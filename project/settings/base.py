@@ -13,7 +13,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = strtobool(os.environ['DEBUG'])
+DEBUG = strtobool(os.getenv('DEBUG', 'false'))
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 

@@ -1,9 +1,9 @@
-FROM python:3.7-alpine3.10 as prod
+FROM python:3.8-alpine3.10 as prod
 ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-COPY requirements/prod.txt requirements/prod.txt
+COPY requirements requirements
 RUN apk update \
 # install psycopg2 dependencies
     && apk add --no-cache postgresql-libs \

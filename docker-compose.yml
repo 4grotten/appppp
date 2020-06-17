@@ -1,0 +1,34 @@
+version: "2.4"
+
+services:
+  django:
+    build:
+      context: .
+      target: prod
+    restart: always
+    container_name: qrcode_django
+    image: django
+    depends_on:
+      - postgres
+    environment:
+      - SECRET_KEY=notasecret
+      - DEBUG=true
+      - DJANGO_SETTINGS_MODULE=project.settings.base
+      - ALLOWED_HOSTS=*
+      - POSTGRES_DB=qrcode
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    ports:
+      - "5000:5000"
+  postgres:
+    restart: always
+    container_name: qrcode_postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=qrcode
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    ports:
+      - "5432:5432"

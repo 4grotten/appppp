@@ -1,0 +1,31 @@
+version: "2.4"
+
+services:
+  django:
+    build:
+      context: .
+      args:
+        - ENV=dev
+    container_name: test_qrcode_django
+    image: django
+    depends_on:
+      - postgres
+    environment:
+      - SECRET_KEY=notasecret
+      - DEBUG=true
+      - DJANGO_SETTINGS_MODULE=project.settings.test
+      - ALLOWED_HOSTS=*
+      - POSTGRES_DB=qrcode
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    entrypoint: ""
+    command: /app/scripts/run_tests.sh
+  postgres:
+    container_name: test_qrcode_postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=qrcode
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres

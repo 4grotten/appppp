@@ -7,13 +7,12 @@ class UserManager(BaseUserManager):
 
     use_in_migrations = True
 
-    def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
-        if not email:
-            raise ValueError('User must have an email address')
+    def _create_user(self, phone_number, password, is_staff, is_superuser, **extra_fields):
+        if not phone_number:
+            raise ValueError('User must have an phone_number address')
 
-        email = self.normalize_email(email)
         user = self.model(
-            email=email,
+            phone_number=phone_number,
             is_active=True,
             is_staff=is_staff,
             is_superuser=is_superuser,
@@ -22,8 +21,8 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, password=None, **extra_fields):
-        return self._create_user(email, password, False, False, **extra_fields)
+    def create_user(self, phone_number, password=None, **extra_fields):
+        return self._create_user(phone_number, password, False, False, **extra_fields)
 
-    def create_superuser(self, email, password, **extra_fields):
-        return self._create_user(email, password, True, True, **extra_fields)
+    def create_superuser(self, phone_number, password, **extra_fields):
+        return self._create_user(phone_number, password, True, True, **extra_fields)

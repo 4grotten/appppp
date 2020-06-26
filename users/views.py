@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer
+from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer, ResendTemporaryCodeSerializer
 from .services import UserService, TemporaryCodeService
 
 
@@ -61,4 +61,27 @@ class VerifyTemporaryCodeAPIView(APIView):
 
         return Response(data={
             'message': 'Successfully validated'
+        }, status=status.HTTP_200_OK)
+
+
+class ResendTemporaryCodeAPIView(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+
+    def post(self, request):
+        serializer = ResendTemporaryCodeSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        phone_number = serializer.validated_data.get('phone_number')
+        user = UserService.get(phone_number=phone_number)
+
+        TemporaryCodeService.create(user=user)
+
+        return Response(data={
+            'message': 'Code has successfully sent'
         }, status=status.HTTP_200_OK)

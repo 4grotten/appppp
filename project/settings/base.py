@@ -1,5 +1,6 @@
 import json
 import os
+from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from distutils.util import strtobool
@@ -10,12 +11,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = strtobool(os.getenv('DEBUG', 'false'))
+DEBUG = strtobool(config('DEBUG', default='false'))
 
-ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 # Application definition
 
@@ -72,12 +73,12 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['POSTGRES_DB'],
-        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-        'USER': os.environ['POSTGRES_USER'],
-        'HOST': os.environ['POSTGRES_HOST'],
-        'PORT': os.environ['POSTGRES_PORT'],
-        'OPTIONS': json.loads(os.environ.get('POSTGRES_OPTIONS', "{}")),
+        'NAME': config('POSTGRES_DB'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
+        'USER': config('POSTGRES_USER'),
+        'HOST': config('POSTGRES_HOST'),
+        'PORT': config('POSTGRES_PORT'),
+        'OPTIONS': json.loads(config('POSTGRES_OPTIONS', default="{}")),
     }
 }
 

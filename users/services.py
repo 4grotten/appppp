@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.utils import timezone
 
-from common.exceptions import ObjectNotFoundException, IntegrityException
+from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from users.models import TemporaryCode
 
 User = get_user_model()
@@ -49,3 +50,13 @@ class TemporaryCodeService:
             return cls.model.objects.create(user=user)
         except IntegrityError:
             raise IntegrityException('Error while creating temporary code')
+
+    @classmethod
+    def validate(cls, code: str, phone_number: str):
+        temporary_codes = cls.filter(code=code, user_phone_number=phone_number).last()
+        temporary_code = temporary_codes.last()
+
+        if not temporary_codes or temporary_code.expiration_datetime > timezone.now():
+            raise ValidationException('Invalid code')
+
+        temporary_codes.delete()

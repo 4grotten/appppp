@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import AbstractUser
 
 from django.db import models
@@ -34,11 +36,13 @@ class TemporaryCode(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.IntegerField(blank=True)
     is_used = models.BooleanField(default=False)
+    expiration_datetime = models.DateTimeField(blank=True)
 
     def __str__(self):
         return self.user.phone_number
 
     def save(self, *args, **kwargs):
-        if not self.code:
+        if not self.pk:
             self.code = generate_random_code()
+            self.expiration_datetime = self.expiration_datetime + datetime.timedelta(minutes=2)
         super(TemporaryCode, self).save(*args, **kwargs)

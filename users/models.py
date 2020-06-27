@@ -44,5 +44,5 @@ class TemporaryCode(TimestampModel):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.code = generate_random_code()
-            self.expiration_datetime = self.expiration_datetime + datetime.timedelta(minutes=2)
+            self.expiration_datetime = datetime.datetime.now() + datetime.timedelta(minutes=2)
         super(TemporaryCode, self).save(*args, **kwargs)

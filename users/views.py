@@ -1,4 +1,3 @@
-from rest_auth.models import TokenModel
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response

@@ -56,8 +56,6 @@ class TemporaryCodeService:
         temporary_codes = cls.filter(code=code, user__phone_number=phone_number)
         temporary_code = temporary_codes.last()
 
-        print(temporary_code)
-
         if not temporary_codes or temporary_code.expiration_datetime < timezone.now():
             raise ValidationException('Invalid code')
 

@@ -1,4 +1,6 @@
+from rest_auth.models import TokenModel
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -59,8 +61,17 @@ class VerifyTemporaryCodeAPIView(APIView):
 
         TemporaryCodeService.validate(code=code, phone_number=phone_number)
 
+        user = UserService.get(phone_number=phone_number)
+
+        token = None
+
+        if user.is_new_user:
+            token, created = Token.objects.get_or_create(user=user)
+
         return Response(data={
-            'message': 'Successfully validated'
+            'message': 'Successfully validated',
+            'token': token.key if token else None,
+            'is_new_user': user.is_new_user
         }, status=status.HTTP_200_OK)
 
 

@@ -154,3 +154,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'common.schemas.DefaultSchema',
 }
+
+NIKITA_URL = 'https://smspro.nikita.kg/api/message'
+NIKITA_USERNAME = config('NIKITA_USERNAME')
+NIKITA_PASSWORD = config('NIKITA_PASSWORD')
+NIKITA_SENDER = config('NIKITA_SENDER')
+NIKITA_TEST_MODE = config('NIKITA_TEST_MODE', default=1)

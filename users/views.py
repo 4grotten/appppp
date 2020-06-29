@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer,
     ResendTemporaryCodeSerializer, LoginSerializer,
-    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer
+    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer
 )
 
 from .services import UserService, TemporaryCodeService
@@ -175,3 +175,24 @@ class LoginAPIView(APIView):
             'message': 'Wrong credentials',
             'errors': {}
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserChangePasswordAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = UserChangePasswordSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        UserService.change_password(
+            user=request.user,
+            old_password=serializer.validated_data.get('old_password', None),
+            new_password=serializer.validated_data.get('new_password', None)
+        )
+
+        return Response(data={'message': 'Password has successfully changed'}, status=status.HTTP_200_OK)

@@ -58,6 +58,14 @@ class UserService:
         user.is_new_user = False
         user.save()
 
+    @classmethod
+    def change_password(cls, user: User, new_password: str, old_password: str):
+        if not user.check_password(old_password):
+            raise ValidationException('Incorrect old password')
+
+        user.set_password(new_password)
+        user.save()
+
 
 class TemporaryCodeService:
     model = TemporaryCode

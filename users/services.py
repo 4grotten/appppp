@@ -25,6 +25,7 @@ class UserService:
     @classmethod
     def create(cls, phone_number: str):
         try:
+
             return cls.model.objects.create(phone_number=phone_number)
         except IntegrityError:
             raise IntegrityException('Error while creating user')
@@ -84,6 +85,9 @@ class TemporaryCodeService:
     @classmethod
     def create(cls, user: User):
         try:
+            if cls.filter(user=user).count() >= 2:
+                raise ValidationException('Limit exceeded')
+
             return cls.model.objects.create(user=user)
         except IntegrityError:
             raise IntegrityException('Error while creating temporary code')

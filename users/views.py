@@ -166,9 +166,11 @@ class LoginAPIView(APIView):
 
         if user is not None:
             token, _ = Token.objects.get_or_create(user=user)
+            user_data = ProfileSerializer(user).data
             return Response(data={
                 'message': 'Successfully logged in',
-                'token': token.key
+                'token': token.key,
+                'user': user_data
             }, status=status.HTTP_200_OK)
 
         return Response(data={

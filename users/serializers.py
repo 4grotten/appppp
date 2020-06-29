@@ -39,3 +39,8 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
 class SetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
+
+
+class LoginSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    password = serializers.CharField()

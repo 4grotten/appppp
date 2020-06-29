@@ -8,14 +8,20 @@ from .models import File
 
 class FileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = File
-        fields = ('id', 'file', 'name')
+        fields = ('id', 'url', 'name')
         read_only_fields = ('name',)
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
+
+    def get_url(self, obj):
+        request = self.context.get('request')
+        url = obj.file.url
+        return request.build_absolute_uri(url)
 
 
 class TimezoneField(serializers.Field):

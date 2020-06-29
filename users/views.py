@@ -103,7 +103,7 @@ class ProfileInitialAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = ProfileUpdateSerializer(data=request.data, many=False)
+        serializer = ProfileUpdateSerializer(data=request.data, many=False, context={'request': request})
 
         if not serializer.is_valid():
             return Response(data={
@@ -121,7 +121,7 @@ class ProfileInitialAPIView(APIView):
             full_name=serializer.validated_data.get('full_name')
         )
 
-        return Response(ProfileSerializer(user).data, status=status.HTTP_200_OK)
+        return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
 class SetPasswordAPIView(APIView):

@@ -1,9 +1,11 @@
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer, ResendTemporaryCodeSerializer
+from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer, ResendTemporaryCodeSerializer, \
+    ProfileUpdateSerializer, ProfileSerializer
 from .services import UserService, TemporaryCodeService
 
 
@@ -95,3 +97,28 @@ class ResendTemporaryCodeAPIView(APIView):
         return Response(data={
             'message': 'Code has successfully sent'
         }, status=status.HTTP_200_OK)
+
+
+class ProfileInitialAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ProfileUpdateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user = UserService.init_profile(
+            user=request.user,
+            avatar_id=serializer.validated_data.get('avatar_id'),
+            username=serializer.validated_data.get('username'),
+            date_of_birth=serializer.validated_data.get('date_of_birth'),
+            email=serializer.validated_data.get('email'),
+            gender=serializer.validated_data.get('gender'),
+            full_name=serializer.validated_data.get('full_name')
+        )
+
+        return Response(ProfileSerializer(user).data, status=status.HTTP_200_OK)

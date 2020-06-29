@@ -29,6 +29,25 @@ class UserService:
         except IntegrityError:
             raise IntegrityException('Error while creating user')
 
+    @classmethod
+    def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
+                     date_of_birth, email: str, gender: str):
+
+        try:
+            user.avatar_id = avatar_id
+            user.full_name = full_name
+            user.username = username
+            user.date_of_birth = date_of_birth
+            user.email = email
+            user.gender = gender
+
+            user.save()
+
+            return user
+
+        except Exception as e:
+            raise IntegrityException('Error while initializing profile')
+
 
 class TemporaryCodeService:
     model = TemporaryCode

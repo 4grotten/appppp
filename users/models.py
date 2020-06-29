@@ -46,3 +46,19 @@ class TemporaryCode(TimestampModel):
             self.code = generate_random_code()
             self.expiration_datetime = datetime.datetime.now() + datetime.timedelta(minutes=2)
         super(TemporaryCode, self).save(*args, **kwargs)
+
+
+class PhoneNumber(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.user.phone_number
+
+
+class SocialNetworkContact(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    url = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.user.phone_number

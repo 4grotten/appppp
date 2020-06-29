@@ -1,11 +1,16 @@
+from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer, ResendTemporaryCodeSerializer, \
+from .serializers import (
+    RegisterAuthSerializer, TemporaryCodeSerializer,
+    ResendTemporaryCodeSerializer, LoginSerializer,
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer
+)
+
 from .services import UserService, TemporaryCodeService
 
 
@@ -141,3 +146,32 @@ class SetPasswordAPIView(APIView):
         return Response(data={
             'message': 'You have successfully set password'
         }, status=status.HTTP_200_OK)
+
+
+class LoginAPIView(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user = authenticate(**serializer.validated_data)
+
+        if user is not None:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response(data={
+                'message': 'Successfully logged in',
+                'token': token.key
+            }, status=status.HTTP_200_OK)
+
+        return Response(data={
+            'message': 'Wrong credentials',
+            'errors': {}
+        }, status=status.HTTP_400_BAD_REQUEST)

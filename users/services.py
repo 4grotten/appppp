@@ -82,10 +82,13 @@ class TemporaryCodeService:
 
     @classmethod
     def validate(cls, code: str, phone_number: str):
-        temporary_codes = cls.filter(code=code, user__phone_number=phone_number)
-        temporary_code = temporary_codes.last()
+        try:
+            temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number, is_used=False)
 
-        if not temporary_codes or temporary_code.expiration_datetime < timezone.now():
-            raise ValidationException('Invalid code')
+            if temporary_code.expiration_datetime < timezone.now():
+                raise ValidationException('Code expired')
 
-        cls.filter(user__phone_number=phone_number).delete()
+            cls.model.objects.filter(user__phone_number=phone_number).update(is_used=True)
+
+        except cls.model.DoesNotExist:
+            raise ValidationException('Code not found')

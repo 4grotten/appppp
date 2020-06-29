@@ -11,7 +11,7 @@ class RegisterAuthSerializer(serializers.Serializer):
 
 
 class TemporaryCodeSerializer(serializers.Serializer):
-    code = serializers.CharField()
+    code = serializers.IntegerField()
     phone_number = serializers.CharField()
 
 

@@ -34,7 +34,7 @@ class RegisterAuthAPIView(APIView):
 
         if not UserService.filter(phone_number=phone_number).exists():
             user = UserService.create(phone_number=phone_number)
-            TemporaryCodeService.create(user=user)
+            TemporaryCodeService.create_and_send(user=user)
 
             return Response(data={
                 'message': 'User has successfully created',
@@ -97,7 +97,7 @@ class ResendTemporaryCodeAPIView(APIView):
         phone_number = serializer.validated_data.get('phone_number')
         user = UserService.get(phone_number=phone_number)
 
-        TemporaryCodeService.create(user=user)
+        TemporaryCodeService.create_and_send(user=user)
 
         return Response(data={
             'message': 'Code has successfully sent'

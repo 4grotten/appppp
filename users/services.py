@@ -3,7 +3,9 @@ from django.db import IntegrityError
 from django.utils import timezone
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
-from users.models import TemporaryCode
+from sms_sender.services import MessageService
+from .constants import SMS_CODE_MESSAGE
+from .models import TemporaryCode
 
 User = get_user_model()
 
@@ -23,9 +25,8 @@ class UserService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create(cls, phone_number: str):
+    def create(cls, phone_number: str) -> User:
         try:
-
             return cls.model.objects.create(phone_number=phone_number)
         except IntegrityError:
             raise IntegrityException('Error while creating user')
@@ -83,14 +84,19 @@ class TemporaryCodeService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create(cls, user: User):
+    def create_and_send(cls, user: User) -> TemporaryCode:
         try:
             if cls.filter(user=user).count() >= 2:
                 raise ValidationException('Limit exceeded')
 
-            return cls.model.objects.create(user=user)
+            code = cls.model.objects.create(user=user)
         except IntegrityError:
             raise IntegrityException('Error while creating temporary code')
+
+        message = SMS_CODE_MESSAGE.format(code.code)
+        sms_id = f'{user.id}{code.code}'
+        MessageService.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
+        return code
 
     @classmethod
     def validate(cls, code: str, phone_number: str):

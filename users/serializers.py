@@ -35,3 +35,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('avatar_id', 'full_name', 'username',
                   'date_of_birth', 'email', 'gender')
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()

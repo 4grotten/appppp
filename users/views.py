@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import RegisterAuthSerializer, TemporaryCodeSerializer, ResendTemporaryCodeSerializer, \
-    ProfileUpdateSerializer, ProfileSerializer
+    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer
 from .services import UserService, TemporaryCodeService
 
 
@@ -122,3 +122,22 @@ class ProfileInitialAPIView(APIView):
         )
 
         return Response(ProfileSerializer(user).data, status=status.HTTP_200_OK)
+
+
+class SetPasswordAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = SetPasswordSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        UserService.set_password(user=request.user, password=serializer.validated_data.get('password'))
+
+        return Response(data={
+            'message': 'You have successfully set password'
+        }, status=status.HTTP_200_OK)

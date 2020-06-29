@@ -5,3 +5,5 @@ GENDER_CHOICES = (
     (MALE, MALE.capitalize()),
     (FEMALE, FEMALE.capitalize())
 )
+
+SMS_CODE_MESSAGE = 'Your code is {}'

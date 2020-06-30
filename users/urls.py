@@ -2,7 +2,7 @@ from django.urls import path
 
 from users.views import (
     RegisterAuthAPIView, VerifyTemporaryCodeAPIView,
-    ResendTemporaryCodeAPIView, LoginAPIView,
+    ResendTemporaryCodeAPIView, LoginAPIView, LogoutAPIView,
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
     ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
     UserPhoneNumbersUpdateAPIView, UserNetworksListAPIView, UserSocialNetworksUpdateAPIView
@@ -15,6 +15,7 @@ urlpatterns = [
     path('init_profile/', ProfileInitialAPIView.as_view(), name='init_profile'),
     path('set_password/', SetPasswordAPIView.as_view(), name='set_password'),
     path('login/', LoginAPIView.as_view(), name='login'),
+    path('logout/', LogoutAPIView.as_view(), name='logout'),
     path('users/doChangePassword/', UserChangePasswordAPIView.as_view(), name='change_password'),
     path('users/forgot_password/', ForgotPasswordAPIView.as_view(), name='forgot_password'),
     path('users/me/', CurrentUserAPIView.as_view(), name='forgot_password'),

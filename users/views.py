@@ -179,6 +179,18 @@ class LoginAPIView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class LogoutAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        token_key = request.headers['Authorization'].split()[1]
+        Token.objects.filter(key=token_key).delete()
+
+        return Response(data={
+            'message': 'Successfully logged out',
+        }, status=status.HTTP_200_OK)
+
+
 class UserChangePasswordAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

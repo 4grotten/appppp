@@ -42,6 +42,7 @@ class UserService:
             user.date_of_birth = date_of_birth
             user.email = email
             user.gender = gender
+            user.is_new_user = False
 
             user.save()
 
@@ -52,9 +53,6 @@ class UserService:
 
     @classmethod
     def set_password(cls, user: User, password: str):
-
-        if not user.is_new_user:
-            raise ValidationException('Permission denied, you already set password')
 
         user.set_password(password)
         user.is_new_user = False

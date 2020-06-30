@@ -86,7 +86,12 @@ class TemporaryCodeService:
     @classmethod
     def create_and_send(cls, user: User) -> TemporaryCode:
         try:
-            if cls.filter(user=user).count() >= 2:
+
+            current_datetime = timezone.now()
+            max_datetime = current_datetime + timezone.timedelta(seconds=-10)
+
+            if cls.model.objects.filter(user=user,
+                                        created_at__range=(max_datetime, current_datetime)).count() >= 2:
                 raise ValidationException('Limit exceeded')
 
             code = cls.model.objects.create(user=user)

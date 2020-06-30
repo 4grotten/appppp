@@ -46,6 +46,9 @@ class RegisterAuthAPIView(APIView):
 
         user = UserService.get(phone_number=phone_number)
 
+        if user.is_new_user:
+            TemporaryCodeService.create_and_send(user=user)
+
         return Response(data={
             'message': 'User found',
             'is_new_user': user.is_new_user

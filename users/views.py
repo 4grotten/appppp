@@ -233,3 +233,12 @@ class ForgotPasswordAPIView(APIView):
         return Response(data={
             'message': 'Code sent'
         }, status=status.HTTP_200_OK)
+
+
+class CurrentUserAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+
+        return Response(ProfileSerializer(user).data)

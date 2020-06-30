@@ -5,10 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import ValidationException
+from .constants import PHONE_NUMBER_TYPE, EMAIL_TYPE
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer,
     ResendTemporaryCodeSerializer, LoginSerializer,
-    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer
+    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
+    ForgotPasswordSerializer
 )
 
 from .services import UserService, TemporaryCodeService
@@ -198,3 +201,35 @@ class UserChangePasswordAPIView(APIView):
         )
 
         return Response(data={'message': 'Password has successfully changed'}, status=status.HTTP_200_OK)
+
+
+class ForgotPasswordAPIView(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user = UserService.get(phone_number=serializer.validated_data.get('phone_number'))
+        TemporaryCodeService.create_and_send(user=user)
+
+        #        input_type = serializer.validated_data.get('type')
+
+        #        if input_type == PHONE_NUMBER_TYPE:
+        #            user = UserService.get(phone_number=serializer.validated_data.get('phone_number'))
+        #            TemporaryCodeService.create_and_send(user=user)
+        #        elif input_type == EMAIL_TYPE:
+        #            user = UserService.get(email=serializer.validated_data.get('email'))
+        #            # TODO send code to email
+        #        else:
+        #            raise ValidationException('Invalid input')
+
+        return Response(data={
+            'message': 'Code sent'
+        }, status=status.HTTP_200_OK)

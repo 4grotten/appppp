@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from common.serializers import FileSerializer
+from users.constants import FORGOT_PASSWORD_CHOICES
 
 User = get_user_model()
 
@@ -49,3 +50,9 @@ class LoginSerializer(serializers.Serializer):
 class UserChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    #    type = serializers.ChoiceField(choices=FORGOT_PASSWORD_CHOICES)
+    #    email = serializers.CharField(allow_null=True)
+    phone_number = serializers.CharField()

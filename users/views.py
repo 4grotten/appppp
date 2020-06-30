@@ -257,7 +257,7 @@ class UserPhoneNumbersUpdateAPIView(APIView):
         data = PhoneNumberSerializer(numbers, many=True).data
         return Response(data={
             'message': 'Successfully updated',
-            'networks': data
+            'numbers': data
         }, status=status.HTTP_200_OK)
 
 

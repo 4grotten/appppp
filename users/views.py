@@ -169,7 +169,7 @@ class LoginAPIView(APIView):
 
         if user is not None:
             token, _ = Token.objects.get_or_create(user=user)
-            user_data = ProfileSerializer(user).data
+            user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
                 'message': 'Successfully logged in',
                 'token': token.key,
@@ -241,4 +241,4 @@ class CurrentUserAPIView(APIView):
     def get(self, request):
         user = request.user
 
-        return Response(ProfileSerializer(user).data)
+        return Response(ProfileSerializer(user, context={'request': request}).data)

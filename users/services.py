@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from sms_sender.services import MessageService
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact
 
 User = get_user_model()
 
@@ -112,3 +113,35 @@ class TemporaryCodeService:
 
         except cls.model.DoesNotExist:
             raise ValidationException('Code not found')
+
+
+class PhoneNumberService:
+    model = PhoneNumber
+
+    @classmethod
+    def get_numbers_of_user(cls, user_id: int) -> QuerySet:
+        return PhoneNumber.objects.filter(user_id=user_id)
+
+    @classmethod
+    def update_phone_numbers(cls, user: User, numbers: list):
+        with transaction.atomic():
+            PhoneNumber.objects.filter(user=user).delete()
+            numbers = [PhoneNumber(user=user, phone_number=number) for number in numbers]
+            PhoneNumber.objects.bulk_create(numbers)
+            return numbers
+
+
+class SocialNetworkContactService:
+    model = SocialNetworkContact
+
+    @classmethod
+    def get_networks_of_user(cls, user_id: int) -> QuerySet:
+        return SocialNetworkContact.objects.filter(user_id=user_id)
+
+    @classmethod
+    def update_social_networks(cls, user: User, urls: list):
+        with transaction.atomic():
+            SocialNetworkContact.objects.filter(user=user).delete()
+            contacts = [SocialNetworkContact(user=user, url=url) for url in urls]
+            SocialNetworkContact.objects.bulk_create(contacts)
+            return contacts

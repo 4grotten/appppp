@@ -4,7 +4,8 @@ from users.views import (
     RegisterAuthAPIView, VerifyTemporaryCodeAPIView,
     ResendTemporaryCodeAPIView, LoginAPIView,
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
-    ForgotPasswordAPIView, CurrentUserAPIView
+    ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
+    UserPhoneNumbersUpdateAPIView, UserNetworksListAPIView, UserSocialNetworksUpdateAPIView
 )
 
 urlpatterns = [
@@ -17,4 +18,8 @@ urlpatterns = [
     path('users/doChangePassword/', UserChangePasswordAPIView.as_view(), name='change_password'),
     path('users/forgot_password/', ForgotPasswordAPIView.as_view(), name='forgot_password'),
     path('users/me/', CurrentUserAPIView.as_view(), name='forgot_password'),
+    path('users/<int:pk>/phone_numbers/', UserPhonesListAPIView.as_view(), name='user_phones'),
+    path('users/phone_numbers/', UserPhoneNumbersUpdateAPIView.as_view(), name='set_user_phones'),
+    path('users/<int:pk>/social_networks/', UserNetworksListAPIView.as_view(), name='user_networks'),
+    path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
 ]

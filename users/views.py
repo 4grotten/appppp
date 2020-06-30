@@ -5,16 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import ValidationException
-from .constants import PHONE_NUMBER_TYPE, EMAIL_TYPE
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer,
     ResendTemporaryCodeSerializer, LoginSerializer,
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
-    ForgotPasswordSerializer
+    ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer
 )
-
-from .services import UserService, TemporaryCodeService
+from .services import UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService
 
 
 class RegisterAuthAPIView(APIView):
@@ -240,5 +237,46 @@ class CurrentUserAPIView(APIView):
 
     def get(self, request):
         user = request.user
-
         return Response(ProfileSerializer(user, context={'request': request}).data)
+
+
+class UserPhonesListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        numbers = PhoneNumberService.get_numbers_of_user(user_id=kwargs['pk'])
+        data = PhoneNumberSerializer(numbers, many=True).data
+        return Response(data)
+
+
+class UserPhoneNumbersUpdateAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        numbers = PhoneNumberService.update_phone_numbers(user=request.user, numbers=request.data)
+        data = PhoneNumberSerializer(numbers, many=True).data
+        return Response(data={
+            'message': 'Successfully updated',
+            'networks': data
+        }, status=status.HTTP_200_OK)
+
+
+class UserNetworksListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        networks = SocialNetworkContactService.get_networks_of_user(user_id=kwargs['pk'])
+        data = SocialNetworkContactSerializer(networks, many=True).data
+        return Response(data)
+
+
+class UserSocialNetworksUpdateAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        networks = SocialNetworkContactService.update_social_networks(user=request.user, urls=request.data)
+        data = SocialNetworkContactSerializer(networks, many=True).data
+        return Response(data={
+            'message': 'Successfully updated',
+            'networks': data
+        }, status=status.HTTP_200_OK)

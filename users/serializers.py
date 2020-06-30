@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from common.serializers import FileSerializer
-from users.constants import FORGOT_PASSWORD_CHOICES
+from .models import PhoneNumber, SocialNetworkContact
 
 User = get_user_model()
 
@@ -56,3 +56,15 @@ class ForgotPasswordSerializer(serializers.Serializer):
     #    type = serializers.ChoiceField(choices=FORGOT_PASSWORD_CHOICES)
     #    email = serializers.CharField(allow_null=True)
     phone_number = serializers.CharField()
+
+
+class PhoneNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhoneNumber
+        fields = ('phone_number',)
+
+
+class SocialNetworkContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocialNetworkContact
+        fields = ('url',)

@@ -53,7 +53,6 @@ class UserService:
 
     @classmethod
     def set_password(cls, user: User, password: str):
-
         user.set_password(password)
         user.is_new_user = False
         user.save()

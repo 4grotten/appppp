@@ -75,10 +75,7 @@ class VerifyTemporaryCodeAPIView(APIView):
 
         user = UserService.get(phone_number=phone_number)
 
-        token = None
-
-        if user.is_new_user:
-            token, created = Token.objects.get_or_create(user=user)
+        token, created = Token.objects.get_or_create(user=user)
 
         return Response(data={
             'message': 'Successfully validated',

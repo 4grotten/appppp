@@ -26,7 +26,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'avatar', 'full_name', 'username',
-                  'date_of_birth', 'email', 'gender')
+                  'date_of_birth', 'email', 'gender', 'phone_number')
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -61,10 +61,10 @@ class ForgotPasswordSerializer(serializers.Serializer):
 class PhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneNumber
-        fields = ('phone_number',)
+        fields = ('id', 'phone_number')
 
 
 class SocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
-        fields = ('url',)
+        fields = ('id', 'url')

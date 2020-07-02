@@ -13,7 +13,7 @@ class User(AbstractUser, TimestampModel):
     first_name = models.CharField(max_length=255, verbose_name='First Name', null=True, blank=True)
     last_name = models.CharField(max_length=255, verbose_name='Last Name', null=True, blank=True)
     full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
-    email = models.EmailField(verbose_name='Email', null=True, blank=True)
+    email = models.EmailField(verbose_name='Email', unique=True)
     phone_number = models.CharField(max_length=255, unique=True)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
     date_of_birth = models.DateField(null=True, blank=True)

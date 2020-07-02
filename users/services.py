@@ -66,6 +66,14 @@ class UserService:
         user.set_password(new_password)
         user.save()
 
+    @classmethod
+    def change_phone_number(cls, user: User, new_phone_number: str):
+        try:
+            user.phone_number = new_phone_number
+            user.save()
+        except Exception:
+            raise IntegrityException('Error while changing number')
+
 
 class TemporaryCodeService:
     model = TemporaryCode

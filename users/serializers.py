@@ -68,3 +68,9 @@ class SocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
         fields = ('id', 'url')
+
+
+class ChangeAndValidateNewNumberSerializer(serializers.ModelSerializer):
+    old_phone_number = serializers.CharField()
+    new_phone_number = serializers.CharField()
+    code = serializers.IntegerField()

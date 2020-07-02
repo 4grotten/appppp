@@ -9,8 +9,8 @@ from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer,
     ResendTemporaryCodeSerializer, LoginSerializer,
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
-    ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer
-)
+    ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer,
+    ChangeAndValidateNewNumberSerializer)
 from .services import UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService
 
 
@@ -292,3 +292,45 @@ class UserSocialNetworksUpdateAPIView(APIView):
             'message': 'Successfully updated',
             'networks': data
         }, status=status.HTTP_200_OK)
+
+
+class ValidateOldNumberAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        # TODO send code to email
+
+        TemporaryCodeService.create_and_send(user=request.user)
+
+        return Response(data={
+            'message': 'Code sent to old number and email'
+        })
+
+
+class ChangeAndVerifyNewNumber(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ChangeAndValidateNewNumberSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        old_phone_number = serializer.validated_data.get('old_phone_number')
+
+        user = UserService.get(phone_number=old_phone_number)
+
+        TemporaryCodeService.validate(
+            code=serializer.validated_data.get('code'), phone_number=old_phone_number
+        )
+
+        UserService.change_phone_number(
+            user=user, new_phone_number=serializer.validated_data.get('new_phone_number')
+        )
+
+        return Response(data={
+            'message': 'You have successfully changed auth number'
+        })

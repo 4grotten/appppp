@@ -5,8 +5,8 @@ from users.views import (
     ResendTemporaryCodeAPIView, LoginAPIView, LogoutAPIView,
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
     ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
-    UserPhoneNumbersUpdateAPIView, UserNetworksListAPIView, UserSocialNetworksUpdateAPIView
-)
+    UserPhoneNumbersUpdateAPIView, UserNetworksListAPIView, UserSocialNetworksUpdateAPIView,
+    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber)
 
 urlpatterns = [
     path('register_auth/', RegisterAuthAPIView.as_view(), name='register_auth'),
@@ -23,4 +23,6 @@ urlpatterns = [
     path('users/phone_numbers/', UserPhoneNumbersUpdateAPIView.as_view(), name='set_user_phones'),
     path('users/<int:pk>/social_networks/', UserNetworksListAPIView.as_view(), name='user_networks'),
     path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
+    path('users/doValidateOldNumber/', ValidateOldNumberAPIView.as_view(), name='validate_old_number'),
+    path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='validate_old_number'),
 ]

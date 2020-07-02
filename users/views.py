@@ -11,8 +11,10 @@ from .serializers import (
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
     ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer,
     ChangeAndValidateNewNumberSerializer)
-from .services import UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, \
-    TemporaryPhoneNumberService
+from .services import (
+    UserService, TemporaryCodeService, PhoneNumberService,
+    SocialNetworkContactService, TemporaryPhoneNumberService
+)
 
 
 class RegisterAuthAPIView(APIView):

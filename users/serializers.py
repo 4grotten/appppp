@@ -70,7 +70,7 @@ class SocialNetworkContactSerializer(serializers.ModelSerializer):
         fields = ('id', 'url')
 
 
-class ChangeAndValidateNewNumberSerializer(serializers.ModelSerializer):
+class ChangeAndValidateNewNumberSerializer(serializers.Serializer):
     old_phone_number = serializers.CharField()
     new_phone_number = serializers.CharField()
     code = serializers.IntegerField()

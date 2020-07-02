@@ -48,6 +48,22 @@ class TemporaryCode(TimestampModel):
         super(TemporaryCode, self).save(*args, **kwargs)
 
 
+class TemporaryPhoneNumber(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=255)
+    code = models.IntegerField(blank=True)
+    expiration_datetime = models.DateTimeField(blank=True)
+
+    def __str__(self):
+        return self.user.phone_number
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.code = generate_random_code()
+            self.expiration_datetime = datetime.datetime.now() + datetime.timedelta(minutes=2)
+        super(TemporaryPhoneNumber, self).save(*args, **kwargs)
+
+
 class PhoneNumber(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=255)

@@ -11,7 +11,8 @@ from .serializers import (
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
     ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer,
     ChangeAndValidateNewNumberSerializer)
-from .services import UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService
+from .services import UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, \
+    TemporaryPhoneNumberService
 
 
 class RegisterAuthAPIView(APIView):
@@ -333,4 +334,26 @@ class ChangeAndVerifyNewNumber(APIView):
 
         return Response(data={
             'message': 'You have successfully changed auth number'
+        })
+
+
+class SendCodeToNewNumberAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ResendTemporaryCodeSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TemporaryPhoneNumberService.create(
+            user=request.user,
+            phone_number=serializer.validated_data.get('phone_number')
+        )
+
+        return Response(data={
+            'message': 'Code sent to new phone number'
         })

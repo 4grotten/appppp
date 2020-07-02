@@ -6,7 +6,7 @@ from django.utils import timezone
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from sms_sender.services import MessageService
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode, PhoneNumber, SocialNetworkContact
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
 User = get_user_model()
 
@@ -153,3 +153,21 @@ class SocialNetworkContactService:
             contacts = [SocialNetworkContact(user=user, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class TemporaryPhoneNumberService:
+    model = TemporaryPhoneNumber
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return cls.model.objects.get(**filters)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException('Temporary phone number not found')
+
+    @classmethod
+    def create(cls, user: User, phone_number: str):
+        try:
+            return cls.model.objects.create(user=user, phone_number=phone_number)
+        except IntegrityError:
+            raise IntegrityException('Error while creating temporary code for new phone_number')

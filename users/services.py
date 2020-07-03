@@ -34,14 +34,13 @@ class UserService:
 
     @classmethod
     def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
-                     date_of_birth, email: str, gender: str):
+                     date_of_birth, gender: str):
 
         try:
             user.avatar_id = avatar_id
             user.full_name = full_name
             user.username = username
             user.date_of_birth = date_of_birth
-            user.email = email
             user.gender = gender
             user.is_new_user = False
 
@@ -73,6 +72,16 @@ class UserService:
             user.save()
         except Exception:
             raise IntegrityException('Error while changing number')
+
+    @staticmethod
+    def is_email_updated(user, email):
+        return user == email
+
+    @classmethod
+    def init_or_update_user_email(cls, user, email):
+        if not cls.is_email_updated(user=user, email=email):
+            user.email = email
+            user.save()
 
 
 class TemporaryCodeService:

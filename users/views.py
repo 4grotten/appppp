@@ -134,12 +134,15 @@ class ProfileInitialAPIView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        email = serializer.validated_data.get('email')
+
+        UserService.init_or_update_user_email(user=request.user, email=email)
+
         user = UserService.init_profile(
             user=request.user,
             avatar_id=serializer.validated_data.get('avatar_id'),
             username=serializer.validated_data.get('username'),
             date_of_birth=serializer.validated_data.get('date_of_birth'),
-            email=serializer.validated_data.get('email'),
             gender=serializer.validated_data.get('gender'),
             full_name=serializer.validated_data.get('full_name')
         )

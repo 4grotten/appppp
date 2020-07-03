@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from django.contrib.auth.models import AbstractUser
 
@@ -30,6 +31,11 @@ class User(AbstractUser, TimestampModel):
 
     def __str__(self):
         return self.phone_number
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.email = "{}@example.com".format(uuid.uuid4().hex[:6].upper())
+        super(User, self).save(*args, **kwargs)
 
 
 class TemporaryCode(TimestampModel):

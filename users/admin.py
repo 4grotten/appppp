@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 
-from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact
+from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
 User = get_user_model()
 
@@ -23,4 +23,9 @@ class PhoneNumberAdmin(admin.ModelAdmin):
 
 @admin.register(SocialNetworkContact)
 class SocialNetworkContactAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(TemporaryPhoneNumber)
+class TemporaryPhoneNumberAdmin(admin.ModelAdmin):
     pass

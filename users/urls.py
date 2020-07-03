@@ -6,7 +6,7 @@ from users.views import (
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
     ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
     UserPhoneNumbersUpdateAPIView, UserNetworksListAPIView, UserSocialNetworksUpdateAPIView,
-    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber)
+    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView)
 
 urlpatterns = [
     path('register_auth/', RegisterAuthAPIView.as_view(), name='register_auth'),
@@ -24,5 +24,6 @@ urlpatterns = [
     path('users/<int:pk>/social_networks/', UserNetworksListAPIView.as_view(), name='user_networks'),
     path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
     path('users/doValidateOldNumber/', ValidateOldNumberAPIView.as_view(), name='validate_old_number'),
+    path('users/doSendCode/', SendCodeToNewNumberAPIView.as_view(), name='send_code_to_new_number'),
     path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='validate_old_number'),
 ]

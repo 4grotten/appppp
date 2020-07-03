@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from common.serializers import FileSerializer
+from .constants import RESEND_CODE_CHOICES, REGISTER_AUTH_TYPE
 from .models import PhoneNumber, SocialNetworkContact
 
 User = get_user_model()
@@ -17,6 +18,11 @@ class TemporaryCodeSerializer(serializers.Serializer):
 
 
 class ResendTemporaryCodeSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    type = serializers.ChoiceField(choices=RESEND_CODE_CHOICES)
+
+
+class SendCodeToNewNumberSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
 
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from sms_sender.services import MessageService
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode, PhoneNumber, SocialNetworkContact
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
 User = get_user_model()
 
@@ -153,3 +153,51 @@ class SocialNetworkContactService:
             contacts = [SocialNetworkContact(user=user, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class TemporaryPhoneNumberService:
+    model = TemporaryPhoneNumber
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return cls.model.objects.get(**filters)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException('Temporary phone number not found')
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def create(cls, user: User, phone_number: str):
+        try:
+
+            current_datetime = timezone.now()
+            max_datetime = current_datetime + timezone.timedelta(seconds=-10)
+
+            if cls.model.objects.filter(user=user,
+                                        created_at__range=(max_datetime, current_datetime)).count() >= 2:
+                raise ValidationException('Limit exceeded')
+
+            code = cls.model.objects.create(user=user, phone_number=phone_number)
+
+            message = SMS_CODE_MESSAGE.format(code.code)
+            sms_id = f'{user.id}{code.code}'
+            MessageService.send_sms(numbers=[phone_number], message=message, sms_id=sms_id)
+
+        except IntegrityError:
+            raise IntegrityException('Error while creating temporary code for new phone_number')
+
+    @classmethod
+    def validate(cls, code: str, phone_number: str):
+        try:
+            temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number)
+
+            if temporary_code.expiration_datetime < timezone.now():
+                raise ValidationException('Code expired')
+
+            cls.model.objects.filter(user__phone_number=phone_number).delete()
+
+        except cls.model.DoesNotExist:
+            raise ValidationException('Code not found')

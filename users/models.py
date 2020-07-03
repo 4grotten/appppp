@@ -71,16 +71,16 @@ class TemporaryPhoneNumber(TimestampModel):
 
 
 class PhoneNumber(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='phone_numbers')
     phone_number = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.user.phone_number
+        return self.phone_number
 
 
 class SocialNetworkContact(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_contacts')
     url = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.user.phone_number
+        return self.url

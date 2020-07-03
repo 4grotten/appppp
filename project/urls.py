@@ -5,6 +5,7 @@ from django.urls import path, include
 
 v1 = ([
           path('', include('users.urls')),
+          path('', include('organizations.urls')),
           path('', include('common.urls'))
       ], 'v1')
 

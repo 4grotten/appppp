@@ -5,12 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import ValidationException, NotAcceptableException, ObjectNotFoundException
+from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer,
     ResendTemporaryCodeSerializer, LoginSerializer,
     ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
     ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer,
-    ChangeAndValidateNewNumberSerializer)
+    ChangeAndValidateNewNumberSerializer, SendCodeToNewNumberSerializer)
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService,
     SocialNetworkContactService, TemporaryPhoneNumberService
@@ -97,10 +99,23 @@ class ResendTemporaryCodeAPIView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        resend_type = serializer.validated_data.get('type')
         phone_number = serializer.validated_data.get('phone_number')
-        user = UserService.get(phone_number=phone_number)
 
-        TemporaryCodeService.create_and_send(user=user)
+        if resend_type == CHANGE_AUTH_NUMBER_TYPE:
+            temporary_codes = TemporaryPhoneNumberService.filter(phone_number=phone_number)
+            if not temporary_codes:
+                raise ObjectNotFoundException('You can not resend')
+
+            temporary_code = temporary_codes.last()
+
+            TemporaryPhoneNumberService.create(user=temporary_code.user, phone_number=phone_number)
+
+        elif resend_type == REGISTER_AUTH_TYPE:
+            user = UserService.get(phone_number=phone_number)
+            TemporaryCodeService.create_and_send(user=user)
+        else:
+            raise ValidationException('Invalid type')
 
         return Response(data={
             'message': 'Code has successfully sent'
@@ -326,7 +341,10 @@ class ChangeAndVerifyNewNumber(APIView):
 
         user = UserService.get(phone_number=old_phone_number)
 
-        TemporaryCodeService.validate(
+        if user != request.user:
+            raise NotAcceptableException('You have not permission to do this operation')
+
+        TemporaryPhoneNumberService.validate(
             code=serializer.validated_data.get('code'), phone_number=old_phone_number
         )
 
@@ -343,7 +361,7 @@ class SendCodeToNewNumberAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = ResendTemporaryCodeSerializer(data=request.data)
+        serializer = SendCodeToNewNumberSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={

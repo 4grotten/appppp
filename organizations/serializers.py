@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.serializers import FileSerializer
-from .models import Organization, OrganizationType
+from .models import Organization, OrganizationType, PhoneNumber, SocialNetworkContact
 from .services import OrganizationService
 
 
@@ -50,3 +50,15 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationType
         fields = ('id', 'title',)
+
+
+class OrgPhoneNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhoneNumber
+        fields = ('id', 'phone_number')
+
+
+class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocialNetworkContact
+        fields = ('id', 'url')

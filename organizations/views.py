@@ -3,12 +3,15 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Organization, OrganizationType
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
-    OrganizationTypeSerializer, OrganizationSerializer
+    OrganizationTypeSerializer, OrganizationSerializer,
+    OrgPhoneNumberSerializer, OrgSocialNetworkContactSerializer
 )
+from .services import OrgPhoneNumberService, OrgSocialNetworkContactService
 
 
 class OrganizationsListCreateView(ListCreateAPIView):
@@ -38,3 +41,39 @@ class OrganizationTypesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationTypeSerializer
     queryset = OrganizationType.objects.all()
+
+
+class OrgPhonesListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        numbers = OrgPhoneNumberService.get_numbers_of_organization(organization_id=kwargs['pk'])
+        data = OrgPhoneNumberSerializer(numbers, many=True).data
+        return Response(data)
+
+    def post(self, request, **kwargs):
+        numbers = OrgPhoneNumberService.update_phone_numbers(
+            organization_id=kwargs['pk'], user=request.user, numbers=request.data)
+        data = OrgPhoneNumberSerializer(numbers, many=True).data
+        return Response(data={
+            'message': 'Successfully updated',
+            'numbers': data
+        }, status=status.HTTP_200_OK)
+
+
+class OrgNetworksListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        networks = OrgSocialNetworkContactService.get_networks_of_organization(organization_id=kwargs['pk'])
+        data = OrgSocialNetworkContactSerializer(networks, many=True).data
+        return Response(data)
+
+    def post(self, request, **kwargs):
+        networks = OrgSocialNetworkContactService.update_social_networks(
+            organization_id=kwargs['pk'], user=request.user, urls=request.data)
+        data = OrgSocialNetworkContactSerializer(networks, many=True).data
+        return Response(data={
+            'message': 'Successfully updated',
+            'networks': data
+        }, status=status.HTTP_200_OK)

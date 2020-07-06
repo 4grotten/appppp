@@ -5,10 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Organization, OrganizationType
+from .models import Organization, OrganizationCategory
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
-    OrganizationTypeSerializer, OrganizationSerializer,
+    OrganizationCategorySerializer, OrganizationSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
 )
@@ -40,8 +40,9 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
 class OrganizationTypesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OrganizationTypeSerializer
-    queryset = OrganizationType.objects.all()
+    pagination_class = None
+    serializer_class = OrganizationCategorySerializer
+    queryset = OrganizationCategory.objects.all()
 
 
 class OrgPhonesListAPIView(APIView):

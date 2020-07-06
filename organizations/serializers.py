@@ -58,7 +58,15 @@ class OrgPhoneNumberSerializer(serializers.ModelSerializer):
         fields = ('id', 'phone_number')
 
 
+class OrgPhoneNumberEditSerializer(serializers.Serializer):
+    phone_numbers = serializers.ListSerializer(child=serializers.CharField())
+
+
 class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
         fields = ('id', 'url')
+
+
+class OrgSocialNetworkEditSerializer(serializers.Serializer):
+    networks = serializers.ListSerializer(child=serializers.CharField())

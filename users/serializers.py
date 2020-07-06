@@ -73,10 +73,18 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
         fields = ('id', 'phone_number')
 
 
+class PhoneNumberEditSerializer(serializers.Serializer):
+    phone_numbers = serializers.ListSerializer(child=serializers.CharField())
+
+
 class SocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
         fields = ('id', 'url')
+
+
+class SocialNetworkEditSerializer(serializers.Serializer):
+    networks = serializers.ListSerializer(child=serializers.CharField())
 
 
 class ChangeAndValidateNewNumberSerializer(serializers.Serializer):

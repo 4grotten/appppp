@@ -9,7 +9,8 @@ from .models import Organization, OrganizationType
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationTypeSerializer, OrganizationSerializer,
-    OrgPhoneNumberSerializer, OrgSocialNetworkContactSerializer
+    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
 )
 from .services import OrgPhoneNumberService, OrgSocialNetworkContactService
 
@@ -52,8 +53,16 @@ class OrgPhonesListAPIView(APIView):
         return Response(data)
 
     def post(self, request, **kwargs):
+        serializer = OrgPhoneNumberEditSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         numbers = OrgPhoneNumberService.update_phone_numbers(
-            organization_id=kwargs['pk'], user=request.user, numbers=request.data)
+            organization_id=kwargs['pk'], user=request.user, numbers=serializer.validated_data['phone_numbers'])
         data = OrgPhoneNumberSerializer(numbers, many=True).data
         return Response(data={
             'message': 'Successfully updated',
@@ -70,8 +79,16 @@ class OrgNetworksListAPIView(APIView):
         return Response(data)
 
     def post(self, request, **kwargs):
+        serializer = OrgSocialNetworkEditSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         networks = OrgSocialNetworkContactService.update_social_networks(
-            organization_id=kwargs['pk'], user=request.user, urls=request.data)
+            organization_id=kwargs['pk'], user=request.user, urls=serializer.validated_data['networks'])
         data = OrgSocialNetworkContactSerializer(networks, many=True).data
         return Response(data={
             'message': 'Successfully updated',

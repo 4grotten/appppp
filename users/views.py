@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 from common.exceptions import ValidationException, NotAcceptableException, ObjectNotFoundException
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE
 from .serializers import (
-    RegisterAuthSerializer, TemporaryCodeSerializer,
-    ResendTemporaryCodeSerializer, LoginSerializer,
-    ProfileUpdateSerializer, ProfileSerializer, SetPasswordSerializer, UserChangePasswordSerializer,
-    ForgotPasswordSerializer, PhoneNumberSerializer, SocialNetworkContactSerializer,
-    ChangeAndValidateNewNumberSerializer, SendCodeToNewNumberSerializer)
+    RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
+    ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
+    SetPasswordSerializer, UserChangePasswordSerializer, ForgotPasswordSerializer,
+    SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
+    PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer,
+)
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService,
     SocialNetworkContactService, TemporaryPhoneNumberService
@@ -286,7 +287,16 @@ class UserPhoneNumbersUpdateAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        numbers = PhoneNumberService.update_phone_numbers(user=request.user, numbers=request.data)
+        serializer = PhoneNumberEditSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        numbers = PhoneNumberService.update_phone_numbers(user=request.user,
+                                                          numbers=serializer.validated_data['phone_numbers'])
         data = PhoneNumberSerializer(numbers, many=True).data
         return Response(data={
             'message': 'Successfully updated',
@@ -294,7 +304,7 @@ class UserPhoneNumbersUpdateAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class UserNetworksListAPIView(APIView):
+class UserSocialNetworksListAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, **kwargs):
@@ -307,7 +317,16 @@ class UserSocialNetworksUpdateAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        networks = SocialNetworkContactService.update_social_networks(user=request.user, urls=request.data)
+        serializer = SocialNetworkEditSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        networks = SocialNetworkContactService.update_social_networks(user=request.user,
+                                                                      urls=serializer.validated_data['networks'])
         data = SocialNetworkContactSerializer(networks, many=True).data
         return Response(data={
             'message': 'Successfully updated',

@@ -1,3 +1,4 @@
+from django.contrib.gis.db.models import PointField
 from django.db import models
 
 from common.models import TimestampModel
@@ -29,12 +30,22 @@ class Organization(models.Model):
     description = models.TextField(null=True, blank=True)
     opens_at = models.TimeField(null=True, blank=True)
     closes_at = models.TimeField(null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    location = PointField(help_text="Для создания местоположения", null=True, blank=True)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
     show_contacts = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.title}'
+
+    @property
+    def full_location(self):
+        full_location = dict(
+            latitude=None if not self.location or not self.location.y else self.location.y,
+            longitude=None if not self.location or not self.location.x else self.location.x
+        )
+        return full_location
 
 
 class PhoneNumber(TimestampModel):

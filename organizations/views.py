@@ -5,14 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
 from .models import Organization, OrganizationCategory
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationCategorySerializer, OrganizationSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
-    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, LocationSerializer,
 )
-from .services import OrgPhoneNumberService, OrgSocialNetworkContactService
+from .services import OrgPhoneNumberService, OrgSocialNetworkContactService, OrganizationService
 
 
 class OrganizationsListCreateView(ListCreateAPIView):
@@ -95,3 +96,37 @@ class OrgNetworksListAPIView(APIView):
             'message': 'Successfully updated',
             'networks': data
         }, status=status.HTTP_200_OK)
+
+
+class SetOrganizationLocationAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = LocationSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = OrganizationService.get(pk=pk)
+
+        if organization.owner != request.user:
+            raise NotAcceptableException('You can set location')
+
+        changed_organization = OrganizationService.set_location(
+            organization=organization,
+            longitude=serializer.validated_data.get('longitude'),
+            latitude=serializer.validated_data.get('latitude'),
+            address=serializer.validated_data.get('address')
+        )
+
+        data = OrganizationSerializer(changed_organization, context={'request': request}).data
+
+        return Response(data={
+            'message': 'Successfully updated',
+            'data': data
+        }, status=status.HTTP_200_OK)
+
+

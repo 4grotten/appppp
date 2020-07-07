@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.gis.db import models
+from mapwidgets.widgets import GooglePointFieldWidget
 
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
@@ -7,6 +9,9 @@ from .models import (
 
 
 class OrganizationAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
     list_display = ('title', 'owner', 'opens_at', 'closes_at',)
 
 

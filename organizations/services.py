@@ -1,7 +1,8 @@
+from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.db.models import QuerySet
 
-from common.exceptions import ObjectNotFoundException, NotAcceptableException
+from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException
 from users.models import User
 
 from .models import Organization, Membership, PhoneNumber, SocialNetworkContact
@@ -30,6 +31,19 @@ class OrganizationService:
             return True
         membership = MembershipService.get(organization=organization, user=user)
         return membership.role.can_edit_organization
+
+    @classmethod
+    def set_location(cls, organization, longitude, latitude, address):
+        try:
+            point = Point(longitude, latitude)
+            organization.location = point
+            organization.address = address
+            organization.save()
+
+            return organization
+
+        except Exception:
+            raise ValidationException('Something went wrong')
 
 
 class MembershipService:

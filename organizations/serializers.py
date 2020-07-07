@@ -20,7 +20,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
-                  'opens_at', 'closes_at', 'show_contacts', 'types')
+                  'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address')
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):
@@ -81,3 +81,9 @@ class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
 
 class OrgSocialNetworkEditSerializer(serializers.Serializer):
     networks = serializers.ListSerializer(child=serializers.CharField())
+
+
+class LocationSerializer(serializers.Serializer):
+    address = serializers.CharField()
+    longitude = serializers.FloatField()
+    latitude = serializers.FloatField()

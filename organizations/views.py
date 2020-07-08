@@ -147,3 +147,15 @@ class OrganizationDiscountsAPIView(ListCreateAPIView):
         discounts = DiscountService.get_grouped_discounts(organization_id=organization_id)
         serializer = DiscountGroupSerializer(discounts)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

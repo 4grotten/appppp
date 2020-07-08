@@ -25,7 +25,7 @@ services:
   postgres:
     restart: always
     container_name: qrcode_postgres
-    image: postgres:latest
+    image: postgis/postgis:latest
     environment:
       - POSTGRES_DB=qrcode
       - POSTGRES_PASSWORD=postgres

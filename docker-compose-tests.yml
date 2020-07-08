@@ -28,7 +28,7 @@ services:
     command: /app/scripts/run_tests.sh
   postgres:
     container_name: test_qrcode_postgres
-    image: postgres:latest
+    image: postgis/postgis:latest
     environment:
       - POSTGRES_DB=qrcode
       - POSTGRES_PASSWORD=postgres

@@ -9,7 +9,7 @@ services:
     container_name: qrcode_django
     image: django
     depends_on:
-      - postgres
+      - postgis
     environment:
       - SECRET_KEY=notasecret
       - DEBUG=true
@@ -22,9 +22,9 @@ services:
       - POSTGRES_PORT=5432
     ports:
       - "5000:5000"
-  postgres:
+  postgis:
     restart: always
-    container_name: qrcode_postgres
+    container_name: qrcode_postgis
     image: postgis/postgis:latest
     environment:
       - POSTGRES_DB=qrcode

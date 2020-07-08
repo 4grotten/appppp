@@ -9,7 +9,7 @@ services:
     container_name: test_qrcode_django
     image: django
     depends_on:
-      - postgres
+      - postgis
     environment:
       - SECRET_KEY=notasecret
       - DEBUG=true
@@ -26,8 +26,8 @@ services:
       - NIKITA_TEST_MODE=1
     entrypoint: ""
     command: /app/scripts/run_tests.sh
-  postgres:
-    container_name: test_qrcode_postgres
+  postgis:
+    container_name: test_qrcode_postgis
     image: postgis/postgis:latest
     environment:
       - POSTGRES_DB=qrcode

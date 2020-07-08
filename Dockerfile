@@ -9,7 +9,6 @@ RUN apk update \
     && apk add --no-cache postgresql-libs \
         zlib-dev \
         jpeg-dev \
-        gdal-bin \
     && apk add --no-cache --virtual .requirements-build-deps \
         gcc \
         musl-dev \
@@ -17,6 +16,7 @@ RUN apk update \
         libffi-dev \
         libxml2-dev \
         libxslt-dev \
+
 # install requirements
     && pip install --no-cache-dir -r requirements/prod.txt \
     && rm -r requirements \

@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView, DestroyAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from .models import Organization, OrganizationCategory, DiscountCard
 from .serializers import (
-    OrganizationListSerializer, OrganizationCreateSerializer,
+    OrganizationListSerializer, OrganizationCreateSerializer, OrganizationDetailedSerializer,
     OrganizationCategorySerializer, OrganizationSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
@@ -39,7 +39,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
         organization = serializer.save()
 
-        data = OrganizationSerializer(organization, context={'request': request}).data
+        data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
 
@@ -48,6 +48,12 @@ class OrganizationTypesListView(ListAPIView):
     pagination_class = None
     serializer_class = OrganizationCategorySerializer
     queryset = OrganizationCategory.objects.all()
+
+
+class OrganizationRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationDetailedSerializer
+    queryset = Organization.objects.all()
 
 
 class OrgPhonesListAPIView(APIView):

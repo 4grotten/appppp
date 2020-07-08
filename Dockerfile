@@ -16,6 +16,7 @@ RUN apk update \
         libffi-dev \
         libxml2-dev \
         libxslt-dev \
+        gdal-bin \
 # install requirements
     && pip install --no-cache-dir -r requirements/prod.txt \
     && rm -r requirements \

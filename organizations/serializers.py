@@ -105,10 +105,12 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
 
 class DiscountSerializer(serializers.ModelSerializer):
     organization = UserFilteredPrimaryKeyRelatedField(write_only=True)
+    image = FileSerializer(read_only=True)
+    image_id = serializers.IntegerField(write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = DiscountCard
-        fields = ('id', 'type', 'percent', 'limit', 'currency', 'organization')
+        fields = ('id', 'type', 'percent', 'limit', 'currency', 'organization', 'image', 'image_id')
 
     def validate(self, attrs):
         if attrs['type'] == DiscountCard.CUMULATIVE:

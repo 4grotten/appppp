@@ -105,6 +105,7 @@ class DiscountCard(TimestampModel):
     percent = models.PositiveSmallIntegerField()
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='discounts', null=True, blank=True)
     limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         ordering = ('type', 'percent', 'limit')

@@ -100,7 +100,7 @@ class OrgSocialNetworkContactService:
             return contacts
 
 
-class DiscountService:
+class DiscountCardService:
     @classmethod
     def get(cls, *args, **kwargs):
         try:
@@ -127,3 +127,8 @@ class DiscountService:
         if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
             raise NotAcceptableException('No rights to edit organization')
         discount.delete()
+
+    @classmethod
+    def bulk_create_discounts(cls, cards: list, organization: Organization):
+        for card_data in cards:
+            DiscountCard.objects.create(organization=organization, **card_data)

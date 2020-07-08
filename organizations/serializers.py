@@ -90,6 +90,27 @@ class LocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
 
 
+class DiscountCardSerializer(serializers.ModelSerializer):
+    image = FileSerializer(read_only=True)
+    organization_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = DiscountCard
+        fields = ('id', 'type', 'percent', 'limit', 'currency', 'image', 'organization_id',)
+
+    def validate(self, attrs):
+        if attrs['type'] == DiscountCard.CUMULATIVE:
+            errors = {}
+
+            if attrs.get('currency', None) is None:
+                errors['currency'] = ['This field is required']
+            if attrs.get('limit', None) is None:
+                errors['limit'] = ['This field is required']
+            if errors:
+                raise serializers.ValidationError(errors)
+        return attrs
+
+
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         request = self.context.get('request')
@@ -103,29 +124,11 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         return queryset
 
 
-class DiscountSerializer(serializers.ModelSerializer):
+class DiscountBulkCreateSerializer(serializers.Serializer):
+    cards = DiscountCardSerializer(many=True)
     organization = UserFilteredPrimaryKeyRelatedField(write_only=True)
-    image = FileSerializer(read_only=True)
-    image_id = serializers.IntegerField(write_only=True, allow_null=True, required=False)
-
-    class Meta:
-        model = DiscountCard
-        fields = ('id', 'type', 'percent', 'limit', 'currency', 'organization', 'image', 'image_id')
-
-    def validate(self, attrs):
-        if attrs['type'] == DiscountCard.CUMULATIVE:
-            errors = {}
-
-            if attrs.get('currency', None) is None:
-                errors['currency'] = ['This field is required']
-            if attrs.get('limit', None) is None:
-                errors['limit'] = ['This field is required']
-            if errors:
-                raise serializers.ValidationError(errors)
-
-        return attrs
 
 
 class DiscountGroupSerializer(serializers.Serializer):
-    cumulative = DiscountSerializer(many=True)
-    fixed = DiscountSerializer(many=True)
+    cumulative = DiscountCardSerializer(many=True)
+    fixed = DiscountCardSerializer(many=True)

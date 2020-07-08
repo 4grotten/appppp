@@ -12,11 +12,11 @@ from .serializers import (
     OrganizationCategorySerializer, OrganizationSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
-    LocationSerializer, DiscountGroupSerializer, DiscountSerializer,
+    LocationSerializer, DiscountGroupSerializer, DiscountBulkCreateSerializer,
 )
 from .services import (
     OrgPhoneNumberService, OrgSocialNetworkContactService,
-    OrganizationService, DiscountService
+    OrganizationService, DiscountCardService
 )
 
 
@@ -134,10 +134,10 @@ class SetOrganizationLocationAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class OrganizationDiscountsAPIView(ListCreateAPIView):
+class OrganizationDiscountsAPIView(ListAPIView):
     pagination_class = None
     permission_classes = (IsAuthenticated,)
-    serializer_class = DiscountSerializer
+    serializer_class = DiscountBulkCreateSerializer
 
     def list(self, request, *args, **kwargs):
         organization_id = request.GET.get('organization', None)
@@ -147,11 +147,11 @@ class OrganizationDiscountsAPIView(ListCreateAPIView):
                 'message': 'Please provide organization id as a query parameter',
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        discounts = DiscountService.get_grouped_discounts(organization_id=organization_id)
+        discounts = DiscountCardService.get_grouped_discounts(organization_id=organization_id)
         serializer = DiscountGroupSerializer(discounts)
         return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
@@ -159,9 +159,12 @@ class OrganizationDiscountsAPIView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        DiscountCardService.bulk_create_discounts(cards=serializer.validated_data['cards'],
+                                                  organization=serializer.validated_data['organization'])
+
+        return Response(data={
+            'message': 'Successfully created',
+        }, status=status.HTTP_201_CREATED)
 
 
 class OrganizationDiscountsDeleteAPIView(DestroyAPIView):
@@ -169,7 +172,7 @@ class OrganizationDiscountsDeleteAPIView(DestroyAPIView):
     queryset = DiscountCard.objects.all()
 
     def destroy(self, request, *args, **kwargs):
-        DiscountService.delete_discount(discount_id=kwargs['pk'], user=request.user)
+        DiscountCardService.delete_discount(discount_id=kwargs['pk'], user=request.user)
         return Response(data={
             'message': 'Successfully deleted',
         }, status=status.HTTP_200_OK)

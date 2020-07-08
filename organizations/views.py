@@ -1,12 +1,12 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
-from .models import Organization, OrganizationCategory
+from .models import Organization, OrganizationCategory, DiscountCard
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationCategorySerializer, OrganizationSerializer,
@@ -14,7 +14,10 @@ from .serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     LocationSerializer, DiscountGroupSerializer, DiscountSerializer,
 )
-from .services import OrgPhoneNumberService, OrgSocialNetworkContactService, OrganizationService, DiscountService
+from .services import (
+    OrgPhoneNumberService, OrgSocialNetworkContactService,
+    OrganizationService, DiscountService
+)
 
 
 class OrganizationsListCreateView(ListCreateAPIView):
@@ -159,3 +162,14 @@ class OrganizationDiscountsAPIView(ListCreateAPIView):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class OrganizationDiscountsDeleteAPIView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = DiscountCard.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        DiscountService.delete_discount(discount_id=kwargs['pk'], user=request.user)
+        return Response(data={
+            'message': 'Successfully deleted',
+        }, status=status.HTTP_200_OK)

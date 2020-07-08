@@ -102,6 +102,13 @@ class OrgSocialNetworkContactService:
 
 class DiscountService:
     @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return DiscountCard.objects.get(**kwargs)
+        except DiscountCard.DoesNotExist:
+            raise ObjectNotFoundException('Discount not found')
+
+    @classmethod
     def get_grouped_discounts(cls, organization_id: int) -> dict:
         discounts = DiscountCard.objects.filter(organization_id=organization_id)
         discounts_dict = {
@@ -113,3 +120,10 @@ class DiscountService:
             discounts_dict[discount_type] = list(group)
 
         return discounts_dict
+
+    @classmethod
+    def delete_discount(cls, discount_id: int, user: User):
+        discount = cls.get(id=discount_id)
+        if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
+            raise NotAcceptableException('No rights to edit organization')
+        discount.delete()

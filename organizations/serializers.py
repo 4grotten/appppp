@@ -172,3 +172,11 @@ class DiscountBulkCreateSerializer(serializers.Serializer):
 class DiscountGroupSerializer(serializers.Serializer):
     cumulative = DiscountCardSerializer(many=True)
     fixed = DiscountCardSerializer(many=True)
+
+
+class DiscountCardUpdateSerializer(serializers.ModelSerializer):
+    image_id = serializers.IntegerField(required=True, allow_null=True)
+
+    class Meta:
+        model = DiscountCard
+        fields = ('image_id',)

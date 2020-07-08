@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +13,7 @@ from .serializers import (
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     LocationSerializer, DiscountGroupSerializer, DiscountBulkCreateSerializer,
+    DiscountCardUpdateSerializer, DiscountCardSerializer,
 )
 from .services import (
     OrgPhoneNumberService, OrgSocialNetworkContactService,
@@ -173,12 +174,31 @@ class OrganizationDiscountsAPIView(ListAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class OrganizationDiscountsDeleteAPIView(DestroyAPIView):
+class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = DiscountCard.objects.all()
+    serializer_class = DiscountCardUpdateSerializer
 
     def destroy(self, request, *args, **kwargs):
         DiscountCardService.delete_discount(discount_id=kwargs['pk'], user=request.user)
         return Response(data={
             'message': 'Successfully deleted',
         }, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if not OrganizationService.user_can_edit_organization(organization_id=instance.organization.id,
+                                                              user=request.user):
+            raise NotAcceptableException('No rights to edit organization')
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        instance = serializer.save()
+        data = DiscountCardSerializer(instance).data
+        return Response(data)

@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
+from common.exceptions import NotAcceptableException
 from common.serializers import FileSerializer
 from .models import (
     Organization, OrganizationType, PhoneNumber,
-    SocialNetworkContact, OrganizationCategory
+    SocialNetworkContact, OrganizationCategory, DiscountCard
 )
 from .services import OrganizationService
 
@@ -87,3 +88,42 @@ class LocationSerializer(serializers.Serializer):
     address = serializers.CharField()
     longitude = serializers.FloatField()
     latitude = serializers.FloatField()
+
+
+class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        request = self.context.get('request')
+        organization_id = request.data['organization']
+        queryset = Organization.objects.filter(id=organization_id)
+
+        if not queryset or not OrganizationService.user_can_edit_organization(
+                organization_id=organization_id, user=request.user):
+            raise NotAcceptableException('No rights to edit organization')
+
+        return queryset
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    organization = UserFilteredPrimaryKeyRelatedField(write_only=True)
+
+    class Meta:
+        model = DiscountCard
+        fields = ('id', 'type', 'percent', 'limit', 'currency', 'organization')
+
+    def validate(self, attrs):
+        if attrs['type'] == DiscountCard.CUMULATIVE:
+            errors = {}
+
+            if attrs.get('currency', None) is None:
+                errors['currency'] = ['This field is required']
+            if attrs.get('limit', None) is None:
+                errors['limit'] = ['This field is required']
+            if errors:
+                raise serializers.ValidationError(errors)
+
+        return attrs
+
+
+class DiscountGroupSerializer(serializers.Serializer):
+    cumulative = DiscountSerializer(many=True)
+    fixed = DiscountSerializer(many=True)

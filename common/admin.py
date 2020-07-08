@@ -11,6 +11,7 @@ class FileAdmin(admin.ModelAdmin):
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'flag', 'currency', 'is_priority', 'is_active',)
+    search_fields = ('code', 'name', 'currency__code',)
 
 
 @admin.register(Currency)

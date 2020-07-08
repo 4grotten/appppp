@@ -11,9 +11,10 @@ from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationCategorySerializer, OrganizationSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
-    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, LocationSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
+    LocationSerializer, DiscountGroupSerializer, DiscountSerializer,
 )
-from .services import OrgPhoneNumberService, OrgSocialNetworkContactService, OrganizationService
+from .services import OrgPhoneNumberService, OrgSocialNetworkContactService, OrganizationService, DiscountService
 
 
 class OrganizationsListCreateView(ListCreateAPIView):
@@ -130,3 +131,19 @@ class SetOrganizationLocationAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class OrganizationDiscountsAPIView(ListCreateAPIView):
+    pagination_class = None
+    permission_classes = (IsAuthenticated,)
+    serializer_class = DiscountSerializer
+
+    def list(self, request, *args, **kwargs):
+        organization_id = request.GET.get('organization', None)
+
+        if organization_id is None:
+            return Response(data={
+                'message': 'Please provide organization id as a query parameter',
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        discounts = DiscountService.get_grouped_discounts(organization_id=organization_id)
+        serializer = DiscountGroupSerializer(discounts)
+        return Response(serializer.data)

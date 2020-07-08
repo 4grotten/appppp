@@ -13,7 +13,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(TemporaryCode)
 class TemporaryCodeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'code', 'is_used', 'expiration_datetime',)
 
 
 @admin.register(PhoneNumber)

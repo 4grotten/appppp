@@ -1,11 +1,12 @@
+from itertools import groupby
+
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException
 from users.models import User
-
-from .models import Organization, Membership, PhoneNumber, SocialNetworkContact
+from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard
 
 
 class OrganizationService:
@@ -26,10 +27,14 @@ class OrganizationService:
         return membership.role.title
 
     @classmethod
-    def user_can_edit_organization(cls, organization: Organization, user: User) -> bool:
+    def user_can_edit_organization(cls, organization_id: int, user: User) -> bool:
+        organization = OrganizationService.get(id=organization_id)
         if organization.owner == user:
             return True
-        membership = MembershipService.get(organization=organization, user=user)
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
         return membership.role.can_edit_organization
 
     @classmethod
@@ -66,13 +71,12 @@ class OrgPhoneNumberService:
 
     @classmethod
     def update_phone_numbers(cls, organization_id: int, user: User, numbers: list):
-        organization = OrganizationService.get(id=organization_id)
-        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
+        if not OrganizationService.user_can_edit_organization(organization_id=organization_id, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         with transaction.atomic():
-            PhoneNumber.objects.filter(organization=organization).delete()
-            numbers = [PhoneNumber(organization=organization, phone_number=number) for number in numbers]
+            PhoneNumber.objects.filter(organization_id=organization_id).delete()
+            numbers = [PhoneNumber(organization_id=organization_id, phone_number=number) for number in numbers]
             PhoneNumber.objects.bulk_create(numbers)
             return numbers
 
@@ -86,12 +90,26 @@ class OrgSocialNetworkContactService:
 
     @classmethod
     def update_social_networks(cls, organization_id: int, user: User, urls: list):
-        organization = OrganizationService.get(id=organization_id)
-        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
+        if not OrganizationService.user_can_edit_organization(organization_id=organization_id, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         with transaction.atomic():
-            SocialNetworkContact.objects.filter(organization=organization).delete()
-            contacts = [SocialNetworkContact(organization=organization, url=url) for url in urls]
+            SocialNetworkContact.objects.filter(organization_id=organization_id).delete()
+            contacts = [SocialNetworkContact(organization_id=organization_id, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class DiscountService:
+    @classmethod
+    def get_grouped_discounts(cls, organization_id: int) -> dict:
+        discounts = DiscountCard.objects.filter(organization_id=organization_id)
+        discounts_dict = {
+            DiscountCard.CUMULATIVE: [],
+            DiscountCard.FIXED: []
+        }
+
+        for discount_type, group in groupby(discounts, lambda x: x.type):
+            discounts_dict[discount_type] = list(group)
+
+        return discounts_dict

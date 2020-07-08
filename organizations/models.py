@@ -1,7 +1,9 @@
 from django.contrib.gis.db.models import PointField
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-from common.models import TimestampModel
+from common.models import TimestampModel, Currency
 from users.models import User
 
 
@@ -88,3 +90,34 @@ class Membership(TimestampModel):
 
     def __str__(self):
         return f'{self.user} as {self.role} in {self.organization}'
+
+
+class DiscountCard(TimestampModel):
+    FIXED = 'fixed'
+    CUMULATIVE = 'cumulative'
+    TYPES = (
+        (FIXED, FIXED),
+        (CUMULATIVE, CUMULATIVE),
+    )
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='discounts')
+    type = models.CharField(max_length=20, choices=TYPES, default=FIXED)
+    percent = models.PositiveSmallIntegerField()
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='discounts', null=True, blank=True)
+    limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        ordering = ('type', 'percent', 'limit')
+
+    def clean_fields(self, exclude=None):
+        super().clean_fields(exclude)
+        errors = {}
+
+        if self.type == self.CUMULATIVE:
+            if not self.currency:
+                errors['currency'] = _('This field is required')
+            if not self.limit:
+                errors['limit'] = _('This field is required')
+
+        if errors:
+            raise ValidationError(errors)

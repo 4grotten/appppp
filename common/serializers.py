@@ -3,7 +3,7 @@ import six
 
 from rest_framework import serializers
 
-from .models import File
+from .models import File, Currency, Country
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -16,6 +16,20 @@ class FileSerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ('code', 'name',)
+
+
+class CountrySerializer(serializers.ModelSerializer):
+    currency = CurrencySerializer()
+
+    class Meta:
+        model = Country
+        fields = ('code', 'name', 'flag', 'currency')
 
 
 class TimezoneField(serializers.Field):

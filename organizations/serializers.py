@@ -4,9 +4,9 @@ from common.exceptions import NotAcceptableException
 from common.serializers import FileSerializer
 from .models import (
     Organization, OrganizationType, PhoneNumber,
-    SocialNetworkContact, OrganizationCategory, DiscountCard
+    SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
 )
-from .services import OrganizationService, DiscountCardService
+from .services import OrganizationService, DiscountCardService, SubscriptionService
 
 
 class DiscountCardSerializer(serializers.ModelSerializer):
@@ -105,18 +105,17 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
     social_contacts = OrgSocialNetworkContactSerializer(many=True)
-    followers = serializers.SerializerMethodField()
+    subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
     user_savings = serializers.SerializerMethodField()
-    is_following = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     def get_can_edit(self, organization: Organization):
         return OrganizationService.user_can_edit_organization(
             organization_id=organization.id, user=self.context['request'].user)
 
-    def get_followers(self, organization: Organization):
-        # ToDo: create Follow model and calcualte it
-        return 0
+    def get_subscribers(self, organization: Organization):
+        return SubscriptionService.get_number_of_subscriptions(organization=organization)
 
     def get_discounts(self, organization: Organization):
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
@@ -126,16 +125,16 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         # ToDo Implement
         return 0
 
-    def get_is_following(self, organizaiton: Organization):
-        # ToDo Implement
-        return False
+    def get_is_subscribed(self, organizaiton: Organization):
+        return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'followers', 'user_savings', 'description', 'currency',
-            'full_location', 'address', 'show_contacts', 'phone_numbers', 'social_contacts',
-            'is_following', 'can_edit', 'types', 'opens_at', 'closes_at', 'discounts',
+            'id', 'title', 'image', 'subscribers', 'description', 'currency',
+            'user_savings', 'is_subscribed', 'can_edit',
+            'show_contacts', 'opens_at', 'closes_at', 'address', 'full_location',
+            'types', 'phone_numbers', 'social_contacts', 'discounts',
         )
 
 
@@ -185,3 +184,9 @@ class LocationSerializer(serializers.Serializer):
     address = serializers.CharField()
     longitude = serializers.FloatField()
     latitude = serializers.FloatField()
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ('organization',)

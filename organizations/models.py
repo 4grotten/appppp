@@ -125,3 +125,14 @@ class DiscountCard(TimestampModel):
 
         if errors:
             raise ValidationError(errors)
+
+
+class Subscription(TimestampModel):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='subscriptions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+
+    class Meta:
+        unique_together = ('organization', 'user')
+
+    def __str__(self):
+        return f'{self.user} subscribed to {self.organization}'

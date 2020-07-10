@@ -4,7 +4,7 @@ from mapwidgets.widgets import GooglePointFieldWidget
 
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
-    SocialNetworkContact, Role, Membership, DiscountCard
+    SocialNetworkContact, Role, Membership, DiscountCard, Subscription
 )
 
 
@@ -47,6 +47,11 @@ class DiscountCardAdmin(admin.ModelAdmin):
     list_filter = ('organization', 'type')
 
 
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'user',)
+    list_filter = ('organization', 'user',)
+
+
 admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)
 admin.site.register(OrganizationType, OrganizationTypeAdmin)
 admin.site.register(Organization, OrganizationAdmin)
@@ -55,3 +60,4 @@ admin.site.register(SocialNetworkContact, SocialNetworkContactAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(DiscountCard, DiscountCardAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)

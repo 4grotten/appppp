@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrgPhonesListAPIView,
     OrgNetworksListAPIView, SetOrganizationLocationAPIView, OrganizationDiscountsAPIView,
-    OrganizationDiscountsDeleteUpdateView, OrganizationRetrieveView
+    OrganizationDiscountsDeleteUpdateView, OrganizationRetrieveView, SubscriptionsView
 )
 
 urlpatterns = [
@@ -15,4 +15,5 @@ urlpatterns = [
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set-location'),
     path('discounts/', OrganizationDiscountsAPIView.as_view(), name='discounts'),
     path('discounts/<int:pk>/', OrganizationDiscountsDeleteUpdateView.as_view(), name='discounts-delete'),
+    path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
 ]

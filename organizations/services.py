@@ -50,6 +50,25 @@ class OrganizationService:
         except Exception:
             raise ValidationException('Something went wrong')
 
+    @classmethod
+    def create_organization(cls, owner, title, description, image_id,
+                            opens_at, closes_at, address, longitude, latitude,
+                            types, numbers, accounts, cards, currency="SDD"):
+        with transaction.atomic():
+            point = Point(longitude, latitude)
+            organization = Organization.objects.create(owner=owner, title=title, description=description,
+                                                       image_id=image_id, opens_at=opens_at, closes_at=closes_at,
+                                                       address=address, location=point, currency=currency)
+            organization.types.set(types)
+            for number in numbers:
+                OrgPhoneNumberService.create(organization=organization, number=number)
+            for link in accounts:
+                OrgSocialNetworkContactService.create(organization=organization, url=link)
+
+            DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
+
+            return organization
+
 
 class MembershipService:
     model = Membership
@@ -64,6 +83,10 @@ class MembershipService:
 
 class OrgPhoneNumberService:
     model = PhoneNumber
+
+    @classmethod
+    def create(cls, organization: Organization, number: str) -> PhoneNumber:
+        return PhoneNumber.objects.create(organization=organization, phone_number=number)
 
     @classmethod
     def get_numbers_of_organization(cls, organization_id: int) -> QuerySet:
@@ -83,6 +106,10 @@ class OrgPhoneNumberService:
 
 class OrgSocialNetworkContactService:
     model = SocialNetworkContact
+
+    @classmethod
+    def create(cls, organization: Organization, url: str) -> PhoneNumber:
+        return SocialNetworkContact.objects.create(organization=organization, url=url)
 
     @classmethod
     def get_networks_of_organization(cls, organization_id: int) -> QuerySet:
@@ -131,4 +158,6 @@ class DiscountCardService:
     @classmethod
     def bulk_create_discounts(cls, cards: list, organization: Organization):
         for card_data in cards:
+            if card_data['type'] == DiscountCard.CUMULATIVE:
+                card_data['currency'] = organization.currency
             DiscountCard.objects.create(organization=organization, **card_data)

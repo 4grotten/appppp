@@ -38,8 +38,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        organization = serializer.save()
-
+        organization = OrganizationService.create_organization(**serializer.validated_data)
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -123,8 +122,8 @@ class SetOrganizationLocationAPIView(APIView):
 
         organization = OrganizationService.get(pk=pk)
 
-        if organization.owner != request.user:
-            raise NotAcceptableException('You can set location')
+        if not OrganizationService.user_can_edit_organization(organization_id=pk, user=request.user):
+            raise NotAcceptableException('No rights to edit organization')
 
         changed_organization = OrganizationService.set_location(
             organization=organization,

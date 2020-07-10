@@ -32,11 +32,14 @@ class Organization(models.Model):
     description = models.TextField(null=True, blank=True)
     opens_at = models.TimeField(null=True, blank=True)
     closes_at = models.TimeField(null=True, blank=True)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    show_contacts = models.BooleanField(default=False)
+    types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     address = models.CharField(max_length=255, null=True, blank=True)
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
-    types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
-    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
-    show_contacts = models.BooleanField(default=True)
+
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.title}'

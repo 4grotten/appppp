@@ -12,7 +12,8 @@ class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
-    list_display = ('title', 'owner', 'opens_at', 'closes_at',)
+    list_display = ('title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'is_active')
+    list_filter = ('is_active',)
 
 
 class OrganizationTypeAdmin(admin.ModelAdmin):

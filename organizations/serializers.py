@@ -101,7 +101,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
     image = FileSerializer()
-    can_edit = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
     social_contacts = OrgSocialNetworkContactSerializer(many=True)
@@ -111,9 +111,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     active_card = serializers.SerializerMethodField()
 
-    def get_can_edit(self, organization: Organization):
-        return OrganizationService.user_can_edit_organization(
-            organization_id=organization.id, user=self.context['request'].user)
+    def get_permissions(self, organization: Organization):
+        return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                             user=self.context['request'].user)
 
     def get_subscribers(self, organization: Organization):
         return SubscriptionService.get_number_of_subscriptions(organization=organization)
@@ -142,9 +142,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'currency',
-            'saved_amount', 'is_subscribed', 'can_edit',
             'show_contacts', 'opens_at', 'closes_at', 'address', 'full_location',
-            'types', 'phone_numbers', 'social_contacts', 'discounts', 'active_card',
+            'types', 'phone_numbers', 'social_contacts', 'discounts',
+            'saved_amount', 'is_subscribed', 'permissions', 'active_card',
         )
 
 

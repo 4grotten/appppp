@@ -38,6 +38,32 @@ class OrganizationService:
         return membership.role.can_edit_organization
 
     @classmethod
+    def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
+        if organization.owner == user:
+            return {
+                'can_sale': True,
+                'can_check_attendance': True,
+                'can_see_stats': True,
+                'can_edit_organization': True
+            }
+
+        try:
+            role = MembershipService.get(organization=organization, user=user).role
+            return {
+                'can_sale': role.can_sale,
+                'can_check_attendance': role.can_check_attendance,
+                'can_see_stats': role.can_see_stats,
+                'can_edit_organization': role.can_edit_organization
+            }
+        except ObjectNotFoundException:
+            return {
+                'can_sale': False,
+                'can_check_attendance': False,
+                'can_see_stats': False,
+                'can_edit_organization': False
+            }
+
+    @classmethod
     def set_location(cls, organization, longitude, latitude, address):
         try:
             point = Point(longitude, latitude)

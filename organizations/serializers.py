@@ -128,11 +128,17 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
     def get_active_card(self, organizaiton: Organization):
         # ToDo Implement
+        card = DiscountCard.objects.filter(organization=organizaiton, type=DiscountCard.CUMULATIVE).first()
+        if card:
+            return {
+                'cumulative': card.id,
+                'sum': 93000,
+                'next': 100000
+            }
         return {
-            'cumulative': DiscountCard.objects.filter(organization=organizaiton,
-                                                      type=DiscountCard.CUMULATIVE).first().id,
-            'sum': 93000,
-            'next': 100000
+            'cumulative': None,
+            'sum': 0,
+            'next': 0
         }
 
     def get_is_subscribed(self, organizaiton: Organization):

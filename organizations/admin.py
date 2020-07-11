@@ -18,6 +18,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 class OrganizationTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'category')
+    list_filter = ('category',)
 
 
 class OrganizationCategoryAdmin(admin.ModelAdmin):

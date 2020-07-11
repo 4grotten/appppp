@@ -107,8 +107,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     social_contacts = OrgSocialNetworkContactSerializer(many=True)
     subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
-    user_savings = serializers.SerializerMethodField()
+    saved_amount = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    active_card = serializers.SerializerMethodField()
 
     def get_can_edit(self, organization: Organization):
         return OrganizationService.user_can_edit_organization(
@@ -121,9 +122,18 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
         return DiscountGroupSerializer(discounts).data
 
-    def get_user_savings(self, organizaiton: Organization):
+    def get_saved_amount(self, organizaiton: Organization):
         # ToDo Implement
         return 0
+
+    def get_active_card(self, organizaiton: Organization):
+        # ToDo Implement
+        return {
+            'cumulative': DiscountCard.objects.filter(organization=organizaiton,
+                                                      type=DiscountCard.CUMULATIVE).first().id,
+            'sum': 93000,
+            'next': 100000
+        }
 
     def get_is_subscribed(self, organizaiton: Organization):
         return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
@@ -132,9 +142,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'currency',
-            'user_savings', 'is_subscribed', 'can_edit',
+            'saved_amount', 'is_subscribed', 'can_edit',
             'show_contacts', 'opens_at', 'closes_at', 'address', 'full_location',
-            'types', 'phone_numbers', 'social_contacts', 'discounts',
+            'types', 'phone_numbers', 'social_contacts', 'discounts', 'active_card',
         )
 
 

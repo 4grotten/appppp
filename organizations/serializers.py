@@ -165,8 +165,8 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
     numbers = serializers.ListSerializer(child=serializers.CharField())
     accounts = serializers.ListSerializer(child=serializers.CharField())
-    longitude = serializers.FloatField()
-    latitude = serializers.FloatField()
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
     cards = DiscountCardSerializer(many=True)
 
     class Meta:

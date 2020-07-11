@@ -4,6 +4,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
+from mailer.services import MailerService
 from sms_sender.services import MessageService
 from .constants import SMS_CODE_MESSAGE
 from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
@@ -101,7 +102,6 @@ class TemporaryCodeService:
     @classmethod
     def create_and_send(cls, user: User) -> TemporaryCode:
         try:
-
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(seconds=-10)
 
@@ -116,6 +116,8 @@ class TemporaryCodeService:
         message = SMS_CODE_MESSAGE.format(code.code)
         sms_id = f'{user.id}{code.code}'
         MessageService.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
+
+        MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code
 
     @classmethod

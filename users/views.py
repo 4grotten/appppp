@@ -338,8 +338,6 @@ class ValidateOldNumberAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        # TODO send code to email
-
         TemporaryCodeService.create_and_send(user=request.user)
 
         return Response(data={

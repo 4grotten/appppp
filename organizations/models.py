@@ -29,7 +29,6 @@ class OrganizationType(models.Model):
         return f'{self.title}'
 
 
-
 class Organization(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
 

@@ -169,3 +169,11 @@ NIKITA_TEST_MODE = int(config('NIKITA_TEST_MODE', default=1))
 OER_APP_ID = config('OER_APP_ID')
 OER_CACHE_TIMEOUT = 60 * 60 * 5
 OER_BASE_CURRENCY = 'USD'
+
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='login@yandex.ru')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='password')
+DEFAULT_FROM_EMAIL = 'login@example.com'
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='from@yandex.ru')

@@ -1,0 +1,1 @@
+VERIFICATION_CODE_EMAIL_TITLE = 'QR plus code'

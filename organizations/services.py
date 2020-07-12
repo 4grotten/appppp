@@ -1,4 +1,5 @@
 from itertools import groupby
+from typing import Tuple
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
@@ -41,6 +42,7 @@ class OrganizationService:
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             return {
+                'is_owner': True,
                 'can_sale': True,
                 'can_check_attendance': True,
                 'can_see_stats': True,
@@ -50,6 +52,7 @@ class OrganizationService:
         try:
             role = MembershipService.get(organization=organization, user=user).role
             return {
+                'is_owner': False,
                 'can_sale': role.can_sale,
                 'can_check_attendance': role.can_check_attendance,
                 'can_see_stats': role.can_see_stats,
@@ -57,11 +60,23 @@ class OrganizationService:
             }
         except ObjectNotFoundException:
             return {
+                'is_owner': False,
                 'can_sale': False,
                 'can_check_attendance': False,
                 'can_see_stats': False,
                 'can_edit_organization': False
             }
+
+    @classmethod
+    def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:
+        # ToDo: implement this after organizations partnerships
+        partners = Organization.objects.all()
+        partners_list = []
+
+        for partner in partners[:3]:
+            partners_list.append({'id': partner.id, 'image': partner.image})
+
+        return partners.count(), partners[:3]
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):

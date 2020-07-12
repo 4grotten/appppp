@@ -6,7 +6,8 @@ from users.views import (
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
     ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
     UserPhoneNumbersUpdateAPIView, UserSocialNetworksListAPIView, UserSocialNetworksUpdateAPIView,
-    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView)
+    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView
+)
 
 urlpatterns = [
     path('register_auth/', RegisterAuthAPIView.as_view(), name='register_auth'),

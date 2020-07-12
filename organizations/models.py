@@ -12,6 +12,7 @@ class OrganizationCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'Organization categories'
+        ordering = ('name',)
 
     def __str__(self):
         return f'{self.name}'
@@ -20,6 +21,9 @@ class OrganizationCategory(models.Model):
 class OrganizationType(models.Model):
     title = models.CharField(max_length=255)
     category = models.ForeignKey(OrganizationCategory, on_delete=models.CASCADE, related_name='types')
+
+    class Meta:
+        ordering = ('title',)
 
     def __str__(self):
         return f'{self.title}'

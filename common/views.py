@@ -3,13 +3,13 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 
 from .models import File, Country
-from .serializers import FileSerializer, CountrySerializer
+from .serializers import ImageSerializer, CountrySerializer
 
 
-class FileCreateView(CreateAPIView):
+class ImageCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     parser_classes = (MultiPartParser,)
-    serializer_class = FileSerializer
+    serializer_class = ImageSerializer
     queryset = File.objects.all()
 
 

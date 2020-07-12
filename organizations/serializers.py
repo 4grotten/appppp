@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from common.serializers import FileSerializer
+from common.serializers import ImageSerializer
 from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
@@ -10,7 +10,7 @@ from .services import OrganizationService, DiscountCardService, SubscriptionServ
 
 
 class DiscountCardSerializer(serializers.ModelSerializer):
-    image = FileSerializer(read_only=True)
+    image = ImageSerializer(read_only=True)
     organization_id = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -85,7 +85,7 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    image = FileSerializer(many=False)
+    image = ImageSerializer(many=False)
     role = serializers.SerializerMethodField()
     types = serializers.StringRelatedField(many=True)
 
@@ -100,7 +100,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class OrganizationWithImageSerializer(serializers.ModelSerializer):
-    image = FileSerializer()
+    image = ImageSerializer()
 
     class Meta:
         model = Organization
@@ -108,7 +108,7 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
-    image = FileSerializer()
+    image = ImageSerializer()
     permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
@@ -171,7 +171,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):
-    image = FileSerializer(many=False)
+    image = ImageSerializer(many=False)
     role = serializers.SerializerMethodField()
 
     def get_role(self, organization: Organization):

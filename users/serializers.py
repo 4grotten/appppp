@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from common.serializers import FileSerializer
+from common.serializers import ImageSerializer
 from .constants import RESEND_CODE_CHOICES, REGISTER_AUTH_TYPE
 from .models import PhoneNumber, SocialNetworkContact
 
@@ -27,7 +27,7 @@ class SendCodeToNewNumberSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    avatar = FileSerializer(many=False)
+    avatar = ImageSerializer(many=False)
 
     class Meta:
         model = User

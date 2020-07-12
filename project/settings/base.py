@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_auth',
     'corsheaders',
     'mapwidgets',
+    'imagekit',
 ]
 
 MIDDLEWARE = [

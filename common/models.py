@@ -1,4 +1,6 @@
 from django.db import models
+from imagekit.models import ImageSpecField
+from pilkit.processors import ResizeToFit
 
 from common.utils import upload_file_with_original_file_name
 
@@ -12,10 +14,24 @@ class TimestampModel(models.Model):
 
 
 class File(TimestampModel):
-    file = models.FileField(
+    file = models.ImageField(
         upload_to=upload_file_with_original_file_name,
-        help_text='File that you want to store'
+        help_text='Image that you want to store'
     )
+
+    large = ImageSpecField(source='file',
+                           processors=[ResizeToFit(300, 300)],
+                           format='JPEG',
+                           options={'quality': 80})
+    medium = ImageSpecField(source='file',
+                            processors=[ResizeToFit(150, 150)],
+                            format='JPEG',
+                            options={'quality': 80})
+
+    small = ImageSpecField(source='file',
+                           processors=[ResizeToFit(50, 50)],
+                           format='JPEG',
+                           options={'quality': 80})
 
     def __str__(self):
         return self.file.name

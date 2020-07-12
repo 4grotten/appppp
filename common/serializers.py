@@ -1,17 +1,19 @@
 import pytz
 import six
-
 from rest_framework import serializers
 
 from .models import File, Currency, Country
 
 
-class FileSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    large = serializers.ImageField(read_only=True)
+    medium = serializers.ImageField(read_only=True)
+    small = serializers.ImageField(read_only=True)
 
     class Meta:
         model = File
-        fields = ('id', 'file', 'name')
+        fields = ('id', 'file', 'name', 'large', 'medium', 'small')
         read_only_fields = ('name',)
 
     def get_name(self, obj):

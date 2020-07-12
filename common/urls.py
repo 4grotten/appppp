@@ -1,8 +1,8 @@
 from django.urls import path
 
-from common.views import FileCreateView, CountriesListView
+from common.views import ImageCreateView, CountriesListView
 
 urlpatterns = [
-    path('files/', FileCreateView.as_view(), name='files'),
+    path('files/', ImageCreateView.as_view(), name='images'),
     path('countries/', CountriesListView.as_view(), name='countries'),
 ]

@@ -1,4 +1,5 @@
 from itertools import groupby
+from typing import Tuple
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
@@ -65,6 +66,17 @@ class OrganizationService:
                 'can_see_stats': False,
                 'can_edit_organization': False
             }
+
+    @classmethod
+    def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:
+        # ToDo: implement this after organizations partnerships
+        partners = Organization.objects.all()
+        partners_list = []
+
+        for partner in partners[:3]:
+            partners_list.append({'id': partner.id, 'image': partner.image})
+
+        return partners.count(), partners[:3]
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):

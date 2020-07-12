@@ -99,6 +99,14 @@ class OrganizationSerializer(serializers.ModelSerializer):
                   'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address')
 
 
+class OrganizationWithImageSerializer(serializers.ModelSerializer):
+    image = FileSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'image')
+
+
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
     image = FileSerializer()
     permissions = serializers.SerializerMethodField()
@@ -110,6 +118,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     saved_amount = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
     active_card = serializers.SerializerMethodField()
+    partners = serializers.SerializerMethodField()
 
     def get_permissions(self, organization: Organization):
         return OrganizationService.get_user_permissions_dict(organization=organization,
@@ -121,6 +130,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     def get_discounts(self, organization: Organization):
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
         return DiscountGroupSerializer(discounts).data
+
+    def get_is_subscribed(self, organizaiton: Organization):
+        return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
 
     def get_saved_amount(self, organizaiton: Organization):
         # ToDo Implement
@@ -141,8 +153,12 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'next': 0
         }
 
-    def get_is_subscribed(self, organizaiton: Organization):
-        return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
+    def get_partners(self, organizaiton: Organization):
+        count, partners = OrganizationService.get_partners_dict(organization=organizaiton)
+        return {
+            'count': count,
+            'list': OrganizationWithImageSerializer(partners, many=True).data
+        }
 
     class Meta:
         model = Organization
@@ -150,7 +166,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'id', 'title', 'image', 'subscribers', 'description', 'currency',
             'show_contacts', 'opens_at', 'closes_at', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
-            'saved_amount', 'is_subscribed', 'permissions', 'active_card',
+            'saved_amount', 'is_subscribed', 'permissions', 'active_card', 'partners',
         )
 
 

@@ -67,9 +67,11 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        updated_organization = OrganizationService.update(**serializer.validated_data)
+        organization = OrganizationService.get(pk=kwargs['pk'])
 
-        return Response(self.serializer_class(updated_organization).data)
+        updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
+
+        return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
 
 class OrgPhonesListAPIView(APIView):

@@ -4,7 +4,7 @@ from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.db.models import QuerySet
 
-from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException
+from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
 from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard, Subscription
 
@@ -94,6 +94,25 @@ class OrganizationService:
             DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
 
             return organization
+
+    @classmethod
+    def update(cls, organization, image_id, longitude, latitude,
+               title, opens_at, closes_at, address, currency):
+        try:
+            point = Point(longitude, latitude)
+            organization.image_id = image_id
+            organization.location = point
+            organization.title = title
+            organization.opens_at = opens_at
+            organization.closes_at = closes_at
+            organization.address = address
+            organization.currency = currency
+            organization.save()
+
+            return organization
+
+        except Exception as e:
+            raise IntegrityException('Can not update organization: {e}'.format(e=str(e)))
 
 
 class MembershipService:

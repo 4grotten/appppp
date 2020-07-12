@@ -165,8 +165,8 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
     numbers = serializers.ListSerializer(child=serializers.CharField())
     accounts = serializers.ListSerializer(child=serializers.CharField())
-    longitude = serializers.FloatField()
-    latitude = serializers.FloatField()
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
     cards = DiscountCardSerializer(many=True)
 
     class Meta:
@@ -192,11 +192,22 @@ class OrganizationCategorySerializer(serializers.ModelSerializer):
 
 class LocationSerializer(serializers.Serializer):
     address = serializers.CharField()
-    longitude = serializers.FloatField()
-    latitude = serializers.FloatField()
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ('organization',)
+
+
+class OrganizationUpdateSerializer(serializers.ModelSerializer):
+    image_id = serializers.IntegerField()
+    longitude = serializers.FloatField()
+    latitude = serializers.FloatField()
+
+    class Meta:
+        model = Organization
+        fields = ('title', 'image_id', 'longitude', 'latitude',
+                  'opens_at', 'closes_at', 'address', 'currency')

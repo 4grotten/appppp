@@ -2,6 +2,7 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.generics import (
     DestroyAPIView, GenericAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView, UpdateAPIView,
+    RetrieveUpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ from .serializers import (
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     LocationSerializer, DiscountGroupSerializer, DiscountBulkCreateSerializer,
-    DiscountCardUpdateSerializer, DiscountCardSerializer, SubscriptionSerializer,
+    DiscountCardUpdateSerializer, DiscountCardSerializer, SubscriptionSerializer, OrganizationUpdateSerializer,
 )
 from .services import (
     OrgPhoneNumberService, OrgSocialNetworkContactService,
@@ -52,10 +53,23 @@ class OrganizationTypesListView(ListAPIView):
     queryset = OrganizationCategory.objects.all()
 
 
-class OrganizationRetrieveView(RetrieveAPIView):
+class OrganizationRetrieveView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        serializer = OrganizationUpdateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        updated_organization = OrganizationService.update(**serializer.validated_data)
+
+        return Response(self.serializer_class(updated_organization).data)
 
 
 class OrgPhonesListAPIView(APIView):

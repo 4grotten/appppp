@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
 
     'common.apps.CoreConfig',
+    'transactions.apps.TransactionsConfig',
     'organizations.apps.OrganizationsConfig',
     'users.apps.UsersConfig',
 

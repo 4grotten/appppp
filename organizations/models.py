@@ -47,6 +47,9 @@ class Organization(models.Model):
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ('title',)
+
     def __str__(self):
         return f'{self.title}'
 
@@ -117,7 +120,10 @@ class DiscountCard(TimestampModel):
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
-        ordering = ('type', 'percent', 'limit')
+        ordering = ('organization', 'type', 'percent', 'limit')
+
+    def __str__(self):
+        return f'{self.percent}% {self.type} card in {self.organization.title}'
 
     def clean_fields(self, exclude=None):
         super().clean_fields(exclude)
@@ -131,6 +137,14 @@ class DiscountCard(TimestampModel):
 
         if errors:
             raise ValidationError(errors)
+
+
+class CardOwnership(TimestampModel):
+    card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='owners')
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
+
+    def __str__(self):
+        return f'{self.card.type} card of {self.user} in {self.card.organization.title}'
 
 
 class Subscription(TimestampModel):

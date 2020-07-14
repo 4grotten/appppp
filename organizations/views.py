@@ -1,8 +1,8 @@
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.generics import (
-    DestroyAPIView, GenericAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView, UpdateAPIView,
-    RetrieveUpdateAPIView,
+    DestroyAPIView, GenericAPIView, ListAPIView,
+    ListCreateAPIView, UpdateAPIView, RetrieveUpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -173,7 +173,7 @@ class OrganizationDiscountsAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
         organization_id = request.GET.get('organization', None)
 
-        if organization_id is None:
+        if organization_id is None or organization_id == '':
             return Response(data={
                 'message': 'Please provide organization id as a query parameter',
             }, status=status.HTTP_406_NOT_ACCEPTABLE)

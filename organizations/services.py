@@ -7,7 +7,8 @@ from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
-from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard, Subscription
+from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard, Subscription, \
+    CardOwnership
 
 
 class OrganizationService:
@@ -37,6 +38,16 @@ class OrganizationService:
         except ObjectNotFoundException:
             return False
         return membership.role.can_edit_organization
+
+    @classmethod
+    def user_can_sell(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_sale
 
     @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
@@ -236,6 +247,29 @@ class DiscountCardService:
             if card_data['type'] == DiscountCard.CUMULATIVE:
                 card_data['currency'] = organization.currency
             DiscountCard.objects.create(organization=organization, **card_data)
+
+
+class CardOwnershipService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return CardOwnership.objects.get(*args, **kwargs)
+        except CardOwnership.DoesNotExist:
+            raise ObjectNotFoundException('CardOwner not found')
+
+    @classmethod
+    def filter(cls, *args, **kwargs):
+        return CardOwnership.objects.filter(*args, **kwargs)
+
+    @classmethod
+    def get_client_discount_info(cls, client: User, organization: Organization) -> dict:
+        ownership = cls.filter(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE).first()
+        percent = 0
+        if ownership:
+            percent = ownership.card.percent
+        return {
+            'cumulative_percent': percent
+        }
 
 
 class SubscriptionService:

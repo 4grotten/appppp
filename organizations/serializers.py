@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from common.serializers import ImageSerializer
+from common.serializers import ImageSerializer, CountrySerializer
 from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
@@ -119,6 +119,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     active_card = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
+    country = CountrySerializer()
 
     def get_permissions(self, organization: Organization):
         return OrganizationService.get_user_permissions_dict(organization=organization,
@@ -163,8 +164,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'subscribers', 'description', 'currency',
-            'show_contacts', 'opens_at', 'closes_at', 'address', 'full_location',
+            'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
+            'currency', 'country', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
             'saved_amount', 'is_subscribed', 'permissions', 'active_card', 'partners',
         )
@@ -194,7 +195,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'title', 'description', 'image_id', 'currency',
+            'title', 'description', 'image_id', 'currency', 'country',
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
             'types', 'numbers', 'accounts', 'cards'
         )

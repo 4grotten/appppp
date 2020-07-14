@@ -94,12 +94,12 @@ class OrganizationService:
     @classmethod
     def create_organization(cls, owner, title, description, image_id,
                             opens_at, closes_at, address, longitude, latitude,
-                            types, numbers, accounts, cards, currency="SDD"):
+                            types, numbers, accounts, cards, currency="KGS", country="KG"):
         with transaction.atomic():
             point = Point(longitude, latitude)
-            organization = Organization.objects.create(owner=owner, title=title, description=description,
-                                                       image_id=image_id, opens_at=opens_at, closes_at=closes_at,
-                                                       address=address, location=point, currency=currency)
+            organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
+                                                       description=description, image_id=image_id, address=address,
+                                                       location=point, currency=currency, country=country)
             organization.types.set(types)
             for number in numbers:
                 OrgPhoneNumberService.create(organization=organization, number=number)

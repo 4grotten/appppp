@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from common.models import TimestampModel, Currency
+from common.models import TimestampModel, Currency, Country
 from users.models import User
 
 
@@ -37,6 +37,7 @@ class Organization(models.Model):
     opens_at = models.TimeField(null=True, blank=True)
     closes_at = models.TimeField(null=True, blank=True)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')
+    country = models.ForeignKey(Country, on_delete=models.PROTECT, related_name='countries', default='KG')
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
     show_contacts = models.BooleanField(default=False)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')

@@ -227,8 +227,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
-    longitude = serializers.FloatField()
-    latitude = serializers.FloatField()
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
 
     class Meta:
         model = Organization

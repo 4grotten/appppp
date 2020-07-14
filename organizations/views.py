@@ -73,6 +73,13 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
+    def delete(self, request, *args, **kwargs):
+        organization = OrganizationService.get(pk=kwargs['pk'])
+
+        deactivated_organization = OrganizationService.deactivate(organization=organization)
+
+        return Response(self.serializer_class(deactivated_organization, context={'request': request}).data)
+
 
 class OrgPhonesListAPIView(APIView):
     permission_classes = (IsAuthenticated,)

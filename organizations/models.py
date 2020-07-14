@@ -45,6 +45,7 @@ class Organization(models.Model):
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.title}'

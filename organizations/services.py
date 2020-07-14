@@ -112,7 +112,7 @@ class OrganizationService:
 
     @classmethod
     def update(cls, organization, image_id, longitude, latitude,
-               title, opens_at, closes_at, address, currency):
+               title, opens_at, closes_at, address, currency, show_contacts, country):
         try:
             point = Point(longitude, latitude)
             organization.image_id = image_id
@@ -122,12 +122,25 @@ class OrganizationService:
             organization.closes_at = closes_at
             organization.address = address
             organization.currency = currency
+            organization.show_contacts = show_contacts
+            organization.country = country
             organization.save()
 
             return organization
 
         except Exception as e:
             raise IntegrityException('Can not update organization: {e}'.format(e=str(e)))
+
+    @classmethod
+    def deactivate(cls, organization):
+        try:
+            organization.is_deleted = True
+            organization.save()
+
+            return organization
+
+        except Exception as e:
+            raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
 
 
 class MembershipService:

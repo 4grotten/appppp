@@ -24,6 +24,7 @@ services:
       - NIKITA_PASSWORD=nikitapass
       - NIKITA_SENDER=nikitasender
       - NIKITA_TEST_MODE=1
+      - OER_APP_ID=oerappid
     entrypoint: ""
     command: /app/scripts/run_tests.sh
   postgis:

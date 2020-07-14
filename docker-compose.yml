@@ -20,6 +20,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
+      - NIKITA_USERNAME=nikita
+      - NIKITA_PASSWORD=nikitapass
+      - NIKITA_SENDER=nikitasender
+      - NIKITA_TEST_MODE=1
+      - OER_APP_ID=oerappid
     ports:
       - "5000:5000"
   postgis:

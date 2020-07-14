@@ -232,5 +232,5 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('title', 'image_id', 'longitude', 'latitude', 'description',
+        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country')

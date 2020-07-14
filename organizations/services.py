@@ -111,7 +111,7 @@ class OrganizationService:
             return organization
 
     @classmethod
-    def update(cls, organization, image_id, longitude, latitude, description,
+    def update(cls, organization, image_id, longitude, latitude, description, types,
                title, opens_at, closes_at, address, currency, show_contacts, country):
         try:
             point = Point(longitude, latitude)
@@ -125,6 +125,7 @@ class OrganizationService:
             organization.show_contacts = show_contacts
             organization.country = country
             organization.description = description
+            organization.types.set(types)
             organization.save()
 
             return organization

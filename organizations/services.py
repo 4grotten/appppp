@@ -249,13 +249,8 @@ class DiscountCardService:
             DiscountCard.objects.create(organization=organization, **card_data)
 
     @classmethod
-    def get_available_discounts(cls, client: User, organization: Organization) -> dict:
-        cumulative = CardOwnershipService.get_client_cumulative_card(client=client, organization=organization)
-        fixed = DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
-        return {
-            'cumulative': cumulative,
-            'fixed': fixed
-        }
+    def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:
+        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
 
 
 class CardOwnershipService:

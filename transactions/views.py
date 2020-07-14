@@ -4,16 +4,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.serializers import DiscountCardBriefSerializer
-from organizations.services import DiscountCardService
-from .serializers import PreprocessQueryParamSerializer
+from organizations.services import DiscountCardService, CardOwnershipService
+from .serializers import PreprocessSerializer
 from .services import TransactionService
 
 
 class TransactionPreprocessView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = PreprocessSerializer
 
-    def get(self, request, *args, **kwargs):
-        serializer = PreprocessQueryParamSerializer(data=dict(request.GET.items()))
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={
@@ -27,21 +28,17 @@ class TransactionPreprocessView(GenericAPIView):
         transaction = TransactionService.preprocess_transaction(
             client=client, organization=organization, processed_by=request.user
         )
-        discount_cards = DiscountCardService.get_available_discounts(
-            client=client, organization=organization
-        )
-        cumulative = None
-        if discount_cards['cumulative'] is not None:
-            cumulative = DiscountCardBriefSerializer(discount_cards['cumulative']).data
 
-        cards = {
-            'cumulative': cumulative,
-            'fixed': DiscountCardBriefSerializer(discount_cards['fixed'], many=True).data
-        }
+        cumulative = CardOwnershipService.get_client_cumulative_card(client=client, organization=organization)
+        fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
+
+        if cumulative is not None:
+            cumulative = DiscountCardBriefSerializer(cumulative).data
 
         data = {
             'transaction_id': transaction.id,
-            'discounts': cards
+            'cumulative': cumulative,
+            'fixed': DiscountCardBriefSerializer(fixed, many=True).data
         }
 
         return Response(data=data, status=status.HTTP_200_OK)

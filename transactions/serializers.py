@@ -4,6 +4,6 @@ from organizations.models import Organization
 from users.models import User
 
 
-class PreprocessQueryParamSerializer(serializers.Serializer):
+class PreprocessSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())

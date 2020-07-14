@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import Tuple
+from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
@@ -248,6 +248,15 @@ class DiscountCardService:
                 card_data['currency'] = organization.currency
             DiscountCard.objects.create(organization=organization, **card_data)
 
+    @classmethod
+    def get_available_discounts(cls, client: User, organization: Organization) -> dict:
+        cumulative = CardOwnershipService.get_client_cumulative_card(client=client, organization=organization)
+        fixed = DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
+        return {
+            'cumulative': cumulative,
+            'fixed': fixed
+        }
+
 
 class CardOwnershipService:
     @classmethod
@@ -262,14 +271,11 @@ class CardOwnershipService:
         return CardOwnership.objects.filter(*args, **kwargs)
 
     @classmethod
-    def get_client_discount_info(cls, client: User, organization: Organization) -> dict:
+    def get_client_cumulative_card(cls, client: User, organization: Organization) -> Union[DiscountCard, None]:
         ownership = cls.filter(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE).first()
-        percent = 0
         if ownership:
-            percent = ownership.card.percent
-        return {
-            'cumulative_percent': percent
-        }
+            return ownership.card
+        return None
 
 
 class SubscriptionService:

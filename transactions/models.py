@@ -20,11 +20,12 @@ class Transaction(TimestampModel):
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions')
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions')
-    original_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    discount_percent = models.PositiveSmallIntegerField()
-    discounted_amount = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
-    discount_type = models.CharField(choices=TYPES, max_length=20)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
+    original_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount_percent = models.PositiveSmallIntegerField(default=0)
+    savings = models.DecimalField(max_digits=12, decimal_places=2, editable=False, default=0)
+
+    discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='transactions')
 

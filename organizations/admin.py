@@ -44,8 +44,8 @@ class MembershipAdmin(admin.ModelAdmin):
 
 
 class DiscountCardAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'type', 'percent', 'limit',)
-    list_filter = ('organization', 'type')
+    list_display = ('organization', 'type', 'percent', 'limit', 'is_published',)
+    list_filter = ('type', 'is_published', 'organization',)
 
 
 class CardOwnershipAdmin(admin.ModelAdmin):

@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views import ClientDiscountInfoView
+from .views import TransactionPreprocessView
 
 urlpatterns = [
-    path('transactions/preprocess/', ClientDiscountInfoView.as_view(), name='client-discounts'),
+    path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
 ]

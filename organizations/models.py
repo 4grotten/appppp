@@ -119,6 +119,8 @@ class DiscountCard(TimestampModel):
     limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
+    is_published = models.BooleanField(default=True)
+
     class Meta:
         ordering = ('organization', 'type', 'percent', 'limit')
 

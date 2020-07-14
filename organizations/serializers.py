@@ -58,6 +58,12 @@ class DiscountCardUpdateSerializer(serializers.ModelSerializer):
         fields = ('image_id',)
 
 
+class DiscountCardBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiscountCard
+        fields = ('id', 'percent',)
+
+
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneNumber

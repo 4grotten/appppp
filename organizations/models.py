@@ -123,6 +123,9 @@ class DiscountCard(TimestampModel):
 
     class Meta:
         ordering = ('organization', 'type', 'percent', 'limit')
+        constraints = [
+            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_cards')
+        ]
 
     def __str__(self):
         return f'{self.percent}% {self.type} card in {self.organization.title}'

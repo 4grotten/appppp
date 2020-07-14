@@ -2,7 +2,7 @@ from itertools import groupby
 from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
@@ -222,6 +222,13 @@ class DiscountCardService:
             raise ObjectNotFoundException('Discount not found')
 
     @classmethod
+    def create(cls, *args, **kwargs):
+        try:
+            DiscountCard.objects.create(*args, **kwargs)
+        except IntegrityError:
+            raise IntegrityException('Duplicate cards are not allowed')
+
+    @classmethod
     def get_grouped_discounts(cls, organization_id: int) -> dict:
         discounts = DiscountCard.objects.filter(organization_id=organization_id)
         discounts_dict = {
@@ -243,10 +250,11 @@ class DiscountCardService:
 
     @classmethod
     def bulk_create_discounts(cls, cards: list, organization: Organization):
-        for card_data in cards:
-            if card_data['type'] == DiscountCard.CUMULATIVE:
-                card_data['currency'] = organization.currency
-            DiscountCard.objects.create(organization=organization, **card_data)
+        with transaction.atomic():
+            for card_data in cards:
+                if card_data['type'] == DiscountCard.CUMULATIVE:
+                    card_data['currency'] = organization.currency
+                cls.create(organization=organization, **card_data)
 
     @classmethod
     def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:

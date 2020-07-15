@@ -124,7 +124,7 @@ class DiscountCard(TimestampModel):
     class Meta:
         ordering = ('organization', 'type', 'percent', 'limit')
         constraints = [
-            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_cards')
+            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_cards_of_organization')
         ]
 
     def __str__(self):
@@ -150,6 +150,11 @@ class CardOwnership(TimestampModel):
 
     def __str__(self):
         return f'{self.card.type} card of {self.user} in {self.card.organization.title}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('card', 'user'), name='unique_cards_of_user')
+        ]
 
 
 class Subscription(TimestampModel):

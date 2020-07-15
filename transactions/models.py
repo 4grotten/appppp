@@ -23,7 +23,7 @@ class Transaction(TimestampModel):
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
     original_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount_percent = models.PositiveSmallIntegerField(default=0)
-    savings = models.DecimalField(max_digits=12, decimal_places=2, editable=False, default=0)
+    savings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
@@ -35,4 +35,4 @@ class Transaction(TimestampModel):
         return f'Transaction #{self.id} for {self.original_amount} in {self.organization.title}'
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ('-updated_at',)

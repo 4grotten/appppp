@@ -7,8 +7,9 @@ from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
-from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard, Subscription, \
-    CardOwnership
+from .models import (
+    CardOwnership, DiscountCard, Organization, Membership, PhoneNumber, SocialNetworkContact, Subscription,
+)
 
 
 class OrganizationService:
@@ -279,6 +280,20 @@ class CardOwnershipService:
         if ownership:
             return ownership.card
         return None
+
+    @classmethod
+    def can_use_given_card(cls, client: User, card: DiscountCard) -> bool:
+        if not card.is_published:
+            return False
+
+        if card.type == DiscountCard.FIXED:
+            return True
+
+        if card is not None:
+            owned_card = cls.get_client_cumulative_card(client=client, organization=card.organization)
+            return card == owned_card
+
+        return False
 
 
 class SubscriptionService:

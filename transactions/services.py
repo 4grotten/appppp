@@ -1,6 +1,8 @@
 from typing import Union
 
 from django.db import IntegrityError
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
 from organizations.models import Organization, DiscountCard
@@ -56,3 +58,9 @@ class TransactionService:
             raise IntegrityException('Could not complete transaction')
 
         return transaction
+
+    @classmethod
+    def get_total_saved_amount(cls, client: User, organization: Organization):
+        aggregated = Transaction.objects.filter(
+            client=client, organization=organization, is_processed=True).aggregate(total=Coalesce(Sum('savings'), 0))
+        return aggregated['total']

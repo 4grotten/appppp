@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer
+from transactions.services import TransactionService
 from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
@@ -142,8 +143,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
 
     def get_saved_amount(self, organizaiton: Organization):
-        # ToDo Implement
-        return 0
+        return TransactionService.get_total_saved_amount(client=self.context['request'].user, organization=organizaiton)
 
     def get_active_card(self, organizaiton: Organization):
         # ToDo Implement

@@ -1,13 +1,15 @@
 from itertools import groupby
-from typing import Tuple
+from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
-from .models import Organization, Membership, PhoneNumber, SocialNetworkContact, DiscountCard, Subscription
+from .models import (
+    CardOwnership, DiscountCard, Organization, Membership, PhoneNumber, SocialNetworkContact, Subscription,
+)
 
 
 class OrganizationService:
@@ -37,6 +39,16 @@ class OrganizationService:
         except ObjectNotFoundException:
             return False
         return membership.role.can_edit_organization
+
+    @classmethod
+    def user_can_sell(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_sale
 
     @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
@@ -211,6 +223,13 @@ class DiscountCardService:
             raise ObjectNotFoundException('Discount not found')
 
     @classmethod
+    def create(cls, *args, **kwargs):
+        try:
+            DiscountCard.objects.create(*args, **kwargs)
+        except IntegrityError:
+            raise IntegrityException('Duplicate cards are not allowed')
+
+    @classmethod
     def get_grouped_discounts(cls, organization_id: int) -> dict:
         discounts = DiscountCard.objects.filter(organization_id=organization_id)
         discounts_dict = {
@@ -232,10 +251,49 @@ class DiscountCardService:
 
     @classmethod
     def bulk_create_discounts(cls, cards: list, organization: Organization):
-        for card_data in cards:
-            if card_data['type'] == DiscountCard.CUMULATIVE:
-                card_data['currency'] = organization.currency
-            DiscountCard.objects.create(organization=organization, **card_data)
+        with transaction.atomic():
+            for card_data in cards:
+                if card_data['type'] == DiscountCard.CUMULATIVE:
+                    card_data['currency'] = organization.currency
+                cls.create(organization=organization, **card_data)
+
+    @classmethod
+    def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:
+        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
+
+
+class CardOwnershipService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return CardOwnership.objects.get(*args, **kwargs)
+        except CardOwnership.DoesNotExist:
+            raise ObjectNotFoundException('CardOwner not found')
+
+    @classmethod
+    def filter(cls, *args, **kwargs):
+        return CardOwnership.objects.filter(*args, **kwargs)
+
+    @classmethod
+    def get_client_cumulative_card(cls, client: User, organization: Organization) -> Union[DiscountCard, None]:
+        ownership = cls.filter(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE).first()
+        if ownership:
+            return ownership.card
+        return None
+
+    @classmethod
+    def can_use_given_card(cls, client: User, card: DiscountCard) -> bool:
+        if not card.is_published:
+            return False
+
+        if card.type == DiscountCard.FIXED:
+            return True
+
+        if card is not None:
+            owned_card = cls.get_client_cumulative_card(client=client, organization=card.organization)
+            return card == owned_card
+
+        return False
 
 
 class SubscriptionService:

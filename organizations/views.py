@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
+from common.models import File
+from common.serializers import ImageSerializer
 from .models import Organization, OrganizationCategory, DiscountCard
 from .serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer, OrganizationDetailedSerializer,
@@ -227,6 +229,17 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
         instance = serializer.save()
         data = DiscountCardSerializer(instance).data
         return Response(data)
+
+
+class BackgroundListView(ListAPIView):
+    pagination_class = None
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ImageSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = File.objects.filter(backgrounds__isnull=False)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class SubscriptionsView(GenericAPIView):

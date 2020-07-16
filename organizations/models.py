@@ -148,6 +148,14 @@ class DiscountCard(TimestampModel):
             raise ValidationError(errors)
 
 
+class CardBackground(models.Model):
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, null=True, blank=True,
+                              related_name='backgrounds')
+
+    def __str__(self):
+        return f'Card background #{self.id}: {self.image}'
+
+
 class OrganizationClientFinancialStatus(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='client_statuses')

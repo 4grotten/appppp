@@ -1,6 +1,6 @@
 from typing import Union
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
@@ -29,6 +29,7 @@ class TransactionService:
         return transaction
 
     @classmethod
+    @transaction.atomic
     def complete_transaction(cls,
                              transaction_id: int,
                              processed_by: User,

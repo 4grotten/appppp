@@ -307,6 +307,13 @@ class DiscountCardService:
     def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:
         return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
 
+    @classmethod
+    def get_lowest_cumulative_limit(cls, organization: Organization) -> Union[Decimal, int]:
+        lowest = organization.discounts.filter(previous_cumulative=None).first()
+        if lowest:
+            return lowest.limit
+        return 0
+
 
 class OrganizationClientFinancialStatusService:
     @classmethod
@@ -331,7 +338,7 @@ class OrganizationClientFinancialStatusService:
     def get_client_financial_status_data(cls, client: User, organization: Organization) -> dict:
         total_spent_in_organization = 0
         cumulative_card = None
-        next_level_limit = 0
+        next_level_limit = None
 
         client_status = cls.get(user=client, organization=organization)
         if client_status is not None:
@@ -340,6 +347,9 @@ class OrganizationClientFinancialStatusService:
             if client_status.card is not None:
                 cumulative_card = client_status.card.id
                 next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
+
+        if next_level_limit is None:
+            next_level_limit = DiscountCardService.get_lowest_cumulative_limit(organization=organization)
 
         return {
             'cumulative': cumulative_card,

@@ -4,7 +4,7 @@ from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
@@ -317,7 +317,7 @@ class DiscountCardService:
 
 class OrganizationClientFinancialStatusService:
     @classmethod
-    def get(cls, *args, **kwargs):
+    def get(cls, *args, **kwargs) -> Union[OrganizationClientFinancialStatus, None]:
         try:
             return OrganizationClientFinancialStatus.objects.get(*args, **kwargs)
         except OrganizationClientFinancialStatus.DoesNotExist:
@@ -326,6 +326,23 @@ class OrganizationClientFinancialStatusService:
     @classmethod
     def filter(cls, *args, **kwargs):
         return OrganizationClientFinancialStatus.objects.filter(*args, **kwargs)
+
+    @classmethod
+    def get_or_create(cls, *args, **kwargs) -> OrganizationClientFinancialStatus:
+        client_status, _ = OrganizationClientFinancialStatus.objects.get_or_create(*args, **kwargs)
+        return client_status
+
+    @classmethod
+    def change_totals(cls, status: OrganizationClientFinancialStatus,
+                      spent: Decimal, saved: Decimal) -> OrganizationClientFinancialStatus:
+        try:
+            status.total_spent = F('total_spent') + spent
+            status.total_saved = F('total_saved') + saved
+            status.save()
+            status.refresh_from_db()
+            return status
+        except IntegrityError:
+            raise IntegrityException('Could not change total spent')
 
     @classmethod
     def get_client_cumulative_card(cls, client: User, organization: Organization) -> Union[DiscountCard, None]:

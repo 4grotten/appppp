@@ -52,9 +52,15 @@ class DiscountCardAdmin(admin.ModelAdmin):
 
 
 class OrganizationClientFinancialStatusAdmin(admin.ModelAdmin):
-    list_display = ('user', 'card', 'organization', 'total_spent',)
+    list_display = ('user', 'card', 'organization', 'total_spent', 'total_saved', 'get_currency',)
     list_filter = ('card', 'user',)
-    readonly_fields = ('total_spent',)
+    readonly_fields = ('total_spent', 'total_saved', 'get_currency',)
+
+    def get_currency(self, client_status: OrganizationClientFinancialStatus):
+        return client_status.organization.currency
+
+    get_currency.short_description = 'Currency'
+    get_currency.admin_order_field = 'organization__currency'
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'card':

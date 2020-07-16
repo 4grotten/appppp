@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -15,11 +16,13 @@ class CompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
     source_card = serializers.PrimaryKeyRelatedField(queryset=DiscountCard.objects.filter(is_published=True),
                                                      allow_null=True)
-    discount_percent = serializers.IntegerField(required=True)
+    discount_percent = serializers.IntegerField(required=True, validators=[MinValueValidator(0)])
+    original_amount = serializers.DecimalField(max_digits=16, decimal_places=2,
+                                               validators=[MinValueValidator(0)])
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'original_amount', 'savings', 'discount_percent', 'source_card')
+        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card')
 
     def validate(self, attrs):
         card = attrs['source_card']
@@ -27,9 +30,5 @@ class CompleteSerializer(serializers.ModelSerializer):
 
         if card is not None and not card.percent == percent:
             raise NotAcceptableException('Discount percent does not match with cards percent')
-
-        calculated_savings = (attrs['original_amount'] * percent) / 100
-        if not calculated_savings == attrs['savings']:
-            raise NotAcceptableException('Savings are incorrectly calculated')
 
         return attrs

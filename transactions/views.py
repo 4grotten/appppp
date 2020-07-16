@@ -61,7 +61,6 @@ class TransactionCompleteView(GenericAPIView):
             transaction_id=serializer.validated_data['transaction_id'],
             processed_by=request.user,
             original_amount=serializer.validated_data['original_amount'],
-            savings=serializer.validated_data['savings'],
             discount_percent=serializer.validated_data['discount_percent'],
             source_card=serializer.validated_data['source_card']
         )

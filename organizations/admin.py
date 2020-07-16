@@ -44,8 +44,11 @@ class MembershipAdmin(admin.ModelAdmin):
 
 
 class DiscountCardAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'type', 'percent', 'limit', 'is_published', 'next_cumulative',)
+    list_display = ('organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative',)
     list_filter = ('type', 'is_published', 'organization',)
+    readonly_fields = (
+        'organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative', 'image'
+    )
 
 
 class OrganizationClientFinancialStatusAdmin(admin.ModelAdmin):

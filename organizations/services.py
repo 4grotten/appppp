@@ -1,3 +1,4 @@
+from decimal import Decimal
 from itertools import groupby
 from typing import Tuple, Union
 
@@ -104,23 +105,23 @@ class OrganizationService:
             raise ValidationException('Something went wrong')
 
     @classmethod
+    @transaction.atomic
     def create_organization(cls, owner, title, description, image_id,
                             opens_at, closes_at, address, longitude, latitude,
                             types, numbers, accounts, cards, currency="KGS", country="KG"):
-        with transaction.atomic():
-            point = Point(longitude, latitude)
-            organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
-                                                       description=description, image_id=image_id, address=address,
-                                                       location=point, currency=currency, country=country)
-            organization.types.set(types)
-            for number in numbers:
-                OrgPhoneNumberService.create(organization=organization, number=number)
-            for link in accounts:
-                OrgSocialNetworkContactService.create(organization=organization, url=link)
+        point = Point(longitude, latitude)
+        organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
+                                                   description=description, image_id=image_id, address=address,
+                                                   location=point, currency=currency, country=country)
+        organization.types.set(types)
+        for number in numbers:
+            OrgPhoneNumberService.create(organization=organization, number=number)
+        for link in accounts:
+            OrgSocialNetworkContactService.create(organization=organization, url=link)
 
-            DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
+        DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
 
-            return organization
+        return organization
 
     @classmethod
     def update(cls, organization, image_id, longitude, latitude, description, types,
@@ -230,8 +231,19 @@ class DiscountCardService:
             raise IntegrityException('Duplicate cards are not allowed')
 
     @classmethod
+    def create_or_reactivate(cls, organization: Organization, percent: int, type: str, limit: Decimal, **kwargs):
+        unpublished_card = DiscountCard.objects.filter(is_published=False, organization=organization,
+                                                       percent=percent, type=type).first()
+        if unpublished_card:
+            unpublished_card.limit = limit
+            unpublished_card.is_published = True
+            unpublished_card.save(update_fields=('limit', 'is_published'))
+        else:
+            cls.create(organization=organization, percent=percent, type=type, limit=limit, **kwargs)
+
+    @classmethod
     def get_grouped_discounts(cls, organization_id: int) -> dict:
-        discounts = DiscountCard.objects.filter(organization_id=organization_id)
+        discounts = DiscountCard.objects.filter(organization_id=organization_id, is_published=True)
         discounts_dict = {
             DiscountCard.CUMULATIVE: [],
             DiscountCard.FIXED: []
@@ -243,19 +255,53 @@ class DiscountCardService:
         return discounts_dict
 
     @classmethod
+    @transaction.atomic
     def delete_discount(cls, discount_id: int, user: User):
-        discount = cls.get(id=discount_id)
+        discount = cls.get(id=discount_id, is_published=True)
         if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
             raise NotAcceptableException('No rights to edit organization')
-        discount.delete()
+
+        if not cls.is_card_editable(discount=discount):
+            raise NotAcceptableException('Discount card can not be deleted')
+
+        discount.is_published = False
+        discount.save(update_fields=('is_published',))
+
+        if discount.type == DiscountCard.CUMULATIVE:
+            cls.organize_cumulative_cards(organization=discount.organization)
 
     @classmethod
+    def is_card_editable(cls, discount: DiscountCard) -> bool:
+        if discount.type == DiscountCard.FIXED:
+            return True
+        return not discount.clients.exists()
+
+    @classmethod
+    @transaction.atomic
     def bulk_create_discounts(cls, cards: list, organization: Organization):
-        with transaction.atomic():
-            for card_data in cards:
-                if card_data['type'] == DiscountCard.CUMULATIVE:
-                    card_data['currency'] = organization.currency
-                cls.create(organization=organization, **card_data)
+        should_organize = False
+
+        for card_data in cards:
+            if card_data['type'] == DiscountCard.CUMULATIVE:
+                should_organize = True
+                card_data['currency'] = organization.currency
+            cls.create_or_reactivate(organization=organization, **card_data)
+
+        if should_organize:
+            cls.organize_cumulative_cards(organization=organization)
+
+    @classmethod
+    @transaction.atomic
+    def organize_cumulative_cards(cls, organization: Organization):
+        # reset existing "next_cumulative" pointers
+        organization.discounts.filter(type=DiscountCard.CUMULATIVE).update(next_cumulative=None)
+
+        cumulative_cards = organization.discounts.filter(
+            is_published=True, type=DiscountCard.CUMULATIVE).order_by('limit')
+
+        for i in range(len(cumulative_cards) - 1):
+            cumulative_cards[i].next_cumulative = cumulative_cards[i + 1]
+            cumulative_cards[i].save()
 
     @classmethod
     def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:

@@ -26,6 +26,9 @@ class DiscountCardSerializer(serializers.ModelSerializer):
                 errors['limit'] = ['This field is required']
             if errors:
                 raise serializers.ValidationError(errors)
+        else:
+            attrs['limit'] = None
+
         return attrs
 
 

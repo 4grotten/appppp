@@ -354,12 +354,14 @@ class OrganizationClientFinancialStatusService:
     @classmethod
     def get_client_financial_status_data(cls, client: User, organization: Organization) -> dict:
         total_spent_in_organization = 0
+        total_saved_in_organization = 0
         cumulative_card = None
         next_level_limit = None
 
         client_status = cls.get(user=client, organization=organization)
         if client_status is not None:
             total_spent_in_organization = client_status.total_spent
+            total_saved_in_organization = client_status.total_saved
 
             if client_status.card is not None:
                 cumulative_card = client_status.card.id
@@ -370,8 +372,9 @@ class OrganizationClientFinancialStatusService:
 
         return {
             'cumulative': cumulative_card,
-            'sum': total_spent_in_organization,
-            'next': next_level_limit
+            'total_spent': total_spent_in_organization,
+            'total_saved': total_saved_in_organization,
+            'next_limit': next_level_limit
         }
 
     @classmethod

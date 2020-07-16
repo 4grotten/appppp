@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer
-from transactions.services import TransactionService
 from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
@@ -126,9 +125,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     social_contacts = OrgSocialNetworkContactSerializer(many=True)
     subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
-    saved_amount = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
-    active_card = serializers.SerializerMethodField()
+    client_status = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
 
@@ -146,10 +144,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, organization: Organization):
         return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
-    def get_saved_amount(self, organization: Organization):
-        return TransactionService.get_total_saved_amount(client=self.context['request'].user, organization=organization)
-
-    def get_active_card(self, organization: Organization):
+    def get_client_status(self, organization: Organization):
         data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
             client=self.context['request'].user,
             organization=organization)
@@ -168,7 +163,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'country', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
-            'saved_amount', 'is_subscribed', 'permissions', 'active_card', 'partners', 'is_deleted'
+            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
         )
 
 

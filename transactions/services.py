@@ -58,13 +58,15 @@ class TransactionService:
             raise IntegrityException('Could not complete transaction')
 
         client_status = OrganizationClientFinancialStatusService.get_or_create(
-            user=current_transaction.client, organization=current_transaction.organization
+            user=current_transaction.client,
+            organization=current_transaction.organization
         )
-        OrganizationClientFinancialStatusService.change_totals(status=client_status,
-                                                               spent=current_transaction.final_amount,
-                                                               saved=current_transaction.savings)
-
-        # ToDo attach cumulative card if applicable
+        client_status = OrganizationClientFinancialStatusService.change_totals(
+            status=client_status,
+            spent=current_transaction.final_amount,
+            saved=current_transaction.savings
+        )
+        OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
         return current_transaction
 

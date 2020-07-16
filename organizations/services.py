@@ -308,11 +308,9 @@ class DiscountCardService:
         return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
 
     @classmethod
-    def get_lowest_cumulative_limit(cls, organization: Organization) -> Union[Decimal, int]:
-        lowest = organization.discounts.filter(previous_cumulative=None).first()
-        if lowest:
-            return lowest.limit
-        return 0
+    def get_lowest_cumulative_card(cls, organization: Organization) -> Union[DiscountCard, None]:
+        return organization.discounts.filter(type=DiscountCard.CUMULATIVE, is_published=True,
+                                             previous_cumulative=None).order_by('limit').first()
 
 
 class OrganizationClientFinancialStatusService:
@@ -368,14 +366,28 @@ class OrganizationClientFinancialStatusService:
                 next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
 
         if next_level_limit is None:
-            next_level_limit = DiscountCardService.get_lowest_cumulative_limit(organization=organization)
+            lowest_card = DiscountCardService.get_lowest_cumulative_card(organization=organization)
+            next_level_limit = lowest_card.limit if lowest_card is not None else 0
 
         return {
-            'cumulative': cumulative_card,
+            'active_card': cumulative_card,
             'total_spent': total_spent_in_organization,
             'total_saved': total_saved_in_organization,
             'next_limit': next_level_limit
         }
+
+    @classmethod
+    def update_client_cumulative_card(cls, client_status: OrganizationClientFinancialStatus):
+        highest_card_possible = DiscountCard.objects.filter(
+            type=DiscountCard.CUMULATIVE, is_published=True, organization=client_status.organization,
+            limit__lte=client_status.total_spent
+        ).order_by('-limit').first()
+
+        if highest_card_possible is None:
+            return
+
+        client_status.card = highest_card_possible
+        client_status.save(update_fields=('card',))
 
     @classmethod
     def can_use_given_card(cls, client: User, card: DiscountCard) -> bool:

@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
 from organizations.models import Organization, DiscountCard
-from organizations.services import OrganizationService, CardOwnershipService
+from organizations.services import OrganizationService, OrganizationClientFinancialStatusService
 from users.models import User
 from .models import Transaction
 
@@ -40,7 +40,7 @@ class TransactionService:
 
         transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False)
 
-        if source_card is not None and not CardOwnershipService.can_use_given_card(
+        if source_card is not None and not OrganizationClientFinancialStatusService.can_use_given_card(
                 client=transaction.client, card=source_card):
             raise NotAcceptableException('Client cannot use this card')
 

@@ -8,7 +8,7 @@ from django.db.models import QuerySet
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, ValidationException, IntegrityException
 from users.models import User
 from .models import (
-    CardOwnership, DiscountCard, Organization, Membership, PhoneNumber, SocialNetworkContact, Subscription,
+    DiscountCard, Organization, OrganizationClientFinancialStatus, Membership, PhoneNumber, SocialNetworkContact,
 )
 
 
@@ -262,24 +262,44 @@ class DiscountCardService:
         return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
 
 
-class CardOwnershipService:
+class OrganizationClientFinancialStatusService:
     @classmethod
     def get(cls, *args, **kwargs):
         try:
-            return CardOwnership.objects.get(*args, **kwargs)
-        except CardOwnership.DoesNotExist:
-            raise ObjectNotFoundException('CardOwner not found')
+            return OrganizationClientFinancialStatus.objects.get(*args, **kwargs)
+        except OrganizationClientFinancialStatus.DoesNotExist:
+            return None
 
     @classmethod
     def filter(cls, *args, **kwargs):
-        return CardOwnership.objects.filter(*args, **kwargs)
+        return OrganizationClientFinancialStatus.objects.filter(*args, **kwargs)
 
     @classmethod
     def get_client_cumulative_card(cls, client: User, organization: Organization) -> Union[DiscountCard, None]:
-        ownership = cls.filter(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE).first()
+        ownership = cls.get(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE)
         if ownership:
             return ownership.card
         return None
+
+    @classmethod
+    def get_client_financial_status_data(cls, client: User, organization: Organization) -> dict:
+        total_spent_in_organization = 0
+        cumulative_card = None
+        next_level_limit = 0
+
+        client_status = cls.get(user=client, organization=organization)
+        if client_status is not None:
+            total_spent_in_organization = client_status.total_spent
+
+            if client_status.card is not None:
+                cumulative_card = client_status.card.id
+                next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
+
+        return {
+            'cumulative': cumulative_card,
+            'sum': total_spent_in_organization,
+            'next': next_level_limit
+        }
 
     @classmethod
     def can_use_given_card(cls, client: User, card: DiscountCard) -> bool:
@@ -293,22 +313,4 @@ class CardOwnershipService:
             owned_card = cls.get_client_cumulative_card(client=client, organization=card.organization)
             return card == owned_card
 
-        return False
-
-
-class SubscriptionService:
-    @classmethod
-    def is_subscribed(cls, organization: Organization, user: User) -> bool:
-        return Subscription.objects.filter(organization=organization, user=user).exists()
-
-    @classmethod
-    def get_number_of_subscriptions(cls, organization: Organization) -> int:
-        return Subscription.objects.filter(organization=organization).count()
-
-    @classmethod
-    def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:
-        subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
-        if created:
-            return True
-        subscription.delete()
         return False

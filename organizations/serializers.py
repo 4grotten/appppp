@@ -7,7 +7,8 @@ from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
 )
-from .services import OrganizationService, DiscountCardService, SubscriptionService
+from .services import OrganizationService, DiscountCardService, OrganizationClientFinancialStatusService
+from .servs.subscription_services import SubscriptionService
 
 
 class DiscountCardSerializer(serializers.ModelSerializer):
@@ -139,26 +140,17 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
         return DiscountGroupSerializer(discounts).data
 
-    def get_is_subscribed(self, organizaiton: Organization):
-        return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
+    def get_is_subscribed(self, organization: Organization):
+        return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
-    def get_saved_amount(self, organizaiton: Organization):
-        return TransactionService.get_total_saved_amount(client=self.context['request'].user, organization=organizaiton)
+    def get_saved_amount(self, organization: Organization):
+        return TransactionService.get_total_saved_amount(client=self.context['request'].user, organization=organization)
 
-    def get_active_card(self, organizaiton: Organization):
-        # ToDo Implement
-        card = DiscountCard.objects.filter(organization=organizaiton, type=DiscountCard.CUMULATIVE).first()
-        if card:
-            return {
-                'cumulative': card.id,
-                'sum': 93000,
-                'next': 100000
-            }
-        return {
-            'cumulative': None,
-            'sum': 0,
-            'next': 0
-        }
+    def get_active_card(self, organization: Organization):
+        data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
+            client=self.context['request'].user,
+            organization=organization)
+        return data
 
     def get_partners(self, organizaiton: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organizaiton)

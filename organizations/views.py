@@ -20,8 +20,9 @@ from .serializers import (
 )
 from .services import (
     OrgPhoneNumberService, OrgSocialNetworkContactService,
-    OrganizationService, DiscountCardService, SubscriptionService
+    OrganizationService, DiscountCardService
 )
+from .servs.subscription_services import SubscriptionService
 
 
 class OrganizationsListCreateView(ListCreateAPIView):

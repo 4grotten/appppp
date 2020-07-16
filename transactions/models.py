@@ -21,9 +21,10 @@ class Transaction(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
-    original_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    original_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     discount_percent = models.PositiveSmallIntegerField(default=0)
-    savings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
 
     discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
@@ -36,3 +37,7 @@ class Transaction(TimestampModel):
 
     class Meta:
         ordering = ('-updated_at',)
+
+    def save(self, *args, **kwargs):
+        self.final_amount = self.original_amount - self.savings
+        super().save(*args, **kwargs)

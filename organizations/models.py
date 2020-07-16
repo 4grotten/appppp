@@ -119,12 +119,16 @@ class DiscountCard(TimestampModel):
     limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
+    next_cumulative = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name='previous_cumulative')
+
     is_published = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ('organization', 'type', 'percent', 'limit')
+        ordering = ('organization', 'type', 'limit', 'percent',)
         constraints = [
-            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_cards_of_organization')
+            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_percents_of_organization'),
+            models.UniqueConstraint(fields=('organization', 'type', 'limit'), name='unique_limits_of_organization'),
         ]
 
     def __str__(self):
@@ -144,16 +148,20 @@ class DiscountCard(TimestampModel):
             raise ValidationError(errors)
 
 
-class CardOwnership(TimestampModel):
-    card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='owners')
+class OrganizationClientFinancialStatus(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='client_statuses')
+    card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='clients', null=True, blank=True)
+    total_spent = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
+    total_saved = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
 
     def __str__(self):
-        return f'{self.card.type} card of {self.user} in {self.card.organization.title}'
+        return f'{self.user} in {self.organization.title} has spent {self.total_spent} {self.organization.currency}'
 
     class Meta:
+        verbose_name_plural = 'Organization client financial statuses'
         constraints = [
-            models.UniqueConstraint(fields=('card', 'user'), name='unique_cards_of_user')
+            models.UniqueConstraint(fields=('user', 'organization'), name='unique_statuses_of_user_in_organization')
         ]
 
 

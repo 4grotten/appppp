@@ -2,12 +2,12 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer
-from transactions.services import TransactionService
 from .models import (
     Organization, OrganizationType, PhoneNumber,
     SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
 )
-from .services import OrganizationService, DiscountCardService, SubscriptionService
+from .services import OrganizationService, DiscountCardService, OrganizationClientFinancialStatusService
+from .servs.subscription_services import SubscriptionService
 
 
 class DiscountCardSerializer(serializers.ModelSerializer):
@@ -25,6 +25,9 @@ class DiscountCardSerializer(serializers.ModelSerializer):
                 errors['limit'] = ['This field is required']
             if errors:
                 raise serializers.ValidationError(errors)
+        else:
+            attrs['limit'] = None
+
         return attrs
 
 
@@ -122,9 +125,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     social_contacts = OrgSocialNetworkContactSerializer(many=True)
     subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
-    saved_amount = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
-    active_card = serializers.SerializerMethodField()
+    client_status = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
 
@@ -139,26 +141,14 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
         return DiscountGroupSerializer(discounts).data
 
-    def get_is_subscribed(self, organizaiton: Organization):
-        return SubscriptionService.is_subscribed(organization=organizaiton, user=self.context['request'].user)
+    def get_is_subscribed(self, organization: Organization):
+        return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
-    def get_saved_amount(self, organizaiton: Organization):
-        return TransactionService.get_total_saved_amount(client=self.context['request'].user, organization=organizaiton)
-
-    def get_active_card(self, organizaiton: Organization):
-        # ToDo Implement
-        card = DiscountCard.objects.filter(organization=organizaiton, type=DiscountCard.CUMULATIVE).first()
-        if card:
-            return {
-                'cumulative': card.id,
-                'sum': 93000,
-                'next': 100000
-            }
-        return {
-            'cumulative': None,
-            'sum': 0,
-            'next': 0
-        }
+    def get_client_status(self, organization: Organization):
+        data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
+            client=self.context['request'].user,
+            organization=organization)
+        return data
 
     def get_partners(self, organizaiton: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organizaiton)
@@ -173,7 +163,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'country', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
-            'saved_amount', 'is_subscribed', 'permissions', 'active_card', 'partners', 'is_deleted'
+            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
         )
 
 

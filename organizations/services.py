@@ -256,8 +256,7 @@ class DiscountCardService:
 
     @classmethod
     @transaction.atomic
-    def delete_discount(cls, discount_id: int, user: User):
-        discount = cls.get(id=discount_id, is_published=True)
+    def delete_discount(cls, discount: DiscountCard, user: User) -> DiscountCard:
         if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
@@ -267,8 +266,7 @@ class DiscountCardService:
         discount.is_published = False
         discount.save(update_fields=('is_published',))
 
-        if discount.type == DiscountCard.CUMULATIVE:
-            cls.organize_cumulative_cards(organization=discount.organization)
+        return discount
 
     @classmethod
     def is_card_editable(cls, discount: DiscountCard) -> bool:
@@ -311,6 +309,21 @@ class DiscountCardService:
     def get_lowest_cumulative_card(cls, organization: Organization) -> Union[DiscountCard, None]:
         return organization.discounts.filter(type=DiscountCard.CUMULATIVE, is_published=True,
                                              previous_cumulative=None).order_by('limit').first()
+
+    @classmethod
+    @transaction.atomic
+    def bulk_delete_discounts(cls, cards: list, organization: Organization, deleted_by: User):
+        should_organize = False
+
+        for card in cards:
+            if not card.organization == organization:
+                continue
+            if cls.is_card_editable(discount=card):
+                should_organize = True if card.type == DiscountCard.CUMULATIVE else False
+                cls.delete_discount(discount=card, user=deleted_by)
+
+        if should_organize:
+            cls.organize_cumulative_cards(organization=organization)
 
 
 class OrganizationClientFinancialStatusService:

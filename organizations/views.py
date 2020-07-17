@@ -209,7 +209,11 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
     serializer_class = DiscountCardUpdateSerializer
 
     def destroy(self, request, *args, **kwargs):
-        DiscountCardService.delete_discount(discount_id=kwargs['pk'], user=request.user)
+        discount = DiscountCardService.get(id=kwargs['pk'], is_published=True)
+        deactivated_card = DiscountCardService.delete_discount(discount=discount, user=request.user)
+        if deactivated_card.type == DiscountCard.CUMULATIVE:
+            DiscountCardService.organize_cumulative_cards(organization=deactivated_card.organization)
+
         return Response(data={
             'message': 'Successfully deleted',
         }, status=status.HTTP_200_OK)

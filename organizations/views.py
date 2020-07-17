@@ -232,15 +232,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        try:
-            instance = serializer.save()
-            if instance.type == DiscountCard.CUMULATIVE:
-                DiscountCardService.organize_cumulative_cards(organization=instance.organization)
-        except IntegrityError:
-            return Response(data={
-                'message': 'Duplicate percent'
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        instance = serializer.save()
         data = DiscountCardSerializer(instance).data
         return Response(data)
 

@@ -61,23 +61,10 @@ class DiscountGroupSerializer(serializers.Serializer):
 
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField(required=False, allow_null=True)
-    percent = serializers.IntegerField(required=False)
-    limit = serializers.DecimalField(required=False, max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
 
     class Meta:
         model = DiscountCard
-        fields = ('image_id', 'percent', 'limit',)
-
-    def validate(self, attrs):
-        if not DiscountCardService.is_card_editable(self.instance):
-            if 'percent' in attrs:
-                attrs.pop('percent')
-            if 'limit' in attrs:
-                attrs.pop('limit')
-        if self.instance.type == DiscountCard.FIXED:
-            if 'limit' in attrs:
-                attrs.pop('limit')
-        return attrs
+        fields = ('image_id',)
 
 
 class DiscountCardBriefSerializer(serializers.ModelSerializer):

@@ -14,10 +14,14 @@ from .servs.subscription_services import SubscriptionService
 class DiscountCardSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)
     organization_id = serializers.IntegerField(read_only=True)
+    is_editable = serializers.SerializerMethodField()
+
+    def get_is_editable(self, card: DiscountCard) -> bool:
+        return DiscountCardService.is_card_editable(discount=card)
 
     class Meta:
         model = DiscountCard
-        fields = ('id', 'type', 'percent', 'limit', 'currency', 'image', 'organization_id',)
+        fields = ('id', 'type', 'percent', 'limit', 'currency', 'is_editable', 'image', 'organization_id',)
 
     def validate(self, attrs):
         if attrs['type'] == DiscountCard.CUMULATIVE:
@@ -30,17 +34,6 @@ class DiscountCardSerializer(serializers.ModelSerializer):
             attrs['limit'] = None
 
         return attrs
-
-
-class DiscountCardIsEditableSerializer(DiscountCardSerializer):
-    is_editable = serializers.SerializerMethodField()
-
-    def get_is_editable(self, card: DiscountCard) -> bool:
-        return DiscountCardService.is_card_editable(discount=card)
-
-    class Meta:
-        model = DiscountCard
-        fields = ('id', 'type', 'percent', 'limit', 'currency', 'is_editable', 'image', 'organization_id',)
 
 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
@@ -64,11 +57,6 @@ class DiscountBulkCreateSerializer(serializers.Serializer):
 class DiscountGroupSerializer(serializers.Serializer):
     cumulative = DiscountCardSerializer(many=True)
     fixed = DiscountCardSerializer(many=True)
-
-
-class DiscountGroupIsEditableSerializer(serializers.Serializer):
-    cumulative = DiscountCardIsEditableSerializer(many=True)
-    fixed = DiscountCardIsEditableSerializer(many=True)
 
 
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):

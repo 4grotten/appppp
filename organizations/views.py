@@ -20,7 +20,7 @@ from .serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     LocationSerializer, DiscountBulkCreateSerializer, DiscountCardUpdateSerializer,
     DiscountCardSerializer, SubscriptionSerializer, OrganizationUpdateSerializer,
-    DiscountGroupIsEditableSerializer,
+    DiscountGroupSerializer,
 )
 from .services import (
     OrgPhoneNumberService, OrgSocialNetworkContactService,
@@ -184,7 +184,7 @@ class OrganizationDiscountsAPIView(ListAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization_id)
-        serializer = DiscountGroupIsEditableSerializer(discounts)
+        serializer = DiscountGroupSerializer(discounts)
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):

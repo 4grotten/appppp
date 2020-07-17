@@ -1,16 +1,26 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from organizations.models import DiscountCard, Organization
 
 
-class BulkUpdateSerializer(serializers.Serializer):
-    pass
-
-
-class DiscountCardIDSerializer(serializers.ModelSerializer):
+class DiscountCardBulkDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiscountCard
         fields = ('id',)
+
+
+class DiscountCardBulkUpdateSerializer(serializers.Serializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=DiscountCard.objects.filter(is_published=True))
+    percent = serializers.IntegerField(required=False)
+    limit = serializers.DecimalField(required=False, allow_null=True,
+                                     max_digits=16, decimal_places=2,
+                                     validators=[MinValueValidator(0)])
+
+
+class BulkUpdateSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    cards = DiscountCardBulkUpdateSerializer(many=True)
 
 
 class BulkDeleteSerializer(serializers.Serializer):

@@ -14,15 +14,17 @@ class DiscountsBulkUpdateView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 
-        # if not serializer.is_valid():
-        #     return Response(data={
-        #         'message': 'Invalid input',
-        #         'errors': serializer.errors
-        #     }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        DiscountCardService.bulk_update_discounts(cards_data=serializer.validated_data['cards'],
+                                                  organization=serializer.validated_data['organization'],
+                                                  updated_by=request.user)
         return Response(data={
             'message': 'Successfully updated cards',
-
         }, status=status.HTTP_200_OK)
 
 
@@ -42,8 +44,6 @@ class DiscountsBulkDeleteView(GenericAPIView):
         DiscountCardService.bulk_delete_discounts(cards=serializer.validated_data['cards'],
                                                   organization=serializer.validated_data['organization'],
                                                   deleted_by=request.user)
-
         return Response(data={
             'message': 'Successfully deleted cards',
-
         }, status=status.HTTP_200_OK)

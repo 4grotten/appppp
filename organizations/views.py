@@ -210,9 +210,9 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         discount = DiscountCardService.get(id=kwargs['pk'], is_published=True)
-        deactivated_card = DiscountCardService.delete_discount(discount=discount, user=request.user)
-        if deactivated_card.type == DiscountCard.CUMULATIVE:
-            DiscountCardService.organize_cumulative_cards(organization=deactivated_card.organization)
+        DiscountCardService.delete_discount(discount=discount, user=request.user)
+        if discount.type == DiscountCard.CUMULATIVE:
+            DiscountCardService.organize_cumulative_cards(organization=discount.organization)
 
         return Response(data={
             'message': 'Successfully deleted',

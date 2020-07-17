@@ -231,15 +231,11 @@ class DiscountCardService:
             raise IntegrityException('Duplicate cards are not allowed')
 
     @classmethod
-    def create_or_reactivate(cls, organization: Organization, percent: int, type: str, limit: Decimal, **kwargs):
-        unpublished_card = DiscountCard.objects.filter(is_published=False, organization=organization,
-                                                       percent=percent, type=type).first()
-        if unpublished_card:
-            unpublished_card.limit = limit
-            unpublished_card.is_published = True
-            unpublished_card.save(update_fields=('limit', 'is_published'))
-        else:
-            cls.create(organization=organization, percent=percent, type=type, limit=limit, **kwargs)
+    def create_or_reactivate(cls, organization: Organization, percent: int, type: str, **kwargs):
+        reactivated = DiscountCard.objects.filter(is_published=False, organization=organization,
+                                                  percent=percent, type=type).update(is_published=True)
+        if not reactivated:
+            cls.create(organization=organization, percent=percent, type=type, **kwargs)
 
     @classmethod
     def get_grouped_discounts(cls, organization_id: int) -> dict:
@@ -255,7 +251,6 @@ class DiscountCardService:
         return discounts_dict
 
     @classmethod
-    @transaction.atomic
     def delete_discount(cls, discount: DiscountCard, user: User) -> DiscountCard:
         if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
             raise NotAcceptableException('No rights to edit organization')
@@ -263,10 +258,58 @@ class DiscountCardService:
         if not cls.is_card_editable(discount=discount):
             raise NotAcceptableException('Discount card can not be deleted')
 
-        discount.is_published = False
-        discount.save(update_fields=('is_published',))
+        if discount.type == DiscountCard.FIXED:
+            discount.is_published = False
+            discount.save(update_fields=('is_published',))
+            return discount
 
+        discount.delete()
+
+    @classmethod
+    def update_discount(cls, discount: DiscountCard, user: User,
+                        limit: Decimal = None, percent: int = None) -> DiscountCard:
+        if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
+            raise NotAcceptableException('No rights to edit organization')
+
+        if not cls.is_card_editable(discount=discount):
+            raise NotAcceptableException('Discount card can not be updated')
+
+        if discount.type == DiscountCard.FIXED:
+            discount = cls.swap_or_update(discount=discount, percent=percent)
+            return discount
+
+        if limit:
+            discount.limit = limit
+        if percent:
+            discount.percent = percent
+        try:
+            discount.save()
+        except IntegrityError:
+            raise IntegrityException('Duplicate cards are not allowed')
         return discount
+
+    @classmethod
+    @transaction.atomic
+    def swap_or_update(cls, discount: DiscountCard, percent: Union[int, None]):
+        if not percent:
+            raise IntegrityException('Percent is required for fixed discount')
+
+        temp = 999
+        updated = DiscountCard.objects.filter(is_published=False, percent=percent).update(percent=temp)
+
+        if not updated:
+            discount.percent = percent
+            try:
+                discount.save(update_fields=('percent',))
+            except IntegrityError:
+                raise IntegrityException('Duplicate cards are not allowed')
+            return discount
+
+        old_value = discount.percent
+        discount.percent = percent
+        discount.save()
+
+        DiscountCard.objects.filter(is_published=False, percent=temp).update(percent=old_value)
 
     @classmethod
     def is_card_editable(cls, discount: DiscountCard) -> bool:
@@ -283,7 +326,9 @@ class DiscountCardService:
             if card_data['type'] == DiscountCard.CUMULATIVE:
                 should_organize = True
                 card_data['currency'] = organization.currency
-            cls.create_or_reactivate(organization=organization, **card_data)
+                cls.create(organization=organization, **card_data)
+            else:
+                cls.create_or_reactivate(organization=organization, **card_data)
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
@@ -317,10 +362,32 @@ class DiscountCardService:
 
         for card in cards:
             if not card.organization == organization:
-                continue
-            if cls.is_card_editable(discount=card):
-                should_organize = True if card.type == DiscountCard.CUMULATIVE else False
-                cls.delete_discount(discount=card, user=deleted_by)
+                raise NotAcceptableException('Card does not belong to this organization')
+            if not cls.is_card_editable(discount=card):
+                raise NotAcceptableException('Card is not editable')
+            if card.type == DiscountCard.CUMULATIVE:
+                should_organize = True
+            cls.delete_discount(discount=card, user=deleted_by)
+
+        if should_organize:
+            cls.organize_cumulative_cards(organization=organization)
+
+    @classmethod
+    @transaction.atomic
+    def bulk_update_discounts(cls, cards_data: list, organization: Organization, updated_by: User):
+        should_organize = False
+
+        for card_data in cards_data:
+            card = card_data.pop('id')
+
+            if not card.organization == organization:
+                raise NotAcceptableException('Card does not belong to this organization')
+            if not cls.is_card_editable(discount=card):
+                raise NotAcceptableException('Card is not editable')
+            if card.type == DiscountCard.CUMULATIVE:
+                should_organize = True
+
+            cls.update_discount(discount=card, user=updated_by, **card_data)
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)

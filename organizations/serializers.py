@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -57,14 +58,18 @@ class DiscountGroupSerializer(serializers.Serializer):
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField(required=False, allow_null=True)
     percent = serializers.IntegerField(required=False)
+    limit = serializers.DecimalField(required=False, max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
 
     class Meta:
         model = DiscountCard
-        fields = ('image_id', 'percent',)
+        fields = ('image_id', 'percent', 'limit',)
 
     def validate(self, attrs):
         if not DiscountCardService.is_card_editable(self.instance):
             attrs.pop('percent')
+            attrs.pop('limit')
+        if self.instance.type == DiscountCard.FIXED:
+            attrs.pop('limit')
         return attrs
 
 

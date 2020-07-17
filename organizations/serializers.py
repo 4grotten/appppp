@@ -70,10 +70,13 @@ class DiscountCardUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if not DiscountCardService.is_card_editable(self.instance):
-            attrs.pop('percent')
-            attrs.pop('limit')
+            if 'percent' in attrs:
+                attrs.pop('percent')
+            if 'limit' in attrs:
+                attrs.pop('limit')
         if self.instance.type == DiscountCard.FIXED:
-            attrs.pop('limit')
+            if 'limit' in attrs:
+                attrs.pop('limit')
         return attrs
 
 

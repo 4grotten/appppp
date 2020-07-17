@@ -32,6 +32,17 @@ class DiscountCardSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class DiscountCardIsEditableSerializer(DiscountCardSerializer):
+    is_editable = serializers.SerializerMethodField()
+
+    def get_is_editable(self, card: DiscountCard) -> bool:
+        return DiscountCardService.is_card_editable(discount=card)
+
+    class Meta:
+        model = DiscountCard
+        fields = ('id', 'type', 'percent', 'limit', 'currency', 'is_editable', 'image', 'organization_id',)
+
+
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         request = self.context.get('request')
@@ -53,6 +64,11 @@ class DiscountBulkCreateSerializer(serializers.Serializer):
 class DiscountGroupSerializer(serializers.Serializer):
     cumulative = DiscountCardSerializer(many=True)
     fixed = DiscountCardSerializer(many=True)
+
+
+class DiscountGroupIsEditableSerializer(serializers.Serializer):
+    cumulative = DiscountCardIsEditableSerializer(many=True)
+    fixed = DiscountCardIsEditableSerializer(many=True)
 
 
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):

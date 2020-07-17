@@ -63,7 +63,7 @@ class DiscountCardUpdateSerializer(serializers.ModelSerializer):
         fields = ('image_id', 'percent',)
 
     def validate(self, attrs):
-        if self.instance.type == DiscountCard.CUMULATIVE:
+        if not DiscountCardService.is_card_editable(self.instance):
             attrs.pop('percent')
         return attrs
 

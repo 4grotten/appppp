@@ -55,11 +55,17 @@ class DiscountGroupSerializer(serializers.Serializer):
 
 
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):
-    image_id = serializers.IntegerField(required=True, allow_null=True)
+    image_id = serializers.IntegerField(required=False, allow_null=True)
+    percent = serializers.IntegerField(required=False)
 
     class Meta:
         model = DiscountCard
-        fields = ('image_id',)
+        fields = ('image_id', 'percent',)
+
+    def validate(self, attrs):
+        if self.instance.type == DiscountCard.CUMULATIVE:
+            attrs.pop('percent')
+        return attrs
 
 
 class DiscountCardBriefSerializer(serializers.ModelSerializer):

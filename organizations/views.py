@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.generics import (
@@ -226,7 +227,13 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        instance = serializer.save()
+        try:
+            instance = serializer.save()
+        except IntegrityError:
+            return Response(data={
+                'message': 'Duplicate percent'
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         data = DiscountCardSerializer(instance).data
         return Response(data)
 

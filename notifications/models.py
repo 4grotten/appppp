@@ -15,6 +15,7 @@ class Notification(TimestampModel):
     mode = models.CharField(max_length=20, choices=NOTIFICATION_MODES)
     title = models.CharField(max_length=255)
     description = models.TextField()
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

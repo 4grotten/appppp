@@ -9,7 +9,7 @@ v1 = ([
           path('', include('organizations.urls')),
           path('', include('common.urls')),
           path('', include('transactions.urls')),
-          path('', include('notifications.urls'))
+          path('notifications/', include('notifications.urls'))
       ], 'v1')
 
 

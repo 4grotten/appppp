@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'mapwidgets',
     'imagekit',
+    'fcm_django',
+    'notifications'
 ]
 
 MIDDLEWARE = [
@@ -178,3 +180,16 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='login@yandex.ru')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='password')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='from@yandex.ru')
 EMAIL_USE_TLS = True
+
+FCM_DJANGO_SETTINGS = {
+    "APP_VERBOSE_NAME": 'Qrcode push',
+    # default: _('FCM Django')
+    "FCM_SERVER_KEY": os.environ['FCM_KEY'],
+    # true if you want to have only one active device per registered user at a time
+    # default: False
+    "ONE_DEVICE_PER_USER": False,
+    # devices to which notifications cannot be sent,
+    # are deleted upon receiving error response from FCM
+    # default: False
+    "DELETE_INACTIVE_DEVICES": False,
+}

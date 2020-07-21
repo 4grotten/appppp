@@ -6,7 +6,7 @@ from .views import (
     OrganizationDiscountsDeleteUpdateView, OrganizationRetrieveView, SubscriptionsView, BackgroundListView
 )
 from .viws.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
-from .viws.partnerships_views import PartnershipView
+from .viws.partnerships_views import PartnershipView, OrganizationPartnersView
 
 urlpatterns = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -16,6 +16,7 @@ urlpatterns = [
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
     path('organizations/<int:pk>/social_networks/', OrgNetworksListAPIView.as_view(), name='organization_networks'),
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set_location'),
+    path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),
 
     path('discounts/', OrganizationDiscountsAPIView.as_view(), name='discounts'),
     path('discounts/<int:pk>/', OrganizationDiscountsDeleteUpdateView.as_view(), name='discounts_delete'),

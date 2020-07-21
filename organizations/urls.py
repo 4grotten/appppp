@@ -6,6 +6,7 @@ from .views import (
     OrganizationDiscountsDeleteUpdateView, OrganizationRetrieveView, SubscriptionsView, BackgroundListView
 )
 from .viws.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
+from .viws.partnerships_views import PartnershipView
 
 urlpatterns = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -24,4 +25,6 @@ urlpatterns = [
     path('discount_backgrounds/', BackgroundListView.as_view(), name='backgrounds'),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
+
+    path('partnerships/', PartnershipView.as_view(), name='partnerships'),
 ]

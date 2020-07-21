@@ -82,12 +82,8 @@ class OrganizationService:
 
     @classmethod
     def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:
-        # ToDo: implement this after organizations partnerships
-        partners = Organization.objects.all()
-        partners_list = []
-
-        for partner in partners[:3]:
-            partners_list.append({'id': partner.id, 'image': partner.image})
+        partners = Organization.objects.filter(
+            id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
         return partners.count(), partners[:3]
 

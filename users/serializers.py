@@ -47,6 +47,12 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         }
 
 
+class ProfileBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'full_name')
+
+
 class SetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
 

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from organizations.serializers import DiscountCardBriefSerializer
 from organizations.services import DiscountCardService, OrganizationClientFinancialStatusService
+from users.serializers import ProfileBriefSerializer
 from .serializers import PreprocessSerializer, CompleteSerializer
 from .services import TransactionService
 
@@ -29,7 +30,8 @@ class TransactionPreprocessView(GenericAPIView):
             client=client, organization=organization, processed_by=request.user
         )
 
-        cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client, organization=organization)
+        cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
+                                                                                         organization=organization)
         fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
 
         if cumulative is not None:
@@ -38,7 +40,8 @@ class TransactionPreprocessView(GenericAPIView):
         data = {
             'transaction_id': transaction.id,
             'cumulative': cumulative,
-            'fixed': DiscountCardBriefSerializer(fixed, many=True).data
+            'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
+            'client': ProfileBriefSerializer(client).data
         }
 
         return Response(data=data, status=status.HTTP_200_OK)

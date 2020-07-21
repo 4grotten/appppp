@@ -20,18 +20,17 @@ class File(TimestampModel):
     )
 
     large = ImageSpecField(source='file',
-                           processors=[ResizeToFit(300, 300)],
+                           processors=[ResizeToFit(400, 400)],
                            format='JPEG',
-                           options={'quality': 80})
+                           options={'quality': 100})
     medium = ImageSpecField(source='file',
                             processors=[ResizeToFit(150, 150)],
                             format='JPEG',
-                            options={'quality': 80})
-
+                            options={'quality': 100})
     small = ImageSpecField(source='file',
                            processors=[ResizeToFit(50, 50)],
                            format='JPEG',
-                           options={'quality': 80})
+                           options={'quality': 100})
 
     def __str__(self):
         return self.file.name

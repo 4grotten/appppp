@@ -1,9 +1,11 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from organizations.serializers import PartnerSerializer
 from organizations.sers.partnership_serializers import PartnershipRequestSerializer
+from organizations.services import OrganizationService
 from organizations.servs.partnership_services import PartnershipService
 
 
@@ -28,3 +30,11 @@ class PartnershipView(GenericAPIView):
         return Response(data={
             'message': 'Successfully sent partnership request'
         }, status=status.HTTP_200_OK)
+
+
+class OrganizationPartnersView(ListAPIView):
+    serializer_class = PartnerSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        return PartnershipService.get_accepted_partners(user=self.request.user, organization=organization)

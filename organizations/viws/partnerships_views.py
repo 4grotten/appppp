@@ -25,4 +25,6 @@ class PartnershipView(GenericAPIView):
             accepted_by=serializer.validated_data['accepted_by']
         )
 
-        return Response()
+        return Response(data={
+            'message': 'Successfully sent partnership request'
+        }, status=status.HTTP_200_OK)

@@ -123,6 +123,7 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
 
 class PartnerSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
     partners = serializers.SerializerMethodField()
 
     def get_partners(self, organizaiton: Organization):
@@ -134,7 +135,7 @@ class PartnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'partners')
+        fields = ('id', 'title', 'image', 'types', 'partners')
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):

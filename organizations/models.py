@@ -182,3 +182,22 @@ class Subscription(TimestampModel):
 
     def __str__(self):
         return f'{self.user} subscribed to {self.organization}'
+
+
+class Partnership(TimestampModel):
+    requested_by = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='requested_partnerships')
+    accepted_by = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='accepted_partnerships')
+
+    is_accepted = models.BooleanField(default=False)
+
+    can_check_attendance = models.BooleanField(default=False)
+    can_see_stats = models.BooleanField(default=False)
+    can_edit_organization = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(fields=('requested_by', 'accepted_by'), name='unique_partnerships'),
+        )
+
+    def __str__(self):
+        return f'{self.accepted_by} accepted partnership of {self.requested_by}'

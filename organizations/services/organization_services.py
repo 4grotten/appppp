@@ -89,10 +89,13 @@ class OrganizationService:
 
     @classmethod
     def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:
-        partners = Organization.objects.filter(
-            id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
-
+        partners = cls.get_organization_partners(organization=organization)
         return partners.count(), partners[:3]
+
+    @classmethod
+    def get_organization_partners(cls, organization: Organization) -> QuerySet:
+        return Organization.objects.filter(
+            id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):

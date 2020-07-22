@@ -38,3 +38,10 @@ class OrganizationPartnersView(ListAPIView):
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         return PartnershipService.get_accepted_partners(user=self.request.user, organization=organization)
+
+
+class HomepagePartnersView(ListAPIView):
+    serializer_class = PartnerSerializer
+
+    def get_queryset(self):
+        return OrganizationService.get_organizations_ordered_by_num_of_partners()

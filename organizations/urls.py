@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from .views.homepage_views import BannerView
+from .views.banner_views import BannerView
 from .views.subscription_views import SubscriptionsView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.organization_views import (
@@ -8,7 +8,7 @@ from .views.organization_views import (
     OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView
 )
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
-from .views.partnerships_views import PartnershipView, OrganizationPartnersView
+from .views.partnerships_views import PartnershipView, OrganizationPartnersView, HomepagePartnersView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -37,4 +37,5 @@ urlpatterns = [
     path('partnerships/', PartnershipView.as_view(), name='partnerships'),
 
     path('banners/', BannerView.as_view(), name='banners'),
+    path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
 ]

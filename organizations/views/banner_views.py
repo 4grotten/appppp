@@ -4,7 +4,6 @@ from rest_framework.response import Response
 
 from organizations.serializers.banner_serializers import BannerSerializer, OrganizationIDSerializer
 from organizations.services.banner_services import BannerService
-from organizations.services.organization_services import OrganizationService
 
 
 class BannerView(GenericAPIView):
@@ -18,11 +17,5 @@ class BannerView(GenericAPIView):
 
         banners = BannerService.get_banners(organization=serializer.validated_data['organization'])
         banners = BannerSerializer(banners, many=True).data
-
-        partners = OrganizationService.get_organizations_ordered_by_num_of_partners(limit=10)
-
-        for partner in partners:
-            print(partner)
-            print(partner.partners_count)
 
         return Response(banners)

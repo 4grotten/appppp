@@ -3,10 +3,10 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from organizations.serializers import PartnerSerializer
-from organizations.sers.partnership_serializers import PartnershipRequestSerializer
-from organizations.services import OrganizationService
-from organizations.servs.partnership_services import PartnershipService
+from organizations.serializers.organization_serializers import PartnerSerializer
+from organizations.serializers.partnership_serializers import PartnershipRequestSerializer
+from organizations.services.organization_services import OrganizationService
+from organizations.services.partnership_services import PartnershipService
 
 
 class PartnershipView(GenericAPIView):

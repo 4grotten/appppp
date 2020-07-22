@@ -1,12 +1,13 @@
 from django.urls import path
 
-from .views import (
-    OrganizationsListCreateView, OrganizationTypesListView, OrgPhonesListAPIView,
-    OrgNetworksListAPIView, SetOrganizationLocationAPIView, OrganizationDiscountsAPIView,
-    OrganizationDiscountsDeleteUpdateView, OrganizationRetrieveView, SubscriptionsView, BackgroundListView
+from .views.subscription_views import SubscriptionsView
+from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
+from .views.organization_views import (
+    OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
+    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView
 )
-from .viws.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
-from .viws.partnerships_views import PartnershipView, OrganizationPartnersView
+from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
+from .views.partnerships_views import PartnershipView, OrganizationPartnersView
 
 urlpatterns = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),

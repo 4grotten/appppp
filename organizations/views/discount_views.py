@@ -3,8 +3,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from organizations.sers.bulk_serializers import BulkDeleteSerializer, BulkUpdateSerializer
-from organizations.services import DiscountCardService
+from organizations.serializers.bulk_serializers import BulkDeleteSerializer, BulkUpdateSerializer
+from organizations.services.card_services import DiscountCardService
 
 
 class DiscountsBulkUpdateView(GenericAPIView):

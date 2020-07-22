@@ -1,75 +1,12 @@
 from rest_framework import serializers
 
-from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer
-from .models import (
-    Organization, OrganizationType, PhoneNumber,
-    SocialNetworkContact, OrganizationCategory, DiscountCard, Subscription
-)
-from .services import OrganizationService, DiscountCardService, OrganizationClientFinancialStatusService
-from .servs.subscription_services import SubscriptionService
-
-
-class DiscountCardSerializer(serializers.ModelSerializer):
-    image = ImageSerializer(read_only=True)
-    organization_id = serializers.IntegerField(read_only=True)
-    is_editable = serializers.SerializerMethodField()
-
-    def get_is_editable(self, card: DiscountCard) -> bool:
-        return DiscountCardService.is_card_editable(discount=card)
-
-    class Meta:
-        model = DiscountCard
-        fields = ('id', 'type', 'percent', 'limit', 'currency', 'is_editable', 'image', 'organization_id',)
-
-    def validate(self, attrs):
-        if attrs['type'] == DiscountCard.CUMULATIVE:
-            errors = {}
-            if attrs.get('limit', None) is None:
-                errors['limit'] = ['This field is required']
-            if errors:
-                raise serializers.ValidationError(errors)
-        else:
-            attrs['limit'] = None
-
-        return attrs
-
-
-class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
-    def get_queryset(self):
-        request = self.context.get('request')
-        organization_id = request.data['organization']
-        queryset = Organization.objects.filter(id=organization_id)
-
-        if not queryset or not OrganizationService.user_can_edit_organization(
-                organization_id=organization_id, user=request.user):
-            raise NotAcceptableException('No rights to edit organization')
-
-        return queryset
-
-
-class DiscountBulkCreateSerializer(serializers.Serializer):
-    cards = DiscountCardSerializer(many=True)
-    organization = UserFilteredPrimaryKeyRelatedField(write_only=True)
-
-
-class DiscountGroupSerializer(serializers.Serializer):
-    cumulative = DiscountCardSerializer(many=True)
-    fixed = DiscountCardSerializer(many=True)
-
-
-class DiscountCardUpdateSerializer(serializers.ModelSerializer):
-    image_id = serializers.IntegerField(required=False, allow_null=True)
-
-    class Meta:
-        model = DiscountCard
-        fields = ('image_id',)
-
-
-class DiscountCardBriefSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DiscountCard
-        fields = ('id', 'percent',)
+from organizations.models import PhoneNumber, SocialNetworkContact, OrganizationType, Organization, OrganizationCategory
+from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
+from organizations.services.card_services import DiscountCardService
+from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.organization_services import OrganizationService
+from organizations.services.subscription_services import SubscriptionService
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -228,18 +165,6 @@ class OrganizationCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationCategory
         fields = ('id', 'name', 'types')
-
-
-class LocationSerializer(serializers.Serializer):
-    address = serializers.CharField()
-    longitude = serializers.FloatField(allow_null=True)
-    latitude = serializers.FloatField(allow_null=True)
-
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Subscription
-        fields = ('organization',)
 
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):

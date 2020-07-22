@@ -3,7 +3,7 @@ from django.db.models import QuerySet
 
 from common.exceptions import NotAcceptableException, IntegrityException
 from organizations.models import Organization, Partnership
-from organizations.services import OrganizationService
+from organizations.services.organization_services import OrganizationService
 from users.models import User
 
 

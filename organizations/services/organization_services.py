@@ -2,7 +2,8 @@ from typing import Tuple
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Count
+from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
 from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership
@@ -160,6 +161,14 @@ class OrganizationService:
 
         except Exception as e:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
+
+    @classmethod
+    def get_organizations_ordered_by_num_of_partners(cls, limit: int = None) -> QuerySet:
+        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
+            partners_count=Coalesce(Count('requested_partnerships'), 0)).order_by('-partners_count')
+        if limit is not None:
+            queryset = queryset[:limit]
+        return queryset
 
 
 class OrgPhoneNumberService:

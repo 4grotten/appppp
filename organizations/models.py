@@ -201,3 +201,14 @@ class Partnership(TimestampModel):
 
     def __str__(self):
         return f'{self.accepted_by} accepted partnership of {self.requested_by}'
+
+
+class Banner(TimestampModel):
+    host_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hosted_banners',
+                                          null=True, blank=True)
+    linked_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='leading_banners')
+
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='banners')
+
+    def __str__(self):
+        return f'Banner of {self.linked_organization} hosted by {self.host_organization}'

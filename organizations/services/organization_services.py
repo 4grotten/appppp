@@ -48,6 +48,16 @@ class OrganizationService:
         return membership.role.can_sale
 
     @classmethod
+    def user_can_see_stats(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_see_stats
+
+    @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             return {

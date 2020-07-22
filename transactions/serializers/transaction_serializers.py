@@ -2,9 +2,9 @@ from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from organizations.models import DiscountCard, Organization
+from organizations.models import Organization, DiscountCard
+from transactions.models import Transaction
 from users.models import User
-from .models import Transaction
 
 
 class PreprocessSerializer(serializers.Serializer):

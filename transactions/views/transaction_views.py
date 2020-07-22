@@ -6,9 +6,9 @@ from rest_framework.response import Response
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.card_services import DiscountCardService
+from transactions.serializers.transaction_serializers import PreprocessSerializer, CompleteSerializer
 from users.serializers import ProfileBriefSerializer
-from .serializers import PreprocessSerializer, CompleteSerializer
-from .services import TransactionService
+from transactions.services.transaction_services import TransactionService
 
 
 class TransactionPreprocessView(GenericAPIView):

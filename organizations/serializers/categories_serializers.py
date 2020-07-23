@@ -24,7 +24,7 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
 
     def get_organizations(self, category: OrganizationCategory):
         # ToDo: limit number of returning organizations
-        organizations = Organization.objects.filter(is_active=True, types__in=category.types.all())
+        organizations = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
         return OrganizationWithDiscountsSerializer(organizations, many=True).data
 
     class Meta:

@@ -43,3 +43,9 @@ class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'types', 'image', 'discounts')
+
+
+class OrganizationAndCategorySerializer(serializers.Serializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=OrganizationCategory.objects.all())
+    partner = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
+                                                      default=None)

@@ -5,7 +5,7 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
-    CardBackground, Partnership
+    CardBackground, Partnership, Banner
 )
 
 
@@ -85,6 +85,11 @@ class PartnershipAdmin(admin.ModelAdmin):
     )
 
 
+class BannerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'host_organization', 'linked_organization', 'updated_at')
+    list_filter = ('host_organization',)
+
+
 admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)
 admin.site.register(OrganizationType, OrganizationTypeAdmin)
 admin.site.register(Organization, OrganizationAdmin)
@@ -97,3 +102,4 @@ admin.site.register(OrganizationClientFinancialStatus, OrganizationClientFinanci
 admin.site.register(Subscription, SubscriptionAdmin)
 admin.site.register(CardBackground, CardBackgroundAdmin)
 admin.site.register(Partnership, PartnershipAdmin)
+admin.site.register(Banner, BannerAdmin)

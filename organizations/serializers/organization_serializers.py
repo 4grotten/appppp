@@ -63,12 +63,26 @@ class PartnerSerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     partners = serializers.SerializerMethodField()
 
-    def get_partners(self, organizaiton: Organization):
-        count, partners = OrganizationService.get_partners_dict(organization=organizaiton)
+    def get_partners(self, organization: Organization):
+        count, partners = OrganizationService.get_partners_dict(organization=organization)
         return {
             'count': count,
             'list': OrganizationWithImageSerializer(partners, many=True).data
         }
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'image', 'types', 'partners')
+
+
+class HomepagePartnerSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    partners = serializers.SerializerMethodField()
+
+    def get_partners(self, organization: Organization):
+        partners = OrganizationService.get_organization_partners(organization=organization)
+        return OrganizationWithImageSerializer(partners, many=True).data
 
     class Meta:
         model = Organization
@@ -108,8 +122,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             organization=organization)
         return data
 
-    def get_partners(self, organizaiton: Organization):
-        count, partners = OrganizationService.get_partners_dict(organization=organizaiton)
+    def get_partners(self, organization: Organization):
+        count, partners = OrganizationService.get_partners_dict(organization=organization)
         return {
             'count': count,
             'list': OrganizationWithImageSerializer(partners, many=True).data

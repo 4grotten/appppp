@@ -10,7 +10,7 @@ from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
-from .models import Transaction
+from transactions.models import Transaction
 
 
 class TransactionService:

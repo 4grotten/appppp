@@ -2,7 +2,8 @@ from typing import Tuple
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Count
+from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
 from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership
@@ -48,6 +49,16 @@ class OrganizationService:
         return membership.role.can_sale
 
     @classmethod
+    def user_can_see_stats(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_see_stats
+
+    @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             return {
@@ -78,10 +89,13 @@ class OrganizationService:
 
     @classmethod
     def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:
-        partners = Organization.objects.filter(
-            id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
-
+        partners = cls.get_organization_partners(organization=organization)
         return partners.count(), partners[:3]
+
+    @classmethod
+    def get_organization_partners(cls, organization: Organization) -> QuerySet:
+        return Organization.objects.filter(
+            id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):
@@ -150,6 +164,14 @@ class OrganizationService:
 
         except Exception as e:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
+
+    @classmethod
+    def get_organizations_ordered_by_num_of_partners(cls, limit: int = None) -> QuerySet:
+        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
+            partners_count=Coalesce(Count('requested_partnerships'), 0)).order_by('-partners_count')
+        if limit is not None:
+            queryset = queryset[:limit]
+        return queryset
 
 
 class OrgPhoneNumberService:

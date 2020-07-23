@@ -1,14 +1,15 @@
 from django.urls import path, include
 
 from .views.banner_views import BannerView
-from .views.subscription_views import SubscriptionsView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
+from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
-    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView
+    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
+    OrganizationsInCategoryView
 )
-from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.partnerships_views import PartnershipView, OrganizationPartnersView, HomepagePartnersView
+from .views.subscription_views import SubscriptionsView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -38,4 +39,7 @@ urlpatterns = [
 
     path('banners/', BannerView.as_view(), name='banners'),
     path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
+    path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
+
+    path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]

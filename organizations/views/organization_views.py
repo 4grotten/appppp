@@ -7,13 +7,18 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
+from organizations.serializers.categories_serializers import (
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationAndCategorySerializer,
+    OrganizationWithDiscountsSerializer
+)
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
-    OrganizationDetailedSerializer, OrganizationCategorySerializer, OrganizationUpdateSerializer,
+    OrganizationDetailedSerializer, OrganizationUpdateSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer, OrgSocialNetworkContactSerializer,
     OrgSocialNetworkEditSerializer, OrganizationSerializer
 )
+from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService
 )
@@ -61,6 +66,9 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization_id=kwargs['pk']):
+            raise NotAcceptableException('No rights to edit organization')
 
         organization = OrganizationService.get(pk=kwargs['pk'])
 
@@ -158,3 +166,38 @@ class SetOrganizationLocationAPIView(APIView):
             'message': 'Successfully updated',
             'data': data
         }, status=status.HTTP_200_OK)
+
+
+class HomepageOrganizationsView(ListAPIView):
+    serializer_class = HomepageOrganizationsSerializer
+
+    def get_queryset(self):
+        return OrganizationCategoryService.get_nonempty_categories()
+
+
+class OrganizationsInCategoryView(ListAPIView):
+    serializer_class = OrganizationWithDiscountsSerializer
+
+    def list(self, request, *args, **kwargs):
+        serializer = OrganizationAndCategorySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        category = serializer.validated_data['category']
+        organization = serializer.validated_data['partner']
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
+
+        if organization is not None:
+            queryset = queryset.filter(accepted_partnerships__is_accepted=True).filter(
+                accepted_partnerships__requested_by=organization)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

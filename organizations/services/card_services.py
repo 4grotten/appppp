@@ -187,3 +187,10 @@ class DiscountCardService:
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
+
+    @classmethod
+    def get_unique_discount_percents_to_display(cls, organization: Organization) -> list:
+        values = DiscountCard.objects.filter(
+            is_published=True, organization=organization
+        ).distinct('percent').order_by('percent').values_list('percent', flat=True)
+        return values

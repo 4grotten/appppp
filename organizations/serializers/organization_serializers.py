@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer, CountrySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, OrganizationType, Organization, OrganizationCategory
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
+from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
@@ -27,12 +28,6 @@ class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
 
 class OrgSocialNetworkEditSerializer(serializers.Serializer):
     networks = serializers.ListSerializer(child=serializers.CharField())
-
-
-class OrganizationTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrganizationType
-        fields = ('id', 'title',)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -171,14 +166,6 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['owner'] = self.context['request'].user
         return attrs
-
-
-class OrganizationCategorySerializer(serializers.ModelSerializer):
-    types = OrganizationTypeSerializer(many=True)
-
-    class Meta:
-        model = OrganizationCategory
-        fields = ('id', 'name', 'types')
 
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):

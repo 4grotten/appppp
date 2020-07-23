@@ -7,13 +7,17 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
+from organizations.serializers.categories_serializers import (
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer
+)
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
-    OrganizationDetailedSerializer, OrganizationCategorySerializer, OrganizationUpdateSerializer,
+    OrganizationDetailedSerializer, OrganizationUpdateSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer, OrgSocialNetworkContactSerializer,
     OrgSocialNetworkEditSerializer, OrganizationSerializer
 )
+from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService
 )
@@ -158,3 +162,10 @@ class SetOrganizationLocationAPIView(APIView):
             'message': 'Successfully updated',
             'data': data
         }, status=status.HTTP_200_OK)
+
+
+class HomepageOrganizationsView(ListAPIView):
+    serializer_class = HomepageOrganizationsSerializer
+
+    def get_queryset(self):
+        return OrganizationCategoryService.get_nonempty_categories()

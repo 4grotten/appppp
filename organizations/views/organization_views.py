@@ -66,6 +66,9 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization_id=kwargs['pk']):
+            raise NotAcceptableException('No rights to edit organization')
+
         organization = OrganizationService.get(pk=kwargs['pk'])
 
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)

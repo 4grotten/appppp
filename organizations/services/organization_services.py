@@ -248,9 +248,9 @@ class OrgMessageService:
 
     @classmethod
     def get_messages_of_organization(cls, organization_id: int) -> QuerySet:
-        return Message.objects.filter(organization_id=organization_id)
+        return cls.model.objects.filter(organization_id=organization_id)
 
     @classmethod
     @transaction.atomic
     def create_message(cls, organization: Organization, msg_content: str):
-        return Message.objects.create(organization=organization, msg_content=msg_content)
+        return cls.model.objects.create(organization=organization, msg_content=msg_content)

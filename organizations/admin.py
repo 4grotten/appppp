@@ -91,7 +91,7 @@ class BannerAdmin(admin.ModelAdmin):
 
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'organization', 'msg_content')
+    list_display = ('id', 'organization', 'content')
 
 
 admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)

@@ -85,7 +85,7 @@ class Role(models.Model):
     can_check_attendance = models.BooleanField(default=False)
     can_see_stats = models.BooleanField(default=False)
     can_edit_organization = models.BooleanField(default=False)
-    can_send_message = models.BooleanField(default=False)
+    can_send_message = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.title} in {self.organization.title}'
@@ -217,7 +217,7 @@ class Banner(TimestampModel):
 
 class Message(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='sender_organization')
-    msg_content = models.CharField(blank=False, null=False, max_length=800)
+    content = models.CharField(blank=False, null=False, max_length=800)
 
     def __str__(self):
-        return f'Message of {self.organization}'
+        return f'Message of {self.organization.title}'

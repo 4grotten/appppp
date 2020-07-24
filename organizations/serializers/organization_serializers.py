@@ -182,12 +182,12 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 class OrgMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ('id', 'msg_content')
+        fields = ('id', 'content')
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):
-    msg_content = serializers.CharField(max_length=800, allow_blank=False, allow_null=False)
+    content = serializers.CharField(max_length=800)
 
     class Meta:
         model = Message
-        fields = ('msg_content',)
+        fields = ('content',)

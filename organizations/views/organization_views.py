@@ -1,5 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -206,10 +207,11 @@ class OrganizationsInCategoryView(ListAPIView):
 
 class OrgMessageAPIView(ListAPIView):
     serializer_class = OrgMessageSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         messages = OrgMessageService.get_messages_of_organization(organization_id=self.kwargs['pk'])
-        return OrgMessageSerializer(messages, many=True).data
+        return messages
 
     def post(self, request, *args, **kwargs):
         serializer = OrgMessageCreateSerializer(data=request.data, many=False)
@@ -223,8 +225,7 @@ class OrgMessageAPIView(ListAPIView):
         organization = OrganizationService.get(pk=kwargs['pk'])
 
         if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
-            raise NotAcceptableException('No rights to send message to followers of this organization')
-
+            raise PermissionDenied({'message': 'No rights to send message to followers of this organization'})
         OrgMessageService.create_message(organization=organization,
                                          msg_content=serializer.validated_data.get('msg_content'))
         return Response(data={'message': 'Message is created'},

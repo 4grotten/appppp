@@ -252,5 +252,5 @@ class OrgMessageService:
 
     @classmethod
     @transaction.atomic
-    def create_message(cls, organization: Organization, msg_content: str):
-        return cls.model.objects.create(organization=organization, msg_content=msg_content)
+    def create_message(cls, organization: Organization, content: str):
+        return cls.model.objects.create(organization=organization, content=content)

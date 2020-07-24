@@ -15,11 +15,12 @@ from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationDetailedSerializer, OrganizationUpdateSerializer,
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer, OrgSocialNetworkContactSerializer,
-    OrgSocialNetworkEditSerializer, OrganizationSerializer
+    OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
+    OrgMessageCreateSerializer
 )
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
-    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService
+    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService
 )
 
 
@@ -172,3 +173,30 @@ class HomepageOrganizationsView(ListAPIView):
 
     def get_queryset(self):
         return OrganizationCategoryService.get_nonempty_categories()
+
+
+class OrgMessageAPIView(ListAPIView):
+    serializer_class = OrgMessageSerializer
+
+    def get_queryset(self):
+        messages = OrgMessageService.get_messages_of_organization(organization_id=self.kwargs['pk'])
+        return OrgMessageSerializer(messages, many=True).data
+
+    def post(self, request, *args, **kwargs):
+        serializer = OrgMessageCreateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = OrganizationService.get(pk=kwargs['pk'])
+
+        if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
+            raise NotAcceptableException('No rights to send message to followers of this organization')
+
+        OrgMessageService.create_message(organization=organization,
+                                         msg_content=serializer.validated_data.get('msg_content'))
+        return Response(data={'message': 'Message is created'},
+                        status=status.HTTP_201_CREATED)

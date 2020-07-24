@@ -6,7 +6,7 @@ from django.db.models import QuerySet, Count
 from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
-from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership
+from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership, Message
 from users.models import User
 
 
@@ -37,6 +37,18 @@ class OrganizationService:
         except ObjectNotFoundException:
             return False
         return membership.role.can_edit_organization
+
+    @classmethod
+    def user_can_send_message(cls, organization_id: int, user: User) -> bool:
+        organization = OrganizationService.get(id=organization_id)
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_send_message
+
 
     @classmethod
     def user_can_sell(cls, organization: Organization, user: User) -> bool:
@@ -229,3 +241,16 @@ class MembershipService:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
             raise ObjectNotFoundException('Membership not found')
+
+
+class OrgMessageService:
+    model = Message
+
+    @classmethod
+    def get_messages_of_organization(cls, organization_id: int) -> QuerySet:
+        return Message.objects.filter(organization_id=organization_id)
+
+    @classmethod
+    @transaction.atomic
+    def create_message(cls, organization: Organization, msg_content: str):
+        return Message.objects.create(organization=organization, msg_content=msg_content)

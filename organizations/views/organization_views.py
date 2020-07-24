@@ -9,20 +9,22 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationAndCategorySerializer,
-    OrganizationWithDiscountsSerializer
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer,
+    OrganizationAndCategorySerializer, OrganizationWithDiscountsSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationDetailedSerializer, OrganizationUpdateSerializer,
-    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer, OrgSocialNetworkContactSerializer,
-    OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
+    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
+    OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer
 )
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
-    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService
+    OrganizationService, OrgPhoneNumberService,
+    OrgSocialNetworkContactService, OrgMessageService
 )
 
 

@@ -6,7 +6,9 @@ from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteVi
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
     OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
-    OrgMessageAPIView
+    OrgMessageAPIView,
+    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
+    OrganizationsInCategoryView
 )
 from .views.partnerships_views import PartnershipView, OrganizationPartnersView, HomepagePartnersView
 from .views.subscription_views import SubscriptionsView
@@ -41,4 +43,6 @@ urlpatterns = [
     path('banners/', BannerView.as_view(), name='banners'),
     path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
+
+    path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]

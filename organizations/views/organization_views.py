@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer, HomepageOrganizationsSerializer
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationAndCategorySerializer,
+    OrganizationWithDiscountsSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -173,6 +174,34 @@ class HomepageOrganizationsView(ListAPIView):
 
     def get_queryset(self):
         return OrganizationCategoryService.get_nonempty_categories()
+
+
+class OrganizationsInCategoryView(ListAPIView):
+    serializer_class = OrganizationWithDiscountsSerializer
+
+    def list(self, request, *args, **kwargs):
+        serializer = OrganizationAndCategorySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        category = serializer.validated_data['category']
+        organization = serializer.validated_data['partner']
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
+
+        if organization is not None:
+            queryset = queryset.filter(accepted_partnerships__is_accepted=True).filter(
+                accepted_partnerships__requested_by=organization)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class OrgMessageAPIView(ListAPIView):

@@ -20,7 +20,7 @@ class File(TimestampModel):
     )
 
     large = ImageSpecField(source='file',
-                           processors=[ResizeToFit(400, 400)],
+                           processors=[ResizeToFit(600, 600)],
                            format='JPEG',
                            options={'quality': 100})
     medium = ImageSpecField(source='file',

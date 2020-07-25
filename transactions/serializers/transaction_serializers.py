@@ -15,7 +15,7 @@ class PreprocessSerializer(serializers.Serializer):
 class CompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
     source_card = serializers.PrimaryKeyRelatedField(queryset=DiscountCard.objects.filter(is_published=True),
-                                                     allow_null=True)
+                                                     default=None)
     discount_percent = serializers.IntegerField(required=True, validators=[MinValueValidator(0)])
     original_amount = serializers.DecimalField(max_digits=16, decimal_places=2,
                                                validators=[MinValueValidator(0)])

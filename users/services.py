@@ -106,7 +106,7 @@ class TemporaryCodeService:
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
 
             if cls.model.objects.filter(user=user,
-                                        created_at__range=(max_datetime, current_datetime)).count() >= 2:
+                                        created_at__range=(max_datetime, current_datetime)).count() >= 3:
                 raise ValidationException('Limit exceeded')
 
             code = cls.model.objects.create(user=user)

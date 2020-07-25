@@ -49,7 +49,6 @@ class OrganizationService:
             return False
         return membership.role.can_send_message
 
-
     @classmethod
     def user_can_sell(cls, organization: Organization, user: User) -> bool:
         if organization.owner == user:
@@ -252,5 +251,5 @@ class OrgMessageService:
 
     @classmethod
     @transaction.atomic
-    def create_message(cls, organization: Organization, content: str):
-        return cls.model.objects.create(organization=organization, content=content)
+    def create_message(cls, organization: Organization, content: str, sender: User):
+        return cls.model.objects.create(organization=organization, content=content, sender=sender)

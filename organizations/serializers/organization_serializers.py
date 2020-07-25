@@ -182,7 +182,7 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 class OrgMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ('id', 'content')
+        fields = ('id', 'sender', 'content')
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):

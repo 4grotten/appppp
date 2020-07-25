@@ -216,6 +216,7 @@ class Banner(TimestampModel):
 
 
 class Message(TimestampModel):
+    sender = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sender')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='sender_organization')
     content = models.CharField(blank=False, null=False, max_length=800)
 

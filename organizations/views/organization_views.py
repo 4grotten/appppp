@@ -228,7 +228,7 @@ class OrgMessageAPIView(ListAPIView):
 
         if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
             raise PermissionDenied({'message': 'No rights to send message to followers of this organization'})
-        OrgMessageService.create_message(organization=organization,
-                                         content=serializer.validated_data.get('content'))
+        OrgMessageService.create_message(organization=organization, content=serializer.validated_data.get('content'),
+                                         sender=request.user)
         return Response(data={'message': 'Message is created'},
                         status=status.HTTP_201_CREATED)

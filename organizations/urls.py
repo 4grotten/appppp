@@ -6,6 +6,8 @@ from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteVi
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
     OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
+    OrgMessageAPIView,
+    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
     OrganizationsInCategoryView
 )
 from .views.partnerships_views import PartnershipView, OrganizationPartnersView, HomepagePartnersView
@@ -17,6 +19,7 @@ organization_urls = [
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveView.as_view(), name='organization_details'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
+    path('organizations/<int:pk>/messages/', OrgMessageAPIView.as_view(), name='organization_messages'),
     path('organizations/<int:pk>/social_networks/', OrgNetworksListAPIView.as_view(), name='organization_networks'),
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set_location'),
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),

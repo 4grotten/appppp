@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer, CountrySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -177,3 +177,17 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country')
+
+
+class OrgMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ('id', 'sender', 'content')
+
+
+class OrgMessageCreateSerializer(serializers.ModelSerializer):
+    content = serializers.CharField(max_length=800)
+
+    class Meta:
+        model = Message
+        fields = ('content',)

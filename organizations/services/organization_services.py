@@ -6,7 +6,7 @@ from django.db.models import QuerySet, Count
 from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
-from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership
+from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership, Message
 from users.models import User
 
 
@@ -39,6 +39,17 @@ class OrganizationService:
         return membership.role.can_edit_organization
 
     @classmethod
+    def user_can_send_message(cls, organization_id: int, user: User) -> bool:
+        organization = OrganizationService.get(id=organization_id)
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_send_message
+
+    @classmethod
     def user_can_sell(cls, organization: Organization, user: User) -> bool:
         if organization.owner == user:
             return True
@@ -66,7 +77,9 @@ class OrganizationService:
                 'can_sale': True,
                 'can_check_attendance': True,
                 'can_see_stats': True,
-                'can_edit_organization': True
+                'can_edit_organization': True,
+                'can_send_message': True,
+                'can_edit_partners': True
             }
 
         try:
@@ -76,7 +89,9 @@ class OrganizationService:
                 'can_sale': role.can_sale,
                 'can_check_attendance': role.can_check_attendance,
                 'can_see_stats': role.can_see_stats,
-                'can_edit_organization': role.can_edit_organization
+                'can_edit_organization': role.can_edit_organization,
+                'can_send_message': role.can_send_message,
+                'can_edit_partner': role.can_edit_partner
             }
         except ObjectNotFoundException:
             return {
@@ -84,7 +99,9 @@ class OrganizationService:
                 'can_sale': False,
                 'can_check_attendance': False,
                 'can_see_stats': False,
-                'can_edit_organization': False
+                'can_edit_organization': False,
+                'can_send_message': False,
+                'can_edit_partner': False
             }
 
     @classmethod
@@ -229,3 +246,16 @@ class MembershipService:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
             raise ObjectNotFoundException('Membership not found')
+
+
+class OrgMessageService:
+    model = Message
+
+    @classmethod
+    def get_messages_of_organization(cls, organization_id: int) -> QuerySet:
+        return cls.model.objects.filter(organization_id=organization_id)
+
+    @classmethod
+    @transaction.atomic
+    def create_message(cls, organization: Organization, content: str, sender: User):
+        return cls.model.objects.create(organization=organization, content=content, sender=sender)

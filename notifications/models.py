@@ -5,6 +5,7 @@ from fcm_django.models import FCMDevice
 from common.exceptions import ObjectNotFoundException
 from common.models import TimestampModel
 from notifications.constants import NOTIFICATION_MODES
+from notifications.services import NotificationSettingService
 
 User = get_user_model()
 
@@ -23,22 +24,13 @@ class Notification(TimestampModel):
 
     def save(self, *args, **kwargs):
         super(Notification, self).save(*args, *kwargs)
-        fcm_device = self.get_fcm_device()
-        self.send_notification(fcm_device=fcm_device)
 
-    def get_fcm_device(self):
-        try:
-            return FCMDevice.objects.get(user=self.recipient)
-        except FCMDevice.DoesNotExist:
-            raise ObjectNotFoundException('FCM device not found')
-
-    def send_notification(self, fcm_device):
-        fcm_device.send_message(
+        NotificationSettingService.send_notification(
+            user=self.recipient,
             title=self.title,
-            body=self.description,
-            data={
-                "notification_id": self.id
-            }
+            description=self.description,
+            mode=self.mode,
+            notification_id=self.id
         )
 
 

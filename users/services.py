@@ -103,7 +103,7 @@ class TemporaryCodeService:
     def create_and_send(cls, user: User) -> TemporaryCode:
         try:
             current_datetime = timezone.now()
-            max_datetime = current_datetime + timezone.timedelta(seconds=-10)
+            max_datetime = current_datetime + timezone.timedelta(minutes=-30)
 
             if cls.model.objects.filter(user=user,
                                         created_at__range=(max_datetime, current_datetime)).count() >= 2:

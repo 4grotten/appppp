@@ -1,8 +1,8 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from notifications.serializers import NotificationSerializer
-from notifications.services import NotificationService
+from .serializers import NotificationSerializer
+from .services import NotificationService
 
 
 class NotificationListAPIView(ListAPIView):

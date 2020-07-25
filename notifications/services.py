@@ -2,9 +2,15 @@ from django.contrib.auth import get_user_model
 from fcm_django.models import FCMDevice
 
 from common.exceptions import ObjectNotFoundException, IntegrityException
-from notifications.constants import DISCOUNT_NOTIFICATION_MODE, SUBSCRIPTION_NOTIFICATION_MODE, \
-    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE
-from notifications.models import Notification, NotificationSetting
+from .constants import (
+    DISCOUNT_NOTIFICATION_MODE,
+    SUBSCRIPTION_NOTIFICATION_MODE,
+    SYSTEM_NOTIFICATION_MODE,
+    PARTNER_MODE
+)
+from .models import (
+    Notification, NotificationSetting
+)
 
 User = get_user_model()
 

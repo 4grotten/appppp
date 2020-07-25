@@ -2,10 +2,9 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from fcm_django.models import FCMDevice
 
-from common.exceptions import ObjectNotFoundException
 from common.models import TimestampModel
-from notifications.constants import NOTIFICATION_MODES
-from notifications.services import NotificationSettingService
+from .constants import NOTIFICATION_MODES
+from .services import NotificationSettingService
 
 User = get_user_model()
 

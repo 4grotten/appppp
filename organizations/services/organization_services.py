@@ -70,6 +70,16 @@ class OrganizationService:
         return membership.role.can_see_stats
 
     @classmethod
+    def user_has_partners_rights(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.has_partners_rights
+
+    @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             return {
@@ -77,7 +87,9 @@ class OrganizationService:
                 'can_sale': True,
                 'can_check_attendance': True,
                 'can_see_stats': True,
-                'can_edit_organization': True
+                'can_edit_organization': True,
+                'can_send_message': True,
+                'has_partners_rights': True
             }
 
         try:
@@ -87,7 +99,9 @@ class OrganizationService:
                 'can_sale': role.can_sale,
                 'can_check_attendance': role.can_check_attendance,
                 'can_see_stats': role.can_see_stats,
-                'can_edit_organization': role.can_edit_organization
+                'can_edit_organization': role.can_edit_organization,
+                'can_send_message': role.can_send_message,
+                'has_partners_rights': role.have_partners_rights
             }
         except ObjectNotFoundException:
             return {
@@ -95,7 +109,9 @@ class OrganizationService:
                 'can_sale': False,
                 'can_check_attendance': False,
                 'can_see_stats': False,
-                'can_edit_organization': False
+                'can_edit_organization': False,
+                'can_send_message': False,
+                'has_partners_rights': False
             }
 
     @classmethod

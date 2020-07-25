@@ -86,6 +86,7 @@ class Role(models.Model):
     can_see_stats = models.BooleanField(default=False)
     can_edit_organization = models.BooleanField(default=False)
     can_send_message = models.BooleanField(default=True)
+    has_partners_rights = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.title} in {self.organization.title}'

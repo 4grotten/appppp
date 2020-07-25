@@ -101,7 +101,7 @@ class OrganizationService:
                 'can_see_stats': role.can_see_stats,
                 'can_edit_organization': role.can_edit_organization,
                 'can_send_message': role.can_send_message,
-                'has_partners_rights': role.have_partners_rights
+                'has_partners_rights': role.has_partners_rights
             }
         except ObjectNotFoundException:
             return {

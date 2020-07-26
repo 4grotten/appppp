@@ -32,8 +32,8 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
         return OrganizationWithDiscountsSerializer(organizations, many=True).data
 
     def get_organizations_count(self, category: OrganizationCategory):
-        partner = self.context.get('partner', None)
-        return OrganizationService.get_organizations_in_category(category=category, partner=partner).count()
+        # using annotated value from OrganizationCategoryService.get_nonempty_categories
+        return category.orgs_count
 
     class Meta:
         model = OrganizationCategory

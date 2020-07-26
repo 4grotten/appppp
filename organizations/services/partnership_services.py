@@ -1,5 +1,4 @@
 from django.db import IntegrityError
-from django.db.models import QuerySet
 
 from common.exceptions import NotAcceptableException, IntegrityException
 from organizations.models import Organization, Partnership
@@ -22,4 +21,6 @@ class PartnershipService:
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
         # ToDo: send notification to accepted_by organization
 
-
+    @classmethod
+    def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:
+        return Partnership.objects.filter(requested_by=requested_by, accepted_by=accepted_by, is_accepted=True).exists()

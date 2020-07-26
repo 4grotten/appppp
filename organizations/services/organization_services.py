@@ -72,6 +72,16 @@ class OrganizationService:
         return membership.role.can_see_stats
 
     @classmethod
+    def user_can_edit_partner(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_edit_partner
+
+    @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             return {
@@ -81,7 +91,7 @@ class OrganizationService:
                 'can_see_stats': True,
                 'can_edit_organization': True,
                 'can_send_message': True,
-                'can_edit_partners': True
+                'can_edit_partner': True
             }
 
         try:

@@ -29,7 +29,7 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
         return OrganizationWithDiscountsSerializer(organizations, many=True).data
 
     def get_number_of_organizations(self, category: OrganizationCategory):
-        return Organization.objects.filter(is_active=True, types__in=category.types.all()).count()
+        return Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().count()
 
     class Meta:
         model = OrganizationCategory

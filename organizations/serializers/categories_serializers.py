@@ -21,19 +21,19 @@ class OrganizationCategorySerializer(serializers.ModelSerializer):
 
 class HomepageOrganizationsSerializer(serializers.ModelSerializer):
     organizations = serializers.SerializerMethodField()
-    number_of_organizations = serializers.SerializerMethodField()
+    organizations_count = serializers.SerializerMethodField()
 
     def get_organizations(self, category: OrganizationCategory):
         # ToDo: limit number of returning organizations
         organizations = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
         return OrganizationWithDiscountsSerializer(organizations, many=True).data
 
-    def get_number_of_organizations(self, category: OrganizationCategory):
+    def get_organizations_count(self, category: OrganizationCategory):
         return Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().count()
 
     class Meta:
         model = OrganizationCategory
-        fields = ('id', 'name', 'number_of_organizations', 'organizations')
+        fields = ('id', 'name', 'organizations_count', 'organizations')
 
 
 class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):

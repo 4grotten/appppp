@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -31,8 +31,9 @@ class SubscriptionsView(ListAPIView):
             }
         }, status=status.HTTP_200_OK)
 
-    def list(self, request, *args, **kwargs):
-        queryset = SubscriptionService.get_user_subscriptions(user=self.request.user)
-        serializer = OrganizationWithDiscountsSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return SubscriptionService.get_user_subscriptions(user=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        self.serializer_class = OrganizationWithDiscountsSerializer
+        return super().list(request, *args, **kwargs)

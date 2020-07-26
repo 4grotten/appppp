@@ -191,3 +191,16 @@ class OrgMessageCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ('content',)
+
+
+class OrganizationBannerInfo(serializers.ModelSerializer):
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    max_discount = serializers.SerializerMethodField()
+
+    def get_max_discount(self, organization: Organization) -> int:
+        return DiscountCardService.get_max_discount(organization=organization)
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'max_discount', 'types', 'image',)

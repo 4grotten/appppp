@@ -3,7 +3,9 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from organizations.serializers.organization_serializers import PartnerSerializer, HomepagePartnerSerializer
+from organizations.serializers.organization_serializers import (
+    PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo
+)
 from organizations.serializers.partnership_serializers import PartnershipRequestSerializer
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
@@ -45,3 +47,11 @@ class HomepagePartnersView(ListAPIView):
 
     def get_queryset(self):
         return OrganizationService.get_organizations_ordered_by_num_of_partners()
+
+
+class HomepageBannersView(ListAPIView):
+    pagination_class = None
+    serializer_class = OrganizationBannerInfo
+
+    def get_queryset(self):
+        return OrganizationService.get_latest_created_organizations_with_discounts()

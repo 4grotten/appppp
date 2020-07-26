@@ -5,12 +5,14 @@ from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscount
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
-    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
     OrgMessageAPIView,
     OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
     OrganizationsInCategoryView
 )
-from .views.partnerships_views import PartnershipView, OrganizationPartnersView, HomepagePartnersView
+from .views.partnerships_views import (
+    PartnershipView, OrganizationPartnersView, HomepagePartnersView,
+    HomepageBannersView
+)
 from .views.subscription_views import SubscriptionsView
 
 organization_urls = [
@@ -42,6 +44,7 @@ urlpatterns = [
 
     path('banners/', BannerView.as_view(), name='banners'),
     path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
+    path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),

@@ -29,7 +29,7 @@ class OrganizationType(models.Model):
         return f'{self.title}'
 
 
-class Organization(models.Model):
+class Organization(TimestampModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
 
     title = models.CharField(max_length=255)
@@ -206,8 +206,7 @@ class Partnership(TimestampModel):
 
 
 class Banner(TimestampModel):
-    host_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hosted_banners',
-                                          null=True, blank=True)
+    host_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hosted_banners')
     linked_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='leading_banners')
 
     image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='banners')

@@ -1,3 +1,4 @@
+import random
 from typing import Tuple
 
 from django.contrib.gis.geos import Point
@@ -6,6 +7,7 @@ from django.db.models import QuerySet, Count
 from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
+from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership, Message
 from users.models import User
 
@@ -188,6 +190,12 @@ class OrganizationService:
             partners_count=Coalesce(Count('requested_partnerships'), 0)).order_by('-partners_count')
         if limit is not None:
             queryset = queryset[:limit]
+        return queryset
+
+    @classmethod
+    def get_latest_created_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:
+        queryset = list(Organization.objects.exclude(discounts__isnull=True).order_by('-created_at')[:limit])
+        random.shuffle(queryset)
         return queryset
 
 

@@ -28,3 +28,9 @@ class BannerService:
             raise NotAcceptableException('The organizations are not partners')
 
         cls.create(host_organization=host, linked_organization=linked_to, image=image)
+
+    @classmethod
+    def delete_banner(cls, user: User, banner: Banner):
+        if not OrganizationService.user_can_edit_partner(user=user, organization=banner.host_organization):
+            raise NotAcceptableException('No access to partner settings')
+        banner.delete()

@@ -10,7 +10,7 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer,
-    OrganizationAndCategorySerializer, OrganizationWithDiscountsSerializer
+    OrganizationAndCategorySerializer, OrganizationWithDiscountsSerializer, PartnerQueryParamSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -174,9 +174,18 @@ class SetOrganizationLocationAPIView(APIView):
 
 class HomepageOrganizationsView(ListAPIView):
     serializer_class = HomepageOrganizationsSerializer
+    partner = None
 
     def get_queryset(self):
-        return OrganizationCategoryService.get_nonempty_categories()
+        params = PartnerQueryParamSerializer(data=self.request.GET)
+        params.is_valid(raise_exception=True)
+        self.partner = params.validated_data.get('partner', None)
+        return OrganizationCategoryService.get_nonempty_categories(partner=self.partner)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['partner'] = self.partner
+        return context
 
 
 class OrganizationsInCategoryView(ListAPIView):

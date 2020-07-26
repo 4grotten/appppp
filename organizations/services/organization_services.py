@@ -8,7 +8,10 @@ from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
-from organizations.models import Organization, PhoneNumber, SocialNetworkContact, Membership, Message
+from organizations.models import (
+    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact,
+    Membership, Message
+)
 from users.models import User
 
 
@@ -206,6 +209,14 @@ class OrganizationService:
     def get_latest_created_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:
         queryset = list(Organization.objects.exclude(discounts__isnull=True).order_by('-created_at')[:limit])
         random.shuffle(queryset)
+        return queryset
+
+    @classmethod
+    def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
+        if partner is not None:
+            queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+
         return queryset
 
 

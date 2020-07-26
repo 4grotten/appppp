@@ -1,12 +1,14 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.serializers.organization_serializers import (
     PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo
 )
-from organizations.serializers.partnership_serializers import PartnershipRequestSerializer
+from organizations.serializers.partnership_serializers import (
+    PartnershipRequestSerializer, PartnershipSerializer, PartnershipDetailedSerializer
+)
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 
@@ -34,12 +36,29 @@ class PartnershipView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class PartnershipDetailsView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PartnershipDetailedSerializer
+
+    def get_queryset(self):
+        return PartnershipService.get_available_partnerships(partnership_id=self.kwargs['pk'],
+                                                             user=self.request.user)
+
+
 class OrganizationPartnersView(ListAPIView):
     serializer_class = PartnerSerializer
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         return OrganizationService.get_organization_partners(organization=organization)
+
+
+class OrgPartnershipsView(ListAPIView):
+    serializer_class = PartnershipSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        return PartnershipService.get_organization_partnerships(organization=organization, user=self.request.user)
 
 
 class HomepagePartnersView(ListAPIView):

@@ -1,12 +1,22 @@
-from django.db import IntegrityError
+from typing import Union
 
-from common.exceptions import NotAcceptableException, IntegrityException
+from django.db import IntegrityError
+from django.db.models import QuerySet
+
+from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from organizations.models import Organization, Partnership
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
 
 class PartnershipService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return Partnership.objects.get(*args, **kwargs)
+        except Partnership.DoesNotExist:
+            raise ObjectNotFoundException('Partnership not found')
+
     @classmethod
     def create(cls, *args, **kwargs):
         try:
@@ -24,3 +34,18 @@ class PartnershipService:
     @classmethod
     def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:
         return Partnership.objects.filter(requested_by=requested_by, accepted_by=accepted_by, is_accepted=True).exists()
+
+    @classmethod
+    def get_organization_partnerships(cls, organization: Organization, user: User) -> QuerySet:
+        if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
+            raise NotAcceptableException('No access to partner settings')
+
+        return Partnership.objects.filter(requested_by=organization)
+
+    @classmethod
+    def get_available_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
+        partnership = cls.get(id=partnership_id)
+        try:
+            return cls.get_organization_partnerships(organization=partnership.requested_by, user=user)
+        except NotAcceptableException:
+            return None

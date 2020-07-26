@@ -11,7 +11,7 @@ from .views.organization_views import (
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
-    HomepageBannersView
+    HomepageBannersView, OrgPartnershipsView, PartnershipDetailsView
 )
 from .views.subscription_views import SubscriptionsView
 
@@ -35,12 +35,18 @@ discounts_urls = [
     path('discount_backgrounds/', BackgroundListView.as_view(), name='discount_backgrounds'),
 ]
 
+partnership_urls = [
+    path('partnerships/', PartnershipView.as_view(), name='partnerships'),
+    path('partnerships/<int:pk>/', PartnershipDetailsView.as_view(), name='partnership_details'),
+    path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
+]
+
 urlpatterns = [
     path('', include(organization_urls)),
     path('', include(discounts_urls)),
+    path('', include(partnership_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
-    path('partnerships/', PartnershipView.as_view(), name='partnerships'),
 
     path('banners/', BannerView.as_view(), name='banners'),
     path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),

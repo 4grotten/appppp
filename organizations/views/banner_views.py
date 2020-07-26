@@ -37,4 +37,6 @@ class BannerView(GenericAPIView):
             image=serializer.validated_data['image']
         )
 
-        return Response()
+        return Response(data={
+            'message': 'Successfully created',
+        }, status=status.HTTP_201_CREATED)

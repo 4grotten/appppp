@@ -49,3 +49,16 @@ class PartnershipService:
             return cls.get_organization_partnerships(organization=partnership.requested_by, user=user)
         except NotAcceptableException:
             return None
+
+    @classmethod
+    def set_permissions(cls, partnership: Partnership, can_check_attendance: bool, can_see_stats: bool,
+                        can_edit_organization: bool) -> Partnership:
+        try:
+            partnership.is_accepted = True
+            partnership.can_check_attendance = can_check_attendance
+            partnership.can_see_stats = can_see_stats
+            partnership.can_edit_organization = can_edit_organization
+            partnership.save()
+            return partnership
+        except IntegrityError:
+            raise IntegrityException('Could not update partnership permissions')

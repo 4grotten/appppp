@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -7,7 +7,7 @@ from organizations.serializers.organization_serializers import (
     PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo
 )
 from organizations.serializers.partnership_serializers import (
-    PartnershipRequestSerializer, PartnershipSerializer, PartnershipDetailedSerializer
+    PartnershipRequestSerializer, PartnershipSerializer, PartnershipDetailedSerializer, PartnershipUpdateSerializer
 )
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
@@ -36,13 +36,26 @@ class PartnershipView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class PartnershipDetailsView(RetrieveAPIView):
+class PartnershipRetrieveUpdateView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PartnershipDetailedSerializer
 
     def get_queryset(self):
         return PartnershipService.get_available_partnerships(partnership_id=self.kwargs['pk'],
                                                              user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        serializer = PartnershipUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        partnership = self.get_object()
+        partnership = PartnershipService.set_permissions(partnership=partnership, **serializer.validated_data)
+        data = PartnershipDetailedSerializer(partnership).data
+        return Response(data)
 
 
 class OrganizationPartnersView(ListAPIView):

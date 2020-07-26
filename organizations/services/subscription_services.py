@@ -23,5 +23,5 @@ class SubscriptionService:
     @classmethod
     def get_user_subscriptions(cls, user: User) -> QuerySet:
         organizations_id = Subscription.objects.filter(user=user)
-        organizations = Organization.objects.filter(id__in=organizations_id.values('organization_id'))
+        organizations = Organization.objects.filter(id__in=organizations_id.values('organization_id')).distinct()
         return organizations

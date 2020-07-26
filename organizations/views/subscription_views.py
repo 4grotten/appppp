@@ -31,7 +31,8 @@ class SubscriptionsView(ListAPIView):
             }
         }, status=status.HTTP_200_OK)
 
-    def get_queryset(self):
-        self.serializer_class = OrganizationWithDiscountsSerializer
-        return SubscriptionService.get_user_subscriptions(user=self.request.user)
+    def list(self, request, *args, **kwargs):
+        queryset = SubscriptionService.get_user_subscriptions(user=self.request.user)
+        serializer = OrganizationWithDiscountsSerializer(queryset, many=True)
+        return Response(serializer.data)
 

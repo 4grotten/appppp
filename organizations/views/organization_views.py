@@ -185,6 +185,7 @@ class HomepageOrganizationsView(ListAPIView):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['partner'] = self.partner
+        context['request'] = self.request
         return context
 
 

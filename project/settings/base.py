@@ -184,7 +184,7 @@ EMAIL_USE_TLS = True
 FCM_DJANGO_SETTINGS = {
     "APP_VERBOSE_NAME": 'Qrcode push',
     # default: _('FCM Django')
-    "FCM_SERVER_KEY": os.environ['FCM_KEY'],
+    "FCM_SERVER_KEY": config('FCM_KEY'),
     # true if you want to have only one active device per registered user at a time
     # default: False
     "ONE_DEVICE_PER_USER": False,

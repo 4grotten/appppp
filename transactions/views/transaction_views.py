@@ -1,9 +1,12 @@
+from django.views.generic import ListView
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
+from organizations.serializers.organization_serializers import PartnerSerializer
+from organizations.serializers.partnership_serializers import PartnershipSerializer
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.card_services import DiscountCardService
 from transactions.serializers.transaction_serializers import PreprocessSerializer, CompleteSerializer
@@ -72,3 +75,12 @@ class TransactionCompleteView(GenericAPIView):
         return Response(data={
             'message': 'Transaction successfully completed'
         }, status=status.HTTP_200_OK)
+
+
+class TransactionOrganizationsView(ListAPIView):
+    serializer_class = PartnerSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        organizations = TransactionService.get_user_transaction_organizations(client=self.request.user)
+        return organizations

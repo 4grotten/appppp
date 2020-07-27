@@ -76,3 +76,9 @@ class TransactionService:
         aggregated = Transaction.objects.filter(
             client=client, organization=organization, is_processed=True).aggregate(total=Coalesce(Sum('savings'), 0))
         return aggregated['total']
+
+    @classmethod
+    def get_user_transaction_organizations(cls, client: User):
+        transactions = Transaction.objects.filter(client=client)
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
+        return organizations

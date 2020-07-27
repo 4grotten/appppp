@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
+from organizations.constants import HOMEPAGE_ORGS_IN_CATEGORIES_COUNT
 from organizations.models import OrganizationType, OrganizationCategory, Organization
 from organizations.services.card_services import DiscountCardService
+from organizations.services.organization_services import OrganizationService
 
 
 class OrganizationTypeSerializer(serializers.ModelSerializer):
@@ -21,15 +23,21 @@ class OrganizationCategorySerializer(serializers.ModelSerializer):
 
 class HomepageOrganizationsSerializer(serializers.ModelSerializer):
     organizations = serializers.SerializerMethodField()
+    organizations_count = serializers.SerializerMethodField()
 
     def get_organizations(self, category: OrganizationCategory):
-        # ToDo: limit number of returning organizations
-        organizations = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
+        partner = self.context.get('partner', None)
+        organizations = OrganizationService.get_organizations_in_category(category=category, partner=partner,
+                                                                          )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
         return OrganizationWithDiscountsSerializer(organizations, many=True).data
+
+    def get_organizations_count(self, category: OrganizationCategory):
+        # using annotated value from OrganizationCategoryService.get_nonempty_categories
+        return category.orgs_count
 
     class Meta:
         model = OrganizationCategory
-        fields = ('id', 'name', 'organizations',)
+        fields = ('id', 'name', 'organizations_count', 'organizations')
 
 
 class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
@@ -48,4 +56,8 @@ class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
 class OrganizationAndCategorySerializer(serializers.Serializer):
     category = serializers.PrimaryKeyRelatedField(queryset=OrganizationCategory.objects.all())
     partner = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
-                                                      default=None)
+                                                 default=None)
+
+
+class PartnerQueryParamSerializer(serializers.Serializer):
+    partner = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True), default=None)

@@ -13,5 +13,10 @@ class BannerSerializer(serializers.ModelSerializer):
 
 
 class OrganizationIDSerializer(serializers.Serializer):
-    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
-                                                      default=None)
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+
+
+class BannerCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = ('host_organization', 'linked_organization', 'image',)

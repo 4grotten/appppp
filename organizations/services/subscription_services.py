@@ -1,4 +1,5 @@
 from organizations.models import Organization, Subscription
+from django.db.models import QuerySet
 from users.models import User
 
 
@@ -18,3 +19,9 @@ class SubscriptionService:
             return True
         subscription.delete()
         return False
+
+    @classmethod
+    def get_user_subscriptions(cls, user: User) -> QuerySet:
+        organizations_id = Subscription.objects.filter(user=user)
+        organizations = Organization.objects.filter(id__in=organizations_id.values('organization_id')).distinct()
+        return organizations

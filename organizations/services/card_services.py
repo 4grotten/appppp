@@ -194,3 +194,12 @@ class DiscountCardService:
             is_published=True, organization=organization
         ).distinct('percent').order_by('percent').values_list('percent', flat=True)
         return values
+
+    @classmethod
+    def get_max_discount(cls, organization: Organization) -> int:
+        max_discount = DiscountCard.objects.filter(
+            is_published=True, organization=organization
+        ).distinct('percent').order_by('-percent').values_list('percent', flat=True)[:1]
+        if max_discount:
+            return max_discount[0]
+        return 0

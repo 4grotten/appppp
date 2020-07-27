@@ -1,5 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,19 +9,22 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationAndCategorySerializer,
-    OrganizationWithDiscountsSerializer
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer,
+    OrganizationAndCategorySerializer, OrganizationWithDiscountsSerializer, PartnerQueryParamSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer,
     OrganizationDetailedSerializer, OrganizationUpdateSerializer,
-    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer, OrgSocialNetworkContactSerializer,
-    OrgSocialNetworkEditSerializer, OrganizationSerializer
+    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
+    OrganizationSerializer, OrgMessageSerializer,
+    OrgMessageCreateSerializer
 )
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
-    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService
+    OrganizationService, OrgPhoneNumberService,
+    OrgSocialNetworkContactService, OrgMessageService
 )
 
 
@@ -170,9 +174,18 @@ class SetOrganizationLocationAPIView(APIView):
 
 class HomepageOrganizationsView(ListAPIView):
     serializer_class = HomepageOrganizationsSerializer
+    partner = None
 
     def get_queryset(self):
-        return OrganizationCategoryService.get_nonempty_categories()
+        params = PartnerQueryParamSerializer(data=self.request.GET)
+        params.is_valid(raise_exception=True)
+        self.partner = params.validated_data.get('partner', None)
+        return OrganizationCategoryService.get_nonempty_categories(partner=self.partner)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['partner'] = self.partner
+        return context
 
 
 class OrganizationsInCategoryView(ListAPIView):
@@ -201,3 +214,30 @@ class OrganizationsInCategoryView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class OrgMessageAPIView(ListAPIView):
+    serializer_class = OrgMessageSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        messages = OrgMessageService.get_messages_of_organization(organization_id=self.kwargs['pk'])
+        return messages
+
+    def post(self, request, *args, **kwargs):
+        serializer = OrgMessageCreateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = OrganizationService.get(pk=kwargs['pk'])
+
+        if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
+            raise PermissionDenied({'message': 'No rights to send message to followers of this organization'})
+        OrgMessageService.create_message(organization=organization, content=serializer.validated_data.get('content'),
+                                         sender=request.user)
+        return Response(data={'message': 'Message is created'},
+                        status=status.HTTP_201_CREATED)

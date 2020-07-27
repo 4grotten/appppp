@@ -1,13 +1,14 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
 from organizations.services.subscription_services import SubscriptionService
 
 
-class SubscriptionsView(GenericAPIView):
+class SubscriptionsView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscriptionSerializer
 
@@ -29,3 +30,10 @@ class SubscriptionsView(GenericAPIView):
                 'is_subscribed': is_subscribed
             }
         }, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        return SubscriptionService.get_user_subscriptions(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        self.serializer_class = OrganizationWithDiscountsSerializer
+        return super().list(request, *args, **kwargs)

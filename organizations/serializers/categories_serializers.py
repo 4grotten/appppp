@@ -21,6 +21,12 @@ class OrganizationCategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'types')
 
 
+class OrganizationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationCategory
+        fields = ('id', 'name')
+
+
 class HomepageOrganizationsSerializer(serializers.ModelSerializer):
     organizations = serializers.SerializerMethodField()
     organizations_count = serializers.SerializerMethodField()

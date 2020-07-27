@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from organizations.views.category_views import CategoryDetailAPIView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
@@ -55,4 +56,5 @@ urlpatterns = [
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
+    path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
 ]

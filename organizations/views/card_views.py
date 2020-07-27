@@ -76,7 +76,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         instance = serializer.save()
-        data = DiscountCardSerializer(instance).data
+        data = DiscountCardSerializer(instance, context={'request': request}).data
         return Response(data)
 
 
@@ -87,5 +87,5 @@ class BackgroundListView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = File.objects.filter(backgrounds__isnull=False)
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)

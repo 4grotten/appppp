@@ -2,14 +2,9 @@ from django.contrib.auth import get_user_model
 from fcm_django.models import FCMDevice
 
 from common.exceptions import ObjectNotFoundException, IntegrityException
-from .constants import (
-    DISCOUNT_NOTIFICATION_MODE,
-    SUBSCRIPTION_NOTIFICATION_MODE,
-    SYSTEM_NOTIFICATION_MODE,
-    PARTNER_MODE
-)
 from .models import (
-    Notification, NotificationSetting
+    Notification,
+    NotificationSetting
 )
 
 User = get_user_model()
@@ -66,28 +61,3 @@ class NotificationSettingService:
         setting = cls.get(user=user)
 
         return setting.fcm_device
-
-    @classmethod
-    def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str):
-        notification_setting = cls.get(user=user)
-        fcm_device = notification_setting.fcm_device
-
-        notification_payload = {
-            'title': title,
-            'body': description,
-            'data': {
-                'notification_id': notification_id
-            }
-        }
-
-        if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
-            fcm_device.send_message(**notification_payload)
-
-        if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_device.send_message(**notification_payload)
-
-        if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_device.send_message(**notification_payload)
-
-        if mode == PARTNER_MODE and notification_setting.organization_notifications:
-            fcm_device.send_message(**notification_payload)

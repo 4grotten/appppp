@@ -3,8 +3,12 @@ from django.db import models
 from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
-from .constants import NOTIFICATION_MODES
-from .services import NotificationSettingService
+from .constants import (
+    NOTIFICATION_MODES,
+    DISCOUNT_NOTIFICATION_MODE,
+    SUBSCRIPTION_NOTIFICATION_MODE,
+    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE
+)
 
 User = get_user_model()
 
@@ -24,13 +28,38 @@ class Notification(TimestampModel):
     def save(self, *args, **kwargs):
         super(Notification, self).save(*args, *kwargs)
 
-        NotificationSettingService.send_notification(
+        self.send_notification(
             user=self.recipient,
             title=self.title,
             description=self.description,
             mode=self.mode,
             notification_id=self.id
         )
+
+    @staticmethod
+    def send_notification(user: User, title: str, description: str, notification_id: int, mode: str):
+        notification_setting = NotificationSetting.objects.get(user=user)
+        fcm_device = notification_setting.fcm_device
+
+        notification_payload = {
+            'title': title,
+            'body': description,
+            'data': {
+                'notification_id': notification_id
+            }
+        }
+
+        if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
+            fcm_device.send_message(**notification_payload)
+
+        if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
+            fcm_device.send_message(**notification_payload)
+
+        if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
+            fcm_device.send_message(**notification_payload)
+
+        if mode == PARTNER_MODE and notification_setting.organization_notifications:
+            fcm_device.send_message(**notification_payload)
 
 
 class NotificationSetting(TimestampModel):

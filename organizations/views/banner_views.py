@@ -22,7 +22,7 @@ class BannerView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         banners = BannerService.get_banners(organization=serializer.validated_data['organization'])
-        banners = BannerSerializer(banners, many=True).data
+        banners = BannerSerializer(banners, many=True, context={'request': request}).data
 
         return Response(banners)
 

@@ -3,7 +3,7 @@ from typing import Tuple
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import QuerySet, Count
+from django.db.models import QuerySet, Count, Q
 from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
@@ -213,10 +213,11 @@ class OrganizationService:
 
     @classmethod
     def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
-        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().annotate(
+            cards_count=Count(
+                'discounts', distinct=True, filter=Q(discounts__is_published=True))).order_by('-cards_count')
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
-
         return queryset
 
 

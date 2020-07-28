@@ -19,6 +19,10 @@ class OrganizationService:
     model = Organization
 
     @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
     def get(cls, *args, **kwargs):
         try:
             return cls.model.objects.get(*args, **kwargs)

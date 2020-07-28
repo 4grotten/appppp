@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,8 +19,8 @@ from organizations.serializers.organization_serializers import (
     OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     OrganizationSerializer, OrgMessageSerializer,
-    OrgMessageCreateSerializer
-)
+    OrgMessageCreateSerializer,
+    OrganizationTitleSerializer)
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,
@@ -246,3 +246,9 @@ class OrgMessageAPIView(ListAPIView):
                                          sender=request.user)
         return Response(data={'message': 'Message is created'},
                         status=status.HTTP_201_CREATED)
+
+
+class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationTitleSerializer
+    queryset = OrganizationService.filter()

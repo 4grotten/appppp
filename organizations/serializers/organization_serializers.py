@@ -204,3 +204,9 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'max_discount', 'types', 'image',)
+
+
+class OrganizationTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title')

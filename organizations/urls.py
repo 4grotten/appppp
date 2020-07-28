@@ -8,8 +8,8 @@ from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
     OrgMessageAPIView,
     OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
-    OrganizationsInCategoryView
-)
+    OrganizationsInCategoryView,
+    OrganizationTitleRetrieveAPIView)
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
     HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateView
@@ -26,6 +26,7 @@ organization_urls = [
     path('organizations/<int:pk>/social_networks/', OrgNetworksListAPIView.as_view(), name='organization_networks'),
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set_location'),
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),
+    path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
 ]
 
 discounts_urls = [

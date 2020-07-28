@@ -11,7 +11,8 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.card_services import DiscountCardService
 from transactions.serializers.stats_serializers import StartEndDateSerializer
 from transactions.serializers.transaction_serializers import (
-    PreprocessSerializer, CompleteSerializer, UserTotalsSerializer
+    PreprocessSerializer, CompleteSerializer, UserTotalsSerializer,
+    TransactionsSerializer, StartEndDateTransactionSerializer
 )
 from users.serializers import ProfileBriefSerializer
 from transactions.services.transaction_services import TransactionService
@@ -85,16 +86,17 @@ class TransactionOrganizationsView(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        serializer = StartEndDateSerializer(data=self.request.GET)
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         organizations = TransactionService.get_user_transaction_organizations(client=self.request.user,
-                                                                              start_date=serializer.validated_data[
-                                                                                  'start'],
-                                                                              end_date=serializer.validated_data['end'])
+                                                                              start_date=serializer.validated_data.get(
+                                                                                  'start'),
+                                                                              end_date=serializer.validated_data.get(
+                                                                                  'end'))
         return organizations
 
 
@@ -102,14 +104,23 @@ class TransactionUserTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        serializer = StartEndDateSerializer(data=request.GET)
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         totals = TransactionService.get_user_totals(client=request.user,
-                                                    start_date=serializer.validated_data['start'],
-                                                    end_date=serializer.validated_data['end'])
+                                                    start_date=serializer.validated_data.get('start'),
+                                                    end_date=serializer.validated_data.get('end'))
         data = UserTotalsSerializer(totals).data
         return Response(data)
+
+
+class TransactionsListApiView(ListAPIView):
+    permission_classes = (IsAuthenticated),
+    serializer_class = TransactionsSerializer
+
+    def get_queryset(self):
+        transactions = TransactionService.get_user_transactions(client=self.request.user)
+        return transactions

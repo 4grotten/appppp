@@ -80,15 +80,45 @@ class TransactionService:
 
     @classmethod
     def get_user_transaction_organizations(cls, client: User, start_date, end_date):
+        if not start_date and not end_date:
+            return cls.get_user_tr_organizations_without_date(client)
+        return cls.get_user_tr_organizations_with_date(client=client, start_date=start_date, end_date=end_date)
+
+    @staticmethod
+    def get_user_tr_organizations_without_date(client):
+        transactions = Transaction.objects.filter(client=client)
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
+        return organizations
+
+    @staticmethod
+    def get_user_tr_organizations_with_date(client, start_date, end_date):
         end_date = end_date + timedelta(days=1)
         transactions = Transaction.objects.filter(client=client).filter(created_at__range=[start_date, end_date])
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
 
     @classmethod
-    def get_user_totals(cls, client: User, start_date, end_date) -> dict:
+    def get_user_totals(cls, client: User, start_date=None, end_date=None):
+        if not start_date and not end_date:
+            return cls.get_user_total_without_date(client)
+        return cls.get_user_total_with_date(client=client, start_date=start_date, end_date=end_date)
+
+    @staticmethod
+    def get_user_total_with_date(client: User, start_date, end_date):
         end_date = end_date + timedelta(days=1)
         transactions = Transaction.objects.filter(created_at__range=[start_date, end_date]).filter(
             client=client).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
                                      total_savings=Coalesce(Sum('savings'), 0))
+        return transactions
+
+    @staticmethod
+    def get_user_total_without_date(client: User):
+        transactions = Transaction.objects.filter(client=client).aggregate(
+            total_original_amount=Coalesce(Sum('original_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0))
+        return transactions
+
+    @classmethod
+    def get_user_transactions(cls, client: User):
+        transactions = Transaction.objects.filter(client=client)
         return transactions

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
@@ -82,3 +83,11 @@ class TransactionService:
         transactions = Transaction.objects.filter(client=client)
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
+
+    @classmethod
+    def get_user_totals(cls, client: User, start_day, end_day) -> dict:
+        end_day = end_day + timedelta(days=1)
+        transactions = Transaction.objects.filter(updated_at__range=[start_day, end_day]).filter(
+            client=client).aggregate(total_spent=Coalesce(Sum('final_amount'), 0),
+                                     total_savings=Coalesce(Sum('savings'), 0))
+        return transactions

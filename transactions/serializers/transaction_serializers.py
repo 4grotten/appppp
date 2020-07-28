@@ -35,11 +35,6 @@ class CompleteSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class UserTotalsSerializer(serializers.Serializer):
-    total_original_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
-    total_savings = serializers.DecimalField(max_digits=16, decimal_places=2)
-
-
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction

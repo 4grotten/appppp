@@ -6,13 +6,16 @@ from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException, \
+from common.exceptions import (
+    NotAcceptableException, ObjectNotFoundException, IntegrityException,
     PermissionDeniedException
+)
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
-from users.models import User
 from transactions.models import Transaction
+from transactions.services.stats_services import StatisticsService
+from users.models import User
 
 
 class TransactionService:
@@ -109,25 +112,14 @@ class TransactionService:
         return organizations
 
     @classmethod
-    def get_user_totals(cls, client: User, start_date=None, end_date=None):
-        if not start_date and not end_date:
-            return cls.get_user_total_without_date(client)
-        return cls.get_user_total_with_date(client=client, start_date=start_date, end_date=end_date)
-
-    @staticmethod
-    def get_user_total_with_date(client: User, start_date, end_date):
-        end_date = end_date + timedelta(days=1)
-        transactions = Transaction.objects.filter(created_at__range=[start_date, end_date]).filter(
-            client=client, is_processed=True).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
-                                                        total_savings=Coalesce(Sum('savings'), 0))
-        return transactions
-
-    @staticmethod
-    def get_user_total_without_date(client: User):
-        transactions = Transaction.objects.filter(client=client, is_processed=True).aggregate(
-            total_original_amount=Coalesce(Sum('original_amount'), 0),
-            total_savings=Coalesce(Sum('savings'), 0))
-        return transactions
+    def get_user_totals(cls, client: User, currency: str, start_date=None, end_date=None):
+        transactions = Transaction.objects.filter(client=client, is_processed=True)
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+        transactions = transactions.order_by().values('currency').annotate(total_spent=Coalesce(Sum('final_amount'), 0),
+                                                                           total_savings=Coalesce(Sum('savings'), 0))
+        return StatisticsService.get_stats_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
     def get_user_transactions(cls, client: User):

@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.services.organization_services import OrganizationService
-from transactions.serializers.stats_serializers import StartEndDateSerializer, PartnersTotalStatsSerializer
+from transactions.serializers.stats_serializers import StartEndDateSerializer, TotalStatsSerializer
 from transactions.services.stats_services import StatisticsService
 
 
@@ -26,5 +26,5 @@ class PartnersTotalStatsView(GenericAPIView):
                                                               start_day=serializer.validated_data['start'],
                                                               end_day=serializer.validated_data['end'],
                                                               currency=currency)
-        data = PartnersTotalStatsSerializer(stats).data
+        data = TotalStatsSerializer(stats).data
         return Response(data)

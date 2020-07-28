@@ -1,7 +1,8 @@
+from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,10 +11,11 @@ from organizations.serializers.card_serializers import DiscountCardBriefSerializ
 from organizations.serializers.organization_serializers import PartnerSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
-    PreprocessSerializer, CompleteSerializer, UserTotalsSerializer,
-    TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer)
+    PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
+    TransactionDetailSerializer
+)
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefSerializer
@@ -111,10 +113,12 @@ class TransactionUserTotalsView(APIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        totals = TransactionService.get_user_totals(client=request.user,
+
+        currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+        totals = TransactionService.get_user_totals(client=request.user, currency=currency,
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
-        data = UserTotalsSerializer(totals).data
+        data = TotalStatsSerializer(totals).data
         return Response(data)
 
 

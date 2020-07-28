@@ -1,5 +1,7 @@
 import json
 import os
+
+from corsheaders.defaults import default_headers
 from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -147,6 +149,10 @@ CORS_ALLOW_METHODS = (
     'POST',
     'PUT',
 )
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'Currency',
+]
 
 SESSION_COOKIE_SAMESITE = None
 

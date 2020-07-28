@@ -1,4 +1,3 @@
-from django.views.generic import ListView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -9,16 +8,15 @@ from rest_framework.views import APIView
 
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import PartnerSerializer
-from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.card_services import DiscountCardService
-from transactions.serializers.stats_serializers import StartEndDateSerializer
+from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, UserTotalsSerializer,
     TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer)
 from transactions.services.filters import TransactionFilter
-from users.serializers import ProfileBriefSerializer
 from transactions.services.transaction_services import TransactionService
+from users.serializers import ProfileBriefSerializer
 
 
 class TransactionPreprocessView(GenericAPIView):

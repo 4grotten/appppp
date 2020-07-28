@@ -37,3 +37,14 @@ class CompleteSerializer(serializers.ModelSerializer):
 class UserTotalsSerializer(serializers.Serializer):
     total_original_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
     total_savings = serializers.DecimalField(max_digits=16, decimal_places=2)
+
+
+class TransactionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency')
+
+
+class StartEndDateTransactionSerializer(serializers.Serializer):
+    start = serializers.DateField(required=False)
+    end = serializers.DateField(required=False)

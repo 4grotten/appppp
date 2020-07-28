@@ -1,5 +1,7 @@
 from django.views.generic import ListView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -14,6 +16,7 @@ from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, UserTotalsSerializer,
     TransactionsSerializer, StartEndDateTransactionSerializer
 )
+from transactions.services.filters import TransactionFilter
 from users.serializers import ProfileBriefSerializer
 from transactions.services.transaction_services import TransactionService
 
@@ -118,9 +121,11 @@ class TransactionUserTotalsView(APIView):
 
 
 class TransactionsListApiView(ListAPIView):
-    permission_classes = (IsAuthenticated),
+    permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionFilter
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_transactions(client=self.request.user)
+        transactions = TransactionService.get_user_transactions(client=self.request.user, )
         return transactions

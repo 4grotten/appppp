@@ -86,14 +86,15 @@ class TransactionService:
 
     @staticmethod
     def get_user_tr_organizations_without_date(client):
-        transactions = Transaction.objects.filter(client=client)
+        transactions = Transaction.objects.filter(client=client, is_processed=True)
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
 
     @staticmethod
     def get_user_tr_organizations_with_date(client, start_date, end_date):
         end_date = end_date + timedelta(days=1)
-        transactions = Transaction.objects.filter(client=client).filter(created_at__range=[start_date, end_date])
+        transactions = Transaction.objects.filter(client=client, is_processed=True).filter(
+            created_at__range=[start_date, end_date])
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
 
@@ -107,18 +108,18 @@ class TransactionService:
     def get_user_total_with_date(client: User, start_date, end_date):
         end_date = end_date + timedelta(days=1)
         transactions = Transaction.objects.filter(created_at__range=[start_date, end_date]).filter(
-            client=client).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
-                                     total_savings=Coalesce(Sum('savings'), 0))
+            client=client, is_processed=True).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
+                                                        total_savings=Coalesce(Sum('savings'), 0))
         return transactions
 
     @staticmethod
     def get_user_total_without_date(client: User):
-        transactions = Transaction.objects.filter(client=client).aggregate(
+        transactions = Transaction.objects.filter(client=client, is_processed=True).aggregate(
             total_original_amount=Coalesce(Sum('original_amount'), 0),
             total_savings=Coalesce(Sum('savings'), 0))
         return transactions
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(client=client)
+        transactions = Transaction.objects.filter(client=client, is_processed=True)
         return transactions

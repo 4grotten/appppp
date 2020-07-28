@@ -1,11 +1,11 @@
 from .exceptions import (
     ObjectNotFoundException, ValidationException, AuthenticationException,
-    BadRequestException, NotAcceptableException, IntegrityException
-)
+    BadRequestException, NotAcceptableException, IntegrityException,
+    PermissionDeniedException)
 from .responses import (
     NotFoundResponse, ValidationExceptionResponse, AuthenticationExceptionResponse,
-    BadRequestResponse, NotAcceptableExceptionResponse, IntegrityExceptionResponse
-)
+    BadRequestResponse, NotAcceptableExceptionResponse, IntegrityExceptionResponse,
+    PermissionExceptionResponse)
 
 EXCEPTION_MAPPER = {
     ObjectNotFoundException.__name__: NotFoundResponse,
@@ -14,6 +14,7 @@ EXCEPTION_MAPPER = {
     BadRequestException.__name__: BadRequestResponse,
     IntegrityException.__name__: IntegrityExceptionResponse,
     NotAcceptableException.__name__: NotAcceptableExceptionResponse,
+    PermissionDeniedException.__name__: PermissionExceptionResponse,
 }
 
 

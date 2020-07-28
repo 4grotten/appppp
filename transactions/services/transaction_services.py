@@ -6,7 +6,8 @@ from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException, \
+    PermissionDeniedException
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
@@ -30,6 +31,15 @@ class TransactionService:
         transaction = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
                                                  currency=organization.currency)
         return transaction
+
+    @classmethod
+    def get_user_transaction_detail(cls, user: User, transaction_id: int):
+        transaction_object = cls.get(id=transaction_id)
+
+        if transaction_object.client != user:
+            raise PermissionDeniedException('Permission denied')
+
+        return transaction_object
 
     @classmethod
     @transaction.atomic

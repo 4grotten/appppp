@@ -27,3 +27,7 @@ class NotAcceptableException(GeneralException):
 
 class IntegrityException(GeneralException):
     default_message = 'Integrity Error'
+
+
+class PermissionDeniedException(GeneralException):
+    default_message = 'You do not have permission'

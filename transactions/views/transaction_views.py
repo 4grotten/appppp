@@ -2,7 +2,7 @@ from django.views.generic import ListView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,8 +14,8 @@ from organizations.services.card_services import DiscountCardService
 from transactions.serializers.stats_serializers import StartEndDateSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, UserTotalsSerializer,
-    TransactionsSerializer, StartEndDateTransactionSerializer
-)
+    TransactionsSerializer, StartEndDateTransactionSerializer,
+    TransactionDetailSerializer)
 from transactions.services.filters import TransactionFilter
 from users.serializers import ProfileBriefSerializer
 from transactions.services.transaction_services import TransactionService
@@ -129,3 +129,13 @@ class TransactionsListApiView(ListAPIView):
     def get_queryset(self):
         transactions = TransactionService.get_user_transactions(client=self.request.user, )
         return transactions
+
+
+class TransactionDetailAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionDetailSerializer
+
+    def get(self, request, pk):
+        transaction = TransactionService.get_user_transaction_detail(user=request.user, transaction_id=pk)
+
+        return Response(self.serializer_class(transaction, many=False).data)

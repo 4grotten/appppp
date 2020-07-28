@@ -5,6 +5,7 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Organization, DiscountCard
 from transactions.models import Transaction
 from users.models import User
+from users.serializers import ProfileSerializer
 
 
 class PreprocessSerializer(serializers.Serializer):
@@ -43,6 +44,14 @@ class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency')
+
+
+class TransactionDetailSerializer(serializers.ModelSerializer):
+    user = ProfileSerializer(source='client', many=False)
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency', 'user')
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

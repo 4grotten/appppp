@@ -81,6 +81,10 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
     def delete(self, request, *args, **kwargs):
+
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization_id=kwargs['pk']):
+            raise NotAcceptableException('No rights to edit organization')
+
         organization = OrganizationService.get(pk=kwargs['pk'])
 
         deactivated_organization = OrganizationService.deactivate(organization=organization)

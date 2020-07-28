@@ -47,11 +47,11 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
-    user = ProfileSerializer(source='client', many=False)
+    processed_by = ProfileSerializer(source='processed_by', many=False)
 
     class Meta:
         model = Transaction
-        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency', 'user')
+        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency', 'processed_by')
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

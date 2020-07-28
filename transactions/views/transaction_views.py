@@ -138,4 +138,4 @@ class TransactionDetailAPIView(APIView):
     def get(self, request, pk):
         transaction = TransactionService.get_user_transaction_detail(user=request.user, transaction_id=pk)
 
-        return Response(self.serializer_class(transaction, many=False).data)
+        return Response(self.serializer_class(transaction, many=False, context={'request': request}).data)

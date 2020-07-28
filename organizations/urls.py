@@ -43,19 +43,24 @@ partnership_urls = [
     path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
 ]
 
-urlpatterns = [
-    path('', include(organization_urls)),
-    path('', include(discounts_urls)),
-    path('', include(partnership_urls)),
-
-    path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
-
-    path('banners/', BannerView.as_view(), name='banners'),
-    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
+homepage_urls = [
     path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
     path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
+]
+
+urlpatterns = [
+    path('', include(organization_urls)),
+    path('', include(discounts_urls)),
+    path('', include(partnership_urls)),
+    path('', include(homepage_urls)),
+
+    path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
+
+    path('banners/', BannerView.as_view(), name='banners'),
+    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
+
     path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
 ]

@@ -205,12 +205,8 @@ class OrganizationsInCategoryView(ListAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         category = serializer.validated_data['category']
-        organization = serializer.validated_data['partner']
-        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
-
-        if organization is not None:
-            queryset = queryset.filter(accepted_partnerships__is_accepted=True).filter(
-                accepted_partnerships__requested_by=organization)
+        partner = serializer.validated_data['partner']
+        queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

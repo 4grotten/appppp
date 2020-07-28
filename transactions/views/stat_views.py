@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -20,8 +21,10 @@ class PartnersTotalStatsView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = OrganizationService.get(id=kwargs['pk'])
+        currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
         stats = StatisticsService.get_total_stats_of_partners(organization=organization, requesting_user=request.user,
                                                               start_day=serializer.validated_data['start'],
-                                                              end_day=serializer.validated_data['end'])
+                                                              end_day=serializer.validated_data['end'],
+                                                              currency=currency)
         data = PartnersTotalStatsSerializer(stats).data
         return Response(data)

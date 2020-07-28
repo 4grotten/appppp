@@ -9,3 +9,4 @@ class StartEndDateSerializer(serializers.Serializer):
 class PartnersTotalStatsSerializer(serializers.Serializer):
     total_spent = serializers.DecimalField(max_digits=16, decimal_places=2)
     total_savings = serializers.DecimalField(max_digits=16, decimal_places=2)
+    currency = serializers.CharField()

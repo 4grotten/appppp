@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.cache import cache
 from rest_framework import status
 
-from ..exceptions import GeneralException
+from ..exceptions import NotAcceptableException
 
 
 class CurrencyConverterService:
@@ -14,12 +14,18 @@ class CurrencyConverterService:
         query = f'app_id={settings.OER_APP_ID}&symbols={from_currency},{to_currency}'
         response = requests.get(f'https://openexchangerates.org/api/latest.json?{query}')
         if response.status_code != status.HTTP_200_OK:
-            raise GeneralException('Bad response from openexchangerates.org')
+            raise NotAcceptableException('Bad response from openexchangerates.org')
 
-        from_rate_to_base = response.json()['rates'][from_currency.upper()]
+        try:
+            from_rate_to_base = response.json()['rates'][from_currency.upper()]
+        except KeyError:
+            raise NotAcceptableException(f'No currency with code {from_currency.upper()}')
         cache.set(f'{settings.OER_BASE_CURRENCY}{from_currency}', from_rate_to_base, timeout=settings.OER_CACHE_TIMEOUT)
 
-        to_rate_to_base = response.json()['rates'][to_currency.upper()]
+        try:
+            to_rate_to_base = response.json()['rates'][to_currency.upper()]
+        except KeyError:
+            raise NotAcceptableException(f'No currency with code {to_currency.upper()}')
         cache.set(f'{settings.OER_BASE_CURRENCY}{to_currency}', to_rate_to_base, timeout=settings.OER_CACHE_TIMEOUT)
 
         rate = Decimal(to_rate_to_base) / Decimal(from_rate_to_base)

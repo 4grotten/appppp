@@ -174,6 +174,8 @@ OER_APP_ID = config('OER_APP_ID')
 OER_CACHE_TIMEOUT = 60 * 60 * 5
 OER_BASE_CURRENCY = 'USD'
 
+APP_BASE_CURRENCY = 'KGS'
+
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='login@yandex.ru')

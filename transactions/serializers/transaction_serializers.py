@@ -47,7 +47,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
-    processed_by = ProfileSerializer(source='processed_by', many=False)
+    processed_by = ProfileSerializer(many=False)
 
     class Meta:
         model = Transaction

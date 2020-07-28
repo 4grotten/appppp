@@ -64,7 +64,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        if not OrganizationService.user_can_edit_organization(organization_id=instance.organization.id,
+        if not OrganizationService.user_can_edit_organization(organization=instance.organization,
                                                               user=request.user):
             raise NotAcceptableException('No rights to edit organization')
 

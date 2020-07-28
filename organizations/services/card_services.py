@@ -48,7 +48,7 @@ class DiscountCardService:
 
     @classmethod
     def delete_discount(cls, discount: DiscountCard, user: User) -> DiscountCard:
-        if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
+        if not OrganizationService.user_can_edit_organization(organization=discount.organization, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         if not cls.is_card_editable(discount=discount):
@@ -64,7 +64,7 @@ class DiscountCardService:
     @classmethod
     def update_discount(cls, discount: DiscountCard, user: User,
                         limit: Decimal = None, percent: int = None) -> DiscountCard:
-        if not OrganizationService.user_can_edit_organization(organization_id=discount.organization.id, user=user):
+        if not OrganizationService.user_can_edit_organization(organization=discount.organization, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         if not cls.is_card_editable(discount=discount):

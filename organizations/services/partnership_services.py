@@ -26,7 +26,7 @@ class PartnershipService:
 
     @classmethod
     def create_request(cls, user: User, requested_by: Organization, accepted_by: Organization):
-        if not OrganizationService.user_can_edit_organization(organization_id=requested_by.id, user=user):
+        if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
             raise NotAcceptableException('No rights to edit organization')
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
         # ToDo: send notification to accepted_by organization

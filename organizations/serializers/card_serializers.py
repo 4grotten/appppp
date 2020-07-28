@@ -37,9 +37,10 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         request = self.context.get('request')
         organization_id = request.data['organization']
         queryset = Organization.objects.filter(id=organization_id)
+        organization = OrganizationService.get(id=organization_id)
 
         if not queryset or not OrganizationService.user_can_edit_organization(
-                organization_id=organization_id, user=request.user):
+                organization=organization, user=request.user):
             raise NotAcceptableException('No rights to edit organization')
 
         return queryset

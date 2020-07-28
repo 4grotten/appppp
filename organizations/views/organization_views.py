@@ -71,21 +71,18 @@ class OrganizationRetrieveView(RetrieveUpdateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        if not OrganizationService.user_can_edit_organization(user=request.user, organization_id=kwargs['pk']):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
             raise NotAcceptableException('No rights to edit organization')
-
-        organization = OrganizationService.get(pk=kwargs['pk'])
 
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
     def delete(self, request, *args, **kwargs):
-
-        if not OrganizationService.user_can_edit_organization(user=request.user, organization_id=kwargs['pk']):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
             raise NotAcceptableException('No rights to edit organization')
-
-        organization = OrganizationService.get(pk=kwargs['pk'])
 
         deactivated_organization = OrganizationService.deactivate(organization=organization)
 
@@ -158,7 +155,7 @@ class SetOrganizationLocationAPIView(APIView):
 
         organization = OrganizationService.get(pk=pk)
 
-        if not OrganizationService.user_can_edit_organization(organization_id=pk, user=request.user):
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise NotAcceptableException('No rights to edit organization')
 
         changed_organization = OrganizationService.set_location(

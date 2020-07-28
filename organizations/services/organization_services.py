@@ -23,7 +23,7 @@ class OrganizationService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def get(cls, *args, **kwargs):
+    def get(cls, *args, **kwargs) -> Organization:
         try:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
@@ -37,8 +37,7 @@ class OrganizationService:
         return membership.role.title
 
     @classmethod
-    def user_can_edit_organization(cls, organization_id: int, user: User) -> bool:
-        organization = OrganizationService.get(id=organization_id)
+    def user_can_edit_organization(cls, organization: Organization, user: User) -> bool:
         if organization.owner == user:
             return True
         try:
@@ -238,7 +237,8 @@ class OrgPhoneNumberService:
 
     @classmethod
     def update_phone_numbers(cls, organization_id: int, user: User, numbers: list):
-        if not OrganizationService.user_can_edit_organization(organization_id=organization_id, user=user):
+        organization = OrganizationService.get(id=organization_id)
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         with transaction.atomic():
@@ -261,7 +261,8 @@ class OrgSocialNetworkContactService:
 
     @classmethod
     def update_social_networks(cls, organization_id: int, user: User, urls: list):
-        if not OrganizationService.user_can_edit_organization(organization_id=organization_id, user=user):
+        organization = OrganizationService.get(id=organization_id)
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
             raise NotAcceptableException('No rights to edit organization')
 
         with transaction.atomic():

@@ -29,7 +29,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
     list_display = ('title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'is_active')
-    list_filter = ('is_active',)
+    list_filter = ('is_active', 'types__category',)
+    search_fields = ('title',)
 
     inlines = (PhoneInline, SocialInline, DiscountInline,)
 
@@ -37,10 +38,12 @@ class OrganizationAdmin(admin.ModelAdmin):
 class OrganizationTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'category')
     list_filter = ('category',)
+    search_fields = ('title', 'category__name',)
 
 
 class OrganizationCategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    search_fields = ('name',)
 
 
 class PhoneNumberAdmin(admin.ModelAdmin):

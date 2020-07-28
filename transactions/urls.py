@@ -1,8 +1,10 @@
 from django.urls import path
 
 from transactions.views.stat_views import PartnersTotalStatsView
-from transactions.views.transaction_views import TransactionCompleteView, TransactionPreprocessView, \
-    TransactionOrganizationsView, TransactionUserTotalsView
+from transactions.views.transaction_views import (
+    TransactionCompleteView, TransactionPreprocessView, TransactionOrganizationsView,
+    TransactionUserTotalsView
+)
 
 urlpatterns = [
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),

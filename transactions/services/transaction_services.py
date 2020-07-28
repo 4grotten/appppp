@@ -79,15 +79,16 @@ class TransactionService:
         return aggregated['total']
 
     @classmethod
-    def get_user_transaction_organizations(cls, client: User, start_day, end_day):
-        transactions = Transaction.objects.filter(client=client).filter(created_at__range=[start_day, end_day])
+    def get_user_transaction_organizations(cls, client: User, start_date, end_date):
+        end_date = end_date + timedelta(days=1)
+        transactions = Transaction.objects.filter(client=client).filter(created_at__range=[start_date, end_date])
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
 
     @classmethod
-    def get_user_totals(cls, client: User, start_day, end_day) -> dict:
-        end_day = end_day + timedelta(days=1)
-        transactions = Transaction.objects.filter(created_at__range=[start_day, end_day]).filter(
+    def get_user_totals(cls, client: User, start_date, end_date) -> dict:
+        end_date = end_date + timedelta(days=1)
+        transactions = Transaction.objects.filter(created_at__range=[start_date, end_date]).filter(
             client=client).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
                                      total_savings=Coalesce(Sum('savings'), 0))
         return transactions

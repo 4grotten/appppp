@@ -10,7 +10,8 @@ from organizations.serializers.partnership_serializers import PartnershipSeriali
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.card_services import DiscountCardService
 from transactions.serializers.stats_serializers import StartEndDateSerializer, PartnersTotalStatsSerializer
-from transactions.serializers.transaction_serializers import PreprocessSerializer, CompleteSerializer
+from transactions.serializers.transaction_serializers import PreprocessSerializer, CompleteSerializer, \
+    UserTotalsSerializer
 from users.serializers import ProfileBriefSerializer
 from transactions.services.transaction_services import TransactionService
 
@@ -100,5 +101,5 @@ class TransactionUserTotalsView(ListAPIView):
         stats = TransactionService.get_user_totals(client=request.user,
                                                    start_day=serializer.validated_data['start'],
                                                    end_day=serializer.validated_data['end'])
-        data = PartnersTotalStatsSerializer(stats).data
+        data = UserTotalsSerializer(stats).data
         return Response(data)

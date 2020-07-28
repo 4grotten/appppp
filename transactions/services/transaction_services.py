@@ -88,6 +88,6 @@ class TransactionService:
     def get_user_totals(cls, client: User, start_day, end_day) -> dict:
         end_day = end_day + timedelta(days=1)
         transactions = Transaction.objects.filter(updated_at__range=[start_day, end_day]).filter(
-            client=client).aggregate(total_spent=Coalesce(Sum('final_amount'), 0),
+            client=client).aggregate(total_original_amount=Coalesce(Sum('original_amount'), 0),
                                      total_savings=Coalesce(Sum('savings'), 0))
         return transactions

@@ -67,7 +67,7 @@ class PartnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'address', 'image', 'types', 'partners')
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):

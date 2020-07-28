@@ -38,7 +38,10 @@ class CompleteSerializer(serializers.ModelSerializer):
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency')
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'updated_at', 'created_at',
+        )
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
@@ -46,7 +49,10 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ('id', 'original_amount', 'discount_percent', 'savings', 'created_at', 'currency', 'processed_by')
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'updated_at', 'created_at', 'processed_by'
+        )
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

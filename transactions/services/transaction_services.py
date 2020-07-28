@@ -39,6 +39,7 @@ class TransactionService:
     def get_user_transaction_detail(cls, user: User, transaction_id: int):
         transaction_object = cls.get(id=transaction_id)
 
+        # ToDo: ask Rinat if organization employees can see transaction details
         if transaction_object.client != user:
             raise PermissionDeniedException('Permission denied')
 

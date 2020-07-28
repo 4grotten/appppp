@@ -84,7 +84,15 @@ class TransactionOrganizationsView(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        organizations = TransactionService.get_user_transaction_organizations(client=self.request.user)
+        serializer = StartEndDateSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        organizations = TransactionService.get_user_transaction_organizations(client=self.request.user,
+                                                   start_day=serializer.validated_data['start'],
+                                                   end_day=serializer.validated_data['end'] )
         return organizations
 
 

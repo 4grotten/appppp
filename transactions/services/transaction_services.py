@@ -79,8 +79,8 @@ class TransactionService:
         return aggregated['total']
 
     @classmethod
-    def get_user_transaction_organizations(cls, client: User):
-        transactions = Transaction.objects.filter(client=client)
+    def get_user_transaction_organizations(cls, client: User, start_day, end_day):
+        transactions = Transaction.objects.filter(client=client).filter(updated_at__range=[start_day, end_day])
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
         return organizations
 

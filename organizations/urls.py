@@ -4,7 +4,10 @@ from organizations.views.category_views import CategoryDetailAPIView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
-from .views.membership_views import MembershipAPIView, RolesListCreateAPIView, RoleRetrieveUpdateDestroyAPIView
+from .views.membership_views import (
+    MembershipAPIView, RolesListCreateAPIView, RoleRetrieveUpdateDestroyAPIView,
+    MembershipRetrieveUpdateDestroyAPIView
+)
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
     OrgMessageAPIView,
@@ -32,6 +35,7 @@ organization_urls = [
 
 membership_urls = [
     path('employees/', MembershipAPIView.as_view(), name='organization_employees'),
+    path('employees/<int:pk>/', MembershipRetrieveUpdateDestroyAPIView.as_view(), name='employee_details'),
     path('roles/', RolesListCreateAPIView.as_view(), name='organization_roles'),
     path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role_details'),
 ]

@@ -51,3 +51,15 @@ class MembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ('id', 'role', 'user',)
+
+
+class MembershipCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Membership
+        fields = ('role', 'user', 'organization',)
+
+
+class MembershipUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Membership
+        fields = ('role',)

@@ -215,6 +215,17 @@ class OrganizationService:
         return queryset
 
     @classmethod
+    def get_organizations_in_category_with_search(cls, category: OrganizationCategory, partner: Organization = None,
+                                                  search=None) -> QuerySet:
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all(),
+                                               title__icontains=search).distinct().annotate(
+            cards_count=Count(
+                'discounts', distinct=True, filter=Q(discounts__is_published=True))).order_by('-cards_count')
+        if partner is not None:
+            queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+        return queryset
+
+    @classmethod
     def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
         queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().annotate(
             cards_count=Count(

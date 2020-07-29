@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -203,7 +203,13 @@ class OrganizationsInCategoryView(ListAPIView):
 
         category = serializer.validated_data['category']
         partner = serializer.validated_data['partner']
-        queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner)
+
+        if request.GET.get('search'):
+            search = request.GET.get('search')
+            queryset = OrganizationService.get_organizations_in_category_with_search(category=category, partner=partner,
+                                                                                     search=search)
+        else:
+            queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

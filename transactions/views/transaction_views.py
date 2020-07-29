@@ -127,6 +127,7 @@ class TransactionsListApiView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
+    search_fields = ['id']
 
     def get_queryset(self):
         transactions = TransactionService.get_user_transactions(client=self.request.user, )

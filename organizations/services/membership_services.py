@@ -51,6 +51,10 @@ class MembershipService:
         except IntegrityError:
             raise IntegrityException('Could not update role')
 
+    @classmethod
+    def has_edit_rights_in_any_organization(cls, user: User) -> bool:
+        return Membership.objects.filter(user=user, role__can_edit_organization=True).exists()
+
 
 class RoleService:
     @classmethod

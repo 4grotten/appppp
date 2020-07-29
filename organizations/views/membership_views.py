@@ -1,11 +1,12 @@
 from django.db.models import ProtectedError
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Role, Membership
+from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.membership_serializers import (
     MembershipSerializer, RoleBriefSerializer, RoleSerializer, RoleCreateSerializer, MembershipCreateSerializer,
     MembershipUpdateSerializer, TransferOwnershipSerializer
@@ -13,9 +14,11 @@ from organizations.serializers.membership_serializers import (
 from organizations.serializers.organization_serializers import OrganizationQueryParamSerializer
 from organizations.services.membership_services import MembershipService, RoleService
 from organizations.services.organization_services import OrganizationService
+from users.models import User
+from users.serializers import EmployeeSerializer
 
 
-class MembershipAPIView(ListCreateAPIView):
+class MembershipListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MembershipSerializer
 
@@ -45,7 +48,7 @@ class MembershipAPIView(ListCreateAPIView):
         return Response(data={'message': 'Successfully created'}, status=status.HTTP_201_CREATED)
 
 
-class MembershipRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MembershipSerializer
     queryset = Membership.objects.all()
@@ -71,7 +74,7 @@ class MembershipRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         return Response(MembershipSerializer(membership).data)
 
 
-class RolesListCreateAPIView(ListCreateAPIView):
+class RolesListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = RoleBriefSerializer
 
@@ -90,7 +93,7 @@ class RolesListCreateAPIView(ListCreateAPIView):
         return super().create(request, *args, **kwargs)
 
 
-class RoleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+class RoleRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = RoleSerializer
     queryset = Role.objects.all()
@@ -108,7 +111,7 @@ class RoleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             raise NotAcceptableException('There are existing employees with this role')
 
 
-class TransferOwnershipAPIView(GenericAPIView):
+class TransferOwnershipView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransferOwnershipSerializer
 
@@ -125,3 +128,9 @@ class TransferOwnershipAPIView(GenericAPIView):
                                                       current_owner=request.user)
 
         return Response(data={'message': 'Successfully transferred ownership'}, status=status.HTTP_200_OK)
+
+
+class BriefUserInfoView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated, IsAnyOrganizationOwnerOrAdmin)
+    serializer_class = EmployeeSerializer
+    queryset = User.objects.filter(is_active=True)

@@ -5,8 +5,8 @@ from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.membership_views import (
-    MembershipAPIView, RolesListCreateAPIView, RoleRetrieveUpdateDestroyAPIView,
-    MembershipRetrieveUpdateDestroyAPIView, TransferOwnershipAPIView
+    MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
+    MembershipRetrieveUpdateDestroyView, TransferOwnershipView, BriefUserInfoView
 )
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
@@ -34,11 +34,12 @@ organization_urls = [
 ]
 
 membership_urls = [
-    path('employees/', MembershipAPIView.as_view(), name='organization_employees'),
-    path('employees/<int:pk>/', MembershipRetrieveUpdateDestroyAPIView.as_view(), name='employee_details'),
-    path('roles/', RolesListCreateAPIView.as_view(), name='organization_roles'),
-    path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role_details'),
-    path('employees/doTransferOwnership/', TransferOwnershipAPIView.as_view(), name='ownership_transfer'),
+    path('employees/', MembershipListCreateView.as_view(), name='organization_employees'),
+    path('employees/<int:pk>/', MembershipRetrieveUpdateDestroyView.as_view(), name='employee_details'),
+    path('roles/', RolesListCreateView.as_view(), name='organization_roles'),
+    path('roles/<int:pk>/', RoleRetrieveUpdateDestroyView.as_view(), name='role_details'),
+    path('employees/doTransferOwnership/', TransferOwnershipView.as_view(), name='ownership_transfer'),
+    path('employees/user_info/<int:pk>/', BriefUserInfoView.as_view(), name='new_employee_info'),
 ]
 
 discounts_urls = [

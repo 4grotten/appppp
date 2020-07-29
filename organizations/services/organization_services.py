@@ -9,9 +9,9 @@ from django.db.models.functions import Coalesce
 from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
-    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact,
-    Membership, Message
+    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message
 )
+from organizations.services.membership_services import MembershipService
 from users.models import User
 
 
@@ -281,17 +281,6 @@ class OrgSocialNetworkContactService:
             contacts = [SocialNetworkContact(organization_id=organization_id, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
-
-
-class MembershipService:
-    model = Membership
-
-    @classmethod
-    def get(cls, *args, **kwargs) -> Membership:
-        try:
-            return cls.model.objects.get(*args, **kwargs)
-        except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Membership not found')
 
 
 class OrgMessageService:

@@ -53,6 +53,14 @@ class ProfileBriefSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name')
 
 
+class EmployeeSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer(many=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'avatar', 'full_name', 'phone_number')
+
+
 class SetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
 

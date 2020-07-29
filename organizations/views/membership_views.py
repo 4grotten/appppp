@@ -1,5 +1,6 @@
 from django.db.models import ProtectedError
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,8 @@ from users.serializers import EmployeeSerializer
 class MembershipListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MembershipSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('user__id', 'user__phone_number', 'user__first_name', 'user__last_name',)
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,10 +11,12 @@ from organizations.services.subscription_services import SubscriptionService
 
 class SubscriptionsView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = SubscriptionSerializer
+    serializer_class = OrganizationWithDiscountsSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ['title']
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = SubscriptionSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={
@@ -33,7 +36,3 @@ class SubscriptionsView(ListAPIView):
 
     def get_queryset(self):
         return SubscriptionService.get_user_subscriptions(user=self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        self.serializer_class = OrganizationWithDiscountsSerializer
-        return super().list(request, *args, **kwargs)

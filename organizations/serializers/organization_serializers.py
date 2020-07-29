@@ -210,3 +210,7 @@ class OrganizationTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title')
+
+
+class OrganizationQueryParamSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))

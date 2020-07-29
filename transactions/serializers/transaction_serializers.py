@@ -58,3 +58,5 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 class StartEndDateTransactionSerializer(serializers.Serializer):
     start = serializers.DateField(required=False)
     end = serializers.DateField(required=False)
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
+                                                      default=None)

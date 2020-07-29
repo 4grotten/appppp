@@ -114,8 +114,14 @@ class TransactionUserTotalsView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+        organization = serializer.validated_data['organization']
+        if organization is not None:
+            currency = organization.currency.code
+        else:
+            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+
         totals = TransactionService.get_user_totals(client=request.user, currency=currency,
+                                                    organization=organization,
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
         data = TotalStatsSerializer(totals).data

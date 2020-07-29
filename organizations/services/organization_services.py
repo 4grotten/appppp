@@ -2,11 +2,14 @@ import random
 from typing import Tuple
 
 from django.contrib.gis.geos import Point
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q
 from django.db.models.functions import Coalesce
 
-from common.exceptions import ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException
+from common.exceptions import (
+    ObjectNotFoundException, ValidationException, IntegrityException,
+    NotAcceptableException, PermissionDeniedException
+)
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message
@@ -233,6 +236,16 @@ class OrganizationService:
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
         return queryset
+
+    @classmethod
+    def change_organization_owner(cls, organization: Organization, new_owner: User, current_owner: User):
+        if not organization.owner == current_owner:
+            raise PermissionDeniedException('No rights to change owner')
+        try:
+            organization.owner = new_owner
+            organization.save()
+        except IntegrityError:
+            raise IntegrityException('Could not change owner')
 
 
 class OrgPhoneNumberService:

@@ -1,6 +1,6 @@
 from django.db.models import ProtectedError
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -8,7 +8,7 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Role, Membership
 from organizations.serializers.membership_serializers import (
     MembershipSerializer, RoleBriefSerializer, RoleSerializer, RoleCreateSerializer, MembershipCreateSerializer,
-    MembershipUpdateSerializer
+    MembershipUpdateSerializer, TransferOwnershipSerializer
 )
 from organizations.serializers.organization_serializers import OrganizationQueryParamSerializer
 from organizations.services.membership_services import MembershipService, RoleService
@@ -106,3 +106,22 @@ class RoleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             instance.delete()
         except ProtectedError:
             raise NotAcceptableException('There are existing employees with this role')
+
+
+class TransferOwnershipAPIView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransferOwnershipSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        OrganizationService.change_organization_owner(organization=serializer.validated_data['organization'],
+                                                      new_owner=serializer.validated_data['new_owner'],
+                                                      current_owner=request.user)
+
+        return Response(data={'message': 'Successfully transferred ownership'}, status=status.HTTP_200_OK)

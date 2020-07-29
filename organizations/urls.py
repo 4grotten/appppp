@@ -6,7 +6,7 @@ from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscount
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.membership_views import (
     MembershipAPIView, RolesListCreateAPIView, RoleRetrieveUpdateDestroyAPIView,
-    MembershipRetrieveUpdateDestroyAPIView
+    MembershipRetrieveUpdateDestroyAPIView, TransferOwnershipAPIView
 )
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
@@ -38,6 +38,7 @@ membership_urls = [
     path('employees/<int:pk>/', MembershipRetrieveUpdateDestroyAPIView.as_view(), name='employee_details'),
     path('roles/', RolesListCreateAPIView.as_view(), name='organization_roles'),
     path('roles/<int:pk>/', RoleRetrieveUpdateDestroyAPIView.as_view(), name='role_details'),
+    path('employees/doTransferOwnership/', TransferOwnershipAPIView.as_view(), name='ownership_transfer'),
 ]
 
 discounts_urls = [

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from organizations.models import Membership, Role
+from organizations.models import Membership, Role, Organization
 from organizations.serializers.card_serializers import UserFilteredPrimaryKeyRelatedField
+from users.models import User
 from users.serializers import EmployeeSerializer
 
 
@@ -63,3 +64,8 @@ class MembershipUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ('role',)
+
+
+class TransferOwnershipSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    new_owner = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))

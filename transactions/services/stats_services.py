@@ -32,7 +32,7 @@ class StatisticsService:
         return cls.get_stats_in_one_currency(totals=transactions, currency=currency)
 
     @staticmethod
-    def get_stats_in_one_currency(totals: QuerySet, currency: str):
+    def get_stats_in_one_currency(totals: QuerySet, currency: str) -> dict:
         """
         "totals" queryset should look like this
         QuerySet [{'currency': 'USD', 'total_spent': Decimal('80400.00'), 'total_savings': Decimal('20100.00')},

@@ -77,20 +77,9 @@ class TransactionService:
             user=current_transaction.client,
             organization=current_transaction.organization
         )
-        client_status = OrganizationClientFinancialStatusService.change_totals(
-            status=client_status,
-            spent=current_transaction.final_amount,
-            saved=current_transaction.savings
-        )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
         return current_transaction
-
-    @classmethod
-    def get_total_saved_amount(cls, client: User, organization: Organization):
-        aggregated = Transaction.objects.filter(
-            client=client, organization=organization, is_processed=True).aggregate(total=Coalesce(Sum('savings'), 0))
-        return aggregated['total']
 
     @classmethod
     def get_user_transaction_organizations(cls, client: User, start_date, end_date):
@@ -114,7 +103,7 @@ class TransactionService:
 
     @classmethod
     def get_user_totals(cls, client: User, currency: str,
-                        organization: Organization = None, start_date=None, end_date=None):
+                        organization: Organization = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(client=client, is_processed=True)
 
         if organization is not None:

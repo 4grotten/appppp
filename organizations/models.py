@@ -162,11 +162,9 @@ class OrganizationClientFinancialStatus(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='client_statuses')
     card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='clients', null=True, blank=True)
-    total_spent = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
-    total_saved = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
 
     def __str__(self):
-        return f'{self.user} in {self.organization.title} has spent {self.total_spent} {self.organization.currency}'
+        return f'{self.user} status in {self.organization.title}'
 
     class Meta:
         verbose_name_plural = 'Organization client financial statuses'

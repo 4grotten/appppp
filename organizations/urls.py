@@ -1,19 +1,18 @@
 from django.urls import path, include
 
-from organizations.views.category_views import CategoryDetailAPIView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
+from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
     MembershipRetrieveUpdateDestroyView, TransferOwnershipView, BriefUserInfoView
 )
 from .views.organization_views import (
-    OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveView,
-    OrgMessageAPIView,
-    OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView, HomepageOrganizationsView,
-    OrganizationsInCategoryView,
-    OrganizationTitleRetrieveAPIView)
+    OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
+    OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
+    HomepageOrganizationsView, OrganizationsInCategoryView, OrganizationTitleRetrieveAPIView
+)
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
     HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateView
@@ -24,7 +23,7 @@ organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
 
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
-    path('organizations/<int:pk>/', OrganizationRetrieveView.as_view(), name='organization_details'),
+    path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
     path('organizations/<int:pk>/messages/', OrgMessageAPIView.as_view(), name='organization_messages'),
     path('organizations/<int:pk>/social_networks/', OrgNetworksListAPIView.as_view(), name='organization_networks'),

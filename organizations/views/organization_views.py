@@ -57,7 +57,7 @@ class OrganizationTypesListView(ListAPIView):
     queryset = OrganizationCategory.objects.all()
 
 
-class OrganizationRetrieveView(RetrieveUpdateAPIView):
+class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()

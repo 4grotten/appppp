@@ -170,6 +170,7 @@ class OrganizationService:
         return organization
 
     @classmethod
+    @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, description, types,
                title, opens_at, closes_at, address, currency, show_contacts, country):
         try:
@@ -180,6 +181,10 @@ class OrganizationService:
             organization.opens_at = opens_at
             organization.closes_at = closes_at
             organization.address = address
+            if not organization.currency == currency:
+                from organizations.services.card_services import DiscountCardService
+                DiscountCardService.update_discount_currency(organization=organization, new_currency=currency.code)
+
             organization.currency = currency
             organization.show_contacts = show_contacts
             organization.country = country

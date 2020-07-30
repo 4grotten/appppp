@@ -1,10 +1,5 @@
-from decimal import Decimal
 from typing import Union
 
-from django.db import IntegrityError
-from django.db.models import F
-
-from common.exceptions import IntegrityException
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
 from organizations.services.card_services import DiscountCardService
 from users.models import User
@@ -28,18 +23,6 @@ class OrganizationClientFinancialStatusService:
         return client_status
 
     @classmethod
-    def change_totals(cls, status: OrganizationClientFinancialStatus,
-                      spent: Decimal, saved: Decimal) -> OrganizationClientFinancialStatus:
-        try:
-            status.total_spent = F('total_spent') + spent
-            status.total_saved = F('total_saved') + saved
-            status.save()
-            status.refresh_from_db()
-            return status
-        except IntegrityError:
-            raise IntegrityException('Could not change total spent')
-
-    @classmethod
     def get_client_cumulative_card(cls, client: User, organization: Organization) -> Union[DiscountCard, None]:
         ownership = cls.get(user=client, card__organization=organization, card__type=DiscountCard.CUMULATIVE)
         if ownership:
@@ -48,16 +31,17 @@ class OrganizationClientFinancialStatusService:
 
     @classmethod
     def get_client_financial_status_data(cls, client: User, organization: Organization) -> dict:
-        total_spent_in_organization = 0
-        total_saved_in_organization = 0
+        from transactions.services.transaction_services import TransactionService
+        user_totals = TransactionService.get_user_totals(client=client, organization=organization,
+                                                         currency=organization.currency.code)
+
+        total_spent_in_organization = user_totals['total_spent']
+        total_saved_in_organization = user_totals['total_savings']
         cumulative_card = None
         next_level_limit = None
 
         client_status = cls.get(user=client, organization=organization)
         if client_status is not None:
-            total_spent_in_organization = client_status.total_spent
-            total_saved_in_organization = client_status.total_saved
-
             if client_status.card is not None:
                 cumulative_card = client_status.card.id
                 next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
@@ -75,9 +59,15 @@ class OrganizationClientFinancialStatusService:
 
     @classmethod
     def update_client_cumulative_card(cls, client_status: OrganizationClientFinancialStatus):
+        from transactions.services.transaction_services import TransactionService
+        user_totals = TransactionService.get_user_totals(client=client_status.user,
+                                                         organization=client_status.organization,
+                                                         currency=client_status.organization.currency.code)
+        total_spent_in_organization = user_totals['total_spent']
+
         highest_card_possible = DiscountCard.objects.filter(
             type=DiscountCard.CUMULATIVE, is_published=True, organization=client_status.organization,
-            limit__lte=client_status.total_spent
+            limit__lte=total_spent_in_organization
         ).order_by('-limit').first()
 
         if highest_card_possible is None:

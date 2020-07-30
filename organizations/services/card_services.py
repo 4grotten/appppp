@@ -3,9 +3,10 @@ from itertools import groupby
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
+from common.services.currency import CurrencyConverterService
 from organizations.models import DiscountCard, Organization
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -203,3 +204,9 @@ class DiscountCardService:
         if max_discount:
             return max_discount[0]
         return 0
+
+    @classmethod
+    def update_discount_currency(cls, organization: Organization, new_currency: str):
+        rate = CurrencyConverterService.get_rate(from_currency=organization.currency.code, to_currency=new_currency)
+        DiscountCard.objects.filter(organization=organization, type=DiscountCard.CUMULATIVE
+                                    ).update(currency=new_currency, limit=F('limit') * rate)

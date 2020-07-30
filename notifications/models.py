@@ -4,6 +4,7 @@ from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
 from organizations.models import Organization
+from organizations.serializers.organization_serializers import OrganizationShortInfoSerializer
 from .constants import (
     NOTIFICATION_MODES,
     DISCOUNT_NOTIFICATION_MODE,

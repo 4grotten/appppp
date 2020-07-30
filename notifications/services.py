@@ -25,14 +25,15 @@ class NotificationService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_notification(cls, recipient, sender: None, mode, title, description):
+    def create_notification(cls, recipient, mode, title, description, organization=None, sender=None):
         try:
             return cls.model.objects.create(
                 recipient=recipient,
                 sender=sender,
                 mode=mode,
                 title=title,
-                description=description
+                description=description,
+                organization=organization
             )
         except Exception as e:
             raise IntegrityException('Error while creating notification: {e}'.format(e=str(e)))
@@ -61,3 +62,17 @@ class NotificationSettingService:
         setting = cls.get(user=user)
 
         return setting.fcm_device
+
+    @classmethod
+    def update(cls, notification_setting: NotificationSetting, discount_notifications: bool,
+               private_notifications: bool, organization_notifications: bool):
+        try:
+            notification_setting.discount_notifications = discount_notifications
+            notification_setting.private_notifications = private_notifications
+            notification_setting.organization_notifications = organization_notifications
+            notification_setting.save()
+
+            return notification_setting
+
+        except Exception as e:
+            raise IntegrityException('Can not update: {e}'.format(e=str(e)))

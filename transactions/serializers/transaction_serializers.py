@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, DiscountCard
+from organizations.services.organization_services import OrganizationService
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileSerializer
@@ -46,12 +47,17 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
     processed_by = ProfileSerializer(many=False)
+    employee_role = serializers.SerializerMethodField()
+
+    def get_employee_role(self, transaction: Transaction):
+        return OrganizationService.get_user_role_in_organization(organization=transaction.organization,
+                                                                 user=transaction.processed_by)
 
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
-            'updated_at', 'created_at', 'processed_by'
+            'updated_at', 'created_at', 'processed_by', 'employee_role',
         )
 
 

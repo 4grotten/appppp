@@ -43,7 +43,7 @@ class Notification(TimestampModel):
             user=self.recipient,
             title=self.title,
             description=self.description,
-            mode=self.mode,
+            mode=self.mode.name,
             notification_id=self.id
         )
 

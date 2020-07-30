@@ -4,6 +4,7 @@ from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
 from organizations.models import Organization
+from organizations.serializers.organization_serializers import OrganizationShortInfoSerializer
 from .constants import (
     NOTIFICATION_MODES,
     DISCOUNT_NOTIFICATION_MODE,
@@ -36,11 +37,13 @@ class Notification(TimestampModel):
             title=self.title,
             description=self.description,
             mode=self.mode,
-            notification_id=self.id
+            notification_id=self.id,
+            organization=self.organization
         )
 
-    @staticmethod
-    def send_notification(user: User, title: str, description: str, notification_id: int, mode: str):
+    @classmethod
+    def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
+                          organization=None):
         notification_setting = NotificationSetting.objects.get(user=user)
         fcm_device = notification_setting.fcm_device
 
@@ -48,8 +51,10 @@ class Notification(TimestampModel):
             'title': title,
             'body': description,
             'data': {
-                'notification_id': notification_id
-            }
+                'notification_id': notification_id,
+                'organization': OrganizationShortInfoSerializer(organization, many=False).data if organization else None
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
 
         if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
@@ -63,6 +68,10 @@ class Notification(TimestampModel):
 
         if mode == PARTNER_MODE and notification_setting.organization_notifications:
             fcm_device.send_message(**notification_payload)
+
+    @staticmethod
+    def get_organization_small_image(organization):
+        return str(organization.image.medium) if organization.image else None
 
 
 class NotificationSetting(TimestampModel):

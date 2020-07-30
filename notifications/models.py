@@ -3,6 +3,7 @@ from django.db import models
 from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
+from organizations.models import Organization
 from .constants import (
     NOTIFICATION_MODES,
     DISCOUNT_NOTIFICATION_MODE,
@@ -21,6 +22,8 @@ class Notification(TimestampModel):
     title = models.CharField(max_length=255)
     description = models.TextField()
     is_read = models.BooleanField(default=False)
+    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True,
+                                     related_name='organization_notifications')
 
     def __str__(self):
         return self.title

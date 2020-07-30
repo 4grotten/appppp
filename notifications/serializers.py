@@ -32,3 +32,10 @@ class CustomFCMDeviceSerializer(FCMDeviceSerializer):
                 raise IntegrityException('Error while creating notification setting: {e}'.format(e=str(e)))
 
             return fcm_device
+
+
+class NotificationSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationSetting
+        fields = ('id', 'discount_notifications', 'private_notifications', 'organization_notifications')
+        extra_kwargs = {"id": {"read_only": True, "required": False}}

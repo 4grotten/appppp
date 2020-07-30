@@ -61,3 +61,17 @@ class NotificationSettingService:
         setting = cls.get(user=user)
 
         return setting.fcm_device
+
+    @classmethod
+    def update(cls, notification_setting: NotificationSetting, discount_notifications: bool,
+               private_notifications: bool, organization_notifications: bool):
+        try:
+            notification_setting.discount_notifications = discount_notifications
+            notification_setting.private_notifications = private_notifications
+            notification_setting.organization_notifications = organization_notifications
+            notification_setting.save()
+
+            return notification_setting
+
+        except Exception as e:
+            raise IntegrityException('Can not update: {e}'.format(e=str(e)))

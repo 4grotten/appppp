@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.urls import path, include
 from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
 
+from notifications.views import CustomFCMDeviceAuthorizedViewSet
+
 v1 = ([
           path('', include('users.urls')),
           path('', include('organizations.urls')),
@@ -18,7 +20,7 @@ urlpatterns = [
     path('api/v1/', include(v1)),
     path('api-auth/', include('rest_framework.urls')),
     path('rest-auth/', include('rest_auth.urls')),
-    path('api/v1/devices/', FCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
+    path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

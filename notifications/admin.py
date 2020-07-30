@@ -1,8 +1,13 @@
 from django.contrib import admin
 
 from .models import (
-    Notification, NotificationSetting
+    Notification, NotificationSetting, NotificationMode
 )
+
+
+@admin.register(NotificationMode)
+class NotificationAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(Notification)

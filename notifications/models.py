@@ -15,16 +15,23 @@ from .constants import (
 User = get_user_model()
 
 
+class NotificationMode(TimestampModel):
+    name = models.CharField(max_length=255, primary_key=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Notification(TimestampModel):
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipient_notifications')
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,
                                related_name='sender_notifications')
-    mode = models.CharField(max_length=20, choices=NOTIFICATION_MODES)
     title = models.CharField(max_length=255)
     description = models.TextField()
     is_read = models.BooleanField(default=False)
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True,
                                      related_name='organization_notifications')
+    mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
 
     def __str__(self):
         return self.title
@@ -36,7 +43,7 @@ class Notification(TimestampModel):
             user=self.recipient,
             title=self.title,
             description=self.description,
-            mode=self.mode,
+            mode=self.mode.name,
             notification_id=self.id,
             organization=self.organization
         )

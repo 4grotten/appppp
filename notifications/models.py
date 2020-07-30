@@ -23,7 +23,7 @@ class Notification(TimestampModel):
     description = models.TextField()
     is_read = models.BooleanField(default=False)
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True,
-                                     related_name='organization')
+                                     related_name='organization_notifications')
 
     def __str__(self):
         return self.title

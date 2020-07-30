@@ -6,11 +6,10 @@ from users.serializers import ProfileSerializer
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    recipient = ProfileSerializer(many=False)
     sender = ProfileSerializer(many=False, allow_null=True)
     organization = OrganizationNotificationInfo(allow_null=True)
 
     class Meta:
         model = Notification
-        fields = ('id', 'created_at', 'updated_at', 'recipient', 'sender',
+        fields = ('id', 'created_at', 'updated_at', 'sender',
                   'mode', 'title', 'description', 'is_read', 'organization')

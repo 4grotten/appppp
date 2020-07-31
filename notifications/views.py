@@ -51,3 +51,19 @@ class NotificationSettingAPIView(APIView):
         )
 
         return Response(self.serializer_class(updated_notification_setting, many=False).data)
+
+
+class NotificationsCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response(data={
+            'count': NotificationService.get_user_notifications_count(user=request.user)
+        })
+
+    def post(self, request):
+        NotificationService.do_read_notifications(user=request.user)
+
+        return Response(data={
+            'message': 'Success'
+        })

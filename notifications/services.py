@@ -42,6 +42,14 @@ class NotificationService:
     def get_own_notifications(cls, user: User):
         return cls.filter(recipient=user)
 
+    @classmethod
+    def get_user_notifications_count(cls, user: User):
+        return cls.filter(is_read=False, recipient=user).count()
+
+    @classmethod
+    def do_read_notifications(cls, user: User):
+        return cls.filter(is_read=False, recipient=user).update(is_read=True)
+
 
 class NotificationSettingService:
     model = NotificationSetting

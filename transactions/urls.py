@@ -3,15 +3,17 @@ from django.urls import path
 from transactions.views.stat_views import PartnersTotalStatsView
 from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, TransactionOrganizationsView,
-    TransactionUserTotalsView, TransactionsListApiView,
-    TransactionDetailAPIView)
+    TransactionUserTotalsView, UserTransactionsListView, TransactionDetailAPIView, OrganizationTransactionListView
+)
 
 urlpatterns = [
+    path('transactions/', OrganizationTransactionListView.as_view(), name='organization_transactions'),
+
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
 
     path('statistics/totals/', TransactionUserTotalsView.as_view(), name='user_totals'),
-    path('statistics/transactions/', TransactionsListApiView.as_view(), name='user_transactions'),
+    path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),
     path('statistics/transactions/<int:pk>/', TransactionDetailAPIView.as_view(), name='user_transaction_detail'),
     path('statistics/organizations/', TransactionOrganizationsView.as_view(), name='transaction_organizations'),
 

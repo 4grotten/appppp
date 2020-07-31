@@ -121,3 +121,20 @@ class TransactionService:
     def get_user_transactions(cls, client: User):
         transactions = Transaction.objects.filter(client=client, is_processed=True)
         return transactions
+
+    @classmethod
+    def get_organization_transactions(cls, organization: Organization, processed_by: User = None,
+                                      start_date=None, end_date=None, search_id: int = None):
+
+        transactions = Transaction.objects.filter(is_processed=True, organization=organization)
+        if processed_by is not None:
+            transactions = transactions.filter(processed_by=processed_by)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        if search_id is not None:
+            transactions = transactions.filter(id=search_id)
+
+        return transactions

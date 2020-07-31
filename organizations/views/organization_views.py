@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import status, filters
+from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -10,7 +10,7 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer,
-    OrganizationAndCategorySerializer, OrganizationWithDiscountsSerializer, PartnerQueryParamSerializer
+    OrganizationWithDiscountsSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -21,6 +21,9 @@ from organizations.serializers.organization_serializers import (
     OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer,
     OrganizationTitleSerializer)
+from organizations.serializers.query_param_serializers import (
+    PartnerQueryParamSerializer, OrganizationAndCategorySerializer
+)
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,

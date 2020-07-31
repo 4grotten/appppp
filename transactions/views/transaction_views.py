@@ -7,10 +7,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import PartnerSerializer
+from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.organization_services import OrganizationService
+from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
@@ -128,7 +132,7 @@ class TransactionUserTotalsView(APIView):
         return Response(data)
 
 
-class TransactionsListApiView(ListAPIView):
+class UserTransactionsListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
@@ -148,3 +152,37 @@ class TransactionDetailAPIView(APIView):
         transaction = TransactionService.get_user_transaction_detail(user=request.user, transaction_id=pk)
 
         return Response(self.serializer_class(transaction, many=False, context={'request': request}).data)
+
+
+class OrganizationTransactionListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    queryset = Transaction.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
+                                                      user=request.user):
+            raise NotAcceptableException('No rights to see stats of organization')
+
+        queryset = TransactionService.get_organization_transactions(
+            organization=serializer.validated_data['organization'],
+            processed_by=serializer.validated_data['processed_by'],
+            start_date=serializer.validated_data['start'],
+            end_date=serializer.validated_data['end'],
+            search_id=serializer.validated_data['search']
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

@@ -11,7 +11,7 @@ from common.exceptions import (
     PermissionDeniedException
 )
 from notifications.constants import DISCOUNT_NOTIFICATION_MODE, \
-    ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE, DECLINE_DISCOUNT_TYPE
+    ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE, DECLINE_DISCOUNT_TYPE, DISCOUNT_COMPLETE_DESCRIPTION
 from notifications.services import NotificationService
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -80,7 +80,7 @@ class TransactionService:
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=current_transaction.discount_percent),
-                description='Итого со скидкой: {savings}'.format(savings=current_transaction.savings),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(savings=current_transaction.savings),
                 organization=current_transaction.organization
             )
         except IntegrityError:

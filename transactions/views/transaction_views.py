@@ -18,7 +18,7 @@ from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer
+    TransactionDetailSerializer, TransactionWithClientSerializer
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
@@ -144,13 +144,12 @@ class UserTransactionsListView(ListAPIView):
         return transactions
 
 
-class TransactionDetailAPIView(APIView):
+class UserTransactionDetailAPIView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionDetailSerializer
 
     def get(self, request, pk):
-        transaction = TransactionService.get_user_transaction_detail(user=request.user, transaction_id=pk)
-
+        transaction = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
         return Response(self.serializer_class(transaction, many=False, context={'request': request}).data)
 
 
@@ -186,3 +185,12 @@ class OrganizationTransactionListView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class OrganizationTransactionDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithClientSerializer
+
+    def get(self, request, pk):
+        transaction = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
+        return Response(self.serializer_class(transaction).data)

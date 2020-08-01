@@ -53,6 +53,14 @@ class ProfileBriefSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name')
 
 
+class ProfileBriefWithPhotoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar')
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer(many=False)
 

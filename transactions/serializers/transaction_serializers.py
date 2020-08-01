@@ -6,7 +6,7 @@ from organizations.models import Organization, DiscountCard
 from organizations.services.organization_services import OrganizationService
 from transactions.models import Transaction
 from users.models import User
-from users.serializers import ProfileSerializer
+from users.serializers import ProfileBriefWithPhotoSerializer
 
 
 class PreprocessSerializer(serializers.Serializer):
@@ -46,7 +46,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
-    processed_by = ProfileSerializer(many=False)
+    processed_by = ProfileBriefWithPhotoSerializer()
     employee_role = serializers.SerializerMethodField()
 
     def get_employee_role(self, transaction: Transaction):
@@ -58,6 +58,17 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
             'updated_at', 'created_at', 'processed_by', 'employee_role',
+        )
+
+
+class TransactionWithClientSerializer(TransactionDetailSerializer):
+    client = ProfileBriefWithPhotoSerializer()
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'updated_at', 'created_at', 'processed_by', 'employee_role', 'client',
         )
 
 

@@ -34,8 +34,8 @@ class SubscriptionService:
             NotificationService.create_notification(
                 recipient=user,
                 mode=SUBSCRIPTION_NOTIFICATION_MODE,
-                notification_type=ORGANIZATION_FOLLOWED_TYPE.format(org_title=organization.title),
-                title=ORGANIZATION_FOLLOWED_TITLE,
+                notification_type=ORGANIZATION_FOLLOWED_TYPE,
+                title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
                 description=organization.address,
                 organization=organization
             )

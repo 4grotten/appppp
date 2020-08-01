@@ -80,7 +80,7 @@ class TransactionService:
                 sender=current_transaction.processed_by,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
-                title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
+                title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(savings=str(current_transaction.savings)),
                 organization=current_transaction.organization
             )
@@ -88,7 +88,7 @@ class TransactionService:
                 recipient=current_transaction.processed_by,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
-                title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
+                title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(savings=str(current_transaction.savings)),
                 organization=current_transaction.organization
             )

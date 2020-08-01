@@ -28,3 +28,7 @@ NOTIFICATION_TYPES = (
     (SYSTEM_TYPE, SYSTEM_TYPE),
 
 )
+
+FOLLOWED_TO_ORGANIZATION_TITLE = 'На вашу организацию подписались'
+ORGANIZATION_FOLLOWED_TITLE = 'Вы подписались на организацию'
+COMPLETE_TITLE = 'Вы провели скидку {discount_percent}'

@@ -4,8 +4,8 @@ from fcm_django.models import FCMDevice
 from common.exceptions import ObjectNotFoundException, IntegrityException
 from .models import (
     Notification,
-    NotificationSetting
-)
+    NotificationSetting,
+    NotificationMode)
 
 User = get_user_model()
 
@@ -28,15 +28,20 @@ class NotificationService:
     def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
                             sender=None):
         try:
-            return cls.model.objects.create(
+
+            mode_object = NotificationMode.objects.get(name=mode)  # move to services
+
+            notification, _ = cls.model.objects.get_or_create(
                 recipient=recipient,
                 sender=sender,
-                mode=mode,
+                mode=mode_object,
                 title=title,
                 description=description,
                 organization=organization,
                 type=notification_type
             )
+
+            return notification
         except Exception as e:
             raise IntegrityException('Error while creating notification: {e}'.format(e=str(e)))
 

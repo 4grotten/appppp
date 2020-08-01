@@ -1,3 +1,8 @@
+from notifications.constants import (
+    SUBSCRIPTION_NOTIFICATION_MODE, FOLLOWED_TO_ORGANIZATION_TYPE,
+    FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
+    ORGANIZATION_FOLLOWED_TITLE)
+from notifications.services import NotificationService
 from organizations.models import Organization, Subscription
 from django.db.models import QuerySet
 from users.models import User
@@ -16,6 +21,25 @@ class SubscriptionService:
     def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:
         subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
         if created:
+            NotificationService.create_notification(
+                recipient=organization.owner,
+                sender=user,
+                mode=SUBSCRIPTION_NOTIFICATION_MODE,
+                notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+                title=FOLLOWED_TO_ORGANIZATION_TITLE,
+                description=organization.address,
+                organization=organization
+            )
+
+            NotificationService.create_notification(
+                recipient=user,
+                mode=SUBSCRIPTION_NOTIFICATION_MODE,
+                notification_type=ORGANIZATION_FOLLOWED_TYPE,
+                title=ORGANIZATION_FOLLOWED_TITLE,
+                description='Вы провели скидку {saving}'.format(),
+                organization=organization
+            )
+
             return True
         subscription.delete()
         return False

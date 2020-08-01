@@ -201,3 +201,5 @@ FCM_DJANGO_SETTINGS = {
     # default: False
     "DELETE_INACTIVE_DEVICES": False,
 }
+
+HOST_URL = 'https://apofiz.com'

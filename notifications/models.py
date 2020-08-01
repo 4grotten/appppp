@@ -4,7 +4,7 @@ from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
 from organizations.models import Organization
-from organizations.serializers.organization_serializers import OrganizationShortInfoSerializer
+from project.settings.base import HOST_URL
 from .constants import (
     NOTIFICATION_MODES,
     DISCOUNT_NOTIFICATION_MODE,
@@ -29,7 +29,7 @@ class Notification(TimestampModel):
     title = models.CharField(max_length=255)
     description = models.TextField()
     is_read = models.BooleanField(default=False)
-    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True,
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.SET_NULL, blank=True, null=True,
                                      related_name='organization_notifications')
     mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
     type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
@@ -37,8 +37,9 @@ class Notification(TimestampModel):
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        super(Notification, self).save(*args, *kwargs)
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(Notification, self).save()
 
         self.send_notification(
             user=self.recipient,
@@ -60,7 +61,10 @@ class Notification(TimestampModel):
             'body': description,
             'data': {
                 'notification_id': notification_id,
-                'organization': OrganizationShortInfoSerializer(organization, many=False).data if organization else None
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
@@ -79,7 +83,7 @@ class Notification(TimestampModel):
 
     @staticmethod
     def get_organization_small_image(organization):
-        return str(organization.image.medium) if organization.image else None
+        return HOST_URL + str(organization.image.medium) if organization.image else None
 
 
 class NotificationSetting(TimestampModel):

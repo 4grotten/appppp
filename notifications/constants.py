@@ -31,4 +31,8 @@ NOTIFICATION_TYPES = (
 
 FOLLOWED_TO_ORGANIZATION_TITLE = 'На вашу организацию подписались'
 ORGANIZATION_FOLLOWED_TITLE = 'Вы подписались на организацию'
-COMPLETE_TITLE = 'Вы провели скидку {discount_percent}'
+DISCOUNT_COMPLETE_USER_TITLE = 'Вам провели скидку {discount_percent}'
+DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {savings}'
+
+DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent}'
+DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {savings}'

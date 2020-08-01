@@ -10,6 +10,9 @@ from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException,
     PermissionDeniedException
 )
+from notifications.constants import DISCOUNT_NOTIFICATION_MODE, \
+    ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE, DECLINE_DISCOUNT_TYPE
+from notifications.services import NotificationService
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
@@ -70,6 +73,16 @@ class TransactionService:
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
+
+            NotificationService.create_notification(
+                recipient=current_transaction.client,
+                sender=current_transaction.processed_by,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=ACCEPT_DISCOUNT_TYPE,
+                title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=current_transaction.discount_percent),
+                description='Итого со скидкой: {savings}'.format(savings=current_transaction.savings),
+                organization=current_transaction.organization
+            )
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
 

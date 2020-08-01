@@ -25,7 +25,8 @@ class NotificationService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_notification(cls, recipient, mode, title, description, organization=None, sender=None):
+    def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
+                            sender=None):
         try:
             return cls.model.objects.create(
                 recipient=recipient,
@@ -33,7 +34,8 @@ class NotificationService:
                 mode=mode,
                 title=title,
                 description=description,
-                organization=organization
+                organization=organization,
+                type=notification_type
             )
         except Exception as e:
             raise IntegrityException('Error while creating notification: {e}'.format(e=str(e)))

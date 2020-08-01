@@ -72,17 +72,17 @@ class Notification(TimestampModel):
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
 
-        # if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
-        #     fcm_devices.send_message(**notification_payload)
-        #
-        # if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
-        #     fcm_devices.send_message(**notification_payload)
-        #
-        # if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
-        #     fcm_devices.send_message(**notification_payload)
-        #
-        # if mode == PARTNER_MODE and notification_setting.organization_notifications:
-        #     fcm_devices.send_message(**notification_payload)
+        if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
+            fcm_devices.send_message(**notification_payload)
+
+        if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
+            fcm_devices.send_message(**notification_payload)
+
+        if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
+            fcm_devices.send_message(**notification_payload)
+
+        if mode == PARTNER_MODE and notification_setting.organization_notifications:
+            fcm_devices.send_message(**notification_payload)
 
     @staticmethod
     def get_organization_small_image(organization):

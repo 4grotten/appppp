@@ -1,9 +1,17 @@
 from rest_framework import serializers
 
+from users.models import User
+
 
 class StartEndDateSerializer(serializers.Serializer):
     start = serializers.DateField(required=True)
     end = serializers.DateField(required=True)
+
+
+class StartEndProcessedByQueryParamSerializer(serializers.Serializer):
+    start = serializers.DateField(default=None)
+    end = serializers.DateField(default=None)
+    processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
 
 
 class TotalStatsSerializer(serializers.Serializer):

@@ -9,8 +9,8 @@ from .constants import (
     NOTIFICATION_MODES,
     DISCOUNT_NOTIFICATION_MODE,
     SUBSCRIPTION_NOTIFICATION_MODE,
-    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE
-)
+    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
+    NOTIFICATION_TYPES, SYSTEM_TYPE)
 
 User = get_user_model()
 
@@ -32,6 +32,7 @@ class Notification(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True,
                                      related_name='organization_notifications')
     mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
+    type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
 
     def __str__(self):
         return self.title

@@ -36,7 +36,7 @@ class SubscriptionService:
                 mode=SUBSCRIPTION_NOTIFICATION_MODE,
                 notification_type=ORGANIZATION_FOLLOWED_TYPE,
                 title=ORGANIZATION_FOLLOWED_TITLE,
-                description='Вы провели скидку {saving}'.format(),
+                description=organization.address,
                 organization=organization
             )
 

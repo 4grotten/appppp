@@ -16,7 +16,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ('id', 'created_at', 'updated_at', 'sender',
-                  'mode', 'title', 'description', 'is_read', 'organization')
+                  'mode', 'title', 'description', 'is_read', 'organization', 'type')
 
 
 class CustomFCMDeviceSerializer(FCMDeviceSerializer):

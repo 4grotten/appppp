@@ -34,6 +34,9 @@ class Notification(TimestampModel):
     mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
     type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
 
+    class Meta:
+        ordering = ('-created_at',)
+
     def __str__(self):
         return self.title
 

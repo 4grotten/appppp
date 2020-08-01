@@ -1,13 +1,14 @@
 from django.conf import settings
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import PartnerSerializer
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
@@ -187,10 +188,21 @@ class OrganizationTransactionListView(ListAPIView):
         return Response(serializer.data)
 
 
-class OrganizationTransactionDetailView(APIView):
+class OrganizationTransactionDetailView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionWithClientSerializer
 
-    def get(self, request, pk):
-        transaction = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(self.serializer_class(transaction).data)
+    def get_object(self):
+        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+
+    def perform_destroy(self, instance: Transaction):
+        # ToDo: implement proper cancellation of transactions
+        if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
+            raise PermissionDeniedException('Permission denied')
+
+        with transaction.atomic():
+            instance.delete()
+            client_status = OrganizationClientFinancialStatusService.get(user=instance.client,
+                                                                         organization=instance.organization)
+            if client_status is not None:
+                OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)

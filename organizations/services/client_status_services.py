@@ -70,9 +70,6 @@ class OrganizationClientFinancialStatusService:
             limit__lte=total_spent_in_organization
         ).order_by('-limit').first()
 
-        if highest_card_possible is None:
-            return
-
         client_status.card = highest_card_possible
         client_status.save(update_fields=('card',))
 

@@ -57,7 +57,7 @@ class Notification(TimestampModel):
     def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
                           organization=None):
         notification_setting = NotificationSetting.objects.get(user=user)
-        fcm_device = notification_setting.fcm_device
+        fcm_devices = FCMDevice.objects.filter(user=user)
 
         notification_payload = {
             'title': title,
@@ -73,16 +73,16 @@ class Notification(TimestampModel):
         }
 
         if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
-            fcm_device.send_message(**notification_payload)
+            fcm_devices.send_message(**notification_payload)
 
         if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_device.send_message(**notification_payload)
+            fcm_devices.send_message(**notification_payload)
 
         if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_device.send_message(**notification_payload)
+            fcm_devices.send_message(**notification_payload)
 
         if mode == PARTNER_MODE and notification_setting.organization_notifications:
-            fcm_device.send_message(**notification_payload)
+            fcm_devices.send_message(**notification_payload)
 
     @staticmethod
     def get_organization_small_image(organization):
@@ -91,7 +91,7 @@ class Notification(TimestampModel):
 
 class NotificationSetting(TimestampModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    fcm_device = models.ForeignKey(FCMDevice, on_delete=models.CASCADE)
+    fcm_device = models.ManyToManyField(FCMDevice)
     discount_notifications = models.BooleanField(default=True)
     private_notifications = models.BooleanField(default=True)
     organization_notifications = models.BooleanField(default=True)

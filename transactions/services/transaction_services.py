@@ -89,16 +89,18 @@ class TransactionService:
 
     @staticmethod
     def get_user_tr_organizations_without_date(client):
-        transactions = Transaction.objects.filter(client=client, is_processed=True)
-        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
+        transactions = Transaction.objects.filter(client=client)
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).order_by(
+            '-transactions__updated_at').distinct()
         return organizations
 
     @staticmethod
     def get_user_tr_organizations_with_date(client, start_date, end_date):
         end_date = end_date + timedelta(days=1)
-        transactions = Transaction.objects.filter(client=client, is_processed=True).filter(
+        transactions = Transaction.objects.filter(client=client).filter(
             created_at__range=[start_date, end_date])
-        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).distinct()
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).order_by(
+            '-transactions__updated_at').distinct()
         return organizations
 
     @classmethod

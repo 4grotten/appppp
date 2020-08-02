@@ -89,7 +89,7 @@ class TransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class TransactionOrganizationsView(ListAPIView):
+class UserTransactionOrganizationView(ListAPIView):
     serializer_class = PartnerWithLatestTransactionSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -107,7 +107,7 @@ class TransactionOrganizationsView(ListAPIView):
         )
 
 
-class TransactionUserTotalsView(APIView):
+class UserTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
@@ -144,7 +144,7 @@ class UserTransactionsListView(ListAPIView):
         return transactions
 
 
-class UserTransactionDetailAPIView(APIView):
+class UserTransactionDetailView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionDetailSerializer
 

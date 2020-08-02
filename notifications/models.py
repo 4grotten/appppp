@@ -67,8 +67,7 @@ class Notification(TimestampModel):
                 'organization': {
                     'id': organization.id,
                     'title': organization.title
-                } if organization else None,
-                'picture_url': cls.get_organization_small_image(organization=organization) if organization else None
+                } if organization else None
             }
             # 'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }

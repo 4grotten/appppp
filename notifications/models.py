@@ -67,7 +67,8 @@ class Notification(TimestampModel):
                 'organization': {
                     'id': organization.id,
                     'title': organization.title
-                } if organization else None
+                } if organization else None,
+                'image': cls.get_organization_small_image(organization=organization) if organization else None
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
@@ -86,8 +87,8 @@ class Notification(TimestampModel):
 
     @staticmethod
     def get_organization_small_image(organization):
-        print(HOST_URL + str(organization.image.medium) if organization.image else None)
-        return HOST_URL + str(organization.image.medium) if organization.image else None
+        print(HOST_URL + str(organization.image) if organization.image else None)
+        return HOST_URL + str(organization.image) if organization.image else None
 
 
 class NotificationSetting(TimestampModel):

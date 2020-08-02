@@ -3,16 +3,17 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Sum, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException,
     PermissionDeniedException
 )
-from notifications.constants import (DISCOUNT_NOTIFICATION_MODE,
-                                     ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE, DECLINE_DISCOUNT_TYPE,
-                                     DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE)
+from notifications.constants import (
+    DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
+    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE
+)
 from notifications.services import NotificationService
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -105,24 +106,18 @@ class TransactionService:
 
     @classmethod
     def get_user_transaction_organizations(cls, client: User, start_date, end_date):
-        if not start_date and not end_date:
-            return cls.get_user_tr_organizations_without_date(client)
-        return cls.get_user_tr_organizations_with_date(client=client, start_date=start_date, end_date=end_date)
-
-    @staticmethod
-    def get_user_tr_organizations_without_date(client):
         transactions = Transaction.objects.filter(client=client, is_processed=True)
-        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).order_by(
-            '-transactions__updated_at').distinct()
-        return organizations
 
-    @staticmethod
-    def get_user_tr_organizations_with_date(client, start_date, end_date):
-        end_date = end_date + timedelta(days=1)
-        transactions = Transaction.objects.filter(client=client, is_processed=True).filter(
-            created_at__range=[start_date, end_date])
-        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).order_by(
-            '-transactions__updated_at').distinct()
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(
+                    organization=OuterRef('pk'), ).order_by('-updated_at').values('updated_at')[:1]
+            )
+        ).order_by('-latest_transaction_time')
         return organizations
 
     @classmethod

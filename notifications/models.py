@@ -61,7 +61,7 @@ class Notification(TimestampModel):
             return
 
         notification_setting = NotificationSetting.objects.get(user=user)
-        fcm_devices = FCMDevice.objects.filter(user=user)
+        fcm_devices = notification_setting.fcm_device.all()
 
         notification_payload = {
             'title': title,

@@ -76,6 +76,18 @@ class PartnerSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'address', 'image', 'types', 'partners')
 
 
+class PartnerWithLatestTransactionSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        # Annotated field
+        return organization.latest_transaction_time
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners')
+
+
 class HomepagePartnerSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)

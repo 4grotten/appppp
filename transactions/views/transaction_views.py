@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
-from organizations.serializers.organization_serializers import PartnerSerializer
+from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -89,8 +89,8 @@ class TransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class TransactionOrganizationsView(ListAPIView):
-    serializer_class = PartnerSerializer
+class UserTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -100,15 +100,14 @@ class TransactionOrganizationsView(ListAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        organizations = TransactionService.get_user_transaction_organizations(client=self.request.user,
-                                                                              start_date=serializer.validated_data.get(
-                                                                                  'start'),
-                                                                              end_date=serializer.validated_data.get(
-                                                                                  'end'))
-        return organizations
+        return TransactionService.get_user_transaction_organizations(
+            client=self.request.user,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
 
 
-class TransactionUserTotalsView(APIView):
+class UserTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
@@ -145,7 +144,7 @@ class UserTransactionsListView(ListAPIView):
         return transactions
 
 
-class UserTransactionDetailAPIView(APIView):
+class UserTransactionDetailView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionDetailSerializer
 

@@ -91,8 +91,7 @@ class Notification(TimestampModel):
 
     @staticmethod
     def get_organization_small_image(organization):
-        print(HOST_URL + str(organization.image) if organization.image else None)
-        return HOST_URL + str(organization.image) if organization.image else None
+        return HOST_URL + str(organization.image.small) if organization.image else None
 
 
 class NotificationSetting(TimestampModel):

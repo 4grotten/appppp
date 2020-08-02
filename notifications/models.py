@@ -56,6 +56,10 @@ class Notification(TimestampModel):
     @classmethod
     def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
                           organization=None):
+
+        if not NotificationSetting.objects.filter(user=user).exists():
+            return
+
         notification_setting = NotificationSetting.objects.get(user=user)
         fcm_devices = FCMDevice.objects.filter(user=user)
 

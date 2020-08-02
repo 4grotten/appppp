@@ -68,8 +68,8 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None
-            }
-            # 'icon': cls.get_organization_small_image(organization=organization) if organization else None
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
 
         if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:

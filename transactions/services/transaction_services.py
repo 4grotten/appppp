@@ -116,8 +116,8 @@ class TransactionService:
 
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
-                Transaction.objects.filter(
-                    organization=OuterRef('pk'), ).order_by('-updated_at').values('updated_at')[:1]
+                Transaction.objects.filter(organization=OuterRef('pk'), client=client, is_processed=True
+                                           ).order_by('-updated_at').values('updated_at')[:1]
             )
         ).order_by('-latest_transaction_time')
         return organizations

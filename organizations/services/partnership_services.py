@@ -4,8 +4,9 @@ from django.db import IntegrityError
 from django.db.models import QuerySet
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
-from notifications.constants import PARTNER_MODE, REQUEST_PARTNER_TYPE, PARTNER_REQUEST_TITLE, \
-    PARTNER_REQUEST_DESCRIPTION
+from notifications.constants import (
+    PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
+    PARTNERSHIP_REQUEST_DESCRIPTION)
 from notifications.services import NotificationService
 from organizations.models import Organization, Partnership
 from organizations.services.organization_services import OrganizationService
@@ -36,10 +37,10 @@ class PartnershipService:
             recipient=accepted_by.owner,
             sender=requested_by.owner,
             mode=PARTNER_MODE,
-            notification_type=REQUEST_PARTNER_TYPE,
-            title=PARTNER_REQUEST_TITLE.format(sender_organization=requested_by.title,
-                                               recipient_organization=accepted_by.title),
-            description=PARTNER_REQUEST_DESCRIPTION.format(address=requested_by.address),
+            notification_type=REQUEST_PARTNERSHIP_TYPE,
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
+                                                   recipient_organization=accepted_by.title),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
             organization=requested_by
         )
 

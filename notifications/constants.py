@@ -10,9 +10,9 @@ NOTIFICATION_MODES = (
     (PARTNER_MODE, PARTNER_MODE.capitalize())
 )
 
-ACCEPT_PARTNER_TYPE = 'accept_partner'
-DECLINE_PARTNER_TYPE = 'decline_partner'
-REQUEST_PARTNER_TYPE = 'request_partner'
+ACCEPT_PARTNERSHIP_TYPE = 'accept_partnership'
+DECLINE_PARTNERSHIP_TYPE = 'decline_partnership'
+REQUEST_PARTNERSHIP_TYPE = 'request_partnership'
 
 ACCEPT_DISCOUNT_TYPE = 'accept_discount'
 DECLINE_DISCOUNT_TYPE = 'decline_discount'
@@ -29,7 +29,8 @@ NOTIFICATION_TYPES = (
     (NEW_ORGANIZATION, NEW_ORGANIZATION),
     (FOLLOWED_TO_ORGANIZATION_TYPE, FOLLOWED_TO_ORGANIZATION_TYPE),
     (ORGANIZATION_FOLLOWED_TYPE, ORGANIZATION_FOLLOWED_TYPE),
-    (SYSTEM_TYPE, SYSTEM_TYPE),
+    (SYSTEM_TYPE, SYSTEM_TYPE), (ACCEPT_PARTNERSHIP_TYPE, ACCEPT_PARTNERSHIP_TYPE),
+    (DECLINE_PARTNERSHIP_TYPE, DECLINE_PARTNERSHIP_TYPE), (REQUEST_PARTNERSHIP_TYPE, REQUEST_PARTNERSHIP_TYPE)
 
 )
 
@@ -39,5 +40,5 @@ DISCOUNT_COMPLETE_USER_TITLE = 'Вам провели скидку {discount_per
 DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent} %'
 
-PARTNER_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
-PARTNER_REQUEST_DESCRIPTION = '{address}'
+PARTNERSHIP_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
+PARTNERSHIP_REQUEST_DESCRIPTION = '{address}'

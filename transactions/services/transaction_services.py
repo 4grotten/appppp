@@ -82,7 +82,8 @@ class TransactionService:
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount)),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
                 organization=current_transaction.organization
             )
             NotificationService.create_notification(
@@ -90,7 +91,8 @@ class TransactionService:
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount)),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
                 organization=current_transaction.organization
             )
         except IntegrityError:

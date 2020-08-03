@@ -4,6 +4,9 @@ from django.db import IntegrityError
 from django.db.models import QuerySet
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
+from notifications.constants import PARTNER_MODE, REQUEST_PARTNER_TYPE, PARTNER_REQUEST_TITLE, \
+    PARTNER_REQUEST_DESCRIPTION
+from notifications.services import NotificationService
 from organizations.models import Organization, Partnership
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -29,7 +32,16 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
             raise NotAcceptableException('No rights to edit organization')
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
-        # ToDo: send notification to accepted_by organization
+        NotificationService.create_notification(
+            recipient=accepted_by.owner,
+            sender=requested_by.owner,
+            mode=PARTNER_MODE,
+            notification_type=REQUEST_PARTNER_TYPE,
+            title=PARTNER_REQUEST_TITLE.format(sender_organization=requested_by.title,
+                                               recipient_organization=accepted_by.title),
+            description=PARTNER_REQUEST_DESCRIPTION.format(address=requested_by.address),
+            organization=requested_by
+        )
 
     @classmethod
     def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:

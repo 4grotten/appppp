@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from fcm_django.models import FCMDevice
 
@@ -33,6 +34,7 @@ class Notification(TimestampModel):
                                      related_name='organization_notifications')
     mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
     type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
+    road_ids = JSONField(default=[], null=True)
 
     class Meta:
         ordering = ('-created_at',)

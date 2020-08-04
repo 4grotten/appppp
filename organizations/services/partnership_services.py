@@ -33,6 +33,7 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
             raise NotAcceptableException('No rights to edit organization')
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
+        partnership = Partnership.objects.get(requested_by=requested_by, accepted_by=accepted_by)
         NotificationService.create_notification(
             recipient=accepted_by.owner,
             sender=requested_by.owner,
@@ -41,7 +42,9 @@ class PartnershipService:
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
-            organization=requested_by
+            organization=requested_by,
+            road_ids=dict(
+                partnership_id=partnership.id)
         )
 
     @classmethod

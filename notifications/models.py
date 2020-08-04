@@ -34,7 +34,7 @@ class Notification(TimestampModel):
                                      related_name='organization_notifications')
     mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
     type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
-    road_ids = JSONField(default=[], null=True)
+    extra_data = JSONField(default=[], null=True)
 
     class Meta:
         ordering = ('-created_at',)

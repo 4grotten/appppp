@@ -26,7 +26,7 @@ class NotificationService:
 
     @classmethod
     def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
-                            sender=None, road_ids=None):
+                            sender=None, extra_data=None):
         try:
 
             mode_object = NotificationMode.objects.get(name=mode)  # move to services
@@ -39,7 +39,7 @@ class NotificationService:
                 description=description,
                 organization=organization,
                 type=notification_type,
-                road_ids=road_ids
+                extra_data=extra_data
             )
 
             return notification

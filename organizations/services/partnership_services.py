@@ -43,7 +43,7 @@ class PartnershipService:
                                                    recipient_organization=accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
             organization=requested_by,
-            road_ids=dict(
+            extra_data=dict(
                 partnership_id=partnership.id)
         )
 

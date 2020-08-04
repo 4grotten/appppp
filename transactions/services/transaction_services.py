@@ -84,7 +84,8 @@ class TransactionService:
                 title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
-                organization=current_transaction.organization
+                organization=current_transaction.organization,
+                extra_data=dict(transaction_id=current_transaction.id)
             )
             NotificationService.create_notification(
                 recipient=current_transaction.processed_by,
@@ -93,7 +94,8 @@ class TransactionService:
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
-                organization=current_transaction.organization
+                organization=current_transaction.organization,
+                extra_data=dict(transaction_id=current_transaction.id)
             )
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')

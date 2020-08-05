@@ -142,7 +142,7 @@ class TransactionService:
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(client=client)
+        transactions = Transaction.objects.filter(client=client, is_processed=True)
         return transactions
 
     @classmethod

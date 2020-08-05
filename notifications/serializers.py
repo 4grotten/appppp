@@ -27,13 +27,13 @@ class CustomFCMDeviceSerializer(FCMDeviceSerializer):
 
                 if NotificationSetting.objects.filter(user=fcm_device.user).exists():
                     notification_setting = NotificationSetting.objects.get(user=fcm_device.user)
-                    notification_setting.fcm_device.set([fcm_device])
+                    notification_setting.fcm_device.add(fcm_device)
 
                 else:
-                    NotificationSetting.objects.create(
-                        user=fcm_device.user,
-                        fcm_device=fcm_device
+                    notification_setting = NotificationSetting.objects.create(
+                        user=fcm_device.user
                     )
+                    notification_setting.fcm_device.add(fcm_device)
             except Exception as e:
                 raise IntegrityException('Error while creating notification setting: {e}'.format(e=str(e)))
 

@@ -168,7 +168,7 @@ class OrganizationService:
 
         DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
 
-        send_notifications_to_all_users.delay(organization=organization, user=owner)
+        send_notifications_to_all_users.delay(organization_id=organization.id, user_id=owner.id)
 
         return organization
 

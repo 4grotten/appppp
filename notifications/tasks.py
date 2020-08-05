@@ -12,8 +12,9 @@ User = get_user_model()
 
 
 @shared_task
-def send_notifications_to_all_users(organization: Organization, user: User):
-    users = User.objects.exclude(id=user.id)
+def send_notifications_to_all_users(organization_id: int, user_id: int):
+    users = User.objects.exclude(id=user_id)
+    organization = Organization.objects.get(id=organization_id)
 
     for user in users:
         NotificationService.create_notification(

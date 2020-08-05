@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -59,6 +60,8 @@ class PartnershipRetrieveUpdateView(RetrieveUpdateAPIView):
 
 
 class OrganizationPartnersView(ListAPIView):
+    filter_backends = (SearchFilter,)
+    search_fields = ('title',)
     serializer_class = PartnerSerializer
 
     def get_queryset(self):

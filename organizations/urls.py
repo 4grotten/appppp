@@ -11,7 +11,7 @@ from .views.membership_views import (
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
-    HomepageOrganizationsView, OrganizationsInCategoryView, OrganizationTitleRetrieveAPIView
+    HomepageOrganizationsView, OrganizationsInCategoryView, OrganizationTitleRetrieveAPIView, HomepageSearchView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
@@ -59,6 +59,7 @@ homepage_urls = [
     path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
     path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
+    path('homepage/search/', HomepageSearchView.as_view(), name='homepage_search'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]

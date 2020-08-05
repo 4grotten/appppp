@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -194,6 +195,8 @@ class HomepageOrganizationsView(ListAPIView):
 
 
 class OrganizationsInCategoryView(ListAPIView):
+    filter_backends = (SearchFilter,)
+    search_fields = ('title',)
     serializer_class = OrganizationWithDiscountsSerializer
 
     def list(self, request, *args, **kwargs):
@@ -221,6 +224,13 @@ class OrganizationsInCategoryView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class HomepageSearchView(ListAPIView):
+    filter_backends = (SearchFilter,)
+    search_fields = ('title',)
+    serializer_class = OrganizationWithDiscountsSerializer
+    queryset = Organization.objects.filter(is_active=True)
 
 
 class OrgMessageAPIView(ListAPIView):

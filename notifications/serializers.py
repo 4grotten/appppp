@@ -27,7 +27,7 @@ class CustomFCMDeviceSerializer(FCMDeviceSerializer):
 
                 if NotificationSetting.objects.filter(user=fcm_device.user).exists():
                     notification_setting = NotificationSetting.objects.get(user=fcm_device.user)
-                    notification_setting.fcm_device.add(fcm_device)
+                    notification_setting.fcm_device.set([fcm_device])
 
                 else:
                     NotificationSetting.objects.create(

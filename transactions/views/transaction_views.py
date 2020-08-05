@@ -9,6 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
+from notifications.constants import (
+    DISCOUNT_NOTIFICATION_MODE,
+    TRANSACTION_DECLINED_NOTIFICATION_TITLE, DECLINE_DISCOUNT_TYPE,
+    TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION, YOU_DECLINED_NOTIFICATION_TITLE
+)
+from notifications.services import NotificationService
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
@@ -201,6 +207,27 @@ class OrganizationTransactionDetailView(RetrieveDestroyAPIView):
 
         with transaction.atomic():
             instance.delete()
+
+            NotificationService.create_notification(
+                recipient=instance.client,
+                sender=instance.processed_by,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=DECLINE_DISCOUNT_TYPE,
+                title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
+                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(instance.savings),
+                                                                                 currency=instance.currency.code),
+                organization=instance.organization
+            )
+            NotificationService.create_notification(
+                recipient=instance.processed_by,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=DECLINE_DISCOUNT_TYPE,
+                title=YOU_DECLINED_NOTIFICATION_TITLE,
+                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(instance.savings),
+                                                                                 currency=instance.currency.code),
+                organization=instance.organization
+            )
+
             client_status = OrganizationClientFinancialStatusService.get(user=instance.client,
                                                                          organization=instance.organization)
             if client_status is not None:

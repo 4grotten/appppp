@@ -203,3 +203,4 @@ FCM_DJANGO_SETTINGS = {
 }
 
 HOST_URL = 'https://apofiz.com/media/'
+CELERY_BROKER_URL = 'amqp://localhost'

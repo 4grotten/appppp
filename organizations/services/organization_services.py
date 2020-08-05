@@ -10,6 +10,7 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException,
     NotAcceptableException, PermissionDeniedException
 )
+from notifications.tasks import send_notifications_to_all_users
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message
@@ -166,6 +167,8 @@ class OrganizationService:
             OrgSocialNetworkContactService.create(organization=organization, url=link)
 
         DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
+
+        send_notifications_to_all_users.delay(organization=organization, user=owner)
 
         return organization
 

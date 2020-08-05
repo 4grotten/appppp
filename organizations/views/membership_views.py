@@ -80,6 +80,8 @@ class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 class RolesListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = RoleBriefSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('title',)
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

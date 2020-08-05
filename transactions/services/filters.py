@@ -22,7 +22,9 @@ class MultipleListFilter(Filter):
 
 class TransactionFilter(filters.FilterSet):
     organization = MultipleListFilter()
+    start = filters.DateFilter(field_name="updated_at", lookup_expr='gte')
+    end = filters.DateFilter(field_name="updated_at", lookup_expr='lte')
 
     class Meta:
         model = Transaction
-        fields = ('organization_id',)
+        fields = ('organization_id', 'start', 'end')

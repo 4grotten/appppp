@@ -12,7 +12,7 @@ from common.exceptions import (
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
-    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE
+    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE
 )
 from notifications.services import NotificationService
 from organizations.models import Organization, DiscountCard
@@ -90,7 +90,7 @@ class TransactionService:
             NotificationService.create_notification(
                 recipient=current_transaction.processed_by,
                 mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=ACCEPT_DISCOUNT_TYPE,
+                notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),

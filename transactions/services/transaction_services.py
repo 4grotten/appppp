@@ -15,6 +15,7 @@ from notifications.constants import (
     DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE
 )
 from notifications.services import NotificationService
+from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
@@ -76,7 +77,7 @@ class TransactionService:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
 
-            NotificationService.create_notification(
+            sent_notification(
                 recipient=current_transaction.client,
                 sender=current_transaction.processed_by,
                 mode=DISCOUNT_NOTIFICATION_MODE,
@@ -87,7 +88,7 @@ class TransactionService:
                 organization=current_transaction.organization,
                 extra_data=dict(transaction_id=current_transaction.id)
             )
-            NotificationService.create_notification(
+            sent_notification(
                 recipient=current_transaction.processed_by,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,

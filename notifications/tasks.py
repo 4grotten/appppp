@@ -25,3 +25,18 @@ def send_notifications_to_all_users(organization_id: int, user_id: int):
             description=organization.address,
             organization=organization
         )
+
+
+@shared_task
+def sent_notification(title: str, description: str, extra_data=None, organization=None, recipient=None,
+                      sender=None, mode=None, notification_type=None):
+    NotificationService.create_notification(
+        recipient=recipient,
+        sender=sender,
+        mode=mode,
+        title=title,
+        description=description,
+        organization=organization,
+        notification_type=notification_type,
+        extra_data=extra_data
+    )

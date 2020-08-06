@@ -5,14 +5,13 @@ from django.db import migrations
 
 
 def default_settings(apps, _):
-    user = apps.get_model('users', 'User')
-    notification_settings = apps.get_model('notifications', 'NotificationSetting')
-    for user in user.objects.all():
+    User = apps.get_model('users', 'User')
+    NotificationSettings = apps.get_model('notifications', 'NotificationSetting')
+    for user in User.objects.all():
         try:
-            notification_settings.objects.get(user=user)
-        except notification_settings.DoesNotExist:
-            settings = notification_settings(user=user)
-            settings.save()
+            NotificationSettings.objects.get(user=user)
+        except NotificationSettings.DoesNotExist:
+            NotificationSettings.objects.create(user=user)
 
 
 class Migration(migrations.Migration):

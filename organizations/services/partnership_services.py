@@ -8,6 +8,7 @@ from notifications.constants import (
     PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION)
 from notifications.services import NotificationService
+from notifications.tasks import sent_notification
 from organizations.models import Organization, Partnership
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -34,7 +35,8 @@ class PartnershipService:
             raise NotAcceptableException('No rights to edit organization')
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
         partnership = Partnership.objects.get(requested_by=requested_by, accepted_by=accepted_by)
-        NotificationService.create_notification(
+
+        sent_notification(
             recipient=accepted_by.owner,
             sender=requested_by.owner,
             mode=PARTNER_MODE,

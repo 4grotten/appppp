@@ -3,6 +3,7 @@ from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
     ORGANIZATION_FOLLOWED_TITLE)
 from notifications.services import NotificationService
+from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
 from django.db.models import QuerySet
 from users.models import User
@@ -21,7 +22,7 @@ class SubscriptionService:
     def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:
         subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
         if created:
-            NotificationService.create_notification(
+            sent_notification(
                 recipient=organization.owner,
                 sender=user,
                 mode=SUBSCRIPTION_NOTIFICATION_MODE,
@@ -31,7 +32,7 @@ class SubscriptionService:
                 organization=organization
             )
 
-            NotificationService.create_notification(
+            sent_notification(
                 recipient=user,
                 mode=SUBSCRIPTION_NOTIFICATION_MODE,
                 notification_type=ORGANIZATION_FOLLOWED_TYPE,

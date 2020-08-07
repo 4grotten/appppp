@@ -15,10 +15,10 @@ from notifications.constants import (
     DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE
 )
 from notifications.services import NotificationService
-from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
+from notifications.tasks import sent_notification
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -77,25 +77,25 @@ class TransactionService:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
 
-            sent_notification(
-                recipient=current_transaction.client,
-                sender=current_transaction.processed_by,
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
-                organization=current_transaction.organization,
+                organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id)
             )
-            sent_notification(
-                recipient=current_transaction.processed_by,
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
-                organization=current_transaction.organization,
+                organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id)
             )
         except IntegrityError:

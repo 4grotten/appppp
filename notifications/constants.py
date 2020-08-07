@@ -45,8 +45,8 @@ DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {final_amount} 
 DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent} %'
 
 PARTNERSHIP_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
-PARTNERSHIP_REQUEST_DESCRIPTION = '{address}'
-
+PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION = '{address} '
 TRANSACTION_DECLINED_NOTIFICATION_TITLE = 'Вам отменили сделку'
 YOU_DECLINED_NOTIFICATION_TITLE = 'Вы отменили сделку'
 TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Скидка {savings} {currency}'

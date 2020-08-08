@@ -29,7 +29,7 @@ def send_notifications_to_all_users(organization_id: int, user_id: int):
 @shared_task
 def sent_notification(recipient_id: int, sender_id=None, mode='system', notification_type='system', extra_data=None,
                       title='Title was not sent', description='Description was not sent', organization_id=None):
-    recipient = recipient_id
+    recipient = User.objects.get(id=recipient_id)
     if sender_id is not None:
         sender = User.objects.get(id=sender_id)
     else:

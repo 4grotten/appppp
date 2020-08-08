@@ -20,15 +20,15 @@ class File(TimestampModel):
     )
 
     large = ImageSpecField(source='file',
-                           processors=[ResizeToFit(600, 600)],
+                           processors=[ResizeToFit(600, 600, upscale=False)],
                            format='JPEG',
                            options={'quality': 100})
     medium = ImageSpecField(source='file',
-                            processors=[ResizeToFit(150, 150)],
+                            processors=[ResizeToFit(150, 150, upscale=False)],
                             format='JPEG',
                             options={'quality': 100})
     small = ImageSpecField(source='file',
-                           processors=[ResizeToFit(50, 50)],
+                           processors=[ResizeToFit(50, 50, upscale=False)],
                            format='JPEG',
                            options={'quality': 100})
 

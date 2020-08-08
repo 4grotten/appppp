@@ -1,10 +1,12 @@
+from django.db.models import QuerySet, Subquery, OuterRef
+
 from notifications.constants import (
     SUBSCRIPTION_NOTIFICATION_MODE, FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
-    ORGANIZATION_FOLLOWED_TITLE)
+    ORGANIZATION_FOLLOWED_TITLE
+)
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription
-from django.db.models import QuerySet
 from users.models import User
 
 
@@ -46,6 +48,8 @@ class SubscriptionService:
 
     @classmethod
     def get_user_subscriptions(cls, user: User) -> QuerySet:
-        organizations_id = Subscription.objects.filter(user=user)
-        organizations = Organization.objects.filter(id__in=organizations_id.values('organization_id')).distinct()
+        organizations = Organization.objects.filter(id__in=user.subscriptions.values('organization_id')).annotate(
+            subscription_time=Subquery(
+                Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
+        ).order_by('-subscription_time')
         return organizations

@@ -10,6 +10,8 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException,
     NotAcceptableException, PermissionDeniedException
 )
+from notifications.constants import SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, \
+    NEW_ORGANIZATION_DESCRIPTION
 from notifications.tasks import send_notifications_to_all_users
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
@@ -168,7 +170,14 @@ class OrganizationService:
 
         DiscountCardService.bulk_create_discounts(cards=cards, organization=organization)
 
-        send_notifications_to_all_users.delay(organization_id=organization.id, user_id=owner.id)
+        send_notifications_to_all_users.delay(
+            organization_id=organization.id,
+            sender_id=owner.id,
+            mode=SYSTEM_NOTIFICATION_MODE,
+            notification_type=NEW_ORGANIZATION,
+            title=NEW_ORGANIZATION_TITLE,
+            description=NEW_ORGANIZATION_DESCRIPTION.format(address=address)
+        )
 
         return organization
 

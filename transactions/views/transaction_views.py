@@ -155,8 +155,8 @@ class UserTransactionDetailView(APIView):
     serializer_class = TransactionDetailSerializer
 
     def get(self, request, pk):
-        transaction = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(self.serializer_class(transaction, many=False, context={'request': request}).data)
+        instance = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
+        return Response(self.serializer_class(instance, many=False, context={'request': request}).data)
 
 
 class OrganizationTransactionListView(ListAPIView):

@@ -240,3 +240,11 @@ class OrganizationNotificationInfo(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'address')
+
+
+class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
+    types = OrganizationTypeSerializer(many=True)
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'address', 'image', 'types')

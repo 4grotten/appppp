@@ -130,6 +130,8 @@ class DiscountCardService:
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
 
+
+
     @classmethod
     @transaction.atomic
     def organize_cumulative_cards(cls, organization: Organization):

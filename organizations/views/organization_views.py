@@ -38,7 +38,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user))
+        return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user)).distinct()
 
     def create(self, request, *args, **kwargs):
         serializer = OrganizationCreateSerializer(data=request.data, context={'request': request})

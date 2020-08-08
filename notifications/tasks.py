@@ -1,6 +1,5 @@
 from celery import shared_task
 from django.contrib.auth import get_user_model
-
 from notifications.constants import (
     SUBSCRIPTION_NOTIFICATION_MODE, NEW_ORGANIZATION,
     NEW_ORGANIZATION_TITLE, SYSTEM_NOTIFICATION_MODE
@@ -12,31 +11,43 @@ User = get_user_model()
 
 
 @shared_task
-def send_notifications_to_all_users(organization_id: int, user_id: int):
-    users = User.objects.exclude(id=user_id)
+def send_notifications_to_all_users(sender_id: int, mode='system', notification_type='system',
+                                    title='Title was not sent', description='Description was not sent',
+                                    extra_data=None, organization_id=None):
+    users = User.objects.exclude(id=sender_id)
     organization = Organization.objects.get(id=organization_id)
-
     for user in users:
         NotificationService.create_notification(
             recipient=user,
-            mode=SYSTEM_NOTIFICATION_MODE,
-            notification_type=NEW_ORGANIZATION,
-            title=NEW_ORGANIZATION_TITLE,
-            description=organization.address,
-            organization=organization
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
         )
 
 
 @shared_task
-def sent_notification(title: str, description: str, extra_data=None, organization=None, recipient=None,
-                      sender=None, mode=None, notification_type=None):
+def sent_notification(recipient_id: int, sender_id=None, mode='system', notification_type='system', extra_data=None,
+                      title='Title was not sent', description='Description was not sent', organization_id=None):
+    recipient = User.objects.get(id=recipient_id)
+    if sender_id is not None:
+        sender = User.objects.get(id=sender_id)
+    else:
+        sender = None
+    if organization_id is not None:
+        organization = Organization.objects.get(id=organization_id)
+    else:
+        organization = None
+
     NotificationService.create_notification(
         recipient=recipient,
         sender=sender,
         mode=mode,
+        notification_type=notification_type,
         title=title,
         description=description,
         organization=organization,
-        notification_type=notification_type,
         extra_data=extra_data
     )

@@ -8,7 +8,7 @@ from notifications.constants import (
     PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION)
 from notifications.services import NotificationService
-from notifications.tasks import sent_notification
+from notifications.tasks import send_notifications_to_all_users, sent_notification
 from organizations.models import Organization, Partnership
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -36,17 +36,15 @@ class PartnershipService:
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
         partnership = Partnership.objects.get(requested_by=requested_by, accepted_by=accepted_by)
 
-        sent_notification(
-            recipient=accepted_by.owner,
-            sender=requested_by.owner,
+        sent_notification.delay(
+            recipient_id=requested_by.owner_id,
             mode=PARTNER_MODE,
             notification_type=REQUEST_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
-            organization=requested_by,
-            extra_data=dict(
-                partnership_id=partnership.id)
+            organization_id=requested_by.id,
+            extra_data=dict(parnership_id=partnership.id)
         )
 
     @classmethod

@@ -6,6 +6,8 @@ from notifications.constants import (
     ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, PERSONAL_MODE)
 from organizations.models import Organization, Subscription
 from django.db.models import QuerySet
+
+from organizations.services.organization_services import OrganizationService
 from users.models import User
 from notifications.tasks import sent_notification
 
@@ -53,3 +55,7 @@ class SubscriptionService:
                 Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
         ).order_by('-subscription_time')
         return organizations
+
+    @classmethod
+    def get_organization_followers(cls, organization_id: int) -> QuerySet:
+        return User.objects.filter(subscriptions__organization_id=organization_id)

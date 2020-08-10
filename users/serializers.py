@@ -113,3 +113,11 @@ class ChangeAndValidateNewNumberSerializer(serializers.Serializer):
     old_phone_number = serializers.CharField()
     new_phone_number = serializers.CharField()
     code = serializers.IntegerField()
+
+
+class UserShortInfoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar', 'username')

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -7,6 +8,9 @@ from rest_framework.response import Response
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
 from organizations.services.subscription_services import SubscriptionService
+from users.serializers import UserShortInfoSerializer
+
+User = get_user_model()
 
 
 class SubscriptionsView(ListAPIView):
@@ -36,3 +40,11 @@ class SubscriptionsView(ListAPIView):
 
     def get_queryset(self):
         return SubscriptionService.get_user_subscriptions(user=self.request.user)
+
+
+class OrgFollowersListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserShortInfoSerializer
+
+    def get_queryset(self):
+        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])

@@ -17,7 +17,7 @@ from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
     HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateView
 )
-from .views.subscription_views import SubscriptionsView
+from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -30,6 +30,7 @@ organization_urls = [
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set_location'),
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),
     path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
+    path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
 ]
 
 membership_urls = [

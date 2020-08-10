@@ -2,8 +2,9 @@ from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
-from notifications.constants import PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION, \
-    PERSONAL_NOTIFICATION_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE, CHANGE_JOB_POSITION_DESCRIPTION
+from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
+                                     PERSONAL_NOTIFICATION_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
+                                     CHANGE_JOB_POSITION_DESCRIPTION)
 from organizations.models import Membership, Organization, Role
 from notifications.tasks import sent_notification
 from users.models import User

@@ -10,7 +10,7 @@ User = get_user_model()
 def send_notifications_to_all_users(sender_id: int, mode='system', notification_type='system',
                                     title='Title was not sent', description='Description was not sent',
                                     extra_data=None, organization_id=None):
-    recipients = User.objects.exclude(id=sender_id)
+    recipients = User.objects.all()
     sender = User.objects.get(id=sender_id)
     organization = Organization.objects.get(id=organization_id)
     for recipient in recipients:

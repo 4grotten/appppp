@@ -172,7 +172,7 @@ class OrganizationService:
 
         transaction.on_commit(lambda: send_notifications_to_all_users.delay(
             organization_id=organization.id,
-            sender_id=owner.id,
+            # sender_id=owner.id,
             mode=SYSTEM_NOTIFICATION_MODE,
             notification_type=NEW_ORGANIZATION,
             title=NEW_ORGANIZATION_TITLE,

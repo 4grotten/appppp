@@ -4,7 +4,8 @@ from django.db.models import QuerySet
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
 from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
                                      PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
-                                     CHANGE_JOB_POSITION_DESCRIPTION)
+                                     CHANGE_JOB_POSITION_DESCRIPTION, DISMISS_JOB_TYPE, DISMISS_JOB_TITLE,
+                                     DISMISS_JOB_DESCRIPTION)
 from organizations.models import Membership, Organization, Role
 from notifications.tasks import sent_notification
 from users.models import User
@@ -39,6 +40,20 @@ class MembershipService:
     @classmethod
     def get_organization_employees(cls, organization: Organization) -> QuerySet:
         return Membership.objects.filter(organization=organization).order_by('role')
+
+    @classmethod
+    def dismiss_employee(cls, membership: Membership):
+
+        transaction.on_commit(lambda: sent_notification.delay(
+            recipient_id=membership.user_id,
+            sender_id=membership.added_by_id,
+            mode=PERSONAL_MODE,
+            notification_type=DISMISS_JOB_TYPE,
+            title=DISMISS_JOB_TITLE,
+            description=DISMISS_JOB_DESCRIPTION.format(position=membership.role.title),
+            organization_id=membership.organization_id
+        ))
+        return membership.delete()
 
     @classmethod
     def add_employee(cls, organization: Organization, employee: User, role: Role, added_by: User) -> Membership:

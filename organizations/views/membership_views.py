@@ -1,4 +1,5 @@
 from django.db.models import ProtectedError
+from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, RetrieveAPIView
@@ -62,6 +63,11 @@ class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                                                               user=self.request.user):
             raise NotAcceptableException('No rights to edit organization')
         return membership
+
+    def delete(self, request, *args, **kwargs):
+        membership = MembershipService.get(id=self.kwargs['pk'])
+        MembershipService.dismiss_employee(membership)
+        return HttpResponse(status=204)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

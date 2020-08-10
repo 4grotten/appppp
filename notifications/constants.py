@@ -70,3 +70,6 @@ RECRUIT_JOB_DESCRIPTION = '{position} '
 
 CHANGE_JOB_POSITION_TITLE = 'Вы перешли на другую должность'
 CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
+
+DISMISS_JOB_TITLE = 'Вас уволили с работы'
+DISMISS_JOB_DESCRIPTION = '{position} '

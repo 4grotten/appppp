@@ -254,7 +254,7 @@ class OrganizationService:
         #         'discounts', distinct=True, filter=Q(discounts__is_published=True))).order_by('-cards_count')
         #
         # ToDo Remove following querysets
-        additional = Organization.objects.filter(is_active=True, types__category=category).distinct()
+        additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
         queryset = Organization.objects.filter(id__in=additional).order_by('?')
         ##################
 

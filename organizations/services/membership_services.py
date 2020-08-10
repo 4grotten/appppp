@@ -3,7 +3,7 @@ from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
 from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
-                                     PERSONAL_NOTIFICATION_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
+                                     PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
                                      CHANGE_JOB_POSITION_DESCRIPTION)
 from organizations.models import Membership, Organization, Role
 from notifications.tasks import sent_notification
@@ -26,7 +26,7 @@ class MembershipService:
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.user_id,
                 sender_id=membership.added_by_id,
-                mode=PERSONAL_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=RECRUIT_JOB_TYPE,
                 title=RECRUIT_JOB_TITLE,
                 description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
@@ -66,7 +66,7 @@ class MembershipService:
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.user_id,
                 sender_id=membership.added_by_id,
-                mode=PERSONAL_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=CHANGE_JOB_POSITION_TYPE,
                 title=CHANGE_JOB_POSITION_TITLE,
                 description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=old_position.title,

@@ -1,12 +1,13 @@
 from django.db.models import QuerySet, Subquery, OuterRef
 
 from notifications.constants import (
-    SUBSCRIPTION_NOTIFICATION_MODE, FOLLOWED_TO_ORGANIZATION_TYPE,
+    FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
-    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION)
-from notifications.services import NotificationService
+    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, PERSONAL_MODE)
 from organizations.models import Organization, Subscription
 from django.db.models import QuerySet
+
+from organizations.services.organization_services import OrganizationService
 from users.models import User
 from notifications.tasks import sent_notification
 
@@ -27,7 +28,7 @@ class SubscriptionService:
             sent_notification.delay(
                 recipient_id=organization.owner_id,
                 sender_id=user.id,
-                mode=SUBSCRIPTION_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
                 title=FOLLOWED_TO_ORGANIZATION_TITLE,
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
@@ -36,7 +37,7 @@ class SubscriptionService:
 
             sent_notification.delay(
                 recipient_id=user.id,
-                mode=SUBSCRIPTION_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=ORGANIZATION_FOLLOWED_TYPE,
                 title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
@@ -54,3 +55,7 @@ class SubscriptionService:
                 Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
         ).order_by('-subscription_time')
         return organizations
+
+    @classmethod
+    def get_organization_followers(cls, organization_id: int) -> QuerySet:
+        return User.objects.filter(subscriptions__organization_id=organization_id)

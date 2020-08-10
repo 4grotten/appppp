@@ -11,7 +11,7 @@ from .constants import (
     DISCOUNT_NOTIFICATION_MODE,
     SUBSCRIPTION_NOTIFICATION_MODE,
     SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
-    NOTIFICATION_TYPES, SYSTEM_TYPE)
+    NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
 
 User = get_user_model()
 
@@ -82,7 +82,7 @@ class Notification(TimestampModel):
         if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
             fcm_devices.send_message(**notification_payload)
 
-        if mode == SUBSCRIPTION_NOTIFICATION_MODE and notification_setting.private_notifications:
+        if mode == PERSONAL_MODE and notification_setting.private_notifications:
             fcm_devices.send_message(**notification_payload)
 
         if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:

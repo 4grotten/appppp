@@ -44,6 +44,8 @@ DISCOUNT_COMPLETE_USER_TITLE = 'Вам провели скидку {discount_per
 DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent} %'
 
+NEW_DISCOUNT_TITLE = 'Доступна новая скидка {percent}%'
+NEW_DISCOUNT_DESCRIPTION = '{address} '
 PARTNERSHIP_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
 PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '
 SUBSCRIPTION_NOTIFICATION_DESCRIPTION = '{address} '

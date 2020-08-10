@@ -1,9 +1,5 @@
 from celery import shared_task
 from django.contrib.auth import get_user_model
-from notifications.constants import (
-    SUBSCRIPTION_NOTIFICATION_MODE, NEW_ORGANIZATION,
-    NEW_ORGANIZATION_TITLE, SYSTEM_NOTIFICATION_MODE
-)
 from notifications.services import NotificationService
 from organizations.models import Organization
 
@@ -14,11 +10,13 @@ User = get_user_model()
 def send_notifications_to_all_users(sender_id: int, mode='system', notification_type='system',
                                     title='Title was not sent', description='Description was not sent',
                                     extra_data=None, organization_id=None):
-    users = User.objects.exclude(id=sender_id)
+    recipients = User.objects.exclude(id=sender_id)
+    sender = User.objects.get(id=sender_id)
     organization = Organization.objects.get(id=organization_id)
-    for user in users:
+    for recipient in recipients:
         NotificationService.create_notification(
-            recipient=user,
+            recipient=recipient,
+            sender=sender,
             mode=mode,
             notification_type=notification_type,
             title=title,

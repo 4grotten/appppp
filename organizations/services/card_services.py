@@ -7,6 +7,9 @@ from django.db.models import QuerySet, F
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from common.services.currency import CurrencyConverterService
+from notifications.constants import DISCOUNT_NOTIFICATION_MODE, NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE, \
+    NEW_DISCOUNT_DESCRIPTION
+from notifications.tasks import send_notifications_to_all_users
 from organizations.models import DiscountCard, Organization
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -24,6 +27,15 @@ class DiscountCardService:
     def create(cls, *args, **kwargs):
         try:
             DiscountCard.objects.create(*args, **kwargs)
+            organization = Organization.objects.get(id=kwargs['organization'].id)
+            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+                sender_id=organization.owner_id,
+                organization_id=organization.id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=NEW_DISCOUNT_TYPE,
+                title=NEW_DISCOUNT_TITLE.format(percent=str(kwargs['percent'])),
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+            ))
         except IntegrityError:
             raise IntegrityException('Duplicate cards are not allowed')
 

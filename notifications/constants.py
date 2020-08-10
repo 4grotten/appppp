@@ -52,4 +52,4 @@ YOU_DECLINED_NOTIFICATION_TITLE = 'Вы отменили сделку'
 TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Скидка {savings} {currency}'
 
 NEW_ORGANIZATION_TITLE = 'Новая организация доступна для вас'
-NEW_ORGANIZATION_DESCRIPTION = '{address} '
+NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '

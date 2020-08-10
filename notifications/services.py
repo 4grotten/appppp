@@ -48,7 +48,7 @@ class NotificationService:
 
     @classmethod
     def get_own_notifications(cls, user: User):
-        return cls.filter(recipient=user)
+        return cls.filter(recipient=user, organization__isnull=False)
 
     @classmethod
     def get_user_notifications_count(cls, user: User):

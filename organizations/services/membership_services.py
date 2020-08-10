@@ -1,8 +1,12 @@
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
+from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
+                                     PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
+                                     CHANGE_JOB_POSITION_DESCRIPTION)
 from organizations.models import Membership, Organization, Role
+from notifications.tasks import sent_notification
 from users.models import User
 
 
@@ -17,7 +21,18 @@ class MembershipService:
     @classmethod
     def create(cls, *args, **kwargs):
         try:
-            Membership.objects.create(*args, **kwargs)
+            membership = Membership.objects.create(*args, **kwargs)
+
+            transaction.on_commit(lambda: sent_notification.delay(
+                recipient_id=membership.user_id,
+                sender_id=membership.added_by_id,
+                mode=PERSONAL_MODE,
+                notification_type=RECRUIT_JOB_TYPE,
+                title=RECRUIT_JOB_TITLE,
+                description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
+                organization_id=membership.organization_id
+            ))
+
         except IntegrityError:
             raise IntegrityException('Could not add employee')
 
@@ -45,8 +60,19 @@ class MembershipService:
         if not new_role.organization == membership.organization:
             raise NotAcceptableException('No such role in organization')
         try:
+            old_position = membership.role
             membership.role = new_role
             membership.save()
+            transaction.on_commit(lambda: sent_notification.delay(
+                recipient_id=membership.user_id,
+                sender_id=membership.added_by_id,
+                mode=PERSONAL_MODE,
+                notification_type=CHANGE_JOB_POSITION_TYPE,
+                title=CHANGE_JOB_POSITION_TITLE,
+                description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=old_position.title,
+                                                                   new_position=new_role.title),
+                organization_id=membership.organization_id
+            ))
             return membership
         except IntegrityError:
             raise IntegrityException('Could not update role')

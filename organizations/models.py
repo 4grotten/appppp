@@ -218,6 +218,7 @@ class Message(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_messages')
     content = models.CharField(blank=False, null=False, max_length=800)
     receivers_count = models.IntegerField(default=0)
+    organization_address = models.CharField(max_length=255, null=True)
 
     def __str__(self):
         return f'Message of {self.organization.title}'
@@ -226,6 +227,6 @@ class Message(TimestampModel):
              update_fields=None):
         if not self.pk:
             receivers_count = Subscription.objects.filter(organization=self.organization).count()
-            print(receivers_count)
+            self.organization_address = self.organization.address
             self.receivers_count = receivers_count
         super(Message, self).save()

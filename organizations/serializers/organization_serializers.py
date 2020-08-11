@@ -206,7 +206,7 @@ class OrgMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('id', 'sender', 'content', 'organization',
+        fields = ('id', 'sender', 'content', 'organization', 'organization_address',
                   'created_at', 'receivers_count', 'receivers', 'sender_role')
 
     def get_receivers(self, obj):

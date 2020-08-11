@@ -89,4 +89,4 @@ class HomepageBannersView(ListAPIView):
     serializer_class = OrganizationBannerInfo
 
     def get_queryset(self):
-        return OrganizationService.get_latest_created_organizations_with_discounts()
+        return OrganizationService.get_random_organizations_with_discounts()

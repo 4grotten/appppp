@@ -229,9 +229,8 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_latest_created_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:
-        queryset = list(Organization.objects.exclude(discounts__isnull=True).order_by('-created_at')[:limit])
-        random.shuffle(queryset)
+    def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:
+        queryset = Organization.objects.exclude(discounts__isnull=True).order_by('?')[:limit]
         return queryset
 
     @classmethod

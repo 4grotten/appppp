@@ -31,6 +31,7 @@ NEW_ORGANIZATION = 'new_organization'
 FOLLOWED_TO_ORGANIZATION_TYPE = 'followed_to_organization'
 ORGANIZATION_FOLLOWED_TYPE = 'organization_followed'
 SYSTEM_TYPE = 'system'
+ORGANIZATION_MESSAGE_TYPE = 'organization_message'
 
 NOTIFICATION_TYPES = (
     (ACCEPT_DISCOUNT_TYPE, ACCEPT_DISCOUNT_TYPE),
@@ -48,8 +49,8 @@ NOTIFICATION_TYPES = (
     (CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TYPE),
     (DISMISS_JOB_TYPE, DISMISS_JOB_TYPE),
     (QUIT_JOB_TYPE, QUIT_JOB_TYPE),
-    (CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TYPE)
-
+    (CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TYPE),
+    (ORGANIZATION_MESSAGE_TYPE, ORGANIZATION_MESSAGE_TYPE)
 )
 
 FOLLOWED_TO_ORGANIZATION_TITLE = 'На вашу организацию подписались'
@@ -76,15 +77,17 @@ RECRUIT_JOB_DESCRIPTION = '{position} '
 GET_JOB_TITLE = 'Вас приняли на работу {organization}'
 GET_JOB_DESCRIPTION = '{position} '
 
-CHANGE_JOB_POSITION_TITLE = 'Вы перешли на другую должность'
+CHANGE_JOB_POSITION_TITLE = 'Вас назначили на новую должность'
 CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
 
 CHANGE_JOB_POSITION_OWNER_TITLE = 'Вы назначили другую должность'
 CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} на {new_position}'
-
 
 QUIT_JOB_TITLE = 'Вас уволили с работы {organization}'
 QUIT_JOB_DESCRIPTION = '{position} '
 
 DISMISS_JOB_TITLE = 'Вы уволили с работы'
 DISMISS_JOB_DESCRIPTION = '{position} '
+
+ORGANIZATION_MESSAGE_TITLE = 'Сообщение от {organization}'
+ORGANIZATION_MESSAGE_DESCRIPTION = '{content} '

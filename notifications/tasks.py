@@ -1,11 +1,9 @@
 from typing import Union
 
 from celery import shared_task
-from django.contrib.auth import get_user_model
 from notifications.services import NotificationService
-from organizations.models import Organization
-
-User = get_user_model()
+from organizations.models import Organization, Subscription
+from users.models import User
 
 
 @shared_task
@@ -16,6 +14,28 @@ def send_notifications_to_all_users(sender_id: Union[int, None] = None, mode='sy
     sender = sender_id
     if sender_id:
         sender = User.objects.get(id=sender_id)
+    organization = Organization.objects.get(id=organization_id)
+    for recipient in recipients:
+        NotificationService.create_notification(
+            recipient=recipient,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
+
+
+@shared_task
+def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='system', notification_type='system',
+                                      title='Title was not sent', description='Description was not sent',
+                                      extra_data=None, organization_id=None):
+    sender = sender_id
+    if sender_id:
+        sender = User.objects.get(id=sender_id)
+    recipients = User.objects.filter(subscriptions__organization_id=organization_id)
     organization = Organization.objects.get(id=organization_id)
     for recipient in recipients:
         NotificationService.create_notification(

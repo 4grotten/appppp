@@ -91,3 +91,4 @@ DISMISS_JOB_DESCRIPTION = '{position} '
 
 ORGANIZATION_MESSAGE_TITLE = 'Сообщение от {organization}'
 ORGANIZATION_MESSAGE_DESCRIPTION = '{content} '
+ORGANIZATION_OWNER_MESSAGE_TITLE = 'Вы отправили сообщение'

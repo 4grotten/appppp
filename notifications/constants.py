@@ -76,7 +76,7 @@ RECRUIT_JOB_DESCRIPTION = '{position} '
 GET_JOB_TITLE = 'Вас приняли на работу {organization}'
 GET_JOB_DESCRIPTION = '{position} '
 
-CHANGE_JOB_POSITION_TITLE = 'Вас назначили на другую должность'
+CHANGE_JOB_POSITION_TITLE = 'Вас назначили на новую должность'
 CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
 
 CHANGE_JOB_POSITION_OWNER_TITLE = 'Вы назначили другую должность'

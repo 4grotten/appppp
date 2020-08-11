@@ -202,10 +202,12 @@ class OrgMessageSerializer(serializers.ModelSerializer):
     receivers = serializers.SerializerMethodField()
     sender = UserShortInfoSerializer()
     sender_role = serializers.SerializerMethodField()
+    organization = OrganizationWithImageSerializer(many=False)
 
     class Meta:
         model = Message
-        fields = ('id', 'sender', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role')
+        fields = ('id', 'sender', 'content', 'organization',
+                  'created_at', 'receivers_count', 'receivers', 'sender_role')
 
     def get_receivers(self, obj):
         users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]

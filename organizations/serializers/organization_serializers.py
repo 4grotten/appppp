@@ -198,21 +198,25 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country')
 
 
-class OrgMessageSerializer(serializers.ModelSerializer):
+class MessageSerializer(serializers.ModelSerializer):
     receivers = serializers.SerializerMethodField()
-    sender = UserShortInfoSerializer()
-    sender_role = serializers.SerializerMethodField()
-    organization = OrganizationWithImageSerializer(many=False)
 
     class Meta:
         model = Message
-        fields = ('id', 'sender', 'content', 'organization', 'organization_address',
-                  'created_at', 'receivers_count', 'receivers', 'sender_role')
+        fields = ('id', 'content', 'created_at', 'receivers_count', 'receivers')
 
     def get_receivers(self, obj):
         users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
-
         return UserShortInfoSerializer(users, many=True).data
+
+
+class OrgMessageSerializer(MessageSerializer):
+    sender = UserShortInfoSerializer()
+    sender_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ('id', 'sender', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role')
 
     def get_sender_role(self, obj):
         try:
@@ -222,18 +226,12 @@ class OrgMessageSerializer(serializers.ModelSerializer):
             return None
 
 
-class SubscriptionsMessageSerializer(serializers.ModelSerializer):
-    receivers = serializers.SerializerMethodField()
+class SubscriptionsMessageSerializer(MessageSerializer):
     organization = OrganizationWithImageSerializer(many=False)
 
     class Meta:
         model = Message
-        fields = ('id', 'content', 'organization', 'organization_address',
-                  'created_at', 'receivers_count', 'receivers')
-
-    def get_receivers(self, obj):
-        users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
-        return UserShortInfoSerializer(users, many=True).data
+        fields = ('id', 'content', 'organization', 'organization_address', 'created_at', 'receivers_count', 'receivers')
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):

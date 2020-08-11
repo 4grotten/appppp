@@ -3,7 +3,7 @@ import posixpath
 from django.utils.crypto import get_random_string
 
 LENGTH_OF_NUMBER = 6
-ALLOWED_SYMBOLS = '0123456789'
+ALLOWED_SYMBOLS = '123456789'
 
 
 def generate_random_code():

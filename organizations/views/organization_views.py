@@ -261,6 +261,12 @@ class OrgMessageAPIView(ListAPIView):
         return Response(data={'message': 'Message is created'},
                         status=status.HTTP_201_CREATED)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+
+        return context
+
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)

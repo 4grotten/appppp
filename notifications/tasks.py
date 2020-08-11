@@ -32,24 +32,22 @@ def send_notifications_to_all_users(sender_id: Union[int, None] = None, mode='sy
 def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='system', notification_type='system',
                                       title='Title was not sent', description='Description was not sent',
                                       extra_data=None, organization_id=None):
-    subscribers = Subscription.objects.filter(organization_id=organization_id).values('user_id')
-    if subscribers:
-        recipients = User.objects.filter(id__in=subscribers)
-        sender = sender_id
-        if sender_id:
-            sender = User.objects.get(id=sender_id)
-        organization = Organization.objects.get(id=organization_id)
-        for recipient in recipients:
-            NotificationService.create_notification(
-                recipient=recipient,
-                sender=sender,
-                mode=mode,
-                notification_type=notification_type,
-                title=title,
-                description=description,
-                organization=organization,
-                extra_data=extra_data
-            )
+    sender = sender_id
+    if sender_id:
+        sender = User.objects.get(id=sender_id)
+    recipients = User.objects.filter(subscriptions__organization_id=organization_id)
+    organization = Organization.objects.get(id=organization_id)
+    for recipient in recipients:
+        NotificationService.create_notification(
+            recipient=recipient,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
 
 
 @shared_task

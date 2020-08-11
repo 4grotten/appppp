@@ -10,9 +10,9 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException,
     NotAcceptableException, PermissionDeniedException
 )
-from notifications.constants import SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, \
-    NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE, ORGANIZATION_MESSAGE_TITLE, \
-    ORGANIZATION_MESSAGE_DESCRIPTION
+from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE,
+                                     NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
+                                     ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION)
 from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (

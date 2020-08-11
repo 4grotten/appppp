@@ -12,8 +12,10 @@ from common.exceptions import (
 )
 from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE,
                                      NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
-                                     ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION)
-from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers
+                                     ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION,
+                                     ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE, ORGANIZATION_OWN_DESCRIPTION,
+                                     ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE, ORGANIZATION_GAVE_DESCRIPTION)
+from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
@@ -270,6 +272,27 @@ class OrganizationService:
         try:
             organization.owner = new_owner
             organization.save()
+
+            sent_notification.delay(
+                recipient_id=new_owner.id,
+                sender_id=current_owner.id,
+                mode=PERSONAL_MODE,
+                notification_type=ORGANIZATION_OWN_TYPE,
+                title=ORGANIZATION_OWN_TITLE.format(organization=organization.title),
+                description=ORGANIZATION_OWN_DESCRIPTION,
+                organization_id=organization.id
+            )
+
+            sent_notification.delay(
+                recipient_id=current_owner.id,
+                sender_id=new_owner.id,
+                mode=PERSONAL_MODE,
+                notification_type=ORGANIZATION_GAVE_TYPE,
+                title=ORGANIZATION_GAVE_TITLE.format(organization=organization.title),
+                description=ORGANIZATION_GAVE_DESCRIPTION,
+                organization_id=organization.id
+            )
+
         except IntegrityError:
             raise IntegrityException('Could not change owner')
 

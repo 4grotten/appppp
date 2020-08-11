@@ -276,6 +276,6 @@ class OrganizationFollowersCountAPIView(APIView):
         count = SubscriptionService.get_organization_followers(organization_id=pk).count()
 
         return Response(data={
-            'followers': UserShortInfoSerializer(users, many=True).data,
+            'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,
             'count': count
         }, status=status.HTTP_200_OK)

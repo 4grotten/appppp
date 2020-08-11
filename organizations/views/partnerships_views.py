@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -37,7 +37,7 @@ class PartnershipView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class PartnershipRetrieveUpdateView(RetrieveUpdateAPIView):
+class PartnershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PartnershipDetailedSerializer
 
@@ -57,6 +57,10 @@ class PartnershipRetrieveUpdateView(RetrieveUpdateAPIView):
         partnership = PartnershipService.set_permissions(partnership=partnership, **serializer.validated_data)
         data = PartnershipDetailedSerializer(partnership).data
         return Response(data)
+
+    def destroy(self, request, *args, **kwargs):
+        PartnershipService.delete_partnership(partnership_id=self.kwargs['pk'], user=self.request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class OrganizationPartnersView(ListAPIView):

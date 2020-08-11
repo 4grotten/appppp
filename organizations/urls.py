@@ -15,7 +15,7 @@ from .views.organization_views import (
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
-    HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateView
+    HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView
 )
 from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
 
@@ -52,7 +52,7 @@ discounts_urls = [
 
 partnership_urls = [
     path('partnerships/', PartnershipView.as_view(), name='partnerships'),
-    path('partnerships/<int:pk>/', PartnershipRetrieveUpdateView.as_view(), name='partnership_details'),
+    path('partnerships/<int:pk>/', PartnershipRetrieveUpdateDestroyView.as_view(), name='partnership_details'),
     path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
 ]
 
@@ -65,17 +65,20 @@ homepage_urls = [
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]
 
+banner_urls = [
+    path('banners/', BannerView.as_view(), name='banners'),
+    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
+]
+
 urlpatterns = [
     path('', include(organization_urls)),
     path('', include(membership_urls)),
     path('', include(discounts_urls)),
     path('', include(partnership_urls)),
     path('', include(homepage_urls)),
+    path('', include(banner_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
-
-    path('banners/', BannerView.as_view(), name='banners'),
-    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
 
     path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
 ]

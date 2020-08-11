@@ -67,6 +67,21 @@ class PartnershipService:
             return None
 
     @classmethod
+    def delete_partnership(cls, partnership_id: int, user: User):
+        partnership = cls.get(id=partnership_id)
+
+        if not OrganizationService.user_can_edit_partner(
+                organization=partnership.requested_by, user=user
+        ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
+            raise NotAcceptableException('No access to partner settings')
+
+        if not partnership.is_accepted:
+            # ToDo: change notification to rejected
+            pass
+
+        partnership.delete()
+
+    @classmethod
     def set_permissions(cls, partnership: Partnership, can_check_attendance: bool, can_see_stats: bool,
                         can_edit_organization: bool) -> Partnership:
         try:

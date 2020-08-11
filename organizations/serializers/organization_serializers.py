@@ -1,13 +1,14 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer, CountrySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from users.serializers import UserShortInfoSerializer
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -198,9 +199,25 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
 
 class OrgMessageSerializer(serializers.ModelSerializer):
+    receivers = serializers.SerializerMethodField()
+    sender = UserShortInfoSerializer()
+    sender_role = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = ('id', 'sender', 'content')
+        fields = ('id', 'sender', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role')
+
+    def get_receivers(self, obj):
+        users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
+
+        return UserShortInfoSerializer(users, many=True).data
+
+    def get_sender_role(self, obj):
+        try:
+            membership = Membership.objects.get(organization=obj.organization, user=obj.sender)
+            return membership.role.title
+        except Membership.DoesNotExist:
+            return None
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):

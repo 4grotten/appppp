@@ -217,6 +217,15 @@ class Message(TimestampModel):
     sender = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sent_messages')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_messages')
     content = models.CharField(blank=False, null=False, max_length=800)
+    receivers_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f'Message of {self.organization.title}'
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if not self.pk:
+            receivers_count = Subscription.objects.filter(organization=self.organization).count()
+            print(receivers_count)
+            self.receivers_count = receivers_count
+        super(Message, self).save()

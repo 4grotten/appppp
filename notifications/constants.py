@@ -16,9 +16,12 @@ ACCEPT_PARTNERSHIP_TYPE = 'accept_partnership'
 DECLINE_PARTNERSHIP_TYPE = 'decline_partnership'
 REQUEST_PARTNERSHIP_TYPE = 'request_partnership'
 
-RECRUIT_JOB_TYPE = 'recruited'
+RECRUIT_JOB_TYPE = 'recruit'
+GET_JOB_TYPE = 'get_job'
 CHANGE_JOB_POSITION_TYPE = 'changed_position'
+CHANGE_JOB_POSITION_OWNER_TYPE = 'changed_position_as_owner'
 DISMISS_JOB_TYPE = 'dismissed'
+QUIT_JOB_TYPE = 'quit'
 
 ACCEPT_DISCOUNT_TYPE = 'accept_discount'
 ACCEPT_SELLER_DISCOUNT_TYPE = 'accepted_seller_discount'
@@ -43,7 +46,9 @@ NOTIFICATION_TYPES = (
     (ACCEPT_SELLER_DISCOUNT_TYPE, ACCEPT_SELLER_DISCOUNT_TYPE),
     (RECRUIT_JOB_TYPE, RECRUIT_JOB_TYPE),
     (CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TYPE),
-    (DISMISS_JOB_TYPE, DISMISS_JOB_TYPE)
+    (DISMISS_JOB_TYPE, DISMISS_JOB_TYPE),
+    (QUIT_JOB_TYPE, QUIT_JOB_TYPE),
+    (CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TYPE)
 
 )
 
@@ -65,11 +70,21 @@ TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Скидка {savings} {currenc
 NEW_ORGANIZATION_TITLE = 'Новая организация доступна для вас'
 NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '
 
-RECRUIT_JOB_TITLE = 'Вас приняли на работу'
+RECRUIT_JOB_TITLE = 'Вы приняли на работу'
 RECRUIT_JOB_DESCRIPTION = '{position} '
+
+GET_JOB_TITLE = 'Вас приняли на работу {organization}'
+GET_JOB_DESCRIPTION = '{position} '
 
 CHANGE_JOB_POSITION_TITLE = 'Вы перешли на другую должность'
 CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
 
-DISMISS_JOB_TITLE = 'Вас уволили с работы'
+CHANGE_JOB_POSITION_OWNER_TITLE = 'Вы назначили другую должность'
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} на {new_position}'
+
+
+QUIT_JOB_TITLE = 'Вас уволили с работы {organization}'
+QUIT_JOB_DESCRIPTION = '{position} '
+
+DISMISS_JOB_TITLE = 'Вы уволили с работы'
 DISMISS_JOB_DESCRIPTION = '{position} '

@@ -30,6 +30,8 @@ from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,
     OrgSocialNetworkContactService, OrgMessageService
 )
+from organizations.services.subscription_services import SubscriptionService
+from users.serializers import UserShortInfoSerializer
 
 
 class OrganizationsListCreateView(ListCreateAPIView):
@@ -264,3 +266,16 @@ class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationTitleSerializer
     queryset = OrganizationService.filter()
+
+
+class OrganizationFollowersCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        users = SubscriptionService.get_organization_followers(organization_id=pk)[:3]
+        count = SubscriptionService.get_organization_followers(organization_id=pk).count()
+
+        return Response(data={
+            'followers': UserShortInfoSerializer(users, many=True).data,
+            'count': count
+        }, status=status.HTTP_200_OK)

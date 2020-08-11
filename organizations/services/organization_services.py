@@ -16,7 +16,7 @@ from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION,
 from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
-    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message
+    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
 )
 from organizations.services.membership_services import MembershipService
 from users.models import User
@@ -328,6 +328,11 @@ class OrgMessageService:
     @classmethod
     def get_messages_of_organization(cls, organization_id: int) -> QuerySet:
         return cls.model.objects.filter(organization_id=organization_id)
+
+    @classmethod
+    def get_messages_of_subscriptions(cls, user: User) -> QuerySet:
+        organizations = Subscription.objects.filter(user=user).values('organization')
+        return cls.model.objects.filter(organization__in=organizations)
 
     @classmethod
     @transaction.atomic

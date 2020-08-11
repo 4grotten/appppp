@@ -222,6 +222,20 @@ class OrgMessageSerializer(serializers.ModelSerializer):
             return None
 
 
+class SubscriptionsMessageSerializer(serializers.ModelSerializer):
+    receivers = serializers.SerializerMethodField()
+    organization = OrganizationWithImageSerializer(many=False)
+
+    class Meta:
+        model = Message
+        fields = ('id', 'content', 'organization', 'organization_address',
+                  'created_at', 'receivers_count', 'receivers')
+
+    def get_receivers(self, obj):
+        users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
+        return UserShortInfoSerializer(users, many=True).data
+
+
 class OrgMessageCreateSerializer(serializers.ModelSerializer):
     content = serializers.CharField(max_length=800)
 

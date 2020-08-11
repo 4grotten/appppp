@@ -12,7 +12,7 @@ from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
     HomepageOrganizationsView, OrganizationsInCategoryView, OrganizationTitleRetrieveAPIView, HomepageSearchView,
-    OrganizationFollowersCountAPIView)
+    OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView)
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, HomepagePartnersView,
     HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView
@@ -26,6 +26,7 @@ organization_urls = [
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
     path('organizations/<int:pk>/messages/', OrgMessageAPIView.as_view(), name='organization_messages'),
+    path('messages/', SubscriptionsMessageListAPIView.as_view(), name='messages_all_subscriptions'),
     path('organizations/<int:pk>/social_networks/', OrgNetworksListAPIView.as_view(), name='organization_networks'),
     path('organizations/<int:pk>/location/', SetOrganizationLocationAPIView.as_view(), name='set_location'),
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),

@@ -21,7 +21,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer,
-    OrganizationTitleSerializer)
+    OrganizationTitleSerializer, SubscriptionsMessageSerializer)
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
 )
@@ -233,6 +233,15 @@ class HomepageSearchView(ListAPIView):
     search_fields = ('title',)
     serializer_class = OrganizationWithDiscountsSerializer
     queryset = Organization.objects.filter(is_active=True)
+
+
+class SubscriptionsMessageListAPIView(ListAPIView):
+    serializer_class = SubscriptionsMessageSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        messages = OrgMessageService.get_messages_of_subscriptions(user=self.request.user)
+        return messages
 
 
 class OrgMessageAPIView(ListAPIView):

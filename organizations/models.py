@@ -220,6 +220,9 @@ class Message(TimestampModel):
     receivers_count = models.IntegerField(default=0)
     organization_address = models.CharField(max_length=255, null=True)
 
+    class Meta:
+        ordering = ('-created_at',)
+
     def __str__(self):
         return f'Message of {self.organization.title}'
 

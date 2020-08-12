@@ -239,7 +239,7 @@ class HomepageSearchView(ListAPIView):
 class SubscriptionsMessageListAPIView(ListAPIView):
     serializer_class = SubscriptionsMessageSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('organization',)
 
     def get_queryset(self):

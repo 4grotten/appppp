@@ -1,9 +1,10 @@
 from typing import Union
 
 from celery import shared_task
+
+from common.exceptions import ObjectNotFoundException
 from notifications.services import NotificationService
-from organizations.models import Organization, Subscription
-from organizations.services.organization_services import OrganizationService
+from organizations.models import Organization, Subscription, Membership
 from users.models import User
 
 
@@ -41,8 +42,7 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
     for recipient in recipients:
         if not extra_data:
             extra_data = dict()
-            can_send_message = OrganizationService.user_can_send_message(user=recipient,
-                                                                         organization_id=organization_id)
+            can_send_message = user_can_send_message(user=recipient, organization_id=organization_id)
             extra_data['can_send_message'] = can_send_message
 
         NotificationService.create_notification(
@@ -80,3 +80,17 @@ def sent_notification(recipient_id: int, sender_id=None, mode='system', notifica
         organization=organization,
         extra_data=extra_data
     )
+
+
+def user_can_send_message(organization_id: int, user: User) -> bool:
+    try:
+        organization = Organization.objects.get(id=organization_id)
+    except Organization.DoesNotExist:
+        raise ObjectNotFoundException
+    if organization.owner == user:
+        return True
+    try:
+        membership = Membership.objects.get(organization=organization, user=user)
+    except ObjectNotFoundException:
+        return False
+    return membership.role.can_send_message

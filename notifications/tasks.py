@@ -3,6 +3,7 @@ from typing import Union
 from celery import shared_task
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription
+from organizations.services.organization_services import OrganizationService
 from users.models import User
 
 
@@ -38,6 +39,12 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
     recipients = User.objects.filter(subscriptions__organization_id=organization_id)
     organization = Organization.objects.get(id=organization_id)
     for recipient in recipients:
+        if not extra_data:
+            extra_data = dict()
+            can_send_message = OrganizationService.user_can_send_message(user=recipient,
+                                                                         organization_id=organization_id)
+            extra_data['can_send_message'] = can_send_message
+
         NotificationService.create_notification(
             recipient=recipient,
             sender=sender,

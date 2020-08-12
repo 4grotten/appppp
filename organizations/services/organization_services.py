@@ -377,7 +377,8 @@ class OrgMessageService:
             notification_type=ORGANIZATION_MESSAGE_SENDER_TYPE,
             title=ORGANIZATION_OWNER_MESSAGE_TITLE,
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content),
-            organization_id=organization.id
+            organization_id=organization.id,
+            extra_data=dict(can_send_message=True)
         )
 
         return message

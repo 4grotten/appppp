@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
@@ -238,6 +239,8 @@ class HomepageSearchView(ListAPIView):
 class SubscriptionsMessageListAPIView(ListAPIView):
     serializer_class = SubscriptionsMessageSerializer
     permission_classes = (IsAuthenticated,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('organization',)
 
     def get_queryset(self):
         messages = OrgMessageService.get_messages_of_subscriptions(user=self.request.user)

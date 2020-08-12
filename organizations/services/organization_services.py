@@ -13,7 +13,9 @@ from common.exceptions import (
 from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE,
                                      NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
                                      ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION,
-                                     ORGANIZATION_OWNER_MESSAGE_TITLE)
+                                     ORGANIZATION_OWNER_MESSAGE_TITLE, ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE,
+                                     ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
+                                     ORGANIZATION_GAVE_DESCRIPTION)
 from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (

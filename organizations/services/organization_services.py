@@ -362,13 +362,14 @@ class OrgMessageService:
     @transaction.atomic
     def create_message(cls, organization: Organization, content: str, sender: User):
         message = cls.model.objects.create(organization=organization, content=content, sender=sender)
-        transaction.on_commit(lambda: send_notifications_to_subscribers.delay(
+
+        send_notifications_to_subscribers.delay(
             organization_id=organization.id,
             mode=PERSONAL_MODE,
             notification_type=ORGANIZATION_MESSAGE_TYPE,
             title=ORGANIZATION_MESSAGE_TITLE.format(organization=organization.title),
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
-        ))
+        )
 
         sent_notification.delay(
             recipient_id=sender.id,

@@ -34,7 +34,8 @@ class MembershipService:
                 title=GET_JOB_TITLE.format(organization=membership.organization.title),
                 description=GET_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id)
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_otganization=membership.role.can_edit_organization)
             ))
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.added_by_id,
@@ -44,7 +45,8 @@ class MembershipService:
                 title=RECRUIT_JOB_TITLE,
                 description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id)
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_otganization=True)
             ))
 
             return membership
@@ -110,7 +112,8 @@ class MembershipService:
                 description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=old_position.title,
                                                                    new_position=new_role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id)
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_otganization=membership.role.can_edit_organization)
             ))
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.added_by_id,
@@ -121,7 +124,7 @@ class MembershipService:
                 description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(old_position=old_position.title,
                                                                          new_position=new_role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id)
+                extra_data=dict(membership_id=membership.id, can_edit_otganization=True)
             ))
             return membership
         except IntegrityError:

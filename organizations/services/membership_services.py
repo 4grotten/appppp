@@ -74,7 +74,7 @@ class MembershipService:
             notification_type=DISMISS_JOB_TYPE,
             title=DISMISS_JOB_TITLE,
             description=DISMISS_JOB_DESCRIPTION.format(position=membership.role.title),
-            organization_id=membership.organization_id,
+            organization_id=membership.organization_id
         ))
         return membership.delete()
 

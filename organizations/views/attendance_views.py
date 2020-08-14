@@ -4,8 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from common.exceptions import PermissionDeniedException
-from organizations.serializers.attendance_serializers import RecordAttendanceSerializer
-from organizations.serializers.query_param_serializers import OrganizationUserQueryParamSerializer
+from organizations.serializers.attendance_serializers import CreateAttendanceSerializer, AttendanceSerializer
+from organizations.serializers.query_param_serializers import (
+    OrganizationUserQueryParamSerializer, AttendanceStatsQueryParamSerializer
+)
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_services import OrganizationService
 from users.serializers import AttendanceEmployeeSerializer
@@ -36,7 +38,7 @@ class AttendanceView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        serializer = RecordAttendanceSerializer(data=request.data)
+        serializer = CreateAttendanceSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
@@ -48,8 +50,12 @@ class AttendanceView(GenericAPIView):
             raise PermissionDeniedException('No rights to check attendance in this organization')
 
         user = serializer.validated_data['user']
-        AttendanceService.record_arrival(employee=user, organization=organization, recorded_by=request.user)
+        has_arrived = AttendanceService.record_arrival(employee=user, organization=organization,
+                                                       recorded_by=request.user)
 
-        data = {'full_name': user.full_name}
+        data = {
+            'full_name': user.full_name,
+            'has_arrived': has_arrived
+        }
 
         return Response(data)

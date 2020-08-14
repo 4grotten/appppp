@@ -134,6 +134,10 @@ class MembershipService:
     def has_edit_rights_in_any_organization(cls, user: User) -> bool:
         return Membership.objects.filter(user=user, role__can_edit_organization=True).exists()
 
+    @classmethod
+    def is_organization_member(cls, user: User, organization: Organization):
+        return Membership.objects.filter(user=user, organization=organization).exists()
+
 
 class RoleService:
     @classmethod

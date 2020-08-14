@@ -106,6 +106,24 @@ class Membership(TimestampModel):
         return f'{self.user} as {self.role} in {self.organization}'
 
 
+class Attendance(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendances')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='attendances')
+    arrival_time = models.DateTimeField(auto_now_add=True)
+    arrival_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name='checked_arrivals')
+    is_active = models.BooleanField(default=True)
+    departure_time = models.DateTimeField(null=True, blank=True)
+    departure_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                             related_name='checked_departures')
+
+    def __str__(self):
+        return f'{self.user} came to {self.organization.title} at {self.arrival_time}'
+
+    class Meta:
+        ordering = ('-arrival_time',)
+
+
 class DiscountCard(TimestampModel):
     FIXED = 'fixed'
     CUMULATIVE = 'cumulative'

@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
@@ -45,6 +46,12 @@ membership_urls = [
     path('employees/user_info/<int:pk>/', BriefUserInfoView.as_view(), name='new_employee_info'),
 ]
 
+attendance_urls = [
+    path('attendance/user_info/', AttendanceUserInfoView.as_view(), name='employee_info'),
+    path('attendance/', AttendanceView.as_view(), name='record_arrival'),
+    path('attendance/stats/', AttendanceStatsView.as_view(), name='attendance_stats'),
+]
+
 discounts_urls = [
     path('discounts/', OrganizationDiscountsAPIView.as_view(), name='discounts'),
     path('discounts/<int:pk>/', OrganizationDiscountsDeleteUpdateView.as_view(), name='discounts_delete'),
@@ -76,6 +83,7 @@ banner_urls = [
 urlpatterns = [
     path('', include(organization_urls)),
     path('', include(membership_urls)),
+    path('', include(attendance_urls)),
     path('', include(discounts_urls)),
     path('', include(partnership_urls)),
     path('', include(homepage_urls)),

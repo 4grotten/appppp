@@ -2,7 +2,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from .constants import RESEND_CODE_CHOICES, REGISTER_AUTH_TYPE
+from organizations.services.attendance_services import AttendanceService
+from organizations.services.organization_services import OrganizationService
+from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
 
 User = get_user_model()
@@ -67,6 +69,22 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'avatar', 'full_name', 'phone_number')
+
+
+class AttendanceEmployeeSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+    role = serializers.SerializerMethodField()
+    is_arriving = serializers.SerializerMethodField()
+
+    def get_role(self, user: User) -> str:
+        return OrganizationService.get_user_role_in_organization(organization=self.context['organization'], user=user)
+
+    def get_is_arriving(self, user: User) -> bool:
+        return not AttendanceService.is_checked_in(employee=user, organization=self.context['organization'])
+
+    class Meta:
+        model = User
+        fields = ('id', 'avatar', 'full_name', 'role', 'is_arriving',)
 
 
 class SetPasswordSerializer(serializers.Serializer):

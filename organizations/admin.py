@@ -5,7 +5,7 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
-    CardBackground, Partnership, Banner, Message
+    CardBackground, Partnership, Banner, Message, Attendance
 )
 
 
@@ -62,6 +62,15 @@ class RoleAdmin(admin.ModelAdmin):
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user', 'role',)
     list_filter = ('organization', 'user', 'role',)
+
+
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'organization', 'arrival_time', 'arrival_checked_by', 'is_active',
+        'departure_time', 'departure_checked_by'
+    )
+    list_filter = ('organization', 'is_active',)
+    date_hierarchy = 'arrival_time'
 
 
 class DiscountCardAdmin(admin.ModelAdmin):
@@ -121,6 +130,7 @@ admin.site.register(PhoneNumber, PhoneNumberAdmin)
 admin.site.register(SocialNetworkContact, SocialNetworkContactAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(Membership, MembershipAdmin)
+admin.site.register(Attendance, AttendanceAdmin)
 admin.site.register(DiscountCard, DiscountCardAdmin)
 admin.site.register(OrganizationClientFinancialStatus, OrganizationClientFinancialStatusAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)

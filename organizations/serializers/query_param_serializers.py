@@ -30,4 +30,4 @@ class OrganizationUserQueryParamSerializer(serializers.Serializer):
 class AttendanceStatsQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
-    month = serializers.DateField(default=None, input_formats=["%Y-%m"])
+    month_year = serializers.DateField(default=None, input_formats=["%Y-%m"])

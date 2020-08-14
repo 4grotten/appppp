@@ -207,7 +207,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_receivers(self, obj):
         users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
-        return UserShortInfoSerializer(users, many=True).data
+        return UserShortInfoSerializer(users, many=True, context={'request': self.context.get('request')}).data
 
 
 class OrgMessageSerializer(MessageSerializer):

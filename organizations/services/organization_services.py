@@ -88,6 +88,16 @@ class OrganizationService:
         return membership.role.can_see_stats
 
     @classmethod
+    def user_can_check_attendance(cls, organization: Organization, user: User) -> bool:
+        if organization.owner == user:
+            return True
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+        except ObjectNotFoundException:
+            return False
+        return membership.role.can_check_attendance
+
+    @classmethod
     def user_can_edit_partner(cls, organization: Organization, user: User) -> bool:
         if organization.owner == user:
             return True

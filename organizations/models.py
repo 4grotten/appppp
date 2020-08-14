@@ -120,6 +120,9 @@ class Attendance(models.Model):
     def __str__(self):
         return f'{self.user} came to {self.organization.title} at {self.arrival_time}'
 
+    class Meta:
+        ordering = ('-arrival_time',)
+
 
 class DiscountCard(TimestampModel):
     FIXED = 'fixed'

@@ -1,6 +1,5 @@
 from itertools import groupby
 
-from django.db.models import QuerySet
 from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException
@@ -11,8 +10,24 @@ from users.models import User
 
 class AttendanceService:
     @classmethod
+    def _auto_depart_by_system(cls, employee: User, organization: Organization):
+        today = now().date()
+        unclosed_past_attendances = Attendance.objects.filter(
+            user=employee, organization=organization, is_active=True).filter(arrival_time__lt=today)
+        # ToDo: look for bulk update methods
+        for attendance in unclosed_past_attendances:
+            attendance.departure_time = attendance.arrival_time.replace(hour=organization.closes_at.hour,
+                                                                        minute=organization.closes_at.minute,
+                                                                        second=0)
+            attendance.is_active = False
+            attendance.save()
+
+    @classmethod
     def record_arrival(cls, employee: User, organization: Organization, recorded_by: User) -> bool:
-        """returns true if employee is checking in, false when checking out"""
+        """
+        returns true if employee is checking in, false when checking out
+        """
+        cls._auto_depart_by_system(employee=employee, organization=organization)
 
         if not MembershipService.is_organization_member(user=employee, organization=organization):
             raise NotAcceptableException('Given user is not a member of this organization')
@@ -27,6 +42,7 @@ class AttendanceService:
 
     @classmethod
     def is_checked_in(cls, employee: User, organization: Organization):
+        cls._auto_depart_by_system(employee=employee, organization=organization)
         return Attendance.objects.filter(user=employee, organization=organization, is_active=True).exists()
 
     @staticmethod
@@ -35,6 +51,8 @@ class AttendanceService:
 
     @classmethod
     def get_grouped_monthly_attendances(cls, employee: User, organization: Organization, month_year) -> list:
+        cls._auto_depart_by_system(employee=employee, organization=organization)
+
         attendances = Attendance.objects.filter(user=employee, organization=organization).filter(
             arrival_time__year=month_year.year).filter(arrival_time__month=month_year.month).order_by('arrival_time')
 

@@ -33,7 +33,9 @@ class MembershipService:
                 notification_type=GET_JOB_TYPE,
                 title=GET_JOB_TITLE.format(organization=membership.organization.title),
                 description=GET_JOB_DESCRIPTION.format(position=membership.role.title),
-                organization_id=membership.organization_id
+                organization_id=membership.organization_id,
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_organization=membership.role.can_edit_organization)
             ))
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.added_by_id,
@@ -42,7 +44,9 @@ class MembershipService:
                 notification_type=RECRUIT_JOB_TYPE,
                 title=RECRUIT_JOB_TITLE,
                 description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
-                organization_id=membership.organization_id
+                organization_id=membership.organization_id,
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_organization=True)
             ))
 
             return membership
@@ -107,7 +111,9 @@ class MembershipService:
                 title=CHANGE_JOB_POSITION_TITLE,
                 description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=old_position.title,
                                                                    new_position=new_role.title),
-                organization_id=membership.organization_id
+                organization_id=membership.organization_id,
+                extra_data=dict(membership_id=membership.id,
+                                can_edit_organization=membership.role.can_edit_organization)
             ))
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.added_by_id,
@@ -117,7 +123,8 @@ class MembershipService:
                 title=CHANGE_JOB_POSITION_OWNER_TITLE,
                 description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(old_position=old_position.title,
                                                                          new_position=new_role.title),
-                organization_id=membership.organization_id
+                organization_id=membership.organization_id,
+                extra_data=dict(membership_id=membership.id, can_edit_organization=True)
             ))
             return membership
         except IntegrityError:

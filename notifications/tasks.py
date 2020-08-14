@@ -91,6 +91,6 @@ def user_can_send_message(organization_id: int, user: User) -> bool:
         return True
     try:
         membership = Membership.objects.get(organization=organization, user=user)
-    except ObjectNotFoundException:
+    except Membership.DoesNotExist:
         return False
     return membership.role.can_send_message

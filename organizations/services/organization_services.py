@@ -15,7 +15,7 @@ from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION,
                                      ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION,
                                      ORGANIZATION_OWNER_MESSAGE_TITLE, ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE,
                                      ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
-                                     ORGANIZATION_GAVE_DESCRIPTION)
+                                     ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE)
 from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
@@ -249,17 +249,22 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
-        # ToDo: remove random order. For now added because of Rinat's request
-        # Use this queryset
-        # queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().annotate(
-        #     cards_count=Count(
-        #         'discounts', distinct=True, filter=Q(discounts__is_published=True))).order_by('-cards_count')
-        #
-        # ToDo Remove following querysets
+    def get_random_organizations_in_category(cls, category: OrganizationCategory,
+                                             partner: Organization = None) -> QuerySet:
         additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
         queryset = Organization.objects.filter(id__in=additional).order_by('?')
-        ##################
+
+        if partner is not None:
+            queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+
+        return queryset
+
+    @classmethod
+    def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
+        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().annotate(
+            cards_count=Count(
+                'discounts', distinct=True, filter=Q(discounts__is_published=True))
+        ).order_by('-cards_count')
 
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
@@ -374,10 +379,11 @@ class OrgMessageService:
         sent_notification.delay(
             recipient_id=sender.id,
             mode=PERSONAL_MODE,
-            notification_type=ORGANIZATION_MESSAGE_TYPE,
+            notification_type=ORGANIZATION_MESSAGE_SENDER_TYPE,
             title=ORGANIZATION_OWNER_MESSAGE_TITLE,
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content),
-            organization_id=organization.id
+            organization_id=organization.id,
+            extra_data=dict(can_send_message=True)
         )
 
         return message

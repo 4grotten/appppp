@@ -33,8 +33,8 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
 
     def get_organizations(self, category: OrganizationCategory):
         partner = self.context.get('partner', None)
-        organizations = OrganizationService.get_organizations_in_category(category=category, partner=partner,
-                                                                          )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        organizations = OrganizationService.get_random_organizations_in_category(
+            category=category, partner=partner)[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
         return OrganizationWithDiscountsSerializer(organizations, many=True,
                                                    context={'request': self.context.get('request', None)}).data
 

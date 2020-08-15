@@ -53,12 +53,12 @@ class AttendanceView(GenericAPIView):
             raise PermissionDeniedException('No rights to check attendance in this organization')
 
         user = serializer.validated_data['user']
-        has_arrived = AttendanceService.record_arrival(employee=user, organization=organization,
+        is_active = AttendanceService.record_arrival(employee=user, organization=organization,
                                                        recorded_by=request.user)
 
         data = {
             'full_name': user.full_name,
-            'has_arrived': has_arrived
+            'is_active': is_active
         }
 
         return Response(data)

@@ -26,7 +26,7 @@ class AttendanceService:
     @classmethod
     def record_arrival(cls, employee: User, organization: Organization, recorded_by: User) -> bool:
         """
-        returns true if employee is checking in, false when checking out
+        returns is_active status of attendance
         """
         cls._auto_depart_by_system(employee=employee, organization=organization)
 

@@ -74,17 +74,24 @@ class EmployeeSerializer(serializers.ModelSerializer):
 class AttendanceEmployeeSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
     role = serializers.SerializerMethodField()
-    is_arriving = serializers.SerializerMethodField()
+    attendance = serializers.SerializerMethodField()
 
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization(organization=self.context['organization'], user=user)
+
+    def get_attendance(self, user: User):
+        latest = AttendanceService.get_latest_attendance(employee=user, organization=self.context['organization'])
+        if latest is None:
+            return None
+        from organizations.serializers.attendance_serializers import MembershipListAttendanceSerializer
+        return MembershipListAttendanceSerializer(latest).data
 
     def get_is_arriving(self, user: User) -> bool:
         return not AttendanceService.is_checked_in(employee=user, organization=self.context['organization'])
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'role', 'is_arriving',)
+        fields = ('id', 'avatar', 'full_name', 'role', 'attendance',)
 
 
 class SetPasswordSerializer(serializers.Serializer):

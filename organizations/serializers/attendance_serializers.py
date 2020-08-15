@@ -19,6 +19,12 @@ class AttendanceSerializer(serializers.ModelSerializer):
         fields = ('id', 'arrival_time', 'arrival_checked_by', 'departure_time', 'departure_checked_by')
 
 
+class MembershipListAttendanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attendance
+        fields = ('is_active', 'arrival_time', 'departure_time')
+
+
 class GroupAttendanceSerializer(serializers.Serializer):
     date = serializers.DateField()
     attendances = AttendanceSerializer(many=True)

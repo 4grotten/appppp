@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from organizations.models import Membership, Role, Organization
+from organizations.serializers.attendance_serializers import MembershipListAttendanceSerializer
 from organizations.serializers.card_serializers import UserFilteredPrimaryKeyRelatedField
+from organizations.services.attendance_services import AttendanceService
 from users.models import User
 from users.serializers import EmployeeSerializer
 
@@ -52,6 +54,22 @@ class MembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ('id', 'role', 'user',)
+
+
+class MembershipListSerializer(serializers.ModelSerializer):
+    role = RoleBriefSerializer()
+    user = EmployeeSerializer()
+    attendance = serializers.SerializerMethodField()
+
+    def get_attendance(self, membership: Membership):
+        latest = AttendanceService.get_latest_attendance(employee=membership.user, organization=membership.organization)
+        if latest is None:
+            return None
+        return MembershipListAttendanceSerializer(latest).data
+
+    class Meta:
+        model = Membership
+        fields = ('id', 'role', 'user', 'attendance',)
 
 
 class MembershipCreateSerializer(serializers.ModelSerializer):

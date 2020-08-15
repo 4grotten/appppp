@@ -10,8 +10,8 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Role, Membership
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.membership_serializers import (
-    MembershipSerializer, RoleBriefSerializer, RoleSerializer, RoleCreateSerializer, MembershipCreateSerializer,
-    MembershipUpdateSerializer, TransferOwnershipSerializer
+    MembershipSerializer, MembershipListSerializer, MembershipCreateSerializer, MembershipUpdateSerializer,
+    RoleBriefSerializer, RoleSerializer, RoleCreateSerializer, TransferOwnershipSerializer,
 )
 from organizations.serializers.organization_serializers import OrganizationQueryParamSerializer
 from organizations.services.membership_services import MembershipService, RoleService
@@ -22,7 +22,7 @@ from users.serializers import EmployeeSerializer
 
 class MembershipListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = MembershipSerializer
+    serializer_class = MembershipListSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('user__id', 'user__phone_number', 'user__first_name', 'user__last_name',)
 

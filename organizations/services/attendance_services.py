@@ -1,4 +1,5 @@
 from itertools import groupby
+from typing import Union
 
 from django.utils.timezone import now
 
@@ -66,3 +67,7 @@ class AttendanceService:
             result.append(date)
 
         return result
+
+    @classmethod
+    def get_latest_attendance(cls, employee: User, organization: Organization) -> Union[Attendance, None]:
+        return Attendance.objects.filter(user=employee, organization=organization).order_by('-arrival_time').first()

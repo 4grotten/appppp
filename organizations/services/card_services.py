@@ -7,8 +7,8 @@ from django.db.models import QuerySet, F
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from common.services.currency import CurrencyConverterService
-from notifications.constants import DISCOUNT_NOTIFICATION_MODE, NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE, \
-    NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE
+from notifications.constants import (NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE,
+                                     NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE)
 from notifications.tasks import send_notifications_to_all_users
 from organizations.models import DiscountCard, Organization
 from organizations.services.organization_services import OrganizationService

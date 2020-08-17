@@ -9,8 +9,7 @@ from notifications.constants import (
     PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
     DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE)
 from notifications.services import NotificationService
-from notifications.tasks import send_notifications_to_all_users, sent_notification, \
-    send_notifications_organization_members
+from notifications.tasks import (send_notifications_organization_members)
 from organizations.models import Organization, Partnership
 from notifications.models import Notification
 from organizations.services.organization_services import OrganizationService

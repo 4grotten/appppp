@@ -75,6 +75,8 @@ class OrganizationPartnersView(ListAPIView):
 
 class OrgPartnershipsView(ListAPIView):
     serializer_class = PartnershipSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('accepted_by__title',)
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])

@@ -56,7 +56,7 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        return Partnership.objects.filter(requested_by=organization)
+        return Partnership.objects.filter(requested_by=organization).order_by('-is_accepted', '-id')
 
     @classmethod
     def get_available_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:

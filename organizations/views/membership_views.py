@@ -24,7 +24,7 @@ class MembershipListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MembershipListSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ('user__id', 'user__phone_number', 'user__first_name', 'user__last_name',)
+    search_fields = ('user__id', 'user__phone_number', 'user__first_name', 'user__last_name', 'user__full_name',)
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

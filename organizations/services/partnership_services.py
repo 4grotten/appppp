@@ -36,16 +36,16 @@ class PartnershipService:
         cls.create(requested_by=requested_by, accepted_by=accepted_by)
         partnership = Partnership.objects.get(requested_by=requested_by, accepted_by=accepted_by)
 
-        sent_notification.delay(
-            recipient_id=requested_by.owner_id,
-            mode=PARTNER_MODE,
-            notification_type=REQUEST_PARTNERSHIP_TYPE,
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
-                                                   recipient_organization=accepted_by.title),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
-            organization_id=requested_by.id,
-            extra_data=dict(parnership_id=partnership.id)
-        )
+        # sent_notification.delay(
+        #     recipient_id=requested_by.owner_id,
+        #     mode=PARTNER_MODE,
+        #     notification_type=REQUEST_PARTNERSHIP_TYPE,
+        #     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
+        #                                            recipient_organization=accepted_by.title),
+        #     description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
+        #     organization_id=requested_by.id,
+        #     extra_data=dict(parnership_id=partnership.id)
+        # )
 
     @classmethod
     def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:
@@ -59,7 +59,7 @@ class PartnershipService:
         return Partnership.objects.filter(requested_by=organization).order_by('-is_accepted', '-id')
 
     @classmethod
-    def get_available_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
+    def get_requested_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
         partnership = cls.get(id=partnership_id)
         try:
             return cls.get_organization_partnerships(organization=partnership.requested_by, user=user)
@@ -82,8 +82,11 @@ class PartnershipService:
         partnership.delete()
 
     @classmethod
-    def set_permissions(cls, partnership: Partnership, can_check_attendance: bool, can_see_stats: bool,
-                        can_edit_organization: bool) -> Partnership:
+    def set_permissions(cls, partnership: Partnership, user: User,
+                        can_check_attendance: bool, can_see_stats: bool, can_edit_organization: bool) -> Partnership:
+        if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
+            raise NotAcceptableException('No access to partner settings')
+
         try:
             partnership.is_accepted = True
             partnership.can_check_attendance = can_check_attendance

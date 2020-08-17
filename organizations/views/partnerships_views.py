@@ -42,7 +42,7 @@ class PartnershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = PartnershipDetailedSerializer
 
     def get_queryset(self):
-        return PartnershipService.get_available_partnerships(partnership_id=self.kwargs['pk'],
+        return PartnershipService.get_requested_partnerships(partnership_id=self.kwargs['pk'],
                                                              user=self.request.user)
 
     def update(self, request, *args, **kwargs):
@@ -53,8 +53,9 @@ class PartnershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        partnership = self.get_object()
-        partnership = PartnershipService.set_permissions(partnership=partnership, **serializer.validated_data)
+        partnership = PartnershipService.get(id=self.kwargs['pk'])
+        partnership = PartnershipService.set_permissions(partnership=partnership, user=request.user,
+                                                         **serializer.validated_data)
         data = PartnershipDetailedSerializer(partnership).data
         return Response(data)
 

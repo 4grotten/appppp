@@ -187,8 +187,10 @@ class DiscountCardService:
     @transaction.atomic
     def bulk_update_discounts(cls, cards_data: list, organization: Organization, updated_by: User):
         should_organize = False
+        percents = list()
 
         for card_data in cards_data:
+            percents.append(card_data['percent'])
             card = card_data.pop('id')
 
             if not card.organization == organization:
@@ -202,6 +204,17 @@ class DiscountCardService:
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
+
+        percents.sort()
+        str_percent = ','.join(map(str, percents))
+        transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+            sender_id=updated_by.id,
+            organization_id=organization.id,
+            mode=SYSTEM_NOTIFICATION_MODE,
+            notification_type=NEW_DISCOUNT_TYPE,
+            title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
+            description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+        ))
 
     @classmethod
     def get_unique_discount_percents_to_display(cls, organization: Organization) -> list:

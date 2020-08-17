@@ -31,6 +31,46 @@ def send_notifications_to_all_users(sender_id: Union[int, None] = None, mode='sy
 
 
 @shared_task
+def send_notifications_organization_members(members_organization_id: int, organization_id=None,
+                                            sender_id: Union[int, None] = None, mode='system',
+                                            notification_type='system', with_permissions=None,
+                                            title='Title was not sent', description='Description was not sent',
+                                            extra_data=None):
+    organization = Organization.objects.get(id=organization_id)
+    members_organization = Organization.objects.get(id=members_organization_id)
+    owner = members_organization.owner
+    sender = sender_id
+    recipients = User.objects.filter(memberships__organization_id=members_organization_id)
+    if with_permissions:
+        if with_permissions['can_edit_partner']:
+            recipients.filter(memberships__role__can_edit_partner=True)
+    if sender_id:
+        sender = User.objects.get(id=sender_id)
+    for recipient in recipients:
+        NotificationService.create_notification(
+            recipient=recipient,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
+    if owner not in recipients:
+        NotificationService.create_notification(
+            recipient=owner,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
+
+
+@shared_task
 def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='system', notification_type='system',
                                       title='Title was not sent', description='Description was not sent',
                                       extra_data=None, organization_id=None):

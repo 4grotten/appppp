@@ -135,7 +135,7 @@ class DiscountCardService:
             cls.organize_cumulative_cards(organization=organization)
         percents.sort()
         not_dup_percents = list(dict.fromkeys(percents))
-        str_percent = ','.join(map(str, not_dup_percents))
+        str_percent = ', '.join(map(str, not_dup_percents))
         transaction.on_commit(lambda: send_notifications_to_all_users.delay(
             sender_id=organization.owner_id,
             organization_id=organization.id,
@@ -208,7 +208,7 @@ class DiscountCardService:
 
         percents.sort()
         not_dup_percents = list(dict.fromkeys(percents))
-        str_percent = ','.join(map(str, not_dup_percents))
+        str_percent = ', '.join(map(str, not_dup_percents))
         transaction.on_commit(lambda: send_notifications_to_all_users.delay(
             sender_id=updated_by.id,
             organization_id=organization.id,

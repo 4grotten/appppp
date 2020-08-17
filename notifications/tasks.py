@@ -40,10 +40,11 @@ def send_notifications_organization_members(members_organization_id: int, organi
     members_organization = Organization.objects.get(id=members_organization_id)
     owner = members_organization.owner
     sender = sender_id
-    recipients = User.objects.filter(memberships__organization_id=members_organization_id)
-    if with_permissions:
+    recipients = []
+    members = User.objects.filter(memberships__organization_id=members_organization_id)
+    if with_permissions is not None:
         if with_permissions['can_edit_partner']:
-            recipients.filter(memberships__role__can_edit_partner=True)
+            recipients = members.filter(memberships__role__can_edit_partner=True)
     if sender_id:
         sender = User.objects.get(id=sender_id)
     for recipient in recipients:

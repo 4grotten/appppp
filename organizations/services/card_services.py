@@ -27,15 +27,6 @@ class DiscountCardService:
     def create(cls, *args, **kwargs):
         try:
             DiscountCard.objects.create(*args, **kwargs)
-            organization = Organization.objects.get(id=kwargs['organization'].id)
-            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
-                sender_id=organization.owner_id,
-                organization_id=organization.id,
-                mode=SYSTEM_NOTIFICATION_MODE,
-                notification_type=NEW_DISCOUNT_TYPE,
-                title=NEW_DISCOUNT_TITLE.format(percent=str(kwargs['percent'])),
-                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
-            ))
         except IntegrityError:
             raise IntegrityException('Duplicate cards are not allowed')
 
@@ -130,8 +121,9 @@ class DiscountCardService:
     @transaction.atomic
     def bulk_create_discounts(cls, cards: list, organization: Organization):
         should_organize = False
-
+        percents = list()
         for card_data in cards:
+            percents.append(card_data['percent'])
             if card_data['type'] == DiscountCard.CUMULATIVE:
                 should_organize = True
                 card_data['currency'] = organization.currency
@@ -141,6 +133,16 @@ class DiscountCardService:
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
+        percents.sort()
+        str_percent = ','.join(map(str, percents))
+        transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+            sender_id=organization.owner_id,
+            organization_id=organization.id,
+            mode=SYSTEM_NOTIFICATION_MODE,
+            notification_type=NEW_DISCOUNT_TYPE,
+            title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
+            description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+        ))
 
     @classmethod
     @transaction.atomic

@@ -42,8 +42,7 @@ class PartnershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = PartnershipDetailedSerializer
 
     def get_queryset(self):
-        return PartnershipService.get_requested_partnerships(partnership_id=self.kwargs['pk'],
-                                                             user=self.request.user)
+        return PartnershipService.get_incoming_partnerships(partnership_id=self.kwargs['pk'], user=self.request.user)
 
     def update(self, request, *args, **kwargs):
         serializer = PartnershipUpdateSerializer(data=request.data)
@@ -77,7 +76,12 @@ class OrganizationPartnersView(ListAPIView):
 class OrgPartnershipsView(ListAPIView):
     serializer_class = PartnershipSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ('accepted_by__title',)
+    search_fields = ('requested_by__title', 'accepted_by__title',)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['organization_id'] = self.kwargs['pk']
+        return context
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])

@@ -1,17 +1,17 @@
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from notifications.constants import (
     PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
-    DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE)
-from notifications.services import NotificationService
+    DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE
+)
+from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
 from organizations.models import Organization, Partnership
-from notifications.models import Notification
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -70,13 +70,20 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        return Partnership.objects.filter(requested_by=organization).order_by('-is_accepted', '-id')
+        partnerships = Partnership.objects.filter(
+            Q(accepted_by=organization) | (Q(requested_by=organization) & Q(is_accepted=False))
+        ).order_by('-is_accepted', '-id')
+        return partnerships
 
     @classmethod
-    def get_requested_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
+    def get_incoming_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
         partnership = cls.get(id=partnership_id)
+
+        if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
+            raise NotAcceptableException('No access to partner settings')
+
         try:
-            return cls.get_organization_partnerships(organization=partnership.requested_by, user=user)
+            return Partnership.objects.filter(accepted_by=partnership.accepted_by).filter(id=partnership_id)
         except NotAcceptableException:
             return None
 

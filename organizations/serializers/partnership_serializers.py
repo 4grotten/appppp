@@ -11,17 +11,31 @@ class PartnershipRequestSerializer(serializers.ModelSerializer):
 
 
 class PartnershipSerializer(serializers.ModelSerializer):
-    accepted_by = PartnerSerializer()
+    partner = serializers.SerializerMethodField()
+    is_incoming = serializers.SerializerMethodField()
+
+    def get_is_incoming(self, partnership: Partnership) -> bool:
+        return partnership.accepted_by.id == self.context['organization_id']
+
+    def get_partner(self, partnership: Partnership):
+        if partnership.accepted_by.id == self.context['organization_id']:
+            partner = partnership.requested_by
+        else:
+            partner = partnership.accepted_by
+
+        return PartnerSerializer(partner).data
 
     class Meta:
         model = Partnership
-        fields = ('id', 'is_accepted', 'accepted_by',)
+        fields = ('id', 'is_accepted', 'is_incoming', 'partner',)
 
 
 class PartnershipDetailedSerializer(PartnershipSerializer):
+    requested_by = PartnerSerializer()
+
     class Meta:
         model = Partnership
-        fields = ('id', 'is_accepted', 'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'accepted_by',)
+        fields = ('id', 'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'requested_by',)
 
 
 class PartnershipUpdateSerializer(serializers.ModelSerializer):

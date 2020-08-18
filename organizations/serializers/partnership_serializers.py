@@ -25,9 +25,9 @@ class PartnershipDetailedSerializer(PartnershipSerializer):
 
 
 class PartnershipUpdateSerializer(serializers.ModelSerializer):
-    can_check_attendance = serializers.BooleanField()
-    can_see_stats = serializers.BooleanField()
-    can_edit_organization = serializers.BooleanField()
+    can_check_attendance = serializers.BooleanField(required=False)
+    can_see_stats = serializers.BooleanField(required=False)
+    can_edit_organization = serializers.BooleanField(required=False)
 
     class Meta:
         model = Partnership

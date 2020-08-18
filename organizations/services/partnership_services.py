@@ -96,10 +96,6 @@ class PartnershipService:
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        if not partnership.is_accepted:
-            # ToDo: change notification to rejected
-            pass
-
         Notification.objects.filter(extra_data__parnership_id=partnership_id).filter(
             extra_data__should_be_deleted=True).delete()
 
@@ -132,6 +128,8 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
+        send_notification = not partnership.is_accepted
+
         try:
             partnership.is_accepted = True
             partnership.can_check_attendance = can_check_attendance
@@ -142,29 +140,30 @@ class PartnershipService:
             Notification.objects.filter(extra_data__parnership_id=partnership.id).filter(
                 extra_data__should_be_deleted=True).delete()
 
-            transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                mode=PARTNER_MODE,
-                notification_type=ACCEPT_PARTNERSHIP_TYPE,
-                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
-                                                       recipient_organization=partnership.accepted_by.title),
-                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
-                organization_id=partnership.requested_by.id,
-                members_organization_id=partnership.requested_by.id,
-                with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(parnership_id=partnership.id)
-            ))
+            if send_notification:
+                transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                    mode=PARTNER_MODE,
+                    notification_type=ACCEPT_PARTNERSHIP_TYPE,
+                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
+                                                           recipient_organization=partnership.accepted_by.title),
+                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
+                    organization_id=partnership.requested_by.id,
+                    members_organization_id=partnership.requested_by.id,
+                    with_permissions=dict(can_edit_partner=True),
+                    extra_data=dict(parnership_id=partnership.id)
+                ))
 
-            transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                mode=PARTNER_MODE,
-                notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
-                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
-                                                       recipient_organization=partnership.accepted_by.title),
-                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
-                organization_id=partnership.requested_by.id,
-                members_organization_id=partnership.accepted_by.id,
-                with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(parnership_id=partnership.id)
-            ))
+                transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                    mode=PARTNER_MODE,
+                    notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
+                                                           recipient_organization=partnership.accepted_by.title),
+                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
+                    organization_id=partnership.requested_by.id,
+                    members_organization_id=partnership.accepted_by.id,
+                    with_permissions=dict(can_edit_partner=True),
+                    extra_data=dict(parnership_id=partnership.id)
+                ))
 
             return partnership
         except IntegrityError:

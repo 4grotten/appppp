@@ -33,8 +33,8 @@ def send_notifications_to_all_users(sender_id: Union[int, None] = None, mode='sy
 @shared_task
 def send_notifications_organization_members(members_organization_id: int, organization_id=None,
                                             sender_id: Union[int, None] = None, mode='system',
-                                            notification_type='system', with_permissions=None,
-                                            title='Title was not sent', description='Description was not sent',
+                                            notification_type='', with_permissions=None,
+                                            title='', description='',
                                             extra_data=None):
     organization = Organization.objects.get(id=organization_id)
     members_organization = Organization.objects.get(id=members_organization_id)

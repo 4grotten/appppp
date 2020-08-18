@@ -25,9 +25,9 @@ class PartnershipService:
             raise ObjectNotFoundException('Partnership not found')
 
     @classmethod
-    def create(cls, *args, **kwargs):
+    def create(cls, *args, **kwargs) -> Partnership:
         try:
-            Partnership.objects.create(*args, **kwargs)
+            return Partnership.objects.create(*args, **kwargs)
         except IntegrityError:
             raise IntegrityException('Could not create partnership request')
 
@@ -35,9 +35,13 @@ class PartnershipService:
     def create_request(cls, user: User, requested_by: Organization, accepted_by: Organization):
         if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
             raise NotAcceptableException('No rights to edit organization')
-        cls.create(requested_by=requested_by, accepted_by=accepted_by)
+        partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
-        partnership = Partnership.objects.get(requested_by=requested_by, accepted_by=accepted_by)
+        try:
+            cls.create(requested_by=accepted_by, accepted_by=requested_by)
+        except IntegrityException:
+            pass
+
         send_notifications_organization_members.delay(
             mode=PARTNER_MODE,
             notification_type=REQUEST_PARTNERSHIP_TYPE,

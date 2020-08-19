@@ -53,7 +53,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
     def get_employee_role(self, transaction: Transaction):
         return OrganizationService.get_user_role_in_organization(organization=transaction.organization,
-                                                                 user=self.context['request'].user)
+                                                                 user=transaction.processed_by)
 
     class Meta:
         model = Transaction

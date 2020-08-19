@@ -37,8 +37,11 @@ class TransactionService:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException('No rights to sell in this organization')
 
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+
         instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
-                                              currency=organization.currency)
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=organization.currency)
         return instance
 
     @classmethod

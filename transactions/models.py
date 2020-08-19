@@ -20,6 +20,10 @@ class Transaction(TimestampModel):
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions')
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
+    employee_name = models.CharField(max_length=255, null=True, blank=True)
+    employee_role = models.CharField(max_length=255)
+    employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
     original_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     discount_percent = models.PositiveSmallIntegerField(default=0)

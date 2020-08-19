@@ -52,12 +52,13 @@ class Notification(TimestampModel):
             description=self.description,
             mode=self.mode.name,
             notification_id=self.id,
-            organization=self.organization
+            organization=self.organization,
+            extra_data=self.extra_data
         )
 
     @classmethod
     def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
-                          organization=None):
+                          organization=None, extra_data=None):
 
         if not NotificationSetting.objects.filter(user=user).exists():
             return
@@ -74,7 +75,8 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None,
-                'image': cls.get_organization_small_image(organization=organization) if organization else None
+                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'extra_data': extra_data
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }

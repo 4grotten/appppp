@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from organizations.views.seo_views import org_detail
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -92,4 +93,5 @@ urlpatterns = [
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
 
     path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
+    path('org_seo/<int:pk>/', org_detail)
 ]

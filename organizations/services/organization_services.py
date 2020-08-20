@@ -16,7 +16,8 @@ from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION,
                                      ORGANIZATION_OWNER_MESSAGE_TITLE, ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE,
                                      ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
                                      ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE)
-from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification
+from notifications.tasks import send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification, \
+    send_notifications_organization_members
 from organizations.constants import HOMEPAGE_BANNERS_COUNT
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
@@ -386,13 +387,14 @@ class OrgMessageService:
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
         )
 
-        sent_notification.delay(
-            recipient_id=sender.id,
+        send_notifications_organization_members.delay(
+            sender_id=sender.id,
             mode=PERSONAL_MODE,
             notification_type=ORGANIZATION_MESSAGE_SENDER_TYPE,
             title=ORGANIZATION_OWNER_MESSAGE_TITLE,
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content),
             organization_id=organization.id,
+            members_organization_id=organization.id,
             extra_data=dict(can_send_message=True)
         )
 

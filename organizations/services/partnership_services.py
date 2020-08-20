@@ -44,6 +44,7 @@ class PartnershipService:
 
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=REQUEST_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
@@ -105,6 +106,7 @@ class PartnershipService:
 
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -115,6 +117,7 @@ class PartnershipService:
         )
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -147,6 +150,7 @@ class PartnershipService:
             if send_notification:
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,
+                    sender_id=user.id,
                     notification_type=ACCEPT_PARTNERSHIP_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
@@ -159,6 +163,7 @@ class PartnershipService:
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,
+                    sender_id=user.id,
                     notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),

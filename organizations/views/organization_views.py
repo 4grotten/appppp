@@ -4,11 +4,12 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
+from common.utils import method_permission_classes
 from organizations.models import Organization, OrganizationCategory
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer,
@@ -65,10 +66,11 @@ class OrganizationTypesListView(ListAPIView):
 
 
 class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()
 
+    @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):
         serializer = OrganizationUpdateSerializer(data=request.data, many=False)
 
@@ -86,6 +88,7 @@ class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
+    @method_permission_classes((IsAuthenticated,))
     def delete(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):

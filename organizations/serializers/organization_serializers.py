@@ -117,6 +117,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     country = CountrySerializer()
 
     def get_permissions(self, organization: Organization):
+        if not self.context['request'].user:
+            return None
         return OrganizationService.get_user_permissions_dict(organization=organization,
                                                              user=self.context['request'].user)
 
@@ -128,9 +130,13 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return DiscountGroupSerializer(discounts).data
 
     def get_is_subscribed(self, organization: Organization):
+        if not self.context['request'].user:
+            return None
         return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
     def get_client_status(self, organization: Organization):
+        if not self.context['request'].user:
+            return None
         data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
             client=self.context['request'].user,
             organization=organization)

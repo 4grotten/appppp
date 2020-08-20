@@ -25,3 +25,16 @@ def upload_file_with_original_file_name(instance, filename):
         opts.app_label,
         instance.__class__.__name__.lower(),
     ))(instance, filename)
+
+
+def method_permission_classes(classes):
+    def decorator(func):
+        def decorated_func(self, *args, **kwargs):
+            self.permission_classes = classes
+            # this call is needed for request permissions
+            self.check_permissions(self.request)
+            return func(self, *args, **kwargs)
+
+        return decorated_func
+
+    return decorator

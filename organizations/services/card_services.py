@@ -133,6 +133,10 @@ class DiscountCardService:
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
+
+        if not percents:
+            return
+
         percents.sort()
         not_dup_percents = list(dict.fromkeys(percents))
         str_percent = ', '.join(map(str, not_dup_percents))

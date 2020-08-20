@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -42,7 +42,9 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user)).distinct()
+        return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user)).annotate(
+            priority=Case(When(owner=user, then=0), default=1, output_field=IntegerField(), )
+        ).order_by('priority').distinct()
 
     def create(self, request, *args, **kwargs):
         serializer = OrganizationCreateSerializer(data=request.data, context={'request': request})

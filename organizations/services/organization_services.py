@@ -394,6 +394,7 @@ class OrgMessageService:
             title=ORGANIZATION_OWNER_MESSAGE_TITLE,
             description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content),
             organization_id=organization.id,
+            with_permissions=dict(can_send_message=True),
             members_organization_id=organization.id,
             extra_data=dict(can_send_message=True)
         )

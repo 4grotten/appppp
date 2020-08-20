@@ -44,6 +44,7 @@ class PartnershipService:
 
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=REQUEST_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
@@ -51,7 +52,7 @@ class PartnershipService:
             organization_id=requested_by.id,
             members_organization_id=requested_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(parnership_id=partnership.id, should_be_deleted=True)
+            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
         )
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
@@ -62,7 +63,7 @@ class PartnershipService:
             organization_id=requested_by.id,
             members_organization_id=accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(parnership_id=partnership.id, should_be_deleted=True)
+            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
         )
 
     @classmethod
@@ -100,11 +101,12 @@ class PartnershipService:
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        Notification.objects.filter(extra_data__parnership_id=partnership_id).filter(
+        Notification.objects.filter(extra_data__partnership_id=partnership_id).filter(
             extra_data__should_be_deleted=True).delete()
 
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -115,6 +117,7 @@ class PartnershipService:
         )
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
+            sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -141,12 +144,13 @@ class PartnershipService:
             partnership.can_edit_organization = can_edit_organization
             partnership.save()
 
-            Notification.objects.filter(extra_data__parnership_id=partnership.id).filter(
+            Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
                 extra_data__should_be_deleted=True).delete()
 
             if send_notification:
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,
+                    sender_id=user.id,
                     notification_type=ACCEPT_PARTNERSHIP_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
@@ -154,11 +158,12 @@ class PartnershipService:
                     organization_id=partnership.requested_by.id,
                     members_organization_id=partnership.requested_by.id,
                     with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(parnership_id=partnership.id)
+                    extra_data=dict(partnership_id=partnership.id)
                 ))
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,
+                    sender_id=user.id,
                     notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
@@ -166,7 +171,7 @@ class PartnershipService:
                     organization_id=partnership.requested_by.id,
                     members_organization_id=partnership.accepted_by.id,
                     with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(parnership_id=partnership.id)
+                    extra_data=dict(partnership_id=partnership.id)
                 ))
 
             return partnership

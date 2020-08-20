@@ -7,7 +7,7 @@ from common.exceptions import NotAcceptableException, IntegrityException, Object
 from notifications.constants import (
     PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
-    DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE
+    DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE, PERSONAL_MODE
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
@@ -43,7 +43,7 @@ class PartnershipService:
             pass
 
         send_notifications_organization_members.delay(
-            mode=PARTNER_MODE,
+            mode=PERSONAL_MODE,
             notification_type=REQUEST_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
@@ -54,7 +54,7 @@ class PartnershipService:
             extra_data=dict(parnership_id=partnership.id, should_be_deleted=True)
         )
         send_notifications_organization_members.delay(
-            mode=PARTNER_MODE,
+            mode=PERSONAL_MODE,
             notification_type=REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
@@ -104,7 +104,7 @@ class PartnershipService:
             extra_data__should_be_deleted=True).delete()
 
         send_notifications_organization_members.delay(
-            mode=PARTNER_MODE,
+            mode=PERSONAL_MODE,
             notification_type=DECLINE_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -114,7 +114,7 @@ class PartnershipService:
             with_permissions=dict(can_edit_partner=True)
         )
         send_notifications_organization_members.delay(
-            mode=PARTNER_MODE,
+            mode=PERSONAL_MODE,
             notification_type=DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
@@ -146,7 +146,7 @@ class PartnershipService:
 
             if send_notification:
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=PARTNER_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_PARTNERSHIP_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
@@ -158,7 +158,7 @@ class PartnershipService:
                 ))
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=PARTNER_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),

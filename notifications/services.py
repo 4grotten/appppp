@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from fcm_django.models import FCMDevice
+from django.db import IntegrityError
 
 from common.exceptions import ObjectNotFoundException, IntegrityException
 from .models import (
@@ -63,21 +63,16 @@ class NotificationSettingService:
     model = NotificationSetting
 
     @classmethod
-    def get(cls, **filters):
+    def get_or_create(cls, user: User):
         try:
-            return cls.model.objects.get(**filters)
-        except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Settings not found')
+            settings, _ = NotificationSetting.objects.get_or_create(user=user)
+            return settings
+        except IntegrityError:
+            raise IntegrityException('Settings not found')
 
     @classmethod
     def filter(cls, **filters):
         return cls.model.objects.filter(**filters)
-
-    @classmethod
-    def get_fcm_device(cls, user: User) -> FCMDevice:
-        setting = cls.get(user=user)
-
-        return setting.fcm_device
 
     @classmethod
     def update(cls, notification_setting: NotificationSetting, discount_notifications: bool,

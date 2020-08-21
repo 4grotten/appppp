@@ -30,7 +30,7 @@ class NotificationSettingAPIView(APIView):
     serializer_class = NotificationSettingSerializer
 
     def get(self, request):
-        notification_setting = NotificationSettingService.get(user=request.user)
+        notification_setting = NotificationSettingService.get_or_create(user=request.user)
 
         return Response(self.serializer_class(notification_setting, many=False).data)
 
@@ -43,7 +43,7 @@ class NotificationSettingAPIView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        notification_setting = NotificationSettingService.get(user=request.user)
+        notification_setting = NotificationSettingService.get_or_create(user=request.user)
 
         updated_notification_setting = NotificationSettingService.update(
             notification_setting=notification_setting,

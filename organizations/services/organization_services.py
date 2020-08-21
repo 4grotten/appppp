@@ -1,4 +1,3 @@
-import random
 from typing import Tuple
 
 from django.contrib.gis.geos import Point
@@ -16,9 +15,11 @@ from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION,
                                      ORGANIZATION_OWNER_MESSAGE_TITLE, ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE,
                                      ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
                                      ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE)
-from notifications.tasks import (send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification,
-                                 send_notifications_organization_members)
-from organizations.constants import HOMEPAGE_BANNERS_COUNT
+from notifications.tasks import (
+    send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification,
+    send_notifications_organization_members
+)
+from organizations.constants import HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
 )
@@ -236,11 +237,17 @@ class OrganizationService:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
 
     @classmethod
-    def get_organizations_ordered_by_num_of_partners(cls, limit: int = None) -> QuerySet:
+    def get_organizations_ordered_by_num_of_partners(cls) -> QuerySet:
         queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)).order_by('-partners_count')
-        if limit is not None:
-            queryset = queryset[:limit]
+        return queryset
+
+    @classmethod
+    def get_random_organizations_with_min_num_of_partners(
+            cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD) -> QuerySet:
+        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
+            partners_count=Coalesce(Count('requested_partnerships'), 0)
+        ).exclude(partners_count__lt=min_count).order_by('?')[:HOMEPAGE_PARTNERS_COUNT]
         return queryset
 
     @classmethod

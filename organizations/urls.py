@@ -1,6 +1,5 @@
 from django.urls import path, include
 
-from organizations.views.seo_views import org_detail
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
 from .views.banner_views import BannerView, BannerDeleteView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -13,12 +12,14 @@ from .views.membership_views import (
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
-    HomepageOrganizationsView, OrganizationsInCategoryView, OrganizationTitleRetrieveAPIView, HomepageSearchView,
-    OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView)
-from .views.partnerships_views import (
-    PartnershipView, OrganizationPartnersView, HomepagePartnersView,
-    HomepageBannersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView
+    OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
+    OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView,
 )
+from .views.partnerships_views import (
+    PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
+    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView,
+)
+from .views.seo_views import org_detail
 from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
 
 organization_urls = [
@@ -68,7 +69,8 @@ partnership_urls = [
 ]
 
 homepage_urls = [
-    path('homepage/partners/', HomepagePartnersView.as_view(), name='homepage_partners'),
+    path('homepage/partners/', HomepageRandomPartnersView.as_view(), name='homepage_partners'),
+    path('homepage/ordered_partners/', HomepagePartnersListView.as_view(), name='homepage_partners_list'),
     path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
     path('homepage/search/', HomepageSearchView.as_view(), name='homepage_search'),

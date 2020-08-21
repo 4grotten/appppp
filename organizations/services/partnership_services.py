@@ -37,11 +37,6 @@ class PartnershipService:
             raise NotAcceptableException('No rights to edit organization')
         partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
-        try:
-            cls.create(requested_by=accepted_by, accepted_by=requested_by)
-        except IntegrityException:
-            pass
-
         send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
             sender_id=user.id,
@@ -135,7 +130,7 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        send_notification = not partnership.is_accepted
+        is_new_request = not partnership.is_accepted
 
         try:
             partnership.is_accepted = True
@@ -147,7 +142,10 @@ class PartnershipService:
             Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
                 extra_data__should_be_deleted=True).delete()
 
-            if send_notification:
+            if is_new_request:
+                reverse_partnership = cls.create(requested_by=partnership.accepted_by,
+                                                 accepted_by=partnership.requested_by, is_accepted=True)
+
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,
                     sender_id=user.id,
@@ -158,7 +156,7 @@ class PartnershipService:
                     organization_id=partnership.requested_by.id,
                     members_organization_id=partnership.requested_by.id,
                     with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(partnership_id=partnership.id)
+                    extra_data=dict(partnership_id=reverse_partnership.id)
                 ))
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(

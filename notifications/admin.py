@@ -12,7 +12,8 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'organization', 'recipient', 'sender', 'is_read', 'model', 'type',)
+    list_filter = ('is_read', 'mode', 'type', 'organization',)
 
 
 @admin.register(NotificationSetting)

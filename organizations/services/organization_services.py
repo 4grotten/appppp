@@ -1,3 +1,4 @@
+import random
 from typing import Tuple
 
 from django.contrib.gis.geos import Point
@@ -243,12 +244,15 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_random_organizations_with_min_num_of_partners(
-            cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD) -> QuerySet:
+    def get_random_organizations_with_min_count_of_partners(
+            cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD) -> list:
         queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)
-        ).exclude(partners_count__lt=min_count).order_by('?')[:HOMEPAGE_PARTNERS_COUNT]
-        return queryset
+        ).exclude(partners_count__lt=min_count)[:HOMEPAGE_PARTNERS_COUNT]
+
+        q_list = list(queryset)
+        random.shuffle(q_list)
+        return q_list
 
     @classmethod
     def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:

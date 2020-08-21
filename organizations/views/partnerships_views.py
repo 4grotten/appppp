@@ -92,7 +92,7 @@ class HomepageRandomPartnersView(ListAPIView):
     serializer_class = HomepagePartnerSerializer
 
     def get_queryset(self):
-        return OrganizationService.get_random_organizations_with_min_num_of_partners()
+        return OrganizationService.get_random_organizations_with_min_count_of_partners()
 
 
 class HomepagePartnersListView(ListAPIView):

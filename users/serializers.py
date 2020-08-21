@@ -71,6 +71,18 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ('id', 'avatar', 'full_name', 'phone_number')
 
 
+class EmployeeWithRoleSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+    role = serializers.SerializerMethodField()
+
+    def get_role(self, user: User) -> str:
+        return OrganizationService.get_user_role_in_organization(organization=self.context['organization'], user=user)
+
+    class Meta:
+        model = User
+        fields = ('id', 'avatar', 'full_name', 'role',)
+
+
 class AttendanceEmployeeSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
     role = serializers.SerializerMethodField()

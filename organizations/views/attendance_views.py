@@ -13,7 +13,7 @@ from organizations.serializers.query_param_serializers import (
 )
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_services import OrganizationService
-from users.serializers import AttendanceEmployeeSerializer
+from users.serializers import AttendanceEmployeeSerializer, EmployeeWithRoleSerializer
 
 
 class AttendanceUserInfoView(GenericAPIView):
@@ -53,8 +53,7 @@ class AttendanceView(GenericAPIView):
             raise PermissionDeniedException('No rights to check attendance in this organization')
 
         user = serializer.validated_data['user']
-        is_active = AttendanceService.record_arrival(employee=user, organization=organization,
-                                                       recorded_by=request.user)
+        is_active = AttendanceService.record_arrival(employee=user, organization=organization, recorded_by=request.user)
 
         data = {
             'full_name': user.full_name,
@@ -81,11 +80,18 @@ class AttendanceStatsView(GenericAPIView):
 
         month_year = serializer.validated_data['month_year']
         if month_year is None:
-            month_year = now()
+            month_year = now().date()
 
         grouped_attendances = AttendanceService.get_grouped_monthly_attendances(
             employee=serializer.validated_data['user'],
             organization=organization, month_year=month_year
         )
-        data = GroupAttendanceSerializer(grouped_attendances, many=True).data
+
+        employee = EmployeeWithRoleSerializer(serializer.validated_data['user'],
+                                              context={'organization': organization}).data
+
+        data = {
+            'employee': employee,
+            'calendar': GroupAttendanceSerializer(grouped_attendances, many=True).data
+        }
         return Response(data)

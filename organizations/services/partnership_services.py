@@ -37,7 +37,7 @@ class PartnershipService:
             raise NotAcceptableException('No rights to edit organization')
         partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
-        send_notifications_organization_members.delay(
+        transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
             sender_id=user.id,
             notification_type=REQUEST_PARTNERSHIP_TYPE,
@@ -48,8 +48,8 @@ class PartnershipService:
             members_organization_id=requested_by.id,
             with_permissions=dict(can_edit_partner=True),
             extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
-        )
-        send_notifications_organization_members.delay(
+        ))
+        transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
             notification_type=REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
@@ -59,7 +59,7 @@ class PartnershipService:
             members_organization_id=accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
             extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
-        )
+        ))
 
     @classmethod
     def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:
@@ -96,10 +96,10 @@ class PartnershipService:
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
-        Notification.objects.filter(extra_data__partnership_id=partnership_id).filter(
-            extra_data__should_be_deleted=True).delete()
+        transaction.on_commit(lambda: Notification.objects.filter(extra_data__partnership_id=partnership_id).filter(
+            extra_data__should_be_deleted=True).delete())
 
-        send_notifications_organization_members.delay(
+        transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
             sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_TYPE,
@@ -109,8 +109,8 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.requested_by.id,
             with_permissions=dict(can_edit_partner=True)
-        )
-        send_notifications_organization_members.delay(
+        ))
+        transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
             sender_id=user.id,
             notification_type=DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
@@ -120,7 +120,7 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
             with_permissions=dict(can_edit_partner=True)
-        )
+        ))
 
         partnership.delete()
 

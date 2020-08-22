@@ -139,12 +139,13 @@ class PartnershipService:
             partnership.can_edit_organization = can_edit_organization
             partnership.save()
 
-            Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
-                extra_data__should_be_deleted=True).delete()
-
             if is_new_request:
                 reverse_partnership = cls.create(requested_by=partnership.accepted_by,
                                                  accepted_by=partnership.requested_by, is_accepted=True)
+
+                transaction.on_commit(
+                    lambda: Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
+                        extra_data__should_be_deleted=True).delete())
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
                     mode=PERSONAL_MODE,

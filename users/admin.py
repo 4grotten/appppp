@@ -8,7 +8,8 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('phone_number', 'full_name', 'username', 'gender', 'avatar')
+    list_filter = ('gender',)
 
 
 @admin.register(TemporaryCode)
@@ -18,14 +19,14 @@ class TemporaryCodeAdmin(admin.ModelAdmin):
 
 @admin.register(PhoneNumber)
 class PhoneNumberAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'phone_number')
 
 
 @admin.register(SocialNetworkContact)
 class SocialNetworkContactAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'url')
 
 
 @admin.register(TemporaryPhoneNumber)
 class TemporaryPhoneNumberAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'phone_number', 'code')

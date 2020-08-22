@@ -97,6 +97,8 @@ class HomepageRandomPartnersView(ListAPIView):
 
 class HomepagePartnersListView(ListAPIView):
     serializer_class = HomepagePartnerSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('title',)
 
     def get_queryset(self):
         return OrganizationService.get_organizations_ordered_by_num_of_partners()

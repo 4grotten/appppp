@@ -51,7 +51,7 @@ membership_urls = [
 attendance_urls = [
     path('attendance/user_info/', AttendanceUserInfoView.as_view(), name='employee_info'),
     path('attendance/', AttendanceView.as_view(), name='record_arrival'),
-    path('attendance/stats/', AttendanceStatsView.as_view(), name='attendance_stats'),
+    path('employees/<int:pk>/attendance/', AttendanceStatsView.as_view(), name='attendance_stats'),
 ]
 
 discounts_urls = [

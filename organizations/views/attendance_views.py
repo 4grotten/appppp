@@ -9,9 +9,10 @@ from organizations.serializers.attendance_serializers import (
     CreateAttendanceSerializer, GroupAttendanceSerializer
 )
 from organizations.serializers.query_param_serializers import (
-    OrganizationUserQueryParamSerializer, AttendanceStatsQueryParamSerializer
+    OrganizationUserQueryParamSerializer, MonthYearQueryParamSerializer
 )
 from organizations.services.attendance_services import AttendanceService
+from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.serializers import AttendanceEmployeeSerializer, EmployeeWithRoleSerializer
 
@@ -66,15 +67,17 @@ class AttendanceView(GenericAPIView):
 class AttendanceStatsView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, *args, **kwargs):
-        serializer = AttendanceStatsQueryParamSerializer(data=request.GET)
+    def get(self, request, pk, *args, **kwargs):
+        serializer = MonthYearQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        organization = serializer.validated_data['organization']
+        membership = MembershipService.get(id=pk)
+
+        organization = membership.organization
         if not OrganizationService.user_can_check_attendance(organization=organization, user=request.user):
             raise PermissionDeniedException('No rights to check attendance in this organization')
 
@@ -83,12 +86,10 @@ class AttendanceStatsView(GenericAPIView):
             month_year = now().date()
 
         grouped_attendances = AttendanceService.get_grouped_monthly_attendances(
-            employee=serializer.validated_data['user'],
-            organization=organization, month_year=month_year
+            employee=membership.user, organization=organization, month_year=month_year
         )
 
-        employee = EmployeeWithRoleSerializer(serializer.validated_data['user'],
-                                              context={'organization': organization}).data
+        employee = EmployeeWithRoleSerializer(membership.user, context={'organization': organization}).data
 
         data = {
             'employee': employee,

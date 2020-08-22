@@ -43,7 +43,7 @@ def send_notifications_organization_members(members_organization_id: int, organi
     if sender_id:
         sender = User.objects.get(id=sender_id)
 
-    recipients = User.objects.filter(memberships__organization_id=members_organization_id)
+    recipients = User.objects.filter(memberships__organization_id=members_organization_id).distinct()
     if with_permissions is not None:
 
         can_edit_partner = with_permissions.get('can_edit_partner')

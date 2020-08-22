@@ -1,3 +1,4 @@
+from datetime import timedelta
 from itertools import groupby
 from typing import Union
 
@@ -20,6 +21,8 @@ class AttendanceService:
             attendance.departure_time = attendance.arrival_time.replace(hour=organization.closes_at.hour,
                                                                         minute=organization.closes_at.minute,
                                                                         second=0)
+            if attendance.departure_time < attendance.arrival_time:
+                attendance.departure_time = attendance.departure_time + timedelta(days=1)
             attendance.is_active = False
             attendance.save()
 

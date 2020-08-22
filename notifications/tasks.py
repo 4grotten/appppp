@@ -45,14 +45,15 @@ def send_notifications_organization_members(members_organization_id: int, organi
 
     recipients = User.objects.filter(memberships__organization_id=members_organization_id).distinct()
     if with_permissions is not None:
-
         can_edit_partner = with_permissions.get('can_edit_partner')
         if can_edit_partner:
-            recipients = recipients.filter(memberships__role__can_edit_partner=True)
+            recipients = recipients.filter(memberships__role__can_edit_partner=True,
+                                           memberships__organization_id=members_organization_id)
 
         can_send_message = with_permissions.get('can_send_message')
         if can_send_message:
-            recipients = recipients.filter(memberships__role__can_send_message=True)
+            recipients = recipients.filter(memberships__role__can_send_message=True,
+                                           memberships__organization_id=members_organization_id)
 
     for recipient in recipients:
         NotificationService.create_notification(

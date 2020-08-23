@@ -1,0 +1,18 @@
+.option {
+  padding: 0 20px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F5F5F5;
+  border-radius: 8px;
+  cursor: pointer;
+  & svg {
+    min-width: 28px;
+    display: none;
+  }
+  &-active {
+    border: 1px solid #4285F4;
+    & svg { display: block; }
+  }
+}

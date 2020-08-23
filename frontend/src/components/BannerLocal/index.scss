@@ -1,0 +1,34 @@
+.banner-local {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+
+  &__title {
+    text-transform: capitalize;
+  }
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  &__left {
+    margin-right: 12px;
+  }
+
+  &__right {
+    overflow: hidden;
+    color: #FFF;
+    flex-grow: 1;
+  }
+
+  &__desc {
+    margin-top: 5px;
+  }
+}

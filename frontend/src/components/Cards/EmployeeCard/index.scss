@@ -1,0 +1,63 @@
+@import "../../../assets/styles/variables";
+$avatarSize: 60px;
+$avatarStatusSize: 14px;
+
+.employee-card {
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 16px 12px;
+  display: block;
+  width: 100%;
+
+  &__top {
+    display: flex;
+  }
+  &__content {
+    flex-grow: 1;
+  }
+  &__avatar {
+    width: $avatarSize;
+    height: $avatarSize;
+    min-width: $avatarSize;
+    max-width: $avatarSize;
+    min-height: $avatarSize;
+    max-height:  $avatarSize;
+    position: relative;
+    margin-right: 15px;
+    &-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid #E6E8EB;
+      & img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    &-active::after, &-inactive::after {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      content: "";
+      width: $avatarStatusSize;
+      height: $avatarStatusSize;
+      border-radius: 50%;
+      border: 2px solid #FFF;
+    }
+    &-active::after { background: $onlineGreen; }
+    &-inactive::after { background: $offlineRed; }
+  }
+  &__role {
+    color: $textGrey;
+  }
+  &__attendance {
+    margin-top: 5px;
+    color: $onlineGreen;
+  }
+  &__id {
+    margin-top: 5px;
+    color: $textGrey;
+  }
+}

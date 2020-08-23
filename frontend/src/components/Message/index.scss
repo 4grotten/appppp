@@ -1,0 +1,21 @@
+@import "../../assets/styles/variables";
+
+.message {
+  &__body {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #F5F5F5;
+    box-sizing: border-box;
+    border-radius: 7px;
+  }
+
+  &__text {
+    margin-top: 10px;
+  }
+
+  &__time {
+    color: $textGrey;
+    margin-top: 5px;
+    text-align: right;
+  }
+}

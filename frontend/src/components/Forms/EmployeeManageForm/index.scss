@@ -1,0 +1,52 @@
+@import "../../../assets/styles/variables";
+
+.employee-manage-form {
+  &__user {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 30px;
+    &-avatar {
+      margin: 0 15px 0 0;
+    }
+  }
+  &__phone {
+    margin-top: 30px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #E6E6E6;
+    & p:first-child {
+      color: $textGrey;
+      margin-bottom: 4px;
+    }
+  }
+  &__role {
+    border-bottom: 1px solid #E6E6E6;
+    position: relative;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    & label { color: $labelGrey; }
+    & svg {
+      position: absolute;
+      bottom: 5px;
+      right: 0;
+    }
+    & input {
+      border: none;
+      padding: 6px 0;
+      outline: none;
+      &:hover { cursor: pointer;}
+      &::placeholder {
+        font-weight: 500;
+        font-size: 17px;
+        line-height: 24px;
+        color: $textGrey;
+      }
+    }
+  }
+
+  &__btn-owner {
+    margin-top: 40px;
+  }
+}

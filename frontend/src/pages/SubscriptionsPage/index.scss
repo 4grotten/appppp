@@ -1,0 +1,23 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.subscription-page {
+  padding-bottom: $navbarBottomPadding;
+  & .mobile-search-header h5 {
+    padding-left: unset;
+    text-align: left;
+  }
+  &__content { margin-top: 20px; }
+  &__item {
+    &-card {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+    &:not(:last-child) { margin-bottom: 25px; }
+  }
+  &__subscribe,
+  &__unsubscribe {
+    min-width: 22px;
+    margin-left: 15px;
+  }
+}

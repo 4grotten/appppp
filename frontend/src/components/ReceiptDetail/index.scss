@@ -1,0 +1,48 @@
+@import "../../assets/styles/variables";
+
+.receipt-detail {
+  &__initiator {
+    display: flex;
+    align-items: center;
+    &-view {
+      width: 100%;
+      color: $primaryBlue;
+      padding: 8px 0;
+      display: block;
+      border-bottom: 1px solid #E5E5E5;
+    }
+    &-avatar { margin-right: 15px; }
+    &-right {
+      flex-grow: 1;
+      text-transform: capitalize;
+      & p { color: $textGrey; }
+    }
+  }
+
+  &__info { margin-top: 20px; }
+  &__row {
+    height: 50px;
+    text-transform: capitalize;
+    color: $primaryBlack;
+    border-bottom: 1px dashed #818C99;
+    display: block;
+    & p:first-child { color: $textGrey; }
+    &:last-child p { color: $primaryBlack; }
+  }
+
+  &__remove-btn {
+    margin-top: 30px;
+    background: #D72C20;
+  }
+
+  &__organization {
+    display: flex;
+    align-items: center;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #F5F5F5;
+    &-content { flex-grow: 1; overflow: hidden }
+    &-avatar { margin-right: 10px; }
+    &-role { color: $textGrey; }
+  }
+}

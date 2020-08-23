@@ -1,0 +1,18 @@
+.org-types-view {
+  position: relative;
+  &__cards { margin: 20px 0; }
+  &__card {
+    background: #F5F5F5;
+    border-radius: 8px;
+    min-height: 60px;
+    padding: 10px 20px;
+    & svg { min-width: 24px }
+    &:not(:last-child) {
+      margin-bottom: 15px;
+    }
+    &-left {
+      overflow: hidden;
+      & p:last-child { color: #818C99;}
+    }
+  }
+}

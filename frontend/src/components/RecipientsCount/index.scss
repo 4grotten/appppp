@@ -1,0 +1,19 @@
+@import "../../assets/styles/variables";
+
+.recipients-count {
+  display: flex;
+  align-items: center;
+  &__text {
+    color: $textGrey;
+  }
+  &__group {
+    margin-right: 10px;
+    display: flex;
+    justify-content: flex-start;
+    &-avatar {
+      &:not(:first-child) {
+        margin-left: -4px;
+      }
+    }
+  }
+}

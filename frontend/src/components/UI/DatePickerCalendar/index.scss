@@ -1,0 +1,56 @@
+@import "../../../assets/styles/variables";
+
+.calendar {
+  width: 100%;
+
+  &__label {
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 20px;
+    color: $labelGrey;
+  }
+  .react-calendar {
+    min-height: 310px;
+  }
+
+  .react-date-picker__wrapper {
+    background: #FFFFFF;
+    border: none;
+    border-bottom: 0.5px solid $lightGrey;
+    box-sizing: border-box;
+    min-width: 200px;
+  }
+
+  .react-date-picker__inputGroup {
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 24px;
+    color: $primaryBlack;
+    & input:focus {
+      outline: none!important;
+    }
+  }
+
+  & .react-date-picker__calendar-button:focus,
+  & .react-date-picker__button:focus {
+    outline: none!important;
+  }
+
+  .react-date-picker__clear5-button, .react-date-picker__clear-button {
+    display: none;
+  }
+
+  &_error {
+    .react-date-picker__wrapper {
+      border-color: #F93C10;
+    }
+  }
+
+  &__error {
+    color: #F93C10;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+    &_visible {display: block;}
+  }
+}

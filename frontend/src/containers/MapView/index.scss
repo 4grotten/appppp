@@ -1,0 +1,20 @@
+.map-view {
+  &__map {
+    position: relative;
+    height: calc(100vh - 95px); //fallback;
+    height: calc(100 * var(--vh) - 95px);
+    &-full {
+      height: calc(100vh - 44px); //fallback;
+      height: calc(100 * var(--vh) - 44px);
+    }
+  }
+  & .leaflet-container {
+    z-index: 0;
+  }
+  &__bottom {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    width: 100%;
+  }
+}

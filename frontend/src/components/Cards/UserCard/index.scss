@@ -1,0 +1,14 @@
+@import "../../../assets/styles/variables";
+
+.user-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  &__avatar {
+    margin-right: 10px;
+  }
+  &__content {
+    overflow: hidden;
+    &-desc { color: $textGrey; }
+  }
+}

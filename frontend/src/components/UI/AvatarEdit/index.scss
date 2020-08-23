@@ -1,0 +1,30 @@
+@import "../../../assets/styles/variables";
+
+.avatar-edit {
+  clip-path: circle(50%);
+  position: relative;
+  &__error {
+    border: 1px solid $errorRed;
+  }
+  &__container {
+    width: 132px;
+    height: 132px;
+    display: inline-block;
+    overflow: hidden;
+    position: relative;
+    &:hover {
+      & .avatar-edit__rotate {
+        display: block;
+      }
+    }
+  }
+
+  &__rotate {
+    display: none;
+    position: absolute;
+    top: 65px;
+    left: 65px;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  }
+}

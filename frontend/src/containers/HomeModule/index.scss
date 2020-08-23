@@ -1,0 +1,46 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.home-module {
+  &__content {
+    padding-top: 20px;
+    padding-bottom: $navbarBottomPadding;
+  }
+  &__banners { margin: 0 -15px; }
+  &__categories { margin-top: 50px; }
+  &__scroller { overflow-x: hidden!important; }
+  &__category {
+    &:not(:first-child) {
+      margin-top: 30px;
+    }
+    &-top {
+      overflow: hidden;
+      & a {
+        color: $primaryBlue;
+        white-space: nowrap;
+        margin-left: 10px;
+      }
+    }
+    &-slider {
+      margin-top: 30px;
+    }
+  }
+}
+
+.home-module-header {
+  &__wrap { @include stickyHeader; }
+  height: $headerHeight;
+  &__main {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  &__logo {
+    min-width: 24px;
+    width: 24px;
+    min-height: 24px;
+    height: 24px;
+    margin-right: 10px;
+    & img { width: 100%; height: 100% }
+  }
+}

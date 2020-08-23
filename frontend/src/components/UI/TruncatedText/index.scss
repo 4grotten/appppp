@@ -1,0 +1,10 @@
+.truncated-text {
+  font-size: 14px;
+  line-height: 20px;
+  & a {
+    display: inline-block;
+    font-size: 14px;
+    line-height: 20px;
+    color: #818C99;
+  }
+}

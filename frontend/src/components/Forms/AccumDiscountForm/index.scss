@@ -1,0 +1,79 @@
+@import "../../../assets/styles/variables";
+
+.accum-discount-form {
+  background: #FFFFFF;
+  box-shadow: 0 0 96px rgba(0, 0, 0, 0.04), 0 0 2px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(43.4925px);
+  border-radius: 10px;
+  &__inner {
+    padding: 16px;
+  }
+
+  &__row {
+    padding: 10px 0;
+    &:not(:last-child) {
+      border-bottom: 1px solid #E6E6E6;
+    }
+  }
+
+  &__discount, &__currency, &__limit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    & input {
+      width: 50px;
+      border: lightgray;
+      text-align: right;
+      background: inherit;
+
+      &:disabled {
+        background: inherit;
+      }
+
+      &:focus {
+        outline: none;
+      }
+
+      & div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+  }
+
+  &__error {
+    background: $lightRed;
+    border: 1px solid $errorRed;
+  }
+
+  &__discount-error,
+  &__discount-error input {
+    color: $errorRed!important;
+  }
+
+  &__limit {
+    &-error label,
+    &-error input {
+      color: $errorRed!important;
+    }
+    & input {
+      width: 100px;
+    }
+  }
+
+  &__delete {
+    display: block;
+    width: 100%;
+    background: #F5F5F5;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 0 0 10px 10px;
+    &-not {
+      cursor: default;
+      & svg path {
+        fill: #bcbcbc;
+      }
+    }
+  }
+}

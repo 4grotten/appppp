@@ -1,0 +1,7 @@
+@import "../../../assets/styles/variables";
+
+.select-field {
+  &__label {
+    color: $labelGrey;
+  }
+}

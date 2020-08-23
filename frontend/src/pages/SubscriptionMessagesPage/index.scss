@@ -1,0 +1,14 @@
+@import "../../assets/styles/variables";
+
+.subscription-messages-page {
+  padding-bottom: $navbarBottomPadding;
+  &__icon { display: inherit; }
+  &__content {
+    margin-top: 20px;
+  }
+  &__message {
+    &:not(:last-child) {
+      margin-bottom: 30px;
+    }
+  }
+}

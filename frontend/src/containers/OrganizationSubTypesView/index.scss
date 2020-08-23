@@ -1,0 +1,36 @@
+.org-subtypes-view {
+  &__cards {
+    margin: 20px 0;
+  }
+  &__card {
+    background: #F5F5F5;
+    border-radius: 8px;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    min-height: 60px;
+    &:not(:last-child) {
+      margin-bottom: 15px;
+    }
+    &-left {
+      & p:last-child {
+        color: #818C99;
+      }
+    }
+    &-active {
+      border: 1px solid #5286EC;
+      &::after {
+        content: '';
+        width: 28px;
+        height: 28px;
+        background: url("../../assets/icons/icon_checkmark.svg") no-repeat center;
+        background-size: cover;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 15px;
+        position: absolute;
+      }
+    }
+  }
+}

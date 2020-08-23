@@ -1,0 +1,85 @@
+@import "../../../assets/styles/variables";
+
+.password-field {
+  padding-top: 10px;
+  &__input-group {
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  &__input {
+    box-sizing: border-box;
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 24px;
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 5px 21px 5px 0;
+    border-bottom: 1px solid $lightGrey;
+    //&:focus {
+    //  border-color: $textGrey;
+    //}
+  }
+
+  &__label {
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 24px;
+    color: $textGrey;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    pointer-events: none;
+    transition: all .25s ease;
+  }
+
+  &__show {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    &-hidden { display: none; }
+    &:hover path {
+
+    }
+  }
+
+  &__input:focus ~ &__label,
+  &__input-filled ~ &__label,
+  &__input:not(:placeholder-shown) ~ &__label {
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 20px;
+    color: $labelGrey;
+    top: -4px;
+    left: 0;
+  }
+
+  &__input:-webkit-autofill ~ &__label {
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 20px;
+    color: $labelGrey;
+    top: -4px;
+    left: 0;
+  }
+
+  &_error {
+    .password-field {
+      &__input {
+        border-color: #F93C10;
+      }
+    }
+  }
+
+  &__error {
+    color: #F93C10;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+    &_visible {display: block;}
+  }
+}

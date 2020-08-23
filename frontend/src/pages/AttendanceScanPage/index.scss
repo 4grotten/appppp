@@ -1,0 +1,72 @@
+@import "../../assets/styles/variables";
+
+.attendance-scan-page {
+  &__user {
+    margin-top: 25px;
+    &-content {
+      width: 100%;
+      max-width: 343px;
+      margin: -60px auto 0;
+      padding: 16px 12px;
+      background: #FFFFFF;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 0 96px rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(43.4925px);
+      border-radius: 10px;
+    }
+    &-id {
+      color: $textGrey;
+    }
+
+    &-name, &-role {
+      margin-top: 4px;
+    }
+
+    &-name {
+      color: $primaryBlack;
+    }
+
+    &-role {
+      color: #FBBC05;
+    }
+  }
+
+  &__avatar {
+    border: 1px solid rgba(129, 140, 153, 0.1);
+    border-radius: 16px;
+    margin: 0 auto;
+
+    width: 100%!important;
+    height: 343px!important;
+    max-width: 343px!important;
+    max-height: 343px!important;
+    &-wrap {
+     width: 100%;
+    }
+  }
+
+  &__icon {
+    margin-top: 45px;
+    text-align: center;
+  }
+  &__text {
+    margin-top: 15px;
+    text-align: center;
+  }
+  &__buttons {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 15px;
+  }
+  &__button-cancel {
+    background: #F5F5F5;
+    & .button__label {
+      color: $primaryBlue;
+    }
+  }
+
+  &__preloader {
+    margin-top: 20px;
+    height: 200px;
+  }
+}

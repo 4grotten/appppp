@@ -1,0 +1,54 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.mobile-top-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: $headerHeight;
+  max-height: $headerHeight;
+  &__wrap { @include stickyHeader; }
+  &__title {
+    padding: 0 40px;
+    width: 100%;
+    text-align: center;
+  }
+  &__left, &__right {
+    position: absolute;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  &__left {
+    justify-content: flex-start;
+    left: 0;
+  }
+  &__right {
+    justify-content: flex-end;
+    right: 0;
+  }
+  &__back {
+    display: inherit;
+  }
+  &__next,
+  &__menu,
+  &__submit {
+    color: $primaryBlue;
+    display: inherit;
+  }
+  &__menu {
+    & svg { transform: scale(1.4) }
+  }
+  &__submit-loading::after {
+    width: 15px;
+    height: 15px;
+    content: '';
+    background: url("../../assets/icons/icon_preloader.svg") no-repeat center;
+    margin-left: 8px;
+    display: inline-block;
+    background-size: cover;
+  }
+}

@@ -1,0 +1,149 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.organization-module {
+  position: relative;
+  &__content {
+    padding-bottom: $navbarBottomPadding;
+  }
+
+  &__preloader { height: calc(100vh - 100px); }
+  &__savings {
+    margin-top: 15px;
+    display: block;
+    color: $textGrey;
+    & span {
+      font-weight: bold;
+      color: $primaryBlue;
+      display: inline-block;
+    }
+  }
+
+  &__description {
+    margin-top: 12px;
+  }
+
+  &__address {
+    margin-top: 8px;
+    text-align: left;
+    &-btn {
+      text-align: left;
+      margin-top: 8px;
+      color: $primaryBlue;
+    }
+  }
+
+  &__contacts {
+    margin: 10px -4px -4px -4px;
+    max-height: 0;
+    overflow: hidden;
+    &-show {
+      max-height: 3000px;
+      transition: max-height 2s ease;
+    }
+    & .linker { margin: 4px; }
+  }
+  &__header { margin-top: 20px; }
+  &__tools { margin-top: 15px; }
+  &__contacts-btn { max-width: 220px; }
+  &__edit-btn,
+  &__subscribe-btn,
+  &__unsubscribe-btn {
+    margin-left: 15px;
+    max-width: 132px;
+  }
+
+  &__subscribe-btn {
+    background: $primaryBlue;
+    & .standard-button__label {
+      color: #FFF;
+    }
+  }
+
+  &__cards {
+    margin-top: 5px;
+    &-title {
+      font-weight: 800;
+      font-size: 20px;
+      line-height: 24px;
+      color: #000000;
+    }
+  }
+
+  &__card-cumulative,
+  &__card-fixed {
+    margin-top: 25px;
+  }
+
+  &__slider {
+    margin-top: 10px;
+  }
+
+  &__partners {
+    margin-top: 30px;
+  }
+
+  &__menu {
+    position: relative;
+    padding: 10px 0;
+    &-title {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    &-close {
+      position: absolute;
+      top: 5px;
+      right: 0;
+    }
+  }
+}
+
+.discount-wallpaper {
+  &__form {
+    display: flex;
+    align-items: center;
+    position: relative;
+    & svg {margin-right: 20px;}
+    & label { flex-grow: 1 }
+    & input {
+      position: absolute;
+      left: 100%;
+      height: 0;
+      width: 0;
+      opacity: 0;
+    }
+  }
+
+  &__label-loading::after {
+    width: 15px;
+    height: 15px;
+    content: '';
+    background: url("../../assets/icons/icon_preloader.svg") no-repeat center;
+    margin-left: 8px;
+    display: inline-block;
+    background-size: cover;
+  }
+
+  &__recommendations {
+    margin-top: 30px;
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -6px;
+    padding-top: 10px;
+  }
+  &__item {
+    width: 120px;
+    height: 60px;
+    margin: 6px;
+    border-radius: 16px;
+    overflow: hidden;
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}

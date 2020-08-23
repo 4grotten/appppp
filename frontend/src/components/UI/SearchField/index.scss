@@ -1,0 +1,23 @@
+@import "../../../assets/styles/variables";
+
+.search-field {
+  padding: 0 13px 0 8px;
+  display: flex;
+  align-items: center;
+  background: #F5F5F5;
+  border-radius: 10px;
+  height: 36px;
+  width: 100%;
+  & svg path {fill: $textGrey;}
+  &__input {
+    flex-grow: 1;
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: $textGrey;
+    &::placeholder {
+      color: $textGrey;
+    }
+  }
+}

@@ -1,0 +1,118 @@
+@import "../../../assets/styles/variables";
+
+.currency-input {
+  padding-top: 10px;
+  &__input-group {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  &__input {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 24px;
+    color: $primaryBlack;
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 5px 0 5px 0;
+    border-bottom: 1px solid $lightGrey;
+    &:disabled {
+      background: transparent;
+    }
+    &-filled {
+      padding-left: 30px;
+    }
+    //&:focus {
+    //  border-color: $primaryBlack;
+    //}
+  }
+
+  &__label {
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 24px;
+    color: $textGrey;
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    left: 0;
+
+    pointer-events: none;
+    -webkit-transition: all .25s ease;
+    -o-transition: all .25s ease;
+    transition: all .25s ease;
+  }
+
+  &__flag {
+    width: 20px;
+    height: 16px;
+    overflow: hidden;
+    position: absolute;
+    top: 50%;
+    box-shadow: 0 1px 3px rgba(160, 161, 188, 0.15);
+    border-radius: 4px;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    left: 0;
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  &__arrow {
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    right: 0;
+  }
+
+  &__input:focus ~ &__label,
+  &__input-filled ~ &__label,
+  &__input:not(:placeholder-shown) ~ &__label {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: normal;
+    color: $labelGrey;
+    top: -4px;
+    left: 0;
+  }
+
+  &__input:-webkit-autofill ~ &__label {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: normal;
+    color: $labelGrey;
+    top: -4px;
+    left: 0;
+  }
+
+  &__map {
+    color: $primaryBlue;
+  }
+
+  &_error {
+    .currency-input {
+      &__input {
+        border-color: #F93C10;
+      }
+    }
+  }
+
+  &__error {
+    color: #F93C10;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+    &_visible {display: block;}
+  }
+}

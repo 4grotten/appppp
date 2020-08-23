@@ -1,0 +1,21 @@
+@import "../../../assets/styles/variables";
+@import "../../../assets/styles/mixins";
+
+.role-manage-form {
+  &__content {
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    @include minHeightWithHeader;
+  }
+
+  &__remove {
+    margin-top: 50px;
+    background: $offlineRed;
+  }
+  &__manage {
+    margin-top: 40px;
+    color: $textGrey;
+  }
+}

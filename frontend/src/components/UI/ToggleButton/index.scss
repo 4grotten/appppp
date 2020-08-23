@@ -1,0 +1,27 @@
+@import "../../../assets/styles/variables";
+
+.toggle-button {
+  background: #F5F5F5;
+  border-radius: 7px;
+  text-align: center;
+  min-height: 28px;
+  width: 100%;
+  &__label {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: $textGrey;
+  }
+
+  & svg {
+    margin-bottom: 2px;
+    margin-left: 10px;
+    transform: rotate(0);
+    transition: transform .3s;
+  }
+
+  &__active svg {
+    transform: rotate(180deg);
+    transition: transform .3s;
+  }
+}

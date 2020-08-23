@@ -1,0 +1,26 @@
+$width: 280px;
+$height: 128px;
+
+.banner-slider {
+  &__slide {
+    width: $width;
+    height: $height;
+    min-width: $width;
+    max-width: $width;
+    min-height: $height;
+    max-height: $height;
+    transform: scale(1);
+    transition: transform 0.3s;
+    &:last-child {width: 100%;}
+  }
+
+  & .swiper-wrapper {
+    padding: 10px 0;
+    align-items: center;
+  }
+
+  & .swiper-slide-active {
+    transform: scale(1.15);
+    transition: transform 0.3s;
+  }
+}

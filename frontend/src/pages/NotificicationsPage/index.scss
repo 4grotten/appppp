@@ -1,0 +1,36 @@
+@import "../../assets/styles/variables";
+
+.notifications-page {
+  padding-bottom: $navbarBottomPadding;
+  & .mobile-top-header__title {
+    padding-left: unset;
+    text-align: left;
+  }
+
+  &__nav {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    &-link {
+      padding: 5px;
+      &-active { border-bottom: 2px solid $primaryBlue; }
+      &:not(:last-child) {
+        margin-right: 20px;
+      }
+    }
+  }
+
+  &__content { margin-top: 20px; }
+  &__item {
+    &:not(:last-child) {
+      margin-bottom: 10px;
+    }
+  }
+
+  &__menu {
+    &-list {
+      margin-top: 20px;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.employee-edit-page {
+  &__preloader {
+    @include fullHeight;
+  }
+  &__fire-employee {
+    color: $offlineRed;
+    & path {
+      fill: $offlineRed;
+    }
+  }
+  &__stats {
+    margin-top: 15px;
+  }
+}

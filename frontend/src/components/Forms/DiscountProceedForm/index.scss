@@ -1,0 +1,92 @@
+@import "../../../assets/styles/variables";
+
+.discount-proceed-form {
+  &__rounded-btn {
+    margin-top: 15px;
+    width: 44px;
+    height: 44px;
+    background: #FFF;
+    border-radius: 50%;
+    position: relative;
+    & svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  &__header {
+    margin-top: 20px;
+    & .org-avatar {
+      width: 52px!important;
+      height: 52px!important;
+    }
+  }
+
+  &__order {
+    margin-top: 15px;
+    color: $textGrey;
+    & span {
+      margin-top: 5px;
+      display: block;
+      font-size: 24px;
+      line-height: 28px;
+      color: $primaryBlack;
+    }
+  }
+
+  &__client {
+    margin-top: 30px;
+    color: $textGrey;
+    & span {
+      display: block;
+      color: $primaryBlack;
+    }
+  }
+
+  &__amount {
+    margin-top: 20px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  &__percent {
+    flex-grow: 1;
+  }
+  &__manual {
+    margin-top: 25px;
+    border-bottom: 1px solid $lightGrey;
+    padding-bottom: 5px;
+    text-align: center;
+    margin-left: 15px;
+    &-input {
+      font-weight: 500;
+      font-size: 17px;
+      line-height: 24px;
+      text-align: right;
+      width: 40px;
+      border: none;
+      outline: none;
+    }
+  }
+
+  &__dashed {
+    color: $textGrey;
+    padding: 15px 0;
+    border-bottom: 1px dashed $lightGrey;
+    & span:last-child,
+    & b {
+      color: $primaryBlack;
+    }
+  }
+
+  &__submit {
+    margin-top: 50px;
+  }
+}

@@ -1,0 +1,52 @@
+@import "../../assets/styles/variables";
+@import "../../assets/styles/mixins";
+
+.my-qr {
+  height: 0;
+  //transition: height 0.3s;
+  &__open {
+    @include fullHeight;
+    padding-bottom: $navbarBottomPadding;
+    //transition: height 0.3s;
+  }
+  & .avatar__container {
+    width: 72px;
+    height: 72px;
+    max-height: 72px;
+    max-width: 72px;
+  }
+  &__share {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 44px;
+    opacity: 0;
+  }
+  &__user {
+    margin-top: 15px;
+    text-align: center;
+    & h2 {
+      margin-top: 15px;
+      text-align: center;
+      padding: 0 15%;
+    }
+  }
+
+  &__avatar {
+    margin: 0 auto;
+  }
+
+  &__code {
+    background: #FFFFFF;
+    border-radius: 23px;
+    padding: 15px;
+    width: 280px;
+    max-width: 280px;
+    margin: 40px auto 15px;
+  }
+
+  &__id {
+    text-align: center;
+    color: $textGrey;
+  }
+}

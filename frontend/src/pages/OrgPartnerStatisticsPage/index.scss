@@ -1,0 +1,37 @@
+@import '../../assets/styles/variables';
+
+.org-partner-statistics-page {
+  padding-bottom: $navbarBottomPadding;
+
+  &__top {
+    padding-bottom: 5px;
+    border-bottom: 1px solid #F5F5F5;
+    cursor: pointer;
+  }
+
+  &__summary {
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  &__calendar {
+    margin-top: 5px;
+    color: $primaryBlue;
+  }
+
+  &__list {
+    margin-top: 10px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    height: 108px;
+    width: 100%;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #F5F5F5;
+      margin-bottom: 15px;
+    }
+  }
+}

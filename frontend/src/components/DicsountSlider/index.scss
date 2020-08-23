@@ -1,0 +1,28 @@
+@import "../../assets/styles/variables";
+@import "../../../node_modules/swiper/swiper.scss";
+@import "../../../node_modules/swiper/components/pagination/pagination.scss";
+
+.discount-slider {
+  & .swiper-container {
+    padding-bottom: 40px;
+    margin: 0 -15px;
+  }
+
+  & .swiper-pagination-bullet-active {
+    background: #FF5A60;
+  }
+
+  & .swiper-slide {
+    padding-top: 2px;
+  }
+
+  &__earned {
+    & span {
+      color: $textGrey;
+      font-weight: 600;
+    }
+    & span:first-child { color: #F3AA3C;}
+    & span:nth-child(2) { color: #000; }
+    & span:last-child { color:$primaryBlue; }
+  }
+}

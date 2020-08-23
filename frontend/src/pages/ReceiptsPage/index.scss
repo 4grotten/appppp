@@ -1,0 +1,24 @@
+@import "../../assets/styles/variables";
+
+.receipts-page {
+  &__content { padding-bottom: $navbarBottomPadding; }
+  &__top {
+    padding-bottom: 5px;
+    border-bottom: 1px solid #F5F5F5;
+    cursor: pointer;
+  }
+  &__summary {
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  &__list { padding-top: 15px; }
+  &__calendar {
+    margin-top: 5px;
+    color: $primaryBlue;
+  }
+  &__item {
+    &:not(:last-child) {
+      margin-bottom: 8px;
+    }
+  }
+}

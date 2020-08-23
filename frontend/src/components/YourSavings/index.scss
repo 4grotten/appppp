@@ -1,0 +1,20 @@
+@import "../../assets/styles/variables";
+
+.your-savings {
+  border-bottom: 1px solid #E6E6E6;
+  padding-bottom: 8px;
+  &__label { color: $textGrey }
+  &__select {
+    border: none;
+    background: transparent;
+    color: $primaryBlue;
+    outline: none;
+    & option {
+      color: $primaryBlack;
+      padding: 5px;
+    }
+  }
+  & .row {
+    margin-top: 8px;
+  }
+}

@@ -1,0 +1,55 @@
+@import "../../assets/styles/mixins";
+
+.value { color: #FFF}
+.scan-view {
+  position: relative;
+  &__top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+  }
+  &__bottom {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+  }
+  &__reader {
+    &-container {
+      & .container {
+        padding: unset;
+        @include fullHeight;
+      }
+    }
+
+    width: 100%;
+    height: 100%;
+    & > section {
+      height: 100%;
+    }
+
+    & video {
+      //object-fit: contain!important;
+    }
+
+    & div {
+      top: 50%!important;
+      left: 50%!important;
+      box-shadow: rgba(255, 255, 255, 0.5) 0 0 0 5px inset!important;
+      height: 300px!important;
+      width: 300px!important;
+      border: unset!important;
+      transform: translate(-50%, -50%)!important;
+      outline: 500px solid rgba(0, 0, 0, 0.6);
+    }
+  }
+}

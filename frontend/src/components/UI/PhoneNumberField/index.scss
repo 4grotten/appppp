@@ -1,0 +1,27 @@
+@import "../../../assets/styles/variables";
+
+.phone {
+  &__input {
+    font-weight: 500;
+    font-size: 17px!important;
+    line-height: 24px!important;
+    color: $primaryBlack!important;
+    border: unset!important;
+    border-radius: unset!important;
+    border-bottom: 1px solid $borderGrey!important;
+    width: 100%!important;
+  }
+
+  &__button {
+    background-color: unset!important;
+    border: unset!important;
+    border-radius: unset!important;
+    border-bottom: 1px solid $borderGrey!important;
+  }
+}
+
+.phone-input-field {
+  .flag {
+    transform: scale(1.3);
+  }
+}

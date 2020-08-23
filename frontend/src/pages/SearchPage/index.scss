@@ -1,0 +1,13 @@
+@import "../../assets/styles/variables";
+
+.search-page {
+  padding-bottom: $navbarBottomPadding;
+  &__content {
+    margin-top: 20px;
+    & .organization-dsc-card {
+      &:not(:last-child) {
+        margin-bottom: 15px;
+      }
+    }
+  }
+}

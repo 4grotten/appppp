@@ -1,0 +1,13 @@
+@import "../../assets/styles/variables";
+
+.edit-contacts-form {
+  &__add {
+    margin-top: 16px;
+    color: $primaryBlue;
+  }
+
+  &__content { margin-top: 20px; }
+  & .input-text-field:not(:last-child) {
+    margin-bottom: 16px;
+  }
+}

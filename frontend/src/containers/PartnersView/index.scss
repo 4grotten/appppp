@@ -1,0 +1,21 @@
+@import "../../assets/styles/variables";
+
+.partners-view {
+  &__summary {
+    margin-top: 20px;
+    color: $textGrey;
+    & span { color: #000; }
+  }
+  &__date {
+    margin: 5px -15px 0;
+    padding-bottom: 5px;
+    color: $primaryBlue;
+    border-bottom: 1px solid #F6F6F6;
+  }
+  &__list {
+    &-item {
+      border-bottom: 1px solid rgba(129, 140, 153, 0.06);
+      padding: 20px 0 8px;
+    }
+  }
+}

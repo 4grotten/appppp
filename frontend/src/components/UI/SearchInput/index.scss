@@ -1,0 +1,29 @@
+@import "../../../assets/styles/variables";
+
+.search-input {
+  position: relative;
+  &__label {
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: url("../../../assets/icons/icon_search_grey.svg") no-repeat center;
+    top: 50%;
+    left: 6px;
+    transform: translateY(-50%);
+  }
+  &__input {
+    background: #EBEDF0;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    padding: 6px 6px 6px 40px;
+    font-size: 17px;
+    line-height: 24px;
+    &::placeholder {
+      font-size: 17px;
+      line-height: 24px;
+      color: $placeholderGrey;
+    }
+  }
+}

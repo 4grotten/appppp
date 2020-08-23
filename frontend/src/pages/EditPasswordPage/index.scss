@@ -1,0 +1,11 @@
+.edit-password-page {
+  margin-top: 15px;
+}
+.edit-password-form {
+  & .password-field:not(:last-child) {
+    margin-bottom: 16px;
+  }
+  &__submit {
+    margin-top: 50px;
+  }
+}

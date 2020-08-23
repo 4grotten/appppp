@@ -1,0 +1,9 @@
+.currency-view {
+  & .currency-card:not(:last-child) {
+    border-bottom: 1px solid #E6E6E6;
+  }
+
+  & .mobile-top-header {
+    margin-bottom: 20px;
+  }
+}

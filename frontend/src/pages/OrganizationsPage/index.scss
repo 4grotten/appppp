@@ -1,0 +1,13 @@
+@import "../../assets/styles/variables";
+
+.organizations-page {
+  &__content {
+    margin-top: 20px;
+    padding-bottom: $navbarBottomPadding;
+  }
+  &__card {
+    &:not(:last-child) {
+      margin-bottom: 25px;
+    }
+  }
+}

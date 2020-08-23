@@ -1,0 +1,74 @@
+@import "../../../assets/styles/variables";
+
+.notification-card {
+  display: flex;
+  width: 100%;
+  padding: 10px 0;
+  &__avatar {
+    position: relative;
+    margin-right: 15px;
+  }
+
+  &__desc {
+    margin-top: 3px;
+    color: $textGrey;
+  }
+
+  &__content {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+
+  &__title {
+    color: #000;
+  }
+
+  &__time {
+    margin-top: 3px;
+    color: $textGrey;
+  }
+
+  &__badge {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: -10px;
+    right: -10px;
+    & svg { width: 100%; height: 100%; }
+  }
+
+  &__sender {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    margin-top: 3px;
+    & .avatar__container { margin: 0 6px 0 0; }
+    &-name { text-transform: capitalize }
+  }
+
+  &__partnerships {
+    &-status,
+    &-accept,
+    &-decline {
+      display: inline-block;
+      background: #F5F5F5;
+      border-radius: 10px;
+      padding: 6px 16px;
+      color: $textGrey;
+      margin-top: 4px;
+    }
+
+    &-accept {
+      color: #FFF;
+      background: $primaryBlue;
+      margin-right: 8px;
+    }
+    &-decline {
+      color: $primaryBlue;
+    }
+
+    &-declined_partnership, &-declined_partnership_recipient {
+      color: $offlineRed;
+    }
+  }
+}

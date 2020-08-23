@@ -1,0 +1,13 @@
+@import "../../assets/styles/variables";
+
+.partnership-detail-page {
+  &__card {
+    margin-top: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F6F6F6;
+  }
+  &__title {
+    margin-top: 30px;
+    color: $textGrey;
+  }
+}

@@ -1,7 +1,9 @@
+from django.shortcuts import render
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 
+from organizations.services.organization_services import OrganizationService
 from .models import File, Country
 from .serializers import ImageSerializer, CountrySerializer
 
@@ -18,3 +20,17 @@ class CountriesListView(ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects.all()
     pagination_class = None
+
+
+def index(request):
+    return render(request, 'dist/index.html', {})
+
+
+def organization_detail_view(request, pk):
+    organization = OrganizationService.get(pk=pk)
+
+    context = {
+        'organization': organization
+    }
+
+    return render(request, 'organization_detail.html', context)

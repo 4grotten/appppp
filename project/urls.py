@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 
+from common.views import index, organization_detail_view
 from notifications.views import CustomFCMDeviceAuthorizedViewSet
 
 v1 = ([
@@ -20,6 +21,9 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('rest-auth/', include('rest_auth.urls')),
     path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
+    path('organizations/<int:pk>', organization_detail_view, name='organization_detail_view'),
+    re_path(r'^.*', index, name='unmatched'),
+
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

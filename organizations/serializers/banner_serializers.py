@@ -2,10 +2,12 @@ from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.models import Banner, Organization
+from organizations.serializers.organization_serializers import OrganizationTitleImageSerializer
 
 
 class BannerSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
+    linked_organization = OrganizationTitleImageSerializer()
 
     class Meta:
         model = Banner

@@ -22,6 +22,10 @@ class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     search = serializers.IntegerField(default=None)
 
 
+class OrganizationQueryParamSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+
+
 class OrganizationUserQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))

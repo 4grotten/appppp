@@ -267,8 +267,12 @@ class OrganizationTitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'title')
 
 
-class OrganizationQueryParamSerializer(serializers.Serializer):
-    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+class OrganizationTitleImageSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'image')
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):

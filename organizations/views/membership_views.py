@@ -13,7 +13,7 @@ from organizations.serializers.membership_serializers import (
     MembershipSerializer, MembershipListSerializer, MembershipCreateSerializer, MembershipUpdateSerializer,
     RoleBriefSerializer, RoleSerializer, RoleCreateSerializer, TransferOwnershipSerializer,
 )
-from organizations.serializers.organization_serializers import OrganizationQueryParamSerializer
+from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.membership_services import MembershipService, RoleService
 from organizations.services.organization_services import OrganizationService
 from users.models import User

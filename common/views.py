@@ -33,4 +33,4 @@ def organization_detail_view(request, pk):
         'organization': organization
     }
 
-    return render(request, 'organization_detail.html', context)
+    return render(request, 'dist/index.html', context)

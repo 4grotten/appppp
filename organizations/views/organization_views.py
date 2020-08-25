@@ -23,7 +23,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer,
-    OrganizationTitleSerializer, SubscriptionsMessageSerializer)
+    OrganizationTitleSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer)
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
 )
@@ -32,6 +32,7 @@ from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,
     OrgSocialNetworkContactService, OrgMessageService
 )
+from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import UserShortInfoSerializer
 
@@ -300,4 +301,17 @@ class OrganizationFollowersCountAPIView(APIView):
         return Response(data={
             'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,
             'count': count
+        }, status=status.HTTP_200_OK)
+
+
+class OrganizationPartnersCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        organization = OrganizationService.get(id=pk)
+        count, partners = OrganizationService.get_organization_partners(organization=organization)
+
+        return Response(data={
+            'partners': OrganizationWithImageSerializer(partners, many=True, context={'request': request}).data,
+            'count': count,
         }, status=status.HTTP_200_OK)

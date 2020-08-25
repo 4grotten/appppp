@@ -16,7 +16,10 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attendance
-        fields = ('id', 'arrival_time', 'arrival_checked_by', 'departure_time', 'departure_checked_by')
+        fields = (
+            'id', 'arrival_time', 'arrival_checked_by', 'arrival_checker_role',
+            'departure_time', 'departure_checked_by', 'departure_checker_role',
+        )
 
 
 class MembershipListAttendanceSerializer(serializers.ModelSerializer):

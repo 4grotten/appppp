@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization, Attendance
 from organizations.services.membership_services import MembershipService
+from organizations.services.organization_services import OrganizationService
 from users.models import User
 
 
@@ -24,6 +25,7 @@ class AttendanceService:
             if attendance.departure_time < attendance.arrival_time:
                 attendance.departure_time = attendance.departure_time + timedelta(days=1)
             attendance.is_active = False
+            attendance.departure_checker_role = None
             attendance.save()
 
     @classmethod
@@ -36,11 +38,14 @@ class AttendanceService:
         if not MembershipService.is_organization_member(user=employee, organization=organization):
             raise NotAcceptableException('Given user is not a member of this organization')
 
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=recorded_by)
+
         rows = Attendance.objects.filter(
             user=employee, organization=organization, is_active=True).update(
-            is_active=False, departure_time=now(), departure_checked_by=recorded_by)
+            is_active=False, departure_time=now(), departure_checked_by=recorded_by, departure_checker_role=role)
         if rows < 1:
-            Attendance.objects.create(user=employee, organization=organization, arrival_checked_by=recorded_by)
+            Attendance.objects.create(user=employee, organization=organization, arrival_checked_by=recorded_by,
+                                      arrival_checker_role=role)
             return True
         return False
 

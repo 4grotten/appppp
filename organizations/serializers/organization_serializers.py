@@ -245,7 +245,7 @@ class OrgMessageCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('content',)
+        fields = ('content', 'message_to')
 
 
 class OrganizationBannerInfo(serializers.ModelSerializer):

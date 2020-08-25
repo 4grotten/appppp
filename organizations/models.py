@@ -232,10 +232,20 @@ class Banner(TimestampModel):
 
 
 class Message(TimestampModel):
+    ORGANIZATION_FOLLOWERS = 'organization_followers'
+    PARTNERS_MEMBERS = 'partners_members'
+    PARTNERS_SUBSCRIPTIONS = 'partners_followers'
+    MESSAGE_TO = (
+        (ORGANIZATION_FOLLOWERS, ORGANIZATION_FOLLOWERS),
+        (PARTNERS_MEMBERS, PARTNERS_MEMBERS),
+        (PARTNERS_SUBSCRIPTIONS, PARTNERS_SUBSCRIPTIONS)
+    )
     sender = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sent_messages')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_messages')
     content = models.CharField(blank=False, null=False, max_length=800)
     receivers_count = models.IntegerField(default=0)
+    message_to = models.CharField(max_length=50, choices=MESSAGE_TO, default=ORGANIZATION_FOLLOWERS)
+    receivers = models.ManyToManyField(User, related_name='received_messages')
     organization_address = models.CharField(max_length=255, null=True)
 
     class Meta:

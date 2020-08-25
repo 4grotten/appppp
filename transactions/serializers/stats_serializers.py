@@ -4,8 +4,8 @@ from users.models import User
 
 
 class StartEndDateSerializer(serializers.Serializer):
-    start = serializers.DateField(required=True)
-    end = serializers.DateField(required=True)
+    start = serializers.DateField(default=None)
+    end = serializers.DateField(default=None)
 
 
 class StartEndProcessedByQueryParamSerializer(serializers.Serializer):

@@ -309,9 +309,22 @@ class OrganizationPartnersCountAPIView(APIView):
 
     def get(self, request, pk):
         organization = OrganizationService.get(id=pk)
-        count, partners = OrganizationService.get_organization_partners(organization=organization)
+        count, partners = OrganizationService.get_partners_dict(organization=organization)
 
         return Response(data={
             'partners': OrganizationWithImageSerializer(partners, many=True, context={'request': request}).data,
             'count': count,
+        }, status=status.HTTP_200_OK)
+
+
+class OrganizationPartnersFollowersCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        users = SubscriptionService.get_organization_partners_followers(organization_id=pk)[:3]
+        count = SubscriptionService.get_organization_partners_followers(organization_id=pk).count()
+
+        return Response(data={
+            'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,
+            'count': count
         }, status=status.HTTP_200_OK)

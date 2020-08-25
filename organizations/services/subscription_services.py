@@ -59,3 +59,9 @@ class SubscriptionService:
     @classmethod
     def get_organization_followers(cls, organization_id: int) -> QuerySet:
         return User.objects.filter(subscriptions__organization_id=organization_id)
+
+    @classmethod
+    def get_organization_partners_followers(cls, organization_id: int) -> QuerySet:
+        organization = OrganizationService.get(id=organization_id)
+        partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
+        return User.objects.filter(subscriptions__organization_id__in=partners).distinct()

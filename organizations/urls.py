@@ -14,6 +14,7 @@ from .views.organization_views import (
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
+    OrganizationPartnersFollowersCountAPIView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
@@ -38,6 +39,7 @@ organization_urls = [
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
     path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view()),
+    path('organizations/<int:pk>/getPartnersFollowersCount', OrganizationPartnersFollowersCountAPIView.as_view())
 ]
 
 membership_urls = [

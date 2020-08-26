@@ -23,14 +23,15 @@ class CountriesListView(ListAPIView):
 
 
 def index(request):
-    return render(request, 'dist/index.html', {})
+    return render(request, 'index.html', {})
 
 
 def organization_detail_view(request, pk):
     organization = OrganizationService.get(pk=pk)
-
+    title = organization.title
+    title = ' '.join(title.split())
     context = {
-        'organization': organization
+        'organization': organization,
+        'title': title
     }
-
-    return render(request, 'dist/index.html', context)
+    return render(request, 'index.html', context)

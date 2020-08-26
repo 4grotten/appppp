@@ -1,17 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta property="og:url"
-          content="http://www.nytimes.com/2015/02/19/arts/international/when-great-minds-dont-think-alike.html"/>
-    <meta property="og:type" content="article"/>
-    <meta property="og:title" content={{ organization.title }}/>
-    <meta property="og:description" content="{{ organization.description }}"/>
-    <meta property="og:image"
-          content="https://apofiz.com{{ organization.image.file.url }}"/>
-    <title>{{ organization.title }}</title>
+    <link rel="icon" href="https://apofiz.com/static/assets/favicon.ico"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="Apofiz App"/>
+    <link rel="apple-touch-icon" href="https://apofiz.com/static/assets/logo192.png"/>
+    <link rel="manifest" href="https://apofiz.com/static/assets/manifest.json"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+            crossorigin=""></script>
+ {% if organization %}
+        <meta property="og:title" content={{ title }}/>
+        <meta property="og:description" content="{{organization.description|cut:"\n"}}"/>
+        <meta property="og:image" content="https://apofiz.com{{ organization.image.file.url }}"/>
+        <title>{{ organization.title }}</title>
+    {% else %}
+        <title>Apofiz</title>
+        <meta property="og:title" content="Apofiz - Социально-торговая сеть"/>
+        <meta property="og:description" content="Все именно так, мы с большой любовью создали простое и очень важное социальное приложение для Всех, кто ценит время, деньги и главное поставленные цели. Tеперь каждый сможет получать скидки, накапливать реальные деньги, покупать и конечно продавать не только товары, но и все виды услуг. Вам больше не надо открывать интернет - магазин, искать новых клиентов, запускать и тратить деньги на продвижение своего сайта или приложения. Мы сделали торговый онлайн инструмент, в котором есть всё для Вас. Вам будут доступны не только система лояльности своим и новым клиентам, теперь вы сможете управлять, получать всю статистику в режиме онлайн, не только о продажах и скидках вашей организации, но и всё о своих сотрудниках, мир на Вашей ладони."/>
+        <meta property="og:image" content="https://apofiz.com/static/assets/logo192.png"/>
+    {% endif %}
+    <link href="https://apofiz.com/static/0.css" rel="stylesheet">
 </head>
 <body>
-
+<div id="root"></div>
+<div id="control"></div>
+<div id="qr"></div>
+<div id="menu"></div>
+	<script src="https://apofiz.com/static/runtime.b32cfa6ba7789aff05d9.bundle.js"></script>
+	<script src="https://apofiz.com/static/vendors.9dca5561606ab6483d51.bundle.js"></script>
+	<script src="https://apofiz.com/static/main.cfa1cf4f26df0b457df8.bundle.js"></script>
 </body>
 </html>

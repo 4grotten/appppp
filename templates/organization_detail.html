@@ -15,8 +15,8 @@
             integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
             crossorigin=""></script>
  {% if organization %}
-        <meta property="og:title" content={{ title }}/>
-        <meta property="og:description" content="{{organization.description|cut:"\n"}}"/>
+        <meta property="og:title" content={{ organization.title }}/>
+        <meta property="og:description" content="{{ description }}"/>
         <meta property="og:image" content="https://apofiz.com{{ organization.image.file.url }}"/>
         <title>{{ organization.title }}</title>
     {% else %}

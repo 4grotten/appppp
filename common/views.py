@@ -28,10 +28,10 @@ def index(request):
 
 def organization_detail_view(request, pk):
     organization = OrganizationService.get(pk=pk)
-    title = organization.title
-    title = ' '.join(title.split())
+    description = organization.description
+    title = ' '.join(description.split())
     context = {
         'organization': organization,
-        'title': title
+        'description': description
     }
     return render(request, 'index.html', context)

@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
@@ -23,15 +24,17 @@ class CountriesListView(ListAPIView):
 
 
 def index(request):
-    return render(request, 'index.html', {})
+    return render(request, 'dist/index.html', {})
 
 
 def organization_detail_view(request, pk):
     organization = OrganizationService.get(pk=pk)
     description = organization.description
-    title = ' '.join(description.split())
+    # description = description.replace(r'\n', ' ').replace(r'\r', '')
+    description1 = re.sub("\n|\r", " ", description)
+
     context = {
         'organization': organization,
-        'description': description
+        'description': description1
     }
-    return render(request, 'index.html', context)
+    return render(request, 'dist/index.html', context)

@@ -66,8 +66,8 @@ class MembershipAdmin(admin.ModelAdmin):
 
 class AttendanceAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'organization', 'arrival_time', 'arrival_checked_by', 'is_active',
-        'departure_time', 'departure_checked_by'
+        'user', 'organization', 'arrival_time', 'arrival_checked_by', 'arrival_checker_role', 'is_active',
+        'departure_time', 'departure_checked_by', 'departure_checker_role',
     )
     list_filter = ('organization', 'is_active',)
     date_hierarchy = 'arrival_time'

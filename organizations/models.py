@@ -112,10 +112,12 @@ class Attendance(models.Model):
     arrival_time = models.DateTimeField(auto_now_add=True)
     arrival_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                            related_name='checked_arrivals')
+    arrival_checker_role = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     departure_time = models.DateTimeField(null=True, blank=True)
     departure_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='checked_departures')
+    departure_checker_role = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f'{self.user} came to {self.organization.title} at {self.arrival_time}'

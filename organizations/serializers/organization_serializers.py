@@ -213,7 +213,7 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = (
-            'id', 'content', 'created_at', 'receivers_count', 'receivers', 'receiver_partners',
+            'id', 'content', 'message_to', 'created_at', 'receivers_count', 'receivers', 'receiver_partners',
             'receiver_partner_count')
 
     def get_receivers(self, obj):
@@ -236,8 +236,8 @@ class OrgMessageSerializer(MessageSerializer):
     class Meta:
         model = Message
         fields = (
-            'id', 'sender', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role', 'receiver_partners',
-            'receiver_partner_count')
+            'id', 'sender', 'message_to', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role',
+            'receiver_partner_count', 'receiver_partners')
 
     def get_sender_role(self, obj):
         try:

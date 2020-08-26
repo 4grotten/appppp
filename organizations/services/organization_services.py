@@ -391,17 +391,20 @@ class OrgMessageService:
 
     @classmethod
     def send_message(cls, organization: Organization, content: str, sender: User, message_to: str):
-        receivers = None
+        receivers = ()
+        partners_to_save = ()
         partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
         if message_to == "organization_followers":
             receivers = User.objects.filter(subscriptions__organization_id=organization.id).distinct()
         elif message_to == "partners_followers":
+            partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
             receivers = User.objects.filter(subscriptions__organization_id__in=partners).distinct()
         elif message_to == "partners_members":
+            partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
             receivers = User.objects.filter(
                 Q(memberships__organization_id__in=partners) | Q(owned_organizations__in=partners)).distinct()
 
-        partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
+
 
         message = cls.model.objects.create(organization=organization, content=content, sender=sender,
                                            message_to=message_to)

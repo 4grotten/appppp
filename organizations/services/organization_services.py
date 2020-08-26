@@ -386,19 +386,27 @@ class OrgMessageService:
         return cls.model.objects.filter(organization__in=organizations)
 
     @classmethod
+    def get_received_messages(cls, user: User) -> QuerySet:
+        return Message.objects.filter(receivers=user)
+
+    @classmethod
     def send_message(cls, organization: Organization, content: str, sender: User, message_to: str):
         receivers = None
         partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
         if message_to == "organization_followers":
-            receivers = User.objects.filter(subscriptions__organization_id=organization.id)
+            receivers = User.objects.filter(subscriptions__organization_id=organization.id).distinct()
         elif message_to == "partners_followers":
             receivers = User.objects.filter(subscriptions__organization_id__in=partners).distinct()
         elif message_to == "partners_members":
-            receivers = User.objects.filter(memberships__organization_id__in=partners).distinct()
+            receivers = User.objects.filter(
+                Q(memberships__organization_id__in=partners) | Q(owned_organizations__in=partners)).distinct()
+
+        partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
 
         message = cls.model.objects.create(organization=organization, content=content, sender=sender,
                                            message_to=message_to)
         message.receivers.set(receivers)
+        message.receiver_partners.set(partners_to_save)
 
         for receiver in receivers:
             sent_notification.delay(

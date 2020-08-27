@@ -96,7 +96,7 @@ class HomepageRandomPartnersView(ListAPIView):
 
 
 class HomepagePartnersListView(ListAPIView):
-    serializer_class = HomepagePartnerSerializer
+    serializer_class = PartnerSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('title',)
 

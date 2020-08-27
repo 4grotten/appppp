@@ -29,7 +29,7 @@ from transactions.serializers.transaction_serializers import (
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
-from users.serializers import ProfileBriefSerializer
+from users.serializers import ProfileBriefSerializer, ProfileBriefWithPhotoSerializer
 
 
 class TransactionPreprocessView(GenericAPIView):
@@ -63,7 +63,7 @@ class TransactionPreprocessView(GenericAPIView):
             'transaction_id': transaction.id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
-            'client': ProfileBriefSerializer(client).data
+            'client': ProfileBriefWithPhotoSerializer(client).data
         }
 
         return Response(data=data, status=status.HTTP_200_OK)

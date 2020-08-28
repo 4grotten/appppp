@@ -157,14 +157,6 @@ class OrganizationService:
             id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
     @classmethod
-    def get_organization_editable_partners(cls, organization: Organization, user: User) -> QuerySet:
-        if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
-            raise NotAcceptableException('No access to partner settings')
-        return Organization.objects.filter(
-            id__in=organization.requested_partnerships.filter(is_accepted=True, can_edit_organization=True).values_list(
-                'accepted_by', flat=True))
-
-    @classmethod
     def set_location(cls, organization, longitude, latitude, address):
         try:
             point = Point(longitude, latitude)

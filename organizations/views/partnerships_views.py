@@ -89,14 +89,13 @@ class OrgPartnershipsView(ListAPIView):
         return PartnershipService.get_organization_partnerships(organization=organization, user=self.request.user)
 
 
-class OrgEditablePartnershipsView(ListAPIView):
+class OrgPartnershipsInShortView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationWithTypeImageSerializer
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])
-        partners = OrganizationService.get_organization_editable_partners(organization=organization,
-                                                                          user=self.request.user)
+        partners = OrganizationService.get_organization_partners(organization=organization)
         return partners
 
 

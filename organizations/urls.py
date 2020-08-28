@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
-from .views.banner_views import BannerView, BannerDeleteView
+from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
@@ -80,7 +80,7 @@ homepage_urls = [
 
 banner_urls = [
     path('banners/', BannerView.as_view(), name='banners'),
-    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
+    path('banners/<int:pk>/', BannerDetailsView.as_view(), name='banner_delete'),
 ]
 
 urlpatterns = [

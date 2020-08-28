@@ -68,6 +68,7 @@ class BannerDetailsView(RetrieveUpdateDestroyAPIView):
         banner = BannerService.update_banner(
             banner=instance,
             user=request.user,
+            linked_organization=serializer.validated_data['linked_organization'],
             image=serializer.validated_data['image']
         )
         banner = BannerSerializer(banner, context={'request': request}).data

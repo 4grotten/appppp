@@ -20,7 +20,8 @@ from notifications.tasks import (
     send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification,
     send_notifications_organization_members
 )
-from organizations.constants import HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT
+from organizations.constants import (HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
+                                     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD)
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
 )
@@ -240,7 +241,8 @@ class OrganizationService:
     @classmethod
     def get_organizations_ordered_by_num_of_partners(cls) -> QuerySet:
         queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
-            partners_count=Coalesce(Count('requested_partnerships'), 0)).order_by('-partners_count')
+            partners_count=Coalesce(Count('requested_partnerships'), 0)).exclude(
+            partners_count__lt=HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD).order_by('-partners_count')
         return queryset
 
     @classmethod

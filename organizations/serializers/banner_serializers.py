@@ -27,4 +27,4 @@ class BannerCreateSerializer(serializers.ModelSerializer):
 class BannerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
-        fields = ('image',)
+        fields = ('image', 'linked_organization')

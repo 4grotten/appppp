@@ -54,6 +54,15 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image')
 
 
+class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'image', 'types')
+
+
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization

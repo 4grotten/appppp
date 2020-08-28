@@ -17,7 +17,7 @@ from .views.organization_views import (
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
-    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView,
+    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgEditablePartnershipsView,
 )
 from .views.seo_views import org_detail
 from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
@@ -66,6 +66,8 @@ partnership_urls = [
     path('partnerships/', PartnershipView.as_view(), name='partnerships'),
     path('partnerships/<int:pk>/', PartnershipRetrieveUpdateDestroyView.as_view(), name='partnership_details'),
     path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
+    path('organizations/<int:pk>/editable_partnerships/', OrgEditablePartnershipsView.as_view(),
+         name='organization_editable_partnerships'),
 ]
 
 homepage_urls = [

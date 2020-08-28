@@ -20,8 +20,8 @@ from notifications.tasks import (
     send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification,
     send_notifications_organization_members
 )
-from organizations.constants import HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT, \
-    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
+from organizations.constants import (HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
+                                     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD)
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
 )

@@ -285,7 +285,6 @@ class OrgMessageAPIView(ListAPIView):
 
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
-    permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationTitleSerializer
     queryset = OrganizationService.filter()
 

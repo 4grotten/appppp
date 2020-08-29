@@ -17,7 +17,7 @@ from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION,
                                      ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
                                      ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE)
 from notifications.tasks import (
-    send_notifications_to_all_users, send_notifications_to_subscribers, sent_notification,
+    send_notifications_to_all_users, sent_notification,
     send_notifications_organization_members
 )
 from organizations.constants import (HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
@@ -388,18 +388,40 @@ class OrgMessageService:
         return cls.model.objects.filter(organization__in=organizations)
 
     @classmethod
-    @transaction.atomic
-    def create_message(cls, organization: Organization, content: str, sender: User):
-        message = cls.model.objects.create(organization=organization, content=content, sender=sender)
+    def get_received_messages(cls, user: User) -> QuerySet:
+        return Message.objects.filter(receivers=user)
 
-        send_notifications_to_subscribers.delay(
-            organization_id=organization.id,
-            mode=PERSONAL_MODE,
-            notification_type=ORGANIZATION_MESSAGE_TYPE,
-            title=ORGANIZATION_MESSAGE_TITLE.format(organization=organization.title),
-            description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
-        )
+    @classmethod
+    def send_message(cls, organization: Organization, content: str, sender: User, message_to: str):
+        receivers = ()
+        partners_to_save = ()
+        partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
+        if message_to == "organization_followers":
+            receivers = User.objects.filter(subscriptions__organization_id=organization.id).distinct()
+        elif message_to == "partners_followers":
+            partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
+            receivers = User.objects.filter(subscriptions__organization_id__in=partners).distinct()
+        elif message_to == "partners_members":
+            partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
+            receivers = User.objects.filter(
+                Q(memberships__organization_id__in=partners) | Q(owned_organizations__in=partners)).distinct()
 
+
+
+        message = cls.model.objects.create(organization=organization, content=content, sender=sender,
+                                           message_to=message_to)
+        message.receivers.set(receivers)
+        message.receiver_partners.set(partners_to_save)
+
+        for receiver in receivers:
+            sent_notification.delay(
+                organization_id=organization.id,
+                recipient_id=receiver.id,
+                mode=PERSONAL_MODE,
+                notification_type=ORGANIZATION_MESSAGE_TYPE,
+                title=ORGANIZATION_MESSAGE_TITLE.format(organization=organization.title),
+                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
+            )
         send_notifications_organization_members.delay(
             sender_id=sender.id,
             mode=PERSONAL_MODE,
@@ -411,5 +433,4 @@ class OrgMessageService:
             members_organization_id=organization.id,
             extra_data=dict(can_send_message=True)
         )
-
         return message

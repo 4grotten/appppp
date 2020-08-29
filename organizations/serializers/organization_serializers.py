@@ -214,15 +214,28 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    receivers = serializers.SerializerMethodField()
+    receivers = UserShortInfoSerializer(many=True)
+    receivers_count = serializers.SerializerMethodField()
+    receiver_partners = OrganizationWithImageSerializer(many=True)
+    receiver_partner_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ('id', 'content', 'created_at', 'receivers_count', 'receivers')
+        fields = (
+            'id', 'content', 'message_to', 'created_at', 'receivers_count', 'receivers', 'receiver_partners',
+            'receiver_partner_count')
 
     def get_receivers(self, obj):
-        users = SubscriptionService.get_organization_followers(organization_id=obj.organization.id)[:3]
-        return UserShortInfoSerializer(users, many=True, context={'request': self.context.get('request')}).data
+        return obj.receivers[0:3]
+
+    def get_receivers_count(self, obj):
+        return Message.objects.get(id=obj.id).receivers.count()
+
+    def get_partners(self, obj):
+        return obj.receiver_partners[0:3]
+
+    def get_receiver_partner_count(self, obj):
+        return Message.objects.get(id=obj.id).receiver_partners.count()
 
 
 class OrgMessageSerializer(MessageSerializer):
@@ -231,7 +244,9 @@ class OrgMessageSerializer(MessageSerializer):
 
     class Meta:
         model = Message
-        fields = ('id', 'sender', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role')
+        fields = (
+            'id', 'sender', 'message_to', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role',
+            'receiver_partner_count', 'receiver_partners')
 
     def get_sender_role(self, obj):
         try:
@@ -254,7 +269,7 @@ class OrgMessageCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('content',)
+        fields = ('content', 'message_to')
 
 
 class OrganizationBannerInfo(serializers.ModelSerializer):

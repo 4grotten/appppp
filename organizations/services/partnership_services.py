@@ -90,7 +90,7 @@ class PartnershipService:
     @classmethod
     def delete_partnership(cls, partnership_id: int, user: User):
         partnership = cls.get(id=partnership_id)
-
+        reverse_partnership = cls.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by)
         if not OrganizationService.user_can_edit_partner(
                 organization=partnership.requested_by, user=user
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
@@ -123,6 +123,7 @@ class PartnershipService:
         ))
 
         partnership.delete()
+        reverse_partnership.delete()
 
     @classmethod
     def set_permissions(cls, partnership: Partnership, user: User,

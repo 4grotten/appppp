@@ -70,6 +70,7 @@ class Notification(TimestampModel):
         notification_payload = {
             'title': title,
             'body': description,
+            'click_action': type,
             'data': {
                 'notification_id': notification_id,
                 'organization': {

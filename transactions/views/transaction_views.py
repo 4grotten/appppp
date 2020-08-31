@@ -63,7 +63,7 @@ class TransactionPreprocessView(GenericAPIView):
             'transaction_id': transaction.id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
-            'client': ProfileBriefWithPhotoSerializer(client).data
+            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data
         }
 
         return Response(data=data, status=status.HTTP_200_OK)

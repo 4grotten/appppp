@@ -79,7 +79,7 @@ class Notification(TimestampModel):
                 } if organization else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
-                'type': type,
+                'type': type
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }

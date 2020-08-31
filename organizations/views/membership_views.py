@@ -80,7 +80,7 @@ class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         membership = MembershipService.update_role(membership=instance, new_role=serializer.validated_data['role'])
-        return Response(MembershipSerializer(membership).data)
+        return Response(MembershipSerializer(membership, context={'request': request}).data)
 
 
 class RolesListCreateView(ListCreateAPIView):

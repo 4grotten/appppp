@@ -93,6 +93,7 @@ class AttendanceStatsView(GenericAPIView):
 
         data = {
             'employee': employee,
+            'initial_date': membership.created_at,
             'calendar': GroupAttendanceSerializer(grouped_attendances, many=True).data
         }
         return Response(data)

@@ -261,7 +261,8 @@ class SubscriptionsMessageSerializer(MessageSerializer):
 
     class Meta:
         model = Message
-        fields = ('id', 'content', 'organization', 'organization_address', 'created_at', 'receivers_count', 'receivers')
+        fields = ('id', 'content', 'organization', 'organization_address', 'created_at', 'receivers_count', 'receivers',
+                  'receiver_partner_count', 'receiver_partners')
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):

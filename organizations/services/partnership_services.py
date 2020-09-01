@@ -72,7 +72,7 @@ class PartnershipService:
 
         partnerships = Partnership.objects.filter(
             Q(accepted_by=organization) | (Q(requested_by=organization) & Q(is_accepted=False))
-        ).order_by('-is_accepted', '-id')
+        ).order_by('is_accepted', '-id')
         return partnerships
 
     @classmethod

@@ -10,10 +10,10 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
-from organizations.models import Organization, OrganizationCategory
+from organizations.models import Organization, OrganizationCategory, OrganizationType
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer,
-    OrganizationWithDiscountsSerializer
+    OrganizationWithDiscountsSerializer, OrganizationTypeSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -66,6 +66,16 @@ class OrganizationTypesListView(ListAPIView):
     pagination_class = None
     serializer_class = OrganizationCategorySerializer
     queryset = OrganizationCategory.objects.all()
+
+
+class OrganizationAllTypesListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = None
+    serializer_class = OrganizationTypeSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ['category']
+    search_fields = ['title']
+    queryset = OrganizationType.objects.all()
 
 
 class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):

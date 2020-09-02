@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer, CountrySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -214,9 +214,9 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    receivers = UserShortInfoSerializer(many=True)
+    receivers = serializers.SerializerMethodField()
     receivers_count = serializers.SerializerMethodField()
-    receiver_partners = OrganizationWithImageSerializer(many=True)
+    receiver_partners = serializers.SerializerMethodField()
     receiver_partner_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -226,13 +226,15 @@ class MessageSerializer(serializers.ModelSerializer):
             'receiver_partner_count')
 
     def get_receivers(self, obj):
-        return obj.receivers[0:3]
+        receivers = Message.objects.get(id=obj.id).receivers.all()[0:3]
+        return UserShortInfoSerializer(receivers, many=True).data
 
     def get_receivers_count(self, obj):
         return Message.objects.get(id=obj.id).receivers.count()
 
-    def get_partners(self, obj):
-        return obj.receiver_partners[0:3]
+    def get_receiver_partners(self, obj):
+        partners = Message.objects.get(id=obj.id).receiver_partners.all()[0:3]
+        return OrganizationWithImageSerializer(partners, many=True).data
 
     def get_receiver_partner_count(self, obj):
         return Message.objects.get(id=obj.id).receiver_partners.count()

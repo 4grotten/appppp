@@ -135,7 +135,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'frontend', "dist"),  # update the STATICFILES_DIRS
+    os.path.join(BASE_DIR, 'frontend'),  # update the STATICFILES_DIRS
 )
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

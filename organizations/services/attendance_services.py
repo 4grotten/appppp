@@ -2,6 +2,7 @@ from datetime import timedelta
 from itertools import groupby
 from typing import Union
 
+from django.db.models import Q
 from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException
@@ -48,6 +49,15 @@ class AttendanceService:
                                       arrival_checker_role=role)
             return True
         return False
+
+    @classmethod
+    def global_record_arrival(cls, user: User, recorded_by: User):
+        organizations = Organization.objects.filter(memberships__user=user)
+
+        for organization in organizations:
+            pass
+
+
 
     @classmethod
     def is_checked_in(cls, employee: User, organization: Organization):

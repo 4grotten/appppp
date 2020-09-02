@@ -6,8 +6,8 @@ from rest_framework.response import Response
 
 from common.exceptions import PermissionDeniedException
 from organizations.serializers.attendance_serializers import (
-    CreateAttendanceSerializer, GroupAttendanceSerializer
-)
+    CreateAttendanceSerializer, GroupAttendanceSerializer,
+    GlobalAttendanceSerializer)
 from organizations.serializers.query_param_serializers import (
     OrganizationUserQueryParamSerializer, MonthYearQueryParamSerializer
 )
@@ -95,4 +95,31 @@ class AttendanceStatsView(GenericAPIView):
             'employee': employee,
             'calendar': GroupAttendanceSerializer(grouped_attendances, many=True).data
         }
+        return Response(data)
+
+
+class GlobalAttendanceView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = GlobalAttendanceSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user = serializer.validated_data['user']
+        organization = OrganizationService.get_first_organization_of_user(user=user)
+
+        if not OrganizationService.user_can_check_attendance(organization=organization, user=request.user):
+            raise PermissionDeniedException('No rights to check attendance in this organization')
+
+        is_active = AttendanceService.record_arrival(employee=user, organization=organization, recorded_by=request.user)
+
+        data = {
+            'full_name': user.full_name,
+            'is_active': is_active
+        }
+
         return Response(data)

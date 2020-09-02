@@ -162,6 +162,6 @@ class TransactionService:
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
 
         if search_id is not None:
-            transactions = transactions.filter(id=search_id)
+            transactions = transactions.filter(id__contains=search_id)
 
         return transactions

@@ -104,8 +104,12 @@ DISMISS_JOB_TITLE = 'Вы уволили с работы'
 DISMISS_JOB_DESCRIPTION = '{position} '
 
 ORGANIZATION_MESSAGE_TITLE = 'Сообщение от {organization}'
+ORGANIZATION_MESSAGE_PARTNERS_TITLE = 'Сообщение для партнеров {organization}'
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Сообщение подписчикам партнеров {organization}'
 ORGANIZATION_MESSAGE_DESCRIPTION = '{content} '
 ORGANIZATION_OWNER_MESSAGE_TITLE = 'Вы отправили сообщение'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = 'Вы отправили сообщение партнерам'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Вы отправили сообщение подписчикам партнеров'
 
 ORGANIZATION_GAVE_TITLE = 'Вы передали права собственника {organization}'
 ORGANIZATION_GAVE_DESCRIPTION = ' '

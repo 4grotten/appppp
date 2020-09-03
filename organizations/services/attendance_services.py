@@ -83,7 +83,7 @@ class AttendanceService:
                             checker_role=checker_role
                         )
                         rows.append(record)
-        if len(rows) > 1:
+        if len(rows) > 0:
             return True
         return False
 

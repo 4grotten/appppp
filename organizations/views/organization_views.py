@@ -10,10 +10,10 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
-from organizations.models import Organization, OrganizationCategory
+from organizations.models import Organization, OrganizationCategory, OrganizationType
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer,
-    OrganizationWithDiscountsSerializer
+    OrganizationWithDiscountsSerializer, OrganizationTypeSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -23,7 +23,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer,
-    OrganizationTitleSerializer, SubscriptionsMessageSerializer)
+    OrganizationTitleSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer)
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
 )
@@ -32,6 +32,7 @@ from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,
     OrgSocialNetworkContactService, OrgMessageService
 )
+from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import UserShortInfoSerializer
 
@@ -65,6 +66,16 @@ class OrganizationTypesListView(ListAPIView):
     pagination_class = None
     serializer_class = OrganizationCategorySerializer
     queryset = OrganizationCategory.objects.all()
+
+
+class OrganizationAllTypesListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = None
+    serializer_class = OrganizationTypeSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ['category']
+    search_fields = ['title']
+    queryset = OrganizationType.objects.all()
 
 
 class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
@@ -247,7 +258,7 @@ class SubscriptionsMessageListAPIView(ListAPIView):
     filterset_fields = ('organization',)
 
     def get_queryset(self):
-        messages = OrgMessageService.get_messages_of_subscriptions(user=self.request.user)
+        messages = OrgMessageService.get_received_messages(user=self.request.user)
         return messages
 
 
@@ -272,8 +283,8 @@ class OrgMessageAPIView(ListAPIView):
 
         if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
             raise PermissionDenied({'message': 'No rights to send message to followers of this organization'})
-        OrgMessageService.create_message(organization=organization, content=serializer.validated_data.get('content'),
-                                         sender=request.user)
+        OrgMessageService.send_message(organization=organization, content=serializer.validated_data.get('content'),
+                                       sender=request.user, message_to=serializer.validated_data.get('message_to'))
         return Response(data={'message': 'Message is created'},
                         status=status.HTTP_201_CREATED)
 
@@ -285,7 +296,6 @@ class OrgMessageAPIView(ListAPIView):
 
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
-    permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationTitleSerializer
     queryset = OrganizationService.filter()
 
@@ -296,6 +306,32 @@ class OrganizationFollowersCountAPIView(APIView):
     def get(self, request, pk):
         users = SubscriptionService.get_organization_followers(organization_id=pk)[:3]
         count = SubscriptionService.get_organization_followers(organization_id=pk).count()
+
+        return Response(data={
+            'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,
+            'count': count
+        }, status=status.HTTP_200_OK)
+
+
+class OrganizationPartnersCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        organization = OrganizationService.get(id=pk)
+        count, partners = OrganizationService.get_partners_dict(organization=organization)
+
+        return Response(data={
+            'partners': OrganizationWithImageSerializer(partners, many=True, context={'request': request}).data,
+            'count': count,
+        }, status=status.HTTP_200_OK)
+
+
+class OrganizationPartnersFollowersCountAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        users = SubscriptionService.get_organization_partners_followers(organization_id=pk)[:3]
+        count = SubscriptionService.get_organization_partners_followers(organization_id=pk).count()
 
         return Response(data={
             'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,

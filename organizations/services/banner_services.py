@@ -30,6 +30,20 @@ class BannerService:
         cls.create(host_organization=host, linked_organization=linked_to, image=image)
 
     @classmethod
+    def update_banner(cls, banner: Banner, user: User, image: File, linked_organization: Organization):
+        if not OrganizationService.user_can_edit_partner(user=user, organization=banner.host_organization):
+            raise NotAcceptableException('No access to partner settings')
+        if not PartnershipService.are_partners(requested_by=banner.host_organization, accepted_by=linked_organization):
+            raise NotAcceptableException('The organizations are not partners')
+        try:
+            banner.image = image
+            banner.linked_organization = linked_organization
+            banner.save()
+            return banner
+        except Exception as e:
+            raise IntegrityException('Can not update banner: {e}'.format(e=str(e)))
+
+    @classmethod
     def delete_banner(cls, user: User, banner: Banner):
         if not OrganizationService.user_can_edit_partner(user=user, organization=banner.host_organization):
             raise NotAcceptableException('No access to partner settings')

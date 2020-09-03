@@ -72,7 +72,7 @@ class PartnershipService:
 
         partnerships = Partnership.objects.filter(
             Q(accepted_by=organization) | (Q(requested_by=organization) & Q(is_accepted=False))
-        ).order_by('-is_accepted', '-id')
+        ).order_by('is_accepted', '-id')
         return partnerships
 
     @classmethod
@@ -90,7 +90,6 @@ class PartnershipService:
     @classmethod
     def delete_partnership(cls, partnership_id: int, user: User):
         partnership = cls.get(id=partnership_id)
-
         if not OrganizationService.user_can_edit_partner(
                 organization=partnership.requested_by, user=user
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
@@ -121,7 +120,10 @@ class PartnershipService:
             members_organization_id=partnership.accepted_by.id,
             with_permissions=dict(can_edit_partner=True)
         ))
-
+        try:
+            Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
+        except:
+            pass
         partnership.delete()
 
     @classmethod

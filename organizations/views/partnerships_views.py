@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.serializers.organization_serializers import (
-    PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo
+    PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo, OrganizationWithImageSerializer,
+    OrganizationWithTypeImageSerializer
 )
 from organizations.serializers.partnership_serializers import (
     PartnershipRequestSerializer, PartnershipSerializer, PartnershipDetailedSerializer, PartnershipUpdateSerializer
@@ -88,6 +89,16 @@ class OrgPartnershipsView(ListAPIView):
         return PartnershipService.get_organization_partnerships(organization=organization, user=self.request.user)
 
 
+class OrgPartnershipsInShortView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationWithTypeImageSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        partners = OrganizationService.get_organization_partners(organization=organization)
+        return partners
+
+
 class HomepageRandomPartnersView(ListAPIView):
     serializer_class = HomepagePartnerSerializer
 
@@ -96,7 +107,7 @@ class HomepageRandomPartnersView(ListAPIView):
 
 
 class HomepagePartnersListView(ListAPIView):
-    serializer_class = HomepagePartnerSerializer
+    serializer_class = PartnerSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('title',)
 

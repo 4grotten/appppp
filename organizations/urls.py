@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
-from .views.banner_views import BannerView, BannerDeleteView
+from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
@@ -13,17 +13,19 @@ from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
-    OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView,
+    OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
+    OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
-    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView,
+    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView,OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
 from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
+    path('organization_all_types/', OrganizationAllTypesListView.as_view(), name='organization_types'),
 
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
@@ -37,6 +39,8 @@ organization_urls = [
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
+    path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view()),
+    path('organizations/<int:pk>/getPartnersFollowersCount/', OrganizationPartnersFollowersCountAPIView.as_view())
 ]
 
 membership_urls = [
@@ -66,6 +70,8 @@ partnership_urls = [
     path('partnerships/', PartnershipView.as_view(), name='partnerships'),
     path('partnerships/<int:pk>/', PartnershipRetrieveUpdateDestroyView.as_view(), name='partnership_details'),
     path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
+    path('organizations/<int:pk>/partners_short_info/', OrgPartnershipsInShortView.as_view(),
+         name='organization_editable_partnerships'),
 ]
 
 homepage_urls = [
@@ -80,7 +86,7 @@ homepage_urls = [
 
 banner_urls = [
     path('banners/', BannerView.as_view(), name='banners'),
-    path('banners/<int:pk>/', BannerDeleteView.as_view(), name='banner_delete'),
+    path('banners/<int:pk>/', BannerDetailsView.as_view(), name='banner_delete'),
 ]
 
 urlpatterns = [

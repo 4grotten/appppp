@@ -30,7 +30,7 @@ class AttendanceService:
             attendance.save()
 
     @classmethod
-    def record_arrival(cls, employee: User, organization: Organization, recorded_by: User) -> bool:
+    def record_arrival(cls, employee: User, organization: Organization, recorded_by: User, checker_role=None) -> bool:
         """
         returns is_active status of attendance
         """
@@ -39,7 +39,10 @@ class AttendanceService:
         if not MembershipService.is_organization_member(user=employee, organization=organization):
             raise NotAcceptableException('Given user is not a member of this organization')
 
-        role = OrganizationService.get_user_role_in_organization(organization=organization, user=recorded_by)
+        if not checker_role:
+            role = OrganizationService.get_user_role_in_organization(organization=organization, user=recorded_by)
+        else:
+            role = checker_role
 
         rows = Attendance.objects.filter(
             user=employee, organization=organization, is_active=True).update(
@@ -53,14 +56,10 @@ class AttendanceService:
     @classmethod
     def global_record_arrival(cls, user: User, recorded_by: User):
         rows = []
-        membership_ids = Membership.objects.filter(user=user).values('id')
-        rec_membership_ids = Membership.objects.filter(user=recorded_by).values('id')
-        print('membership_ids: {}'.format(membership_ids))
-        print('rec membership_ids: {}'.format(rec_membership_ids))
-        organizations = Organization.objects.filter(memberships__user__in=membership_ids)
-        recorded_by_organizations = Organization.objects.filter(memberships__user__in=rec_membership_ids)
-        print(organizations)
-        print(recorded_by_organizations)
+        organizations_ids = Membership.objects.filter(user=user).values('organization')
+        recorded_by_organizations_ids = Membership.objects.filter(user=recorded_by).values('organization')
+        organizations = Organization.objects.filter(id__in=organizations_ids)
+        recorded_by_organizations = Organization.objects.filter(id__in=recorded_by_organizations_ids)
 
         for organization in organizations:
             for rec_organization in recorded_by_organizations:
@@ -71,11 +70,17 @@ class AttendanceService:
                     partnership1 = Partnership.objects.get(accepted_by=organization, requested_by=rec_organization)
                     partnership2 = Partnership.objects.get(accepted_by=rec_organization, requested_by=organization)
 
+                    checker_role = OrganizationService.get_user_role_in_organization(
+                        organization=rec_organization,
+                        user=recorded_by
+                    )
+
                     if partnership1.can_check_attendance or partnership2.can_check_attendance:
                         record = cls.record_arrival(
                             employee=user,
                             recorded_by=recorded_by,
-                            organization=organization
+                            organization=organization,
+                            checker_role=checker_role
                         )
                         rows.append(record)
         if len(rows) > 1:

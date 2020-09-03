@@ -434,7 +434,7 @@ class OrgMessageService:
                 recipient_id=receiver.id,
                 mode=PERSONAL_MODE,
                 notification_type=ORGANIZATION_MESSAGE_TYPE,
-                title=receiver_notification_title.format(organization=organization.title),
+                title=receiver_notification_title,
                 description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
             )
         send_notifications_organization_members.delay(

@@ -10,6 +10,13 @@ class CreateAttendanceSerializer(serializers.ModelSerializer):
         fields = ('user', 'organization',)
 
 
+class GlobalAttendanceSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+
+    class Meta:
+        fields = ('user_id',)
+
+
 class AttendanceSerializer(serializers.ModelSerializer):
     arrival_checked_by = ProfileBriefSerializer()
     departure_checked_by = ProfileBriefSerializer()

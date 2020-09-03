@@ -118,6 +118,9 @@ class Attendance(models.Model):
     departure_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='checked_departures')
     departure_checker_role = models.CharField(max_length=255, null=True, blank=True)
+    organization_name = models.CharField(max_length=255, null=True, blank=True)
+
+    # TODO organization name saving
 
     def __str__(self):
         return f'{self.user} came to {self.organization.title} at {self.arrival_time}'

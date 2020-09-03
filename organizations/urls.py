@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView
+from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
@@ -55,6 +55,7 @@ membership_urls = [
 attendance_urls = [
     path('attendance/user_info/', AttendanceUserInfoView.as_view(), name='employee_info'),
     path('attendance/', AttendanceView.as_view(), name='record_arrival'),
+    path('global_attendance/', GlobalAttendanceView.as_view(), name='global_record_arrival'),
     path('employees/<int:pk>/attendance/', AttendanceStatsView.as_view(), name='attendance_stats'),
 ]
 

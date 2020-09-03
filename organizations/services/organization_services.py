@@ -44,6 +44,10 @@ class OrganizationService:
             raise ObjectNotFoundException('Organization not found')
 
     @classmethod
+    def get_first_organization_of_user(cls, user: User):
+        return Organization.objects.filter(memberships__user=user).first()
+
+    @classmethod
     def get_user_role_in_organization(cls, organization: Organization, user: User) -> str:
         if organization.owner == user:
             return 'Собственник'

@@ -403,19 +403,19 @@ class OrgMessageService:
         receivers = ()
         receiver_notification_title = ORGANIZATION_MESSAGE_TITLE
         sender_notification_title = ORGANIZATION_OWNER_MESSAGE_TITLE
-        notification_sender = None
+        notification_sender_id = None
         partners_to_save = ()
         partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
         if message_to == "organization_followers":
             receivers = User.objects.filter(subscriptions__organization_id=organization.id).distinct()
         elif message_to == "partners_followers":
-            notification_sender = sender
+            notification_sender_id = sender.id
             receiver_notification_title = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             sender_notification_title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
             receivers = User.objects.filter(subscriptions__organization_id__in=partners).distinct()
         elif message_to == "partners_members":
-            notification_sender = sender
+            notification_sender_id = sender.id
             sender_notification_title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE
             receiver_notification_title = ORGANIZATION_MESSAGE_PARTNERS_TITLE
             partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
@@ -429,7 +429,7 @@ class OrgMessageService:
 
         for receiver in receivers:
             sent_notification.delay(
-                sender=notification_sender.id,
+                sender_id=notification_sender_id,
                 organization_id=organization.id,
                 recipient_id=receiver.id,
                 mode=PERSONAL_MODE,

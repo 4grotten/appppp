@@ -153,7 +153,8 @@ class TransactionService:
     def get_organization_transactions(cls, organization: Organization, processed_by: User = None,
                                       start_date=None, end_date=None, search_id: int = None):
 
-        transactions = Transaction.objects.filter()
+        transactions = Transaction.objects.filter(organization=organization, is_processed=True)
+
         if processed_by is not None:
             transactions = transactions.filter(processed_by=processed_by)
 

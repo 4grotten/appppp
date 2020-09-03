@@ -111,12 +111,8 @@ class GlobalAttendanceView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user = serializer.validated_data['user']
-        organization = OrganizationService.get_first_organization_of_user(user=user)
 
-        if not OrganizationService.user_can_check_attendance(organization=organization, user=request.user):
-            raise PermissionDeniedException('No rights to check attendance in this organization')
-
-        is_active = AttendanceService.record_arrival(employee=user, organization=organization, recorded_by=request.user)
+        is_active = AttendanceService.global_record_arrival(user=user, recorded_by=request.user)
 
         data = {
             'full_name': user.full_name,

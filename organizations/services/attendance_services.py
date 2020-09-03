@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Organization, Attendance
+from organizations.models import Organization, Attendance, Partnership
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -52,12 +52,29 @@ class AttendanceService:
 
     @classmethod
     def global_record_arrival(cls, user: User, recorded_by: User):
+        rows = []
         organizations = Organization.objects.filter(memberships__user=user)
+        recorded_by_organizations = Organization.objects.filter(memberships__user=recorded_by)
 
         for organization in organizations:
-            pass
+            for rec_organization in recorded_by_organizations:
+                if Partnership.objects.filter(
+                        Q(accepted_by=organization, requested_by=rec_organization) |
+                        Q(accepted_by=rec_organization, requested_by=organization), is_accepted=True
+                ).exists():
+                    partnership1 = Partnership.objects.get(accepted_by=organization, requested_by=rec_organization)
+                    partnership2 = Partnership.objects.get(accepted_by=rec_organization, requested_by=organization)
 
-
+                    if partnership1.can_check_attendance or partnership2.can_check_attendance:
+                        record = cls.record_arrival(
+                            employee=user,
+                            recorded_by=recorded_by,
+                            organization=organization
+                        )
+                        rows.append(record)
+        if len(rows) > 1:
+            return True
+        return False
 
     @classmethod
     def is_checked_in(cls, employee: User, organization: Organization):

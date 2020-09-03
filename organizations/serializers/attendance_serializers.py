@@ -10,10 +10,11 @@ class CreateAttendanceSerializer(serializers.ModelSerializer):
         fields = ('user', 'organization',)
 
 
-class GlobalAttendanceSerializer(serializers.ModelSerializer):
+class GlobalAttendanceSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+
     class Meta:
-        model = Attendance
-        fields = ('user',)
+        fields = ('user_id',)
 
 
 class AttendanceSerializer(serializers.ModelSerializer):

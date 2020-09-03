@@ -15,6 +15,7 @@ from organizations.services.attendance_services import AttendanceService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.serializers import AttendanceEmployeeSerializer, EmployeeWithRoleSerializer
+from users.services import UserService
 
 
 class AttendanceUserInfoView(GenericAPIView):
@@ -110,7 +111,9 @@ class GlobalAttendanceView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        user = serializer.validated_data['user']
+        user_id = serializer.validated_data['user_id']
+        print(request.user)
+        user = UserService.get(pk=user_id)
 
         is_active = AttendanceService.global_record_arrival(user=user, recorded_by=request.user)
 

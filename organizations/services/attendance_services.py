@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Organization, Attendance, Partnership
+from organizations.models import Organization, Attendance, Partnership, Membership
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -53,8 +53,14 @@ class AttendanceService:
     @classmethod
     def global_record_arrival(cls, user: User, recorded_by: User):
         rows = []
-        organizations = Organization.objects.filter(memberships__user=user)
-        recorded_by_organizations = Organization.objects.filter(memberships__user=recorded_by)
+        membership_ids = Membership.objects.filter(user=user).values('id')
+        rec_membership_ids = Membership.objects.filter(user=recorded_by).values('id')
+        print('membership_ids: {}'.format(membership_ids))
+        print('rec membership_ids: {}'.format(rec_membership_ids))
+        organizations = Organization.objects.filter(memberships__user__in=membership_ids)
+        recorded_by_organizations = Organization.objects.filter(memberships__user__in=rec_membership_ids)
+        print(organizations)
+        print(recorded_by_organizations)
 
         for organization in organizations:
             for rec_organization in recorded_by_organizations:

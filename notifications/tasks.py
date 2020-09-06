@@ -54,6 +54,10 @@ def send_notifications_organization_members(members_organization_id: int, organi
         if can_send_message:
             recipients = recipients.filter(memberships__role__can_send_message=True,
                                            memberships__organization_id=members_organization_id)
+        can_edit_organization = with_permissions.get('can_edit_organization')
+        if can_edit_organization:
+            recipients = recipients.filter(memberships__role__can_edit_organization=True,
+                                           memberships__organization_id=members_organization_id)
 
     for recipient in recipients:
         NotificationService.create_notification(

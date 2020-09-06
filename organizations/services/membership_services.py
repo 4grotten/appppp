@@ -9,7 +9,7 @@ from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB
                                      GET_JOB_TYPE, GET_JOB_TITLE, GET_JOB_DESCRIPTION, CHANGE_JOB_POSITION_OWNER_TYPE,
                                      CHANGE_JOB_POSITION_OWNER_TITLE, CHANGE_JOB_POSITION_OWNER_DESCRIPTION)
 from organizations.models import Membership, Organization, Role
-from notifications.tasks import sent_notification
+from notifications.tasks import sent_notification, send_notifications_organization_members
 from users.models import User
 
 
@@ -37,8 +37,8 @@ class MembershipService:
                 extra_data=dict(membership_id=membership.id,
                                 can_edit_organization=membership.role.can_edit_organization)
             ))
-            transaction.on_commit(lambda: sent_notification.delay(
-                recipient_id=membership.added_by_id,
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                with_permissions=dict(can_edit_organization=True),
                 sender_id=membership.user_id,
                 mode=PERSONAL_MODE,
                 notification_type=RECRUIT_JOB_TYPE,
@@ -69,8 +69,8 @@ class MembershipService:
             description=QUIT_JOB_DESCRIPTION.format(position=membership.role.title),
             organization_id=membership.organization_id
         ))
-        transaction.on_commit(lambda: sent_notification.delay(
-            recipient_id=membership.added_by_id,
+        transaction.on_commit(lambda: send_notifications_organization_members.delay(
+            with_permissions=dict(can_edit_organization=True),
             sender_id=membership.user_id,
             mode=PERSONAL_MODE,
             notification_type=DISMISS_JOB_TYPE,
@@ -115,8 +115,8 @@ class MembershipService:
                 extra_data=dict(membership_id=membership.id,
                                 can_edit_organization=membership.role.can_edit_organization)
             ))
-            transaction.on_commit(lambda: sent_notification.delay(
-                recipient_id=membership.added_by_id,
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                with_permissions=dict(can_edit_organization=True),
                 sender_id=membership.user_id,
                 mode=PERSONAL_MODE,
                 notification_type=CHANGE_JOB_POSITION_OWNER_TYPE,

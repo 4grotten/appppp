@@ -7,14 +7,18 @@ from rest_framework.response import Response
 from common.exceptions import PermissionDeniedException
 from organizations.serializers.attendance_serializers import (
     CreateAttendanceSerializer, GroupAttendanceSerializer,
-    GlobalAttendanceSerializer)
-from organizations.serializers.query_param_serializers import (
-    OrganizationUserQueryParamSerializer, MonthYearQueryParamSerializer
+    GlobalAttendanceSerializer
 )
+from organizations.serializers.query_param_serializers import (
+    OrganizationUserQueryParamSerializer, MonthYearQueryParamSerializer,
+    GlobalAttendanceQueryParamSerializer)
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from users.serializers import AttendanceEmployeeSerializer, EmployeeWithRoleSerializer
+from users.serializers import (
+    AttendanceEmployeeSerializer, EmployeeWithRoleSerializer,
+    GlobalAttendanceEmployeeSerializer,
+    GlobalUserAttendanceSerializer)
 from users.services import UserService
 
 
@@ -103,23 +107,23 @@ class AttendanceStatsView(GenericAPIView):
 class GlobalAttendanceView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request, *args, **kwargs):
-        serializer = GlobalAttendanceSerializer(data=request.data)
+    def get(self, request):
+        serializer = GlobalAttendanceQueryParamSerializer(data=request.GET)
+
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        user_id = serializer.validated_data['user_id']
-        print(request.user)
-        user = UserService.get(pk=user_id)
+        user = serializer.validated_data.get('user')
 
-        is_active = AttendanceService.global_record_arrival(user=user, recorded_by=request.user)
-
-        data = {
-            'full_name': user.full_name,
-            'is_active': is_active
-        }
-
-        return Response(data)
+        organizations = AttendanceService.get_user_organizations_associated_with_checker(
+            user=user,
+            recorded_by=request.user
+        )
+        return Response(
+            GlobalUserAttendanceSerializer(organizations, context={
+                'organizations': organizations,
+                'user': user,
+                'request': request}).data)

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
+from organizations.models import Organization
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_services import OrganizationService
 from .constants import RESEND_CODE_CHOICES
@@ -104,6 +105,45 @@ class AttendanceEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'avatar', 'full_name', 'role', 'attendance',)
+
+
+class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    attendance = serializers.SerializerMethodField()
+
+    def get_role(self, obj) -> str:
+        return OrganizationService.get_user_role_in_organization(organization=obj,
+                                                                 user=self.context['user'])
+
+    def get_attendance(self, obj):
+        latest = AttendanceService.get_latest_attendance(employee=self.context['user'],
+                                                         organization=obj)
+        if latest is None:
+            return None
+        from organizations.serializers.attendance_serializers import MembershipListAttendanceSerializer
+        return MembershipListAttendanceSerializer(latest).data
+
+    def get_is_arriving(self, obj) -> bool:
+        return not AttendanceService.is_checked_in(employee=self.context['user'], organization=obj)
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'role', 'attendance')
+
+
+class GlobalUserAttendanceSerializer(serializers.Serializer):
+    organizations = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ('organizations', 'user')
+
+    def get_organizations(self, _):
+        return GlobalAttendanceEmployeeSerializer(self.context['organizations'], context={'user': self.context['user']},
+                                                  many=True).data
+
+    def get_user(self, _):
+        return UserShortInfoSerializer(self.context['user'], context={'request': self.context['request']}).data
 
 
 class SetPasswordSerializer(serializers.Serializer):

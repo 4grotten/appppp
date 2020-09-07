@@ -34,7 +34,7 @@ def send_notifications_to_all_users(sender_id: Union[int, None] = None, mode='sy
 def send_notifications_organization_members(members_organization_id: int, organization_id=None,
                                             sender_id: Union[int, None] = None, mode='system',
                                             notification_type='', with_permissions=None,
-                                            title='', description='',
+                                            title='', description='', exclusion=[],
                                             extra_data=None):
     organization = Organization.objects.get(id=organization_id)
     members_organization = Organization.objects.get(id=members_organization_id)
@@ -43,21 +43,25 @@ def send_notifications_organization_members(members_organization_id: int, organi
     if sender_id:
         sender = User.objects.get(id=sender_id)
 
-    recipients = User.objects.filter(memberships__organization_id=members_organization_id).distinct()
+    recipients = User.objects.filter(memberships__organization_id=members_organization_id).exclude(
+        id__in=exclusion).distinct()
     if with_permissions is not None:
         can_edit_partner = with_permissions.get('can_edit_partner')
         if can_edit_partner:
             recipients = recipients.filter(memberships__role__can_edit_partner=True,
-                                           memberships__organization_id=members_organization_id)
+                                           memberships__organization_id=members_organization_id).exclude(
+                id__in=exclusion)
 
         can_send_message = with_permissions.get('can_send_message')
         if can_send_message:
             recipients = recipients.filter(memberships__role__can_send_message=True,
-                                           memberships__organization_id=members_organization_id)
+                                           memberships__organization_id=members_organization_id).exclude(
+                id__in=exclusion)
         can_edit_organization = with_permissions.get('can_edit_organization')
         if can_edit_organization:
             recipients = recipients.filter(memberships__role__can_edit_organization=True,
-                                           memberships__organization_id=members_organization_id)
+                                           memberships__organization_id=members_organization_id).exclude(
+                id__in=exclusion)
 
     for recipient in recipients:
         NotificationService.create_notification(

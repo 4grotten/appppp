@@ -54,12 +54,10 @@ class AttendanceService:
         return False
 
     @classmethod
-    def global_record_arrival(cls, user: User, recorded_by: User):
+    def get_user_organizations_associated_with_checker(cls, user: User, recorded_by: User):
         rows = []
-        organizations_ids = Membership.objects.filter(user=user).values('organization')
-        recorded_by_organizations_ids = Membership.objects.filter(user=recorded_by).values('organization')
-        organizations = Organization.objects.filter(id__in=organizations_ids)
-        recorded_by_organizations = Organization.objects.filter(id__in=recorded_by_organizations_ids)
+        organizations = Organization.objects.filter(memberships__user=user)
+        recorded_by_organizations = Organization.objects.filter(memberships__user=recorded_by)
 
         for organization in organizations:
             for rec_organization in recorded_by_organizations:
@@ -70,22 +68,10 @@ class AttendanceService:
                     partnership1 = Partnership.objects.get(accepted_by=organization, requested_by=rec_organization)
                     partnership2 = Partnership.objects.get(accepted_by=rec_organization, requested_by=organization)
 
-                    checker_role = OrganizationService.get_user_role_in_organization(
-                        organization=rec_organization,
-                        user=recorded_by
-                    )
-
                     if partnership1.can_check_attendance or partnership2.can_check_attendance:
-                        record = cls.record_arrival(
-                            employee=user,
-                            recorded_by=recorded_by,
-                            organization=organization,
-                            checker_role=checker_role
-                        )
-                        rows.append(record)
-        if len(rows) > 0:
-            return True
-        return False
+                        rows.append(organization.id)
+
+        return Organization.objects.filter(id__in=rows)
 
     @classmethod
     def is_checked_in(cls, employee: User, organization: Organization):

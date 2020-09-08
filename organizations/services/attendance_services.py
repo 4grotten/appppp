@@ -6,6 +6,10 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException
+from notifications.constants import (PERSONAL_MODE, ATTENDANCE_IN, ATTENDANCE_IN_TITLE, ATTENDANCE_DESCRIPTION,
+                                     CHECK_ATTENDANCE_IN, CHECK_ATTENDANCE_IN_TITLE, ATTENDANCE_OUT,
+                                     ATTENDANCE_OUT_TITLE, CHECK_ATTENDANCE_OUT, CHECK_ATTENDANCE_OUT_TITLE)
+from notifications.tasks import sent_notification
 from organizations.models import Organization, Attendance, Partnership, Membership
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
@@ -50,7 +54,45 @@ class AttendanceService:
         if rows < 1:
             Attendance.objects.create(user=employee, organization=organization, arrival_checked_by=recorded_by,
                                       arrival_checker_role=role)
+            sent_notification.delay(
+                recipient_id=employee.id,
+                sender_id=recorded_by.id,
+                mode=PERSONAL_MODE,
+                notification_type=ATTENDANCE_IN,
+                title=ATTENDANCE_IN_TITLE.format(organization=organization.title),
+                description=ATTENDANCE_DESCRIPTION,
+                organization_id=organization.id,
+                extra_data=dict(role=role)
+            )
+            sent_notification.delay(
+                recipient_id=recorded_by.id,
+                sender_id=employee.id,
+                mode=PERSONAL_MODE,
+                notification_type=CHECK_ATTENDANCE_IN,
+                title=CHECK_ATTENDANCE_IN_TITLE.format(organization=organization.title),
+                description=ATTENDANCE_DESCRIPTION,
+                organization_id=organization.id,
+            )
             return True
+        sent_notification.delay(
+            recipient_id=employee.id,
+            sender_id=recorded_by.id,
+            mode=PERSONAL_MODE,
+            notification_type=ATTENDANCE_OUT,
+            title=ATTENDANCE_OUT_TITLE.format(organization=organization.title),
+            description=ATTENDANCE_DESCRIPTION,
+            organization_id=organization.id,
+            extra_data=dict(role=role)
+        )
+        sent_notification.delay(
+            recipient_id=recorded_by.id,
+            sender_id=employee.id,
+            mode=PERSONAL_MODE,
+            notification_type=CHECK_ATTENDANCE_OUT,
+            title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=organization.title),
+            description=ATTENDANCE_DESCRIPTION,
+            organization_id=organization.id,
+        )
         return False
 
     @classmethod

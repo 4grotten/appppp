@@ -39,7 +39,7 @@ class AttendanceUserInfoView(GenericAPIView):
             raise PermissionDeniedException('No rights to check attendance in this organization')
 
         data = AttendanceEmployeeSerializer(serializer.validated_data['user'],
-                                            context={'organization': organization}).data
+                                            context={'organization': organization, 'request': request}).data
         return Response(data)
 
 

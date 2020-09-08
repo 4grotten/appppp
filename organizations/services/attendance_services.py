@@ -51,6 +51,7 @@ class AttendanceService:
         rows = Attendance.objects.filter(
             user=employee, organization=organization, is_active=True).update(
             is_active=False, departure_time=now(), departure_checked_by=recorded_by, departure_checker_role=role)
+        membership = Membership.objects.get(organization=organization, user=employee)
         if rows < 1:
             Attendance.objects.create(user=employee, organization=organization, arrival_checked_by=recorded_by,
                                       arrival_checker_role=role)
@@ -62,7 +63,7 @@ class AttendanceService:
                 title=ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
                 organization_id=organization.id,
-                extra_data=dict(role=role, employee_id=employee.id)
+                extra_data=dict(role=role, employee_id=membership.id)
             )
             sent_notification.delay(
                 recipient_id=recorded_by.id,
@@ -72,7 +73,7 @@ class AttendanceService:
                 title=CHECK_ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
                 organization_id=organization.id,
-                extra_data=dict(employee_id=employee.id)
+                extra_data=dict(employee_id=membership.id)
             )
             return True
         sent_notification.delay(
@@ -83,7 +84,7 @@ class AttendanceService:
             title=ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,
             organization_id=organization.id,
-            extra_data=dict(role=role, employee_id=employee.id)
+            extra_data=dict(role=role, employee_id=membership.id)
         )
         sent_notification.delay(
             recipient_id=recorded_by.id,
@@ -93,7 +94,7 @@ class AttendanceService:
             title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,
             organization_id=organization.id,
-            extra_data=dict(employee_id=employee.id)
+            extra_data=dict(employee_id=membership.id)
         )
         return False
 

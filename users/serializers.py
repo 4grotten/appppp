@@ -110,6 +110,7 @@ class AttendanceEmployeeSerializer(serializers.ModelSerializer):
 class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     attendance = serializers.SerializerMethodField()
+    image = ImageSerializer()
 
     def get_role(self, obj) -> str:
         return OrganizationService.get_user_role_in_organization(organization=obj,
@@ -128,7 +129,7 @@ class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'role', 'attendance')
+        fields = ('id', 'role', 'attendance', 'title', 'image')
 
 
 class GlobalUserAttendanceSerializer(serializers.Serializer):
@@ -139,8 +140,10 @@ class GlobalUserAttendanceSerializer(serializers.Serializer):
         fields = ('organizations', 'user')
 
     def get_organizations(self, _):
-        return GlobalAttendanceEmployeeSerializer(self.context['organizations'], context={'user': self.context['user']},
-                                                  many=True).data
+        return GlobalAttendanceEmployeeSerializer(self.context['organizations'], context={
+            'user': self.context['user'],
+            'request': self.context['request']
+        }, many=True).data
 
     def get_user(self, _):
         return UserShortInfoSerializer(self.context['user'], context={'request': self.context['request']}).data

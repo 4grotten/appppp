@@ -62,7 +62,7 @@ class AttendanceService:
                 title=ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
                 organization_id=organization.id,
-                extra_data=dict(role=role)
+                extra_data=dict(role=role, employee_id=employee.id)
             )
             sent_notification.delay(
                 recipient_id=recorded_by.id,
@@ -72,6 +72,7 @@ class AttendanceService:
                 title=CHECK_ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
                 organization_id=organization.id,
+                extra_data=dict(employee_id=employee.id)
             )
             return True
         sent_notification.delay(
@@ -82,7 +83,7 @@ class AttendanceService:
             title=ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,
             organization_id=organization.id,
-            extra_data=dict(role=role)
+            extra_data=dict(role=role, employee_id=employee.id)
         )
         sent_notification.delay(
             recipient_id=recorded_by.id,
@@ -92,6 +93,7 @@ class AttendanceService:
             title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,
             organization_id=organization.id,
+            extra_data=dict(employee_id=employee.id)
         )
         return False
 

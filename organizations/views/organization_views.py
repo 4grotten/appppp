@@ -23,7 +23,8 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
     OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer,
-    OrganizationTitleSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer)
+    OrganizationTitleSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
+    OrganizationUserTransactionSerializer)
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
 )
@@ -296,7 +297,7 @@ class OrgMessageAPIView(ListAPIView):
 
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
-    serializer_class = OrganizationTitleSerializer
+    serializer_class = OrganizationUserTransactionSerializer
     queryset = OrganizationService.filter()
 
 

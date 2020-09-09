@@ -313,7 +313,16 @@ class OrganizationNotificationInfo(serializers.ModelSerializer):
 
 class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
     types = OrganizationTypeSerializer(many=True)
+    partners = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
         fields = ('id', 'title', 'address', 'image', 'types')
+
+    def get_partners(self, organization: Organization):
+        count, partners = OrganizationService.get_partners_dict(organization=organization)
+        return {
+            'count': count,
+            'list': OrganizationWithImageSerializer(partners, many=True,
+                                                    context={'request': self.context['request']}).data
+        }

@@ -300,6 +300,12 @@ class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
     serializer_class = OrganizationUserTransactionSerializer
     queryset = OrganizationService.filter()
 
+    def get_serializer_context(self):
+        context = super(OrganizationTitleRetrieveAPIView, self).get_serializer_context()
+        context['request'] = self.request
+
+        return context
+
 
 class OrganizationFollowersCountAPIView(APIView):
     permission_classes = (IsAuthenticated,)

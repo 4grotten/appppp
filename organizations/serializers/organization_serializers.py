@@ -317,7 +317,7 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'image', 'types')
+        fields = ('id', 'title', 'address', 'image', 'types', 'partners')
 
     def get_partners(self, organization: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organization)

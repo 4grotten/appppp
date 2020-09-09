@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ValidationException
 from common.utils import method_permission_classes
 from organizations.models import Organization, OrganizationCategory, OrganizationType
 from organizations.serializers.categories_serializers import (
@@ -249,7 +249,17 @@ class HomepageSearchView(ListAPIView):
     filter_backends = (SearchFilter,)
     search_fields = ('title',)
     serializer_class = OrganizationWithDiscountsSerializer
-    queryset = Organization.objects.filter(is_active=True)
+
+    def get_queryset(self):
+        serializer = PartnerQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise ValidationException('Provide proper partner id')
+
+        partner = serializer.validated_data['partner']
+        if partner is None:
+            return Organization.objects.filter(is_active=True)
+
+        return OrganizationService.get_organization_partners(organization=partner)
 
 
 class SubscriptionsMessageListAPIView(ListAPIView):

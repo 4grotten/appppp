@@ -93,6 +93,7 @@ class TransactionService:
             )
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                 title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),

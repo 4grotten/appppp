@@ -323,6 +323,5 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
         count, partners = OrganizationService.get_partners_dict(organization=organization)
         return {
             'count': count,
-            'list': OrganizationWithImageSerializer(partners, many=True,
-                                                    context={'request': self.context['request']}).data
+            'list': OrganizationWithImageSerializer(partners, many=True).data
         }

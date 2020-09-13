@@ -168,6 +168,10 @@ class DiscountCardService:
         return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
 
     @classmethod
+    def get_cashback_discounts_of_organization(cls, organization: Organization) -> QuerySet:
+        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.CASHBACK, is_published=True)
+
+    @classmethod
     def get_lowest_cumulative_card(cls, organization: Organization) -> Union[DiscountCard, None]:
         return organization.discounts.filter(type=DiscountCard.CUMULATIVE, is_published=True,
                                              previous_cumulative=None).order_by('limit').first()

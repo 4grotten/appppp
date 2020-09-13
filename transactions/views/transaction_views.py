@@ -48,21 +48,23 @@ class TransactionPreprocessView(GenericAPIView):
         organization = serializer.validated_data['organization']
         client = serializer.validated_data['client']
 
-        transaction = TransactionService.preprocess_transaction(
+        new_transaction = TransactionService.preprocess_transaction(
             client=client, organization=organization, processed_by=request.user
         )
 
         cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
                                                                                          organization=organization)
         fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
+        cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
 
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
         data = {
-            'transaction_id': transaction.id,
+            'transaction_id': new_transaction.id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
+            'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
             'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data
         }
 

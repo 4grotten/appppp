@@ -11,7 +11,7 @@ from organizations.services.banner_services import BannerService
 
 
 class BannerView(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = ()
 
     def get(self, request, *args, **kwargs):
         serializer = OrganizationIDSerializer(data=request.GET)

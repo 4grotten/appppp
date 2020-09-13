@@ -22,12 +22,20 @@ class CompleteSerializer(serializers.ModelSerializer):
     discount_percent = serializers.IntegerField(required=True, validators=[MinValueValidator(0)])
     original_amount = serializers.DecimalField(max_digits=16, decimal_places=2,
                                                validators=[MinValueValidator(0)])
+    from_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, default=0,
+                                             validators=[MinValueValidator(0)])
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card')
+        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card', 'from_cashback')
 
     def validate(self, attrs):
+        original_amount = attrs['original_amount']
+        from_cashback = attrs['from_cashback']
+
+        if from_cashback > original_amount:
+            raise NotAcceptableException('Cashback amount is greater than original amount')
+
         card = attrs['source_card']
         percent = attrs['discount_percent']
 

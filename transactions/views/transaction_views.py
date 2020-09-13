@@ -89,7 +89,8 @@ class TransactionCompleteView(GenericAPIView):
             processed_by=request.user,
             original_amount=serializer.validated_data['original_amount'],
             discount_percent=serializer.validated_data['discount_percent'],
-            source_card=serializer.validated_data['source_card']
+            source_card=serializer.validated_data['source_card'],
+            from_cashback=serializer.validated_data['from_cashback'],
         )
 
         return Response(data={

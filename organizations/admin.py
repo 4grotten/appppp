@@ -82,9 +82,9 @@ class DiscountCardAdmin(admin.ModelAdmin):
 
 
 class OrganizationClientFinancialStatusAdmin(admin.ModelAdmin):
-    list_display = ('user', 'card', 'organization', 'get_currency',)
+    list_display = ('user', 'card', 'organization', 'accrued_cashback', 'get_currency',)
     list_filter = ('card', 'user',)
-    readonly_fields = ('get_currency',)
+    readonly_fields = ('user', 'card', 'organization', 'accrued_cashback', 'get_currency',)
 
     def get_currency(self, client_status: OrganizationClientFinancialStatus):
         return client_status.organization.currency

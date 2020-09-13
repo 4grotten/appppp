@@ -132,9 +132,11 @@ class Attendance(models.Model):
 class DiscountCard(TimestampModel):
     FIXED = 'fixed'
     CUMULATIVE = 'cumulative'
+    CASHBACK = 'cashback'
     TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
+        (CASHBACK, CASHBACK),
     )
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='discounts')

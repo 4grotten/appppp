@@ -13,7 +13,7 @@ from organizations.services.card_services import DiscountCardService
 from organizations.services.organization_services import OrganizationService
 
 
-class OrganizationDiscountsAPIView(ListAPIView):
+class DiscountsListBulkCreateAPIView(ListAPIView):
     pagination_class = None
     permission_classes = (IsAuthenticated,)
     serializer_class = DiscountBulkCreateSerializer

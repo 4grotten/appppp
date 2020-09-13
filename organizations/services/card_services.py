@@ -42,7 +42,8 @@ class DiscountCardService:
         discounts = DiscountCard.objects.filter(organization_id=organization_id, is_published=True)
         discounts_dict = {
             DiscountCard.CUMULATIVE: [],
-            DiscountCard.FIXED: []
+            DiscountCard.FIXED: [],
+            DiscountCard.CASHBACK: []
         }
 
         for discount_type, group in groupby(discounts, lambda x: x.type):

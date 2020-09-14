@@ -57,6 +57,10 @@ class TransactionPreprocessView(GenericAPIView):
         fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
         cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
 
+        accrued_cashback = OrganizationClientFinancialStatusService.get_client_accrued_cashback(
+            client=client, organization=organization
+        )
+
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
@@ -65,6 +69,7 @@ class TransactionPreprocessView(GenericAPIView):
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
             'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
+            'accrued_cashback': accrued_cashback,
             'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data
         }
 

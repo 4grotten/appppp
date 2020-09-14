@@ -48,21 +48,28 @@ class TransactionPreprocessView(GenericAPIView):
         organization = serializer.validated_data['organization']
         client = serializer.validated_data['client']
 
-        transaction = TransactionService.preprocess_transaction(
+        new_transaction = TransactionService.preprocess_transaction(
             client=client, organization=organization, processed_by=request.user
         )
 
         cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
                                                                                          organization=organization)
         fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
+        cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
+
+        accrued_cashback = OrganizationClientFinancialStatusService.get_client_accrued_cashback(
+            client=client, organization=organization
+        )
 
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
         data = {
-            'transaction_id': transaction.id,
+            'transaction_id': new_transaction.id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
+            'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
+            'accrued_cashback': accrued_cashback,
             'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data
         }
 
@@ -87,7 +94,8 @@ class TransactionCompleteView(GenericAPIView):
             processed_by=request.user,
             original_amount=serializer.validated_data['original_amount'],
             discount_percent=serializer.validated_data['discount_percent'],
-            source_card=serializer.validated_data['source_card']
+            source_card=serializer.validated_data['source_card'],
+            from_cashback=serializer.validated_data['from_cashback'],
         )
 
         return Response(data={

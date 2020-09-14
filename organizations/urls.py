@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
-from .views.card_views import OrganizationDiscountsAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
+from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.membership_views import (
@@ -60,7 +60,7 @@ attendance_urls = [
 ]
 
 discounts_urls = [
-    path('discounts/', OrganizationDiscountsAPIView.as_view(), name='discounts'),
+    path('discounts/', DiscountsListBulkCreateAPIView.as_view(), name='discounts'),
     path('discounts/<int:pk>/', OrganizationDiscountsDeleteUpdateView.as_view(), name='discounts_delete'),
     path('discounts/doBulkUpdate/', DiscountsBulkUpdateView.as_view(), name='discounts_bulk_update'),
     path('discounts/doBulkDelete/', DiscountsBulkDeleteView.as_view(), name='discounts_bulk_delete'),

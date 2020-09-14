@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from common.models import Currency, TimestampModel
@@ -8,11 +9,13 @@ from users.models import User
 class Transaction(TimestampModel):
     FIXED = 'fixed'
     CUMULATIVE = 'cumulative'
+    CASHBACK = 'cashback'
     MANUAL = 'manual'
 
     TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
+        (CASHBACK, CASHBACK),
         (MANUAL, MANUAL),
     )
 
@@ -25,10 +28,12 @@ class Transaction(TimestampModel):
     employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
-    original_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    original_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     discount_percent = models.PositiveSmallIntegerField(default=0)
     savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
-    final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
+    from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
+                                       validators=[MinValueValidator(0)])
 
     discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
@@ -43,5 +48,5 @@ class Transaction(TimestampModel):
         ordering = ('-updated_at',)
 
     def save(self, *args, **kwargs):
-        self.final_amount = self.original_amount - self.savings
+        self.final_amount = self.original_amount - self.savings - self.from_cashback
         super().save(*args, **kwargs)

@@ -54,6 +54,7 @@ class DiscountBulkCreateSerializer(serializers.Serializer):
 class DiscountGroupSerializer(serializers.Serializer):
     cumulative = DiscountCardSerializer(many=True)
     fixed = DiscountCardSerializer(many=True)
+    cashback = DiscountCardSerializer(many=True)
 
 
 class DiscountCardUpdateSerializer(serializers.ModelSerializer):

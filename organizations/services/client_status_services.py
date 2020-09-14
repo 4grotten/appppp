@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Union
 
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
@@ -78,7 +79,7 @@ class OrganizationClientFinancialStatusService:
         if not card.is_published:
             return False
 
-        if card.type == DiscountCard.FIXED:
+        if card.type == DiscountCard.FIXED or card.type == DiscountCard.CASHBACK:
             return True
 
         if card is not None:
@@ -86,3 +87,17 @@ class OrganizationClientFinancialStatusService:
             return card == owned_card
 
         return False
+
+    @classmethod
+    def has_enough_cashback_amount(cls, client: User, organization: Organization, amount: Decimal) -> bool:
+        client_status = cls.get(user=client, organization=organization)
+        if client_status is not None:
+            return client_status.accrued_cashback >= amount
+        return False
+
+    @classmethod
+    def get_client_accrued_cashback(cls, client: User, organization: Organization) -> Decimal:
+        client_status = cls.get(user=client, organization=organization)
+        if client_status is not None:
+            return client_status.accrued_cashback
+        return Decimal(0)

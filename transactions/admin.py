@@ -6,7 +6,7 @@ from .models import Transaction
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'client', 'organization', 'processed_by', 'is_processed', 'currency',
-        'original_amount', 'discount_percent', 'savings', 'final_amount', 'discount_type',
+        'original_amount', 'discount_percent', 'savings', 'from_cashback', 'final_amount', 'discount_type',
         'created_at', 'updated_at',
     )
     list_filter = (

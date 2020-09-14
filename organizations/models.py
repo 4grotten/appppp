@@ -1,5 +1,6 @@
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -132,14 +133,16 @@ class Attendance(models.Model):
 class DiscountCard(TimestampModel):
     FIXED = 'fixed'
     CUMULATIVE = 'cumulative'
+    CASHBACK = 'cashback'
     TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
+        (CASHBACK, CASHBACK),
     )
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='discounts')
     type = models.CharField(max_length=20, choices=TYPES, default=FIXED)
-    percent = models.PositiveSmallIntegerField()
+    percent = models.PositiveSmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='discounts', null=True, blank=True)
     limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
@@ -185,6 +188,8 @@ class OrganizationClientFinancialStatus(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='client_statuses')
     card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='clients', null=True, blank=True)
+    accrued_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0,
+                                           validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f'{self.user} status in {self.organization.title}'

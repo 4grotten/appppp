@@ -42,7 +42,8 @@ class DiscountCardService:
         discounts = DiscountCard.objects.filter(organization_id=organization_id, is_published=True)
         discounts_dict = {
             DiscountCard.CUMULATIVE: [],
-            DiscountCard.FIXED: []
+            DiscountCard.FIXED: [],
+            DiscountCard.CASHBACK: []
         }
 
         for discount_type, group in groupby(discounts, lambda x: x.type):
@@ -165,6 +166,10 @@ class DiscountCardService:
     @classmethod
     def get_fixed_discounts_of_organization(cls, organization: Organization) -> QuerySet:
         return DiscountCard.objects.filter(organization=organization, type=DiscountCard.FIXED, is_published=True)
+
+    @classmethod
+    def get_cashback_discounts_of_organization(cls, organization: Organization) -> QuerySet:
+        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.CASHBACK, is_published=True)
 
     @classmethod
     def get_lowest_cumulative_card(cls, organization: Organization) -> Union[DiscountCard, None]:

@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery
+from django.db.models import Sum, OuterRef, Subquery, F
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -61,7 +61,8 @@ class TransactionService:
                              processed_by: User,
                              original_amount: Decimal,
                              discount_percent: int,
-                             source_card: Union[DiscountCard, None]
+                             source_card: Union[DiscountCard, None],
+                             from_cashback: Decimal,
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False)
@@ -70,10 +71,20 @@ class TransactionService:
                 client=current_transaction.client, card=source_card):
             raise NotAcceptableException('Client cannot use this card')
 
+        cashback_percent = 0
+        if source_card is not None and source_card.type == DiscountCard.CASHBACK:
+            cashback_percent = discount_percent
+            discount_percent = 0
+
+        if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
+                client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
+            raise NotAcceptableException('Not enough accrued cashback amount')
+
         try:
             current_transaction.original_amount = original_amount
             current_transaction.savings = (original_amount * discount_percent) / 100
-            current_transaction.discount_percent = discount_percent
+            current_transaction.discount_percent = max(discount_percent, cashback_percent)
+            current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
             if source_card is not None:
@@ -110,6 +121,19 @@ class TransactionService:
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+
+        if source_card is not None and source_card.type == DiscountCard.CASHBACK:
+            cashback = current_transaction.final_amount * cashback_percent / 100
+            client_status.accrued_cashback = F('accrued_cashback') + cashback
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+            # ToDo: send notification about adding to cashback
+
+        if from_cashback > 0:
+            client_status.accrued_cashback = F('accrued_cashback') - from_cashback
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+            # ToDo: send notification about taking from cashback
 
         return current_transaction
 

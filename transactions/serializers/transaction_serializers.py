@@ -49,7 +49,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'final_amount',
             'updated_at', 'created_at',
         )
 
@@ -61,7 +61,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'final_amount',
             'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'organization',
         )
@@ -73,7 +73,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'final_amount',
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'final_amount',
             'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'client',
         )

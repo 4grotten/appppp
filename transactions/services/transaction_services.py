@@ -12,7 +12,9 @@ from common.exceptions import (
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
-    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE
+    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE,
+    WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
+    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER
 )
 from notifications.services import NotificationService
 from organizations.models import Organization, DiscountCard
@@ -127,14 +129,55 @@ class TransactionService:
             client_status.accrued_cashback = F('accrued_cashback') + cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
-            # ToDo: send notification about adding to cashback
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=CHARGE_CASHBACK_CLIENT,
+                title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=' ',
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=CHARGE_CASHBACK_SELLER,
+                title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=' ',
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
 
         if from_cashback > 0:
             client_status.accrued_cashback = F('accrued_cashback') - from_cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
-            # ToDo: send notification about taking from cashback
-
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=' ',
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=' ',
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
         return current_transaction
 
     @classmethod

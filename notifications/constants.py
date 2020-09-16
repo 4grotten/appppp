@@ -142,7 +142,7 @@ ORGANIZATION_GAVE_DESCRIPTION = ' '
 ORGANIZATION_OWN_TITLE = 'Поздравляем Вы стали собственником {organization}'
 ORGANIZATION_OWN_DESCRIPTION = ' '
 
-WITHDRAW_CASHBACK_CLIENT_TITLE = 'Поздравляем Вам сняли {amount} {currency} KGS с кешбэка'
+WITHDRAW_CASHBACK_CLIENT_TITLE = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
 CHARGE_CASHBACK_CLIENT_TITLE = 'Поздравляем вам начислили кешбэк {amount} {currency}'
 
 WITHDRAW_CASHBACK_SELLER_TITLE = 'Вы сняли {amount} {currency} с кешбека'

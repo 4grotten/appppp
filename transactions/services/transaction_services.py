@@ -92,7 +92,7 @@ class TransactionService:
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
-            if source_card is not None and source_card.type != DiscountCard.CASHBACK:
+            if source_card is None or source_card.type != DiscountCard.CASHBACK:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,

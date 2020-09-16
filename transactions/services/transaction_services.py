@@ -136,7 +136,8 @@ class TransactionService:
                 notification_type=CHARGE_CASHBACK_CLIENT,
                 title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
-                description=' ',
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id)
             )
@@ -147,7 +148,8 @@ class TransactionService:
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
-                description=' ',
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id)
             )

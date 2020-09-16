@@ -82,9 +82,14 @@ class TransactionService:
                 client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
             raise NotAcceptableException('Not enough accrued cashback amount')
 
+        discount_amount = (original_amount * discount_percent) / 100
+        amount_to_pay = original_amount - discount_amount
+        if amount_to_pay < from_cashback:
+            raise NotAcceptableException('Cashback amount is greater than original amount')
+
         try:
             current_transaction.original_amount = original_amount
-            current_transaction.savings = (original_amount * discount_percent) / 100
+            current_transaction.savings = discount_amount
             current_transaction.discount_percent = max(discount_percent, cashback_percent)
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
@@ -92,6 +97,7 @@ class TransactionService:
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
+
             if source_card is None or source_card.type != DiscountCard.CASHBACK:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
@@ -116,6 +122,7 @@ class TransactionService:
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id)
                 )
+
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
 
@@ -130,6 +137,10 @@ class TransactionService:
             client_status.accrued_cashback = F('accrued_cashback') + cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
+
+            current_transaction.to_cashback = cashback
+            current_transaction.save(update_fields=('to_cashback',))
+
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
@@ -159,6 +170,7 @@ class TransactionService:
             client_status.accrued_cashback = F('accrued_cashback') - from_cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
+
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
@@ -183,6 +195,7 @@ class TransactionService:
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id)
             )
+
         return current_transaction
 
     @classmethod

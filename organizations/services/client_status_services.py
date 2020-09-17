@@ -37,7 +37,7 @@ class OrganizationClientFinancialStatusService:
                                                          currency=organization.currency.code)
 
         total_spent_in_organization = user_totals['total_spent']
-        total_saved_in_organization = user_totals['total_savings']
+        total_saved_in_organization = user_totals['total_savings'] + user_totals['total_from_cashback']
         cumulative_card = None
         next_level_limit = None
         accrued_cashback = 0

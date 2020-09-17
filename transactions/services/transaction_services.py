@@ -16,11 +16,10 @@ from notifications.constants import (
     WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
     CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER
 )
-from notifications.services import NotificationService
+from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
-from notifications.tasks import sent_notification
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -226,9 +225,12 @@ class TransactionService:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
 
-        transactions = transactions.order_by().values('currency').annotate(total_spent=Coalesce(Sum('final_amount'), 0),
-                                                                           total_savings=Coalesce(Sum('savings'), 0))
-        return StatisticsService.get_stats_in_one_currency(totals=transactions, currency=currency)
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
     def get_user_transactions(cls, client: User):

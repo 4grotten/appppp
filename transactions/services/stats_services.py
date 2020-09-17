@@ -73,3 +73,51 @@ class StatisticsService:
             'total_savings': total_savings,
             'currency': currency
         }
+
+    @staticmethod
+    def get_transaction_totals_in_one_currency(totals: QuerySet, currency: str) -> dict:
+        """
+        "totals" queryset should look like this
+        QuerySet [
+            {
+                'currency': 'USD', 'total_spent': Decimal('7320.80'),
+                'total_savings': Decimal('85.00'),
+                'total_from_cashback': Decimal('494.20')
+            },
+            {
+                'currency': 'KGS', 'total_spent': Decimal('10000.00'),
+                'total_savings': Decimal('0.00'),
+                'total_from_cashback': Decimal('494.20')
+            }
+        ]
+        """
+
+        total_spent = 0
+        total_savings = 0
+        total_from_cashback = 0
+
+        for currency_transaction in totals:
+            if currency_transaction['currency'] == currency:
+                total_spent += currency_transaction['total_spent']
+                total_savings += currency_transaction['total_savings']
+                total_from_cashback += currency_transaction['total_from_cashback']
+                continue
+            total_spent += CurrencyConverterService.convert(
+                from_currency=currency_transaction['currency'], to_currency=currency,
+                amount=currency_transaction['total_spent']
+            )
+            total_savings += CurrencyConverterService.convert(
+                from_currency=currency_transaction['currency'], to_currency=currency,
+                amount=currency_transaction['total_savings']
+            )
+            total_from_cashback += CurrencyConverterService.convert(
+                from_currency=currency_transaction['currency'], to_currency=currency,
+                amount=currency_transaction['total_from_cashback']
+            )
+
+        return {
+            'total_spent': total_spent,
+            'total_savings': total_savings,
+            'total_from_cashback': total_from_cashback,
+            'currency': currency
+        }

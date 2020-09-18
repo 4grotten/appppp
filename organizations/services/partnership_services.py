@@ -1,7 +1,7 @@
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet, Q, F
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from notifications.constants import (
@@ -128,7 +128,8 @@ class PartnershipService:
 
     @classmethod
     def set_permissions(cls, partnership: Partnership, user: User,
-                        can_check_attendance=False, can_see_stats=False, can_edit_organization=False) -> Partnership:
+                        can_check_attendance: bool = False, can_see_stats: bool = False,
+                        can_edit_organization: bool = False, can_share_cashback: bool = False) -> Partnership:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
@@ -139,6 +140,7 @@ class PartnershipService:
             partnership.can_check_attendance = can_check_attendance
             partnership.can_see_stats = can_see_stats
             partnership.can_edit_organization = can_edit_organization
+            partnership.can_share_cashback = can_share_cashback
             partnership.save()
 
             if is_new_request:
@@ -178,3 +180,12 @@ class PartnershipService:
             return partnership
         except IntegrityError:
             raise IntegrityException('Could not update partnership permissions')
+
+    @classmethod
+    def get_shared_cashback_organization_ids(cls, organization: Organization) -> list:
+        requested_organizations = organization.requested_partnerships.filter(
+            is_accepted=True, can_share_cashback=True).annotate(partner=F('accepted_by')).values_list('partner')
+        accepted_organizations = organization.accepted_partnerships.filter(
+            is_accepted=True, can_share_cashback=True).annotate(partner=F('requested_by')).values_list('partner')
+        mutual_cashback_org_ids = requested_organizations.intersection(accepted_organizations)
+        return list(mutual_cashback_org_ids)

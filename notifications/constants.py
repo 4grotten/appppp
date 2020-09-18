@@ -46,11 +46,21 @@ ATTENDANCE_OUT = 'attendance_out'
 CHECK_ATTENDANCE_IN = 'check_attendance_in'
 CHECK_ATTENDANCE_OUT = 'check_attendance_out'
 
+WITHDRAW_CASHBACK_CLIENT = 'withdraw_cashback_client'
+CHARGE_CASHBACK_CLIENT = 'charge_cashback_client'
+
+WITHDRAW_CASHBACK_SELLER = 'withdraw_cashback_seller'
+CHARGE_CASHBACK_SELLER = 'charge_cashback_seller'
+
 NOTIFICATION_TYPES = (
+    (WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_CLIENT),
+    (CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_CLIENT),
+    (WITHDRAW_CASHBACK_SELLER, WITHDRAW_CASHBACK_SELLER),
+    (CHARGE_CASHBACK_SELLER, CHARGE_CASHBACK_SELLER),
     (CHECK_ATTENDANCE_IN, CHECK_ATTENDANCE_IN),
     (CHECK_ATTENDANCE_OUT, CHECK_ATTENDANCE_OUT),
     (ATTENDANCE_IN, ATTENDANCE_IN),
-    (ATTENDANCE_OUT,ATTENDANCE_OUT),
+    (ATTENDANCE_OUT, ATTENDANCE_OUT),
     (ACCEPT_DISCOUNT_TYPE, ACCEPT_DISCOUNT_TYPE),
     (DECLINE_DISCOUNT_TYPE, DECLINE_DISCOUNT_TYPE),
     (NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TYPE),
@@ -81,7 +91,6 @@ CHECK_ATTENDANCE_IN_TITLE = 'Пропуск на вход {organization}'
 CHECK_ATTENDANCE_OUT_TITLE = 'Пропуск на выход {organization}'
 
 ATTENDANCE_DESCRIPTION = 'Пропуск:'
-
 
 FOLLOWED_TO_ORGANIZATION_TITLE = 'На вашу организацию подписались'
 ORGANIZATION_FOLLOWED_TITLE = 'Вы подписались на {org_title}'
@@ -132,3 +141,10 @@ ORGANIZATION_GAVE_DESCRIPTION = ' '
 
 ORGANIZATION_OWN_TITLE = 'Поздравляем Вы стали собственником {organization}'
 ORGANIZATION_OWN_DESCRIPTION = ' '
+
+WITHDRAW_CASHBACK_CLIENT_TITLE = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
+CHARGE_CASHBACK_CLIENT_TITLE = 'Поздравляем вам начислили кешбэк {amount} {currency}'
+
+WITHDRAW_CASHBACK_SELLER_TITLE = 'Вы сняли {amount} {currency} с кешбека'
+CHARGE_CASHBACK_SELLER_TITLE = 'Вы начислили кешбек {amount} {currency}'
+

@@ -114,7 +114,9 @@ class AttendanceService:
                     partnership2 = Partnership.objects.get(accepted_by=rec_organization, requested_by=organization)
 
                     if partnership1.can_check_attendance or partnership2.can_check_attendance:
-                        rows.append(organization.id)
+                        if OrganizationService.user_can_check_attendance(organization=organization,
+                                                                         user=recorded_by):
+                            rows.append(organization.id)
 
         return Organization.objects.filter(id__in=rows)
 

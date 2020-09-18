@@ -37,12 +37,14 @@ class OrganizationClientFinancialStatusService:
                                                          currency=organization.currency.code)
 
         total_spent_in_organization = user_totals['total_spent']
-        total_saved_in_organization = user_totals['total_savings']
+        total_saved_in_organization = user_totals['total_savings'] + user_totals['total_from_cashback']
         cumulative_card = None
         next_level_limit = None
+        accrued_cashback = 0
 
         client_status = cls.get(user=client, organization=organization)
         if client_status is not None:
+            accrued_cashback = client_status.accrued_cashback
             if client_status.card is not None:
                 cumulative_card = client_status.card.id
                 next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
@@ -55,7 +57,8 @@ class OrganizationClientFinancialStatusService:
             'active_card': cumulative_card,
             'total_spent': total_spent_in_organization,
             'total_saved': total_saved_in_organization,
-            'next_limit': next_level_limit
+            'next_limit': next_level_limit,
+            'accrued_cashback': accrued_cashback,
         }
 
     @classmethod

@@ -32,6 +32,7 @@ class Transaction(TimestampModel):
     discount_percent = models.PositiveSmallIntegerField(default=0)
     savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
 

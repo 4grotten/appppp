@@ -147,8 +147,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         if self.context['request'].user.is_anonymous:
             return
         data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
-            client=self.context['request'].user,
-            organization=organization)
+            client=self.context['request'].user, organization=organization
+        )
         return data
 
     def get_partners(self, organization: Organization):

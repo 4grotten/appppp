@@ -12,13 +12,14 @@ from common.exceptions import (
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
-    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE
+    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE,
+    WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
+    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER
 )
-from notifications.services import NotificationService
+from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
-from notifications.tasks import sent_notification
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -80,9 +81,14 @@ class TransactionService:
                 client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
             raise NotAcceptableException('Not enough accrued cashback amount')
 
+        discount_amount = (original_amount * discount_percent) / 100
+        amount_to_pay = original_amount - discount_amount
+        if amount_to_pay < from_cashback:
+            raise NotAcceptableException('Cashback amount is greater than original amount')
+
         try:
             current_transaction.original_amount = original_amount
-            current_transaction.savings = (original_amount * discount_percent) / 100
+            current_transaction.savings = discount_amount
             current_transaction.discount_percent = max(discount_percent, cashback_percent)
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
@@ -91,28 +97,31 @@ class TransactionService:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
 
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=ACCEPT_DISCOUNT_TYPE,
-                title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                 currency=current_transaction.currency.code),
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
-            )
-            sent_notification.delay(
-                recipient_id=current_transaction.processed_by_id,
-                sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
-                title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                 currency=current_transaction.currency.code),
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
-            )
+            if source_card is None or source_card.type != DiscountCard.CASHBACK:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    sender_id=current_transaction.processed_by_id,
+                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    notification_type=ACCEPT_DISCOUNT_TYPE,
+                    title=DISCOUNT_COMPLETE_USER_TITLE.format(
+                        discount_percent=str(current_transaction.discount_percent)),
+                    description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                     currency=current_transaction.currency.code),
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id)
+                )
+                sent_notification.delay(
+                    recipient_id=current_transaction.processed_by_id,
+                    sender_id=current_transaction.client_id,
+                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
+                    title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
+                    description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                     currency=current_transaction.currency.code),
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id)
+                )
+
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
 
@@ -127,13 +136,64 @@ class TransactionService:
             client_status.accrued_cashback = F('accrued_cashback') + cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
-            # ToDo: send notification about adding to cashback
+
+            current_transaction.to_cashback = cashback
+            current_transaction.save(update_fields=('to_cashback',))
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=CHARGE_CASHBACK_CLIENT,
+                title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=CHARGE_CASHBACK_SELLER,
+                title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
 
         if from_cashback > 0:
             client_status.accrued_cashback = F('accrued_cashback') - from_cashback
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
-            # ToDo: send notification about taking from cashback
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
 
         return current_transaction
 
@@ -165,9 +225,12 @@ class TransactionService:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
 
-        transactions = transactions.order_by().values('currency').annotate(total_spent=Coalesce(Sum('final_amount'), 0),
-                                                                           total_savings=Coalesce(Sum('savings'), 0))
-        return StatisticsService.get_stats_in_one_currency(totals=transactions, currency=currency)
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
     def get_user_transactions(cls, client: User):

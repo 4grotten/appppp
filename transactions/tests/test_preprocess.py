@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 from organizations.tests.factories import (
     OrganizationFactory, OrganizationClientFinancialStatusFactory, PartnershipFactory
 )
+from organizations.tests.test_utils import PartnershipUtils
 from users.tests.factories import UserFactory, TokenFactory
 
 
@@ -36,29 +37,15 @@ class PreprocessTransactionTestCase(APITestCase):
         partner_owner = UserFactory()
 
         partner_organization = OrganizationFactory(owner=partner_owner)
-        PartnershipFactory(
-            requested_by=self.organization, accepted_by=partner_organization,
-            is_accepted=True, can_share_cashback=True
-        )
-        PartnershipFactory(
-            requested_by=partner_organization, accepted_by=self.organization,
-            is_accepted=True, can_share_cashback=True
-        )
+        PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
         )
 
-        no_mutually_shared_organization = OrganizationFactory(owner=partner_owner)
-        PartnershipFactory(
-            requested_by=self.organization, accepted_by=no_mutually_shared_organization,
-            is_accepted=True, can_share_cashback=False
-        )
-        PartnershipFactory(
-            requested_by=no_mutually_shared_organization, accepted_by=self.organization,
-            is_accepted=True, can_share_cashback=True
-        )
+        one_sided_cashback_org = OrganizationFactory(owner=partner_owner)
+        PartnershipUtils.create_partnership_with_one_sided_cashback(org1=self.organization, org2=one_sided_cashback_org)
         OrganizationClientFinancialStatusFactory(
-            user=self.client_user, organization=no_mutually_shared_organization, card=None, accrued_cashback=2000
+            user=self.client_user, organization=one_sided_cashback_org, card=None, accrued_cashback=2000
         )
 
         non_partner_organization = OrganizationFactory(owner=partner_owner)

@@ -1,7 +1,8 @@
 from decimal import Decimal
 from typing import Union
 
-from django.db.models import Sum
+from django.db import transaction
+from django.db.models import Sum, F
 from django.db.models.functions import Coalesce
 
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
@@ -44,11 +45,10 @@ class OrganizationClientFinancialStatusService:
         total_saved_in_organization = user_totals['total_savings'] + user_totals['total_from_cashback']
         cumulative_card = None
         next_level_limit = None
-        accrued_cashback = 0
+        accrued_cashback = cls.get_client_accrued_cashback(client=client, organization=organization)
 
         client_status = cls.get(user=client, organization=organization)
         if client_status is not None:
-            accrued_cashback = client_status.accrued_cashback
             if client_status.card is not None:
                 cumulative_card = client_status.card.id
                 next_level_limit = 0 if client_status.card.next_cumulative is None else client_status.card.next_cumulative.limit
@@ -97,10 +97,7 @@ class OrganizationClientFinancialStatusService:
 
     @classmethod
     def has_enough_cashback_amount(cls, client: User, organization: Organization, amount: Decimal) -> bool:
-        client_status = cls.get(user=client, organization=organization)
-        if client_status is not None:
-            return client_status.accrued_cashback >= amount
-        return False
+        return cls.get_client_accrued_cashback(client=client, organization=organization) >= amount
 
     @classmethod
     def get_client_accrued_cashback(cls, client: User, organization: Organization) -> Decimal:
@@ -111,3 +108,19 @@ class OrganizationClientFinancialStatusService:
             user=client, organization__in=partner_ids).aggregate(total=Coalesce(Sum('accrued_cashback'), 0))
 
         return accrued_cashback['total']
+
+    @classmethod
+    @transaction.atomic
+    def use_corporate_cashback(cls, client: User, organization: Organization, amount: Decimal):
+        partner_ids = PartnershipService.get_shared_cashback_organization_ids(organization=organization)
+        client_statuses = OrganizationClientFinancialStatus.objects.filter(
+            user=client, organization__in=partner_ids).order_by('-accrued_cashback')
+
+        for client_status in client_statuses:
+            to_subtract = min(client_status.accrued_cashback, amount)
+            client_status.accrued_cashback = F('accrued_cashback') - to_subtract
+            client_status.save(update_fields=('accrued_cashback',))
+
+            amount = amount - to_subtract
+            if amount <= 0:
+                break

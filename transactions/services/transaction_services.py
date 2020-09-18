@@ -131,6 +131,46 @@ class TransactionService:
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
+        if from_cashback > 0:
+            to_subtract = min(client_status.accrued_cashback, from_cashback)
+            print(f'taking {to_subtract} from client status')
+
+            client_status.accrued_cashback = F('accrued_cashback') - to_subtract
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            if to_subtract < from_cashback:
+                remaining_amount = from_cashback - to_subtract
+                OrganizationClientFinancialStatusService.use_corporate_cashback(
+                    client=current_transaction.client, organization=current_transaction.organization,
+                    amount=remaining_amount
+                )
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id)
+            )
+
         if source_card is not None and source_card.type == DiscountCard.CASHBACK:
             cashback = current_transaction.final_amount * cashback_percent / 100
             client_status.accrued_cashback = F('accrued_cashback') + cashback
@@ -159,36 +199,6 @@ class TransactionService:
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                 currency=current_transaction.currency.code),
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
-            )
-
-        if from_cashback > 0:
-            client_status.accrued_cashback = F('accrued_cashback') - from_cashback
-            client_status.save(update_fields=('accrued_cashback',))
-            client_status.refresh_from_db()
-
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=WITHDRAW_CASHBACK_CLIENT,
-                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
-                                                            currency=current_transaction.currency.code),
-                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                 currency=current_transaction.currency.code),
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
-            )
-            sent_notification.delay(
-                recipient_id=current_transaction.processed_by_id,
-                sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=WITHDRAW_CASHBACK_SELLER,
-                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
-                                                            currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,

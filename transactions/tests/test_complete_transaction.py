@@ -6,8 +6,9 @@ from rest_framework.test import APITestCase
 from common.tests.factories import CurrencyFactory
 from organizations.models import OrganizationClientFinancialStatus, DiscountCard
 from organizations.tests.factories import (
-    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory
+    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory, PartnershipFactory
 )
+from organizations.tests.test_utils import PartnershipUtils
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
 
@@ -66,3 +67,122 @@ class CompleteTransactionTestCase(APITestCase):
         client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
                                                                       organization=self.organization)
         self.assertEqual(client_status.accrued_cashback, 150)
+
+    def test_corporate_organization_cashback_uses_only_organizations_cashback_when_enough(self):
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=self.organization, card=None, accrued_cashback=500
+        )
+
+        partner_owner = UserFactory()
+
+        partner_organization = OrganizationFactory(owner=partner_owner)
+        PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
+        )
+
+        unprocessed_transaction = TransactionFactory(
+            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
+        )
+
+        data = {
+            'transaction_id': unprocessed_transaction.id,
+            'original_amount': 1000,
+            'discount_percent': 0,
+            'source_card': None,
+            'from_cashback': 500
+        }
+
+        response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                      organization=self.organization)
+        self.assertEqual(client_status.accrued_cashback, 0)
+
+        client_status_partner = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                              organization=partner_organization)
+        self.assertEqual(client_status_partner.accrued_cashback, 300)
+
+    def test_corporate_organization_cashback_uses_other_available_cashback_when_not_enough(self):
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=self.organization, card=None, accrued_cashback=500
+        )
+
+        partner_owner = UserFactory()
+
+        partner_organization = OrganizationFactory(owner=partner_owner)
+        PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
+        )
+
+        unprocessed_transaction = TransactionFactory(
+            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
+        )
+
+        data = {
+            'transaction_id': unprocessed_transaction.id,
+            'original_amount': 1000,
+            'discount_percent': 0,
+            'source_card': None,
+            'from_cashback': 700
+        }
+
+        response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
+        print(response.json())
+        self.assertEqual(response.status_code, 200)
+
+        client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                      organization=self.organization)
+        self.assertEqual(client_status.accrued_cashback, 0)
+
+        client_status_partner = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                              organization=partner_organization)
+        self.assertEqual(client_status_partner.accrued_cashback, 100)
+
+    def test_corporate_organization_cashback_must_take_from_organization_with_most_amount_first(self):
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=self.organization, card=None, accrued_cashback=500
+        )
+
+        partner_owner = UserFactory()
+
+        partner_organization = OrganizationFactory(owner=partner_owner)
+        PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
+        )
+
+        bigger_organization = OrganizationFactory(owner=partner_owner)
+        PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=bigger_organization)
+        OrganizationClientFinancialStatusFactory(
+            user=self.client_user, organization=bigger_organization, card=None, accrued_cashback=400
+        )
+
+        unprocessed_transaction = TransactionFactory(
+            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
+        )
+
+        data = {
+            'transaction_id': unprocessed_transaction.id,
+            'original_amount': 1000,
+            'discount_percent': 0,
+            'source_card': None,
+            'from_cashback': 1000
+        }
+
+        response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                      organization=self.organization)
+        self.assertEqual(client_status.accrued_cashback, 0)
+
+        client_status_partner = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                              organization=partner_organization)
+        self.assertEqual(client_status_partner.accrued_cashback, 200)
+
+        bigger_partner_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                              organization=bigger_organization)
+        self.assertEqual(bigger_partner_status.accrued_cashback, 0)

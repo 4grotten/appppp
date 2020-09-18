@@ -1,0 +1,68 @@
+import json
+
+from django.urls import reverse
+from rest_framework.test import APITestCase
+
+from common.tests.factories import CurrencyFactory
+from organizations.models import OrganizationClientFinancialStatus, DiscountCard
+from organizations.tests.factories import (
+    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory
+)
+from transactions.tests.factories import TransactionFactory
+from users.tests.factories import UserFactory, TokenFactory
+
+
+class CompleteTransactionTestCase(APITestCase):
+    def setUp(self):
+        self.url = reverse('v1:transaction_complete')
+        self.user = UserFactory(phone_number='123456789')
+        self.token = TokenFactory(user=self.user)
+        self.header = {"HTTP_AUTHORIZATION": f"Token {self.token}"}
+
+        self.currency = CurrencyFactory(code='XXX')
+        self.organization = OrganizationFactory(owner=self.user, currency=self.currency)
+
+        self.client_user = UserFactory(phone_number='777777777')
+
+    def test_single_organization_cashback_decreases_when_used(self):
+        OrganizationClientFinancialStatusFactory(user=self.client_user, organization=self.organization, card=None,
+                                                 accrued_cashback=500)
+
+        unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
+                                                     organization=self.organization, currency=self.currency)
+
+        data = {
+            'transaction_id': unprocessed_transaction.id,
+            'original_amount': 100,
+            'discount_percent': 0,
+            'source_card': None,
+            'from_cashback': 50
+        }
+
+        response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                      organization=self.organization)
+        self.assertEqual(client_status.accrued_cashback, 450)
+
+    def test_single_organization_cashback_increases_when_cashback_card_is_used(self):
+        cashback_card = DiscountCardFactory(organization=self.organization, type=DiscountCard.CASHBACK, percent=15)
+
+        unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
+                                                     organization=self.organization, currency=self.currency)
+
+        data = {
+            'transaction_id': unprocessed_transaction.id,
+            'original_amount': 1000,
+            'discount_percent': 15,
+            'source_card': cashback_card.id,
+            'from_cashback': 0
+        }
+
+        response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
+                                                                      organization=self.organization)
+        self.assertEqual(client_status.accrued_cashback, 150)

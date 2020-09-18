@@ -99,6 +99,8 @@ DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {final_amount} 
 DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent} %'
 
 NEW_DISCOUNT_TITLE = 'Доступна новая скидка {percent} %'
+NEW_CASHBACK_TITLE = 'Доступен новый кэшбек {percent} %'
+
 NEW_DISCOUNT_DESCRIPTION = '{address} '
 PARTNERSHIP_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
 PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '

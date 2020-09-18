@@ -8,7 +8,7 @@ from django.db.models import QuerySet, F
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from common.services.currency import CurrencyConverterService
 from notifications.constants import (NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE,
-                                     NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE)
+                                     NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE, NEW_CASHBACK_TITLE)
 from notifications.tasks import send_notifications_to_all_users
 from organizations.models import DiscountCard, Organization
 from organizations.services.organization_services import OrganizationService
@@ -123,8 +123,13 @@ class DiscountCardService:
     def bulk_create_discounts(cls, cards: list, organization: Organization):
         should_organize = False
         percents = list()
+        cashbacks = list()
+
         for card_data in cards:
-            percents.append(card_data['percent'])
+            if card_data['type'] != DiscountCard.CASHBACK:
+                percents.append(card_data['percent'])
+            else:
+                cashbacks.append(card_data['percent'])
             if card_data['type'] == DiscountCard.CUMULATIVE:
                 should_organize = True
                 card_data['currency'] = organization.currency
@@ -139,16 +144,27 @@ class DiscountCardService:
             return
 
         percents.sort()
+        cashbacks.sort()
+        not_dup_cashbacks = list(dict.fromkeys(cashbacks))
         not_dup_percents = list(dict.fromkeys(percents))
         str_percent = ', '.join(map(str, not_dup_percents))
-        transaction.on_commit(lambda: send_notifications_to_all_users.delay(
-            sender_id=organization.owner_id,
-            organization_id=organization.id,
-            mode=SYSTEM_NOTIFICATION_MODE,
-            notification_type=NEW_DISCOUNT_TYPE,
-            title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
-            description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
-        ))
+        str_cashback = ', '.join(map(str, not_dup_cashbacks))
+        if percents is not None:
+            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+                organization_id=organization.id,
+                mode=SYSTEM_NOTIFICATION_MODE,
+                notification_type=NEW_DISCOUNT_TYPE,
+                title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+            ))
+        if cashbacks is not None:
+            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+                organization_id=organization.id,
+                mode=SYSTEM_NOTIFICATION_MODE,
+                notification_type=NEW_DISCOUNT_TYPE,
+                title=NEW_CASHBACK_TITLE.format(percent=str_cashback),
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+            ))
 
     @classmethod
     @transaction.atomic
@@ -198,11 +214,14 @@ class DiscountCardService:
     def bulk_update_discounts(cls, cards_data: list, organization: Organization, updated_by: User):
         should_organize = False
         percents = list()
+        cashbacks = list()
 
         for card_data in cards_data:
-            percents.append(card_data['percent'])
+            if card_data['type'] != DiscountCard.CASHBACK:
+                percents.append(card_data['percent'])
+            else:
+                cashbacks.append(card_data['percent'])
             card = card_data.pop('id')
-
             if not card.organization == organization:
                 raise NotAcceptableException('Card does not belong to this organization')
             if not cls.is_card_editable(discount=card):
@@ -216,16 +235,29 @@ class DiscountCardService:
             cls.organize_cumulative_cards(organization=organization)
 
         percents.sort()
+        cashbacks.sort()
+        not_dup_cashbacks = list(dict.fromkeys(cashbacks))
         not_dup_percents = list(dict.fromkeys(percents))
         str_percent = ', '.join(map(str, not_dup_percents))
-        transaction.on_commit(lambda: send_notifications_to_all_users.delay(
-            sender_id=updated_by.id,
-            organization_id=organization.id,
-            mode=SYSTEM_NOTIFICATION_MODE,
-            notification_type=NEW_DISCOUNT_TYPE,
-            title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
-            description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
-        ))
+        str_cashback = ', '.join(map(str, not_dup_cashbacks))
+        if percents is not None:
+            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+                sender_id=updated_by.id,
+                organization_id=organization.id,
+                mode=SYSTEM_NOTIFICATION_MODE,
+                notification_type=NEW_DISCOUNT_TYPE,
+                title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+            ))
+        if cashbacks is not None:
+            transaction.on_commit(lambda: send_notifications_to_all_users.delay(
+                sender_id=updated_by.id,
+                organization_id=organization.id,
+                mode=SYSTEM_NOTIFICATION_MODE,
+                notification_type=NEW_DISCOUNT_TYPE,
+                title=NEW_CASHBACK_TITLE.format(percent=str_cashback),
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+            ))
 
     @classmethod
     def get_unique_discount_percents_to_display(cls, organization: Organization) -> list:

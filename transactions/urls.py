@@ -4,12 +4,12 @@ from transactions.views.stat_views import PartnersTotalStatsView, OrganizationTo
 from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView,
     UserTotalsView, UserTransactionsListView, UserTransactionDetailView,
-    OrganizationTransactionListView, OrganizationTransactionDetailView
+    OrganizationTransactionListView, OrganizationTransactionRetrieveDestroyView
 )
 
 urlpatterns = [
     path('transactions/', OrganizationTransactionListView.as_view(), name='organization_transactions'),
-    path('transactions/<int:pk>/', OrganizationTransactionDetailView.as_view(), name='organization_transaction_detail'),
+    path('transactions/<int:pk>/', OrganizationTransactionRetrieveDestroyView.as_view(), name='organization_transaction_detail'),
 
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),

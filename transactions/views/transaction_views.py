@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -9,12 +8,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
-from notifications.constants import (
-    DISCOUNT_NOTIFICATION_MODE,
-    TRANSACTION_DECLINED_NOTIFICATION_TITLE, DECLINE_DISCOUNT_TYPE,
-    TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION, YOU_DECLINED_NOTIFICATION_TITLE
-)
-from notifications.services import NotificationService
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
@@ -29,7 +22,7 @@ from transactions.serializers.transaction_serializers import (
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
-from users.serializers import ProfileBriefSerializer, ProfileBriefWithPhotoSerializer
+from users.serializers import ProfileBriefWithPhotoSerializer
 
 
 class TransactionPreprocessView(GenericAPIView):
@@ -200,7 +193,7 @@ class OrganizationTransactionListView(ListAPIView):
         return Response(serializer.data)
 
 
-class OrganizationTransactionDetailView(RetrieveDestroyAPIView):
+class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionWithClientSerializer
 
@@ -212,30 +205,4 @@ class OrganizationTransactionDetailView(RetrieveDestroyAPIView):
         if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
             raise PermissionDeniedException('Permission denied')
 
-        with transaction.atomic():
-            instance.delete()
-
-            NotificationService.create_notification(
-                recipient=instance.client,
-                sender=instance.processed_by,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=DECLINE_DISCOUNT_TYPE,
-                title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
-                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(instance.savings),
-                                                                                 currency=instance.currency.code),
-                organization=instance.organization
-            )
-            NotificationService.create_notification(
-                recipient=instance.processed_by,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=DECLINE_DISCOUNT_TYPE,
-                title=YOU_DECLINED_NOTIFICATION_TITLE,
-                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(instance.savings),
-                                                                                 currency=instance.currency.code),
-                organization=instance.organization
-            )
-
-            client_status = OrganizationClientFinancialStatusService.get(user=instance.client,
-                                                                         organization=instance.organization)
-            if client_status is not None:
-                OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+        TransactionService.refund_transaction(old_transaction=instance)

@@ -14,8 +14,11 @@ from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
     DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE,
     WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
-    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER
+    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
+    DECLINE_DISCOUNT_TYPE, TRANSACTION_DECLINED_NOTIFICATION_TITLE, TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION,
+    YOU_DECLINED_NOTIFICATION_TITLE
 )
+from notifications.services import NotificationService
 from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -133,7 +136,6 @@ class TransactionService:
 
         if from_cashback > 0:
             to_subtract = min(client_status.accrued_cashback, from_cashback)
-            print(f'taking {to_subtract} from client status')
 
             client_status.accrued_cashback = F('accrued_cashback') - to_subtract
             client_status.save(update_fields=('accrued_cashback',))
@@ -264,3 +266,37 @@ class TransactionService:
             transactions = transactions.filter(id__contains=search_id)
 
         return transactions
+
+    @classmethod
+    @transaction.atomic
+    def refund_transaction(cls, old_transaction: Transaction):
+        old_transaction.delete()
+
+        client_status = OrganizationClientFinancialStatusService.get(
+            user=old_transaction.client, organization=old_transaction.organization
+        )
+        if client_status is not None:
+            OrganizationClientFinancialStatusService.recalculate_cashback_after_refund(
+                client_status=client_status, refunded_transaction=old_transaction
+            )
+            OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+
+        NotificationService.create_notification(
+            recipient=old_transaction.client,
+            sender=old_transaction.processed_by,
+            mode=DISCOUNT_NOTIFICATION_MODE,
+            notification_type=DECLINE_DISCOUNT_TYPE,
+            title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
+            description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
+                                                                             currency=old_transaction.currency.code),
+            organization=old_transaction.organization
+        )
+        NotificationService.create_notification(
+            recipient=old_transaction.processed_by,
+            mode=DISCOUNT_NOTIFICATION_MODE,
+            notification_type=DECLINE_DISCOUNT_TYPE,
+            title=YOU_DECLINED_NOTIFICATION_TITLE,
+            description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
+                                                                             currency=old_transaction.currency.code),
+            organization=old_transaction.organization
+        )

@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
 from organizations.services.card_services import DiscountCardService
 from organizations.services.partnership_services import PartnershipService
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -124,3 +125,12 @@ class OrganizationClientFinancialStatusService:
             amount = amount - to_subtract
             if amount <= 0:
                 break
+
+    @classmethod
+    def recalculate_cashback_after_refund(cls, client_status: OrganizationClientFinancialStatus,
+                                          refunded_transaction: Transaction):
+        cashback_change = refunded_transaction.from_cashback - refunded_transaction.to_cashback
+
+        client_status.accrued_cashback = F('accrued_cashback') + cashback_change
+        client_status.save(update_fields=('accrued_cashback',))
+        client_status.refresh_from_db()

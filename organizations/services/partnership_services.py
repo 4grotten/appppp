@@ -1,7 +1,7 @@
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet, Q, F
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from notifications.constants import (
@@ -180,3 +180,12 @@ class PartnershipService:
             return partnership
         except IntegrityError:
             raise IntegrityException('Could not update partnership permissions')
+
+    @classmethod
+    def get_shared_cashback_organization_ids(cls, organization: Organization) -> list:
+        requested_organizations = organization.requested_partnerships.filter(
+            is_accepted=True, can_share_cashback=True).annotate(partner=F('accepted_by')).values_list('partner')
+        accepted_organizations = organization.accepted_partnerships.filter(
+            is_accepted=True, can_share_cashback=True).annotate(partner=F('requested_by')).values_list('partner')
+        mutual_cashback_org_ids = requested_organizations.intersection(accepted_organizations)
+        return list(mutual_cashback_org_ids)

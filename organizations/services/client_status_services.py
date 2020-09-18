@@ -1,8 +1,12 @@
 from decimal import Decimal
 from typing import Union
 
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
 from organizations.services.card_services import DiscountCardService
+from organizations.services.partnership_services import PartnershipService
 from users.models import User
 
 
@@ -100,7 +104,10 @@ class OrganizationClientFinancialStatusService:
 
     @classmethod
     def get_client_accrued_cashback(cls, client: User, organization: Organization) -> Decimal:
-        client_status = cls.get(user=client, organization=organization)
-        if client_status is not None:
-            return client_status.accrued_cashback
-        return Decimal(0)
+        partner_ids = PartnershipService.get_shared_cashback_organization_ids(organization=organization)
+        partner_ids.append(organization.id)
+
+        accrued_cashback = OrganizationClientFinancialStatus.objects.filter(
+            user=client, organization__in=partner_ids).aggregate(total=Coalesce(Sum('accrued_cashback'), 0))
+
+        return accrued_cashback['total']

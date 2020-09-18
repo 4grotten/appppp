@@ -110,7 +110,7 @@ class CardBackgroundAdmin(admin.ModelAdmin):
 class PartnershipAdmin(admin.ModelAdmin):
     list_display = (
         'requested_by', 'accepted_by', 'is_accepted',
-        'can_check_attendance', 'can_see_stats', 'can_edit_organization'
+        'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback',
     )
 
 

@@ -36,7 +36,9 @@ class PartnershipDetailedSerializer(PartnershipSerializer):
     class Meta:
         model = Partnership
         fields = (
-            'id', 'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback',
+            'id',
+            'can_check_attendance', 'can_see_stats', 'can_edit_organization',
+            'can_share_cashback', 'can_share_cumulative',
             'requested_by',
         )
 
@@ -46,7 +48,11 @@ class PartnershipUpdateSerializer(serializers.ModelSerializer):
     can_see_stats = serializers.BooleanField(required=False)
     can_edit_organization = serializers.BooleanField(required=False)
     can_share_cashback = serializers.BooleanField(required=False)
+    can_share_cumulative = serializers.BooleanField(required=False)
 
     class Meta:
         model = Partnership
-        fields = ('can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback')
+        fields = (
+            'can_check_attendance', 'can_see_stats', 'can_edit_organization',
+            'can_share_cashback', 'can_share_cumulative',
+        )

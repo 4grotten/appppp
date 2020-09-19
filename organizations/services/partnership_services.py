@@ -129,7 +129,8 @@ class PartnershipService:
     @classmethod
     def set_permissions(cls, partnership: Partnership, user: User,
                         can_check_attendance: bool = False, can_see_stats: bool = False,
-                        can_edit_organization: bool = False, can_share_cashback: bool = False) -> Partnership:
+                        can_edit_organization: bool = False, can_share_cashback: bool = False,
+                        can_share_cumulative: bool = False) -> Partnership:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException('No access to partner settings')
 
@@ -141,6 +142,7 @@ class PartnershipService:
             partnership.can_see_stats = can_see_stats
             partnership.can_edit_organization = can_edit_organization
             partnership.can_share_cashback = can_share_cashback
+            partnership.can_share_cumulative = can_share_cumulative
             partnership.save()
 
             if is_new_request:

@@ -222,6 +222,7 @@ class Partnership(TimestampModel):
     can_see_stats = models.BooleanField(default=False)
     can_edit_organization = models.BooleanField(default=False)
     can_share_cashback = models.BooleanField(default=False)
+    can_share_cumulative = models.BooleanField(default=False)
 
     class Meta:
         constraints = (

@@ -13,6 +13,7 @@ from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
 from organizations.models import Organization, Partnership
 from organizations.services.cashback_group_services import CashbackGroupService
+from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -138,6 +139,7 @@ class PartnershipService:
 
         is_new_request = not partnership.is_accepted
         is_sharing_cashback = can_share_cashback and not partnership.can_share_cashback
+        is_sharing_cumulative = can_share_cumulative and not partnership.can_share_cumulative
 
         try:
             partnership.is_accepted = True
@@ -150,6 +152,9 @@ class PartnershipService:
 
             if is_sharing_cashback:
                 cls.check_and_create_mutual_cashback(one_way_partnership=partnership)
+
+            if is_sharing_cumulative:
+                cls.check_and_create_shared_cumulative(one_way_partnership=partnership)
 
             if is_new_request:
                 reverse_partnership = cls.create(requested_by=partnership.accepted_by,
@@ -202,3 +207,17 @@ class PartnershipService:
 
         CashbackGroupService.link_organizations_in_cashback_group(first=one_way_partnership.accepted_by,
                                                                   second=one_way_partnership.requested_by)
+
+    @classmethod
+    def check_and_create_shared_cumulative(cls, one_way_partnership: Partnership):
+        reverse_partnership = Partnership.objects.filter(
+            requested_by=one_way_partnership.accepted_by,
+            accepted_by=one_way_partnership.requested_by,
+            is_accepted=True, can_share_cumulative=True
+        ).first()
+
+        if reverse_partnership is None:
+            return
+
+        CumulativeGroupService.link_organizations_in_cumulative_group(first=one_way_partnership.accepted_by,
+                                                                      second=one_way_partnership.requested_by)

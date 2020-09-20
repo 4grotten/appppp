@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.db.models import Sum, QuerySet
 from django.db.models.functions import Coalesce
@@ -121,3 +122,32 @@ class StatisticsService:
             'total_from_cashback': total_from_cashback,
             'currency': currency
         }
+
+    @staticmethod
+    def get_total_spent_in_one_currency(totals: QuerySet, currency: str) -> Decimal:
+        """
+        "totals" queryset should look like this
+        QuerySet [
+            {
+                'currency': 'USD',
+                'total_spent': Decimal('7320.80')
+            },
+            {
+                'currency': 'KGS',
+                'total_spent': Decimal('10000.00')
+            }
+        ]
+        """
+
+        total_spent = 0
+
+        for currency_transaction in totals:
+            if currency_transaction['currency'] == currency:
+                total_spent += currency_transaction['total_spent']
+                continue
+            total_spent += CurrencyConverterService.convert(
+                from_currency=currency_transaction['currency'], to_currency=currency,
+                amount=currency_transaction['total_spent']
+            )
+
+        return total_spent

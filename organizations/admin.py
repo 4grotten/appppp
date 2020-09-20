@@ -5,8 +5,15 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
-    CardBackground, Partnership, Banner, Message, Attendance
+    CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup
 )
+
+
+class CashbackGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'organizations_in_group', 'created_at',)
+
+    def organizations_in_group(self, group: CashbackGroup) -> int:
+        return group.organizations.count()
 
 
 class PhoneInline(admin.TabularInline):
@@ -28,8 +35,8 @@ class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
-    list_display = ('title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'is_active')
-    list_filter = ('is_active', 'types__category',)
+    list_display = ('title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'is_active', 'cashback_group',)
+    list_filter = ('is_active', 'types__category', 'cashback_group',)
     search_fields = ('title',)
 
     inlines = (PhoneInline, SocialInline, DiscountInline,)
@@ -123,6 +130,7 @@ class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'sender', 'organization', 'content')
 
 
+admin.site.register(CashbackGroup, CashbackGroupAdmin)
 admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)
 admin.site.register(OrganizationType, OrganizationTypeAdmin)
 admin.site.register(Organization, OrganizationAdmin)

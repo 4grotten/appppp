@@ -5,13 +5,14 @@ from django.db.models import QuerySet, Q, F
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from notifications.constants import (
-    PARTNER_MODE, REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
+    REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
     DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE, PERSONAL_MODE
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
 from organizations.models import Organization, Partnership
+from organizations.services.cashback_group_services import CashbackGroupService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -127,6 +128,7 @@ class PartnershipService:
         partnership.delete()
 
     @classmethod
+    @transaction.atomic
     def set_permissions(cls, partnership: Partnership, user: User,
                         can_check_attendance: bool = False, can_see_stats: bool = False,
                         can_edit_organization: bool = False, can_share_cashback: bool = False,
@@ -135,6 +137,7 @@ class PartnershipService:
             raise NotAcceptableException('No access to partner settings')
 
         is_new_request = not partnership.is_accepted
+        is_sharing_cashback = can_share_cashback and not partnership.can_share_cashback
 
         try:
             partnership.is_accepted = True
@@ -144,6 +147,9 @@ class PartnershipService:
             partnership.can_share_cashback = can_share_cashback
             partnership.can_share_cumulative = can_share_cumulative
             partnership.save()
+
+            if is_sharing_cashback:
+                cls.check_and_create_mutual_cashback(one_way_partnership=partnership)
 
             if is_new_request:
                 reverse_partnership = cls.create(requested_by=partnership.accepted_by,
@@ -184,10 +190,15 @@ class PartnershipService:
             raise IntegrityException('Could not update partnership permissions')
 
     @classmethod
-    def get_shared_cashback_organization_ids(cls, organization: Organization) -> list:
-        requested_organizations = organization.requested_partnerships.filter(
-            is_accepted=True, can_share_cashback=True).annotate(partner=F('accepted_by')).values_list('partner')
-        accepted_organizations = organization.accepted_partnerships.filter(
-            is_accepted=True, can_share_cashback=True).annotate(partner=F('requested_by')).values_list('partner')
-        mutual_cashback_org_ids = requested_organizations.intersection(accepted_organizations)
-        return list(mutual_cashback_org_ids)
+    def check_and_create_mutual_cashback(cls, one_way_partnership: Partnership):
+        reverse_partnership = Partnership.objects.filter(
+            requested_by=one_way_partnership.accepted_by,
+            accepted_by=one_way_partnership.requested_by,
+            is_accepted=True, can_share_cashback=True
+        ).first()
+
+        if reverse_partnership is None:
+            return
+
+        CashbackGroupService.link_organizations_in_cashback_group(first=one_way_partnership.accepted_by,
+                                                                  second=one_way_partnership.requested_by)

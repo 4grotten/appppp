@@ -8,6 +8,13 @@ from common.models import TimestampModel, Currency, Country
 from users.models import User
 
 
+class CashbackGroup(TimestampModel):
+    name = models.CharField(max_length=64, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class OrganizationCategory(models.Model):
     name = models.CharField(max_length=255)
 
@@ -39,11 +46,15 @@ class Organization(TimestampModel):
     closes_at = models.TimeField(null=True, blank=True)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')
     country = models.ForeignKey(Country, on_delete=models.PROTECT, related_name='countries', default='KG')
-    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='organizations')
     show_contacts = models.BooleanField(default=False)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     address = models.CharField(max_length=255, null=True, blank=True)
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
+
+    cashback_group = models.ForeignKey(CashbackGroup, on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='organizations')
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)

@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
 from organizations.services.card_services import DiscountCardService
 from organizations.services.cashback_group_services import CashbackGroupService
+from organizations.services.cumulative_group_services import CumulativeGroupService
 from transactions.models import Transaction
 from users.models import User
 
@@ -72,18 +73,40 @@ class OrganizationClientFinancialStatusService:
     @classmethod
     def update_client_cumulative_card(cls, client_status: OrganizationClientFinancialStatus):
         from transactions.services.transaction_services import TransactionService
-        user_totals = TransactionService.get_user_totals(client=client_status.user,
-                                                         organization=client_status.organization,
-                                                         currency=client_status.organization.currency.code)
-        total_spent_in_organization = user_totals['total_spent']
+        total_spent_in_cumulative_group = TransactionService.get_client_total_spent_in_cumulative_group(
+            client=client_status.user,
+            organization=client_status.organization,
+            currency=client_status.organization.currency.code
+        )
 
         highest_card_possible = DiscountCard.objects.filter(
             type=DiscountCard.CUMULATIVE, is_published=True, organization=client_status.organization,
-            limit__lte=total_spent_in_organization
+            limit__lte=total_spent_in_cumulative_group
         ).order_by('-limit').first()
 
         client_status.card = highest_card_possible
         client_status.save(update_fields=('card',))
+
+        # ToDo: Call this method asynchronously
+        cls.update_cumulative_group_partner_cards(client=client_status.user,
+                                                  organization=client_status.organization,
+                                                  total_spent=total_spent_in_cumulative_group)
+
+    @classmethod
+    # ToDo: make this method asynchronous
+    def update_cumulative_group_partner_cards(cls, client: User, organization: Organization, total_spent: Decimal):
+        partner_ids = CumulativeGroupService.get_partners_in_same_cumulative_group(organization=organization)
+        for partner_id in partner_ids:
+            client_status = OrganizationClientFinancialStatusService.get_or_create(
+                user=client, organization_id=partner_id
+            )
+
+            highest_card_possible = DiscountCard.objects.filter(
+                type=DiscountCard.CUMULATIVE, is_published=True, organization_id=partner_id, limit__lte=total_spent
+            ).order_by('-limit').first()
+
+            client_status.card = highest_card_possible
+            client_status.save(update_fields=('card',))
 
     @classmethod
     def can_use_given_card(cls, client: User, card: DiscountCard) -> bool:

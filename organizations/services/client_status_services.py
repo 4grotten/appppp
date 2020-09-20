@@ -42,7 +42,10 @@ class OrganizationClientFinancialStatusService:
         user_totals = TransactionService.get_user_totals(client=client, organization=organization,
                                                          currency=organization.currency.code)
 
-        total_spent_in_organization = user_totals['total_spent']
+        total_spent_in_cumulative_group = TransactionService.get_client_total_spent_in_cumulative_group(
+            client=client, organization=organization, currency=organization.currency.code
+        )
+
         total_saved_in_organization = user_totals['total_savings'] + user_totals['total_from_cashback']
         cumulative_card = None
         next_level_limit = None
@@ -60,7 +63,7 @@ class OrganizationClientFinancialStatusService:
 
         return {
             'active_card': cumulative_card,
-            'total_spent': total_spent_in_organization,
+            'total_spent': total_spent_in_cumulative_group,
             'total_saved': total_saved_in_organization,
             'next_limit': next_level_limit,
             'accrued_cashback': accrued_cashback,

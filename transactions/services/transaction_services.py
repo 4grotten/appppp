@@ -22,6 +22,7 @@ from notifications.services import NotificationService
 from notifications.tasks import sent_notification
 from organizations.models import Organization, DiscountCard
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.organization_services import OrganizationService
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
@@ -243,6 +244,17 @@ class TransactionService:
             total_from_cashback=Coalesce(Sum('from_cashback'), 0)
         )
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_client_total_spent_in_cumulative_group(cls, client: User, organization: Organization,
+                                                   currency: str) -> Decimal:
+        partner_ids = CumulativeGroupService.get_partners_in_same_cumulative_group(organization=organization)
+        partner_ids.append(organization.id)
+        transactions = Transaction.objects.filter(
+            client=client, is_processed=True, organization_id__in=partner_ids
+        ).order_by().values('currency').annotate(total_spent=Coalesce(Sum('final_amount'), 0))
+
+        return StatisticsService.get_total_spent_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
     def get_user_transactions(cls, client: User):

@@ -16,7 +16,7 @@ class PreprocessTransactionTestCase(APITestCase):
         self.user = UserFactory(phone_number='123456789')
         self.token = TokenFactory(user=self.user)
         self.header = {"HTTP_AUTHORIZATION": f"Token {self.token}"}
-        self.organization = OrganizationFactory(owner=self.user)
+        self.organization = OrganizationFactory(owner=self.user, cashback_group=None)
 
         self.client_user = UserFactory(phone_number='777777777')
 
@@ -36,19 +36,19 @@ class PreprocessTransactionTestCase(APITestCase):
     def test_correct_corporate_organizations_accrued_cashback(self):
         partner_owner = UserFactory()
 
-        partner_organization = OrganizationFactory(owner=partner_owner)
+        partner_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
         )
 
-        one_sided_cashback_org = OrganizationFactory(owner=partner_owner)
+        one_sided_cashback_org = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_one_sided_cashback(org1=self.organization, org2=one_sided_cashback_org)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=one_sided_cashback_org, card=None, accrued_cashback=2000
         )
 
-        non_partner_organization = OrganizationFactory(owner=partner_owner)
+        non_partner_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=non_partner_organization, card=None, accrued_cashback=1000
         )

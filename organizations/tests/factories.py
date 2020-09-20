@@ -1,7 +1,14 @@
 import factory
 
-from organizations.models import Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership
+from organizations.models import (
+    Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership, CashbackGroup
+)
 from users.tests.factories import UserFactory
+
+
+class CashbackGroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = CashbackGroup
 
 
 class OrganizationFactory(factory.django.DjangoModelFactory):
@@ -9,6 +16,8 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         model = Organization
 
     owner = factory.SubFactory(UserFactory)
+    cashback_group = factory.SubFactory(CashbackGroupFactory)
+    title = factory.Sequence(lambda n: f'Organization {n}')
 
 
 class PartnershipFactory(factory.django.DjangoModelFactory):

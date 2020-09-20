@@ -7,7 +7,7 @@ from django.db.models.functions import Coalesce
 
 from organizations.models import OrganizationClientFinancialStatus, Organization, DiscountCard
 from organizations.services.card_services import DiscountCardService
-from organizations.services.partnership_services import PartnershipService
+from organizations.services.cashback_group_services import CashbackGroupService
 from transactions.models import Transaction
 from users.models import User
 
@@ -102,7 +102,7 @@ class OrganizationClientFinancialStatusService:
 
     @classmethod
     def get_client_accrued_cashback(cls, client: User, organization: Organization) -> Decimal:
-        partner_ids = PartnershipService.get_shared_cashback_organization_ids(organization=organization)
+        partner_ids = CashbackGroupService.get_partners_in_same_cashback_group(organization=organization)
         partner_ids.append(organization.id)
 
         accrued_cashback = OrganizationClientFinancialStatus.objects.filter(
@@ -113,7 +113,7 @@ class OrganizationClientFinancialStatusService:
     @classmethod
     @transaction.atomic
     def use_corporate_cashback(cls, client: User, organization: Organization, amount: Decimal):
-        partner_ids = PartnershipService.get_shared_cashback_organization_ids(organization=organization)
+        partner_ids = CashbackGroupService.get_partners_in_same_cashback_group(organization=organization)
         client_statuses = OrganizationClientFinancialStatus.objects.filter(
             user=client, organization__in=partner_ids).order_by('-accrued_cashback')
 

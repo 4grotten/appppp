@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from common.tests.factories import CurrencyFactory
 from organizations.models import OrganizationClientFinancialStatus, DiscountCard
 from organizations.tests.factories import (
-    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory, PartnershipFactory
+    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory
 )
 from organizations.tests.test_utils import PartnershipUtils
 from transactions.tests.factories import TransactionFactory
@@ -21,19 +21,19 @@ class CompleteTransactionTestCase(APITestCase):
         self.header = {"HTTP_AUTHORIZATION": f"Token {self.token}"}
 
         self.currency = CurrencyFactory(code='XXX')
-        self.organization = OrganizationFactory(owner=self.user, currency=self.currency)
+        self.organization = OrganizationFactory(owner=self.user, currency=self.currency, cashback_group=None)
 
         self.client_user = UserFactory(phone_number='777777777')
+
+        self.unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
+                                                          organization=self.organization, currency=self.currency)
 
     def test_single_organization_cashback_decreases_when_used(self):
         OrganizationClientFinancialStatusFactory(user=self.client_user, organization=self.organization, card=None,
                                                  accrued_cashback=500)
 
-        unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
-                                                     organization=self.organization, currency=self.currency)
-
         data = {
-            'transaction_id': unprocessed_transaction.id,
+            'transaction_id': self.unprocessed_transaction.id,
             'original_amount': 100,
             'discount_percent': 0,
             'source_card': None,
@@ -50,11 +50,8 @@ class CompleteTransactionTestCase(APITestCase):
     def test_single_organization_cashback_increases_when_cashback_card_is_used(self):
         cashback_card = DiscountCardFactory(organization=self.organization, type=DiscountCard.CASHBACK, percent=15)
 
-        unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
-                                                     organization=self.organization, currency=self.currency)
-
         data = {
-            'transaction_id': unprocessed_transaction.id,
+            'transaction_id': self.unprocessed_transaction.id,
             'original_amount': 1000,
             'discount_percent': 15,
             'source_card': cashback_card.id,
@@ -75,18 +72,14 @@ class CompleteTransactionTestCase(APITestCase):
 
         partner_owner = UserFactory()
 
-        partner_organization = OrganizationFactory(owner=partner_owner)
+        partner_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
         )
 
-        unprocessed_transaction = TransactionFactory(
-            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
-        )
-
         data = {
-            'transaction_id': unprocessed_transaction.id,
+            'transaction_id': self.unprocessed_transaction.id,
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,
@@ -111,18 +104,14 @@ class CompleteTransactionTestCase(APITestCase):
 
         partner_owner = UserFactory()
 
-        partner_organization = OrganizationFactory(owner=partner_owner)
+        partner_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
         )
 
-        unprocessed_transaction = TransactionFactory(
-            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
-        )
-
         data = {
-            'transaction_id': unprocessed_transaction.id,
+            'transaction_id': self.unprocessed_transaction.id,
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,
@@ -130,7 +119,6 @@ class CompleteTransactionTestCase(APITestCase):
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
-        print(response.json())
         self.assertEqual(response.status_code, 200)
 
         client_status = OrganizationClientFinancialStatus.objects.get(user=self.client_user,
@@ -148,24 +136,20 @@ class CompleteTransactionTestCase(APITestCase):
 
         partner_owner = UserFactory()
 
-        partner_organization = OrganizationFactory(owner=partner_owner)
+        partner_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=partner_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=partner_organization, card=None, accrued_cashback=300
         )
 
-        bigger_organization = OrganizationFactory(owner=partner_owner)
+        bigger_organization = OrganizationFactory(owner=partner_owner, cashback_group=None)
         PartnershipUtils.create_partnership_with_shared_cashback(org1=self.organization, org2=bigger_organization)
         OrganizationClientFinancialStatusFactory(
             user=self.client_user, organization=bigger_organization, card=None, accrued_cashback=400
         )
 
-        unprocessed_transaction = TransactionFactory(
-            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency
-        )
-
         data = {
-            'transaction_id': unprocessed_transaction.id,
+            'transaction_id': self.unprocessed_transaction.id,
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,

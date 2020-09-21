@@ -135,6 +135,7 @@ class UserTotalsView(APIView):
                                                     organization=organization,
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
+        totals['total_savings'] += totals['total_from_cashback']
         data = TotalStatsSerializer(totals).data
         return Response(data)
 

@@ -140,16 +140,13 @@ class DiscountCardService:
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)
 
-        if not percents:
-            return
-
         percents.sort()
         cashbacks.sort()
         not_dup_cashbacks = list(dict.fromkeys(cashbacks))
         not_dup_percents = list(dict.fromkeys(percents))
         str_percent = ', '.join(map(str, not_dup_percents))
         str_cashback = ', '.join(map(str, not_dup_cashbacks))
-        if percents is not None:
+        if percents:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 organization_id=organization.id,
                 mode=SYSTEM_NOTIFICATION_MODE,
@@ -157,7 +154,7 @@ class DiscountCardService:
                 title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
             ))
-        if cashbacks is not None:
+        if cashbacks:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 organization_id=organization.id,
                 mode=SYSTEM_NOTIFICATION_MODE,

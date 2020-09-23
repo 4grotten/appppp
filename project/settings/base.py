@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'transactions.apps.TransactionsConfig',
     'organizations.apps.OrganizationsConfig',
     'users.apps.UsersConfig',
+    'notifications',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     'mapwidgets',
     'imagekit',
     'fcm_django',
-    'notifications'
+    'drf_multiple_model',
 ]
 
 MIDDLEWARE = [

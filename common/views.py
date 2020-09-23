@@ -1,12 +1,15 @@
 import re
 from django.shortcuts import render
+from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
+from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country
-from .serializers import ImageSerializer, CountrySerializer
+from .serializers import ImageSerializer, CountrySerializer, CitySerializer
+from .services.country_city import CountryCityService
 
 
 class ImageCreateView(CreateAPIView):
@@ -21,6 +24,32 @@ class CountriesListView(ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects.all()
     pagination_class = None
+
+
+class CountryCitySearchView(ObjectMultipleModelAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CountrySerializer
+    queryset = Country.objects.all()
+    pagination_class = MultipleModelLimitOffsetPagination
+
+    def get_querylist(self):
+        search_param = self.request.query_params.get('search', None)
+
+        countries, cities = CountryCityService.get_countries_and_cities(keyword=search_param)
+
+        query_list = (
+            {
+                'queryset': countries,
+                'serializer_class': CountrySerializer,
+                'label': 'countries'
+            },
+            {
+                'queryset': cities,
+                'serializer_class': CitySerializer,
+                'label': 'cities'
+            }
+        )
+        return query_list
 
 
 def index(request):

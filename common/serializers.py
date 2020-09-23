@@ -35,9 +35,11 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class CitySerializer(serializers.ModelSerializer):
+    country_code = serializers.CharField(source='country.code')
+
     class Meta:
         model = City
-        fields = ('id', 'name',)
+        fields = ('id', 'name', 'country_code')
 
 
 class TimezoneField(serializers.Field):

@@ -180,13 +180,13 @@ class OrganizationService:
     @transaction.atomic
     def create_organization(cls, owner, title, description, image_id,
                             opens_at, closes_at, address, longitude, latitude,
-                            types, numbers, accounts, cards, currency="KGS", country="KG"):
+                            types, numbers, accounts, cards, currency="KGS", country="KG", city=None):
         from organizations.services.card_services import DiscountCardService
 
         point = Point(longitude, latitude)
         organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
                                                    description=description, image_id=image_id, address=address,
-                                                   location=point, currency=currency, country=country)
+                                                   location=point, currency=currency, country=country, city=city)
         organization.types.set(types)
         for number in numbers:
             OrgPhoneNumberService.create(organization=organization, number=number)
@@ -209,7 +209,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, description, types,
-               title, opens_at, closes_at, address, currency, show_contacts, country):
+               title, opens_at, closes_at, address, currency, show_contacts, country, city=None):
         try:
             point = Point(longitude, latitude)
             organization.image_id = image_id
@@ -225,6 +225,7 @@ class OrganizationService:
             organization.currency = currency
             organization.show_contacts = show_contacts
             organization.country = country
+            organization.city = city
             organization.description = description
             organization.types.set(types)
             organization.save()

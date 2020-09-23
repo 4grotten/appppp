@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from common.serializers import ImageSerializer, CountrySerializer
+from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -124,6 +124,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     client_status = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
+    city = CitySerializer()
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -162,7 +163,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
-            'currency', 'country', 'address', 'full_location',
+            'currency', 'country', 'city', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
             'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
         )
@@ -192,7 +193,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'title', 'description', 'image_id', 'currency', 'country',
+            'title', 'description', 'image_id', 'currency', 'country', 'city',
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
             'types', 'numbers', 'accounts', 'cards'
         )
@@ -210,7 +211,7 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
-                  'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country')
+                  'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',)
 
 
 class MessageSerializer(serializers.ModelSerializer):

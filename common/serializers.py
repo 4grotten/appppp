@@ -2,7 +2,7 @@ import pytz
 import six
 from rest_framework import serializers
 
-from .models import File, Currency, Country
+from .models import File, Currency, Country, City
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -32,6 +32,12 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('code', 'name', 'flag', 'currency')
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ('id', 'name',)
 
 
 class TimezoneField(serializers.Field):

@@ -63,3 +63,15 @@ class Country(models.Model):
     class Meta:
         ordering = ('-is_priority', 'code',)
         verbose_name_plural = 'Countries'
+
+
+class City(models.Model):
+    name = models.CharField(max_length=50)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
+
+    def __str__(self):
+        return f'{self.name} in {self.country.name}'
+
+    class Meta:
+        ordering = ('name', 'country',)
+        verbose_name_plural = 'Cities'

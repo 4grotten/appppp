@@ -126,10 +126,10 @@ class DiscountCardService:
         cashbacks = list()
 
         for card_data in cards:
-            if card_data['type'] != DiscountCard.CASHBACK:
-                percents.append(card_data['percent'])
-            else:
+            if card_data['type'] == DiscountCard.CASHBACK:
                 cashbacks.append(card_data['percent'])
+            else:
+                percents.append(card_data['percent'])
             if card_data['type'] == DiscountCard.CUMULATIVE:
                 should_organize = True
                 card_data['currency'] = organization.currency

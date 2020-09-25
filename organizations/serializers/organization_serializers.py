@@ -128,8 +128,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     currency_country = serializers.SerializerMethodField()
 
     def get_currency_country(self, organization: Organization):
-        currency_countries = organization.currency.countries
-        return CountrySerializer(currency_countries, many=True).data
+        currency_country = organization.currency.countries.first()
+        return CountrySerializer(currency_country).data
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:

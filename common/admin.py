@@ -10,16 +10,16 @@ class FileAdmin(admin.ModelAdmin):
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'flag', 'currency', 'is_priority', 'is_active',)
-    search_fields = ('code', 'name', 'currency__code',)
+    list_display = ('code', 'name', 'flag', 'currency', 'is_priority', 'is_active', 'name_ru', 'name_tr',)
+    search_fields = ('code', 'name', 'currency__code', 'name_ru', 'name_tr',)
 
 
 @admin.register(City)
-class CountryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country',)
-    search_fields = ('name', 'country__code', 'country__name',)
+class CityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'country', 'name_ru', 'name_tr',)
+    search_fields = ('name', 'country__code', 'country__name', 'name_ru', 'name_tr',)
 
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name',)
+    list_display = ('code', 'name', 'name_ru', 'name_tr',)

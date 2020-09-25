@@ -1,11 +1,10 @@
 import json
 import os
+from distutils.util import strtobool
 
 from corsheaders.defaults import default_headers
 from decouple import config
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-from distutils.util import strtobool
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -23,6 +22,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -120,6 +122,17 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+
+LANGUAGES = (
+    ('ru', _('Russian')),
+    ('en', _('English')),
+    ('tr', _('Turkish')),
+)
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'ru'
+MODELTRANSLATION_LANGUAGES = ('ru', 'en', 'tr',)
+MODELTRANSLATION_AVAILABLE_LANGUAGES = ('ru', 'en', 'tr',)
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('ru', 'en', 'tr',)
 
 TIME_ZONE = 'UTC'
 

@@ -13,10 +13,14 @@ class CountryCityService:
 
         if keyword:
             country_filters = (
-                Q(name__istartswith=keyword)
+                Q(name_en__istartswith=keyword) |
+                Q(name_ru__istartswith=keyword) |
+                Q(name_tr__istartswith=keyword)
             )
             city_filters = (
-                Q(name__istartswith=keyword)
+                Q(name_en__istartswith=keyword) |
+                Q(name_ru__istartswith=keyword) |
+                Q(name_tr__istartswith=keyword)
             )
 
         countries = Country.objects.filter(country_filters)

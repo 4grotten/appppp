@@ -4,6 +4,8 @@ from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateD
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from common.exceptions import NotAcceptableException
+from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.organization_serializers import (
     PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo, OrganizationWithImageSerializer,
     OrganizationWithTypeImageSerializer
@@ -103,7 +105,13 @@ class HomepageRandomPartnersView(ListAPIView):
     serializer_class = HomepagePartnerSerializer
 
     def get_queryset(self):
-        return OrganizationService.get_random_organizations_with_min_count_of_partners()
+        serializer = CountryCityQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid country and city are required in query parameters')
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+
+        return OrganizationService.get_random_organizations_with_min_count_of_partners(country=country, city=city)
 
 
 class HomepagePartnersListView(ListAPIView):
@@ -112,7 +120,13 @@ class HomepagePartnersListView(ListAPIView):
     search_fields = ('title',)
 
     def get_queryset(self):
-        return OrganizationService.get_organizations_ordered_by_num_of_partners()
+        serializer = CountryCityQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid country and city are required in query parameters')
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+
+        return OrganizationService.get_organizations_ordered_by_num_of_partners(country=country, city=city)
 
 
 class HomepageBannersView(ListAPIView):
@@ -120,4 +134,10 @@ class HomepageBannersView(ListAPIView):
     serializer_class = OrganizationBannerInfo
 
     def get_queryset(self):
-        return OrganizationService.get_random_organizations_with_discounts()
+        serializer = CountryCityQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid country and city are required in query parameters')
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+
+        return OrganizationService.get_random_organizations_with_discounts(country=country, city=city)

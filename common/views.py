@@ -28,7 +28,6 @@ class CountriesListView(ListAPIView):
 
 class CountryCitySearchView(ObjectMultipleModelAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = CountrySerializer
     queryset = Country.objects.all()
     pagination_class = MultipleModelLimitOffsetPagination
 

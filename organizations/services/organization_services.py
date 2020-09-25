@@ -1,5 +1,5 @@
 import random
-from typing import Tuple
+from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
@@ -10,6 +10,7 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException,
     NotAcceptableException, PermissionDeniedException
 )
+from common.models import Country, City
 from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE,
                                      NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
                                      ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION,
@@ -247,16 +248,25 @@ class OrganizationService:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
 
     @classmethod
-    def get_organizations_ordered_by_num_of_partners(cls) -> QuerySet:
-        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
+    def get_organizations_ordered_by_num_of_partners(cls,
+                                                     country: Union[Country, None] = None,
+                                                     city: Union[City, None] = None) -> QuerySet:
+        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True)
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
+        queryset = queryset.annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)).exclude(
             partners_count__lt=HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD).order_by('-partners_count')
         return queryset
 
     @classmethod
-    def get_random_organizations_with_min_count_of_partners(
-            cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD) -> list:
-        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True).annotate(
+    def get_random_organizations_with_min_count_of_partners(cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD,
+                                                            country: Union[Country, None] = None,
+                                                            city: Union[City, None] = None) -> list:
+        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True)
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
+        queryset = queryset.annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)
         ).exclude(partners_count__lt=min_count)[:HOMEPAGE_PARTNERS_COUNT]
 
@@ -265,34 +275,43 @@ class OrganizationService:
         return q_list
 
     @classmethod
-    def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT) -> list:
-        queryset = Organization.objects.exclude(discounts__isnull=True).order_by('?')[:limit]
+    def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT,
+                                                country: Union[Country, None] = None,
+                                                city: Union[City, None] = None) -> list:
+        queryset = Organization.objects.exclude(discounts__isnull=True)
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
+        queryset = queryset.order_by('?')[:limit]
         return queryset
 
     @classmethod
-    def get_organizations_in_category_with_search(cls, category: OrganizationCategory, partner: Organization = None,
-                                                  search=None) -> QuerySet:
-        queryset = Organization.objects.filter(is_active=True, types__in=category.types.all(),
-                                               title__icontains=search).distinct().annotate(
-            cards_count=Count(
-                'discounts', distinct=True, filter=Q(discounts__is_published=True))).order_by('-cards_count')
-        if partner is not None:
-            queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+    def _filter_by_country_and_city(cls, queryset: QuerySet,
+                                    country: Union[Country, None] = None, city: Union[City, None] = None) -> QuerySet:
+        if country is not None:
+            queryset = queryset.filter(country=country)
+        if city is not None:
+            queryset = queryset.filter(city=city)
         return queryset
 
     @classmethod
     def get_random_organizations_in_category(cls, category: OrganizationCategory,
-                                             partner: Organization = None) -> QuerySet:
+                                             partner: Organization = None,
+                                             country: Union[Country, None] = None,
+                                             city: Union[City, None] = None) -> QuerySet:
         additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
         queryset = Organization.objects.filter(id__in=additional).order_by('?')
 
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         return queryset
 
     @classmethod
-    def get_organizations_in_category(cls, category: OrganizationCategory, partner: Organization = None) -> QuerySet:
+    def get_organizations_in_category(cls, category: OrganizationCategory,
+                                      partner: Organization = None,
+                                      country: Union[Country, None] = None,
+                                      city: Union[City, None] = None) -> QuerySet:
         queryset = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct().annotate(
             cards_count=Count(
                 'discounts', distinct=True, filter=Q(discounts__is_published=True))
@@ -300,6 +319,8 @@ class OrganizationService:
 
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
+
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         return queryset
 

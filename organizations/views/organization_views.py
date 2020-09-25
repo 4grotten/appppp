@@ -199,16 +199,24 @@ class SetOrganizationLocationAPIView(APIView):
 class HomepageOrganizationsView(ListAPIView):
     serializer_class = HomepageOrganizationsSerializer
     partner = None
+    country = None
+    city = None
 
     def get_queryset(self):
-        params = PartnerQueryParamSerializer(data=self.request.GET)
-        params.is_valid(raise_exception=True)
-        self.partner = params.validated_data.get('partner', None)
-        return OrganizationCategoryService.get_nonempty_categories(partner=self.partner)
+        serializer = PartnerQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid partner id, country and city are required in query parameters')
+        self.partner = serializer.validated_data['partner']
+        self.country = serializer.validated_data['country']
+        self.city = serializer.validated_data['city']
+        return OrganizationCategoryService.get_nonempty_categories(partner=self.partner, country=self.country,
+                                                                   city=self.city)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['partner'] = self.partner
+        context['country'] = self.country
+        context['city'] = self.city
         context['request'] = self.request
         return context
 
@@ -218,7 +226,7 @@ class OrganizationsInCategoryView(ListAPIView):
     search_fields = ('title',)
     serializer_class = OrganizationWithDiscountsSerializer
 
-    def list(self, request, *args, **kwargs):
+    def get_queryset(self):
         serializer = OrganizationAndCategorySerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
@@ -228,21 +236,13 @@ class OrganizationsInCategoryView(ListAPIView):
 
         category = serializer.validated_data['category']
         partner = serializer.validated_data['partner']
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
 
-        if request.GET.get('search'):
-            search = request.GET.get('search')
-            queryset = OrganizationService.get_organizations_in_category_with_search(category=category, partner=partner,
-                                                                                     search=search)
-        else:
-            queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner)
+        queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner,
+                                                                     country=country, city=city)
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return queryset
 
 
 class HomepageSearchView(ListAPIView):

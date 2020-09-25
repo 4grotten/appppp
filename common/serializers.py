@@ -42,6 +42,11 @@ class CitySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'country_code')
 
 
+class CountryCityQueryParamSerializer(serializers.Serializer):
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
+
+
 class TimezoneField(serializers.Field):
 
     def to_representation(self, obj):

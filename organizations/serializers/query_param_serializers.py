@@ -1,17 +1,22 @@
 from rest_framework import serializers
 
+from common.models import Country, City
 from organizations.models import Organization, OrganizationCategory
 from users.models import User
 
 
 class PartnerQueryParamSerializer(serializers.Serializer):
     partner = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True), default=None)
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
 
 
 class OrganizationAndCategorySerializer(serializers.Serializer):
     category = serializers.PrimaryKeyRelatedField(queryset=OrganizationCategory.objects.all())
     partner = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                  default=None)
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

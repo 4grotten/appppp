@@ -125,6 +125,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
     city = CitySerializer()
+    currency_country = serializers.SerializerMethodField()
+
+    def get_currency_country(self, organization: Organization):
+        currency_countries = organization.currency.countries
+        return CountrySerializer(currency_countries, many=True).data
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -163,7 +168,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
-            'currency', 'country', 'city', 'address', 'full_location',
+            'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts',
             'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
         )

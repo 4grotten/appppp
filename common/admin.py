@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.gis.db import models
+from mapwidgets import GooglePointFieldWidget
 
 from .models import File, Country, Currency, City
 
@@ -16,6 +18,10 @@ class CountryAdmin(admin.ModelAdmin):
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
+
     list_display = ('name', 'country', 'name_ru', 'name_tr', 'postal',)
     search_fields = ('name', 'country__code', 'country__name', 'name_ru', 'name_tr',)
     list_filter = ('country',)

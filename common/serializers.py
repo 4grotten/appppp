@@ -39,7 +39,7 @@ class CitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = City
-        fields = ('id', 'name', 'country_code')
+        fields = ('id', 'name', 'country_code', 'postal',)
 
 
 class CountryCityQueryParamSerializer(serializers.Serializer):

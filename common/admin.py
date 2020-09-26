@@ -18,6 +18,7 @@ class CountryAdmin(admin.ModelAdmin):
 class CityAdmin(admin.ModelAdmin):
     list_display = ('name', 'country', 'name_ru', 'name_tr',)
     search_fields = ('name', 'country__code', 'country__name', 'name_ru', 'name_tr',)
+    list_filter = ('country',)
 
 
 @admin.register(Currency)

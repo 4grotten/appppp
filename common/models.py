@@ -1,3 +1,4 @@
+from django.contrib.gis.db.models import PointField
 from django.db import models
 from imagekit.models import ImageSpecField
 from pilkit.processors import ResizeToFit
@@ -67,6 +68,9 @@ class Country(models.Model):
 
 class City(models.Model):
     name = models.CharField(max_length=50)
+    postal = models.CharField(max_length=20, null=True, blank=True)
+    location = PointField(null=True, blank=True)
+
     country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
 
     def __str__(self):

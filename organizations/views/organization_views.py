@@ -246,8 +246,9 @@ class OrganizationsInCategoryView(ListAPIView):
 
 
 class HomepageSearchView(ListAPIView):
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, DjangoFilterBackend)
     search_fields = ('title',)
+    filterset_fields = ('country', 'city',)
     serializer_class = OrganizationWithDiscountsSerializer
 
     def get_queryset(self):

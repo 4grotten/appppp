@@ -48,6 +48,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_active', 'types__category', 'country', 'cashback_group',)
     search_fields = ('title',)
+    raw_id_fields = ('country', 'city', 'image',)
 
     inlines = (PhoneInline, SocialInline, DiscountInline,)
 

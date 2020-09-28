@@ -54,13 +54,13 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 
 class OrganizationTypeAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category')
+    list_display = ('title', 'category', 'title_ru', 'title_tr',)
     list_filter = ('category',)
-    search_fields = ('title', 'category__name',)
+    search_fields = ('title', 'title_ru', 'title_tr', 'category__name',)
 
 
 class OrganizationCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'name_ru', 'name_tr',)
     search_fields = ('name',)
 
 

@@ -88,6 +88,7 @@ class Notification(TimestampModel):
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
+
         fcm_devices = notification_setting.fcm_device.all()
         fcm_devices.send_message(**notification_payload)
 

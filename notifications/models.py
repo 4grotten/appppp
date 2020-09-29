@@ -65,7 +65,12 @@ class Notification(TimestampModel):
             return
 
         notification_setting = NotificationSetting.objects.get(user=user)
-        fcm_devices = notification_setting.fcm_device.all()
+
+        if (mode == DISCOUNT_NOTIFICATION_MODE and not notification_setting.discount_notifications) or (
+                mode == PERSONAL_MODE and notification_setting.private_notifications) or (
+                mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or (
+                mode == PARTNER_MODE and notification_setting.organization_notifications):
+            return
 
         notification_payload = {
             'title': title,
@@ -83,18 +88,8 @@ class Notification(TimestampModel):
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
-
-        if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == PERSONAL_MODE and notification_setting.private_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == PARTNER_MODE and notification_setting.organization_notifications:
-            fcm_devices.send_message(**notification_payload)
+        fcm_devices = notification_setting.fcm_device.all()
+        fcm_devices.send_message(**notification_payload)
 
     @staticmethod
     def get_organization_small_image(organization):

@@ -85,68 +85,140 @@ NOTIFICATION_TYPES = (
     (DECLINE_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_RECIPIENT_TYPE),
     (REQUEST_PARTNERSHIP_RECIPIENT_TYPE, REQUEST_PARTNERSHIP_RECIPIENT_TYPE)
 )
-ATTENDANCE_IN_TITLE = 'Вход {organization}'
-ATTENDANCE_OUT_TITLE = 'Выход {organization}'
-CHECK_ATTENDANCE_IN_TITLE = 'Пропуск на вход {organization}'
-CHECK_ATTENDANCE_OUT_TITLE = 'Пропуск на выход {organization}'
 
-ATTENDANCE_DESCRIPTION = 'Пропуск:'
+# ______________________RUSSIAN___________________________#
 
-FOLLOWED_TO_ORGANIZATION_TITLE = 'На вашу организацию подписались'
-ORGANIZATION_FOLLOWED_TITLE = 'Вы подписались на {org_title}'
-DISCOUNT_COMPLETE_USER_TITLE = 'Вам провели скидку {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION = 'Итого со скидкой: {final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE = 'Вы провели скидку {discount_percent} %'
+ATTENDANCE_IN_TITLE_RU = 'Вход {organization}'
+ATTENDANCE_OUT_TITLE_RU = 'Выход {organization}'
+CHECK_ATTENDANCE_IN_TITLE_RU = 'Пропуск на вход {organization}'
+CHECK_ATTENDANCE_OUT_TITLE_RU = 'Пропуск на выход {organization}'
 
-NEW_DISCOUNT_TITLE = 'Доступна новая скидка {percent} %'
-NEW_CASHBACK_TITLE = 'Доступен новый кэшбек {percent} %'
+ATTENDANCE_DESCRIPTION_RU = 'Пропуск:'
+
+FOLLOWED_TO_ORGANIZATION_TITLE_RU = 'На вашу организацию подписались'
+ORGANIZATION_FOLLOWED_TITLE_RU = 'Вы подписались на {org_title}'
+DISCOUNT_COMPLETE_USER_TITLE_RU = 'Вам провели скидку {discount_percent} %'
+DISCOUNT_COMPLETE_DESCRIPTION_RU = 'Итого со скидкой: {final_amount} {currency}'
+DISCOUNT_COMPLETE_TITLE_RU = 'Вы провели скидку {discount_percent} %'
+
+NEW_DISCOUNT_TITLE_RU = 'Доступна новая скидка {percent} %'
+NEW_CASHBACK_TITLE_RU = 'Доступен новый кэшбек {percent} %'
+
+NEW_DISCOUNT_DESCRIPTION_RU = '{address} '
+PARTNERSHIP_REQUEST_TITLE_RU = '{sender_organization} хочет стать партнером {recipient_organization}'
+PARTNERSHIP_REQUEST_DESCRIPTION_RU = '{address} '
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU = '{address} '
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU = 'Вам отменили сделку'
+YOU_DECLINED_NOTIFICATION_TITLE_RU = 'Вы отменили сделку'
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_RU = 'Скидка {savings} {currency}'
+
+NEW_ORGANIZATION_TITLE_RU = 'Новая организация доступна для вас'
+NEW_ORGANIZATION_DESCRIPTION_RU = '{organization_title} '
+
+RECRUIT_JOB_TITLE_RU = 'Вы приняли на работу'
+RECRUIT_JOB_DESCRIPTION_RU = '{position} '
+
+GET_JOB_TITLE_RU = 'Вас приняли на работу {organization}'
+GET_JOB_DESCRIPTION_RU = '{position} '
+
+CHANGE_JOB_POSITION_TITLE_RU = 'Вас назначили на новую должность'
+CHANGE_JOB_POSITION_DESCRIPTION_RU = '{old_position} на {new_position}'
+
+CHANGE_JOB_POSITION_OWNER_TITLE_RU = 'Вы назначили другую должность'
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU = '{old_position} на {new_position}'
+
+QUIT_JOB_TITLE_RU = 'Вас уволили с работы {organization}'
+QUIT_JOB_DESCRIPTION_RU = '{position} '
+
+DISMISS_JOB_TITLE_RU = 'Вы уволили с работы'
+DISMISS_JOB_DESCRIPTION_RU = '{position} '
+
+ORGANIZATION_MESSAGE_TITLE_RU = 'Сообщение от '
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU = 'Сообщение для партнеров '
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Сообщение подписчикам партнеров '
+ORGANIZATION_MESSAGE_DESCRIPTION_RU = '{content} '
+ORGANIZATION_OWNER_MESSAGE_TITLE_RU = 'Вы отправили сообщение'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU = 'Вы отправили сообщение партнерам'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Вы отправили сообщение подписчикам партнеров'
+
+ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника {organization}'
+ORGANIZATION_GAVE_DESCRIPTION_RU = ' '
+
+ORGANIZATION_OWN_TITLE_RU = 'Поздравляем Вы стали собственником {organization}'
+ORGANIZATION_OWN_DESCRIPTION_RU = ' '
+
+WITHDRAW_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
+CHARGE_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем вам начислили кешбэк {amount} {currency}'
+
+WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кешбека'
+CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кешбек {amount} {currency}'
+
+# _______________________ ENGLISH _______________________#
+
+ATTENDANCE_IN_TITLE = 'Input {organization}'
+ATTENDANCE_OUT_TITLE = 'Exit {organization}'
+CHECK_ATTENDANCE_IN_TITLE = 'Entry pass {organization}'
+CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
+
+ATTENDANCE_DESCRIPTION = 'Pass:'
+
+FOLLOWED_TO_ORGANIZATION_TITLE = 'subscribed on your organization'
+ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to {org_title}'
+DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
+DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount:{final_amount} {currency}'
+DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
+
+NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
+NEW_CASHBACK_TITLE = 'New cashback available {percent} %'
 
 NEW_DISCOUNT_DESCRIPTION = '{address} '
-PARTNERSHIP_REQUEST_TITLE = '{sender_organization} хочет стать партнером {recipient_organization}'
+PARTNERSHIP_REQUEST_TITLE = '{sender_organization} wants become a partner {recipient_organization}'
 PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '
 SUBSCRIPTION_NOTIFICATION_DESCRIPTION = '{address} '
-TRANSACTION_DECLINED_NOTIFICATION_TITLE = 'Вам отменили сделку'
-YOU_DECLINED_NOTIFICATION_TITLE = 'Вы отменили сделку'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Скидка {savings} {currency}'
+TRANSACTION_DECLINED_NOTIFICATION_TITLE = 'Your deal was canceled'
+YOU_DECLINED_NOTIFICATION_TITLE = 'You canceled the deal'
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Discount{savings} {currency}'
 
-NEW_ORGANIZATION_TITLE = 'Новая организация доступна для вас'
+NEW_ORGANIZATION_TITLE = 'New organization is available for you '
 NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '
 
-RECRUIT_JOB_TITLE = 'Вы приняли на работу'
+RECRUIT_JOB_TITLE = 'You hired an employee'
 RECRUIT_JOB_DESCRIPTION = '{position} '
 
-GET_JOB_TITLE = 'Вас приняли на работу {organization}'
+GET_JOB_TITLE = 'You were hired as an employee {organization}'
 GET_JOB_DESCRIPTION = '{position} '
 
-CHANGE_JOB_POSITION_TITLE = 'Вас назначили на новую должность'
+CHANGE_JOB_POSITION_TITLE = 'You have been appointed to new position'
 CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
 
-CHANGE_JOB_POSITION_OWNER_TITLE = 'Вы назначили другую должность'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} на {new_position}'
+CHANGE_JOB_POSITION_OWNER_TITLE = 'You have appointed different position'
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} to {new_position}'
 
-QUIT_JOB_TITLE = 'Вас уволили с работы {organization}'
+QUIT_JOB_TITLE = 'You got fired from {organization}'
 QUIT_JOB_DESCRIPTION = '{position} '
 
-DISMISS_JOB_TITLE = 'Вы уволили с работы'
+DISMISS_JOB_TITLE = 'You got fired from'
 DISMISS_JOB_DESCRIPTION = '{position} '
 
-ORGANIZATION_MESSAGE_TITLE = 'Сообщение от '
-ORGANIZATION_MESSAGE_PARTNERS_TITLE = 'Сообщение для партнеров '
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Сообщение подписчикам партнеров '
+ORGANIZATION_MESSAGE_TITLE = 'Message from '
+ORGANIZATION_MESSAGE_PARTNERS_TITLE = 'Message for partners'
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Message to subscribers of partners'
 ORGANIZATION_MESSAGE_DESCRIPTION = '{content} '
-ORGANIZATION_OWNER_MESSAGE_TITLE = 'Вы отправили сообщение'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = 'Вы отправили сообщение партнерам'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Вы отправили сообщение подписчикам партнеров'
+ORGANIZATION_OWNER_MESSAGE_TITLE = 'You have sent a message'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = 'You have sent a message to partners'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'You have sent message to your partners subscribers'
 
-ORGANIZATION_GAVE_TITLE = 'Вы передали права собственника {organization}'
+ORGANIZATION_GAVE_TITLE = 'You have transferred ownership rights {organization}'
 ORGANIZATION_GAVE_DESCRIPTION = ' '
 
-ORGANIZATION_OWN_TITLE = 'Поздравляем Вы стали собственником {organization}'
+ORGANIZATION_OWN_TITLE = 'Congratulations, you become owner {organization}'
 ORGANIZATION_OWN_DESCRIPTION = ' '
 
-WITHDRAW_CASHBACK_CLIENT_TITLE = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
-CHARGE_CASHBACK_CLIENT_TITLE = 'Поздравляем вам начислили кешбэк {amount} {currency}'
+WITHDRAW_CASHBACK_CLIENT_TITLE = 'Congratulations you have paid,{amount} {currency} from cashback'
+CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} {currency}'
 
-WITHDRAW_CASHBACK_SELLER_TITLE = 'Вы сняли {amount} {currency} с кешбека'
-CHARGE_CASHBACK_SELLER_TITLE = 'Вы начислили кешбек {amount} {currency}'
+WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer{amount} {currency} from cashback '
+CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
+
+
 

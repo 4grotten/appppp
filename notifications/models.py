@@ -99,10 +99,24 @@ class Notification(TimestampModel):
 
 class NotificationSetting(TimestampModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    fcm_device = models.ManyToManyField(FCMDevice)
+    fcm_device = models.ManyToManyField(FCMDevice, through='SettingsToToken')
     discount_notifications = models.BooleanField(default=True)
     private_notifications = models.BooleanField(default=True)
     organization_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)
+
+
+class SettingsToToken(TimestampModel):
+    ENGLISH = 'en'
+    RUSSIAN = 'ru'
+    TURKISH = 'tr'
+    LANGUAGES = (
+        (ENGLISH, ENGLISH),
+        (RUSSIAN, RUSSIAN),
+        (TURKISH, TURKISH)
+    )
+    notification_settings = models.ForeignKey(NotificationSetting, on_delete=models.CASCADE)
+    fcm_device = models.ForeignKey(FCMDevice, on_delete=models.CASCADE)
+    language = models.CharField(max_length=25, choices=LANGUAGES, default=RUSSIAN)

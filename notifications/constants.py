@@ -162,7 +162,7 @@ CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
 
 ATTENDANCE_DESCRIPTION = 'Pass:'
 
-FOLLOWED_TO_ORGANIZATION_TITLE = 'subscribed on your organization'
+FOLLOWED_TO_ORGANIZATION_TITLE = 'subscribed to your organization'
 ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to {org_title}'
 DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
 DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount:{final_amount} {currency}'
@@ -172,7 +172,7 @@ NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
 NEW_CASHBACK_TITLE = 'New cashback available {percent} %'
 
 NEW_DISCOUNT_DESCRIPTION = '{address} '
-PARTNERSHIP_REQUEST_TITLE = '{sender_organization} wants become a partner {recipient_organization}'
+PARTNERSHIP_REQUEST_TITLE = '{sender_organization} wants to become a partner {recipient_organization}'
 PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '
 SUBSCRIPTION_NOTIFICATION_DESCRIPTION = '{address} '
 TRANSACTION_DECLINED_NOTIFICATION_TITLE = 'Your deal was canceled'
@@ -197,7 +197,7 @@ CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} to {new_position}'
 QUIT_JOB_TITLE = 'You got fired from {organization}'
 QUIT_JOB_DESCRIPTION = '{position} '
 
-DISMISS_JOB_TITLE = 'You got fired from'
+DISMISS_JOB_TITLE = 'You fired from'
 DISMISS_JOB_DESCRIPTION = '{position} '
 
 ORGANIZATION_MESSAGE_TITLE = 'Message from '
@@ -211,13 +211,13 @@ ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'You have sent message to 
 ORGANIZATION_GAVE_TITLE = 'You have transferred ownership rights {organization}'
 ORGANIZATION_GAVE_DESCRIPTION = ' '
 
-ORGANIZATION_OWN_TITLE = 'Congratulations, you become owner {organization}'
+ORGANIZATION_OWN_TITLE = 'Congratulations, you became an owner of {organization}'
 ORGANIZATION_OWN_DESCRIPTION = ' '
 
 WITHDRAW_CASHBACK_CLIENT_TITLE = 'Congratulations you have paid,{amount} {currency} from cashback'
 CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} {currency}'
 
-WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer{amount} {currency} from cashback '
+WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer{amount} {currency} from cashback'
 CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
 
 

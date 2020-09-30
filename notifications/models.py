@@ -54,7 +54,9 @@ class Notification(TimestampModel):
             user=self.recipient,
             type=self.type,
             title=self.title,
+            title_ru=self.title_ru,
             description=self.description,
+            description_ru=self.description_ru,
             mode=self.mode.name,
             notification_id=self.id,
             organization=self.organization,
@@ -62,8 +64,8 @@ class Notification(TimestampModel):
         )
 
     @classmethod
-    def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
-                          type: str, organization=None, extra_data=None):
+    def send_notification(cls, user: User, title: str, title_ru: str, description: str, description_ru: str,
+                          notification_id: int, mode: str, type: str, organization=None, extra_data=None):
 
         if not NotificationSetting.objects.filter(user=user).exists():
             return
@@ -92,9 +94,27 @@ class Notification(TimestampModel):
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
+        notification_payload_ru = {
+            'title': title_ru,
+            'body': description_ru,
+            'click_action': type,
+            'data': {
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'extra_data': extra_data,
+                'type': type
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+        }
 
-        fcm_devices = notification_setting.fcm_device.all()
-        fcm_devices.send_message(**notification_payload)
+        fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')
+        fcm_devices_ru.send_message(**notification_payload_ru)
+        fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en')
+        fcm_devices_en.send_message(**notification_payload)
 
     @staticmethod
     def get_organization_small_image(organization):

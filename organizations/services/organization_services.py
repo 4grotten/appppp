@@ -202,7 +202,7 @@ class OrganizationService:
             mode=SYSTEM_NOTIFICATION_MODE,
             notification_type=NEW_ORGANIZATION,
             title=NEW_ORGANIZATION_TITLE,
-            description=NEW_ORGANIZATION_DESCRIPTION.format(organization_title=organization.title)
+            extra_data=dict(organization_title=organization.title)
         ))
 
         return organization
@@ -337,9 +337,8 @@ class OrganizationService:
                 sender_id=current_owner.id,
                 mode=PERSONAL_MODE,
                 notification_type=ORGANIZATION_OWN_TYPE,
-                title=ORGANIZATION_OWN_TITLE.format(organization=organization.title),
-                description=ORGANIZATION_OWN_DESCRIPTION,
-                organization_id=organization.id
+                organization_id=organization.id,
+                extra_data=dict(organization=organization.title)
             )
 
             sent_notification.delay(
@@ -347,9 +346,9 @@ class OrganizationService:
                 sender_id=new_owner.id,
                 mode=PERSONAL_MODE,
                 notification_type=ORGANIZATION_GAVE_TYPE,
-                title=ORGANIZATION_GAVE_TITLE.format(organization=organization.title),
                 description=ORGANIZATION_GAVE_DESCRIPTION,
-                organization_id=organization.id
+                organization_id=organization.id,
+                extra_data=dict(organization=organization.title)
             )
 
         except IntegrityError:
@@ -423,8 +422,6 @@ class OrgMessageService:
     @classmethod
     def send_message(cls, organization: Organization, content: str, sender: User, message_to: str):
         receivers = ()
-        receiver_notification_title = ORGANIZATION_MESSAGE_TITLE
-        sender_notification_title = ORGANIZATION_OWNER_MESSAGE_TITLE
         notification_sender_id = None
         partners_to_save = ()
         partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
@@ -432,14 +429,10 @@ class OrgMessageService:
             receivers = User.objects.filter(subscriptions__organization_id=organization.id).distinct()
         elif message_to == "partners_followers":
             notification_sender_id = sender.id
-            receiver_notification_title = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE
-            sender_notification_title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
             receivers = User.objects.filter(subscriptions__organization_id__in=partners).distinct()
         elif message_to == "partners_members":
             notification_sender_id = sender.id
-            sender_notification_title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE
-            receiver_notification_title = ORGANIZATION_MESSAGE_PARTNERS_TITLE
             partners_to_save = OrganizationService.get_organization_partners(organization=organization).distinct()
             receivers = User.objects.filter(
                 Q(memberships__organization_id__in=partners) | Q(owned_organizations__in=partners)).distinct()
@@ -456,18 +449,15 @@ class OrgMessageService:
                 recipient_id=receiver.id,
                 mode=PERSONAL_MODE,
                 notification_type=ORGANIZATION_MESSAGE_TYPE,
-                title=receiver_notification_title,
-                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content)
+                extra_data=dict(message_to=message_to, content=content)
             )
         send_notifications_organization_members.delay(
             sender_id=sender.id,
             mode=PERSONAL_MODE,
             notification_type=ORGANIZATION_MESSAGE_SENDER_TYPE,
-            title=sender_notification_title,
-            description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=content),
             organization_id=organization.id,
             with_permissions=dict(can_send_message=True),
             members_organization_id=organization.id,
-            extra_data=dict(can_send_message=True)
+            extra_data=dict(can_send_message=True, message_to=message_to, content=content)
         )
         return message

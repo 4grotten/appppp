@@ -221,4 +221,75 @@ WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer{amount} {currency} from cash
 CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
 
 
+def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -> dict:
+    notification_str = dict()
 
+    if notification_type == NEW_ORGANIZATION:
+        notification_str = dict(title=NEW_ORGANIZATION_TITLE,
+                                description=NEW_ORGANIZATION_DESCRIPTION.format(
+                                    organization_title=extra_data['organization_title']),
+                                title_ru=NEW_ORGANIZATION_TITLE_RU,
+                                description_ru=NEW_ORGANIZATION_DESCRIPTION_RU.format(
+                                    organization_title=extra_data['organization_title']))
+
+    elif notification_type == ORGANIZATION_OWN_TYPE:
+        notification_str = dict(title=ORGANIZATION_OWN_TITLE.format(organization=extra_data['organization']),
+                                description=ORGANIZATION_OWN_DESCRIPTION,
+                                title_ru=ORGANIZATION_OWN_TITLE_RU,
+                                description_ru=ORGANIZATION_OWN_DESCRIPTION)
+
+    elif notification_type == ORGANIZATION_GAVE_TYPE:
+        notification_str = dict(title=ORGANIZATION_GAVE_TITLE.format(organization=extra_data['organization']),
+                                description=ORGANIZATION_GAVE_DESCRIPTION,
+                                title_ru=ORGANIZATION_GAVE_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=ORGANIZATION_GAVE_DESCRIPTION)
+
+    elif notification_type == ORGANIZATION_MESSAGE_TYPE:
+        title_ru = ''
+        title = ''
+        if extra_data['message_to'] == 'organization_followers':
+            title = ORGANIZATION_MESSAGE_TITLE
+            title_ru = ORGANIZATION_MESSAGE_TITLE_RU
+        elif extra_data['message_to'] == 'partners_followers':
+            title = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE
+            title_ru = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
+        elif extra_data['message_to'] == 'partners_members':
+            title = ORGANIZATION_MESSAGE_PARTNERS_TITLE
+            title_ru = ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU
+        notification_str = dict(title=title,
+                                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=extra_data['content']),
+                                title_ru=title_ru,
+                                description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
+                                    content=extra_data['content']))
+    elif notification_type == ORGANIZATION_MESSAGE_SENDER_TYPE:
+        title_ru = ''
+        title = ''
+        if extra_data['message_to'] == 'organization_followers':
+            title = ORGANIZATION_OWNER_MESSAGE_TITLE
+            title_ru = ORGANIZATION_OWNER_MESSAGE_TITLE_RU
+        elif extra_data['message_to'] == 'partners_followers':
+            title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE
+            title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
+        elif extra_data['message_to'] == 'partners_members':
+            title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE
+            title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU
+        notification_str = dict(title=title,
+                                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=extra_data['content']),
+                                title_ru=title_ru,
+                                description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
+                                    content=extra_data['content']))
+    elif notification_type == NEW_DISCOUNT_TYPE:
+        title = ''
+        title_ru = ''
+        if extra_data['percent']:
+            title = NEW_DISCOUNT_TITLE.format(percent=extra_data['percent'])
+            title_ru = NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['percent'])
+        elif extra_data['cashback']:
+            title = NEW_CASHBACK_TITLE.format(percent=extra_data['cashback'])
+            title_ru = NEW_CASHBACK_TITLE_RU.format(percent=extra_data['cashback'])
+        notification_str = dict(title=title,
+                                description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data['address']),
+                                title_ru=title_ru,
+                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data['address']))
+
+    return notification_str

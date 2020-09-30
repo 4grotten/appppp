@@ -6,12 +6,10 @@ from fcm_django.models import FCMDevice
 from common.models import TimestampModel
 from organizations.models import Organization
 from project.settings.base import HOST_URL
-from .constants import (
-    NOTIFICATION_MODES,
-    DISCOUNT_NOTIFICATION_MODE,
-    SUBSCRIPTION_NOTIFICATION_MODE,
-    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
-    NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
+from .constants import (get_titles_descriptions_from_type,
+                        DISCOUNT_NOTIFICATION_MODE,
+                        SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
 
 User = get_user_model()
 
@@ -42,9 +40,15 @@ class Notification(TimestampModel):
     def __str__(self):
         return self.title
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
-        super(Notification, self).save()
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            notification_str = get_titles_descriptions_from_type(notification_type=self.type,
+                                                                 extra_data=self.extra_data)
+            self.title = notification_str['title']
+            self.description = notification_str['description']
+            self.title_ru = notification_str['title_ru']
+            self.description_ru = notification_str['description_ru']
+        super().save(*args, **kwargs)
 
         self.send_notification(
             user=self.recipient,

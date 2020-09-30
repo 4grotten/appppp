@@ -32,7 +32,8 @@ class SubscriptionService:
                 notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
                 title=FOLLOWED_TO_ORGANIZATION_TITLE,
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
-                organization_id=organization.id
+                organization_id=organization.id,
+                extra_data=dict(address=organization.address)
             )
 
             sent_notification.delay(
@@ -41,7 +42,8 @@ class SubscriptionService:
                 notification_type=ORGANIZATION_FOLLOWED_TYPE,
                 title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
-                organization_id=organization.id
+                organization_id=organization.id,
+                extra_data=dict(org_title=organization.title, address=organization.address)
             )
 
             return True

@@ -112,7 +112,10 @@ class TransactionService:
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                      currency=current_transaction.currency.code),
                     organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id)
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    discount_percent=str(current_transaction.discount_percent),
+                                    final_amount=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
                 )
                 sent_notification.delay(
                     recipient_id=current_transaction.processed_by_id,
@@ -123,7 +126,10 @@ class TransactionService:
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                      currency=current_transaction.currency.code),
                     organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id)
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    discount_percent=str(current_transaction.discount_percent),
+                                    final_amount=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
                 )
 
         except IntegrityError:
@@ -159,7 +165,9 @@ class TransactionService:
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
@@ -171,7 +179,9 @@ class TransactionService:
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
 
         if source_card is not None and source_card.type == DiscountCard.CASHBACK:
@@ -193,7 +203,9 @@ class TransactionService:
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
@@ -205,7 +217,9 @@ class TransactionService:
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
 
         return current_transaction
@@ -301,7 +315,10 @@ class TransactionService:
             title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
             description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
                                                                              currency=old_transaction.currency.code),
-            organization=old_transaction.organization
+            organization=old_transaction.organization,
+            extra_data=dict(savings=str(old_transaction.savings),
+                            currency=old_transaction.currency.code,
+                            recipient='client'),
         )
         NotificationService.create_notification(
             recipient=old_transaction.processed_by,
@@ -310,5 +327,8 @@ class TransactionService:
             title=YOU_DECLINED_NOTIFICATION_TITLE,
             description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
                                                                              currency=old_transaction.currency.code),
-            organization=old_transaction.organization
+            organization=old_transaction.organization,
+            extra_data=dict(savings=str(old_transaction.savings),
+                            currency=old_transaction.currency.code,
+                            recipient='seller')
         )

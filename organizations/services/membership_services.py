@@ -36,7 +36,8 @@ class MembershipService:
                 description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
                 extra_data=dict(membership_id=membership.id,
-                                can_edit_organization=True)
+                                can_edit_organization=True,
+                                position=membership.role.title)
             )
             sent_notification.delay(
                 recipient_id=membership.user_id,
@@ -67,7 +68,8 @@ class MembershipService:
             notification_type=QUIT_JOB_TYPE,
             title=QUIT_JOB_TITLE.format(organization=membership.organization.title),
             description=QUIT_JOB_DESCRIPTION.format(position=membership.role.title),
-            organization_id=membership.organization_id
+            organization_id=membership.organization_id,
+            extra_data=dict(organization=membership.organization.title, position=membership.role.title)
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
             with_permissions=dict(can_edit_organization=True),
@@ -77,7 +79,8 @@ class MembershipService:
             notification_type=DISMISS_JOB_TYPE,
             title=DISMISS_JOB_TITLE,
             description=DISMISS_JOB_DESCRIPTION.format(position=membership.role.title),
-            organization_id=membership.organization_id
+            organization_id=membership.organization_id,
+            extra_data=dict(position=membership.role.title)
         ))
         return membership.delete()
 
@@ -114,7 +117,9 @@ class MembershipService:
                                                                    new_position=new_role.title),
                 organization_id=membership.organization_id,
                 extra_data=dict(membership_id=membership.id,
-                                can_edit_organization=membership.role.can_edit_organization)
+                                can_edit_organization=membership.role.can_edit_organization,
+                                old_position=old_position.title,
+                                new_position=new_role.title)
             ))
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 with_permissions=dict(can_edit_organization=True),

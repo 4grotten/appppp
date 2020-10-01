@@ -95,9 +95,8 @@ class FCMDeviceSettingsService:
     @classmethod
     def update(cls, registration_id: int, language: str, user: User):
         try:
-            device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id)
-            if device_settings.notification_settings.user != user:
-                raise NotAcceptableException('No rights to edit this device')
+            device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id,
+                                                    notification_settings__user=user)
             device_settings.language = language
             device_settings.save()
         except cls.model.DoesNotExist:

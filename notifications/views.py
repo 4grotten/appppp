@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import NotificationFilter
-from .serializers import NotificationSerializer, CustomFCMDeviceSerializer, NotificationSettingSerializer, \
-    FCMDeviceSettingsSerializer
+from .serializers import (NotificationSerializer, CustomFCMDeviceSerializer, NotificationSettingSerializer,
+                          FCMDeviceSettingsSerializer)
 from .services import NotificationService, NotificationSettingService, FCMDeviceSettingsService
 
 

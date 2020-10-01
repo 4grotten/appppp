@@ -72,10 +72,10 @@ class Notification(TimestampModel):
 
         notification_setting = NotificationSetting.objects.get(user=user)
 
-        if (mode == DISCOUNT_NOTIFICATION_MODE and not notification_setting.discount_notifications) or (
+        if not ((mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications) or (
                 mode == PERSONAL_MODE and notification_setting.private_notifications) or (
-                mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or (
-                mode == PARTNER_MODE and notification_setting.organization_notifications):
+                        mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or (
+                        mode == PARTNER_MODE and notification_setting.organization_notifications)):
             return
 
         notification_payload = {

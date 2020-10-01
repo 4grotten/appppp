@@ -113,9 +113,10 @@ class PartnershipService:
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.requested_by.id,
-            with_permissions=dict(can_edit_partner=True, sender_organization=partnership.requested_by.title,
-                                  recipient_organization=partnership.accepted_by.title,
-                                  address=partnership.requested_by.address)
+            with_permissions=dict(can_edit_partner=True),
+            extra_data=dict(sender_organization=partnership.requested_by.title,
+                            recipient_organization=partnership.accepted_by.title,
+                            address=partnership.requested_by.address),
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
@@ -126,9 +127,10 @@ class PartnershipService:
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
-            with_permissions=dict(can_edit_partner=True, sender_organization=partnership.requested_by.title,
-                                  recipient_organization=partnership.accepted_by.title,
-                                  address=partnership.requested_by.address)
+            with_permissions=dict(can_edit_partner=True),
+            extra_data=dict(sender_organization=partnership.requested_by.title,
+                            recipient_organization=partnership.accepted_by.title,
+                            address=partnership.requested_by.address),
         ))
         try:
             Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()

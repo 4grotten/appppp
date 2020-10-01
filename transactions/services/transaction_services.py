@@ -16,7 +16,7 @@ from notifications.constants import (
     WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
     CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
     DECLINE_DISCOUNT_TYPE, TRANSACTION_DECLINED_NOTIFICATION_TITLE, TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION,
-    YOU_DECLINED_NOTIFICATION_TITLE
+    YOU_DECLINED_NOTIFICATION_TITLE, PERSONAL_MODE
 )
 from notifications.services import NotificationService
 from notifications.tasks import sent_notification
@@ -105,7 +105,7 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_USER_TITLE.format(
                         discount_percent=str(current_transaction.discount_percent)),
@@ -120,7 +120,7 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.processed_by_id,
                     sender_id=current_transaction.client_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
@@ -158,7 +158,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=WITHDRAW_CASHBACK_CLIENT,
                 title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
@@ -172,7 +172,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=WITHDRAW_CASHBACK_SELLER,
                 title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
@@ -196,7 +196,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=CHARGE_CASHBACK_CLIENT,
                 title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
@@ -210,7 +210,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),

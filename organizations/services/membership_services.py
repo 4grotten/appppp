@@ -47,7 +47,8 @@ class MembershipService:
                 title=GET_JOB_TITLE.format(organization=membership.organization.title),
                 description=GET_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id,
+                extra_data=dict(membership_id=membership.id, organization=membership.organization.title,
+                                position=membership.role.title,
                                 can_edit_organization=membership.role.can_edit_organization)
             )
             return membership
@@ -132,7 +133,9 @@ class MembershipService:
                 description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(old_position=old_position.title,
                                                                          new_position=new_role.title),
                 organization_id=membership.organization_id,
-                extra_data=dict(membership_id=membership.id, can_edit_organization=True)
+                extra_data=dict(membership_id=membership.id, can_edit_organization=True,
+                                old_position=old_position.title,
+                                new_position=new_role.title)
             ))
             return membership
         except IntegrityError:

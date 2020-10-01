@@ -27,9 +27,6 @@ CHANGE_JOB_POSITION_OWNER_TYPE = 'changed_position_as_owner'
 DISMISS_JOB_TYPE = 'dismissed'
 QUIT_JOB_TYPE = 'quit'
 
-ACCEPT_DISCOUNT_TYPE = 'accept_discount'
-ACCEPT_SELLER_DISCOUNT_TYPE = 'accepted_seller_discount'
-DECLINE_DISCOUNT_TYPE = 'decline_discount'
 NEW_DISCOUNT_TYPE = 'new_discount'
 NEW_ORGANIZATION = 'new_organization'
 FOLLOWED_TO_ORGANIZATION_TYPE = 'followed_to_organization'
@@ -45,6 +42,10 @@ ATTENDANCE_IN = 'attendance_in'
 ATTENDANCE_OUT = 'attendance_out'
 CHECK_ATTENDANCE_IN = 'check_attendance_in'
 CHECK_ATTENDANCE_OUT = 'check_attendance_out'
+
+ACCEPT_DISCOUNT_TYPE = 'accept_discount'
+ACCEPT_SELLER_DISCOUNT_TYPE = 'accepted_seller_discount'
+DECLINE_DISCOUNT_TYPE = 'decline_discount'
 
 WITHDRAW_CASHBACK_CLIENT = 'withdraw_cashback_client'
 CHARGE_CASHBACK_CLIENT = 'charge_cashback_client'
@@ -72,6 +73,7 @@ NOTIFICATION_TYPES = (
     (DECLINE_PARTNERSHIP_TYPE, DECLINE_PARTNERSHIP_TYPE),
     (REQUEST_PARTNERSHIP_TYPE, REQUEST_PARTNERSHIP_TYPE),
     (ACCEPT_SELLER_DISCOUNT_TYPE, ACCEPT_SELLER_DISCOUNT_TYPE),
+    (GET_JOB_TYPE, GET_JOB_TYPE),
     (RECRUIT_JOB_TYPE, RECRUIT_JOB_TYPE),
     (CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TYPE),
     (DISMISS_JOB_TYPE, DISMISS_JOB_TYPE),
@@ -162,10 +164,10 @@ CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
 
 ATTENDANCE_DESCRIPTION = 'Pass:'
 
-FOLLOWED_TO_ORGANIZATION_TITLE = 'subscribed to your organization'
+FOLLOWED_TO_ORGANIZATION_TITLE = 'Subscribed to your organization'
 ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to {org_title}'
 DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount:{final_amount} {currency}'
+DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
 
 NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
@@ -217,7 +219,7 @@ ORGANIZATION_OWN_DESCRIPTION = ' '
 WITHDRAW_CASHBACK_CLIENT_TITLE = 'Congratulations you have paid,{amount} {currency} from cashback'
 CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} {currency}'
 
-WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer{amount} {currency} from cashback'
+WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer {amount} {currency} from cashback'
 CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
 
 
@@ -235,7 +237,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     elif notification_type == ORGANIZATION_OWN_TYPE:
         notification_str = dict(title=ORGANIZATION_OWN_TITLE.format(organization=extra_data['organization']),
                                 description=ORGANIZATION_OWN_DESCRIPTION,
-                                title_ru=ORGANIZATION_OWN_TITLE_RU,
+                                title_ru=ORGANIZATION_OWN_TITLE_RU.format(organization=extra_data['organization']),
                                 description_ru=ORGANIZATION_OWN_DESCRIPTION)
 
     elif notification_type == ORGANIZATION_GAVE_TYPE:
@@ -281,10 +283,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     elif notification_type == NEW_DISCOUNT_TYPE:
         title = ''
         title_ru = ''
-        if extra_data['percent']:
+        if 'percent' in extra_data:
             title = NEW_DISCOUNT_TITLE.format(percent=extra_data['percent'])
             title_ru = NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['percent'])
-        elif extra_data['cashback']:
+        elif 'cashback' in extra_data:
             title = NEW_CASHBACK_TITLE.format(percent=extra_data['cashback'])
             title_ru = NEW_CASHBACK_TITLE_RU.format(percent=extra_data['cashback'])
         notification_str = dict(title=title,
@@ -329,28 +331,28 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data['final_amount'],
                                                                    currency=extra_data['currency']))
     elif notification_type == CHECK_ATTENDANCE_IN:
-        dict(title=CHECK_ATTENDANCE_IN_TITLE.format(organization=extra_data['organization']),
-             description=ATTENDANCE_DESCRIPTION,
-             title_ru=CHECK_ATTENDANCE_IN_TITLE_RU.format(organization=extra_data['organization']),
-             description_ru=ATTENDANCE_DESCRIPTION_RU)
+        notification_str = dict(title=CHECK_ATTENDANCE_IN_TITLE.format(organization=extra_data['organization']),
+                                description=ATTENDANCE_DESCRIPTION,
+                                title_ru=CHECK_ATTENDANCE_IN_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=ATTENDANCE_DESCRIPTION_RU)
 
     elif notification_type == CHECK_ATTENDANCE_OUT:
-        dict(title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=extra_data['organization']),
-             description=ATTENDANCE_DESCRIPTION,
-             title_ru=CHECK_ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data['organization']),
-             description_ru=ATTENDANCE_DESCRIPTION_RU)
+        notification_str = dict(title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=extra_data['organization']),
+                                description=ATTENDANCE_DESCRIPTION,
+                                title_ru=CHECK_ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=ATTENDANCE_DESCRIPTION_RU)
 
     elif notification_type == ATTENDANCE_IN:
-        dict(title=ATTENDANCE_IN_TITLE.format(organization=extra_data['organization']),
-             description=ATTENDANCE_DESCRIPTION,
-             title_ru=ATTENDANCE_IN_TITLE_RU.format(organization=extra_data['organization']),
-             description_ru=ATTENDANCE_DESCRIPTION_RU)
+        notification_str = dict(title=ATTENDANCE_IN_TITLE.format(organization=extra_data['organization']),
+                                description=ATTENDANCE_DESCRIPTION,
+                                title_ru=ATTENDANCE_IN_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=ATTENDANCE_DESCRIPTION_RU)
 
     elif notification_type == ATTENDANCE_OUT:
-        dict(title=ATTENDANCE_OUT_TITLE.format(organization=extra_data['organization']),
-             description=ATTENDANCE_DESCRIPTION,
-             title_ru=ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data['organization']),
-             description_ru=ATTENDANCE_DESCRIPTION_RU)
+        notification_str = dict(title=ATTENDANCE_OUT_TITLE.format(organization=extra_data['organization']),
+                                description=ATTENDANCE_DESCRIPTION,
+                                title_ru=ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=ATTENDANCE_DESCRIPTION_RU)
 
     elif notification_type == ACCEPT_DISCOUNT_TYPE:
         notification_str = dict(
@@ -391,98 +393,116 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                                                     currency=extra_data['currency']))
 
     elif notification_type == FOLLOWED_TO_ORGANIZATION_TYPE:
-        dict(title=FOLLOWED_TO_ORGANIZATION_TITLE,
-             description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=FOLLOWED_TO_ORGANIZATION_TITLE_RU,
-             description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(title=FOLLOWED_TO_ORGANIZATION_TITLE,
+                                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=extra_data['address']),
+                                title_ru=FOLLOWED_TO_ORGANIZATION_TITLE_RU,
+                                description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                                    address=extra_data['address']))
 
     elif notification_type == ORGANIZATION_FOLLOWED_TYPE:
-        dict(title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=extra_data['org_title']),
-             description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=ORGANIZATION_FOLLOWED_TITLE_RU.format(org_title=extra_data['org_title']),
-             description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=extra_data['org_title']),
+                                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=extra_data['address']),
+                                title_ru=ORGANIZATION_FOLLOWED_TITLE_RU.format(org_title=extra_data['org_title']),
+                                description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                                    address=extra_data['address']))
 
     elif notification_type == ACCEPT_PARTNERSHIP_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == DECLINE_PARTNERSHIP_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == REQUEST_PARTNERSHIP_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == RECRUIT_JOB_TYPE:
-        dict(title=RECRUIT_JOB_TITLE,
-             description=RECRUIT_JOB_DESCRIPTION.format(position=extra_data['position']),
-             title_ru=RECRUIT_JOB_TITLE_RU,
-             description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data['position']))
+        notification_str = dict(title=RECRUIT_JOB_TITLE,
+                                description=RECRUIT_JOB_DESCRIPTION.format(position=extra_data['position']),
+                                title_ru=RECRUIT_JOB_TITLE_RU,
+                                description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data['position']))
+
+    elif notification_type == GET_JOB_TYPE:
+        notification_str = dict(title=GET_JOB_TITLE.format(organization=extra_data['organization']),
+                                description=GET_JOB_DESCRIPTION.format(position=extra_data['position']),
+                                title_ru=GET_JOB_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=GET_JOB_DESCRIPTION.format(position=extra_data['position']))
 
     elif notification_type == CHANGE_JOB_POSITION_TYPE:
-        dict(title=CHANGE_JOB_POSITION_TITLE,
-             description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=extra_data['old_position'],
-                                                                new_position=extra_data['new_position']),
-             title_ru=CHANGE_JOB_POSITION_TITLE_RU,
-             description_ru=CHANGE_JOB_POSITION_DESCRIPTION_RU.format(old_position=extra_data['old_position'],
-                                                                      new_position=extra_data['new_position'])
-             )
+        notification_str = dict(title=CHANGE_JOB_POSITION_TITLE,
+                                description=CHANGE_JOB_POSITION_DESCRIPTION.format(
+                                    old_position=extra_data['old_position'],
+                                    new_position=extra_data['new_position']),
+                                title_ru=CHANGE_JOB_POSITION_TITLE_RU,
+                                description_ru=CHANGE_JOB_POSITION_DESCRIPTION_RU.format(
+                                    old_position=extra_data['old_position'],
+                                    new_position=extra_data['new_position'])
+                                )
     elif notification_type == DISMISS_JOB_TYPE:
-        dict(title=DISMISS_JOB_TITLE,
-             description=DISMISS_JOB_DESCRIPTION.format(position=extra_data['position']),
-             title_ru=DISMISS_JOB_TITLE_RU,
-             description_ru=DISMISS_JOB_DESCRIPTION_RU.format(position=extra_data['position']),
-             )
+        notification_str = dict(title=DISMISS_JOB_TITLE,
+                                description=DISMISS_JOB_DESCRIPTION.format(position=extra_data['position']),
+                                title_ru=DISMISS_JOB_TITLE_RU,
+                                description_ru=DISMISS_JOB_DESCRIPTION_RU.format(position=extra_data['position']),
+                                )
 
     elif notification_type == QUIT_JOB_TYPE:
-        dict(title=QUIT_JOB_TITLE.format(organization=extra_data['organization']),
-             description=QUIT_JOB_DESCRIPTION.format(position=extra_data['position']),
-             title_ru=QUIT_JOB_TITLE_RU.format(organization=extra_data['organization']),
-             description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data['position']),
-             )
+        notification_str = dict(title=QUIT_JOB_TITLE.format(organization=extra_data['organization']),
+                                description=QUIT_JOB_DESCRIPTION.format(position=extra_data['position']),
+                                title_ru=QUIT_JOB_TITLE_RU.format(organization=extra_data['organization']),
+                                description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data['position']),
+                                )
 
     elif notification_type == CHANGE_JOB_POSITION_OWNER_TYPE:
-        dict(title=CHANGE_JOB_POSITION_OWNER_TITLE,
-             description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(old_position=extra_data['old_position'],
-                                                                      new_position=extra_data['new_position']),
-             title_ru=CHANGE_JOB_POSITION_OWNER_TITLE_RU,
-             description_ru=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU.format(old_position=extra_data['old_position'],
-                                                                            new_position=extra_data['new_position']),
-             )
+        notification_str = dict(title=CHANGE_JOB_POSITION_OWNER_TITLE,
+                                description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(
+                                    old_position=extra_data['old_position'],
+                                    new_position=extra_data['new_position']),
+                                title_ru=CHANGE_JOB_POSITION_OWNER_TITLE_RU,
+                                description_ru=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU.format(
+                                    old_position=extra_data['old_position'],
+                                    new_position=extra_data['new_position']),
+                                )
     elif notification_type == ACCEPT_PARTNERSHIP_RECIPIENT_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == DECLINE_PARTNERSHIP_RECIPIENT_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == REQUEST_PARTNERSHIP_RECIPIENT_TYPE:
-        dict(title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
-                                                    recipient_organization=extra_data['recipient_organization']),
-             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
-             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
-                                                          recipient_organization=extra_data['recipient_organization']),
-             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data['sender_organization'],
+                                                   recipient_organization=extra_data['recipient_organization']),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data['address']),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data['sender_organization'],
+                                                         recipient_organization=extra_data['recipient_organization']),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data['address']))
     return notification_str

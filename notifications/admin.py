@@ -25,4 +25,5 @@ class NotificationSettingAdmin(admin.ModelAdmin):
 
 @admin.register(SettingsToToken)
 class SettingsToTokenAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('fcm_device', 'language')
+    list_filter = ('language',)

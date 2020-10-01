@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from common.exceptions import ObjectNotFoundException, IntegrityException
+from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from .models import (
     Notification,
     NotificationSetting,
@@ -93,8 +93,13 @@ class FCMDeviceSettingsService:
     model = SettingsToToken
 
     @classmethod
-    def update(cls, registration_id: int, language: str):
-        device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id)
-        device_settings.language = language
-        device_settings.save()
+    def update(cls, registration_id: int, language: str, user: User):
+        try:
+            device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id)
+            if device_settings.notification_settings.user != user:
+                raise NotAcceptableException('No rights to edit this device')
+            device_settings.language = language
+            device_settings.save()
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException('Device not found')
         return device_settings

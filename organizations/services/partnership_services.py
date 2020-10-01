@@ -49,7 +49,9 @@ class PartnershipService:
             organization_id=requested_by.id,
             members_organization_id=requested_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
+            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                            sender_organization=requested_by.title,
+                            recipient_organization=accepted_by.title, address=requested_by.address)
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
@@ -60,7 +62,9 @@ class PartnershipService:
             organization_id=requested_by.id,
             members_organization_id=accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True)
+            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                            sender_organization=requested_by.title,
+                            recipient_organization=accepted_by.title, address=requested_by.address)
         ))
 
     @classmethod
@@ -109,7 +113,10 @@ class PartnershipService:
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.requested_by.id,
-            with_permissions=dict(can_edit_partner=True)
+            with_permissions=dict(can_edit_partner=True),
+            extra_data=dict(sender_organization=partnership.requested_by.title,
+                            recipient_organization=partnership.accepted_by.title,
+                            address=partnership.requested_by.address),
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=PERSONAL_MODE,
@@ -120,7 +127,10 @@ class PartnershipService:
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
-            with_permissions=dict(can_edit_partner=True)
+            with_permissions=dict(can_edit_partner=True),
+            extra_data=dict(sender_organization=partnership.requested_by.title,
+                            recipient_organization=partnership.accepted_by.title,
+                            address=partnership.requested_by.address),
         ))
         try:
             Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
@@ -174,7 +184,10 @@ class PartnershipService:
                     organization_id=partnership.requested_by.id,
                     members_organization_id=partnership.requested_by.id,
                     with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(partnership_id=reverse_partnership.id)
+                    extra_data=dict(partnership_id=reverse_partnership.id,
+                                    sender_organization=partnership.requested_by.title,
+                                    recipient_organization=partnership.accepted_by.title,
+                                    address=partnership.requested_by.address)
                 ))
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
@@ -187,7 +200,9 @@ class PartnershipService:
                     organization_id=partnership.requested_by.id,
                     members_organization_id=partnership.accepted_by.id,
                     with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(partnership_id=partnership.id)
+                    extra_data=dict(partnership_id=partnership.id, sender_organization=partnership.requested_by.title,
+                                    recipient_organization=partnership.accepted_by.title,
+                                    address=partnership.requested_by.address)
                 ))
 
             return partnership

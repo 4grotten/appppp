@@ -4,7 +4,7 @@ from fcm_django.models import FCMDevice
 from rest_framework import serializers
 
 from common.exceptions import IntegrityException
-from notifications.models import Notification, NotificationSetting
+from notifications.models import Notification, NotificationSetting, SettingsToToken
 from organizations.serializers.organization_serializers import OrganizationNotificationInfo
 from users.serializers import ProfileSerializer
 
@@ -45,3 +45,8 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         model = NotificationSetting
         fields = ('id', 'discount_notifications', 'private_notifications', 'organization_notifications')
         extra_kwargs = {"id": {"read_only": True, "required": False}}
+
+
+class FCMDeviceSettingsSerializer(serializers.Serializer):
+    registration_id = serializers.IntegerField()
+    language = serializers.CharField()

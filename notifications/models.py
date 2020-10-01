@@ -6,12 +6,10 @@ from fcm_django.models import FCMDevice
 from common.models import TimestampModel
 from organizations.models import Organization
 from project.settings.base import HOST_URL
-from .constants import (
-    NOTIFICATION_MODES,
-    DISCOUNT_NOTIFICATION_MODE,
-    SUBSCRIPTION_NOTIFICATION_MODE,
-    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
-    NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
+from .constants import (get_titles_descriptions_from_type,
+                        DISCOUNT_NOTIFICATION_MODE,
+                        SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
 
 User = get_user_model()
 
@@ -42,15 +40,23 @@ class Notification(TimestampModel):
     def __str__(self):
         return self.title
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
-        super(Notification, self).save()
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            notification_str = get_titles_descriptions_from_type(notification_type=self.type,
+                                                                 extra_data=self.extra_data)
+            self.title = notification_str['title']
+            self.description = notification_str['description']
+            self.title_ru = notification_str['title_ru']
+            self.description_ru = notification_str['description_ru']
+        super().save(*args, **kwargs)
 
         self.send_notification(
             user=self.recipient,
             type=self.type,
             title=self.title,
+            title_ru=self.title_ru,
             description=self.description,
+            description_ru=self.description_ru,
             mode=self.mode.name,
             notification_id=self.id,
             organization=self.organization,
@@ -58,14 +64,19 @@ class Notification(TimestampModel):
         )
 
     @classmethod
-    def send_notification(cls, user: User, title: str, description: str, notification_id: int, mode: str,
-                          type: str, organization=None, extra_data=None):
+    def send_notification(cls, user: User, title: str, title_ru: str, description: str, description_ru: str,
+                          notification_id: int, mode: str, type: str, organization=None, extra_data=None):
 
         if not NotificationSetting.objects.filter(user=user).exists():
             return
 
         notification_setting = NotificationSetting.objects.get(user=user)
-        fcm_devices = notification_setting.fcm_device.all()
+
+        if (mode == DISCOUNT_NOTIFICATION_MODE and not notification_setting.discount_notifications) or (
+                mode == PERSONAL_MODE and notification_setting.private_notifications) or (
+                mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or (
+                mode == PARTNER_MODE and notification_setting.organization_notifications):
+            return
 
         notification_payload = {
             'title': title,
@@ -83,18 +94,27 @@ class Notification(TimestampModel):
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None
         }
+        notification_payload_ru = {
+            'title': title_ru,
+            'body': description_ru,
+            'click_action': type,
+            'data': {
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'extra_data': extra_data,
+                'type': type
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+        }
 
-        if mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == PERSONAL_MODE and notification_setting.private_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications:
-            fcm_devices.send_message(**notification_payload)
-
-        if mode == PARTNER_MODE and notification_setting.organization_notifications:
-            fcm_devices.send_message(**notification_payload)
+        fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')
+        fcm_devices_ru.send_message(**notification_payload_ru)
+        fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en')
+        fcm_devices_en.send_message(**notification_payload)
 
     @staticmethod
     def get_organization_small_image(organization):
@@ -103,10 +123,24 @@ class Notification(TimestampModel):
 
 class NotificationSetting(TimestampModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    fcm_device = models.ManyToManyField(FCMDevice)
+    fcm_device = models.ManyToManyField(FCMDevice, through='SettingsToToken')
     discount_notifications = models.BooleanField(default=True)
     private_notifications = models.BooleanField(default=True)
     organization_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)
+
+
+class SettingsToToken(TimestampModel):
+    ENGLISH = 'en'
+    RUSSIAN = 'ru'
+    TURKISH = 'tr'
+    LANGUAGES = (
+        (ENGLISH, ENGLISH),
+        (RUSSIAN, RUSSIAN),
+        (TURKISH, TURKISH)
+    )
+    notification_settings = models.ForeignKey(NotificationSetting, on_delete=models.CASCADE)
+    fcm_device = models.ForeignKey(FCMDevice, on_delete=models.CASCADE)
+    language = models.CharField(max_length=25, choices=LANGUAGES, default=RUSSIAN)

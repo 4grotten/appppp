@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 
 from common.views import index, organization_detail_view
-from notifications.views import CustomFCMDeviceAuthorizedViewSet
+from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
 
 v1 = ([
           path('', include('users.urls')),
@@ -14,13 +14,13 @@ v1 = ([
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(v1)),
     path('api-auth/', include('rest_framework.urls')),
     path('rest-auth/', include('rest_auth.urls')),
     path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
+    path('api/v1/devicesSettings/', FCMDeviceSettingsAPIView.as_view(), name='device_settings'),
     path('organizations/<int:pk>', organization_detail_view, name='organization_detail_view'),
     re_path(r'^.*', index, name='unmatched'),
 

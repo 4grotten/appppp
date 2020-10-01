@@ -152,7 +152,8 @@ class DiscountCardService:
                 mode=SYSTEM_NOTIFICATION_MODE,
                 notification_type=NEW_DISCOUNT_TYPE,
                 title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
-                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address),
+                extra_data=dict(percent=str_percent, address=organization.address)
             ))
         if cashbacks:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
@@ -160,7 +161,8 @@ class DiscountCardService:
                 mode=SYSTEM_NOTIFICATION_MODE,
                 notification_type=NEW_DISCOUNT_TYPE,
                 title=NEW_CASHBACK_TITLE.format(percent=str_cashback),
-                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
+                description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address),
+                extra_data=dict(cashback=str_cashback, address=organization.address)
             ))
 
     @classmethod

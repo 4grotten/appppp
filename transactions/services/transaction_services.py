@@ -16,7 +16,7 @@ from notifications.constants import (
     WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
     CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
     DECLINE_DISCOUNT_TYPE, TRANSACTION_DECLINED_NOTIFICATION_TITLE, TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION,
-    YOU_DECLINED_NOTIFICATION_TITLE
+    YOU_DECLINED_NOTIFICATION_TITLE, PERSONAL_MODE
 )
 from notifications.services import NotificationService
 from notifications.tasks import sent_notification
@@ -105,25 +105,31 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_USER_TITLE.format(
                         discount_percent=str(current_transaction.discount_percent)),
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                      currency=current_transaction.currency.code),
                     organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id)
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    discount_percent=str(current_transaction.discount_percent),
+                                    final_amount=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
                 )
                 sent_notification.delay(
                     recipient_id=current_transaction.processed_by_id,
                     sender_id=current_transaction.client_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
+                    mode=PERSONAL_MODE,
                     notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                      currency=current_transaction.currency.code),
                     organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id)
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    discount_percent=str(current_transaction.discount_percent),
+                                    final_amount=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
                 )
 
         except IntegrityError:
@@ -152,26 +158,30 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=WITHDRAW_CASHBACK_CLIENT,
                 title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=WITHDRAW_CASHBACK_SELLER,
                 title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
 
         if source_card is not None and source_card.type == DiscountCard.CASHBACK:
@@ -186,26 +196,30 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=CHARGE_CASHBACK_CLIENT,
                 title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
+                mode=PERSONAL_MODE,
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id)
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
             )
 
         return current_transaction
@@ -301,7 +315,10 @@ class TransactionService:
             title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
             description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
                                                                              currency=old_transaction.currency.code),
-            organization=old_transaction.organization
+            organization=old_transaction.organization,
+            extra_data=dict(savings=str(old_transaction.savings),
+                            currency=old_transaction.currency.code,
+                            recipient='client'),
         )
         NotificationService.create_notification(
             recipient=old_transaction.processed_by,
@@ -310,5 +327,8 @@ class TransactionService:
             title=YOU_DECLINED_NOTIFICATION_TITLE,
             description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
                                                                              currency=old_transaction.currency.code),
-            organization=old_transaction.organization
+            organization=old_transaction.organization,
+            extra_data=dict(savings=str(old_transaction.savings),
+                            currency=old_transaction.currency.code,
+                            recipient='seller')
         )

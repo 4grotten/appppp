@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from common.exceptions import ObjectNotFoundException, IntegrityException
+from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from .models import (
     Notification,
     NotificationSetting,
-    NotificationMode)
+    NotificationMode, SettingsToToken)
 
 User = get_user_model()
 
@@ -87,3 +87,18 @@ class NotificationSettingService:
 
         except Exception as e:
             raise IntegrityException('Can not update: {e}'.format(e=str(e)))
+
+
+class FCMDeviceSettingsService:
+    model = SettingsToToken
+
+    @classmethod
+    def update(cls, registration_id: int, language: str, user: User):
+        try:
+            device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id,
+                                                    notification_settings__user=user)
+            device_settings.language = language
+            device_settings.save()
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException('Device not found')
+        return device_settings

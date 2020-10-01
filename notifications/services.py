@@ -5,7 +5,7 @@ from common.exceptions import ObjectNotFoundException, IntegrityException
 from .models import (
     Notification,
     NotificationSetting,
-    NotificationMode)
+    NotificationMode, SettingsToToken)
 
 User = get_user_model()
 
@@ -87,3 +87,14 @@ class NotificationSettingService:
 
         except Exception as e:
             raise IntegrityException('Can not update: {e}'.format(e=str(e)))
+
+
+class FCMDeviceSettingsService:
+    model = SettingsToToken
+
+    @classmethod
+    def update(cls, registration_id: int, language: str):
+        device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id)
+        device_settings.language = language
+        device_settings.save()
+        return device_settings

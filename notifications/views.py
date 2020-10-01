@@ -7,8 +7,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import NotificationFilter
-from .serializers import NotificationSerializer, CustomFCMDeviceSerializer, NotificationSettingSerializer
-from .services import NotificationService, NotificationSettingService
+from .serializers import NotificationSerializer, CustomFCMDeviceSerializer, NotificationSettingSerializer, \
+    FCMDeviceSettingsSerializer
+from .services import NotificationService, NotificationSettingService, FCMDeviceSettingsService
 
 
 class NotificationListAPIView(ListAPIView):
@@ -63,6 +64,25 @@ class NotificationsCountAPIView(APIView):
 
     def post(self, request):
         NotificationService.do_read_notifications(user=request.user)
+
+        return Response(data={
+            'message': 'Success'
+        })
+
+
+class FCMDeviceSettingsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = FCMDeviceSettingsSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        device_settings = FCMDeviceSettingsService.update(**serializer.validated_data, )
 
         return Response(data={
             'message': 'Success'

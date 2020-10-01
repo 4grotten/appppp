@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    Notification, NotificationSetting, NotificationMode
+    Notification, NotificationSetting, NotificationMode, SettingsToToken
 )
 
 
@@ -20,4 +20,9 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationSetting)
 class NotificationSettingAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(SettingsToToken)
+class SettingsToTokenAdmin(admin.ModelAdmin):
     pass

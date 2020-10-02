@@ -81,7 +81,6 @@ class Notification(TimestampModel):
         notification_payload = {
             'title': title,
             'body': description,
-            'mutable_content': True,
             'click_action': type,
             'data': {
                 'notification_id': notification_id,
@@ -98,7 +97,6 @@ class Notification(TimestampModel):
         notification_payload_ru = {
             'title': title_ru,
             'body': description_ru,
-            'mutable_content': True,
             'click_action': type,
             'data': {
                 'notification_id': notification_id,

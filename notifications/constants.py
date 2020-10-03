@@ -372,7 +372,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=extra_data['discount_percent']),
             description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data['final_amount'],
                                                              currency=extra_data['currency']),
-            title_ru=DISCOUNT_COMPLETE_TITLE.format(discount_percent=extra_data['discount_percent']),
+            title_ru=DISCOUNT_COMPLETE_TITLE_RU.format(discount_percent=extra_data['discount_percent']),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data['final_amount'],
                                                                    currency=extra_data['currency']))
 

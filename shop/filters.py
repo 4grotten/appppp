@@ -15,4 +15,4 @@ class FeedItemFilter(filters.FilterSet):
 
     class Meta:
         model = ShopItem
-        fields = ['id', 'subcategories', 'category', 'country', 'city']
+        fields = ['id', 'subcategories', 'organization', 'category', 'country', 'city']

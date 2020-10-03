@@ -3,9 +3,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
+from common.exceptions import NotAcceptableException
+from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from shop.filters import FeedItemFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
+from shop.services.item_services import ShopItemService
 
 
 class FeedView(ListAPIView):
@@ -20,3 +23,14 @@ class FeedView(ListAPIView):
 
     def get_queryset(self):
         return ShopItem.objects.filter(is_published=True)
+
+
+class OrganizationItemListView(FeedView):
+    def get_queryset(self):
+        serializer = OrganizationQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid organization is required in query parameters')
+
+        return ShopItemService.get_organization_items_queryset_for_user(
+            organization=serializer.validated_data['organization'], user=self.request.user
+        )

@@ -45,3 +45,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             raise NotAcceptableException('No rights to edit organization')
 
         return attrs
+
+
+class ItemChangePublishedSerializer(serializers.Serializer):
+    is_published = serializers.BooleanField()
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())

@@ -1,18 +1,18 @@
 from modeltranslation.decorators import register
 from modeltranslation.translator import TranslationOptions
 
-from shop.models import MainCategory, ItemCategory
+from shop.models import ItemCategory, ItemSubcategory
 
 
-@register(MainCategory)
-class MainCategoryOptions(TranslationOptions):
+@register(ItemCategory)
+class ItemCategoryOptions(TranslationOptions):
     fields = (
         'name',
     )
 
 
-@register(ItemCategory)
-class ItemCategoryOptions(TranslationOptions):
+@register(ItemSubcategory)
+class ItemSubcategoryOptions(TranslationOptions):
     fields = (
         'name',
     )

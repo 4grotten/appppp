@@ -3,13 +3,13 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from organizations.services.organization_services import OrganizationService
-from shop.models import MainCategory, ItemCategory
+from shop.models import ItemCategory, ItemSubcategory
 
 
 class ItemCategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ItemCategory
-        fields = ('id', 'name', 'organization', 'main_category')
+        model = ItemSubcategory
+        fields = ('id', 'name', 'organization', 'category')
 
     def validate(self, attrs):
         user = self.context['request'].user
@@ -23,14 +23,14 @@ class ItemCategorySerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        model = ItemCategory
+        model = ItemSubcategory
         fields = ('id', 'name', 'organization',)
 
 
 class MainCategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
 
-    def get_subcategories(self, main_category: MainCategory) -> dict:
+    def get_subcategories(self, main_category: ItemCategory) -> dict:
         organization = self.context['organization']
         if organization is None:
             subcategories = main_category.subcategories.filter(organization__isnull=True)
@@ -40,5 +40,5 @@ class MainCategorySerializer(serializers.ModelSerializer):
         return ItemCategorySerializer(subcategories, many=True).data
 
     class Meta:
-        model = MainCategory
+        model = ItemCategory
         fields = ('id', 'name', 'subcategories')

@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import JSONField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -5,18 +6,18 @@ from common.models import TimestampModel, File
 from organizations.models import Organization
 
 
-class MainCategory(models.Model):
+class ItemCategory(models.Model):
     name = models.CharField(max_length=64)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name_plural = 'Main categories'
+        verbose_name_plural = 'Item categories'
 
 
-class ItemCategory(models.Model):
-    main_category = models.ForeignKey(MainCategory, on_delete=models.CASCADE, related_name='subcategories')
+class ItemSubcategory(models.Model):
+    category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE, related_name='subcategories')
     name = models.CharField(max_length=64)
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
@@ -26,13 +27,13 @@ class ItemCategory(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name_plural = 'Item categories'
+        verbose_name_plural = 'Item subcategories'
         ordering = ('-organization', 'name',)
 
 
 class ShopItem(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
-    category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE, related_name='items_in_category')
+    subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.CASCADE, related_name='items_in_category')
 
     name = models.CharField(max_length=64)
     description = models.TextField(null=True, blank=True)
@@ -42,14 +43,7 @@ class ShopItem(TimestampModel):
     article = models.CharField(max_length=64, null=True, blank=True)
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
+    youtube_links = JSONField(null=True)
 
     def __str__(self):
         return f'{self.name}'
-
-
-class YoutubeLink(models.Model):
-    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='youtube_links')
-    link = models.URLField(null=True, blank=True)
-
-    def __str__(self):
-        return f'YT link #{self.id} for {self.item.name}'

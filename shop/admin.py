@@ -1,27 +1,22 @@
 from django.contrib import admin
 
-from shop.models import MainCategory, ItemCategory, ShopItem, YoutubeLink
+from shop.models import ItemCategory, ItemSubcategory, ShopItem
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru',)
 
 
-class ItemCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'main_category', 'name_ru', 'organization',)
-    list_filter = ('main_category', 'organization',)
-
-
-class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'category', 'price',)
+class ItemSubcategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'name_ru', 'organization',)
     list_filter = ('category', 'organization',)
 
 
-class YoutubeLinkAdmin(admin.ModelAdmin):
-    list_display = ('link', 'item')
+class ShopItemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'organization', 'subcategory', 'price',)
+    list_filter = ('subcategory', 'organization',)
 
 
-admin.site.register(MainCategory, MainCategoryAdmin)
-admin.site.register(ItemCategory, ItemCategoryAdmin)
+admin.site.register(ItemCategory, MainCategoryAdmin)
+admin.site.register(ItemSubcategory, ItemSubcategoryAdmin)
 admin.site.register(ShopItem, ShopItemAdmin)
-admin.site.register(YoutubeLink, YoutubeLinkAdmin)

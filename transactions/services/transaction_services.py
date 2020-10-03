@@ -105,7 +105,7 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
-                    mode=PERSONAL_MODE,
+                    mode=DISCOUNT_NOTIFICATION_MODE,
                     notification_type=ACCEPT_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_USER_TITLE.format(
                         discount_percent=str(current_transaction.discount_percent)),
@@ -120,7 +120,7 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.processed_by_id,
                     sender_id=current_transaction.client_id,
-                    mode=PERSONAL_MODE,
+                    mode=DISCOUNT_NOTIFICATION_MODE,
                     notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
                     title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
                     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
@@ -158,7 +158,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=PERSONAL_MODE,
+                mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=WITHDRAW_CASHBACK_CLIENT,
                 title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
@@ -172,7 +172,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=PERSONAL_MODE,
+                mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=WITHDRAW_CASHBACK_SELLER,
                 title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
@@ -196,7 +196,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 sender_id=current_transaction.processed_by_id,
-                mode=PERSONAL_MODE,
+                mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=CHARGE_CASHBACK_CLIENT,
                 title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
@@ -210,7 +210,7 @@ class TransactionService:
             sent_notification.delay(
                 recipient_id=current_transaction.processed_by_id,
                 sender_id=current_transaction.client_id,
-                mode=PERSONAL_MODE,
+                mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),

@@ -3,6 +3,7 @@ from django.urls import path
 from shop.views.category_views import (
     ItemCategoriesListView, ItemCategoryRetrieveUpdateDestroyView, ItemCategoriesCreateView
 )
+from shop.views.feed_views import FeedView
 from shop.views.item_views import ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView
 
 urlpatterns = [
@@ -13,4 +14,6 @@ urlpatterns = [
     path('shop/items/', ItemCreateView.as_view(), name='item_create'),
     path('shop/items/<int:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),
     path('shop/doChangeItemPublishedStatus/', ItemChangePublishedStatusView.as_view(), name='item_published_status'),
+
+    path('shop/feed/', FeedView.as_view(), name='shop_feed'),
 ]

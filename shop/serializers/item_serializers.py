@@ -50,3 +50,22 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 class ItemChangePublishedSerializer(serializers.Serializer):
     is_published = serializers.BooleanField()
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+
+
+class ItemFeedSerializer(serializers.ModelSerializer):
+    # ToDo: Unmock these two
+    is_liked = serializers.BooleanField(default=False)
+    is_bookmarked = serializers.BooleanField(default=False)
+
+    organization = OrganizationWithTypeImageSerializer()
+    subcategory = ItemSubcategoryBriefSerializer()
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'description', 'article',
+            'price', 'discount',
+            'is_liked', 'is_bookmarked', 'updated_at',
+            'subcategory', 'images', 'organization',
+        )

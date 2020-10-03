@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,14 +17,12 @@ from organizations.serializers.categories_serializers import (
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
-    OrganizationListSerializer, OrganizationCreateSerializer,
-    OrganizationDetailedSerializer, OrganizationUpdateSerializer,
-    OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
-    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer,
-    OrganizationSerializer, OrgMessageSerializer,
-    OrgMessageCreateSerializer,
-    OrganizationTitleSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer)
+    OrganizationListSerializer, OrganizationCreateSerializer, OrganizationDetailedSerializer,
+    OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
+    OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
+    OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
+    OrganizationUserTransactionSerializer
+)
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
 )
@@ -33,7 +31,6 @@ from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService,
     OrgSocialNetworkContactService, OrgMessageService
 )
-from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import UserShortInfoSerializer
 
@@ -207,8 +204,10 @@ class HomepageOrganizationsView(ListAPIView):
         if not serializer.is_valid():
             raise NotAcceptableException('Valid partner id, country and city are required in query parameters')
         self.partner = serializer.validated_data['partner']
-        self.country = serializer.validated_data['country']
         self.city = serializer.validated_data['city']
+        if self.city is None:
+            self.country = serializer.validated_data['country']
+
         return OrganizationCategoryService.get_nonempty_categories(partner=self.partner, country=self.country,
                                                                    city=self.city)
 

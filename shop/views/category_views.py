@@ -4,16 +4,16 @@ from rest_framework.permissions import IsAuthenticated
 from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
 from shop.models import ItemCategory, ItemSubcategory
-from shop.permissions import CanEditItemCategory
+from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
-    MainCategorySerializer, ItemCategorySerializer, ItemCategoryCreateSerializer
+    ItemCategorySerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer
 )
 
 
 class ItemCategoriesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
-    serializer_class = MainCategorySerializer
+    serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
 
     def get_serializer_context(self):
@@ -27,12 +27,12 @@ class ItemCategoriesListView(ListAPIView):
 
 
 class ItemCategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsAuthenticated, CanEditItemCategory)
-    serializer_class = ItemCategorySerializer
+    permission_classes = (IsAuthenticated, CanEditItemSubcategory)
+    serializer_class = ItemSubcategorySerializer
     queryset = ItemSubcategory.objects.all()
 
 
 class ItemCategoriesCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ItemCategoryCreateSerializer
+    serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()

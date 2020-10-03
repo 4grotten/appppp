@@ -6,7 +6,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
 
 
-class ItemCategoryCreateSerializer(serializers.ModelSerializer):
+class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemSubcategory
         fields = ('id', 'name', 'organization', 'category')
@@ -19,7 +19,7 @@ class ItemCategoryCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ItemCategorySerializer(serializers.ModelSerializer):
+class ItemSubcategorySerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -27,7 +27,13 @@ class ItemCategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'organization',)
 
 
-class MainCategorySerializer(serializers.ModelSerializer):
+class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name',)
+
+
+class ItemCategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
 
     def get_subcategories(self, main_category: ItemCategory) -> dict:
@@ -37,7 +43,7 @@ class MainCategorySerializer(serializers.ModelSerializer):
         else:
             subcategories = main_category.subcategories.filter(
                 Q(organization__isnull=True) | Q(organization=organization))
-        return ItemCategorySerializer(subcategories, many=True).data
+        return ItemSubcategorySerializer(subcategories, many=True).data
 
     class Meta:
         model = ItemCategory

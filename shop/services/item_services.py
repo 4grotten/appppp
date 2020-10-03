@@ -21,3 +21,11 @@ class ShopItemService:
             queryset = queryset.exclude(is_published=False)
 
         return queryset
+
+    @classmethod
+    def get_liked_items(cls, user: User):
+        return ShopItem.objects.filter(is_published=True, liked_users__user=user).distinct()
+
+    @classmethod
+    def get_bookmarked_items(cls, user: User):
+        return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user).distinct()

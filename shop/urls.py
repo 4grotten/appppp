@@ -4,7 +4,10 @@ from shop.views.category_views import (
     ItemCategoriesListView, ItemCategoryRetrieveUpdateDestroyView, ItemCategoriesCreateView
 )
 from shop.views.feed_views import FeedView, OrganizationItemListView
-from shop.views.item_views import ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView
+from shop.views.item_views import (
+    ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
+    BookmarkListCreateView,
+)
 
 urlpatterns = [
     path('shop/categories/', ItemCategoriesListView.as_view(), name='item_categories'),
@@ -17,4 +20,7 @@ urlpatterns = [
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
+
+    path('shop/likes/', LikeListCreateView.as_view(), name='like_list_create'),
+    path('shop/bookmarks/', BookmarkListCreateView.as_view(), name='bookmark_list_create'),
 ]

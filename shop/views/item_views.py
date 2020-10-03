@@ -1,12 +1,16 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from shop.models import ShopItem
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
-from shop.serializers.item_serializers import ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer
+from shop.serializers.item_serializers import (
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
+)
+from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.services.item_services import ShopItemService
+from shop.services.like_bookmark_services import LikeService, BookmarkService
 
 
 class ItemCreateView(CreateAPIView):
@@ -40,3 +44,45 @@ class ItemChangePublishedStatusView(GenericAPIView):
                                                 is_published=serializer.validated_data['is_published'])
 
         return Response(data={'message': 'Successfully updated published status'})
+
+
+class LikeListCreateView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemFeedSerializer
+
+    def get_queryset(self):
+        return ShopItemService.get_liked_items(user=self.request.user)
+
+    def post(self, request):
+        serializer = LikeSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        LikeService.like_unlike_item(user=request.user, item=serializer.validated_data['item'],
+                                     is_liked=serializer.validated_data['is_liked'])
+
+        return Response(data={'message': 'Successfully updated like status'})
+
+
+class BookmarkListCreateView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemFeedSerializer
+
+    def get_queryset(self):
+        return ShopItemService.get_bookmarked_items(user=self.request.user)
+
+    def post(self, request):
+        serializer = BookmarkSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['item'],
+                                                   is_bookmarked=serializer.validated_data['is_bookmarked'])
+
+        return Response(data={'message': 'Successfully updated bookmark status'})

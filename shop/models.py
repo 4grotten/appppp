@@ -4,6 +4,7 @@ from django.db import models
 
 from common.models import TimestampModel, File
 from organizations.models import Organization
+from users.models import User
 
 
 class ItemCategory(models.Model):
@@ -49,3 +50,29 @@ class ShopItem(TimestampModel):
 
     def __str__(self):
         return f'{self.name}'
+
+
+class ItemLike(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='liked_items')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='liked_users')
+
+    def __str__(self):
+        return f'{self.user} liked {self.item.name}'
+
+    class Meta:
+        constraints = (
+            models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_like'),
+        )
+
+
+class ItemBookmark(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarked_items')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='bookmarked_users')
+
+    def __str__(self):
+        return f'{self.user} bookmarked {self.item.name}'
+
+    class Meta:
+        constraints = (
+            models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_bookmark'),
+        )

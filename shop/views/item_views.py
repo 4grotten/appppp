@@ -2,7 +2,7 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from shop.models import ShopItem
-from shop.permissions import CanEditItem
+from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import ItemCreateUpdateSerializer, ItemSerializer
 
 
@@ -17,6 +17,6 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = ShopItem.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        self.permission_classes = (AllowAny,)
+        self.permission_classes = (IsAuthenticated, CanViewUnpublishedItem)
         self.serializer_class = ItemSerializer
         return super().retrieve(request, *args, **kwargs)

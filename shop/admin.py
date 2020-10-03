@@ -13,7 +13,7 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
 
 
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'subcategory', 'price',)
+    list_display = ('name', 'organization', 'subcategory', 'price', 'is_published')
     list_filter = ('subcategory', 'organization',)
 
 

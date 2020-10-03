@@ -16,10 +16,10 @@ class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'organization', 'subcategory',
-            'name', 'description',
-            'price', 'discount', 'article',
-            'instagram_link', 'images', 'youtube_links'
+            'id', 'name', 'description', 'article',
+            'price', 'discount',
+            'instagram_link', 'is_published',
+            'youtube_links', 'subcategory', 'images', 'organization',
         )
 
 

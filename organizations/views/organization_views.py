@@ -228,10 +228,8 @@ class OrganizationsInCategoryView(ListAPIView):
     def get_queryset(self):
         serializer = OrganizationAndCategorySerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise NotAcceptableException(
+                'Valid category, partner id, country and city are required in query parameters')
 
         category = serializer.validated_data['category']
         partner = serializer.validated_data['partner']

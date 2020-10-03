@@ -98,7 +98,7 @@ ATTENDANCE_OUT_TITLE_RU = 'Выход {organization}'
 CHECK_ATTENDANCE_IN_TITLE_RU = 'Пропуск на вход {organization}'
 CHECK_ATTENDANCE_OUT_TITLE_RU = 'Пропуск на выход {organization}'
 
-ATTENDANCE_DESCRIPTION_RU = 'Пропуск:'
+ATTENDANCE_DESCRIPTION_RU = ' '
 
 FOLLOWED_TO_ORGANIZATION_TITLE_RU = 'На вашу организацию подписались'
 ORGANIZATION_FOLLOWED_TITLE_RU = 'Вы подписались на {org_title}'
@@ -165,7 +165,7 @@ ATTENDANCE_OUT_TITLE = 'Exit {organization}'
 CHECK_ATTENDANCE_IN_TITLE = 'Entry pass {organization}'
 CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
 
-ATTENDANCE_DESCRIPTION = 'Pass:'
+ATTENDANCE_DESCRIPTION = ' '
 
 FOLLOWED_TO_ORGANIZATION_TITLE = 'Subscribed to your organization'
 ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to {org_title}'

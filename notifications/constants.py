@@ -287,22 +287,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     elif notification_type == NEW_CASHBACK:
         notification_str = dict(title=NEW_CASHBACK_TITLE.format(percent=extra_data['cashback']),
                                 description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data['address']),
-                                title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['cashback']),
+                                title_ru=NEW_CASHBACK_TITLE_RU.format(percent=extra_data['cashback']),
                                 description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == NEW_DISCOUNT_TYPE:
-        title = ''
-        title_ru = ''
-        if 'percent' in extra_data:
-            title = NEW_DISCOUNT_TITLE.format(percent=extra_data['percent'])
-            title_ru = NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['percent'])
-        elif 'cashback' in extra_data:
-            title = NEW_CASHBACK_TITLE.format(percent=extra_data['cashback'])
-            title_ru = NEW_CASHBACK_TITLE_RU.format(percent=extra_data['cashback'])
-        notification_str = dict(title=title,
-                                description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data['address']),
-                                title_ru=title_ru,
-                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data['address']))
+        notification_str = dict(
+            title=NEW_DISCOUNT_TITLE.format(percent=extra_data['percent']),
+            title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['percent']),
+            description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data['address']),
+            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data['address']))
 
     elif notification_type == WITHDRAW_CASHBACK_CLIENT:
         notification_str = dict(

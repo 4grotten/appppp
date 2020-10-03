@@ -3,6 +3,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
+from shop.filters import FeedItemFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 
@@ -14,6 +15,7 @@ class FeedView(ListAPIView):
     filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)
     ordering_fields = ['updated_at', 'price']
     ordering = ['-updated_at']
+    filter_class = FeedItemFilter
 
     def get_queryset(self):
         return ShopItem.objects.filter(is_published=True)

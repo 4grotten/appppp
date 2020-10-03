@@ -1,10 +1,13 @@
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
-from shop.models import MainCategory
-from shop.serializers.category_serializers import MainCategorySerializer
+from shop.models import MainCategory, ItemCategory
+from shop.permissions import CanEditItemCategory
+from shop.serializers.category_serializers import (
+    MainCategorySerializer, ItemCategorySerializer, ItemCategoryCreateSerializer
+)
 
 
 class ItemCategoriesListView(ListAPIView):
@@ -21,3 +24,15 @@ class ItemCategoriesListView(ListAPIView):
         context = super().get_serializer_context()
         context['organization'] = serializer.validated_data['organization']
         return context
+
+
+class ItemCategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, CanEditItemCategory)
+    serializer_class = ItemCategorySerializer
+    queryset = ItemCategory.objects.all()
+
+
+class ItemCategoriesCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCategoryCreateSerializer
+    queryset = ItemCategory.objects.all()

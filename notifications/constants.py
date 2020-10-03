@@ -53,7 +53,10 @@ CHARGE_CASHBACK_CLIENT = 'charge_cashback_client'
 WITHDRAW_CASHBACK_SELLER = 'withdraw_cashback_seller'
 CHARGE_CASHBACK_SELLER = 'charge_cashback_seller'
 
+NEW_CASHBACK = 'new_cashback'
+
 NOTIFICATION_TYPES = (
+    (NEW_CASHBACK, NEW_CASHBACK),
     (WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_CLIENT),
     (CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_CLIENT),
     (WITHDRAW_CASHBACK_SELLER, WITHDRAW_CASHBACK_SELLER),
@@ -280,6 +283,13 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 title_ru=title_ru,
                                 description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
                                     content=extra_data['content']))
+
+    elif notification_type == NEW_CASHBACK:
+        notification_str = dict(title=NEW_CASHBACK_TITLE.format(percent=extra_data['cashback']),
+                                description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data['address']),
+                                title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data['cashback']),
+                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data['address']))
+
     elif notification_type == NEW_DISCOUNT_TYPE:
         title = ''
         title_ru = ''

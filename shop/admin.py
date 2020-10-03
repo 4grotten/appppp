@@ -8,7 +8,7 @@ class MainCategoryAdmin(admin.ModelAdmin):
 
 
 class ItemCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'main_category', 'name_ru',)
+    list_display = ('name', 'main_category', 'name_ru', 'organization',)
     list_filter = ('main_category', 'organization',)
 
 

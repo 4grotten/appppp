@@ -1,3 +1,5 @@
+from django.db.models import QuerySet, Case, When, BooleanField
+
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
@@ -12,6 +14,21 @@ class ShopItemService:
             raise NotAcceptableException('No rights to edit this item')
         item.is_published = is_published
         item.save(update_fields=('is_published',))
+
+    @classmethod
+    def annotate_likes_and_bookmarks(cls, queryset: QuerySet, user: User) -> QuerySet:
+        return queryset.annotate(
+            is_liked=Case(
+                When(liked_users__user=user, then=1),
+                default=0,
+                output_field=BooleanField()
+            ),
+            is_bookmarked=Case(
+                When(bookmarked_users__user=user, then=1),
+                default=0,
+                output_field=BooleanField()
+            )
+        )
 
     @classmethod
     def get_organization_items_queryset_for_user(cls, organization: Organization, user: User):

@@ -22,7 +22,8 @@ class FeedView(ListAPIView):
     filter_class = FeedItemFilter
 
     def get_queryset(self):
-        return ShopItem.objects.filter(is_published=True)
+        qs = ShopItem.objects.filter(is_published=True)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
 
 class OrganizationItemListView(FeedView):

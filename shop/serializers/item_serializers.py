@@ -53,9 +53,8 @@ class ItemChangePublishedSerializer(serializers.Serializer):
 
 
 class ItemFeedSerializer(serializers.ModelSerializer):
-    # ToDo: Unmock these two
-    is_liked = serializers.BooleanField(default=False)
-    is_bookmarked = serializers.BooleanField(default=False)
+    is_liked = serializers.BooleanField()
+    is_bookmarked = serializers.BooleanField()
 
     organization = OrganizationWithTypeImageSerializer()
     subcategory = ItemSubcategoryBriefSerializer()

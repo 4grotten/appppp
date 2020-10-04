@@ -51,7 +51,8 @@ class LikeListCreateView(ListAPIView):
     serializer_class = ItemFeedSerializer
 
     def get_queryset(self):
-        return ShopItemService.get_liked_items(user=self.request.user)
+        qs = ShopItemService.get_liked_items(user=self.request.user)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def post(self, request):
         serializer = LikeSerializer(data=self.request.data)
@@ -72,7 +73,8 @@ class BookmarkListCreateView(ListAPIView):
     serializer_class = ItemFeedSerializer
 
     def get_queryset(self):
-        return ShopItemService.get_bookmarked_items(user=self.request.user)
+        qs = ShopItemService.get_bookmarked_items(user=self.request.user)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def post(self, request):
         serializer = BookmarkSerializer(data=self.request.data)

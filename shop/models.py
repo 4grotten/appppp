@@ -76,3 +76,12 @@ class ItemBookmark(TimestampModel):
         constraints = (
             models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_bookmark'),
         )
+
+
+class Complaint(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='complaints')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='complaints')
+    reason = models.TextField(max_length=800)
+
+    def __str__(self):
+        return f'Complaint of {self.user} about {self.item.name}'

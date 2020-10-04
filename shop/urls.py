@@ -6,7 +6,7 @@ from shop.views.category_views import (
 from shop.views.feed_views import FeedView, OrganizationItemListView
 from shop.views.item_views import (
     ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView,
+    BookmarkListCreateView, ComplaintCreateView,
 )
 
 urlpatterns = [
@@ -23,4 +23,6 @@ urlpatterns = [
 
     path('shop/likes/', LikeListCreateView.as_view(), name='like_list_create'),
     path('shop/bookmarks/', BookmarkListCreateView.as_view(), name='bookmark_list_create'),
+
+    path('shop/complaints/', ComplaintCreateView.as_view(), name='complaint_create'),
 ]

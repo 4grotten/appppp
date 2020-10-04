@@ -3,10 +3,10 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView,
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from shop.models import ShopItem
+from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer, ComplaintSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.services.item_services import ShopItemService
@@ -88,3 +88,9 @@ class BookmarkListCreateView(ListAPIView):
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
         return Response(data={'message': 'Successfully updated bookmark status'})
+
+
+class ComplaintCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer

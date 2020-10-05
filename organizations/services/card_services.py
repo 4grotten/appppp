@@ -217,10 +217,6 @@ class DiscountCardService:
         cashbacks = list()
 
         for card_data in cards_data:
-            if card_data['type'] != DiscountCard.CASHBACK:
-                percents.append(card_data['percent'])
-            else:
-                cashbacks.append(card_data['percent'])
             card = card_data.pop('id')
             if not card.organization == organization:
                 raise NotAcceptableException('Card does not belong to this organization')
@@ -230,6 +226,11 @@ class DiscountCardService:
                 should_organize = True
 
             cls.update_discount(discount=card, user=updated_by, **card_data)
+
+            if card.type == DiscountCard.CASHBACK:
+                cashbacks.append(card_data['percent'])
+            else:
+                percents.append(card_data['percent'])
 
         if should_organize:
             cls.organize_cumulative_cards(organization=organization)

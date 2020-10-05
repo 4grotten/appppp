@@ -4,7 +4,7 @@ from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country
@@ -27,7 +27,7 @@ class CountriesListView(ListAPIView):
 
 
 class CountryCitySearchView(ObjectMultipleModelAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     pagination_class = MultipleModelLimitOffsetPagination
 
     def get_querylist(self):

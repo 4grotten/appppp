@@ -68,7 +68,7 @@ class DiscountCardService:
         discount.delete()
 
     @classmethod
-    def update_discount(cls, discount: DiscountCard, user: User,  type: str,
+    def update_discount(cls, discount: DiscountCard, user: User,
                         limit: Decimal = None, percent: int = None) -> DiscountCard:
         if not OrganizationService.user_can_edit_organization(organization=discount.organization, user=user):
             raise NotAcceptableException('No rights to edit organization')

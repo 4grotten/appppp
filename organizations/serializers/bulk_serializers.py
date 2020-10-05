@@ -1,6 +1,7 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
+from organizations.constants import TYPES
 from organizations.models import DiscountCard, Organization
 
 
@@ -16,6 +17,7 @@ class DiscountCardBulkUpdateSerializer(serializers.Serializer):
     limit = serializers.DecimalField(required=False, allow_null=True,
                                      max_digits=16, decimal_places=2,
                                      validators=[MinValueValidator(0)])
+    type = serializers.ChoiceField(choices=TYPES)
 
 
 class BulkUpdateSerializer(serializers.Serializer):

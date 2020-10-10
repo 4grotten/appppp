@@ -92,7 +92,8 @@ class Notification(TimestampModel):
                 'extra_data': extra_data,
                 'type': type
             },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'image': cls.get_organization_small_image(organization=organization) if organization else None
         }
         notification_payload_ru = {
             'title': title_ru,
@@ -108,7 +109,8 @@ class Notification(TimestampModel):
                 'extra_data': extra_data,
                 'type': type
             },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'image': cls.get_organization_small_image(organization=organization) if organization else None
         }
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')

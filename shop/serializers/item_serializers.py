@@ -36,9 +36,10 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = self.context['request'].user
         organization = attrs['organization']
-        subcategory = attrs['subcategory']
 
-        if subcategory.organization is not None and not subcategory.organization == organization:
+        subcategory = attrs.get('subcategory', None)
+        subcategory_organization = getattr(subcategory, 'organization', None)
+        if subcategory_organization is not None and not subcategory_organization == organization:
             raise NotAcceptableException('Organization does not have this subcategory')
 
         if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):

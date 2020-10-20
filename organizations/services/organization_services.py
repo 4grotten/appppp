@@ -9,27 +9,23 @@ from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
-    ObjectNotFoundException, ValidationException, IntegrityException,
-    NotAcceptableException, PermissionDeniedException
+    ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
 from common.models import Country, City
-from notifications.constants import (SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE,
-                                     NEW_ORGANIZATION_DESCRIPTION, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
-                                     ORGANIZATION_MESSAGE_TITLE, ORGANIZATION_MESSAGE_DESCRIPTION,
-                                     ORGANIZATION_OWNER_MESSAGE_TITLE, ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TITLE,
-                                     ORGANIZATION_OWN_DESCRIPTION, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TITLE,
-                                     ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
-                                     ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE, ORGANIZATION_MESSAGE_PARTNERS_TITLE,
-                                     ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE,
-                                     ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE)
-from notifications.tasks import (
-    send_notifications_to_all_users, sent_notification,
-    send_notifications_organization_members
+from notifications.constants import (
+    SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
+    ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
 )
-from organizations.constants import (HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
-                                     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD)
+from notifications.tasks import (
+    send_notifications_to_all_users, sent_notification, send_notifications_organization_members
+)
+from organizations.constants import (
+    HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
+    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
+)
 from organizations.models import (
-    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription
+    Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
+    Partnership,
 )
 from organizations.services.membership_services import MembershipService
 from users.models import User
@@ -146,15 +142,47 @@ class OrganizationService:
                 'can_edit_partner': role.can_edit_partner
             }
         except ObjectNotFoundException:
-            return {
-                'is_owner': False,
-                'can_sale': False,
-                'can_check_attendance': False,
-                'can_see_stats': False,
-                'can_edit_organization': False,
-                'can_send_message': False,
-                'can_edit_partner': False
-            }
+            pass
+
+        organization_ids_where_user_can_edit_partner = Membership.objects.filter(
+            user=user, role__can_edit_partner=True).values_list('organization', flat=True).union(
+            Organization.objects.filter(owner=user).values_list('id', flat=True))
+
+        partner_organizations = Organization.objects.filter(
+            id__in=organization_ids_where_user_can_edit_partner,
+            requested_partnerships__is_accepted=True,
+            requested_partnerships__accepted_by=organization
+        ).distinct()
+
+        can_check_attendance = False
+        can_see_stats = False
+        can_edit_organization = False
+
+        for partner in partner_organizations:
+            partnership = Partnership.objects.get(requested_by=partner, is_accepted=True, accepted_by=organization)
+            if user == partner.owner:
+                role_can_check_attendance = role_can_see_stats = role_can_edit_organization = True
+            else:
+                role = Role.objects.get(organization=partner, memberships__user=user)
+                role_can_check_attendance = can_check_attendance or role.can_check_attendance
+                role_can_see_stats = can_see_stats or role.can_see_stats
+                role_can_edit_organization = can_edit_organization or role.can_edit_organization
+
+            can_check_attendance = can_check_attendance or (
+                    role_can_check_attendance and partnership.can_check_attendance)
+            can_see_stats = can_see_stats or (role_can_see_stats and partnership.can_see_stats)
+            can_edit_organization = can_edit_organization or (
+                    role_can_edit_organization and partnership.can_edit_organization)
+
+        return {
+            'is_owner': False,
+            'can_sale': False,
+            'can_check_attendance': can_check_attendance,
+            'can_see_stats': can_see_stats,
+            'can_edit_organization': can_edit_organization,
+            'can_send_message': False,
+            'can_edit_partner': False
+        }
 
     @classmethod
     def get_partners_dict(cls, organization: Organization) -> Tuple[int, QuerySet]:

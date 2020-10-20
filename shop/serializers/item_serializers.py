@@ -67,7 +67,7 @@ class ItemFeedSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'article',
             'price', 'discount', 'is_published',
             'is_liked', 'is_bookmarked', 'updated_at',
-            'subcategory', 'images', 'organization',
+            'youtube_links', 'subcategory', 'images', 'organization',
         )
 
 

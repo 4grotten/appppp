@@ -58,13 +58,8 @@ class OrganizationService:
 
     @classmethod
     def user_can_edit_organization(cls, organization: Organization, user: User) -> bool:
-        if organization.owner == user:
-            return True
-        try:
-            membership = MembershipService.get(organization=organization, user=user)
-        except ObjectNotFoundException:
-            return False
-        return membership.role.can_edit_organization
+        permissions = cls.get_user_permissions_dict(organization=organization, user=user)
+        return permissions['can_edit_organization']
 
     @classmethod
     def user_can_send_message(cls, organization_id: int, user: User) -> bool:
@@ -89,23 +84,13 @@ class OrganizationService:
 
     @classmethod
     def user_can_see_stats(cls, organization: Organization, user: User) -> bool:
-        if organization.owner == user:
-            return True
-        try:
-            membership = MembershipService.get(organization=organization, user=user)
-        except ObjectNotFoundException:
-            return False
-        return membership.role.can_see_stats
+        permissions = cls.get_user_permissions_dict(organization=organization, user=user)
+        return permissions['can_see_stats']
 
     @classmethod
     def user_can_check_attendance(cls, organization: Organization, user: User) -> bool:
-        if organization.owner == user:
-            return True
-        try:
-            membership = MembershipService.get(organization=organization, user=user)
-        except ObjectNotFoundException:
-            return False
-        return membership.role.can_check_attendance
+        permissions = cls.get_user_permissions_dict(organization=organization, user=user)
+        return permissions['can_check_attendance']
 
     @classmethod
     def user_can_edit_partner(cls, organization: Organization, user: User) -> bool:

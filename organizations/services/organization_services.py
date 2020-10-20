@@ -6,6 +6,8 @@ from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q
 from django.db.models.functions import Coalesce
 
+from django.utils.translation import gettext_lazy as _
+
 from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException,
     NotAcceptableException, PermissionDeniedException
@@ -54,7 +56,7 @@ class OrganizationService:
     @classmethod
     def get_user_role_in_organization(cls, organization: Organization, user: User) -> str:
         if organization.owner == user:
-            return 'Собственник'
+            return _('Owner')
         membership = MembershipService.get(organization=organization, user=user)
         return membership.role.title
 

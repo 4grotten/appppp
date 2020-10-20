@@ -30,12 +30,13 @@ class RegisterAuthAPIView(APIView):
         if not serializer.is_valid():
             return Response(
                 data={
-                    'message': 'Something went wrong',
+                    'message': 'Invalid input',
                     'errors': serializer.errors
                 },
                 status=status.HTTP_406_NOT_ACCEPTABLE
             )
 
+        token = None
         phone_number = serializer.validated_data.get('phone_number')
 
         if not UserService.filter(phone_number=phone_number).exists():
@@ -44,17 +45,22 @@ class RegisterAuthAPIView(APIView):
 
             return Response(data={
                 'message': 'User has successfully created',
-                'is_new_user': user.is_new_user
+                'is_new_user': user.is_new_user,
+                'token': None
             })
 
         user = UserService.get(phone_number=phone_number)
 
         if user.is_new_user:
-            TemporaryCodeService.create_and_send(user=user)
+            if TemporaryCodeService.filter(user=user, is_used=True).exists():
+                token, _ = Token.objects.get_or_create(user=user)
+            else:
+                TemporaryCodeService.create_and_send(user=user)
 
         return Response(data={
             'message': 'User found',
-            'is_new_user': user.is_new_user
+            'is_new_user': user.is_new_user,
+            'token': token.key if token else None
         })
 
 

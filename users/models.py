@@ -31,7 +31,7 @@ class User(AbstractUser, TimestampModel):
 
     def __str__(self):
         return self.phone_number
-    
+
     def save(self, *args, **kwargs):
         if not self.pk:
             self.email = "{}@example.com".format(uuid.uuid4().hex[:6].upper())

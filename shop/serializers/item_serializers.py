@@ -6,6 +6,7 @@ from organizations.serializers.organization_serializers import OrganizationWithT
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Complaint
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
+from shop.services.like_bookmark_services import LikeService, BookmarkService
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -13,12 +14,21 @@ class ItemSerializer(serializers.ModelSerializer):
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
 
+    is_liked = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
+
+    def get_is_liked(self, item: ShopItem) -> bool:
+        return LikeService.is_item_liked_by_user(item=item, user=self.context['request'].user)
+
+    def get_is_bookmarked(self, item: ShopItem) -> bool:
+        return BookmarkService.is_item_bookmarked_by_user(item=item, user=self.context['request'].user)
+
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
             'price', 'discount',
-            'instagram_link', 'is_published',
+            'instagram_link', 'is_published', 'is_liked', 'is_bookmarked', 'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
         )
 

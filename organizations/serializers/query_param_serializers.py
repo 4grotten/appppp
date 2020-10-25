@@ -31,6 +31,11 @@ class OrganizationQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
 
 
+class OptionalOrganizationQueryParamSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
+                                                      default=None)
+
+
 class OrganizationUserQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))

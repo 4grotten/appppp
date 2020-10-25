@@ -1,0 +1,96 @@
+from rest_framework import status
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from shop.models import ShopItem, Complaint
+from shop.permissions import CanEditItem, CanViewUnpublishedItem
+from shop.serializers.item_serializers import (
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer, ComplaintSerializer
+)
+from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.services.item_services import ShopItemService
+from shop.services.like_bookmark_services import LikeService, BookmarkService
+
+
+class ItemCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCreateUpdateSerializer
+
+
+class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, CanEditItem)
+    serializer_class = ItemCreateUpdateSerializer
+    queryset = ShopItem.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        self.permission_classes = (IsAuthenticated, CanViewUnpublishedItem)
+        self.serializer_class = ItemSerializer
+        return super().retrieve(request, *args, **kwargs)
+
+
+class ItemChangePublishedStatusView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ItemChangePublishedSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ShopItemService.update_published_status(user=request.user, item=serializer.validated_data['item'],
+                                                is_published=serializer.validated_data['is_published'])
+
+        return Response(data={'message': 'Successfully updated published status'})
+
+
+class LikeListCreateView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemFeedSerializer
+
+    def get_queryset(self):
+        qs = ShopItemService.get_liked_items(user=self.request.user)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def post(self, request):
+        serializer = LikeSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        LikeService.like_unlike_item(user=request.user, item=serializer.validated_data['item'],
+                                     is_liked=serializer.validated_data['is_liked'])
+
+        return Response(data={'message': 'Successfully updated like status'})
+
+
+class BookmarkListCreateView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemFeedSerializer
+
+    def get_queryset(self):
+        qs = ShopItemService.get_bookmarked_items(user=self.request.user)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def post(self, request):
+        serializer = BookmarkSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['item'],
+                                                   is_bookmarked=serializer.validated_data['is_bookmarked'])
+
+        return Response(data={'message': 'Successfully updated bookmark status'})
+
+
+class ComplaintCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer

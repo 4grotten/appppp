@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'organizations.apps.OrganizationsConfig',
     'users.apps.UsersConfig',
     'notifications',
+    'shop.apps.ShopConfig',
 
     'rest_framework',
     'rest_framework.authtoken',

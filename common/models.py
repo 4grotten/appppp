@@ -1,8 +1,30 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from imagekit import register
 from imagekit.models import ImageSpecField
 
+from common.processors import ResizeWatermarkedSpec
 from common.utils import upload_file_with_original_file_name
+
+
+class LargeWatermarkedSpec(ResizeWatermarkedSpec):
+    height = 600
+    width = 600
+
+
+class MediumWatermarkedSpec(ResizeWatermarkedSpec):
+    height = 250
+    width = 250
+
+
+class SmallWatermarkedSpec(ResizeWatermarkedSpec):
+    height = 150
+    width = 150
+
+
+register.generator('common:file:large', LargeWatermarkedSpec)
+register.generator('common:file:medium', MediumWatermarkedSpec)
+register.generator('common:file:small', SmallWatermarkedSpec)
 
 
 class TimestampModel(models.Model):
@@ -21,9 +43,9 @@ class File(TimestampModel):
         help_text='Image that you want to store'
     )
 
-    large = ImageSpecField(source='file', id='large_watermark_image_spec')
-    medium = ImageSpecField(source='file', id='medium_watermark_image_spec')
-    small = ImageSpecField(source='file', id='small_watermark_image_spec')
+    large = ImageSpecField(source='file', id='common:file:large')
+    medium = ImageSpecField(source='file', id='common:file:medium')
+    small = ImageSpecField(source='file', id='common:file:small')
 
     def __str__(self):
         return self.file.name

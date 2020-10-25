@@ -1,7 +1,7 @@
 import os
 
 from PIL import Image
-from imagekit import register, ImageSpec
+from imagekit import ImageSpec
 from imagekit.utils import get_field_info
 from pilkit.processors import ResizeToFit
 
@@ -41,23 +41,3 @@ class ResizeWatermarkedSpec(ImageSpec):
         if model.is_watermarked:
             processors.append(Watermark('watermark/watermark_logo.png'))
         return processors
-
-
-class LargeWatermarkedSpec(ResizeWatermarkedSpec):
-    height = 600
-    width = 600
-
-
-class MediumWatermarkedSpec(ResizeWatermarkedSpec):
-    height = 250
-    width = 250
-
-
-class SmallWatermarkedSpec(ResizeWatermarkedSpec):
-    height = 150
-    width = 150
-
-
-register.generator('large_watermark_image_spec', LargeWatermarkedSpec)
-register.generator('medium_watermark_image_spec', MediumWatermarkedSpec)
-register.generator('small_watermark_image_spec', SmallWatermarkedSpec)

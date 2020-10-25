@@ -32,6 +32,7 @@ class OrganizationItemListView(FeedView):
         if not serializer.is_valid():
             raise NotAcceptableException('Valid organization is required in query parameters')
 
-        return ShopItemService.get_organization_items_queryset_for_user(
+        qs = ShopItemService.get_organization_items_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user
         )
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)

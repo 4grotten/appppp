@@ -66,7 +66,7 @@ class ItemFeedSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'description', 'article',
             'price', 'discount', 'is_published',
-            'is_liked', 'is_bookmarked', 'updated_at',
+            'is_liked', 'is_bookmarked', 'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
         )
 

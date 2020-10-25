@@ -10,10 +10,11 @@ class ImageSerializer(serializers.ModelSerializer):
     large = serializers.ImageField(read_only=True)
     medium = serializers.ImageField(read_only=True)
     small = serializers.ImageField(read_only=True)
+    is_watermarked = serializers.BooleanField(write_only=True)
 
     class Meta:
         model = File
-        fields = ('id', 'file', 'name', 'large', 'medium', 'small')
+        fields = ('id', 'file', 'name', 'large', 'medium', 'small', 'is_watermarked',)
         read_only_fields = ('name',)
 
     def get_name(self, obj):

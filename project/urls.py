@@ -23,9 +23,11 @@ urlpatterns = [
     path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
     path('api/v1/devicesSettings/', FCMDeviceSettingsAPIView.as_view(), name='device_settings'),
     path('organizations/<int:pk>', organization_detail_view, name='organization_detail_view'),
-    re_path(r'^.*', index, name='unmatched'),
-
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [
+    re_path(r'^.*', index, name='unmatched')
+]

@@ -2,9 +2,11 @@ import re
 from django.shortcuts import render
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
+from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country
@@ -17,6 +19,22 @@ class ImageCreateView(CreateAPIView):
     parser_classes = (MultiPartParser,)
     serializer_class = ImageSerializer
     queryset = File.objects.all()
+
+
+class WatermarkImageCreateView(ImageCreateView):
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['is_watermarked'] = True
+        serializer = self.get_serializer(data=data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CountriesListView(ListAPIView):

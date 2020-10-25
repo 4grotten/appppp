@@ -1,7 +1,6 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from imagekit.models import ImageSpecField
-from pilkit.processors import ResizeToFit
 
 from common.utils import upload_file_with_original_file_name
 
@@ -15,23 +14,16 @@ class TimestampModel(models.Model):
 
 
 class File(TimestampModel):
+    is_watermarked = models.BooleanField(default=False)
+
     file = models.ImageField(
         upload_to=upload_file_with_original_file_name,
         help_text='Image that you want to store'
     )
 
-    large = ImageSpecField(source='file',
-                           processors=[ResizeToFit(600, 600, upscale=False)],
-                           format='JPEG',
-                           options={'quality': 100})
-    medium = ImageSpecField(source='file',
-                            processors=[ResizeToFit(250, 250, upscale=False)],
-                            format='JPEG',
-                            options={'quality': 100})
-    small = ImageSpecField(source='file',
-                           processors=[ResizeToFit(150, 150, upscale=False)],
-                           format='JPEG',
-                           options={'quality': 100})
+    large = ImageSpecField(source='file', id='large_watermark_image_spec')
+    medium = ImageSpecField(source='file', id='medium_watermark_image_spec')
+    small = ImageSpecField(source='file', id='small_watermark_image_spec')
 
     def __str__(self):
         return self.file.name

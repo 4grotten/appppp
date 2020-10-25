@@ -7,7 +7,7 @@ from .models import File, Country, Currency, City
 
 @admin.register(File)
 class FileAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'file', 'is_watermarked',)
 
 
 @admin.register(Country)

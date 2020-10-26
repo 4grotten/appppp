@@ -16,6 +16,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     is_liked = serializers.SerializerMethodField()
     is_bookmarked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
 
     def get_is_liked(self, item: ShopItem) -> bool:
         return LikeService.is_item_liked_by_user(item=item, user=self.context['request'].user)
@@ -23,12 +24,16 @@ class ItemSerializer(serializers.ModelSerializer):
     def get_is_bookmarked(self, item: ShopItem) -> bool:
         return BookmarkService.is_item_bookmarked_by_user(item=item, user=self.context['request'].user)
 
+    def get_like_count(self, item: ShopItem) -> int:
+        return item.liked_users.count()
+
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
             'price', 'discount',
-            'instagram_link', 'is_published', 'is_liked', 'is_bookmarked', 'created_at', 'updated_at',
+            'instagram_link', 'is_published', 'is_liked', 'is_bookmarked', 'like_count',
+            'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
         )
 
@@ -66,17 +71,22 @@ class ItemChangePublishedSerializer(serializers.Serializer):
 class ItemFeedSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField()
     is_bookmarked = serializers.BooleanField()
+    like_count = serializers.SerializerMethodField()
 
     organization = OrganizationWithTypeImageSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
+
+    def get_like_count(self, item: ShopItem) -> int:
+        return item.liked_users.count()
 
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
             'price', 'discount', 'is_published',
-            'is_liked', 'is_bookmarked', 'created_at', 'updated_at',
+            'is_liked', 'is_bookmarked', 'like_count',
+            'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
         )
 

@@ -6,8 +6,9 @@ from organizations.serializers.query_param_serializers import OptionalOrganizati
 from shop.models import ItemCategory, ItemSubcategory
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
-    ItemCategorySerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer
+    ItemCategorySerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer, ItemSubcategoryBriefSerializer
 )
+from shop.services.category_services import ItemSubcategoryService
 
 
 class ItemCategoriesListView(ListAPIView):
@@ -36,3 +37,10 @@ class ItemCategoriesCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()
+
+
+class OrganizationSubcategoriesView(ListAPIView):
+    serializer_class = ItemSubcategoryBriefSerializer
+
+    def get_queryset(self):
+        return ItemSubcategoryService.get_nonempty_subcategories(organization_id=self.kwargs['pk'])

@@ -1,7 +1,8 @@
 from django.urls import path
 
 from shop.views.category_views import (
-    ItemCategoriesListView, ItemCategoryRetrieveUpdateDestroyView, ItemCategoriesCreateView
+    ItemCategoriesListView, ItemCategoryRetrieveUpdateDestroyView, ItemCategoriesCreateView,
+    OrganizationSubcategoriesView
 )
 from shop.views.feed_views import FeedView, OrganizationItemListView
 from shop.views.item_views import (
@@ -13,6 +14,7 @@ urlpatterns = [
     path('shop/categories/', ItemCategoriesListView.as_view(), name='item_categories'),
     path('shop/subcategories/', ItemCategoriesCreateView.as_view(), name='item_category_create'),
     path('shop/subcategories/<int:pk>/', ItemCategoryRetrieveUpdateDestroyView.as_view(), name='item_category_details'),
+    path('shop/<int:pk>/subcategories/', OrganizationSubcategoriesView.as_view(), name='organization_subcategories'),
 
     path('shop/items/', ItemCreateView.as_view(), name='item_create'),
     path('shop/items/<int:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),

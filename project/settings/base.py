@@ -173,6 +173,7 @@ AWS_S3_FILE_OVERWRITE = False
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = 'imagekit.cachefiles.backends.Async'
+IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategies.Optimistic'
 
 CELERY_ACCEPT_CONTENT = ['pickle']
 
@@ -245,4 +246,4 @@ FCM_DJANGO_SETTINGS = {
 }
 
 HOST_URL = 'https://apofiz.com/media/'
-CELERY_BROKER_URL = 'amqp://qrcode:qrcode@localhost:5672/qrhost'
+CELERY_BROKER_URL = 'amqp://localhost:5672'

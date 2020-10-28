@@ -36,7 +36,8 @@ class TimestampModel(models.Model):
 
 
 class File(TimestampModel):
-    is_watermarked = models.BooleanField(default=False)
+    is_watermarked = models.BooleanField(default=False, editable=False)
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
 
     file = models.ImageField(
         upload_to=upload_file_with_original_file_name,
@@ -49,6 +50,9 @@ class File(TimestampModel):
 
     def __str__(self):
         return self.file.name
+
+    class Meta:
+        ordering = ('order',)
 
 
 class Currency(models.Model):

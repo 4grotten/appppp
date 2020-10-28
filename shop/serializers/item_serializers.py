@@ -68,6 +68,14 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def save(self, **kwargs):
+        images = self.validated_data.get('images', [])
+        for index, image in enumerate(images):
+            image.order = index
+            image.save(update_fields=('order',))
+
+        return super().save(**kwargs)
+
 
 class ItemChangePublishedSerializer(serializers.Serializer):
     is_published = serializers.BooleanField()

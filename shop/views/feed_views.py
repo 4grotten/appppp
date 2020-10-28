@@ -12,7 +12,6 @@ from shop.services.item_services import ShopItemService
 
 
 class FeedView(ListAPIView):
-    permission_classes = (IsAuthenticated,)
     serializer_class = ItemFeedSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter,)
     filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)

@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Case, When, BooleanField
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Organization
@@ -17,24 +17,29 @@ class ShopItemService:
 
     @classmethod
     def annotate_likes_and_bookmarks(cls, queryset: QuerySet, user: User) -> QuerySet:
-        return queryset.annotate(
-            is_liked=Case(
-                When(liked_users__user=user, then=1),
-                default=0,
-                output_field=BooleanField()
-            ),
-            is_bookmarked=Case(
-                When(bookmarked_users__user=user, then=1),
-                default=0,
-                output_field=BooleanField()
+        if not user.is_authenticated:
+            return queryset.annotate(
+                is_liked=Value(False, output_field=BooleanField()),
+                is_bookmarked=Value(False, output_field=BooleanField())
             )
+
+        return queryset.annotate(
+            is_liked=Max(Case(
+                When(liked_users__user=user, then=1), default=0,
+                output_field=BooleanField())
+            ),
+            is_bookmarked=Max(Case(
+                When(bookmarked_users__user=user, then=1), default=0,
+                output_field=BooleanField()
+            ))
         )
 
     @classmethod
     def get_organization_items_queryset_for_user(cls, organization: Organization, user: User):
         queryset = ShopItem.objects.filter(organization=organization)
 
-        if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
+        if user.is_authenticated and not OrganizationService.user_can_edit_organization(user=user,
+                                                                                        organization=organization):
             queryset = queryset.exclude(is_published=False)
 
         return queryset

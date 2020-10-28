@@ -37,6 +37,7 @@ class ItemCategoriesCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()
+    pagination_class = None
 
 
 class OrganizationSubcategoriesView(ListAPIView):

@@ -1,6 +1,6 @@
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from shop.models import ShopItem, Complaint
@@ -23,8 +23,12 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = ItemCreateUpdateSerializer
     queryset = ShopItem.objects.all()
 
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            self.permission_classes = (AllowAny, CanViewUnpublishedItem,)
+        return super().get_permissions()
+
     def retrieve(self, request, *args, **kwargs):
-        self.permission_classes = (IsAuthenticated, CanViewUnpublishedItem)
         self.serializer_class = ItemSerializer
         return super().retrieve(request, *args, **kwargs)
 

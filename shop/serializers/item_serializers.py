@@ -19,10 +19,16 @@ class ItemSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
 
     def get_is_liked(self, item: ShopItem) -> bool:
-        return LikeService.is_item_liked_by_user(item=item, user=self.context['request'].user)
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return LikeService.is_item_liked_by_user(item=item, user=user)
 
     def get_is_bookmarked(self, item: ShopItem) -> bool:
-        return BookmarkService.is_item_bookmarked_by_user(item=item, user=self.context['request'].user)
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
 
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()

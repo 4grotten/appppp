@@ -74,7 +74,10 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             image.order = index
             image.save(update_fields=('order',))
 
-        return super().save(**kwargs)
+        instance = super().save(**kwargs)
+        if instance.article == '' or instance.article is None:
+            instance.article = f"ART{instance.id}"
+            instance.save(update_fields=('article',))
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

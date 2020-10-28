@@ -37,11 +37,11 @@ class ItemCategoriesCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()
-    pagination_class = None
 
 
 class OrganizationSubcategoriesView(ListAPIView):
     serializer_class = ItemSubcategoryBriefSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return ItemSubcategoryService.get_nonempty_subcategories(organization_id=self.kwargs['pk'])

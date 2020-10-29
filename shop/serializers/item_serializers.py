@@ -85,17 +85,30 @@ class ItemChangePublishedSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 
-class ItemFeedSerializer(serializers.ModelSerializer):
+class ItemListSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField()
     is_bookmarked = serializers.BooleanField()
     like_count = serializers.SerializerMethodField()
 
-    organization = OrganizationWithTypeImageSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
 
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'description', 'article',
+            'price', 'discount', 'instagram_link', 'is_published',
+            'is_liked', 'is_bookmarked', 'like_count',
+            'created_at', 'updated_at',
+            'youtube_links', 'subcategory', 'images',
+        )
+
+
+class ItemFeedSerializer(ItemListSerializer):
+    organization = OrganizationWithTypeImageSerializer()
 
     class Meta:
         model = ShopItem

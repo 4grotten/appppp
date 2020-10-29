@@ -7,7 +7,7 @@ from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from shop.filters import FeedItemFilter
 from shop.models import ShopItem
-from shop.serializers.item_serializers import ItemFeedSerializer
+from shop.serializers.item_serializers import ItemFeedSerializer, ItemListSerializer
 from shop.services.item_services import ShopItemService
 
 
@@ -26,6 +26,8 @@ class FeedView(ListAPIView):
 
 
 class OrganizationItemListView(FeedView):
+    serializer_class = ItemListSerializer
+
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():

@@ -101,7 +101,7 @@ class ItemFeedSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
-            'price', 'discount', 'is_published',
+            'price', 'discount', 'instagram_link', 'is_published',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',

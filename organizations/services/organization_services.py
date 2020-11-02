@@ -182,7 +182,10 @@ class OrganizationService:
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):
         try:
-            point = Point(longitude, latitude)
+            if longitude and latitude:
+                point = Point(longitude, latitude)
+            else:
+                point = None
             organization.location = point
             organization.address = address
             organization.save()
@@ -199,7 +202,10 @@ class OrganizationService:
                             types, numbers, accounts, cards, currency="KGS", country="KG", city=None):
         from organizations.services.card_services import DiscountCardService
 
-        point = Point(longitude, latitude)
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
         organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
                                                    description=description, image_id=image_id, address=address,
                                                    location=point, currency=currency, country=country, city=city)
@@ -227,7 +233,10 @@ class OrganizationService:
     def update(cls, organization, image_id, longitude, latitude, description, types,
                title, opens_at, closes_at, address, currency, show_contacts, country, city=None):
         try:
-            point = Point(longitude, latitude)
+            if longitude and latitude:
+                point = Point(longitude, latitude)
+            else:
+                point = None
             organization.image_id = image_id
             organization.location = point
             organization.title = title

@@ -42,6 +42,7 @@ class ShopItem(TimestampModel):
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     discount = models.PositiveSmallIntegerField(null=True, blank=True,
                                                 validators=[MinValueValidator(0), MaxValueValidator(100)])
+    discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, editable=False)
     article = models.CharField(max_length=64, null=True, blank=True)
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
@@ -51,6 +52,11 @@ class ShopItem(TimestampModel):
 
     def __str__(self):
         return f'{self.name}'
+
+    def save(self, *args, **kwargs):
+        if self.price is not None:
+            self.discounted_price = self.price * (100 - self.discount) / 100
+        super().save(*args, **kwargs)
 
 
 class ItemLike(TimestampModel):
@@ -77,6 +83,33 @@ class ItemBookmark(TimestampModel):
         constraints = (
             models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_bookmark'),
         )
+
+
+class Cart(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='carts')
+
+    def __str__(self):
+        return f'Cart of {self.user} in {self.organization}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('organization', 'user'), name='unique_cart_for_user_in_organization')
+        ]
+
+
+class CartItem(TimestampModel):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_carts')
+    count = models.PositiveSmallIntegerField(default=0)
+
+    def __str__(self):
+        return f'Item #{self.item.id} in cart of {self.cart.user}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('cart', 'item'), name='unique_item_in_user_cart')
+        ]
 
 
 class Complaint(TimestampModel):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint
+from shop.models import ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
@@ -25,6 +25,14 @@ class ItemBookmarkAdmin(admin.ModelAdmin):
     list_display = ('user', 'item',)
 
 
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization',)
+
+
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'item', 'count',)
+
+
 class ComplaintAdmin(admin.ModelAdmin):
     list_display = ('user', 'item',)
 
@@ -34,4 +42,6 @@ admin.site.register(ItemSubcategory, ItemSubcategoryAdmin)
 admin.site.register(ShopItem, ShopItemAdmin)
 admin.site.register(ItemLike, ItemLikeAdmin)
 admin.site.register(ItemBookmark, ItemBookmarkAdmin)
+admin.site.register(Cart, CartAdmin)
+admin.site.register(CartItem, CartItemAdmin)
 admin.site.register(Complaint, ComplaintAdmin)

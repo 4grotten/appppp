@@ -1,7 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer

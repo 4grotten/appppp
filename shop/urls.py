@@ -1,6 +1,6 @@
 from django.urls import path
 
-from shop.views.cart_views import CartItemCountChangeView, UserCartListView, UserCartRetrieveView, OrderDeliveryView
+from shop.views.cart_views import CartItemCountChangeView, UserCartListView, UserCartRetrieveDestroyView, OrderDeliveryView
 from shop.views.category_views import (
     ItemCategoriesListView, ItemCategoryRetrieveUpdateDestroyView, ItemCategoriesCreateView,
     OrganizationSubcategoriesView
@@ -30,7 +30,7 @@ urlpatterns = [
     path('shop/complaints/', ComplaintCreateView.as_view(), name='complaint_create'),
 
     path('carts/', UserCartListView.as_view(), name='user_cart_list'),
-    path('carts/<int:pk>/', UserCartRetrieveView.as_view(), name='user_cart_details'),
+    path('carts/<int:pk>/', UserCartRetrieveDestroyView.as_view(), name='user_cart_details'),
     path('carts/doChangeItemCount/', CartItemCountChangeView.as_view(), name='add_cart_item'),
 
     path('carts/<int:pk>/delivery/', OrderDeliveryView.as_view(), name='order_delivery'),

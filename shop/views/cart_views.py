@@ -1,6 +1,6 @@
 from django.db.models import Count
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -19,7 +19,7 @@ class UserCartListView(ListAPIView):
         return Cart.objects.filter(user=self.request.user).annotate(items_count=Count('items')).order_by('-id')
 
 
-class UserCartRetrieveView(RetrieveAPIView):
+class UserCartRetrieveDestroyView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CartSerializer
 

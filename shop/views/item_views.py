@@ -6,8 +6,9 @@ from rest_framework.response import Response
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer, ComplaintSerializer
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
 )
+from shop.serializers.other_serializers import ComplaintSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService

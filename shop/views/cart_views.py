@@ -1,11 +1,11 @@
 from django.db.models import Count
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from shop.models import Cart
-from shop.serializers.cart_serializers import CartItemCountChangeSerializer, CartListSerializer
+from shop.serializers.cart_serializers import CartItemCountChangeSerializer, CartListSerializer, CartSerializer
 from shop.services.cart_services import CartItemService
 
 
@@ -15,6 +15,14 @@ class UserCartListView(ListAPIView):
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user).annotate(items_count=Count('items')).order_by('-id')
+
+
+class UserCartRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CartSerializer
+
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
 
 
 class CartItemCountChangeView(GenericAPIView):

@@ -4,7 +4,7 @@ from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, Complaint
+from shop.models import ShopItem
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
@@ -121,11 +121,15 @@ class ItemFeedSerializer(ItemListSerializer):
         )
 
 
-class ComplaintSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Complaint
-        fields = ('item', 'reason',)
+class ItemInCartSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
 
-    def validate(self, attrs):
-        attrs['user'] = self.context['request'].user
-        return attrs
+    def get_image(self, item: ShopItem) -> dict:
+        image = item.images.filter(order=0).first()
+        return ImageSerializer(image, context=self.context).data
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'price', 'discounted_price', 'image'
+        )

@@ -20,7 +20,7 @@ class DiscountCardService:
     @classmethod
     def get(cls, *args, **kwargs):
         try:
-            return DiscountCard.objects.get(**kwargs)
+            return DiscountCard.objects.get(*args, **kwargs)
         except DiscountCard.DoesNotExist:
             raise ObjectNotFoundException('Discount not found')
 

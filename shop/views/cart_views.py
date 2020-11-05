@@ -5,8 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from shop.models import Cart
-from shop.serializers.cart_serializers import CartItemCountChangeSerializer, CartListSerializer, CartSerializer
-from shop.services.cart_services import CartItemService
+from shop.serializers.cart_serializers import (
+    CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer
+)
+from shop.services.cart_services import CartItemService, CartService
 
 
 class UserCartListView(ListAPIView):
@@ -47,3 +49,20 @@ class CartItemCountChangeView(GenericAPIView):
         }
 
         return Response(data)
+
+
+class OrderDeliveryView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = DeliveryInfoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        # ToDo: put delivery info into transaction info
+        CartService.checkout_cart(user=request.user, cart_id=pk)
+
+        return Response({'message': 'Success'})

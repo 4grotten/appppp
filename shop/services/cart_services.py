@@ -5,11 +5,19 @@ from django.db import transaction
 from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
 
+from common.exceptions import ObjectNotFoundException
 from shop.models import CartItem, Cart, ShopItem
 from users.models import User
 
 
 class CartService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return Cart.objects.get(*args, **kwargs)
+        except Cart.DoesNotExist:
+            raise ObjectNotFoundException('Cart not found')
+
     @classmethod
     def get_total_prices_in_cart(cls, cart: Cart) -> Tuple[Decimal, Decimal]:
         totals = cart.items.aggregate(
@@ -18,6 +26,12 @@ class CartService:
         )
 
         return totals['original_price'], totals['discounted_price']
+
+    @classmethod
+    def checkout_cart(cls, user: User, cart_id: int):
+        cart = cls.get(user=user, id=cart_id)
+        cart.delete()
+        # ToDo: Put cart contents to transaction
 
 
 class CartItemService:

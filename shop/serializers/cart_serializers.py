@@ -5,7 +5,7 @@ from common.serializers import ImageSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationTitleImageSerializer, OrganizationTitleSerializer
 )
-from shop.models import ShopItem, Cart, CartItem
+from shop.models import ShopItem, Cart, CartItem, DeliveryInfo
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
 
@@ -64,3 +64,9 @@ class CartListSerializer(serializers.ModelSerializer):
 class CartItemCountChangeSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
     change = serializers.IntegerField()
+
+
+class DeliveryInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryInfo
+        fields = ('address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment')

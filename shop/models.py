@@ -112,6 +112,21 @@ class CartItem(TimestampModel):
         ]
 
 
+class DeliveryInfo(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='delivery_infos')
+
+    address = models.CharField(max_length=225)
+    apartment = models.CharField(max_length=36)
+    intercom = models.CharField(max_length=36)
+    entrance = models.CharField(max_length=36)
+    floor = models.CharField(max_length=36)
+    phone = models.CharField(max_length=36)
+    comment = models.CharField(max_length=36)
+
+    def __str__(self):
+        return f'Delivery info of {self.user}'
+
+
 class Complaint(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='complaints')
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='complaints')

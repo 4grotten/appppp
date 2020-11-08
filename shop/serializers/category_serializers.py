@@ -4,6 +4,7 @@ from rest_framework import serializers
 from common.exceptions import NotAcceptableException
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
+from shop.services.category_services import ItemSubcategoryService
 
 
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
@@ -34,15 +35,33 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 
 
 class ItemCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemCategory
+        fields = ('id', 'name',)
+
+
+class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
 
     def get_subcategories(self, main_category: ItemCategory) -> dict:
-        organization = self.context['organization']
+        organization = self.context.get('organization', None)
         if organization is None:
             subcategories = main_category.subcategories.filter(organization__isnull=True)
         else:
             subcategories = main_category.subcategories.filter(
                 Q(organization__isnull=True) | Q(organization=organization))
+        return ItemSubcategorySerializer(subcategories, many=True).data
+
+    class Meta:
+        model = ItemCategory
+        fields = ('id', 'name', 'subcategories')
+
+
+class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerializer):
+    subcategories = serializers.SerializerMethodField()
+
+    def get_subcategories(self, main_category: ItemCategory) -> dict:
+        subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(category=main_category)
         return ItemSubcategorySerializer(subcategories, many=True).data
 
     class Meta:

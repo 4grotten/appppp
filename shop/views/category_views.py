@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
@@ -6,15 +6,16 @@ from organizations.serializers.query_param_serializers import OptionalOrganizati
 from shop.models import ItemCategory, ItemSubcategory
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
-    ItemCategorySerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer, ItemSubcategoryBriefSerializer
+    ItemCategoryWithSubcategoriesSerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer,
+    ItemSubcategoryBriefSerializer, ItemCategorySerializer, ItemCategoryWithNonEmptySubcategoriesSerializer
 )
-from shop.services.category_services import ItemSubcategoryService
+from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
 
 
-class ItemCategoriesListView(ListAPIView):
+class ItemCategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
-    serializer_class = ItemCategorySerializer
+    serializer_class = ItemCategoryWithSubcategoriesSerializer
     queryset = ItemCategory.objects.all()
 
     def get_serializer_context(self):
@@ -27,21 +28,36 @@ class ItemCategoriesListView(ListAPIView):
         return context
 
 
-class ItemCategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+class ItemCategoryRetrieveView(RetrieveAPIView):
+    permission_classes = ()
+    serializer_class = ItemCategoryWithNonEmptySubcategoriesSerializer
+    queryset = ItemCategory.objects.all()
+
+
+class NonEmptyCategoryListView(ListAPIView):
+    permission_classes = ()
+    pagination_class = None
+    serializer_class = ItemCategorySerializer
+
+    def get_queryset(self):
+        return ItemCategoryService.get_nonempty_general_categories()
+
+
+class SubcategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, CanEditItemSubcategory)
     serializer_class = ItemSubcategorySerializer
     queryset = ItemSubcategory.objects.all()
 
 
-class ItemCategoriesCreateView(CreateAPIView):
+class ItemSubcategoryCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()
 
 
-class OrganizationSubcategoriesView(ListAPIView):
+class OrganizationSubcategoryListView(ListAPIView):
     serializer_class = ItemSubcategoryBriefSerializer
     pagination_class = None
 
     def get_queryset(self):
-        return ItemSubcategoryService.get_nonempty_subcategories(organization_id=self.kwargs['pk'])
+        return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=self.kwargs['pk'])

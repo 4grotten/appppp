@@ -61,7 +61,9 @@ class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerialize
     subcategories = serializers.SerializerMethodField()
 
     def get_subcategories(self, main_category: ItemCategory) -> dict:
-        subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(category=main_category)
+        subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(
+            category=main_category, country=self.context['country'], city=self.context['city']
+        )
         return ItemSubcategorySerializer(subcategories, many=True).data
 
     class Meta:

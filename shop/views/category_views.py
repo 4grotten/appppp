@@ -2,6 +2,7 @@ from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, C
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
+from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
 from shop.models import ItemCategory, ItemSubcategory
 from shop.permissions import CanEditItemSubcategory
@@ -33,6 +34,18 @@ class ItemCategoryRetrieveView(RetrieveAPIView):
     serializer_class = ItemCategoryWithNonEmptySubcategoriesSerializer
     queryset = ItemCategory.objects.all()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        qp_serializer = CountryCityQueryParamSerializer(data=self.request.GET)
+        if not qp_serializer.is_valid():
+            raise NotAcceptableException('Valid country and city are required in query parameters')
+
+        context['city'] = qp_serializer.validated_data['city']
+        context['country'] = qp_serializer.validated_data['country']
+
+        return context
+
 
 class NonEmptyCategoryListView(ListAPIView):
     permission_classes = ()
@@ -40,7 +53,12 @@ class NonEmptyCategoryListView(ListAPIView):
     serializer_class = ItemCategorySerializer
 
     def get_queryset(self):
-        return ItemCategoryService.get_nonempty_general_categories()
+        qp_serializer = CountryCityQueryParamSerializer(data=self.request.GET)
+        if not qp_serializer.is_valid():
+            raise NotAcceptableException('Valid country and city are required in query parameters')
+
+        return ItemCategoryService.get_nonempty_general_categories(country=qp_serializer.validated_data['country'],
+                                                                   city=qp_serializer.validated_data['city'])
 
 
 class SubcategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

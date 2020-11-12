@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
-from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
+from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
@@ -10,7 +10,7 @@ from shop.services.like_bookmark_services import LikeService, BookmarkService
 
 
 class ItemSerializer(serializers.ModelSerializer):
-    organization = OrganizationWithTypeImageSerializer()
+    organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
 
@@ -108,7 +108,7 @@ class ItemListSerializer(serializers.ModelSerializer):
 
 
 class ItemFeedSerializer(ItemListSerializer):
-    organization = OrganizationWithTypeImageSerializer()
+    organization = ItemFeedOrganizationSerializer()
 
     class Meta:
         model = ShopItem

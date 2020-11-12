@@ -40,8 +40,7 @@ class ShopItem(TimestampModel):
     name = models.CharField(max_length=64)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    discount = models.PositiveSmallIntegerField(null=True, blank=True,
-                                                validators=[MinValueValidator(0), MaxValueValidator(100)])
+    discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, editable=False)
     article = models.CharField(max_length=64, null=True, blank=True)
     instagram_link = models.URLField(null=True, blank=True)

@@ -301,10 +301,10 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
         fields = ('id', 'title', 'max_discount', 'types', 'image',)
 
 
-class OrganizationTitleSerializer(serializers.ModelSerializer):
+class OrganizationTitleCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title')
+        fields = ('id', 'title', 'currency')
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):
@@ -313,6 +313,12 @@ class OrganizationTitleImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image')
+
+
+class OrganizationTitleImageCurrencySerializer(OrganizationTitleImageSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'image')
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):

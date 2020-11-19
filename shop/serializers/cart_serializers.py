@@ -3,7 +3,7 @@ from rest_framework import serializers
 from common.models import File
 from common.serializers import ImageSerializer
 from organizations.serializers.organization_serializers import (
-    OrganizationTitleImageSerializer, OrganizationTitleSerializer
+    OrganizationTitleImageSerializer, OrganizationTitleCurrencySerializer, OrganizationTitleImageCurrencySerializer
 )
 from shop.models import ShopItem, Cart, CartItem, DeliveryInfo
 from shop.serializers.item_serializers import ItemInCartSerializer
@@ -19,7 +19,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    organization = OrganizationTitleSerializer()
+    organization = OrganizationTitleCurrencySerializer()
     totals = serializers.SerializerMethodField()
     items = CartItemSerializer(many=True)
 
@@ -37,7 +37,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CartListSerializer(serializers.ModelSerializer):
-    organization = OrganizationTitleImageSerializer()
+    organization = OrganizationTitleImageCurrencySerializer()
     # ToDo: ask if items_count unique or total?
     items_count = serializers.IntegerField()
     images = serializers.SerializerMethodField()

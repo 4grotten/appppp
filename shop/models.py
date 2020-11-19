@@ -133,3 +133,8 @@ class Complaint(TimestampModel):
 
     def __str__(self):
         return f'Complaint of {self.user} about {self.item.name}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('user', 'item'), name='unique_complaint_from_user')
+        ]

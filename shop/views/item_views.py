@@ -29,8 +29,9 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         return super().get_permissions()
 
     def retrieve(self, request, *args, **kwargs):
-        self.serializer_class = ItemSerializer
-        return super().retrieve(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = ItemSerializer(instance)
+        return Response(serializer.data)
 
 
 class ItemChangePublishedStatusView(GenericAPIView):

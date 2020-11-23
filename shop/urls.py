@@ -17,7 +17,7 @@ urlpatterns = [
     path('shop/<int:pk>/subcategories/', OrganizationSubcategoriesView.as_view(), name='organization_subcategories'),
 
     path('shop/items/', ItemCreateView.as_view(), name='item_create'),
-    path('shop/items/<int:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),
+    path('shop/items/<str:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),
     path('shop/doChangeItemPublishedStatus/', ItemChangePublishedStatusView.as_view(), name='item_published_status'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),

@@ -29,6 +29,11 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         return super().get_permissions()
 
     def retrieve(self, request, *args, **kwargs):
+        if not kwargs['pk'].isdigit():
+            return Response(data={
+                'details': 'Not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
         self.serializer_class = ItemSerializer
         return super().retrieve(request, *args, **kwargs)
 

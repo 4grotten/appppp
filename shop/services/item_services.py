@@ -1,6 +1,6 @@
 from django.db.models import QuerySet, Case, When, BooleanField, Value, Max
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem
@@ -8,6 +8,14 @@ from users.models import User
 
 
 class ShopItemService:
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return ShopItem.objects.get(**filters)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException('ShopItem not found')
+
     @classmethod
     def update_published_status(cls, user: User, item: ShopItem, is_published: bool):
         if not OrganizationService.user_can_edit_organization(user=user, organization=item.organization):

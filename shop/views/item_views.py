@@ -29,7 +29,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         return super().get_permissions()
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
+        instance = ShopItemService.get(id=kwargs['pk'])
         serializer = ItemSerializer(instance)
         return Response(serializer.data)
 

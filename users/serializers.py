@@ -201,3 +201,11 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'avatar', 'username')
+
+
+class FollowerInfoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number')

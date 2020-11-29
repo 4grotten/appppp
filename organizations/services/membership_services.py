@@ -149,6 +149,10 @@ class MembershipService:
     def is_organization_member(cls, user: User, organization: Organization):
         return Membership.objects.filter(user=user, organization=organization).exists()
 
+    @classmethod
+    def is_organization_member_or_owner(cls, user: User, organization: Organization):
+        return (Membership.objects.filter(user=user, organization=organization).exists() or user == organization.owner)
+
 
 class RoleService:
     @classmethod

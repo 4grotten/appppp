@@ -1,5 +1,6 @@
 from django.db.models import QuerySet, Subquery, OuterRef
 
+from common.exceptions import PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
@@ -7,6 +8,7 @@ from notifications.constants import (
 from organizations.models import Organization, Subscription
 from django.db.models import QuerySet
 
+from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 from notifications.tasks import sent_notification
@@ -61,6 +63,17 @@ class SubscriptionService:
     @classmethod
     def get_organization_followers(cls, organization_id: int) -> QuerySet:
         return User.objects.filter(subscriptions__organization_id=organization_id)
+
+    @classmethod
+    def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> QuerySet:
+        organization = OrganizationService.get(id=organization_id)
+        user = User.objects.get(id=user_id)
+        if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
+            raise PermissionDeniedException('Permission denied')
+
+        if not Subscription.objects.filter(user=user, organization=organization).exists():
+            raise ObjectNotFoundException('Follower not found')
+        return user
 
     @classmethod
     def get_organization_partners_followers(cls, organization_id: int) -> QuerySet:

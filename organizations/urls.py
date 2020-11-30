@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -39,6 +40,9 @@ organization_urls = [
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
     path('organizations/<int:organization_id>/followers/<int:user_id>/', OrgFollowersDetailsAPIView.as_view(),
          name='org_follower_detail'),
+    path('organizations/<int:organization_id>/followers/<int:user_id>/transactions/',
+         OrgFollowersTransactionsListAPIView.as_view(), name='org_followers_transactions'),
+
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
     path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view()),

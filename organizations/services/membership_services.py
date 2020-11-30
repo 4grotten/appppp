@@ -1,5 +1,5 @@
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
 from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
@@ -144,6 +144,12 @@ class MembershipService:
     @classmethod
     def has_edit_rights_in_any_organization(cls, user: User) -> bool:
         return Membership.objects.filter(user=user, role__can_edit_organization=True).exists()
+
+    @classmethod
+    def has_seller_stats_rights_in_any_organization(cls, user: User, organization: Organization) -> bool:
+        return Membership.objects.filter(Q(user=user) & Q(organization=organization) & Q(
+            Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(
+                role__can_edit_organization=True))).exists() or user == organization.owner
 
     @classmethod
     def is_organization_member(cls, user: User, organization: Organization):

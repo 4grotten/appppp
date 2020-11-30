@@ -207,3 +207,16 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
             raise PermissionDeniedException('Permission denied')
 
         TransactionService.refund_transaction(old_transaction=instance)
+
+
+class OrgFollowersTransactionsListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        return TransactionService.get_organization_follower_transactions(organization_id=self.kwargs['organization_id'],
+                                                                         requested_by=self.request.user,
+                                                                         follower_id=self.kwargs['user_id'])

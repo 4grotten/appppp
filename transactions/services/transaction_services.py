@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -20,9 +20,10 @@ from notifications.constants import (
 )
 from notifications.services import NotificationService
 from notifications.tasks import sent_notification
-from organizations.models import Organization, DiscountCard
+from organizations.models import Organization, DiscountCard, Subscription
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
+from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
@@ -274,6 +275,32 @@ class TransactionService:
     def get_user_transactions(cls, client: User):
         transactions = Transaction.objects.filter(client=client, is_processed=True)
         return transactions
+
+    @classmethod
+    def get_organization_follower_transactions(cls, requested_by: User, follower_id: int,
+                                               organization_id: int) -> QuerySet:
+        organization = OrganizationService.get(id=organization_id)
+        user = User.objects.get(id=follower_id)
+        if not MembershipService.has_seller_stats_rights_in_any_organization(user=requested_by,
+                                                                             organization=organization):
+            raise PermissionDeniedException('Permission denied')
+
+        if not Subscription.objects.filter(user=user, organization=organization).exists():
+            raise ObjectNotFoundException('Follower not found')
+
+        transactions = Transaction.objects.filter(organization_id=organization_id, client_id=follower_id)
+        return transactions
+
+    @classmethod
+    def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> QuerySet:
+        organization = OrganizationService.get(id=organization_id)
+        user = User.objects.get(id=user_id)
+        if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
+            raise PermissionDeniedException('Permission denied')
+
+        if not Subscription.objects.filter(user=user, organization=organization).exists():
+            raise ObjectNotFoundException('Follower not found')
+        return user
 
     @classmethod
     def get_organization_transactions(cls, organization: Organization, processed_by: User = None,

@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -18,10 +19,10 @@ from .views.organization_views import (
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
-    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView,OrgPartnershipsInShortView,
+    HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
-from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView
+from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -37,6 +38,11 @@ organization_urls = [
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),
     path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
+    path('organizations/<int:organization_id>/followers/<int:user_id>/', OrgFollowersDetailsAPIView.as_view(),
+         name='org_follower_detail'),
+    path('organizations/<int:organization_id>/followers/<int:user_id>/transactions/',
+         OrgFollowersTransactionsListAPIView.as_view(), name='org_followers_transactions'),
+
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
     path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view()),

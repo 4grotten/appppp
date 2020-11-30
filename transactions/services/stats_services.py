@@ -15,7 +15,7 @@ from users.models import User
 class StatisticsService:
     @classmethod
     def get_totals_of_organization(cls, organization: Organization, start_date=None, end_date=None,
-                                   processed_by: User = None) -> dict:
+                                   processed_by: User = None, client: User = None) -> dict:
         transactions = Transaction.objects.filter(is_processed=True, organization=organization)
 
         if start_date is not None and end_date is not None:
@@ -24,6 +24,9 @@ class StatisticsService:
 
         if processed_by is not None:
             transactions = transactions.filter(processed_by=processed_by)
+
+        if client is not None:
+            transactions = transactions.filter(client=client)
 
         transactions = transactions.order_by().values('currency').annotate(total_spent=Coalesce(Sum('final_amount'), 0),
                                                                            total_savings=Coalesce(Sum('savings'), 0))

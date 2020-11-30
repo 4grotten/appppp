@@ -57,6 +57,17 @@ class OrganizationService:
         return membership.role.title
 
     @classmethod
+    def get_user_role_in_organization_or_client(cls, organization_id: int, user: User) -> str:
+        organization = Organization.objects.get(id=organization_id)
+        if organization.owner == user:
+            return _('Owner')
+        try:
+            membership = MembershipService.get(organization=organization, user=user)
+            return membership.role.title
+        except:
+            return "Client"
+
+    @classmethod
     def user_can_edit_organization(cls, organization: Organization, user: User) -> bool:
         permissions = cls.get_user_permissions_dict(organization=organization, user=user)
         return permissions['can_edit_organization']

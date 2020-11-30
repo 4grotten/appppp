@@ -12,6 +12,7 @@ class StartEndProcessedByQueryParamSerializer(serializers.Serializer):
     start = serializers.DateField(default=None)
     end = serializers.DateField(default=None)
     processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
 
 
 class TotalStatsSerializer(serializers.Serializer):

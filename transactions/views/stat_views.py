@@ -49,6 +49,7 @@ class OrganizationTotalsView(GenericAPIView):
         stats = StatisticsService.get_totals_of_organization(organization=organization,
                                                              start_date=serializer.validated_data['start'],
                                                              end_date=serializer.validated_data['end'],
-                                                             processed_by=serializer.validated_data['processed_by'])
+                                                             processed_by=serializer.validated_data['processed_by'],
+                                                             client=serializer.validated_data['client'])
         data = TotalStatsSerializer(stats).data
         return Response(data)

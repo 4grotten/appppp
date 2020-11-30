@@ -57,5 +57,6 @@ class OrgFollowersDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = SubscriptionService.get_follower(organization_id=kwargs['organization_id'],
                                                 requested_by=self.request.user, user_id=kwargs['user_id'])
-        data = FollowerInfoSerializer(user, many=False).data
+        data = FollowerInfoSerializer(user, context={'organization_id': kwargs['organization_id']},
+                                      many=False).data
         return Response(data, status=status.HTTP_200_OK)

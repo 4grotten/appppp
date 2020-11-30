@@ -205,7 +205,12 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 
 class FollowerInfoSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number')
+        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number', 'role')
+
+    def get_role(self, user: User) -> str:
+        return OrganizationService.get_user_role_in_organization_or_client(
+            organization_id=self.context['organization_id'], user=user)

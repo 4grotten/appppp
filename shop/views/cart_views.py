@@ -3,10 +3,12 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from shop.models import Cart
 from shop.serializers.cart_serializers import (
-    CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer
+    CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
+    CartAllItemsCountSerializer
 )
 from shop.services.cart_services import CartItemService, CartService
 
@@ -49,6 +51,15 @@ class CartItemCountChangeView(GenericAPIView):
         }
 
         return Response(data)
+
+
+class TotalCartItemsCount(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = CartItemService.get_all_items_amount(user=self.request.user)
+        data = CartAllItemsCountSerializer({"count": count}).data
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class OrderDeliveryView(GenericAPIView):

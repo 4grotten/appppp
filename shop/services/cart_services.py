@@ -58,3 +58,12 @@ class CartItemService:
             cart_item.save()
             cart_item.refresh_from_db()
             return cart_item.count
+
+    @classmethod
+    def get_all_items_amount(cls, user: User) -> int:
+        carts = Cart.objects.filter(user=user)
+        cart_items = CartItem.objects.filter(cart__in=carts)
+        total = 0
+        for item in cart_items:
+            total = item.count + total
+        return total

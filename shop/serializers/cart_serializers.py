@@ -66,6 +66,10 @@ class CartItemCountChangeSerializer(serializers.Serializer):
     change = serializers.IntegerField()
 
 
+class CartAllItemsCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+
+
 class DeliveryInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryInfo

@@ -1,13 +1,16 @@
+from django.db import IntegrityError
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
+from common.exceptions import IntegrityException
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer, ComplaintSerializer
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
 )
+from shop.serializers.other_serializers import ComplaintSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -103,3 +106,9 @@ class ComplaintCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Complaint.objects.all()
     serializer_class = ComplaintSerializer
+
+    def perform_create(self, serializer):
+        try:
+            super().perform_create(serializer)
+        except IntegrityError:
+            raise IntegrityException('You have already complained about this item')

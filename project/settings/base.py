@@ -211,6 +211,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'common.pagination.GeneralPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'common.schemas.DefaultSchema',
+    'COERCE_DECIMAL_TO_STRING': False,
 }
 
 NIKITA_URL = 'https://smspro.nikita.kg/api/message'

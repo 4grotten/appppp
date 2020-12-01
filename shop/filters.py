@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+from rest_framework.filters import OrderingFilter
 
 from shop.models import ShopItem
 
@@ -16,3 +17,15 @@ class FeedItemFilter(filters.FilterSet):
     class Meta:
         model = ShopItem
         fields = ['id', 'subcategories', 'organization', 'category', 'country', 'city']
+
+
+class FeedItemOrderingFilter(OrderingFilter):
+    def filter_queryset(self, request, queryset, view):
+        ordering = self.get_ordering(request, queryset, view)
+
+        if ordering:
+            if '-price' in ordering or 'price' in ordering:
+                queryset = queryset.exclude(price__isnull=True)
+            return queryset.order_by(*ordering)
+
+        return queryset

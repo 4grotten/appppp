@@ -1,7 +1,7 @@
 from django.urls import path
 
 from shop.views.cart_views import (
-    CartItemCountChangeView, UserCartListView, UserCartRetrieveDestroyView, OrderDeliveryView
+    CartItemCountChangeView, UserCartListView, UserCartRetrieveDestroyView, OrderDeliveryView, TotalCartItemsCount
 )
 from shop.views.category_views import (
     ItemCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
@@ -37,6 +37,6 @@ urlpatterns = [
     path('carts/', UserCartListView.as_view(), name='user_cart_list'),
     path('carts/<int:pk>/', UserCartRetrieveDestroyView.as_view(), name='user_cart_details'),
     path('carts/doChangeItemCount/', CartItemCountChangeView.as_view(), name='add_cart_item'),
-
+    path('carts/totalUserItemsCount/', TotalCartItemsCount.as_view(), name='all_cart_items_count'),
     path('carts/<int:pk>/delivery/', OrderDeliveryView.as_view(), name='order_delivery'),
 ]

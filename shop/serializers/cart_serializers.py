@@ -52,7 +52,6 @@ class CartListSerializer(serializers.ModelSerializer):
 
     def get_items_count(self, cart: Cart) -> int:
         items_count = CartService.get_total_items_in_cart(cart=cart)
-
         return items_count
 
     def get_images(self, cart: Cart) -> list:

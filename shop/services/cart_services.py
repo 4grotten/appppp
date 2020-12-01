@@ -29,8 +29,11 @@ class CartService:
 
     @classmethod
     def get_total_items_in_cart(cls, cart: Cart) -> int:
-        cart_items = CartItem.objects.get(cart=cart)
-        return cart_items.count
+        cart_items = CartItem.objects.filter(cart=cart)
+        total = 0
+        for item in cart_items:
+            total = item.count+total
+        return total
 
     @classmethod
     def checkout_cart(cls, user: User, cart_id: int):

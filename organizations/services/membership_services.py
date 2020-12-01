@@ -147,9 +147,9 @@ class MembershipService:
 
     @classmethod
     def has_seller_stats_rights_in_any_organization(cls, user: User, organization: Organization) -> bool:
-        return Membership.objects.filter(Q(user=user) & Q(organization=organization) & Q(
-            Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(
-                role__can_edit_organization=True))).exists() or user == organization.owner
+        member = Membership.objects.filter(Q(user=user) & Q(organization=organization))
+        return member.filter(role__can_see_stats=True).exists() or member.filter(
+            role__can_edit_organization=True).exists() or member.filter(role__can_sale=True).exists() or user == organization.owner
 
     @classmethod
     def is_organization_member(cls, user: User, organization: Organization):

@@ -28,6 +28,11 @@ class CartService:
         return totals['original_price'], totals['discounted_price']
 
     @classmethod
+    def get_total_items_in_cart(cls, cart: Cart) -> int:
+        cart_items = CartItem.objects.get(cart=cart)
+        return cart_items.count
+
+    @classmethod
     def checkout_cart(cls, user: User, cart_id: int):
         cart = cls.get(user=user, id=cart_id)
         cart.delete()

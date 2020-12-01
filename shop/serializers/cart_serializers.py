@@ -38,8 +38,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 class CartListSerializer(serializers.ModelSerializer):
     organization = OrganizationTitleImageCurrencySerializer()
-    # ToDo: ask if items_count unique or total?
-    items_count = serializers.IntegerField()
+    items_count = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     totals = serializers.SerializerMethodField()
 
@@ -50,6 +49,11 @@ class CartListSerializer(serializers.ModelSerializer):
             'original_price': original_price,
             'discounted_price': discounted_price
         }
+
+    def get_items_count(self, cart: Cart) -> int:
+        items_count = CartService.get_total_items_in_cart(cart=cart)
+
+        return items_count
 
     def get_images(self, cart: Cart) -> list:
         item_image_ids = cart.items.values_list('item__images', flat=True)

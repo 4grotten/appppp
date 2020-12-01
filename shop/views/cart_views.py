@@ -18,7 +18,7 @@ class UserCartListView(ListAPIView):
     serializer_class = CartListSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user).annotate(items_count=Count('items')).order_by('-id')
+        return Cart.objects.filter(user=self.request.user).order_by('-id')
 
 
 class UserCartRetrieveDestroyView(RetrieveDestroyAPIView):

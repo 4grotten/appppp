@@ -304,13 +304,14 @@ class TransactionService:
 
     @classmethod
     def get_organization_transactions(cls, organization: Organization, processed_by: User = None,
-                                      start_date=None, end_date=None, search_id: int = None):
+                                      start_date=None, end_date=None, search_id: int = None, client: User = None):
 
         transactions = Transaction.objects.filter(organization=organization, is_processed=True)
 
         if processed_by is not None:
             transactions = transactions.filter(processed_by=processed_by)
-
+        if client is not None:
+            transactions = transactions.filter(client=client)
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])

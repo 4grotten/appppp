@@ -25,7 +25,7 @@ class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     start = serializers.DateField(default=None)
     end = serializers.DateField(default=None)
     search = serializers.IntegerField(default=None)
-
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
 
 class OrganizationQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))

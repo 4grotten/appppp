@@ -182,7 +182,8 @@ class OrganizationTransactionListView(ListAPIView):
             processed_by=serializer.validated_data['processed_by'],
             start_date=serializer.validated_data['start'],
             end_date=serializer.validated_data['end'],
-            search_id=serializer.validated_data['search']
+            search_id=serializer.validated_data['search'],
+            client=serializer.validated_data['client']
         )
 
         page = self.paginate_queryset(queryset)

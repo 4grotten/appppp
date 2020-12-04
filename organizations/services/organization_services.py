@@ -25,7 +25,7 @@ from organizations.constants import (
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership,
+    Partnership, InstagramIntegration,
 )
 from organizations.services.membership_services import MembershipService
 from users.models import User
@@ -436,6 +436,21 @@ class OrgSocialNetworkContactService:
             contacts = [SocialNetworkContact(organization_id=organization_id, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class OrganizationInstagramIntegrationService:
+    model = InstagramIntegration
+
+    @classmethod
+    def create(cls, organization: Organization, url: str) -> str:
+        return InstagramIntegration.objects.create(organization=organization, url=url)
+
+    @classmethod
+    def get_from_org(cls, organization: Organization):
+        try:
+            return InstagramIntegration.objects.get(organization=organization)
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
 
 
 class OrgMessageService:

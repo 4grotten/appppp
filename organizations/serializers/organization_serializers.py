@@ -1,7 +1,10 @@
 from rest_framework import serializers
+from rest_framework.relations import PrimaryKeyRelatedField
 
+from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User, \
+    InstagramIntegration
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -343,3 +346,18 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
             'count': count,
             'list': OrganizationWithImageSerializer(partners, many=True).data
         }
+
+
+class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
+    # TODO check url
+    class Meta:
+        model = InstagramIntegration
+        fields = ('url',)
+
+
+class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
+    organization = OrganizationShortInfoSerializer
+
+    class Meta:
+        model = InstagramIntegration
+        fields = ('id', 'url',)

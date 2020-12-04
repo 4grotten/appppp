@@ -109,6 +109,7 @@ class CartItem(TimestampModel):
         constraints = [
             models.UniqueConstraint(fields=('cart', 'item'), name='unique_item_in_user_cart')
         ]
+        ordering = ['-created_at']
 
 
 class DeliveryInfo(TimestampModel):

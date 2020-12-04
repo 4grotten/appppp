@@ -100,6 +100,15 @@ class SocialNetworkContact(TimestampModel):
         return f'{self.url}'
 
 
+class InstagramIntegration(TimestampModel):
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE,
+                                        related_name='instagram_integration_link')
+    url = models.URLField(max_length=255)
+
+    def __str__(self):
+        return f'{self.url}'
+
+
 class Role(models.Model):
     title = models.CharField(max_length=255)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='roles')

@@ -32,7 +32,7 @@ class CartService:
         cart_items = CartItem.objects.filter(cart=cart)
         total = 0
         for item in cart_items:
-            total = item.count+total
+            total = item.count + total
         return total
 
     @classmethod
@@ -66,6 +66,18 @@ class CartItemService:
             cart_item.save()
             cart_item.refresh_from_db()
             return cart_item.count
+
+    @classmethod
+    @transaction.atomic
+    def delete_item_from_all_carts(cls, item: ShopItem):
+        cart_items = CartItem.objects.filter(item=item)
+
+        for cart_item in cart_items:
+            cart = Cart.objects.get(items=cart_item)
+            cart_item.delete()
+
+            if cart.items.count() == 0:
+                cart.delete()
 
     @classmethod
     def get_all_items_amount(cls, user: User) -> int:

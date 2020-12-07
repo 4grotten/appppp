@@ -1,4 +1,5 @@
 import random
+import json
 import requests
 from typing import Tuple, Union
 
@@ -13,6 +14,7 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
 from common.models import Country, City
+from instagram_parser.user_info import get_username_from_instagram_url, get_instagram_user_info
 from notifications.constants import (
     SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
@@ -444,18 +446,13 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def create(cls, organization: Organization, url: str) -> dict:
-        profile_url = url
-        url_tail = "?__a=1"
-        url = url + url_tail
         try:
-            response = requests.get(url).json()
-            small_image = response["graphql"]["user"]["profile_pic_url"]
-            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
-            data = dict(url=profile_url, small_profile_image=small_image, profile_image=hd_image_location)
-            InstagramIntegration.objects.create(organization=organization, url=profile_url)
-            return data
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            InstagramIntegration.objects.create(organization=organization, url=url)
+            return user_info
         except:
-            raise ObjectNotFoundException('Instagram Integration Link not found')
+            raise ObjectNotFoundException('Instagram user not found')
 
     @classmethod
     def delete(cls, organization: Organization):
@@ -468,20 +465,15 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def update(cls, organization: Organization, url: str) -> dict:
-        profile_url = url
-        url_tail = "?__a=1"
-        url = url + url_tail
         try:
-            response = requests.get(url).json()
-            small_image = response["graphql"]["user"]["profile_pic_url"]
-            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
-            data = dict(url=profile_url, small_profile_image=small_image, profile_image=hd_image_location)
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
             insta = InstagramIntegration.objects.get(organization=organization)
-            insta.url = profile_url
+            insta.url = url
             insta.save()
-            return data
+            return user_info
         except:
-            raise ObjectNotFoundException('Instagram Integration Link not found')
+            raise ObjectNotFoundException('Instagram user not found')
 
     @classmethod
     def get_from_org(cls, organization: Organization):

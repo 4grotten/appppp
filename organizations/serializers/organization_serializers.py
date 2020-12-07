@@ -4,6 +4,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
+from instagram_parser.user_info import get_username_from_instagram_url, get_instagram_user_info
 from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User, \
     InstagramIntegration
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -358,29 +359,16 @@ class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
 
 class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
     organization = OrganizationShortInfoSerializer
-    small_profile_image = serializers.SerializerMethodField()
-    profile_image = serializers.SerializerMethodField()
+    user_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = InstagramIntegration
-        fields = ('id', 'url', 'small_profile_image', 'profile_image')
+        fields = ('id', 'url', 'user_profile')
 
-    def get_small_profile_image(self, insta: InstagramIntegration):
+    def get_user_profile(self, insta: InstagramIntegration):
         try:
-            url_tail = "?__a=1"
-            url = insta.url + url_tail
-            response = requests.get(url).json()
-            small_image = response["graphql"]["user"]["profile_pic_url"]
-            return small_image
+            username = get_username_from_instagram_url(insta.url)
+            user_info = get_instagram_user_info(username)
+            return user_info
         except:
-            return "Image not found"
-
-    def get_profile_image(self, insta: InstagramIntegration):
-        try:
-            url_tail = "?__a=1"
-            url = insta.url + url_tail
-            response = requests.get(url).json()
-            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
-            return hd_image_location
-        except:
-            return "Image not found"
+            return "User not found"

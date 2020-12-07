@@ -449,6 +449,7 @@ class OrganizationInstagramIntegrationService:
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
+            user_info['url'] = url
             InstagramIntegration.objects.create(organization=organization, url=url)
             return user_info
         except:
@@ -468,6 +469,7 @@ class OrganizationInstagramIntegrationService:
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
+            user_info['url'] = url
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.url = url
             insta.save()

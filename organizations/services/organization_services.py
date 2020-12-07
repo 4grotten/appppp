@@ -1,4 +1,5 @@
 import random
+import requests
 from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
@@ -442,13 +443,51 @@ class OrganizationInstagramIntegrationService:
     model = InstagramIntegration
 
     @classmethod
-    def create(cls, organization: Organization, url: str) -> str:
-        return InstagramIntegration.objects.create(organization=organization, url=url)
+    def create(cls, organization: Organization, url: str) -> dict:
+        profile_url = url
+        url_tail = "?__a=1"
+        url = url + url_tail
+        try:
+            response = requests.get(url).json()
+            small_image = response["graphql"]["user"]["profile_pic_url"]
+            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
+            data = dict(url=profile_url, small_profile_image=small_image, profile_image=hd_image_location)
+            InstagramIntegration.objects.create(organization=organization, url=profile_url)
+            return data
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
+
+    @classmethod
+    def delete(cls, organization: Organization):
+        try:
+            insta = InstagramIntegration.objects.get(organization=organization)
+            insta.delete()
+            return "Deleted"
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
+
+    @classmethod
+    def update(cls, organization: Organization, url: str) -> dict:
+        profile_url = url
+        url_tail = "?__a=1"
+        url = url + url_tail
+        try:
+            response = requests.get(url).json()
+            small_image = response["graphql"]["user"]["profile_pic_url"]
+            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
+            data = dict(url=profile_url, small_profile_image=small_image, profile_image=hd_image_location)
+            insta = InstagramIntegration.objects.get(organization=organization)
+            insta.url = profile_url
+            insta.save()
+            return data
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
 
     @classmethod
     def get_from_org(cls, organization: Organization):
         try:
             return InstagramIntegration.objects.get(organization=organization)
+
         except:
             raise ObjectNotFoundException('Instagram Integration Link not found')
 

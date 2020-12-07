@@ -1,3 +1,4 @@
+import requests
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
@@ -357,7 +358,29 @@ class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
 
 class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
     organization = OrganizationShortInfoSerializer
+    small_profile_image = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()
 
     class Meta:
         model = InstagramIntegration
-        fields = ('id', 'url',)
+        fields = ('id', 'url', 'small_profile_image', 'profile_image')
+
+    def get_small_profile_image(self, insta: InstagramIntegration):
+        try:
+            url_tail = "?__a=1"
+            url = insta.url + url_tail
+            response = requests.get(url).json()
+            small_image = response["graphql"]["user"]["profile_pic_url"]
+            return small_image
+        except:
+            return "Image not found"
+
+    def get_profile_image(self, insta: InstagramIntegration):
+        try:
+            url_tail = "?__a=1"
+            url = insta.url + url_tail
+            response = requests.get(url).json()
+            hd_image_location = response["graphql"]["user"]["profile_pic_url_hd"]
+            return hd_image_location
+        except:
+            return "Image not found"

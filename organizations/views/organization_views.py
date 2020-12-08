@@ -317,6 +317,20 @@ class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
         return context
 
 
+class InstagramAccountAPIView(APIView):
+    def post(self, request):
+        serializer = InstagramIntegrationCreatUpdateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        data = OrganizationInstagramIntegrationService.check_instagram_account(url=serializer.validated_data.get('url'))
+        return Response(data=dict(url=serializer.validated_data.get('url'), user_profile=data),
+                        status=status.HTTP_200_OK)
+
+
 class InstagramIntegrationCreatAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

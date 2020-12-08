@@ -445,6 +445,15 @@ class OrganizationInstagramIntegrationService:
     model = InstagramIntegration
 
     @classmethod
+    def check_instagram_account(cls, url: str) -> dict:
+        try:
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            return user_info
+        except:
+            raise ObjectNotFoundException('Instagram user not found')
+
+    @classmethod
     def create(cls, organization: Organization, url: str) -> dict:
         try:
             username = get_username_from_instagram_url(url)

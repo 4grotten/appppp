@@ -343,8 +343,8 @@ class InstagramIntegrationCreatAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         data = OrganizationInstagramIntegrationService.update(organization=organization,
                                                               url=serializer.validated_data.get('url'))
-        return Response(data=data,
-                        status=status.HTTP_202_ACCEPTED)
+        return Response(data=dict(url=serializer.validated_data.get('url'), user_info=data),
+                        status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = InstagramIntegrationCreatUpdateSerializer(data=request.data, many=False)
@@ -361,7 +361,7 @@ class InstagramIntegrationCreatAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         data = OrganizationInstagramIntegrationService.create(organization=organization,
                                                               url=serializer.validated_data.get('url'))
-        return Response(data=data,
+        return Response(data=dict(url=serializer.validated_data.get('url'), user_info=data),
                         status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
@@ -370,6 +370,7 @@ class InstagramIntegrationCreatAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         data = OrganizationInstagramIntegrationService.delete(organization=organization)
         return Response(data)
+
 
 class OrganizationFollowersCountAPIView(APIView):
     permission_classes = (IsAuthenticated,)

@@ -14,7 +14,7 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
 from common.models import Country, City
-from instagram_parser.user_info import get_username_from_instagram_url, get_instagram_user_info
+from instagram_parser.get_id import get_username_from_instagram_url
 from notifications.constants import (
     SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
@@ -22,6 +22,7 @@ from notifications.constants import (
 from notifications.tasks import (
     send_notifications_to_all_users, sent_notification, send_notifications_organization_members
 )
+from organizations.task import parse_instagram_to_shop_items
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
@@ -456,10 +457,9 @@ class OrganizationInstagramIntegrationService:
     @classmethod
     def create(cls, organization: Organization, url: str) -> dict:
         try:
-            username = get_username_from_instagram_url(url)
-            user_info = get_instagram_user_info(username)
             InstagramIntegration.objects.create(organization=organization, url=url)
-            return user_info
+            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            return dict(message="Saved")
         except:
             raise ObjectNotFoundException('Instagram user not found')
 
@@ -475,12 +475,11 @@ class OrganizationInstagramIntegrationService:
     @classmethod
     def update(cls, organization: Organization, url: str) -> dict:
         try:
-            username = get_username_from_instagram_url(url)
-            user_info = get_instagram_user_info(username)
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.url = url
             insta.save()
-            return user_info
+            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            return dict(massage="Updated")
         except:
             raise ObjectNotFoundException('Instagram user not found')
 

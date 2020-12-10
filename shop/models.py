@@ -46,6 +46,7 @@ class ShopItem(TimestampModel):
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
     youtube_links = JSONField(null=True)
+    instagram_data = JSONField(null=True)
 
     is_published = models.BooleanField(default=True)
 

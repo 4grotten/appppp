@@ -18,9 +18,10 @@ class MyClient(Client):
 
 
 def get_posts(id):
+    posts = list()
     try:
         web_api = MyClient(auto_patch=True, drop_incompat_keys=False)
-        user_feed_info = web_api.user_feed(id, count=1)
+        user_feed_info = web_api.user_feed(id, count=50)
         for post in user_feed_info:
             data = post.pop('node', None)
             url = data.get('display_url')
@@ -34,7 +35,8 @@ def get_posts(id):
             else:
                 is_video = False
                 video_url = None
-            return dict(images=images, created_at=created_at, is_video=is_video,
-                        video=dict(video_url=video_url, thumbnail=thumbnail), url=url)
+            posts.append(dict(images=images, created_at=created_at, is_video=is_video,
+                              video=dict(video_url=video_url, thumbnail=thumbnail)))
+        return posts
     except ConnectionError as e:
         return "Connection Error"

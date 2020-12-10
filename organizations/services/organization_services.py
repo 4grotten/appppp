@@ -456,12 +456,10 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def create(cls, organization: Organization, url: str) -> dict:
-        parse_instagram_to_shop_items(organization_id=organization.id, url=url)
         try:
-            username = get_username_from_instagram_url(url)
-            user_info = "get_instagram_user_info(username)"
             InstagramIntegration.objects.create(organization=organization, url=url)
-            return dict(user_info=user_info)
+            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            return dict(message="Saved")
         except:
             raise ObjectNotFoundException('Instagram user not found')
 
@@ -477,12 +475,11 @@ class OrganizationInstagramIntegrationService:
     @classmethod
     def update(cls, organization: Organization, url: str) -> dict:
         try:
-            username = get_username_from_instagram_url(url)
-            user_info = "get_instagram_user_info(username)"
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.url = url
             insta.save()
-            return dict(user_info=user_info)
+            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            return dict(massage="Updated")
         except:
             raise ObjectNotFoundException('Instagram user not found')
 

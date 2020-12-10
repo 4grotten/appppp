@@ -1,17 +1,9 @@
-from typing import Union
-from django.utils import timezone
 from datetime import date, timedelta, datetime
 from django.utils import timezone
 from instagram_parser import get_id, parser
-from celery import shared_task
 from shop.models import ShopItem
-from users.models import User
-from typing import Union
 from celery import shared_task
-from common.exceptions import ObjectNotFoundException
-from notifications.services import NotificationService
-from organizations.models import Organization, Subscription, Membership
-from users.models import User
+from organizations.models import Organization
 
 
 @shared_task

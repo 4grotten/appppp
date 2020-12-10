@@ -458,7 +458,7 @@ class OrganizationInstagramIntegrationService:
     def create(cls, organization: Organization, url: str) -> dict:
         try:
             InstagramIntegration.objects.create(organization=organization, url=url)
-            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            parse_instagram_to_shop_items.delay (organization_id=organization.id, url=url)
             return dict(message="Saved")
         except:
             raise ObjectNotFoundException('Instagram user not found')

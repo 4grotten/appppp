@@ -104,7 +104,7 @@ class ItemListSerializer(serializers.ModelSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images',
-            'instagram_data_links'
+            'instagram_data'
         )
 
 

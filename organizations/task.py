@@ -26,5 +26,5 @@ def parse_instagram_to_shop_items(organization_id: int, url: str):
             shop_item = ShopItem.objects.create(name="Instagram", organization=organization)
             shop_item.created_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
             instagram.pop('created_at')
-            shop_item.instagram_data_links = instagram
+            shop_item.instagram_data = instagram
             shop_item.save()

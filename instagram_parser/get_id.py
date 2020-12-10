@@ -7,7 +7,6 @@ def usernametoid(name):
     try:
         response = requests.get('https://www.instagram.com/' + name +"/?__a=1", headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Geko/20100101 Firefox/64.0'}).json()
-        print(response)
         if response:
             return response['graphql']['user']['id']
     except IndexError:

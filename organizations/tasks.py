@@ -9,9 +9,9 @@ from organizations.models import Organization
 @shared_task
 def parse_instagram_to_shop_items(organization_id: int, url: str):
     organization = Organization.objects.get(id=organization_id)
-    # username = get_id.get_username_from_instagram_url(url=url)
-    # user_id = get_id.usernametoid(username)
-    instagram_posts = parser.get_posts(304803426)
+    username = get_id.get_username_from_instagram_url(url=url)
+    user_id = get_id.usernametoid(username)
+    instagram_posts = parser.get_posts(user_id)
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
                 created_at=timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )):

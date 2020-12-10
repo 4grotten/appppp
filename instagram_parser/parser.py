@@ -21,7 +21,7 @@ def get_posts(id):
     posts = list()
     try:
         web_api = MyClient(auto_patch=True, drop_incompat_keys=False)
-        user_feed_info = web_api.user_feed(id, count=50)
+        user_feed_info = web_api.user_feed(id, count=5)
         for post in user_feed_info:
             data = post.pop('node', None)
             url = data.get('display_url')

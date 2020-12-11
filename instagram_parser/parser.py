@@ -26,10 +26,9 @@ def get_posts(id):
             data = post.pop('node', None)
             url = data.get('display_url')
             text = data.get('edge_media_to_caption')['edges'][0]['node']['text']
-            image = dict(
-                image=dict(file=data.get('display_resources')[0]['src'], small=data.get('display_resources')[0]['src'],
-                           medium=data.get('display_resources')[1]['src'],
-                           large=data.get('display_resources')[2]['src']))
+            image = dict(file=data.get('display_resources')[0]['src'], small=data.get('display_resources')[0]['src'],
+                         medium=data.get('display_resources')[1]['src'],
+                         large=data.get('display_resources')[2]['src'])
             thumbnail = data.get('thumbnail_src')
             created_at = data.get('taken_at_timestamp')
             if 'video_url' in data:
@@ -40,7 +39,7 @@ def get_posts(id):
                 video_url = None
             images = list()
             videos = list()
-            video = (dict(video=dict(video_url=video_url, thumbnail=thumbnail).copy()))
+            video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
             images.append(image.copy())
             videos.append(video)
             posts.append(

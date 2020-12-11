@@ -6,7 +6,7 @@ import re
 def usernametoid(name):
     proxies = {'http': 'socks5://Selbulaone0912:B8g4KqW@89.191.233.151:45786', }
     try:
-        response = requests.get('https://www.instagram.com/' + name + "/?__a=1", headers={
+        response = requests.get('https://www.instagram.com/web/search/topsearch/?query=' + name, headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Geko/20100101 Firefox/64.0'},
                                 proxies=proxies).json()
         if response:

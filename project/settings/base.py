@@ -176,7 +176,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = 'imagekit.cachefiles.backends.Async'
 IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategies.Optimistic'
 
-CELERY_ACCEPT_CONTENT = ['json', 'application/text']
+CELERY_ACCEPT_CONTENT = ['json', 'application/text', 'pickle']
 
 AUTH_USER_MODEL = 'users.User'
 

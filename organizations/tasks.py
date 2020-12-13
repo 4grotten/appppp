@@ -7,7 +7,7 @@ from organizations.models import Organization
 
 
 @shared_task
-def parse_instagram_to_shop_items(organization_id: int, url: str, instagram_id: int = 248150720):
+def parse_instagram_to_shop_items(organization_id: int, url: str, instagram_id: int = 5782132305):
     organization = Organization.objects.get(id=organization_id)
     instagram_posts = parser.get_posts(instagram_id)
     for instagram in instagram_posts:
@@ -17,6 +17,7 @@ def parse_instagram_to_shop_items(organization_id: int, url: str, instagram_id: 
             shop_item.description = instagram.get('description')
             instagram.pop('description')
             shop_item.created_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
+            shop_item.updated_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
             instagram.pop('created_at')
             shop_item.instagram_data = instagram
             shop_item.save()

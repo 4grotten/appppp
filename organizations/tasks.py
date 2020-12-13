@@ -7,7 +7,7 @@ from organizations.models import Organization
 
 
 @shared_task
-def parse_instagram_to_shop_items(organization_id: int, url: str, instagram_id: int = 5782132305):
+def parse_instagram_to_shop_items(organization_id: int, url: str, instagram_id: int = 248150720):
     organization = Organization.objects.get(id=organization_id)
     instagram_posts = parser.get_posts(instagram_id)
     for instagram in instagram_posts:

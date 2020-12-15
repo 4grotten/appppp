@@ -1,16 +1,15 @@
-import json
-import requests
 import re
 
+from instagrapi import Client
 
-def usernametoid(name):
-    proxies = {'http': 'socks5://Selbulaone0912:B8g4KqW@89.191.233.151:45786', }
+cl = Client()
+cl.login('ss115test', 'passisnotsecret')
+settings_for_login = cl.get_settings()
+
+
+def usernametoid(name: str):
     try:
-        response = requests.get('https://www.instagram.com/web/search/topsearch/?query=' + name, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Geko/20100101 Firefox/64.0'},
-                                proxies=proxies)
-        if response:
-            return response.json()['users'][0]['user']['pk']
+        return cl.user_id_from_username(name)
     except IndexError:
         return "Wrong username!"
     except ConnectionError:

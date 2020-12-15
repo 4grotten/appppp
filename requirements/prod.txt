@@ -23,5 +23,6 @@ sqlparse==0.3.1
 zipp==3.1.0
 fcm-django==0.3.4
 celery==4.4.7
+instagrapi==1.2.9
 
 

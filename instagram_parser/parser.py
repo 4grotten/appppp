@@ -36,17 +36,18 @@ def get_posts(id):
                     if i == len(post_with_carousel):
                         break
                     i = i + 1
-                    image = dict(file=post_elements.get('display_resources')[0]['src'],
-                                 small=post_elements.get('display_resources')[0]['src'],
-                                 medium=post_elements.get('display_resources')[1]['src'],
-                                 large=post_elements.get('display_resources')[2]['src'])
                     if 'video_url' in post_elements:
                         is_video = post_elements.get('is_video')
                         video_url = post_elements.get('video_url')
                         thumbnail = data.get('thumbnail_src')
                         video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                         videos.append(video)
-                    images.append(image.copy())
+                    else:
+                        image = dict(file=post_elements.get('display_resources')[0]['src'],
+                                     small=post_elements.get('display_resources')[0]['src'],
+                                     medium=post_elements.get('display_resources')[1]['src'],
+                                     large=post_elements.get('display_resources')[2]['src'])
+                        images.append(image.copy())
 
             else:
                 image = dict(file=data.get('display_resources')[0]['src'],

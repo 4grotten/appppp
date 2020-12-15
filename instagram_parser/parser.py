@@ -50,16 +50,17 @@ def get_posts(id):
                         images.append(image.copy())
 
             else:
-                image = dict(file=data.get('display_resources')[0]['src'],
-                             small=data.get('display_resources')[0]['src'],
-                             medium=data.get('display_resources')[1]['src'],
-                             large=data.get('display_resources')[2]['src'])
-                thumbnail = data.get('thumbnail_src')
                 if 'video_url' in data:
                     video_url = data.get('video_url')
+                    thumbnail = data.get('thumbnail_src')
                     video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                     videos.append(video)
-                images.append(image.copy())
+                else:
+                    image = dict(file=data.get('display_resources')[0]['src'],
+                                 small=data.get('display_resources')[0]['src'],
+                                 medium=data.get('display_resources')[1]['src'],
+                                 large=data.get('display_resources')[2]['src'])
+                    images.append(image.copy())
             posts.append(
                 dict(images=images, videos=videos, description=text, created_at=created_at))
         return posts

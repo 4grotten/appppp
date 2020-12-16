@@ -14,12 +14,11 @@ def parse_instagram_to_shop_items(organization_id: int, url: str):
     instagram_posts = parser.get_posts(12312312)
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
-                created_at=timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )):
-            shop_item = ShopItem.objects.create(name="Instagram", organization=organization)
-            shop_item.description = instagram.get('description')
+                created_at=timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at'))),
+                organization=organization):
+            description = instagram.get('description')
             instagram.pop('description')
-            shop_item.created_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
-            shop_item.updated_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
+            created_at = timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )
             instagram.pop('created_at')
-            shop_item.instagram_data = instagram
-            shop_item.save()
+            ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
+                                    updated_at=created_at, instagram_data=instagram, description=description)

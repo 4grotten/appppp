@@ -14,6 +14,8 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
 from common.models import Country, City
+from instagram_parser.get_id import get_username_from_instagram_url
+from instagram_parser.user_info import get_instagram_user_info
 from notifications.constants import (
     SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
@@ -459,7 +461,9 @@ class OrganizationInstagramIntegrationService:
             InstagramIntegration.objects.create(organization=organization, url=url)
             transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
                                   )
-            return dict(message="Saved")
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            return user_info
         except:
             raise ObjectNotFoundException('Instagram user not found')
 
@@ -480,7 +484,9 @@ class OrganizationInstagramIntegrationService:
             insta.save()
             transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
                                   )
-            return dict(massage="Updated")
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            return user_info
         except:
             raise ObjectNotFoundException('Instagram user not found')
 

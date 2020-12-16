@@ -5,6 +5,8 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 # from instagram_parser.get_id import get_username_from_instagram_url
+from instagram_parser.get_id import get_username_from_instagram_url
+from instagram_parser.user_info import get_instagram_user_info
 from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User, \
     InstagramIntegration
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -368,7 +370,7 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
     def get_user_profile(self, insta: InstagramIntegration):
         try:
             username = get_username_from_instagram_url(insta.url)
-            user_info = ('username')
+            user_info = get_instagram_user_info(username)
             return user_info
         except:
             return "User not found"

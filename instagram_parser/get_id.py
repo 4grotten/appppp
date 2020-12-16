@@ -8,7 +8,7 @@ from common.exceptions import ObjectNotFoundException
 def usernametoid(name: str):
     try:
         cl = Client()
-        cl.login('ss115test', 'passisnotsecret')
+        cl.login('apofiz.test', 'passisnotsecret')
         return cl.user_id_from_username(name)
     except IndexError:
         raise ObjectNotFoundException('Can not find instagram page')

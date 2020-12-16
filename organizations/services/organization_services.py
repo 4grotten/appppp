@@ -459,7 +459,8 @@ class OrganizationInstagramIntegrationService:
     def create(cls, organization: Organization, url: str) -> dict:
         try:
             InstagramIntegration.objects.create(organization=organization, url=url)
-            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+                                  )
             return dict(message="Saved")
         except:
             raise ObjectNotFoundException('Instagram user not found')
@@ -479,7 +480,8 @@ class OrganizationInstagramIntegrationService:
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.url = url
             insta.save()
-            parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+                                  )
             return dict(massage="Updated")
         except:
             raise ObjectNotFoundException('Instagram user not found')

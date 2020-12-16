@@ -2,18 +2,24 @@ import re
 
 from instagrapi import Client
 
+from common.exceptions import ObjectNotFoundException
+
 cl = Client()
-cl.login('ss115test', 'passisnotsecret')
-settings_for_login = cl.get_settings()
+
+try:
+    cl.login('ss115test', 'passisnotsecret')
+    settings_for_login = cl.get_settings()
+except:
+    raise ObjectNotFoundException('Can not find instagram page')
 
 
 def usernametoid(name: str):
     try:
         return cl.user_id_from_username(name)
     except IndexError:
-        return "Wrong username!"
+        raise ObjectNotFoundException('Can not find instagram page')
     except ConnectionError:
-        return "Connection error!"
+        raise ObjectNotFoundException('Can not find instagram page')
 
 
 def get_username_from_instagram_url(url: str) -> str:

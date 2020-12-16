@@ -10,7 +10,6 @@ from organizations.models import Organization
 @shared_task
 def parse_instagram_to_shop_items(organization_id: int, url: str):
     organization = Organization.objects.get(id=organization_id)
-    user = get_username_from_instagram_url(url)
     instagram_posts = parser.get_posts(123123132)
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(

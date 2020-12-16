@@ -35,6 +35,7 @@ class ItemSubcategory(models.Model):
 
 class ShopItem(TimestampModel):
     updated_at = models.DateTimeField(default=timezone.now())
+    created_at = models.DateTimeField(default=timezone.now())
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.CASCADE, related_name='items_in_category',
                                     null=True, blank=True)
@@ -56,6 +57,8 @@ class ShopItem(TimestampModel):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
+        if self.id:
+            self.updated_at = timezone.now()
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         super().save(*args, **kwargs)

@@ -4,7 +4,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-from instagram_parser.get_id import get_username_from_instagram_url
+# from instagram_parser.get_id import get_username_from_instagram_url
 from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User, \
     InstagramIntegration
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer

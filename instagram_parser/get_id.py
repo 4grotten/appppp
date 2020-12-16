@@ -3,7 +3,7 @@ import re
 from instagrapi import Client
 
 cl = Client()
-cl.login('apofiztest1', 'passnotsecret')
+cl.login('laurentcatarina', 'gqPN1U')
 settings_for_login = cl.get_settings()
 
 

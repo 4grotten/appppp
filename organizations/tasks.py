@@ -1,7 +1,7 @@
 from datetime import date, timedelta, datetime
 from django.utils import timezone
 from instagram_parser import parser
-from instagram_parser.get_id import get_username_from_instagram_url
+from instagram_parser.get_id import get_username_from_instagram_url, usernametoid
 from shop.models import ShopItem
 from celery import shared_task
 from organizations.models import Organization
@@ -11,7 +11,8 @@ from organizations.models import Organization
 def parse_instagram_to_shop_items(organization_id: int, url: str):
     organization = Organization.objects.get(id=organization_id)
     user = get_username_from_instagram_url(url)
-    instagram_posts = parser.get_posts(12312312)
+    instagram_id = usernametoid(user)
+    instagram_posts = parser.get_posts(instagram_id)
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
                 created_at=timezone.make_aware(datetime.utcfromtimestamp(instagram.get('created_at')), )):

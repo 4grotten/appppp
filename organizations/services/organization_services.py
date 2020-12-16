@@ -15,6 +15,7 @@ from common.exceptions import (
 )
 from common.models import Country, City
 from instagram_parser.get_id import get_username_from_instagram_url
+from instagram_parser.user_info import get_instagram_user_info
 from notifications.constants import (
     SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,

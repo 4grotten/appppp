@@ -1,6 +1,6 @@
 import re
 
-from instagrapi import Client
+#from instagrapi import Client
 
 settings = {
     "uuids": {"phone_id": "35729fff-aa1e-4d6a-b889-1710df661a34", "uuid": "887b0e44-3b83-4996-af14-b517c96fee2f",
@@ -18,13 +18,13 @@ settings = {
 cl = Client(settings)
 
 
-def usernametoid(name: str):
-    try:
-        return cl.user_id_from_username(name)
-    except IndexError:
-        return "Wrong username!"
-    except ConnectionError:
-        return "Connection error!"
+#def usernametoid(name: str):
+ #   try:
+  #      return cl.user_id_from_username(name)
+   # except IndexError:
+    #    return "Wrong username!"
+    #except ConnectionError:
+     #   return "Connection error!"
 
 
 def get_username_from_instagram_url(url: str) -> str:

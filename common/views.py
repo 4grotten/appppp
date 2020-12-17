@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country
-from .serializers import ImageSerializer, CountrySerializer, CitySerializer
+from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer
 from .services.country_city import CountryCityService
 
 
@@ -18,6 +18,12 @@ class ImageCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     parser_classes = (MultiPartParser,)
     serializer_class = ImageSerializer
+    queryset = File.objects.all()
+
+
+class ImageCreateFromUrlView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ImageFromUrlSerializer
     queryset = File.objects.all()
 
 

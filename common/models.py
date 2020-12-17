@@ -1,7 +1,13 @@
+import os
+from tempfile import NamedTemporaryFile
+from urllib import request
+from django.core.files import File as Files
+from django.core.files.base import ContentFile
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from imagekit import register
 from imagekit.models import ImageSpecField
+from urllib.request import urlretrieve, urlopen
 
 from common.processors import ResizeWatermarkedSpec
 from common.utils import upload_file_with_original_file_name
@@ -44,12 +50,24 @@ class File(TimestampModel):
         help_text='Image that you want to store'
     )
 
+    image_url = models.URLField(null=True, blank=True, max_length=1000)
+
     large = ImageSpecField(source='file', id='common:file:large')
     medium = ImageSpecField(source='file', id='common:file:medium')
     small = ImageSpecField(source='file', id='common:file:small')
 
     def __str__(self):
         return self.file.name
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if self.image_url and not self.file:
+            result = request.urlretrieve(self.image_url)
+            self.file.save(
+                os.path.basename(self.image_url),
+                Files(open(result[0], 'rb'))
+            )
+        super(File, self).save()
 
     class Meta:
         ordering = ('order',)

@@ -52,7 +52,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'id', 'organization', 'subcategory',
             'name', 'description',
             'price', 'discount', 'article',
-            'instagram_link', 'images', 'youtube_links'
+            'instagram_link', 'images', 'youtube_links',
+            'instagram_data',
         )
 
     def validate(self, attrs):

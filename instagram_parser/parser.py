@@ -21,12 +21,11 @@ def get_posts(id):
     try:
         posts = list()
         web_api = MyClient(auto_patch=True, drop_incompat_keys=False)
-        user_feed_info = web_api.user_feed(id, count=50)
+        user_feed_info = web_api.user_feed(id, count=2)
         for post in user_feed_info:
             images = list()
             videos = list()
             data = post.pop('node', None)
-            url = data.get('display_url')
             text = data.get('edge_media_to_caption')['edges'][0]['node']['text']
             created_at = data.get('taken_at_timestamp')
             if 'carousel_media' in data:
@@ -37,9 +36,8 @@ def get_posts(id):
                         break
                     i = i + 1
                     if 'video_url' in post_elements:
-                        is_video = post_elements.get('is_video')
                         video_url = post_elements.get('video_url')
-                        thumbnail = data.get('thumbnail_src')
+                        thumbnail = post_elements.get('display_resources')[1]['src']
                         video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                         videos.append(video)
                     else:
@@ -52,7 +50,7 @@ def get_posts(id):
             else:
                 if 'video_url' in data:
                     video_url = data.get('video_url')
-                    thumbnail = data.get('thumbnail_src')
+                    thumbnail = data.get('images')['thumbnail']['url']
                     video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                     videos.append(video)
                 else:

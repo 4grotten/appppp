@@ -50,7 +50,7 @@ def get_posts(id):
             else:
                 if 'video_url' in data:
                     video_url = data.get('video_url')
-                    thumbnail = data.get('images')['thumbnail']['url']
+                    thumbnail = data.get('display_resources')[1]['src']
                     video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                     videos.append(video)
                 else:

@@ -47,7 +47,8 @@ class File(TimestampModel):
 
     file = models.ImageField(
         upload_to=upload_file_with_original_file_name,
-        help_text='Image that you want to store'
+        help_text='Image that you want to store',
+        max_length=1000
     )
 
     image_url = models.URLField(null=True, blank=True, max_length=1000)

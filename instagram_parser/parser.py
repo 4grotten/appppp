@@ -1,7 +1,8 @@
 import hashlib
 import string
 import random
-from instagram_web_api import Client, ClientError, ClientLoginError  # ClientCompatPatch,
+from instagrapi import Client
+
 from instagram_parser import get_id
 import json
 
@@ -19,48 +20,61 @@ class MyClient(Client):
 
 def get_posts(id):
     try:
+        settings = {
+            "uuids": {"phone_id": "35729fff-aa1e-4d6a-b889-1710df661a34",
+                      "uuid": "887b0e44-3b83-4996-af14-b517c96fee2f",
+                      "client_session_id": "1b9cd485-5107-4e20-9bae-28a695998d1c",
+                      "advertising_id": "3723cd4c-d370-4073-8507-1eb7dbb32699",
+                      "device_id": "android-71b445d43959effc"},
+            "cookies": {"csrftoken": "cM4BSEdZA3FQ6bXIKcZEZ8CPiRJxRPWP", "ds_user": "ss115test",
+                        "ds_user_id": "44745007017",
+                        "mid": "X9napgABAAHAkPJXqGNLXYjl13_J", "rur": "PRN",
+                        "sessionid": "44745007017%3AMBJ3TclCka5jaR%3A1",
+                        "urlgen": "\"{158.181.250.169: 41750}:1kpTbP:boqWK79fxV5PWsmtzCmQdrw0xRA\""},
+            "last_login": 1608112813.279875,
+            "device_settings": {"app_version": "105.0.0.18.119", "android_version": 28, "android_release": "9.0",
+                                "dpi": "640dpi", "resolution": "1440x2560", "manufacturer": "samsung",
+                                "device": "SM-G965F",
+                                "model": "star2qltecs", "cpu": "samsungexynos9810", "version_code": "168361634"},
+            "user_agent": "Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)"}
+
+        cl = Client(settings=settings)
+
+        media_list = cl.user_medias(user_id=id, amount=50)
         posts = list()
-        web_api = MyClient(auto_patch=True, drop_incompat_keys=False)
-        user_feed_info = web_api.user_feed(id, count=50)
-        for post in user_feed_info:
+        for media in media_list:
             images = list()
             videos = list()
-            data = post.pop('node', None)
-            text = data.get('edge_media_to_caption')['edges'][0]['node']['text']
-            created_at = data.get('taken_at_timestamp')
-            if 'carousel_media' in data:
-                post_with_carousel = data.get('carousel_media')
-                i = 0
-                for post_elements in post_with_carousel:
-                    if i == len(post_with_carousel):
-                        break
-                    i = i + 1
-                    if 'video_url' in post_elements:
-                        video_url = post_elements.get('video_url')
-                        thumbnail = post_elements.get('display_resources')[1]['src']
+            dict_list = media.dict()
+            if dict_list['resources']:
+                for resource in dict_list['resources']:
+                    if resource['video_url']:
+                        video_url = str(resource.get('video_url'))
+                        thumbnail = str(resource.get('thumbnail_url'))
                         video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                         videos.append(video)
                     else:
-                        image = dict(file=post_elements.get('display_resources')[0]['src'],
-                                     small=post_elements.get('display_resources')[0]['src'],
-                                     medium=post_elements.get('display_resources')[1]['src'],
-                                     large=post_elements.get('display_resources')[2]['src'])
+                        image = dict(file=str(resource.get('thumbnail_url')),
+                                     small=str(resource.get('thumbnail_url')),
+                                     medium=str(resource.get('thumbnail_url')),
+                                     large=str(resource.get('thumbnail_url')))
                         images.append(image.copy())
-
             else:
-                if 'video_url' in data:
-                    video_url = data.get('video_url')
-                    thumbnail = data.get('display_resources')[1]['src']
+                if dict_list['video_url']:
+                    video_url = str(dict_list.get('video_url'))
+                    thumbnail = str(dict_list.get('thumbnail_url'))
                     video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
                     videos.append(video)
                 else:
-                    image = dict(file=data.get('display_resources')[0]['src'],
-                                 small=data.get('display_resources')[0]['src'],
-                                 medium=data.get('display_resources')[1]['src'],
-                                 large=data.get('display_resources')[2]['src'])
+                    image = dict(file=str(dict_list.get('thumbnail_url')),
+                                 small=str(dict_list.get('thumbnail_url')),
+                                 medium=str(dict_list.get('thumbnail_url')),
+                                 large=str(dict_list.get('thumbnail_url')))
                     images.append(image.copy())
             posts.append(
-                dict(images=images, videos=videos, description=text, created_at=created_at))
+                dict(images=images, videos=videos, description=dict_list.get('caption_text'),
+                     created_at=dict_list.get('taken_at')))
         return posts
+
     except ConnectionError as e:
         return "Connection Error"

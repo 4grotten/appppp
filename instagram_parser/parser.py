@@ -21,7 +21,7 @@ def get_posts(id):
     try:
         posts = list()
         web_api = MyClient(auto_patch=True, drop_incompat_keys=False)
-        user_feed_info = web_api.user_feed(id, count=2)
+        user_feed_info = web_api.user_feed(id, count=50)
         for post in user_feed_info:
             images = list()
             videos = list()

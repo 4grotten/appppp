@@ -104,6 +104,10 @@ class InstagramIntegration(TimestampModel):
     organization = models.OneToOneField(Organization, on_delete=models.CASCADE,
                                         related_name='instagram_integration_link')
     url = models.URLField(max_length=255)
+    account_full_name = models.CharField(null=True, blank=True, max_length=50)
+    account_user_name = models.CharField(null=True, blank=True, max_length=50)
+    account_user_id = models.CharField(null=True, blank=True, max_length=50)
+    profile_photo = models.URLField(null=True, max_length=500)
 
     def __str__(self):
         return f'{self.url}'

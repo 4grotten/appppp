@@ -353,7 +353,6 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
 
 
 class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
-    # TODO check url
     class Meta:
         model = InstagramIntegration
         fields = ('url',)
@@ -367,10 +366,6 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
         model = InstagramIntegration
         fields = ('id', 'url', 'user_profile')
 
-    def get_user_profile(self, insta: InstagramIntegration):
-        try:
-            username = get_username_from_instagram_url(insta.url)
-            user_info = get_instagram_user_info(username)
-            return user_info
-        except:
-            return "User not found"
+    def get_user_profile(self, obj):
+        user_profile = dict(full_name=obj.account_full_name, profile_image=obj.profile_photo)
+        return user_profile

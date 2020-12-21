@@ -23,4 +23,4 @@ def get_instagram_user_info(username: str):
     user_info = dict(cl.user_info(user_id=user_id))
     full_name = user_info['full_name']
     profile_image = str(user_info['profile_pic_url'])
-    return dict(full_name=full_name, profile_image=profile_image)
+    return dict(full_name=full_name, profile_image=profile_image, user_id=user_id)

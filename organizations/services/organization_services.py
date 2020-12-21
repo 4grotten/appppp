@@ -458,11 +458,14 @@ class OrganizationInstagramIntegrationService:
     @classmethod
     def create(cls, organization: Organization, url: str) -> dict:
         try:
-            InstagramIntegration.objects.create(organization=organization, url=url)
-            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
-                                  )
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
+            InstagramIntegration.objects.create(organization=organization, url=url, account_user_name=username,
+                                                account_user_id=user_info.pop('user_id'),
+                                                account_full_name=user_info.get('full_name'),
+                                                profile_photo=user_info.get('profile_image'))
+            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+                                  )
             return user_info
         except:
             raise ObjectNotFoundException('Instagram user not found')
@@ -477,20 +480,6 @@ class OrganizationInstagramIntegrationService:
             return "Deleted"
         except:
             raise ObjectNotFoundException('Instagram Integration Link not found')
-
-    @classmethod
-    def update(cls, organization: Organization, url: str) -> dict:
-        try:
-            insta = InstagramIntegration.objects.get(organization=organization)
-            insta.url = url
-            insta.save()
-            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
-                                  )
-            username = get_username_from_instagram_url(url)
-            user_info = get_instagram_user_info(username)
-            return user_info
-        except:
-            raise ObjectNotFoundException('Instagram user not found')
 
     @classmethod
     def get_from_org(cls, organization: Organization):

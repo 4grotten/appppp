@@ -88,7 +88,6 @@ def get_latest_posts(user_id: int, latest_update: str):
         cl = Client(settings=settings)
         media_list = cl.user_medias(user_id=user_id, amount=50)
         posts = list()
-        c = 0
         for media in media_list:
             images = list()
             videos = list()
@@ -121,12 +120,10 @@ def get_latest_posts(user_id: int, latest_update: str):
             code = dict_list.get('code')
             post_url = 'https://www.instagram.com/p/' + code + '/'
             if str(dict_list.get('taken_at')) == latest_update:
-                print(c)
                 break
             posts.append(
                 dict(images=images, videos=videos, description=dict_list.get('caption_text'),
                      created_at=dict_list.get('taken_at'), post_url=post_url))
-            c = c + 1
         return posts
 
     except ConnectionError as e:

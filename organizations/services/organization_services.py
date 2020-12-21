@@ -472,7 +472,8 @@ class OrganizationInstagramIntegrationService:
         try:
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.delete()
-            delete_not_updated_posts_from_instagram.delay(organization_id=organization.id)
+            transaction.on_commit(
+                lambda: delete_not_updated_posts_from_instagram.delay(organization_id=organization.id))
             return "Deleted"
         except:
             raise ObjectNotFoundException('Instagram Integration Link not found')

@@ -1,24 +1,7 @@
-import hashlib
-import string
-import random
 from instagrapi import Client
 
-from instagram_parser import get_id
-import json
 
-
-# new class
-class MyClient(Client):
-    """_docstring_"""
-
-    @staticmethod
-    def _extract_rhx_gis(html):
-        options = string.ascii_lowercase + string.digits
-        text = ''.join([random.choice(options) for _ in range(8)])
-        return hashlib.md5(text.encode()).hexdigest()
-
-
-def get_posts(id):
+def get_posts(user_id):
     try:
         settings = {
             "uuids": {"phone_id": "35729fff-aa1e-4d6a-b889-1710df661a34",
@@ -40,7 +23,7 @@ def get_posts(id):
 
         cl = Client(settings=settings)
 
-        media_list = cl.user_medias(user_id=id, amount=50)
+        media_list = cl.user_medias(user_id=user_id, amount=50)
         posts = list()
         for media in media_list:
             images = list()
@@ -71,9 +54,11 @@ def get_posts(id):
                                  medium=str(dict_list.get('thumbnail_url')),
                                  large=str(dict_list.get('thumbnail_url')))
                     images.append(image.copy())
+            code = dict_list.get('code')
+            post_url = 'https://www.instagram.com/p/' + code + '/'
             posts.append(
                 dict(images=images, videos=videos, description=dict_list.get('caption_text'),
-                     created_at=dict_list.get('taken_at')))
+                     created_at=dict_list.get('taken_at'), post_url=post_url))
         return posts
 
     except ConnectionError as e:

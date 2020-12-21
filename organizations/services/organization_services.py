@@ -23,7 +23,7 @@ from notifications.constants import (
 from notifications.tasks import (
     send_notifications_to_all_users, sent_notification, send_notifications_organization_members
 )
-from organizations.tasks import parse_instagram_to_shop_items
+from organizations.tasks import parse_instagram_to_shop_items, delete_not_updated_posts_from_instagram
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
@@ -472,6 +472,7 @@ class OrganizationInstagramIntegrationService:
         try:
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.delete()
+            delete_not_updated_posts_from_instagram.delay(organization_id=organization.id)
             return "Deleted"
         except:
             raise ObjectNotFoundException('Instagram Integration Link not found')

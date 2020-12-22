@@ -34,8 +34,8 @@ class ItemSubcategory(models.Model):
 
 
 class ShopItem(TimestampModel):
-    updated_at = models.DateTimeField(default=timezone.now())
-    created_at = models.DateTimeField(default=timezone.now())
+    updated_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.CASCADE, related_name='items_in_category',
                                     null=True, blank=True)

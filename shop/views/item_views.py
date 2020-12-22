@@ -12,6 +12,7 @@ from shop.serializers.item_serializers import (
 )
 from shop.serializers.other_serializers import ComplaintSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
@@ -39,6 +40,10 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
         self.serializer_class = ItemSerializer
         return super().retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        CartItemService.delete_item_from_all_carts(item=ShopItem.objects.get(id=kwargs['pk']))
+        return super().delete(self, request, *args, **kwargs)
 
 
 class ItemChangePublishedStatusView(GenericAPIView):

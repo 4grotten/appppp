@@ -314,6 +314,15 @@ class OrganizationTitleCurrencySerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'currency')
 
 
+class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
+    types = OrganizationTypeSerializer(many=True)
+    image = ImageSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'types', 'image', 'address')
+
+
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
 

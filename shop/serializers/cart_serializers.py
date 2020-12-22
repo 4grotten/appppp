@@ -3,7 +3,8 @@ from rest_framework import serializers
 from common.models import File
 from common.serializers import ImageSerializer
 from organizations.serializers.organization_serializers import (
-    OrganizationTitleImageSerializer, OrganizationTitleCurrencySerializer, OrganizationTitleImageCurrencySerializer
+    OrganizationTitleImageSerializer, OrganizationTitleCurrencySerializer, OrganizationTitleImageCurrencySerializer,
+    OrganizationShortInfoWithCurrencySerializer
 )
 from shop.models import ShopItem, Cart, CartItem, DeliveryInfo
 from shop.serializers.item_serializers import ItemInCartSerializer
@@ -19,7 +20,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    organization = OrganizationTitleCurrencySerializer()
+    organization = OrganizationShortInfoWithCurrencySerializer()
     totals = serializers.SerializerMethodField()
     items = CartItemSerializer(many=True)
 

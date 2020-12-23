@@ -1,6 +1,8 @@
 from instagram_parsers.parsers.get_id import usernametoid
 from instagrapi import Client
 
+from instagram_parsers.services.proxy_services import ProxyServices
+
 
 def get_instagram_user_info(username: str):
     settings = {
@@ -17,7 +19,11 @@ def get_instagram_user_info(username: str):
                             'model': 'star2qltecs', 'cpu': 'samsungexynos9810', 'version_code': '168361634'},
         'user_agent': 'Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)'}
 
-    cl = Client(settings=settings)
+    proxy = ProxyServices.get_random_formed_proxy()
+    if proxy is not None:
+        cl = Client(settings=settings, proxy=proxy)
+    else:
+        cl = Client(settings=settings)
     user_id = usernametoid(username)
     user_info = dict(cl.user_info(user_id=user_id))
     full_name = user_info['full_name']

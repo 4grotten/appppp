@@ -464,10 +464,10 @@ class OrganizationInstagramIntegrationService:
                                                 account_user_id=user_info.pop('user_id'),
                                                 account_full_name=user_info.get('full_name'),
                                                 profile_photo=user_info.get('profile_image'))
-            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
+            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id)
                                   )
             return user_info
-        except Exception as e:
+        except:
             raise ObjectNotFoundException('Instagram user not found : {e}'.format(e=str(e)))
 
     @classmethod

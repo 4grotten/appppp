@@ -467,8 +467,8 @@ class OrganizationInstagramIntegrationService:
             transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, url=url)
                                   )
             return user_info
-        except:
-            raise ObjectNotFoundException('Instagram user not found')
+        except Exception as e:
+            raise ObjectNotFoundException('Instagram user not found : {e}'.format(e=str(e)))
 
     @classmethod
     def delete(cls, organization: Organization):

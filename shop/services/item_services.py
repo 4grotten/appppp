@@ -50,8 +50,8 @@ class ShopItemService:
     def get_organization_items_queryset_for_user(cls, organization: Organization, user: User) -> QuerySet:
         queryset = ShopItem.objects.filter(organization=organization)
 
-        if user.is_authenticated and not OrganizationService.user_can_edit_organization(user=user,
-                                                                                        organization=organization):
+        if not user.is_authenticated and not OrganizationService.user_can_edit_organization(user=user,
+                                                                                            organization=organization):
             queryset = queryset.exclude(is_published=False)
 
         return queryset
@@ -68,4 +68,5 @@ class ShopItemService:
 
     @classmethod
     def get_bookmarked_items(cls, user: User):
-        return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user).order_by('-bookmarked_users').distinct()
+        return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user).order_by(
+            '-bookmarked_users').distinct()

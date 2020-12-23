@@ -22,6 +22,7 @@ def usernametoid(name: str):
                                         'manufacturer': 'samsung', 'device': 'SM-G965F', 'model': 'star2qltecs',
                                         'cpu': 'samsungexynos9810', 'version_code': '168361634'},
                     'user_agent': 'Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)'}
+
         cl = Client(settings=settings)
         return cl.user_id_from_username(name)
     except IndexError:

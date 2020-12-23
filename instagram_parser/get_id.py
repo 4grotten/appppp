@@ -7,8 +7,23 @@ from common.exceptions import ObjectNotFoundException
 
 def usernametoid(name: str):
     try:
-        cl = Client()
-        cl.login_by_sessionid('45149694492%3AjIq4vOZE7WPR9m%3A6')
+        settings = {'uuids': {'phone_id': '6605a3d5-a2a7-44f2-b7b1-ba05c979572b',
+                              'uuid': 'c24cfd46-dac3-4135-8064-d7453ee2f5ef',
+                              'client_session_id': '27624802-1d50-4bfa-ab8e-ad046199e940',
+                              'advertising_id': '73967dfc-1605-4b65-9e6a-7bc710d2ee1f',
+                              'device_id': 'android-9adddd55865dc2c7'},
+                    'cookies': {'csrftoken': 'LwRgs1JTDTZWnOa0fetR0K3ALXXhmYHq', 'ds_user': 'apofi_z',
+                                'ds_user_id': '45149694492', 'mid': 'X-MTIQABAAEzDuxYB6ZRM1JnMjaa', 'rur': 'RVA',
+                                'sessionid': '45149694492%3AjIq4vOZE7WPR9m%3A6',
+                                'urlgen': '"{158.181.250.169: 41750}:1ks0nv:CVG1dBvOC1K83neIbFUoipx6mi4"'},
+                    'last_login': 1608717097.4080002,
+                    'device_settings': {'app_version': '105.0.0.18.119', 'android_version': 28,
+                                        'android_release': '9.0', 'dpi': '640dpi', 'resolution': '1440x2560',
+                                        'manufacturer': 'samsung', 'device': 'SM-G965F', 'model': 'star2qltecs',
+                                        'cpu': 'samsungexynos9810', 'version_code': '168361634'},
+                    'user_agent': 'Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)'}
+
+        cl = Client(settings=settings, proxy='https://Lxjibo39fs:YAJHt0n2OW@91.243.61.113:14202')
         return cl.user_id_from_username(name)
     except IndexError:
         raise ObjectNotFoundException('Can not find instagram page')

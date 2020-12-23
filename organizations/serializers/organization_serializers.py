@@ -71,9 +71,20 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
+    permissions = serializers.SerializerMethodField()
+    phone_numbers = OrgPhoneNumberSerializer(many=True)
+
+    def get_permissions(self, organization: Organization):
+        if self.context['request'].user.is_anonymous:
+            return None
+        return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                             user=self.context['request'].user)
+
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'image', 'types')
+        fields = (
+            'id', 'title', 'image', 'currency', 'types', 'phone_numbers', 'permissions',
+        )
 
 
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):

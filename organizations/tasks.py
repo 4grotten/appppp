@@ -1,9 +1,5 @@
-from datetime import date, timedelta, datetime
-from django.utils import timezone
 from django.db.models import F
-from instagram_parser import parser
-from instagram_parser.get_id import get_username_from_instagram_url, usernametoid
-from instagram_parser.parser import get_latest_posts
+from instagram_parsers.parsers import parser
 from shop.models import ShopItem
 from celery import shared_task
 from organizations.models import Organization, InstagramIntegration

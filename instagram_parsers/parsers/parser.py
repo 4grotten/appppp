@@ -1,5 +1,7 @@
 from instagrapi import Client
 
+from instagram_parsers.services.proxy_services import ProxyServices
+
 
 def get_posts(user_id):
     try:
@@ -19,7 +21,11 @@ def get_posts(user_id):
                                         'cpu': 'samsungexynos9810', 'version_code': '168361634'},
                     'user_agent': 'Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)'}
 
-        cl = Client(settings=settings)
+        proxy = ProxyServices.get_random_formed_proxy()
+        if proxy is not None:
+            cl = Client(settings=settings, proxy=proxy)
+        else:
+            cl = Client(settings=settings)
         media_list = cl.user_medias(user_id=user_id, amount=50)
         posts = list()
         for media in media_list:
@@ -80,7 +86,11 @@ def get_latest_posts(user_id: int, latest_update: str):
                                         'cpu': 'samsungexynos9810', 'version_code': '168361634'},
                     'user_agent': 'Instagram 105.0.0.18.119 Android (28/9.0; 640dpi; 1440x2560; samsung; SM-G965F; star2qltecs; samsungexynos9810; en_US; 168361634)'}
 
-        cl = Client(settings=settings)
+        proxy = ProxyServices.get_random_formed_proxy()
+        if proxy is not None:
+            cl = Client(settings=settings, proxy=proxy)
+        else:
+            cl = Client(settings=settings)
         media_list = cl.user_medias(user_id=user_id, amount=10)
         posts = list()
         for media in media_list:

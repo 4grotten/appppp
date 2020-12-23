@@ -86,7 +86,8 @@ class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         if self.request.user.is_authenticated:
             if OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
-                parse_instagram_last_updates.delay(organization_id=organization.id)
+                pass
+                # parse_instagram_last_updates.delay(organization_id=organization.id)
         return Organization.objects.all()
 
     @method_permission_classes((IsAuthenticated,))

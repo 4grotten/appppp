@@ -1,5 +1,7 @@
 import re
+import random
 
+from instagram_parsers.models import Proxy
 from instagrapi import Client
 
 from common.exceptions import ObjectNotFoundException

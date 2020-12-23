@@ -1,4 +1,4 @@
-from instagram_parser.get_id import usernametoid
+from instagram_parsers.parsers.get_id import usernametoid
 from instagrapi import Client
 
 

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'notifications',
     'shop.apps.ShopConfig',
+    'instagram_parsers.apps.InstagramParsersConfig',
 
     'rest_framework',
     'rest_framework.authtoken',

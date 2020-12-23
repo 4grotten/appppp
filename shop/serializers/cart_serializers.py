@@ -38,7 +38,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CartListSerializer(serializers.ModelSerializer):
-    organization = OrganizationTitleImageCurrencySerializer()
+    organization = OrganizationShortInfoWithCurrencySerializer()
     items_count = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     totals = serializers.SerializerMethodField()

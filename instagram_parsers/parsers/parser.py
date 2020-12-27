@@ -26,44 +26,27 @@ def get_posts(user_id):
             cl = Client(settings=settings, proxy=proxy)
         else:
             cl = Client(settings=settings)
-        media_list = cl.user_medias(user_id=user_id, amount=50)
-        posts = list()
+        media_list = cl.user_medias(user_id=user_id, amount=4)
+        post = list()
         for media in media_list:
-            images = list()
-            videos = list()
+            data_s = list()
             dict_list = media.dict()
             if dict_list['resources']:
                 for resource in dict_list['resources']:
-                    if resource['video_url']:
-                        video_url = str(resource.get('video_url'))
-                        thumbnail = str(resource.get('thumbnail_url'))
-                        video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
-                        videos.append(video)
-                    else:
-                        image = dict(file=str(resource.get('thumbnail_url')),
-                                     small=str(resource.get('thumbnail_url')),
-                                     medium=str(resource.get('thumbnail_url')),
-                                     large=str(resource.get('thumbnail_url')))
-                        images.append(image.copy())
+                    data = dict(thumbnail_url=str(resource.get('thumbnail_url')), video_url=str(resource.get('video_url')),
+                                pk=str((resource.get('pk'))))
+                    data_s.append(data.copy())
             else:
-                if dict_list['video_url']:
-                    video_url = str(dict_list.get('video_url'))
-                    thumbnail = str(dict_list.get('thumbnail_url'))
-                    video = (dict(video_url=video_url, thumbnail=thumbnail).copy())
-                    videos.append(video)
-                else:
-                    image = dict(file=str(dict_list.get('thumbnail_url')),
-                                 small=str(dict_list.get('thumbnail_url')),
-                                 medium=str(dict_list.get('thumbnail_url')),
-                                 large=str(dict_list.get('thumbnail_url')))
-                    images.append(image.copy())
+                data = dict(thumbnail_url=str(dict_list.get('thumbnail_url')), video_url=str(dict_list.get('video_url')),
+                            pk=str((dict_list.get('pk'))))
+                data_s.append(data.copy())
             code = dict_list.get('code')
+            pk = str((dict_list.get('pk')))
             post_url = 'https://www.instagram.com/p/' + code + '/'
-            posts.append(
-                dict(images=images, videos=videos, description=dict_list.get('caption_text'),
-                     created_at=dict_list.get('taken_at'), post_url=post_url))
-        return posts
-
+            post.append(
+                dict(description=dict_list.get('caption_text'), created_at=dict_list.get('taken_at'),
+                     post_url=post_url, pk=pk, data=data_s))
+        return post
     except ConnectionError as e:
         return "Connection Error"
 

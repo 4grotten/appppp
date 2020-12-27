@@ -4,7 +4,7 @@ from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem
+from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
@@ -13,10 +13,17 @@ class ItemSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
+    instagram_data = serializers.SerializerMethodField()
 
     is_liked = serializers.SerializerMethodField()
     is_bookmarked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
+
+    def get_instagram_data(self, item: ShopItem):
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url='None')
+        images = ItemInstagramData.objects.filter(item=item, video_url='None')
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)
 
     def get_is_liked(self, item: ShopItem) -> bool:
         user = self.context['request'].user
@@ -53,7 +60,6 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'name', 'description',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'youtube_links',
-            'instagram_data',
         )
 
     def validate(self, attrs):
@@ -87,13 +93,66 @@ class ItemChangePublishedSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 
+class ItemInstagramDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemInstagramData
+        fields = (
+            'id', 'item', 'post_pk', 'thumbnail_url', 'video_url'
+        )
+
+
+class ItemInstagramVideoSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+
+    def get_thumbnail(self, obj):
+        return obj.thumbnail_url
+
+    class Meta:
+        model = ItemInstagramData
+        fields = (
+            'thumbnail', 'video_url'
+        )
+
+
+class ItemInstagramImageSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
+    large = serializers.SerializerMethodField()
+    small = serializers.SerializerMethodField()
+    medium = serializers.SerializerMethodField()
+
+    def get_file(self, obj):
+        return obj.thumbnail_url
+
+    def get_large(self, obj):
+        return obj.thumbnail_url
+
+    def get_small(self, obj):
+        return obj.thumbnail_url
+
+    def get_medium(self, obj):
+        return obj.thumbnail_url
+
+    class Meta:
+        model = ItemInstagramData
+        fields = (
+            'file', 'large', 'small', 'medium'
+        )
+
+
 class ItemListSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField()
     is_bookmarked = serializers.BooleanField()
     like_count = serializers.SerializerMethodField()
+    instagram_data = serializers.SerializerMethodField()
 
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
+
+    def get_instagram_data(self, item: ShopItem):
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url='None')
+        images = ItemInstagramData.objects.filter(item=item, video_url='None')
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)
 
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()

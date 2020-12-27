@@ -1,6 +1,6 @@
 from django.db.models import F
 from instagram_parsers.parsers import parser
-from shop.models import ShopItem
+from shop.models import ShopItem, ItemInstagramData
 from celery import shared_task
 from organizations.models import Organization, InstagramIntegration
 
@@ -17,9 +17,12 @@ def parse_instagram_to_shop_items(organization_id: int):
             description = instagram.pop('description')
             created_at = instagram.pop('created_at')
             post_url = instagram.pop('post_url')
-            ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
-                                    updated_at=created_at, instagram_data=instagram, description=description,
-                                    instagram_link=post_url)
+            shop_item = ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
+                                                updated_at=created_at, description=description, instagram_link=post_url)
+            for data in instagram.get('data'):
+                ItemInstagramData.objects.create(item=shop_item, post_pk=data.get('pk'),
+                                                 thumbnail_url=data.get('thumbnail_url'),
+                                                 video_url=data.get('video_url'))
 
 
 @shared_task

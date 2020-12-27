@@ -1,12 +1,18 @@
 from django.contrib import admin
 
 from shop.models import (
-    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem, DeliveryInfo
+    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem, DeliveryInfo,
+    ItemInstagramData
 )
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru',)
+
+
+class InstagramDataInline(admin.TabularInline):
+    model = ItemInstagramData
+    extra = 0
 
 
 class ItemSubcategoryAdmin(admin.ModelAdmin):
@@ -17,6 +23,11 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
 class ShopItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'organization', 'subcategory', 'price', 'is_published')
     list_filter = ('subcategory', 'organization',)
+    inlines = (InstagramDataInline,)
+
+
+class ItemInstagramDataAdmin(admin.ModelAdmin):
+    list_display = ('item', 'post_pk', 'thumbnail_url', 'video_url')
 
 
 class ItemLikeAdmin(admin.ModelAdmin):
@@ -43,6 +54,7 @@ class ComplaintAdmin(admin.ModelAdmin):
     list_display = ('user', 'item',)
 
 
+admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)
 admin.site.register(ItemCategory, MainCategoryAdmin)
 admin.site.register(ItemSubcategory, ItemSubcategoryAdmin)
 admin.site.register(ShopItem, ShopItemAdmin)

@@ -4,7 +4,7 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
-from shop.models import ShopItem
+from shop.models import ShopItem, ItemInstagramData
 from shop.services.cart_services import CartItemService
 from users.models import User
 
@@ -70,3 +70,8 @@ class ShopItemService:
     def get_bookmarked_items(cls, user: User):
         return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user).order_by(
             '-bookmarked_users').distinct()
+
+    @classmethod
+    def delete_instagram_images(cls, item_id: int):
+        item = ShopItem.objects.get(id=item_id)
+        return ItemInstagramData.objects.filter(item=item, video_url=None).delete()

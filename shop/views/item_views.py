@@ -4,7 +4,8 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView,
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from common.exceptions import IntegrityException
+from common.exceptions import IntegrityException, NotAcceptableException
+from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
@@ -26,6 +27,10 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, CanEditItem)
     serializer_class = ItemCreateUpdateSerializer
     queryset = ShopItem.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        ShopItemService.delete_instagram_images(kwargs['pk'])
+        return super(ItemRetrieveUpdateDestroyView, self).put(request, *args, **kwargs)
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:

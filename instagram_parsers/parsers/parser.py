@@ -41,8 +41,12 @@ def get_posts(user_id):
                                 pk=str((resource.get('pk'))))
                     data_s.append(data.copy())
             else:
+                if dict_list.get('video_url'):
+                    video_url = str(dict_list.get('video_url'))
+                else:
+                    video_url = None
                 data = dict(thumbnail_url=str(dict_list.get('thumbnail_url')),
-                            video_url=str(dict_list.get('video_url')),
+                            video_url=video_url,
                             pk=str((dict_list.get('pk'))))
                 data_s.append(data.copy())
             code = dict_list.get('code')

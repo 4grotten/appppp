@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
@@ -74,4 +74,4 @@ class ShopItemService:
     @classmethod
     def delete_instagram_images(cls, item_id):
         item = ShopItem.objects.get(id=int(item_id))
-        return ItemInstagramData.objects.filter(item=item, video_url=None).delete()
+        return ItemInstagramData.objects.filter(item=item, video_url='None').delete()

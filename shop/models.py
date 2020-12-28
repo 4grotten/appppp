@@ -39,7 +39,6 @@ class ShopItem(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.CASCADE, related_name='items_in_category',
                                     null=True, blank=True)
-
     name = models.CharField(max_length=64)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -49,7 +48,6 @@ class ShopItem(TimestampModel):
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
     youtube_links = JSONField(null=True)
-    instagram_data = JSONField(null=True)
 
     is_published = models.BooleanField(default=True)
 
@@ -62,6 +60,13 @@ class ShopItem(TimestampModel):
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         super().save(*args, **kwargs)
+
+
+class ItemInstagramData(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
+    post_pk = models.CharField(max_length=255)
+    thumbnail_url = models.URLField(max_length=500)
+    video_url = models.URLField(max_length=500, null=True, blank=True)
 
 
 class ItemLike(TimestampModel):

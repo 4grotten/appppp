@@ -26,7 +26,7 @@ def get_posts(user_id):
             cl = Client(settings=settings, proxy=proxy)
         else:
             cl = Client(settings=settings)
-        media_list = cl.user_medias(user_id=user_id, amount=4)
+        media_list = cl.user_medias(user_id=user_id, amount=50)
         post = list()
         for media in media_list:
             data_s = list()

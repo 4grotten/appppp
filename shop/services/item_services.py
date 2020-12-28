@@ -74,4 +74,4 @@ class ShopItemService:
     @classmethod
     def delete_instagram_images(cls, item_id):
         item = ShopItem.objects.get(id=int(item_id))
-        return ItemInstagramData.objects.filter(item=item, video_url='None').delete()
+        return ItemInstagramData.objects.filter(item=item, video_url=None).delete()

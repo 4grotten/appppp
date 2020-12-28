@@ -20,8 +20,8 @@ class ItemSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
 
     def get_instagram_data(self, item: ShopItem):
-        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url='None')
-        images = ItemInstagramData.objects.filter(item=item, video_url='None')
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
+        images = ItemInstagramData.objects.filter(item=item, video_url=None)
         return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
                     images=ItemInstagramImageSerializer(images, many=True).data)
 
@@ -149,8 +149,8 @@ class ItemListSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
 
     def get_instagram_data(self, item: ShopItem):
-        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url='None')
-        images = ItemInstagramData.objects.filter(item=item, video_url='None')
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
+        images = ItemInstagramData.objects.filter(item=item, video_url=None)
         return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
                     images=ItemInstagramImageSerializer(images, many=True).data)
 

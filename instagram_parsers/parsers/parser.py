@@ -33,11 +33,16 @@ def get_posts(user_id):
             dict_list = media.dict()
             if dict_list['resources']:
                 for resource in dict_list['resources']:
-                    data = dict(thumbnail_url=str(resource.get('thumbnail_url')), video_url=str(resource.get('video_url')),
+                    if resource.get('video_url'):
+                        video_url = str(resource.get('video_url'))
+                    else:
+                        video_url = None
+                    data = dict(thumbnail_url=str(resource.get('thumbnail_url')), video_url=video_url,
                                 pk=str((resource.get('pk'))))
                     data_s.append(data.copy())
             else:
-                data = dict(thumbnail_url=str(dict_list.get('thumbnail_url')), video_url=str(dict_list.get('video_url')),
+                data = dict(thumbnail_url=str(dict_list.get('thumbnail_url')),
+                            video_url=str(dict_list.get('video_url')),
                             pk=str((dict_list.get('pk'))))
                 data_s.append(data.copy())
             code = dict_list.get('code')

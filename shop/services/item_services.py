@@ -72,6 +72,6 @@ class ShopItemService:
             '-bookmarked_users').distinct()
 
     @classmethod
-    def delete_instagram_images(cls, item_id: int):
-        item = ShopItem.objects.get(id=item_id)
+    def delete_instagram_images(cls, item_id):
+        item = ShopItem.objects.get(id=int(item_id))
         return ItemInstagramData.objects.filter(item=item, video_url=None).delete()

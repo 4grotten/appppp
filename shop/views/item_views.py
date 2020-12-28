@@ -30,7 +30,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         ShopItemService.delete_instagram_images(kwargs['pk'])
-        return super(ItemRetrieveUpdateDestroyView, self).put(request, *args, **kwargs)
+        return super().put(request, *args, **kwargs)
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:

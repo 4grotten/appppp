@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django_celery_beat',
 
     'common.apps.CoreConfig',
     'transactions.apps.TransactionsConfig',

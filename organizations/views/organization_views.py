@@ -339,6 +339,17 @@ class InstagramAccountAPIView(APIView):
                         status=status.HTTP_200_OK)
 
 
+class InstagramParseLastDataAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(pk=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
+            raise PermissionDenied({'message': 'No rights to edit organization'})
+        parse_instagram_last_updates.delay(organization_id=organization.id)
+        return Response({'message': 'Success'})
+
+
 class InstagramIntegrationCreatAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

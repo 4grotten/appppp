@@ -77,3 +77,11 @@ class OrderDeliveryView(GenericAPIView):
         CartService.checkout_cart(user=request.user, cart_id=pk)
 
         return Response({'message': 'Success'})
+
+
+class OrderSelfPickupView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        CartService.checkout_cart(user=request.user, cart_id=pk)
+        return Response({'message': 'Success'})

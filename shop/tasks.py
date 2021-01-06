@@ -8,5 +8,5 @@ def update_instagram_videos():
     instagram_data = ItemInstagramData.objects.filter(video_url__isnull=False)
     for data in instagram_data:
         video_url = get_video_url_from_post(data.post_pk)
-        data.video_ur = video_url
+        data.video_url = video_url
         data.save()

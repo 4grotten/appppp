@@ -13,10 +13,11 @@ class FeedItemFilter(filters.FilterSet):
     category = filters.NumberFilter(field_name='subcategory__category')
     country = filters.CharFilter(field_name='organization__country')
     city = filters.CharFilter(field_name='organization__city')
+    current_timestamp_lt = filters.IsoDateTimeFilter(field_name='updated_at', lookup_expr='lt')
 
     class Meta:
         model = ShopItem
-        fields = ['id', 'subcategories', 'organization', 'category', 'country', 'city']
+        fields = ['id', 'subcategories', 'organization', 'category', 'country', 'city', 'current_timestamp_lt']
 
 
 class FeedItemOrderingFilter(OrderingFilter):

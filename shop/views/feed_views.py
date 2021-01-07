@@ -1,3 +1,5 @@
+import datetime
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -7,7 +9,8 @@ from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
-from shop.serializers.item_serializers import ItemFeedSerializer, ItemListSerializer
+from shop.serializers.item_serializers import ItemFeedSerializer, ItemListSerializer, \
+    StartDateTimeSerializer
 from shop.services.item_services import ShopItemService
 
 
@@ -46,3 +49,11 @@ class SubscriptionItemListView(FeedView):
     def get_queryset(self):
         qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user)
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        serializer = StartDateTimeSerializer(data=request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Validation Error')
+        response = super().list(request, args, kwargs)
+        response.data['has_new'] = ShopItemService.has_new(serializer.validated_data['start_time'])
+        return response

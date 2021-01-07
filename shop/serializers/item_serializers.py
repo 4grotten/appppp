@@ -1,3 +1,4 @@
+import datetime
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -182,6 +183,10 @@ class ItemFeedSerializer(ItemListSerializer):
             'youtube_links', 'subcategory', 'images', 'organization',
             'instagram_data'
         )
+
+
+class StartDateTimeSerializer(serializers.Serializer):
+    start_time = serializers.DateTimeField(required=False, default=datetime.datetime.utcnow().isoformat())
 
 
 class ItemInCartSerializer(serializers.ModelSerializer):

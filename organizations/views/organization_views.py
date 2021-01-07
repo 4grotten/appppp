@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException, ValidationException
+from common.exceptions import NotAcceptableException, ValidationException, ObjectNotFoundException
 from common.utils import method_permission_classes
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration
 from organizations.serializers.categories_serializers import (
@@ -346,6 +346,8 @@ class InstagramParseLastDataAPIView(APIView):
         organization = OrganizationService.get(pk=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': 'No rights to edit organization'})
+        if not InstagramIntegration.objects.get(organization=organization):
+            raise ObjectNotFoundException('Instagram Integration Link not found')
         parse_instagram_last_updates.delay(organization_id=organization.id)
         return Response({'message': 'Success'})
 

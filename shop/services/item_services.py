@@ -28,6 +28,10 @@ class ShopItemService:
         item.save(update_fields=('is_published',))
 
     @classmethod
+    def has_new(cls, timestamp: str) -> bool:
+        return ShopItem.objects.filter(updated_at__gt=timestamp).exists()
+
+    @classmethod
     def annotate_likes_and_bookmarks(cls, queryset: QuerySet, user: User) -> QuerySet:
         if not user.is_authenticated:
             return queryset.annotate(

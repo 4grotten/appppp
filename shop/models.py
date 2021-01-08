@@ -127,12 +127,12 @@ class DeliveryInfo(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='delivery_infos')
 
     address = models.CharField(max_length=225)
-    apartment = models.CharField(max_length=36, null=True)
-    intercom = models.CharField(max_length=36, null=True)
-    entrance = models.CharField(max_length=36, null=True)
-    floor = models.CharField(max_length=36, null=True)
+    apartment = models.CharField(max_length=36, null=True, blank=True)
+    intercom = models.CharField(max_length=36, null=True, blank=True)
+    entrance = models.CharField(max_length=36, null=True, blank=True)
+    floor = models.CharField(max_length=36, null=True, blank=True)
     phone = models.CharField(max_length=36)
-    comment = models.CharField(max_length=36, null=True)
+    comment = models.CharField(max_length=36, null=True, blank=True)
 
     def __str__(self):
         return f'Delivery info of {self.user}'

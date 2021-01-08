@@ -19,6 +19,12 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ('item', 'count',)
 
 
+class CartItemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ('item', 'count',)
+
+
 class CartSerializer(serializers.ModelSerializer):
     organization = OrganizationShortInfoWithCurrencySerializer()
     totals = serializers.SerializerMethodField()
@@ -35,6 +41,14 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ('id', 'organization', 'totals', 'items',)
+
+
+class CartUpdateSerializer(serializers.ModelSerializer):
+    items = CartItemUpdateSerializer(many=True)
+
+    class Meta:
+        model = Cart
+        fields = ('items',)
 
 
 class CartListSerializer(serializers.ModelSerializer):
@@ -68,6 +82,11 @@ class CartListSerializer(serializers.ModelSerializer):
 class CartItemCountChangeSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
     change = serializers.IntegerField()
+
+
+class BulkCartItemCountChangeSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+    count = serializers.IntegerField()
 
 
 class CartAllItemsCountSerializer(serializers.Serializer):

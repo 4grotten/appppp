@@ -1,14 +1,15 @@
 from django.db.models import Count
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import ObjectNotFoundException
 from shop.models import Cart
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
-    CartAllItemsCountSerializer
+    CartAllItemsCountSerializer, CartUpdateSerializer
 )
 from shop.services.cart_services import CartItemService, CartService
 
@@ -21,12 +22,26 @@ class UserCartListView(ListAPIView):
         return Cart.objects.filter(user=self.request.user).order_by('-id')
 
 
-class UserCartRetrieveDestroyView(RetrieveDestroyAPIView):
+class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CartSerializer
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        serializer = CartUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        try:
+            cart = Cart.objects.get(id=kwargs['pk'])
+        except Exception:
+            raise ObjectNotFoundException('Cart not found')
+        CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
+        return Response({'message': 'ok'})
 
 
 class CartItemCountChangeView(GenericAPIView):

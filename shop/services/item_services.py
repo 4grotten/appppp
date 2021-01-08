@@ -28,8 +28,11 @@ class ShopItemService:
         item.save(update_fields=('is_published',))
 
     @classmethod
-    def has_new(cls, timestamp: str) -> bool:
-        return ShopItem.objects.filter(updated_at__gt=timestamp).exists()
+    def has_new(cls, timestamp: str, user: User) -> bool:
+        organizations = SubscriptionService.get_user_subscriptions(user=user)
+        queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True,
+                                           updated_at__gt=timestamp).distinct()
+        return queryset.exists()
 
     @classmethod
     def annotate_likes_and_bookmarks(cls, queryset: QuerySet, user: User) -> QuerySet:

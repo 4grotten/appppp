@@ -55,5 +55,6 @@ class SubscriptionItemListView(FeedView):
         if not serializer.is_valid():
             raise NotAcceptableException('Validation Error')
         response = super().list(request, args, kwargs)
-        response.data['has_new'] = ShopItemService.has_new(serializer.validated_data['start_time'])
+        response.data['has_new'] = ShopItemService.has_new(timestamp=serializer.validated_data['start_time'],
+                                                           user=request.user)
         return response

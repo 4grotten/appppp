@@ -5,7 +5,8 @@ from django.db import transaction
 from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
 
-from common.exceptions import ObjectNotFoundException
+from common.exceptions import ObjectNotFoundException, PermissionDeniedException
+from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem
 from users.models import User
 
@@ -40,6 +41,21 @@ class CartService:
         cart = cls.get(user=user, id=cart_id)
         cart.delete()
         # ToDo: Put cart contents to transaction
+
+    @classmethod
+    def can_user_change_cart(cls, user: User, cart: Cart) -> bool:
+        return cart.user == user or OrganizationService.user_can_sell(organization=cart.organization, user=user)
+
+    @classmethod
+    def bulk_update(cls, cart: Cart, items, user: User):
+        if not cls.can_user_change_cart(user=user, cart=cart):
+            raise PermissionDeniedException('No rights to change this cart')
+        CartItem.objects.filter(cart=cart).delete()
+        for data in items:
+            if data['count']:
+                CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])
+        if not CartItem.objects.filter(cart=cart):
+            cart.delete()
 
 
 class CartItemService:

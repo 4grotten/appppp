@@ -1,13 +1,16 @@
 from decimal import Decimal
+from sqlite3 import IntegrityError
 from typing import Tuple
 
 from django.db import transaction
 from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
 
-from common.exceptions import ObjectNotFoundException, PermissionDeniedException
+from common.exceptions import ObjectNotFoundException, PermissionDeniedException, IntegrityException, \
+    BadRequestException
 from organizations.services.organization_services import OrganizationService
-from shop.models import CartItem, Cart, ShopItem
+from shop.models import CartItem, Cart, ShopItem, DeliveryInfo
+from transactions.services.transaction_services import TransactionService
 from users.models import User
 
 
@@ -43,8 +46,23 @@ class CartService:
         # ToDo: Put cart contents to transaction
 
     @classmethod
+    def close_the_cart(cls, user: User, cart_id: int):
+        cart = cls.get(id=cart_id)
+        if cart.user != user:
+            raise PermissionDeniedException('No rights to change this cart')
+        if not cart.transaction:
+            try:
+                TransactionService.create_transaction_from_cart(cart)
+            except IntegrityError:
+                raise IntegrityException('Could not add transaction')
+        cart.is_open = False
+        cart.save()
+        return cart
+
+    @classmethod
     def can_user_change_cart(cls, user: User, cart: Cart) -> bool:
-        return cart.user == user or OrganizationService.user_can_sell(organization=cart.organization, user=user)
+        return (cart.user == user and cart.is_open) or OrganizationService.user_can_sell(organization=cart.organization,
+                                                                                         user=user)
 
     @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
@@ -62,7 +80,7 @@ class CartItemService:
     @classmethod
     @transaction.atomic
     def change_cart_item_count(cls, user: User, shop_item: ShopItem, change: int) -> int:
-        cart, created = Cart.objects.get_or_create(user=user, organization=shop_item.organization)
+        cart, created = Cart.objects.get_or_create(user=user, organization=shop_item.organization, is_open=True)
 
         if created:
             if change <= 0:
@@ -103,3 +121,13 @@ class CartItemService:
         for item in cart_items:
             total = item.count + total
         return total
+
+
+class DeliveryInfoService:
+    @classmethod
+    def create(cls, *args, **kwargs):
+        print(kwargs)
+        try:
+            return DeliveryInfo.objects.create(**kwargs)
+        except Exception as e:
+            raise BadRequestException(f'Could not add delivery info , {e}')

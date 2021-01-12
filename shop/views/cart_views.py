@@ -11,7 +11,8 @@ from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
     CartAllItemsCountSerializer, CartUpdateSerializer
 )
-from shop.services.cart_services import CartItemService, CartService
+from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
+from transactions.services.transaction_services import TransactionService
 
 
 class UserCartListView(ListAPIView):
@@ -19,7 +20,7 @@ class UserCartListView(ListAPIView):
     serializer_class = CartListSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user).order_by('-id')
+        return Cart.objects.filter(user=self.request.user, is_open=True).order_by('-id')
 
 
 class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -27,7 +28,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.filter(user=self.request.user, is_open=True)
 
     def put(self, request, *args, **kwargs):
         serializer = CartUpdateSerializer(data=request.data)
@@ -87,16 +88,13 @@ class OrderDeliveryView(GenericAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-        # ToDo: put delivery info into transaction info
-        CartService.checkout_cart(user=request.user, cart_id=pk)
-
+        cart = CartService.close_the_cart(user=request.user, cart_id=pk)
+        DeliveryInfoService.create(**serializer.validated_data, user=request.user, transaction=cart.transaction,)
         return Response({'message': 'Success'})
 
 
 class OrderSelfPickupView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-
     def post(self, request, pk):
-        CartService.checkout_cart(user=request.user, cart_id=pk)
+        CartService.close_the_cart(user=request.user, cart_id=pk)
         return Response({'message': 'Success'})

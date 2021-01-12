@@ -25,6 +25,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
+from shop.models import Cart
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -360,3 +361,11 @@ class TransactionService:
                             currency=old_transaction.currency.code,
                             recipient='seller')
         )
+
+    @classmethod
+    def create_transaction_from_cart(cls, cart: Cart):
+        try:
+            transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart)
+            return transaction
+        except IntegrityError:
+            raise IntegrityException('Could not add employee')

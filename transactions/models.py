@@ -20,11 +20,11 @@ class Transaction(TimestampModel):
     )
 
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
-    processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions')
+    processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
     employee_name = models.CharField(max_length=255, null=True, blank=True)
-    employee_role = models.CharField(max_length=255)
+    employee_role = models.CharField(max_length=255, null=True)
     employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')

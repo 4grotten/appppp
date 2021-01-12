@@ -11,12 +11,18 @@ class Transaction(TimestampModel):
     CUMULATIVE = 'cumulative'
     CASHBACK = 'cashback'
     MANUAL = 'manual'
-
-    TYPES = (
+    DISCOUNT_TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
         (CASHBACK, CASHBACK),
         (MANUAL, MANUAL),
+    )
+
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+    TYPE = (
+        (ONLINE, ONLINE),
+        (OFFLINE, OFFLINE),
     )
 
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
@@ -36,10 +42,10 @@ class Transaction(TimestampModel):
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
 
-    discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
+    discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
+    type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='transactions')
-
     is_processed = models.BooleanField(default=False)
 
     def __str__(self):

@@ -366,7 +366,7 @@ class TransactionService:
     def create_transaction_from_cart(cls, cart: Cart):
         try:
             transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
-                                                     status="online")
+                                                     type="online")
             return transaction
         except IntegrityError:
-            raise IntegrityException('Could not add employee')
+            raise IntegrityException('Could not create transaction')

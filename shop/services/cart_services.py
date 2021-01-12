@@ -126,8 +126,10 @@ class CartItemService:
 class DeliveryInfoService:
     @classmethod
     def create(cls, *args, **kwargs):
-        print(kwargs)
         try:
-            return DeliveryInfo.objects.create(**kwargs)
+            transaction = kwargs['transaction']
+            transaction.delivery_type = 'cash_courier'
+            transaction.save()
+            return DeliveryInfo.objects.create(*args, **kwargs)
         except Exception as e:
             raise BadRequestException(f'Could not add delivery info , {e}')

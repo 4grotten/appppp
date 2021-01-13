@@ -10,6 +10,7 @@ from common.exceptions import ObjectNotFoundException, PermissionDeniedException
     BadRequestException
 from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem, DeliveryInfo
+from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
 
@@ -52,12 +53,23 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
         if not cart.transaction:
             try:
-                TransactionService.create_transaction_from_cart(cart)
+                cls.create_transaction(cart)
             except IntegrityError:
                 raise IntegrityException('Could not add transaction')
         cart.is_open = False
         cart.save()
         return cart
+
+    @classmethod
+    def create_transaction(cls, cart: Cart):
+        try:
+            original_price, discounted_price = cls.get_total_prices_in_cart(cart)
+            transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
+                                                     type="online", original_amount=original_price,
+                                                     savings=original_price - discounted_price)
+            return transaction
+        except IntegrityError:
+            raise IntegrityException('Could not create transaction')
 
     @classmethod
     def can_user_change_cart(cls, user: User, cart: Cart) -> bool:

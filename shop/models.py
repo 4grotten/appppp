@@ -66,8 +66,8 @@ class ShopItem(TimestampModel):
 class ItemInstagramData(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
     post_pk = models.CharField(max_length=255)
-    thumbnail_url = models.URLField(max_length=500)
-    video_url = models.URLField(max_length=500, null=True, blank=True)
+    thumbnail_url = models.URLField(max_length=5000)
+    video_url = models.URLField(max_length=5000, null=True, blank=True)
 
 
 class ItemLike(TimestampModel):

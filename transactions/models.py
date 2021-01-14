@@ -11,20 +11,34 @@ class Transaction(TimestampModel):
     CUMULATIVE = 'cumulative'
     CASHBACK = 'cashback'
     MANUAL = 'manual'
-
-    TYPES = (
+    DISCOUNT_TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
         (CASHBACK, CASHBACK),
         (MANUAL, MANUAL),
     )
 
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+    TYPE = (
+        (ONLINE, ONLINE),
+        (OFFLINE, OFFLINE),
+    )
+
+    CASH_COURIER = 'cash_courier'
+    SELF_PICKUP = 'self_pickup'
+
+    DELIVERY_TYPE = (
+        (CASH_COURIER, CASH_COURIER),
+        (SELF_PICKUP, SELF_PICKUP)
+    )
+
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
-    processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions')
+    processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
     employee_name = models.CharField(max_length=255, null=True, blank=True)
-    employee_role = models.CharField(max_length=255)
+    employee_role = models.CharField(max_length=255, null=True)
     employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
 
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
@@ -36,10 +50,11 @@ class Transaction(TimestampModel):
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
 
-    discount_type = models.CharField(choices=TYPES, max_length=20, default=MANUAL)
+    discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
+    type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)
+    delivery_type = models.CharField(choices=DELIVERY_TYPE, max_length=20, default=SELF_PICKUP)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='transactions')
-
     is_processed = models.BooleanField(default=False)
 
     def __str__(self):

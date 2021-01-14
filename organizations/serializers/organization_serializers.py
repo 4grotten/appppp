@@ -10,6 +10,7 @@ from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
 
@@ -115,6 +116,24 @@ class PartnerWithLatestTransactionSerializer(PartnerSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners')
+
+
+class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        # Annotated field
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        return Transaction.objects.filter(organization=organization, is_processed=False).count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners')
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):

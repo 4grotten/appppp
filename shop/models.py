@@ -2,9 +2,10 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-
+from django.db.models import Q
 from common.models import TimestampModel, File
 from organizations.models import Organization
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -98,13 +99,16 @@ class ItemBookmark(TimestampModel):
 class Cart(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='carts')
+    is_open = models.BooleanField(default=True)
+    transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, related_name='cart', null=True)
 
     def __str__(self):
         return f'Cart of {self.user} in {self.organization}'
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('organization', 'user'), name='unique_cart_for_user_in_organization')
+            models.UniqueConstraint(fields=('organization', 'user'), condition=Q(is_open=True),
+                                    name='unique_cart_for_user_in_organization')
         ]
 
 
@@ -125,7 +129,7 @@ class CartItem(TimestampModel):
 
 class DeliveryInfo(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='delivery_infos')
-
+    transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, null=True, related_name='delivery_info')
     address = models.CharField(max_length=225)
     apartment = models.CharField(max_length=36, null=True, blank=True)
     intercom = models.CharField(max_length=36, null=True, blank=True)

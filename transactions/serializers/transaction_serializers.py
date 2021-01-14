@@ -50,7 +50,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at',
+            'final_amount', 'updated_at', 'created_at', 'type', 'is_processed'
         )
 
 

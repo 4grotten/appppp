@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -20,7 +20,7 @@ from notifications.constants import (
 )
 from notifications.services import NotificationService
 from notifications.tasks import sent_notification
-from organizations.models import Organization, DiscountCard, Subscription
+from organizations.models import Organization, DiscountCard, Subscription, Membership
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
@@ -361,3 +361,10 @@ class TransactionService:
                             currency=old_transaction.currency.code,
                             recipient='seller')
         )
+
+    @classmethod
+    def get_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, is_processed=False).count()

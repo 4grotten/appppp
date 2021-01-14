@@ -221,3 +221,12 @@ class OrgFollowersTransactionsListAPIView(ListAPIView):
         return TransactionService.get_organization_follower_transactions(organization_id=self.kwargs['organization_id'],
                                                                          requested_by=self.request.user,
                                                                          follower_id=self.kwargs['user_id'])
+
+
+class UserUnprocessedTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = TransactionService.get_unprocessed_transactions_count(user=request.user)
+        data = dict(count=count)
+        return Response(data, status=status.HTTP_200_OK)

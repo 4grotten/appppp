@@ -81,6 +81,8 @@ class CartService:
         if not cls.can_user_change_cart(user=user, cart=cart):
             raise PermissionDeniedException('No rights to change this cart')
         CartItem.objects.filter(cart=cart).delete()
+        if not cart.is_open:
+            raise ObjectNotFoundException(message="Cart was closed")
         for data in items:
             if data['count']:
                 CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])

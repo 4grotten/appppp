@@ -1,9 +1,8 @@
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
-
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -243,6 +242,21 @@ class TransactionService:
         return organizations
 
     @classmethod
+    def get_user_sale_transaction_organizations(cls, user: User, start_date, end_date):
+        transactions = cls.get_user_sale_transactions(user=user)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(organization=OuterRef('pk'), processed_by=user, is_processed=True
+                                           ).order_by('-updated_at').values('updated_at')[:1]
+            )
+        ).order_by('-latest_transaction_time')
+        return organizations
+
+    @classmethod
     def get_user_totals(cls, client: User, currency: str,
                         organization: Organization = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(client=client, is_processed=True)
@@ -368,3 +382,12 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         return Transaction.objects.filter(organization__in=organization, is_processed=False).count()
+
+    @classmethod
+    def get_user_sale_transactions(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        transactions = Transaction.objects.filter(
+            Q(processed_by=user) | (Q(organization__in=organization) & Q(is_processed=False)))
+        return transactions

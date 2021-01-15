@@ -33,6 +33,15 @@ class Transaction(TimestampModel):
         (SELF_PICKUP, SELF_PICKUP)
     )
 
+    REJECTED = 'rejected'
+    IN_PROGRESS = 'in_progress'
+    ACCEPTED = 'accepted'
+    STATUS = (
+        (IN_PROGRESS, IN_PROGRESS),
+        (ACCEPTED, ACCEPTED),
+        (REJECTED, REJECTED)
+    )
+
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
@@ -56,6 +65,7 @@ class Transaction(TimestampModel):
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='transactions')
     is_processed = models.BooleanField(default=False)
+    status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
 
     def __str__(self):
         return f'Transaction #{self.id} for {self.original_amount} in {self.organization.title}'

@@ -66,6 +66,7 @@ class CartService:
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
             transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
                                                      type="online", original_amount=original_price,
+                                                     currency=cart.organization.currency, status='in_progress',
                                                      savings=original_price - discounted_price)
             return transaction
         except IntegrityError:
@@ -129,7 +130,7 @@ class CartItemService:
 
     @classmethod
     def get_all_items_amount(cls, user: User) -> int:
-        carts = Cart.objects.filter(user=user)
+        carts = Cart.objects.filter(user=user, is_open=True)
         cart_items = CartItem.objects.filter(cart__in=carts)
         total = 0
         for item in cart_items:

@@ -19,7 +19,7 @@ from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer, TransactionWithClientSerializer
+    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
@@ -90,6 +90,29 @@ class TransactionCompleteView(GenericAPIView):
             discount_percent=serializer.validated_data['discount_percent'],
             source_card=serializer.validated_data['source_card'],
             from_cashback=serializer.validated_data['from_cashback'],
+        )
+
+        return Response(data={
+            'message': 'Transaction successfully completed'
+        }, status=status.HTTP_200_OK)
+
+
+class OnlineTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_online_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            processed_by=request.user
         )
 
         return Response(data={
@@ -179,7 +202,7 @@ class UserSaleTransactionsListView(ListAPIView):
     search_fields = ['id']
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_sale_transactions(user=self.request.user, )
+        transactions = TransactionService.get_user_sale_transactions(user=self.request.user)
         return transactions
 
 

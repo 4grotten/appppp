@@ -72,7 +72,7 @@ class TransactionService:
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
-                                      status='in_progress')
+                                      status=Transaction.IN_PROGRESS)
 
         if source_card is not None and not OrganizationClientFinancialStatusService.can_use_given_card(
                 client=current_transaction.client, card=source_card):
@@ -233,8 +233,8 @@ class TransactionService:
                                     transaction_id: int,
                                     processed_by: User,
                                     ) -> Transaction:
-        current_transaction = cls.get(id=transaction_id, is_processed=False, type='online',
-                                      status='in_progress')
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
+                                      status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException('No rights to sell in this organization')
@@ -415,7 +415,7 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
-        return Transaction.objects.filter(organization__in=organization, status='in_progress', ).count()
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS, ).count()
 
     @classmethod
     def get_user_sale_transactions(cls, user: User):
@@ -423,5 +423,5 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         transactions = Transaction.objects.filter(
-            Q(processed_by=user) | (Q(organization__in=organization) & Q(status='in_progress')))
+            Q(processed_by=user) | (Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS)))
         return transactions

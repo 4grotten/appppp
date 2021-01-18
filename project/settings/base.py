@@ -5,6 +5,7 @@ from distutils.util import strtobool
 from corsheaders.defaults import default_headers
 from decouple import config
 from django.utils.translation import gettext_lazy as _
+from kombu.serialization import registry
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django_celery_beat',
 
     'common.apps.CoreConfig',
     'transactions.apps.TransactionsConfig',
@@ -38,6 +40,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'notifications',
     'shop.apps.ShopConfig',
+    'instagram_parsers.apps.InstagramParsersConfig',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -175,7 +178,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = 'imagekit.cachefiles.backends.Async'
 IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategies.Optimistic'
 
-CELERY_ACCEPT_CONTENT = ['pickle']
+CELERY_ACCEPT_CONTENT = ['json', 'application/text', 'pickle']
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -211,6 +214,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'common.pagination.GeneralPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'common.schemas.DefaultSchema',
+    'COERCE_DECIMAL_TO_STRING': False,
 }
 
 NIKITA_URL = 'https://smspro.nikita.kg/api/message'

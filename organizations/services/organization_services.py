@@ -12,6 +12,8 @@ from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
 from common.models import Country, City
+from instagram_parsers.parsers.get_id import get_username_from_instagram_url
+from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
     SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
@@ -19,13 +21,14 @@ from notifications.constants import (
 from notifications.tasks import (
     send_notifications_to_all_users, sent_notification, send_notifications_organization_members
 )
+from organizations.tasks import parse_instagram_to_shop_items, delete_not_updated_posts_from_instagram
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership,
+    Partnership, InstagramIntegration,
 )
 from organizations.services.membership_services import MembershipService
 from users.models import User
@@ -436,6 +439,53 @@ class OrgSocialNetworkContactService:
             contacts = [SocialNetworkContact(organization_id=organization_id, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class OrganizationInstagramIntegrationService:
+    model = InstagramIntegration
+
+    @classmethod
+    def check_instagram_account(cls, url: str) -> dict:
+        try:
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            return user_info
+        except:
+            raise ObjectNotFoundException('Instagram user not found')
+
+    @classmethod
+    def create(cls, organization: Organization, url: str) -> dict:
+        try:
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+            InstagramIntegration.objects.create(organization=organization, url=url, account_user_name=username,
+                                                account_user_id=user_info.pop('user_id'),
+                                                account_full_name=user_info.get('full_name'),
+                                                profile_photo=user_info.get('profile_image'))
+            transaction.on_commit(lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id)
+                                  )
+            return user_info
+        except Exception as e:
+            raise ObjectNotFoundException('Instagram user not found : {e}'.format(e=str(e)))
+
+    @classmethod
+    def delete(cls, organization: Organization):
+        try:
+            insta = InstagramIntegration.objects.get(organization=organization)
+            insta.delete()
+            transaction.on_commit(
+                lambda: delete_not_updated_posts_from_instagram.delay(organization_id=organization.id))
+            return "Deleted"
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
+
+    @classmethod
+    def get_from_org(cls, organization: Organization):
+        try:
+            return InstagramIntegration.objects.get(organization=organization)
+
+        except:
+            raise ObjectNotFoundException('Instagram Integration Link not found')
 
 
 class OrgMessageService:

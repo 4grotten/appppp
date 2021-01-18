@@ -1,13 +1,16 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, User
+# from instagram_parser.get_id import get_username_from_instagram_url
+from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, \
+    InstagramIntegration
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
 
@@ -63,6 +66,23 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'types')
 
 
+class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
+    permissions = serializers.SerializerMethodField()
+    phone_numbers = OrgPhoneNumberSerializer(many=True)
+
+    def get_permissions(self, organization: Organization):
+        if self.context['request'].user.is_anonymous:
+            return None
+        return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                             user=self.context['request'].user)
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'image', 'currency', 'types', 'phone_numbers', 'permissions',
+        )
+
+
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
@@ -96,6 +116,24 @@ class PartnerWithLatestTransactionSerializer(PartnerSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners')
+
+
+class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        # Annotated field
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        return Transaction.objects.filter(organization=organization, is_processed=False).count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners')
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):
@@ -295,10 +333,19 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
         fields = ('id', 'title', 'max_discount', 'types', 'image',)
 
 
-class OrganizationTitleSerializer(serializers.ModelSerializer):
+class OrganizationTitleCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title')
+        fields = ('id', 'title', 'currency')
+
+
+class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
+    types = OrganizationTypeSerializer(many=True)
+    image = ImageSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'types', 'image', 'address')
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):
@@ -307,6 +354,12 @@ class OrganizationTitleImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image')
+
+
+class OrganizationTitleImageCurrencySerializer(OrganizationTitleImageSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'image')
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):
@@ -331,3 +384,22 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
             'count': count,
             'list': OrganizationWithImageSerializer(partners, many=True).data
         }
+
+
+class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InstagramIntegration
+        fields = ('url',)
+
+
+class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
+    organization = OrganizationShortInfoSerializer
+    user_profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = InstagramIntegration
+        fields = ('id', 'url', 'user_profile')
+
+    def get_user_profile(self, obj):
+        user_profile = dict(full_name=obj.account_full_name, profile_image=obj.profile_photo)
+        return user_profile

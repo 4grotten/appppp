@@ -1,14 +1,19 @@
+from django.db import IntegrityError
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
+from common.exceptions import IntegrityException, NotAcceptableException
+from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer, ComplaintSerializer
+    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
 )
+from shop.serializers.other_serializers import ComplaintSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
@@ -23,6 +28,10 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = ItemCreateUpdateSerializer
     queryset = ShopItem.objects.all()
 
+    def put(self, request, *args, **kwargs):
+        ShopItemService.delete_instagram_images(item_id=kwargs['pk'])
+        return super().put(request, *args, **kwargs)
+
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             self.permission_classes = (AllowAny, CanViewUnpublishedItem,)
@@ -36,6 +45,10 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
         self.serializer_class = ItemSerializer
         return super().retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        CartItemService.delete_item_from_all_carts(item=ShopItem.objects.get(id=kwargs['pk']))
+        return super().delete(self, request, *args, **kwargs)
 
 
 class ItemChangePublishedStatusView(GenericAPIView):
@@ -103,3 +116,9 @@ class ComplaintCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Complaint.objects.all()
     serializer_class = ComplaintSerializer
+
+    def perform_create(self, serializer):
+        try:
+            super().perform_create(serializer)
+        except IntegrityError:
+            raise IntegrityException('You have already complained about this item')

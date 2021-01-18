@@ -50,8 +50,18 @@ class TransactionsSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at',
+            'final_amount', 'updated_at', 'created_at', 'type', 'status'
         )
+
+
+class OnlineCompleteSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(required=True)
+    from_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, default=0,
+                                             validators=[MinValueValidator(0)])
+
+    class Meta:
+        model = Transaction
+        fields = ('transaction_id', 'from_cashback')
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
@@ -75,7 +85,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
-            'updated_at', 'created_at', 'client',
+            'updated_at', 'created_at', 'client', 'delivery_type'
         )
 
 

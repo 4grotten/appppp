@@ -21,6 +21,24 @@ class ImageSerializer(serializers.ModelSerializer):
         return obj.file.name.split("/")[-1]
 
 
+class ImageFromUrlSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    large = serializers.ImageField(read_only=True)
+    medium = serializers.ImageField(read_only=True)
+    small = serializers.ImageField(read_only=True)
+    is_watermarked = serializers.BooleanField(write_only=True)
+    image_url = serializers.URLField()
+    file = serializers.FileField(required=False)
+
+    class Meta:
+        model = File
+        fields = ('id', 'name', 'large', 'medium', 'small', 'is_watermarked', 'image_url', 'file')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
+
+
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Currency

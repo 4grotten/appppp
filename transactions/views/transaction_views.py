@@ -9,7 +9,8 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
-from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer
+from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer, \
+    PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -18,7 +19,7 @@ from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer, TransactionWithClientSerializer
+    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
@@ -96,6 +97,29 @@ class TransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class OnlineTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_online_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            processed_by=request.user
+        )
+
+        return Response(data={
+            'message': 'Transaction successfully completed'
+        }, status=status.HTTP_200_OK)
+
+
 class UserTransactionOrganizationView(ListAPIView):
     serializer_class = PartnerWithLatestTransactionSerializer
     permission_classes = (IsAuthenticated,)
@@ -109,6 +133,24 @@ class UserTransactionOrganizationView(ListAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         return TransactionService.get_user_transaction_organizations(
             client=self.request.user,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+
+class UserSaleTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return TransactionService.get_user_sale_transaction_organizations(
+            user=self.request.user,
             start_date=serializer.validated_data.get('start'),
             end_date=serializer.validated_data.get('end')
         )
@@ -152,6 +194,18 @@ class UserTransactionsListView(ListAPIView):
         return transactions
 
 
+class UserSaleTransactionsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        transactions = TransactionService.get_user_sale_transactions(user=self.request.user)
+        return transactions
+
+
 class UserTransactionDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -182,7 +236,8 @@ class OrganizationTransactionListView(ListAPIView):
             processed_by=serializer.validated_data['processed_by'],
             start_date=serializer.validated_data['start'],
             end_date=serializer.validated_data['end'],
-            search_id=serializer.validated_data['search']
+            search_id=serializer.validated_data['search'],
+            client=serializer.validated_data['client']
         )
 
         page = self.paginate_queryset(queryset)
@@ -220,3 +275,12 @@ class OrgFollowersTransactionsListAPIView(ListAPIView):
         return TransactionService.get_organization_follower_transactions(organization_id=self.kwargs['organization_id'],
                                                                          requested_by=self.request.user,
                                                                          follower_id=self.kwargs['user_id'])
+
+
+class UserUnprocessedTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = TransactionService.get_unprocessed_transactions_count(user=request.user)
+        data = dict(count=count)
+        return Response(data, status=status.HTTP_200_OK)

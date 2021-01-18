@@ -371,7 +371,7 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def refund_transaction(cls, old_transaction: Transaction):
-        old_transaction.status = "rejected"
+        old_transaction.status = Transaction.REJECTED
         old_transaction.is_processed = False
         old_transaction.save()
 

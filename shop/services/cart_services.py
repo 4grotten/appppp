@@ -66,7 +66,7 @@ class CartService:
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
             transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
                                                      type="online", original_amount=original_price,
-                                                     currency=cart.organization.currency, status='in_progress',
+                                                     currency=cart.organization.currency, status=Transaction.IN_PROGRESS,
                                                      savings=original_price - discounted_price)
             return transaction
         except IntegrityError:

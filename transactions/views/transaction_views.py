@@ -211,7 +211,7 @@ class UserTransactionDetailView(APIView):
 
     def get(self, request, pk):
         instance = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(TransactionDetailSerializer(instance).data)
+        return Response(TransactionDetailSerializer(instance, context=dict(request=request)).data)
 
 
 class OrganizationTransactionListView(ListAPIView):

@@ -43,6 +43,14 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ('id', 'organization', 'totals', 'items',)
 
 
+class CartWithItemsSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)
+
+    class Meta:
+        model = Cart
+        fields = ('id', 'items')
+
+
 class CartUpdateSerializer(serializers.ModelSerializer):
     items = CartItemUpdateSerializer(many=True)
 

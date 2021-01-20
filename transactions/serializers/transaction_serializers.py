@@ -7,7 +7,7 @@ from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
 from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.serializers.cart_serializers import CartWithItemsSerializer
+from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
@@ -70,31 +70,44 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
-    cart = CartWithItemsSerializer()
+    cart = CartSerializer()
+    current_user_can_see_stats = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+
+    def get_current_user_can_see_stats(self, instance):
+        return OrganizationService.user_can_see_stats(user=self.context.get('user'),
+                                                      organization=instance.organization)
 
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
-            'updated_at', 'created_at', 'organization', 'delivery_type', 'type', 'cart', 'status'
+            'updated_at', 'created_at', 'organization', 'delivery_type', 'type', 'cart', 'status',
+            'current_user_can_see_stats', 'delivery_info'
         )
 
 
 class TransactionWithClientSerializer(TransactionDetailSerializer):
     client = ProfileBriefWithPhotoSerializer()
-    cart = CartWithItemsSerializer()
+    cart = CartSerializer()
+    delivery_info = DeliveryInfoSerializer()
     processed_by = serializers.SerializerMethodField()
     employee_name = serializers.SerializerMethodField()
     employee_avatar = serializers.SerializerMethodField()
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationUserTransactionSerializer()
+    current_user_can_see_stats = serializers.SerializerMethodField()
 
     def get_employee_avatar(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
                                                                                 organization=instance.organization):
             return ImageSerializer(self.context['request'].user.avatar).data
         return ImageSerializer(instance.employee_avatar).data
+
+    def get_current_user_can_see_stats(self, instance):
+        return OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                      organization=instance.organization)
 
     def get_employee_name(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
@@ -119,8 +132,9 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role', 'organization',
-            'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status'
+            'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
+            'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status',
+            'current_user_can_see_stats', 'delivery_info'
         )
 
 

@@ -75,7 +75,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     delivery_info = DeliveryInfoSerializer()
 
     def get_current_user_can_see_stats(self, instance):
-        return OrganizationService.user_can_see_stats(user=self.context['request'].user,
+        return OrganizationService.user_can_see_stats(user=self.context.get('user'),
                                                       organization=instance.organization)
 
     class Meta:

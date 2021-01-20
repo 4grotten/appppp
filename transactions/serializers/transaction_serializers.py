@@ -7,7 +7,7 @@ from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
 from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.serializers.cart_serializers import CartWithItemsSerializer
+from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
@@ -70,8 +70,9 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
-    cart = CartWithItemsSerializer()
+    cart = CartSerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context['request'].user,
@@ -89,7 +90,8 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
 class TransactionWithClientSerializer(TransactionDetailSerializer):
     client = ProfileBriefWithPhotoSerializer()
-    cart = CartWithItemsSerializer()
+    cart = CartSerializer()
+    delivery_info = DeliveryInfoSerializer()
     processed_by = serializers.SerializerMethodField()
     employee_name = serializers.SerializerMethodField()
     employee_avatar = serializers.SerializerMethodField()

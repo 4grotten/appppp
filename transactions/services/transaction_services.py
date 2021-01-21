@@ -2,12 +2,12 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count, DecimalField
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException,
-    PermissionDeniedException
+    PermissionDeniedException, BadRequestException
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
@@ -239,6 +239,12 @@ class TransactionService:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException('No rights to sell in this organization')
 
+        totals = current_transaction.cart.items.aggregate(
+            original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
+            discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
+        )
+        original_price = totals['original_price']
+        discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         try:
             current_transaction.is_processed = True
@@ -246,7 +252,9 @@ class TransactionService:
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
             current_transaction.employee_avatar = processed_by.avatar
-            current_transaction.status = 'accepted'
+            current_transaction.status = Transaction.ACCEPTED
+            current_transaction.original_amount = original_price
+            current_transaction.savings = discounted_price
             current_transaction.save()
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
@@ -371,6 +379,9 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def refund_transaction(cls, old_transaction: Transaction):
+        if not (old_transaction.status == Transaction.IN_PROGRESS or old_transaction.ACCEPTED):
+            raise BadRequestException(message='This transaction already rejected')
+
         old_transaction.status = Transaction.REJECTED
         old_transaction.is_processed = False
         old_transaction.save()

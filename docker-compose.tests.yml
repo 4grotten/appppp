@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      target: development
+    environment:
+      - AWS_ACCESS_KEY_ID=***
+      - AWS_SECRET_ACCESS_KEY=***
+      - AWS_STORAGE_BUCKET_NAME=***
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=qrcode
+      - POSTGRES_USER=qrcode
+      - POSTGRES_PASSWORD=qrcode
+      - SECRET_KEY=notasecret
+      - DEBUG=true
+      - DJANGO_SETTINGS_MODULE=project.settings.base
+      - ALLOWED_HOSTS=*
+      - POSTGRES_PORT=5432
+      - NIKITA_USERNAME=***
+      - NIKITA_PASSWORD=***
+      - NIKITA_SENDER=***
+      - NIKITA_TEST_MODE=1
+      - OER_APP_ID=1
+      - FCM_KEY=***
+    command: ["sh", "-c", "timeout 60 sh -c 'until nc -z $${POSTGRES_HOST} $${POSTGRES_PORT}; do sleep 1; done' && coverage run --source='.' manage.py test; coverage report"]

@@ -16,7 +16,7 @@ run_tests:
     - apk add --no-cache py-pip
     - pip install docker-compose==1.23.2
   script:
-    - docker-compose -f docker-compose-tests.yml up --build --exit-code-from django
+    - docker-compose -f docker-compose.base.yml -f docker-compose.tests.yml up --build --exit-code-from app
   coverage: "/TOTAL.+ ([0-9]{1,3}%)/"
   only:
     refs:

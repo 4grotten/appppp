@@ -43,7 +43,9 @@ class CustomFCMDeviceSerializer(FCMDeviceSerializer):
 class NotificationSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSetting
-        fields = ('id', 'discount_notifications', 'private_notifications', 'organization_notifications')
+        fields = (
+            'id', 'discount_notifications', 'private_notifications', 'organization_notifications',
+            'product_notifications')
         extra_kwargs = {"id": {"read_only": True, "required": False}}
 
 

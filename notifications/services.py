@@ -75,16 +75,21 @@ class NotificationSettingService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def update(cls, notification_setting: NotificationSetting, discount_notifications: bool,
-               private_notifications: bool, organization_notifications: bool):
-        try:
+    def update(cls, notification_setting: NotificationSetting, discount_notifications: bool = None,
+               private_notifications: bool = None, organization_notifications: bool = None,
+               product_notifications: bool = None):
+
+        if not (discount_notifications is None):
             notification_setting.discount_notifications = discount_notifications
+        if not (private_notifications is None):
             notification_setting.private_notifications = private_notifications
+        if not (organization_notifications is None):
             notification_setting.organization_notifications = organization_notifications
+        if not (product_notifications is None):
+            notification_setting.product_notifications = product_notifications
+        try:
             notification_setting.save()
-
             return notification_setting
-
         except Exception as e:
             raise IntegrityException('Can not update: {e}'.format(e=str(e)))
 

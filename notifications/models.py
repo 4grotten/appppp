@@ -9,7 +9,7 @@ from project.settings.base import HOST_URL
 from .constants import (get_titles_descriptions_from_type,
                         DISCOUNT_NOTIFICATION_MODE,
                         SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
-                        NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE)
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE, PRODUCT_MODE)
 
 User = get_user_model()
 
@@ -72,10 +72,11 @@ class Notification(TimestampModel):
 
         notification_setting = NotificationSetting.objects.get(user=user)
 
-        if not ((mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications) or (
-                mode == PERSONAL_MODE and notification_setting.private_notifications) or (
-                        mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or (
-                        mode == PARTNER_MODE and notification_setting.organization_notifications)):
+        if not ((mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications) or
+                (mode == PERSONAL_MODE and notification_setting.private_notifications) or
+                (mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or
+                (mode == PARTNER_MODE and notification_setting.organization_notifications) or
+                (mode == PRODUCT_MODE and notification_setting.product_notifications)):
             return
 
         notification_payload = {
@@ -127,6 +128,7 @@ class NotificationSetting(TimestampModel):
     discount_notifications = models.BooleanField(default=True)
     private_notifications = models.BooleanField(default=True)
     organization_notifications = models.BooleanField(default=True)
+    product_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)

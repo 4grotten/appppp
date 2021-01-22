@@ -10,8 +10,10 @@ RUN apt-get install --no-install-recommends --yes \
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
+COPY ./Pipfile /app/
+COPY ./Pipfile.lock /app/
+RUN pip install pipenv
+RUN pipenv lock -r --keep-outdated | pip install -r /dev/stdin && pipenv --rm
 
 COPY . /app/
 
@@ -19,8 +21,7 @@ COPY . /app/
 
 FROM env as development
 
-COPY ./requirements.dev.txt /app/requirements.dev.txt
-RUN pip install -r /app/requirements.dev.txt
+RUN pipenv lock -r --dev-only --keep-outdated | pip install -r /dev/stdin && pipenv --rm
 
 
 

@@ -227,3 +227,6 @@ dmypy.json
 
 ### Python Patch ###
 .venv/
+
+# Posgres dev path
+.postgres

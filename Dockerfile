@@ -1,32 +1,55 @@
-FROM python:3.8-alpine3.10 as prod
-ENV PYTHONUNBUFFERED 1
+FROM python:3.9-slim as env
+
+ENV PYTHONUNBUFFERED=1
+ENV prometheus_multiproc_dir=/dev/shm/prometheus
+ENV STATIC_ROOT=/app/static/
+
+RUN apt-get update
+RUN apt-get install --no-install-recommends --yes \
+    netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin
 
 WORKDIR /app
 
-COPY requirements requirements
-RUN apk update \
-# install psycopg2 dependencies
-    && apk add --no-cache postgresql-libs \
-        zlib-dev \
-        jpeg-dev \
-    && apk add --no-cache --virtual .requirements-build-deps \
-        gcc \
-        musl-dev \
-        postgresql-dev \
-        libffi-dev \
-        libxml2-dev \
-        libxslt-dev \
+COPY ./Pipfile /app/
+COPY ./Pipfile.lock /app/
+RUN pip install pipenv
+RUN pipenv lock -r --keep-outdated | pip install -r /dev/stdin && pipenv --rm
 
-# install requirements
-    && pip install --no-cache-dir -r requirements/prod.txt \
-    && rm -r requirements \
-    && apk del .requirements-build-deps
+COPY . /app/
 
-COPY . .
 
-EXPOSE 5000
-ENTRYPOINT [ "/app/scripts/entrypoint.sh" ]
-CMD gunicorn -b 0.0.0.0:5000 --workers=$GUNICORN_WORKERS project.wsgi
 
-FROM prod as dev
-RUN pip install --no-cache-dir -r requirements/dev.txt
+FROM env as development
+
+RUN pipenv lock -r --dev-only --keep-outdated | pip install -r /dev/stdin && pipenv --rm
+
+
+
+FROM env as production
+ARG UNIT_VERSION=1.21.0
+# -------- Building Nginx Unit --------
+RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
+    tar xzf unit-$UNIT_VERSION.tar.gz && \
+    rm -f unit-$UNIT_VERSION.tar.gz && \
+    cd unit-$UNIT_VERSION && \
+    ./configure --prefix="/usr" \
+            --state="/var/lib/unit" \
+            --control="unix:/run/control.unit.sock" \
+            --pid="/run/unit.pid" \
+            --log="/var/log/unit.log" \
+            --modules="/usr/lib/unit/modules" \
+            --user=unit \
+            --group=unit \
+            --tests && \
+    ./configure python --config=python3-config && \
+    make && \
+    make tests && \
+    ./build/tests && \
+    make install && \
+    useradd -d /var/lib/unit -U -m -r -s /sbin/nologin unit && \
+    rm -rf unit-$UNIT_VERSION
+
+STOPSIGNAL SIGTERM
+
+RUN ln -sf /dev/stdout /var/log/unit.log
+# -------------------------------------

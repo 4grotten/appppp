@@ -110,7 +110,7 @@ NOTIFICATION_TYPES = (
 # ______________________RUSSIAN___________________________#
 
 ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ'
-DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ  '
+DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ'
 REQUEST_ORDER_TITLE_RU = 'У вас новый заказ'
 
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли'

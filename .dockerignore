@@ -1,0 +1,9 @@
+.postgres
+.gitlab
+.git
+.gitignore
+.gitlab-ci.yml
+docker-compose.tests.yml
+docker-compose.base.yml
+docker-compose.dev.yml
+Dockerfile

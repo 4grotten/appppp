@@ -15,7 +15,8 @@ from notifications.constants import (
     WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
     CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
     DECLINE_DISCOUNT_TYPE, TRANSACTION_DECLINED_NOTIFICATION_TITLE, TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION,
-    YOU_DECLINED_NOTIFICATION_TITLE, PERSONAL_MODE
+    YOU_DECLINED_NOTIFICATION_TITLE, PERSONAL_MODE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE, ACCEPT_ORDER_CLIENT_TYPE,
+    ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE
 )
 from notifications.services import NotificationService
 from notifications.tasks import sent_notification
@@ -263,6 +264,24 @@ class TransactionService:
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+        sent_notification.delay(
+            recipient_id=current_transaction.client_id,
+            mode=PRODUCT_MODE,
+            notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=PRODUCT_MODE,
+            notification_type=ACCEPT_ORDER_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
         return current_transaction
 
     @classmethod
@@ -379,13 +398,14 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def refund_transaction(cls, old_transaction: Transaction):
-        if not (old_transaction.status == Transaction.IN_PROGRESS or old_transaction.ACCEPTED):
-            raise BadRequestException(message='This transaction already rejected')
-
-        old_transaction.status = Transaction.REJECTED
-        old_transaction.is_processed = False
-        old_transaction.save()
-
+        if old_transaction.status == Transaction.REJECTED:
+            raise BadRequestException(message='This transaction already was rejected')
+        try:
+            old_transaction.status = Transaction.REJECTED
+            old_transaction.is_processed = False
+            old_transaction.save()
+        except:
+            raise IntegrityException()
         client_status = OrganizationClientFinancialStatusService.get(
             user=old_transaction.client, organization=old_transaction.organization
         )
@@ -394,32 +414,47 @@ class TransactionService:
                 client_status=client_status, refunded_transaction=old_transaction
             )
             OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-
-        NotificationService.create_notification(
-            recipient=old_transaction.client,
-            sender=old_transaction.processed_by,
-            mode=DISCOUNT_NOTIFICATION_MODE,
-            notification_type=DECLINE_DISCOUNT_TYPE,
-            title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
-            description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
-                                                                             currency=old_transaction.currency.code),
-            organization=old_transaction.organization,
-            extra_data=dict(savings=str(old_transaction.savings),
-                            currency=old_transaction.currency.code,
-                            recipient='client'),
-        )
-        NotificationService.create_notification(
-            recipient=old_transaction.processed_by,
-            mode=DISCOUNT_NOTIFICATION_MODE,
-            notification_type=DECLINE_DISCOUNT_TYPE,
-            title=YOU_DECLINED_NOTIFICATION_TITLE,
-            description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=str(old_transaction.savings),
-                                                                             currency=old_transaction.currency.code),
-            organization=old_transaction.organization,
-            extra_data=dict(savings=str(old_transaction.savings),
-                            currency=old_transaction.currency.code,
-                            recipient='seller')
-        )
+        if old_transaction.type == Transaction.OFFLINE:
+            sent_notification.delay(
+                recipient_id=old_transaction.client_id,
+                sender_id=old_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=DECLINE_DISCOUNT_TYPE,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(savings=str(old_transaction.savings),
+                                currency=old_transaction.currency.code,
+                                recipient='client'),
+            )
+            sent_notification.delay(
+                recipient_id=old_transaction.processed_by_id,
+                mode=DISCOUNT_NOTIFICATION_MODE,
+                notification_type=DECLINE_DISCOUNT_TYPE,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(savings=str(old_transaction.savings),
+                                currency=old_transaction.currency.code,
+                                recipient='seller')
+            )
+        else:
+            sent_notification.delay(
+                recipient_id=old_transaction.processed_by_id,
+                sender_id=old_transaction.client_id,
+                mode=PRODUCT_MODE,
+                notification_type=DECLINE_ORDER_TYPE,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(transaction_id=old_transaction.id,
+                                total_price=old_transaction.final_amount,
+                                currency=old_transaction.currency.code)
+            )
+            sent_notification.delay(
+                recipient_id=old_transaction.client_id,
+                sender_id=old_transaction.processed_by_id,
+                mode=PRODUCT_MODE,
+                notification_type=DECLINE_ORDER_CLIENT_TYPE,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(transaction_id=old_transaction.id,
+                                total_price=old_transaction.final_amount,
+                                currency=old_transaction.currency.code)
+            )
 
     @classmethod
     def get_unprocessed_transactions_count(cls, user: User):

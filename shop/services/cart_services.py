@@ -8,11 +8,14 @@ from django.db.models.functions import Coalesce
 
 from common.exceptions import ObjectNotFoundException, PermissionDeniedException, IntegrityException, \
     BadRequestException
+from notifications.constants import ACCEPT_DISCOUNT_TYPE, ACCEPT_ORDER_CLIENT_TYPE, PRODUCT_MODE, \
+    REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
 from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem, DeliveryInfo
 from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
+from notifications.tasks import sent_notification, send_notifications_organization_members
 
 
 class CartService:
@@ -51,14 +54,36 @@ class CartService:
         cart = cls.get(id=cart_id)
         if cart.user != user:
             raise PermissionDeniedException('No rights to change this cart')
-        if not cart.transaction:
-            try:
-                cls.create_transaction(cart)
-            except IntegrityError:
-                raise IntegrityException('Could not add transaction')
+        if not cart.is_open:
+            raise BadRequestException('Cart is already closed')
+        current_transaction = cls.create_transaction(cart)
         cart.is_open = False
-        cart.save()
-        return cart
+        try:
+            cart.save()
+        except IntegrityError:
+            raise IntegrityException('Could not add transaction')
+        finally:
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                mode=PRODUCT_MODE,
+                notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=str(current_transaction.final_amount),
+                                currency=current_transaction.currency.code)
+            )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=PRODUCT_MODE,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_see_stats=True),
+                notification_type=REQUEST_ORDER_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=str(current_transaction.final_amount),
+                                currency=current_transaction.currency.code)
+            )
+            return cart
 
     @classmethod
     def create_transaction(cls, cart: Cart):
@@ -66,7 +91,8 @@ class CartService:
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
             transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
                                                      type="online", original_amount=original_price,
-                                                     currency=cart.organization.currency, status=Transaction.IN_PROGRESS,
+                                                     currency=cart.organization.currency,
+                                                     status=Transaction.IN_PROGRESS,
                                                      savings=original_price - discounted_price)
             return transaction
         except IntegrityError:

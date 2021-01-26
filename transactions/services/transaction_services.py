@@ -255,7 +255,7 @@ class TransactionService:
             current_transaction.employee_avatar = processed_by.avatar
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
-            current_transaction.savings = discounted_price
+            current_transaction.savings = original_price - discounted_price
             current_transaction.save()
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
@@ -319,6 +319,25 @@ class TransactionService:
     def get_user_totals(cls, client: User, currency: str,
                         organization: Organization = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(client=client, is_processed=True)
+
+        if organization is not None:
+            transactions = transactions.filter(organization=organization)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_user_sale_totals(cls, processed_by: User, currency: str,
+                             organization: Organization = None, start_date=None, end_date=None) -> dict:
+        transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True)
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)

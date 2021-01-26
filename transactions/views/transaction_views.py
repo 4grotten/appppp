@@ -182,6 +182,32 @@ class UserTotalsView(APIView):
         return Response(data)
 
 
+class UserSaleTotalsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        if organization is not None:
+            currency = organization.currency.code
+        else:
+            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+
+        totals = TransactionService.get_user_sale_totals(processed_by=request.user, currency=currency,
+                                                         organization=organization,
+                                                         start_date=serializer.validated_data.get('start'),
+                                                         end_date=serializer.validated_data.get('end'))
+        totals['total_savings'] += totals['total_from_cashback']
+        data = TotalStatsSerializer(totals).data
+        return Response(data)
+
+
 class UserTransactionsListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer

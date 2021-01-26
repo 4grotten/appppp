@@ -89,12 +89,13 @@ class OrderDeliveryView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.close_the_cart(user=request.user, cart_id=pk)
-        DeliveryInfoService.create(**serializer.validated_data, user=request.user, transaction=cart.transaction,)
+        DeliveryInfoService.create(**serializer.validated_data, user=request.user, transaction=cart.transaction, )
         return Response({'message': 'Success'})
 
 
 class OrderSelfPickupView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
+
     def post(self, request, pk):
         CartService.close_the_cart(user=request.user, cart_id=pk)
         return Response({'message': 'Success'})

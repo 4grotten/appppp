@@ -104,12 +104,19 @@ class CartService:
                                                                                          user=user)
 
     @classmethod
+    def can_user_change_closed_cart(cls, user: User, cart: Cart) -> bool:
+        return OrganizationService.user_can_sell(organization=cart.organization,
+                                                 user=user)
+
+    @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
-        if not cls.can_user_change_cart(user=user, cart=cart):
+        if not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
+                user=user, cart=cart)):
             raise PermissionDeniedException('No rights to change this cart')
-        CartItem.objects.filter(cart=cart).delete()
-        if not cart.is_open:
+        if not (cart.is_open or cls.can_user_change_closed_cart(
+                user=user, cart=cart)):
             raise ObjectNotFoundException(message="Cart was closed")
+        CartItem.objects.filter(cart=cart).delete()
         for data in items:
             if data['count']:
                 CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])

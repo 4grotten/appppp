@@ -190,7 +190,7 @@ class OrganizationService:
 
     @classmethod
     def get_organization_partners(cls, organization: Organization) -> QuerySet:
-        return Organization.objects.filter(
+        return Organization.objects.select_related('image').filter(
             id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
     @classmethod
@@ -300,17 +300,18 @@ class OrganizationService:
     @classmethod
     def get_random_organizations_with_min_count_of_partners(cls, min_count: int = HOMEPAGE_MIN_PARTNERS_THRESHOLD,
                                                             country: Union[Country, None] = None,
-                                                            city: Union[City, None] = None) -> list:
-        queryset = Organization.objects.filter(requested_partnerships__is_accepted=True)
+                                                            city: Union[City, None] = None) -> QuerySet:
+        queryset = Organization.objects.select_related('image').filter(requested_partnerships__is_accepted=True)
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         queryset = queryset.annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)
         ).exclude(partners_count__lt=min_count)[:HOMEPAGE_PARTNERS_COUNT]
 
-        q_list = list(queryset)
-        random.shuffle(q_list)
-        return q_list
+        # This is fucking shit, but i comment it
+        # q_list = list(queryset)
+        # random.shuffle(q_list)
+        return queryset
 
     @classmethod
     def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT,

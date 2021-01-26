@@ -5,7 +5,7 @@ from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView,
     UserTotalsView, UserTransactionsListView, UserTransactionDetailView,
     OrganizationTransactionListView, OrganizationTransactionRetrieveDestroyView, UserUnprocessedTransactionCountView,
-    UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView
+    UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView, UserSaleTotalsView
 )
 
 urlpatterns = [
@@ -17,6 +17,7 @@ urlpatterns = [
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='transaction_complete'),
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),
+    path('statistics/saleTotals/', UserSaleTotalsView.as_view(), name='user_sale_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),
     path('statistics/saleTransactions/', UserSaleTransactionsListView.as_view(), name='user_sale_tran'),
     path('statistics/transactions/<int:pk>/', UserTransactionDetailView.as_view(), name='user_transaction_detail'),

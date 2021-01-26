@@ -255,7 +255,7 @@ class TransactionService:
             current_transaction.employee_avatar = processed_by.avatar
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
-            current_transaction.savings = original_price-discounted_price
+            current_transaction.savings = original_price - discounted_price
             current_transaction.save()
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')

@@ -20,7 +20,7 @@ class FeedView(ListAPIView):
     filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)
     ordering_fields = ['updated_at', 'price']
     ordering = ['-updated_at']
-    search_fields = ('name', 'description',)
+    search_fields = ('article', 'id', 'name', 'description',)
     filter_class = FeedItemFilter
 
     def get_queryset(self):

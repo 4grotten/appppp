@@ -50,5 +50,5 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
 
 
 class FCMDeviceSettingsSerializer(serializers.Serializer):
-    registration_id = serializers.IntegerField()
+    registration_id = serializers.CharField()
     language = serializers.CharField()

@@ -35,6 +35,7 @@ Pillow = "==7.2.0"
 [dev-packages]
 coverage = "==5.1"
 factory-boy = "==3.0.1"
+requests-mock = "*"
 
 [requires]
 python_version = "3.9"

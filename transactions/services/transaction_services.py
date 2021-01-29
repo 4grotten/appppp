@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count, DecimalField
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -314,8 +314,11 @@ class TransactionService:
             transactions = transactions.filter(created_at__range=[start_date, end_date])
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
-                Transaction.objects.filter(organization=OuterRef('pk'), processed_by=user, is_processed=True
-                                           ).order_by('-updated_at').values('updated_at')[:1]
+                Transaction.objects.filter(
+                    Q(organization=OuterRef('pk')) & (
+                            (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
+                        Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)))).order_by(
+                    '-updated_at').values('updated_at')[:1]
             )
         ).order_by('-latest_transaction_time')
         return organizations
@@ -404,7 +407,12 @@ class TransactionService:
     def get_organization_transactions(cls, organization: Organization, processed_by: User = None,
                                       start_date=None, end_date=None, search_id: int = None, client: User = None):
 
-        transactions = Transaction.objects.filter(organization=organization)
+        transactions = Transaction.objects.filter(Q(organization=organization) & ~Q(
+            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.IN_PROGRESS))).annotate(
+            in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
+                                   When(status=Transaction.ACCEPTED, then=1),
+                                   When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
+        ).order_by('in_progress_first', '-updated_at')
 
         if processed_by is not None:
             transactions = transactions.filter(Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS))
@@ -497,5 +505,5 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         transactions = Transaction.objects.filter(
-            Q(processed_by=user) | (Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS)))
+            Q(organization__in=organization) & (Q(status=Transaction.IN_PROGRESS) or Q(processed_by=user)))
         return transactions

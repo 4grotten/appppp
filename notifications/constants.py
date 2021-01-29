@@ -186,13 +186,13 @@ CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кешбек {amount}
 
 # _______________________ ENGLISH _______________________#
 
-ACCEPT_ORDER_TITLE_EN = 'You have accepted the order'
-DECLINE_ORDER_TITLE_EN = 'You canceled the order'
-REQUEST_ORDER_TITLE_EN = 'You have a new order'
+ACCEPT_ORDER_TITLE_EN = 'You accepted order'
+DECLINE_ORDER_TITLE_EN = 'You canceled order'
+REQUEST_ORDER_TITLE_EN = 'You got new order'
 
-ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order was accepted'
+ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted'
 DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled'
-REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! Our staff will contact you.'
+REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
 ATTENDANCE_IN_TITLE = 'Input {organization}'

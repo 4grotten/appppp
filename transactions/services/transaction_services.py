@@ -459,7 +459,7 @@ class TransactionService:
                                 recipient='client'),
             )
             sent_notification.delay(
-                recipient_id=user,
+                recipient_id=user.id,
                 mode=DISCOUNT_NOTIFICATION_MODE,
                 notification_type=DECLINE_DISCOUNT_TYPE,
                 organization_id=old_transaction.organization_id,
@@ -472,7 +472,7 @@ class TransactionService:
                 Q(extra_data__transaction_id=old_transaction.id) & (
                         Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
             sent_notification.delay(
-                recipient_id=user,
+                recipient_id=user.id,
                 sender_id=old_transaction.client_id,
                 mode=PRODUCT_MODE,
                 notification_type=DECLINE_ORDER_TYPE,

@@ -505,5 +505,6 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         transactions = Transaction.objects.filter(
-            Q(organization__in=organization) & (Q(status=Transaction.IN_PROGRESS) or Q(processed_by=user)))
+            (Q(processed_by=user) & Q(organization__in=organization)) | (
+                    Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS)))
         return transactions

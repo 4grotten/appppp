@@ -504,7 +504,20 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        #
+        # transactions = Transaction.objects.filter(
+        #     (Q(processed_by=user) & Q(organization__in=organization)) | (
+        #             Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS)))
+        #
+        # (a & b) | (a & c) = a & (b | c)
+        # a = Q(organization__in=organization)
+        # b = Q(processed_by=user)
+        # c = Q(status=Transaction.IN_PROGRESS)
+        # (Q(organization__in=organization) & Q(processed_by=user)) |
+        #     (Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS))
+        # ==
+        # Q(organization__in=organization) & (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         transactions = Transaction.objects.filter(
-            (Q(processed_by=user) & Q(organization__in=organization)) | (
-                    Q(organization__in=organization) & Q(status=Transaction.IN_PROGRESS)))
+            Q(organization__in=organization) & (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
+        )
         return transactions

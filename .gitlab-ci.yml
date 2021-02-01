@@ -1,7 +1,7 @@
 image: python:3.8-alpine3.10
 
-variables:
-  DOCKER_HOST: tcp://docker:2375/
+#variables:
+#  DOCKER_HOST: tcp://docker:2375/
 
 services:
   - docker:dind

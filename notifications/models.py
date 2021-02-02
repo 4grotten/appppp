@@ -126,8 +126,8 @@ class Notification(TimestampModel):
         fcm_devices_en.send_message(**notification_payload)
 
     @staticmethod
-    def get_organization_small_image(organization):
-        return HOST_URL + str(organization.image.medium) if organization.image else None
+    def get_organization_small_image(organization: Organization):
+        return organization.image.medium.url if organization.image else None
 
 
 class NotificationSetting(TimestampModel):

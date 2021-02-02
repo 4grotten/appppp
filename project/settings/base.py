@@ -249,5 +249,5 @@ FCM_DJANGO_SETTINGS = {
     "DELETE_INACTIVE_DEVICES": False,
 }
 
-HOST_URL = 'https://apofiz.com/media/'
+HOST_URL = 'https://test.apofiz.com/media/'
 CELERY_BROKER_URL = 'amqp://localhost:5672'

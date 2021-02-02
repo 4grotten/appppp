@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from fcm_django.models import FCMDevice
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from .models import (
@@ -98,10 +99,13 @@ class FCMDeviceSettingsService:
     model = SettingsToToken
 
     @classmethod
-    def update(cls, registration_id: int, language: str, user: User):
+    def create(cls, registration_id: str, language: str, user: User):
         try:
-            device_settings = cls.model.objects.get(fcm_device__registration_id=registration_id,
-                                                    notification_settings__user=user)
+            fcm_device = FCMDevice.objects.get(registration_id=registration_id)
+            notification_settings, _ = NotificationSetting.objects.get_or_create(user=user)
+            notification_settings.fcm_device.add(fcm_device)
+            device_settings, _ = cls.model.objects.get_or_create(fcm_device=fcm_device,
+                                                                 notification_settings=notification_settings)
             device_settings.language = language
             device_settings.save()
         except cls.model.DoesNotExist:

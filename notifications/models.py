@@ -83,7 +83,6 @@ class Notification(TimestampModel):
             'title': title,
             'body': description,
             'click_action': type,
-            'mutable_content': True,
             'sound': 'default',
             'data': {
                 'notification_id': notification_id,
@@ -95,13 +94,13 @@ class Notification(TimestampModel):
                 'extra_data': extra_data,
                 'type': type
             },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'mutable_content': True,
         }
         notification_payload_ru = {
             'title': title_ru,
             'body': description_ru,
             'click_action': type,
-            'mutable_content': True,
             'sound': 'default',
             'data': {
                 'notification_id': notification_id,
@@ -113,7 +112,8 @@ class Notification(TimestampModel):
                 'extra_data': extra_data,
                 'type': type
             },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'mutable_content': True,
         }
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')

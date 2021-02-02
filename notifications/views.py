@@ -82,7 +82,7 @@ class FCMDeviceSettingsAPIView(APIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        device_settings = FCMDeviceSettingsService.update(**serializer.validated_data, user=request.user)
+        FCMDeviceSettingsService.create(**serializer.validated_data, user=request.user)
 
         return Response(data={
             'message': 'Success'

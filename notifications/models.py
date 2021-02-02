@@ -95,7 +95,9 @@ class Notification(TimestampModel):
                 'type': type
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'mutable_content': True,
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
         }
         notification_payload_ru = {
             'title': title_ru,
@@ -113,7 +115,9 @@ class Notification(TimestampModel):
                 'type': type
             },
             'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'mutable_content': True,
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
         }
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')

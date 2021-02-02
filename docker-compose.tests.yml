@@ -14,7 +14,7 @@ services:
       - POSTGRES_PASSWORD=qrcode
       - SECRET_KEY=notasecret
       - DEBUG=true
-      - DJANGO_SETTINGS_MODULE=project.settings.base
+      - DJANGO_SETTINGS_MODULE=project.settings.test
       - ALLOWED_HOSTS=*
       - POSTGRES_PORT=5432
       - NIKITA_USERNAME=***

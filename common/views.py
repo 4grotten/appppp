@@ -55,7 +55,7 @@ class CountryCitySearchView(ObjectMultipleModelAPIView):
     pagination_class = MultipleModelLimitOffsetPagination
 
     def get_querylist(self):
-        search_param = self.request.query_params.get('search', None)
+        search_param = self.request.query_params.get('search')
 
         countries, cities = CountryCityService.get_countries_and_cities(keyword=search_param)
 
@@ -74,11 +74,11 @@ class CountryCitySearchView(ObjectMultipleModelAPIView):
         return query_list
 
 
-def index(request):
+def index(request):  # pragma: no cover
     return render(request, 'dist/index.html', {})
 
 
-def organization_detail_view(request, pk):
+def organization_detail_view(request, pk):  # pragma: no cover
     organization = OrganizationService.get(pk=pk)
     description = organization.description
     # description = description.replace(r'\n', ' ').replace(r'\r', '')

@@ -57,7 +57,7 @@ class File(TimestampModel):
     medium = ImageSpecField(source='file', id='common:file:medium')
     small = ImageSpecField(source='file', id='common:file:small')
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.file.name
 
     def save(self, force_insert=False, force_update=False, using=None,
@@ -78,7 +78,7 @@ class Currency(models.Model):
     code = models.CharField(max_length=3, primary_key=True)
     name = models.CharField(max_length=50, null=True, blank=True)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f'{self.code}'
 
     class Meta:
@@ -95,7 +95,7 @@ class Country(models.Model):
     is_priority = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f'{self.name}'
 
     class Meta:
@@ -110,7 +110,7 @@ class City(models.Model):
 
     country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f'{self.name} in {self.country.name}'
 
     class Meta:

@@ -83,6 +83,8 @@ class Notification(TimestampModel):
             'title': title,
             'body': description,
             'click_action': type,
+            'mutable_content': True,
+            'sound': 'default',
             'data': {
                 'notification_id': notification_id,
                 'organization': {
@@ -99,6 +101,8 @@ class Notification(TimestampModel):
             'title': title_ru,
             'body': description_ru,
             'click_action': type,
+            'mutable_content': True,
+            'sound': 'default',
             'data': {
                 'notification_id': notification_id,
                 'organization': {

@@ -15,7 +15,7 @@ urlpatterns = [
 
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
-    path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='transaction_complete'),
+    path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),
     path('statistics/saleTotals/', UserSaleTotalsView.as_view(), name='user_sale_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),

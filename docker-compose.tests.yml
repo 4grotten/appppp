@@ -23,4 +23,6 @@ services:
       - NIKITA_TEST_MODE=1
       - OER_APP_ID=1
       - FCM_KEY=***
-    command: ["sh", "-c", "timeout 60 sh -c 'until nc -z $${POSTGRES_HOST} $${POSTGRES_PORT}; do sleep 1; done' && coverage run --source='.' manage.py test; TEST_EXIT_CODE=$$?; coverage report; exit $$TEST_EXIT_CODE"]
+    volumes:
+      - ./:/app/
+    command: ["sh", "-c", "timeout 60 sh -c 'until nc -z $${POSTGRES_HOST} $${POSTGRES_PORT}; do sleep 1; done' && coverage run --source='.' manage.py test; TEST_EXIT_CODE=$$?; coverage report; coverage xml; exit $$TEST_EXIT_CODE"]

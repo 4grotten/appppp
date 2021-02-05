@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from organizations.models import Organization
 from users.models import User
 
 
@@ -19,3 +20,9 @@ class TotalStatsSerializer(serializers.Serializer):
     total_spent = serializers.DecimalField(max_digits=16, decimal_places=2)
     total_savings = serializers.DecimalField(max_digits=16, decimal_places=2)
     currency = serializers.CharField()
+
+
+class OrganizationCalendarSerializer(serializers.Serializer):
+    month_year = serializers.DateField(default=None, input_formats=["%Y-%m"])
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=True)
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all(), required=True)

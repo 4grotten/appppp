@@ -1,7 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Sum, QuerySet
+from django.db.models import Sum, QuerySet, Q
 from django.db.models.functions import Coalesce
 
 from common.exceptions import NotAcceptableException
@@ -154,3 +154,14 @@ class StatisticsService:
             )
 
         return total_spent
+
+    @staticmethod
+    def get_days_when_client_did_transactions(organization: Organization, client: User, month_year):
+        transactions = Transaction.objects.filter(
+            (Q(organization=organization) & Q(client=client)) & ~Q(
+                Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).filter(
+            updated_at__year=month_year.year).filter(updated_at__month=month_year.month).values('updated_at')
+        data = []
+        for transaction in transactions:
+            data.append(transaction.get('updated_at').strftime('%Y-%m-%d'))
+        return list(dict.fromkeys(data))

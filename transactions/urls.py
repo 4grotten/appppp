@@ -1,6 +1,7 @@
 from django.urls import path
 
-from transactions.views.stat_views import PartnersTotalStatsView, OrganizationTotalsView
+from transactions.views.stat_views import PartnersTotalStatsView, OrganizationTotalsView, \
+    OrganizationTransactionCalendarView
 from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView,
     UserTotalsView, UserTransactionsListView, UserTransactionDetailView,
@@ -28,4 +29,5 @@ urlpatterns = [
          name='unprocessed_transaction_count'),
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
+    path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 ]

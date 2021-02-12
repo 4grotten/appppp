@@ -3,11 +3,14 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils.timezone import now
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, PermissionDeniedException
+from organizations.serializers.query_param_serializers import MonthYearQueryParamSerializer
 from organizations.services.organization_services import OrganizationService
 from transactions.serializers.stats_serializers import (
-    StartEndDateSerializer, TotalStatsSerializer, StartEndProcessedByQueryParamSerializer
+    StartEndDateSerializer, TotalStatsSerializer, StartEndProcessedByQueryParamSerializer,
+    OrganizationCalendarSerializer
 )
 from transactions.services.stats_services import StatisticsService
 
@@ -52,4 +55,32 @@ class OrganizationTotalsView(GenericAPIView):
                                                              processed_by=serializer.validated_data['processed_by'],
                                                              client=serializer.validated_data['client'])
         data = TotalStatsSerializer(stats).data
+        return Response(data)
+
+
+class OrganizationTransactionCalendarView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = OrganizationCalendarSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        if not OrganizationService.user_can_see_stats(organization=organization, user=request.user):
+            raise PermissionDeniedException('No rights to check attendance in this organization')
+
+        month_year = serializer.validated_data['month_year']
+        if month_year is None:
+            month_year = now().date()
+
+        calendar_days = StatisticsService.get_days_when_client_did_transactions(organization=organization,
+                                                                                client=serializer.validated_data[
+                                                                                    'client'], month_year=month_year)
+        data = {
+            'calendar': calendar_days
+        }
         return Response(data)

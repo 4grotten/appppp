@@ -338,7 +338,7 @@ class OrganizationService:
                                              country: Union[Country, None] = None,
                                              city: Union[City, None] = None) -> QuerySet:
         additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
-        queryset = Organization.objects.filter(id__in=additional).order_by('?')
+        queryset = Organization.objects.prefetch_related('types').select_related('image').filter(id__in=additional).order_by('?')
 
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))

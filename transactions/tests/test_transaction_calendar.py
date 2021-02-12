@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -17,7 +18,6 @@ from users.tests.factories import UserFactory, TokenFactory
 
 class CompleteTransactionTestCase(APITestCase):
     def setUp(self):
-        self.url = reverse('v1:org_client_calendar')
         self.user = UserFactory(phone_number='123456789')
         self.token = TokenFactory(user=self.user)
         self.header = {"HTTP_AUTHORIZATION": f"Token {self.token}"}
@@ -29,20 +29,80 @@ class CompleteTransactionTestCase(APITestCase):
 
         self.unprocessed_transaction = TransactionFactory(client=self.client_user, processed_by=self.user,
                                                           organization=self.organization, currency=self.currency)
+        self.url = reverse('v1:org_client_calendar')
 
-    def test_accepted_get_calendar(self):
+    @patch('django.utils.timezone.now')
+    def test_accepted_get_calendar(self, patched_now: Mock):
+        url_parameters = {'client': self.client_user.id, 'organization': self.organization.id, 'month_year': '2021-02'}
+
+        patched_now.return_value = datetime(2021, 2, 3, 11, 15, 0)
+
         processed_transaction_online = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=True, status='accepted', type='online',
-            organization=self.organization, currency=self.currency,
-            created_at=datetime(year=2021, month=2, day=7,
-                                hour=12, minute=42, second=32)
+            organization=self.organization, currency=self.currency
         )
-        processed_transaction_offline = TransactionFactory(client=self.client_user, processed_by=self.user,
-                                                           is_processed=True, status='accepted', type='offline',
-                                                           organization=self.organization, currency=self.currency)
-        processed_transaction_unprocessed = TransactionFactory(client=self.client_user, processed_by=self.user,
-                                                               is_processed=False, status='in_progress',
-                                                               type='online',
-                                                               organization=self.organization,
-                                                               currency=self.currency)
+
+        processed_transaction_online_at_same_day = TransactionFactory(
+            client=self.client_user, processed_by=self.user,
+            is_processed=True, status='accepted', type='online',
+            organization=self.organization, currency=self.currency,
+        )
+
+        patched_now.return_value = datetime(2021, 2, 5, 11, 15, 0)
+
+        processed_transaction_offline = TransactionFactory(
+            client=self.client_user, processed_by=self.user,
+            is_processed=True, status='accepted', type='offline',
+            organization=self.organization, currency=self.currency,
+        )
+
+        patched_now.return_value = datetime(2021, 2, 6, 11, 15, 0)
+
+        processed_transaction_unprocessed = TransactionFactory(
+            client=self.client_user, processed_by=self.user,
+            is_processed=False, status='in_progress',
+            type='online',
+            organization=self.organization, currency=self.currency,
+        )
+        patched_now.return_value = datetime(2021, 2, 7, 11, 15, 0)
+
+        processed_transaction_unprocessed = TransactionFactory(
+            client=self.client_user, processed_by=self.user,
+            is_processed=False, status='in_progress',
+            type='offline',
+            organization=self.organization, currency=self.currency,
+        )
+        expected_data = {"calendar": ["2021-02-06", "2021-02-05", "2021-02-03"]}
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, expected_data)
+
+    def test_serializer_fail_on_client_get_calendar(self):
+        url_parameters = {'organization': self.organization.id, }
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 406)
+
+    def test_serializer_fail_on_organization_get_calendar(self):
+        url_parameters = {'client': self.client_user.id, }
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 406)
+
+    def test_serializer_fail_on_month_year_get_calendar(self):
+        url_parameters = {'client': self.client_user.id, 'month_year': '02-2002',
+                          'organization': self.organization.id, }
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 406)
+
+    def test_with_no_month_year_get_calendar(self):
+        url_parameters = {'client': self.client_user.id, 'organization': self.organization.id}
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_failed_no_permission(self):
+        user = UserFactory(phone_number='123456769')
+        url_parameters = {'client': self.client_user.id, 'organization': self.organization.id}
+        token = TokenFactory(user=user)
+        header = {"HTTP_AUTHORIZATION": f"Token {token}"}
+        response = self.client.get(self.url, url_parameters, **header, content_type='application/json')
+        self.assertEqual(response.status_code, 403)

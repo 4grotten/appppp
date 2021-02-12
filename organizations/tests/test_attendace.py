@@ -29,7 +29,7 @@ class UserAttendanceInfo(APITestCase):
         self.header = {"HTTP_AUTHORIZATION": f"Token {self.token}"}
         self.organization = OrganizationFactory(owner=self.user_owner)
         self.membership = MembershipFactory(organization=self.organization, user=self.user_employee)
-        self.membership = MembershipFactory(organization=self.organization, user=self.user_employee_with_no_permission,
+        self.membership_with_no_permission = MembershipFactory(organization=self.organization, user=self.user_employee_with_no_permission,
                                             role=self.role)
 
     @patch('notifications.tasks.sent_notification.delay')
@@ -44,13 +44,13 @@ class UserAttendanceInfo(APITestCase):
 
         notification.assert_has_calls([
             call(description=' ',
-                 extra_data={'role': 'Owner', 'employee_id': self.user_owner.id,
+                 extra_data={'role': 'Owner', 'employee_id': self.membership.id,
                              'organization': self.organization.title},
                  mode='personal', notification_type='attendance_in', organization_id=self.organization.id,
                  recipient_id=self.user_employee.id, sender_id=self.user_owner.id,
                  title=f'Input {self.organization.title}'),
             call(description=' ',
-                 extra_data={'employee_id': self.user_owner.id, 'organization': self.organization.title},
+                 extra_data={'employee_id': self.membership.id, 'organization': self.organization.title},
                  mode='personal',
                  notification_type='check_attendance_in', organization_id=self.organization.id,
                  recipient_id=self.user_owner.id, sender_id=self.user_employee.id,
@@ -72,24 +72,24 @@ class UserAttendanceInfo(APITestCase):
         self.assertFalse(response.data.get('is_active'))
         notification.assert_has_calls([
             call(description=' ',
-                 extra_data={'role': 'Owner', 'employee_id': self.user_owner.id,
+                 extra_data={'role': 'Owner', 'employee_id': self.membership.id,
                              'organization': self.organization.title},
                  mode='personal', notification_type='attendance_in', organization_id=self.organization.id,
                  recipient_id=self.user_employee.id, sender_id=self.user_owner.id,
                  title=f'Input {self.organization.title}'),
             call(description=' ',
-                 extra_data={'employee_id': self.user_owner.id, 'organization': self.organization.title},
+                 extra_data={'employee_id': self.membership.id, 'organization': self.organization.title},
                  mode='personal',
                  notification_type='check_attendance_in', organization_id=self.organization.id,
                  recipient_id=self.user_owner.id, sender_id=self.user_employee.id,
                  title=f'Entry pass {self.organization.title}'),
-            call(description=' ', extra_data={'role': 'Owner', 'employee_id': self.user_owner.id,
+            call(description=' ', extra_data={'role': 'Owner', 'employee_id': self.membership.id,
                                               'organization': self.organization.title},
                  mode='personal', notification_type='attendance_out', organization_id=self.organization.id,
                  recipient_id=self.user_employee.id, sender_id=self.user_owner.id,
                  title=f'Exit {self.organization.title}'),
             call(description=' ',
-                 extra_data={'employee_id': self.user_owner.id, 'organization': self.organization.title},
+                 extra_data={'employee_id': self.membership.id, 'organization': self.organization.title},
                  mode='personal',
                  notification_type='check_attendance_out', organization_id=self.organization.id,
                  recipient_id=self.user_owner.id, sender_id=self.user_employee.id,

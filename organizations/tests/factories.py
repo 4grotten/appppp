@@ -1,7 +1,7 @@
 import factory
 
 from organizations.models import (
-    Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership, CashbackGroup
+    Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership, CashbackGroup, Membership, Role
 )
 from users.tests.factories import UserFactory
 
@@ -43,3 +43,20 @@ class OrganizationClientFinancialStatusFactory(factory.django.DjangoModelFactory
     user = factory.SubFactory(UserFactory)
     organization = factory.SubFactory(OrganizationFactory)
     card = factory.SubFactory(DiscountCardFactory)
+
+
+class RoleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Role
+
+    organization = factory.SubFactory(OrganizationFactory)
+    title = factory.Sequence(lambda n: f'Role{n}')
+
+
+class MembershipFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Membership
+
+    organization = factory.SubFactory(OrganizationFactory)
+    user = factory.SubFactory(UserFactory)
+    role = factory.SubFactory(RoleFactory)

@@ -14,7 +14,6 @@ from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
 
 
-@expectedFailure
 class CompleteTransactionTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('v1:transaction_complete')

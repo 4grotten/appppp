@@ -43,6 +43,7 @@ class AttendanceService:
         if not MembershipService.is_organization_member(user=employee, organization=organization):
             raise NotAcceptableException('Given user is not a member of this organization')
 
+        # ToDo search why this code is needed
         if not checker_role:
             role = OrganizationService.get_user_role_in_organization(organization=organization, user=recorded_by)
         else:

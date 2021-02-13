@@ -6,7 +6,6 @@ services:
       context: .
     depends_on:
       - postgres
-      - celery
   rabbit:
     image: rabbitmq:3.8-alpine
   postgres:

@@ -26,6 +26,8 @@ services:
   app:
     build:
       target: development
+    depends_on:
+      - celery
     environment:
       <<: *env
     ports:

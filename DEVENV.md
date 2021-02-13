@@ -1,19 +1,19 @@
 # HOWTO: Set up dev env (DRAFT)
-- [Preparing local development environment](#Preparing local development environment)
-  - [Required programms](#Required programs)
-  - [Getting source code](#Getting source code)
-  - [If you want use different Python version](#If you want use different Python version)
-    - [Installing pyenv](#Installing pyenv)
-	- [Installing proper Python version](#Installing proper Python version)
-  - [Install pipenv](#Install pipenv)
-  - [Install Pipenv environment](#Install Pipenv environment)
-- [Preparing docker development environment](#Preparing docker development environment)
-  - [Running docker-compose base env](#Running docker-compose base environment)
-  - [Running all env in docker-compose](#Running all environment in docker-compose)
+- [Preparing local development environment](#preparing-local-development-environment)
+  - [Required programs](#required-programs)
+  - [Getting source code](#getting-source-code)
+  - [If you want use different Python version](#if-you-want-use-different-python-version)
+    - [Installing pyenv](#installing-pyenv)
+	- [Installing proper Python version](#installing-proper-python-version)
+  - [Install pipenv](#install-pipenv)
+  - [Install Pipenv environment](#install-pipenv-environment)
+- [Preparing docker development environment](#preparing-docker-development-environment)
+  - [Running docker-compose base env](#running-docker-compose-base-environment)
+  - [Running all env in docker-compose](#running-all-environment-in-docker-compose)
 
-##Preparing local development environment
+## Preparing local development environment
 
-###Required programs
+### Required programs
 - docker
 - docker-compose
 - git (lol, you are developer)
@@ -24,14 +24,14 @@
 - libjpeg
 - gdal
 
-###Getting source code
+### Getting source code
 1. Clone this repository
 2. Go to local repository directory (with cd, of course)
 
-###If you want use different Python version
+### If you want use different Python version
 Use this instruction only if your system Python version is too old.
 If you satisfied with system version, goto [Install pipenv](#Install pipenv)
-####Installing pyenv
+#### Installing pyenv
 1. Install pyenv with automatic installer
 ```bash
 curl https://pyenv.run | bash
@@ -40,7 +40,7 @@ curl https://pyenv.run | bash
 
 If you have problems, see https://github.com/pyenv/pyenv/wiki/Common-build-problems
 
-####Installing proper Python version
+#### Installing proper Python version
 1. Install Python with
 ```
 pyenv install <version number>
@@ -50,14 +50,14 @@ pyenv install <version number>
 pyenv local <version number>
 ```
 
-###Install pipenv
+### Install pipenv
 1. Install pip env current environment
 ```bash
 pip install pipenv
 ```
 If you use system python maybe you need run pip with sudo or run pip3
 
-###Install Pipenv environment
+### Install Pipenv environment
 1. Run command
 ```bash
 pipenv install
@@ -65,14 +65,30 @@ pipenv install
 After installation is done, you have installed and configured virual environment with all dependency installed
 
 
-##Preparing docker development environment
+## Preparing docker development environment
 
-###Running docker-compose base environment
-For base development processes, you may run `./compose <params>` script for get running database and other needed software.
+### Running docker-compose base environment
+For base development processes, you may run
+```bash
+./compose <params>
+```
+script for get running database and other needed software.
 
-Example: `./compose up -d` will run only database and rabbitmq with forwarded ports to localhost
+Example:
+```bash
+./compose up -d
+```
+will run only **Database** and **RabbitMQ** with forwarded ports to localhost
 
-###Running all environment in docker-compose
-If you want to run all development environment in Docker, use `./compose full <params>` instead.
+### Running all environment in docker-compose
+If you want to run all development environment in Docker, use _full_ argument instead, e.g:
+```bash
+./compose full <params>
+```
 
-Example: `./compose full up -d` will run all services, e.g. database, mq, celery, application
+Example:
+
+```bash
+./compose full up -d
+```
+will run all services, e.g. **Database**, **RabbitMQ**, **Celery**, **Flower**, **Application** with forwarded ports to localhost

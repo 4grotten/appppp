@@ -6,9 +6,18 @@ services:
       context: .
     depends_on:
       - postgres
+      - celery
+  celery:
+    build:
+      context: .
+      target: celery
+    depends_on:
+      - rabbit
+  rabbit:
+    image: rabbitmq:3.8-alpine
   postgres:
     image: postgis/postgis:latest
     environment:
-      - POSTGRES_DB=qrcode
-      - POSTGRES_PASSWORD=qrcode
-      - POSTGRES_USER=qrcode
+      POSTGRES_DB: "qrcode"
+      POSTGRES_PASSWORD: "qrcode"
+      POSTGRES_USER: "qrcode"

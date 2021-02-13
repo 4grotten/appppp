@@ -19,6 +19,11 @@ COPY . /app/
 
 
 
+FROM env as celery
+
+RUN pip install flower
+
+
 FROM env as development
 
 RUN pipenv lock -r --dev-only --keep-outdated | pip install -r /dev/stdin && pipenv --rm

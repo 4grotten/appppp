@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+compose_base() {
+  docker-compose -f docker-compose.base.yml -f docker-compose.dev-base.yml "$@"
+}
+
+compose_full() {
+  docker-compose -f docker-compose.base.yml -f docker-compose.dev-full.yml "${@:2}"
+}
+
+case "$1" in
+  full)
+        compose_full "$@"
+        ;;
+  *)
+        compose_base "$@"
+esac
+

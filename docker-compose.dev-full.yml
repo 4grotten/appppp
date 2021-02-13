@@ -1,0 +1,60 @@
+version: "3.7"
+
+x-env: &env
+  AWS_ACCESS_KEY_ID: "***"
+  AWS_SECRET_ACCESS_KEY: "***"
+  AWS_STORAGE_BUCKET_NAME: "apofiz-media"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_DB: "qrcode"
+  POSTGRES_USER: "qrcode"
+  POSTGRES_PASSWORD: "qrcode"
+  SECRET_KEY: "notasecret"
+  DEBUG: "true"
+  DJANGO_SETTINGS_MODULE: "project.settings.base"
+  ALLOWED_HOSTS: "*"
+  POSTGRES_PORT: 5432
+  NIKITA_USERNAME: "***"
+  NIKITA_PASSWORD: "***"
+  NIKITA_SENDER: "***"
+  NIKITA_TEST_MODE: 1
+  OER_APP_ID: 1
+  FCM_KEY: "***"
+  CELERY_DSN: "amqp://rabbit:5672"
+  C_FORCE_ROOT: "true"
+
+services:
+  app:
+    build:
+      target: development
+    depends_on:
+      - celery
+    environment:
+      <<: *env
+    ports:
+      - 127.0.0.1:8000:8000
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+  celery:
+    build:
+      context: .
+      target: celery
+    depends_on:
+      - rabbit
+    environment:
+      <<: *env
+    command: ["celery", "-A", "project", "worker", "--loglevel=INFO"]
+  flower:
+    build:
+      context: .
+      target: celery
+    environment:
+      <<: *env
+    depends_on:
+      - celery
+    ports:
+      - 127.0.0.1:5555:5555
+    command: ["celery", "flower", "-A", "project", "-address=0.0.0.0", "--port=5555"]
+  postgres:
+    volumes:
+      - ./.postgres:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:5432:5432

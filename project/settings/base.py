@@ -250,4 +250,4 @@ FCM_DJANGO_SETTINGS = {
 }
 
 HOST_URL = config('DJANGO_HOST_URL', default='https://apofiz.com/media/')
-CELERY_BROKER_URL = config('CELERY_DSN')
+CELERY_BROKER_URL = config('CELERY_DSN', 'amqp://localhost:5672')

@@ -1,6 +1,6 @@
 # HOWTO: Set up dev env (DRAFT)
 - [Preparing local development environment](#Preparing local development environment)
-  - [Required programms](#Required programms)
+  - [Required programms](#Required programs)
   - [Getting source code](#Getting source code)
   - [If you want use different Python version](#If you want use different Python version)
     - [Installing pyenv](#Installing pyenv)
@@ -8,10 +8,12 @@
   - [Install pipenv](#Install pipenv)
   - [Install Pipenv environment](#Install Pipenv environment)
 - [Preparing docker development environment](#Preparing docker development environment)
+  - [Running docker-compose base env](#Running docker-compose base environment)
+  - [Running all env in docker-compose](#Running all environment in docker-compose)
 
 ##Preparing local development environment
 
-###Required programms
+###Required programs
 - docker
 - docker-compose
 - git (lol, you are developer)
@@ -64,3 +66,13 @@ After installation is done, you have installed and configured virual environment
 
 
 ##Preparing docker development environment
+
+###Running docker-compose base environment
+For base development processes, you may run `./compose <params>` script for get running database and other needed software.
+
+Example: `./compose up -d` will run only database and rabbitmq with forwarded ports to localhost
+
+###Running all environment in docker-compose
+If you want to run all development environment in Docker, use `./compose full <params>` instead.
+
+Example: `./compose full up -d` will run all services, e.g. database, mq, celery, application

@@ -5,7 +5,7 @@ from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
 from organizations.models import Organization
-from project.settings.base import HOST_URL
+from django.conf import settings
 from .constants import (get_titles_descriptions_from_type,
                         DISCOUNT_NOTIFICATION_MODE,
                         SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
@@ -121,9 +121,9 @@ class Notification(TimestampModel):
         }
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')
-        fcm_devices_ru.send_message(**notification_payload_ru)
+        fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en')
-        fcm_devices_en.send_message(**notification_payload)
+        fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
     @staticmethod
     def get_organization_small_image(organization: Organization):

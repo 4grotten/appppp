@@ -249,5 +249,7 @@ FCM_DJANGO_SETTINGS = {
     "DELETE_INACTIVE_DEVICES": False,
 }
 
+FCM_DRY_RUN_ENABLE = config('FCM_DRY_RUN_ENABLE', default=True, cast=bool)
+
 HOST_URL = config('DJANGO_HOST_URL', default='https://apofiz.com/media/')
 CELERY_BROKER_URL = config('CELERY_DSN', 'amqp://localhost:5672')

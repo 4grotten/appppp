@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4e2dd7df7fcd515e5e8b5c99d5c9b63ad54a4adaa05acb670f21787f35a648b7"
+            "sha256": "57946741b1b8d6a7338130e6bb45c155b8a92bd08b9f954c21492b34444d9a6e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -124,7 +124,7 @@
         },
         "django-imagekit": {
             "editable": true,
-            "git": "https://github.com/agrelle/django-imagekit",
+            "git": "https://github.com/agrelle/django-imagekit.git",
             "hashes": [
                 "sha256:304c3379f6a5cac387e47ace11195a603ad3cb01e3e951b45489824d25b00359",
                 "sha256:6ec0afb77cdf52cd453c9fc2c10ef350d111edfd6ce53c5977aa8a0e22cee00c"

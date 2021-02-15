@@ -1,4 +1,8 @@
 import posixpath
+import hashlib
+import datetime
+import uuid
+from pathlib import Path
 
 from django.utils.crypto import get_random_string
 
@@ -25,6 +29,16 @@ def upload_file_with_original_file_name(instance, filename):
         opts.app_label,
         instance.__class__.__name__.lower(),
     ))(instance, filename)
+
+
+def upload_file_with_unique_name(instance, filename):
+    return Path(
+        hashlib.sha256(
+            datetime.date.today().strftime("%Y%m").encode()
+        ).hexdigest()[32:-16]
+    ) / Path(str(uuid.uuid4())).with_suffix(
+        Path(filename).suffix
+    )
 
 
 def method_permission_classes(classes):

@@ -1,7 +1,7 @@
 import factory
 from rest_framework.authtoken.models import Token
 
-from users.models import User
+from users.models import User, TemporaryCode
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -14,5 +14,12 @@ class UserFactory(factory.django.DjangoModelFactory):
 class TokenFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Token
+
+    user = factory.SubFactory(UserFactory)
+
+
+class TemporaryCodeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = TemporaryCode
 
     user = factory.SubFactory(UserFactory)

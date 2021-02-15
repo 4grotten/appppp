@@ -26,7 +26,7 @@ RUN pip install flower
 
 FROM env as development
 
-RUN pipenv install --dev-only --system --deploy
+RUN pipenv install --dev --system --deploy
 
 
 

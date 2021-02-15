@@ -32,9 +32,9 @@ def upload_file_with_original_file_name(instance, filename):
 
 
 def upload_file_with_unique_name(instance, filename):
-    return Path(
+    return Path('media') / Path(
         hashlib.sha256(
-            datetime.date.today().strftime("%Y%m").encode()
+            datetime.date.today().strftime('%Y%m').encode()
         ).hexdigest()[32:-16]
     ) / Path(str(uuid.uuid4())).with_suffix(
         Path(filename).suffix

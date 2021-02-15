@@ -13,7 +13,7 @@ WORKDIR /app
 COPY ./Pipfile /app/
 COPY ./Pipfile.lock /app/
 RUN pip install pipenv
-RUN pipenv lock -r --keep-outdated | pip install -r /dev/stdin && pipenv --rm
+RUN pipenv install --system --deploy
 
 COPY . /app/
 
@@ -26,7 +26,7 @@ RUN pip install flower
 
 FROM env as development
 
-RUN pipenv lock -r --dev-only --keep-outdated | pip install -r /dev/stdin && pipenv --rm
+RUN pipenv install --dev --system --deploy
 
 
 

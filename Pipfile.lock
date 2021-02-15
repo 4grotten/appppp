@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "711011b2fdc1d6d28aa5128c24505d0e44357528a24dfb7edfe7fd32eede0d9f"
+            "sha256": "497e424403110c2a2b8654f8e7162a5c74ae9503645c8e8a2d75ff827883a6e0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -123,12 +123,13 @@
             "version": "==2.4.0"
         },
         "django-imagekit": {
+            "editable": false,
+            "git": "https://github.com/agrelle/django-imagekit.git",
             "hashes": [
                 "sha256:304c3379f6a5cac387e47ace11195a603ad3cb01e3e951b45489824d25b00359",
                 "sha256:6ec0afb77cdf52cd453c9fc2c10ef350d111edfd6ce53c5977aa8a0e22cee00c"
             ],
-            "index": "pypi",
-            "version": "==4.0.2"
+            "ref": "6c4c10841621d26b0a74487d8081f66ac441ac34"
         },
         "django-map-widgets": {
             "hashes": [

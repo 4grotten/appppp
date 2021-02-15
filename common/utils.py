@@ -36,7 +36,7 @@ def upload_file_with_original_file_name(instance, filename):
 
 
 def upload_file_with_unique_name(instance, filename):
-    return Path('media') / Path(
+    return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(
         hashlib.sha256(
             datetime.date.today().strftime('%Y%m').encode()
         ).hexdigest()[32:-16]

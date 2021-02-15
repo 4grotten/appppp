@@ -1,5 +1,4 @@
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
@@ -48,7 +47,7 @@ class ShopItem(TimestampModel):
     article = models.CharField(max_length=64, null=True, blank=True)
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
-    youtube_links = JSONField(null=True)
+    youtube_links = models.JSONField(null=True)
 
     is_published = models.BooleanField(default=True)
 

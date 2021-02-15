@@ -10,7 +10,7 @@ from imagekit.models import ImageSpecField
 from urllib.request import urlretrieve, urlopen
 
 from common.processors import ResizeWatermarkedSpec
-from common.utils import upload_file_with_original_file_name
+from common.utils import upload_file_with_unique_name
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -46,7 +46,7 @@ class File(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
     file = models.ImageField(
-        upload_to=upload_file_with_original_file_name,
+        upload_to=upload_file_with_unique_name,
         help_text='Image that you want to store',
         max_length=1000
     )

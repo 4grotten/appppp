@@ -161,6 +161,7 @@ STATICFILES_DIRS = (
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+MEDIA_UPLOAD_PREFIX = config('DJANGO_MEDIA_UPLOAD_PREFIX', default='/media/')
 
 # AWS settings
 
@@ -177,6 +178,9 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = 'imagekit.cachefiles.backends.Async'
 IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategies.Optimistic'
+IMAGEKIT_CACHEFILE_NAMER = 'common.utils.imagekit_filename_generator'
+IMAGEKIT_SPEC_CACHEFILE_NAMER = IMAGEKIT_CACHEFILE_NAMER
+IMAGEKIT_CACHEFILE_DIR = 'cache/images'
 
 CELERY_ACCEPT_CONTENT = ['json', 'application/text', 'pickle']
 

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'fcm_django',
     'drf_multiple_model',
     'storages',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [

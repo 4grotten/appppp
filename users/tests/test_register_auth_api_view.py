@@ -18,12 +18,9 @@ class RegisterAuthApiViewTestCase(APITestCase):
     # TODO: Need to add phone_number validation
     def test_user_not_register(self):
         data = {
-            "phone_number": "здесь отправляю гавно"
+            "phone_number": "huinya kakaya to"
         }
-        expected_data = {
-            'message': 'Invalid input',
-            'errors': ''
-        }
+        expected_data = {"message": "Invalid input", "errors": {"phone_number": ["Enter a valid phone number."]}}
 
         response = self.client.post(
             self.url,
@@ -49,13 +46,13 @@ class RegisterAuthApiViewTestCase(APITestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)
 
     def test_user_found_temporary_code_not_exists(self):
-        user = UserFactory(is_new_user=True)
+        user = UserFactory(is_new_user=True, phone_number='+996550778133')
         data = {
-            "phone_number": user.phone_number
+            "phone_number": str(user.phone_number)
         }
         expected_data = {
             'message': 'User found',
@@ -73,11 +70,11 @@ class RegisterAuthApiViewTestCase(APITestCase):
         self.assertJSONEqual(response.content, expected_data)
 
     def test_user_found_with_temporary_code(self):
-        user = UserFactory(phone_number="996550778133", is_new_user=True)
+        user = UserFactory(phone_number="+996550778133", is_new_user=True)
         TemporaryCodeFactory(user=user, is_used=True)
         token = TokenFactory(user=user)
         data = {
-            "phone_number": user.phone_number
+            "phone_number": str(user.phone_number)
         }
         expected_data = {
             'message': 'User found',

@@ -46,7 +46,7 @@ class WatermarkImageCreateView(ImageCreateView):
 class CountriesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CountrySerializer
-    queryset = Country.objects.all()
+    queryset = Country.objects.select_related('currency').all()
     pagination_class = None
 
 

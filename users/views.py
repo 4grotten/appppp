@@ -121,8 +121,6 @@ class ResendTemporaryCodeAPIView(APIView):
         elif resend_type == REGISTER_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
             TemporaryCodeService.create_and_send(user=user)
-        else:
-            raise ValidationException('Invalid type')
 
         return Response(data={
             'message': 'Code has successfully sent'

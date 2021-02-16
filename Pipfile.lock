@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "497e424403110c2a2b8654f8e7162a5c74ae9503645c8e8a2d75ff827883a6e0"
+            "sha256": "739072cdcbcfb253139a4b7ba67b8fcf17263b2cfacbe81e932c94bc86acbce8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -145,6 +145,17 @@
             ],
             "index": "pypi",
             "version": "==0.15.2"
+        },
+        "django-phonenumber-field": {
+            "extras": [
+                "phonenumbers"
+            ],
+            "hashes": [
+                "sha256:1eb7af3a108744665f7c3939d38aa15b3728c57d13d45d656b0a2aa11e8cdc3c",
+                "sha256:adb46905cc4ecb19d8494424e1c4352f24946bb472340a2a17257d44bf8228e6"
+            ],
+            "index": "pypi",
+            "version": "==5.0.0"
         },
         "django-rest-auth": {
             "hashes": [
@@ -309,6 +320,13 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==1.20.1"
+        },
+        "phonenumbers": {
+            "hashes": [
+                "sha256:0aa0f5e1382d292a7ff2f8bc08673126521461c7f908e0220756449a734d8fef",
+                "sha256:f60b1cc7b424cdadf5c291ed839d1c623a46ca1e4d0a04d3e85d1fdf754c1a26"
+            ],
+            "version": "==8.12.18"
         },
         "pilkit": {
             "hashes": [

@@ -7,12 +7,13 @@ from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_services import OrganizationService
 from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
+from phonenumber_field.serializerfields import PhoneNumberField
 
 User = get_user_model()
 
 
 class RegisterAuthSerializer(serializers.Serializer):
-    phone_number = serializers.CharField()
+    phone_number = PhoneNumberField()
 
 
 class TemporaryCodeSerializer(serializers.Serializer):

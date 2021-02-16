@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 from django.contrib.auth.models import AbstractUser
+from phonenumber_field.modelfields import PhoneNumberField
 
 from django.db import models
 from common.models import TimestampModel
@@ -15,7 +16,7 @@ class User(AbstractUser, TimestampModel):
     last_name = models.CharField(max_length=255, verbose_name='Last Name', null=True, blank=True)
     full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
     email = models.EmailField(verbose_name='Email', unique=True)
-    phone_number = models.CharField(max_length=255, unique=True)
+    phone_number = PhoneNumberField(unique=True, max_length=255)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
     date_of_birth = models.DateField(null=True, blank=True)
     avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)

@@ -30,7 +30,7 @@ class VerifyTemporaryCodeTestCase(APITestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
         self.assertJSONEqual(response.content, expected_data)
 
     def test_verify_temporary_code(self):

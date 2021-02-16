@@ -52,7 +52,7 @@ class ResendTemporaryCodeAPIViewTestCase(APITestCase):
         user = UserFactory(phone_number="996550178133")
         TemporaryPhoneNumberFactory(phone_number=user.phone_number)
         data = {
-            "phone_number": user.phone_number,
+            "phone_number": str(user.phone_number),
             "type": CHANGE_AUTH_NUMBER_TYPE
         }
         expected_data = {
@@ -71,7 +71,7 @@ class ResendTemporaryCodeAPIViewTestCase(APITestCase):
     def test_create_and_send_temporary_code(self):
         user = UserFactory(phone_number="996550278133")
         data = {
-            "phone_number": user.phone_number,
+            "phone_number": str(user.phone_number),
             "type": REGISTER_AUTH_TYPE
         }
         expected_data = {

@@ -1,8 +1,4 @@
 import json
-<<<<<<< HEAD
-import unittest
-=======
->>>>>>> 31-add-tests-for-registerauthapiview
 
 from django.urls import reverse
 from rest_framework import status

@@ -38,7 +38,7 @@ class VerifyTemporaryCodeTestCase(APITestCase):
         temporary_code = TemporaryCodeFactory(user=user)
         token = TokenFactory(user=user)
         data = {
-            "phone_number": user.phone_number,
+            "phone_number": str(user.phone_number),
             "code": temporary_code.code
         }
         expected_data = {

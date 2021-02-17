@@ -31,28 +31,6 @@ class ProfileInitialAPIViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertJSONEqual(response.content, expected_data)
 
-
-    def test_required_fields(self):
-        user = UserFactory(phone_number="996550778131")
-        self.client.force_authenticate(user=user)
-        expected_data = {
-            "message": "Invalid input",
-            "errors": {
-                "avatar_id": ["This field is required."],
-                "email": ["This field is required."],
-                "gender": ["This field is required."]
-            }
-        }
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps({}),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-        self.assertJSONEqual(response.content, expected_data)
-
     def test_required_fields(self):
         user = UserFactory(phone_number="996550778131")
         self.client.force_authenticate(user=user)

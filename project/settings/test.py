@@ -20,6 +20,8 @@ CACHES = {
     }
 }
 
+IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = 'imagekit.cachefiles.backends.Simple'
+
 TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
 
 TEST_OUTPUT_FILE_NAME = 'junittestreport.xml'

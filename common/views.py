@@ -72,20 +72,3 @@ class CountryCitySearchView(ObjectMultipleModelAPIView):
             }
         )
         return query_list
-
-
-def index(request):  # pragma: no cover
-    return render(request, 'dist/index.html', {})
-
-
-def organization_detail_view(request, pk):  # pragma: no cover
-    organization = OrganizationService.get(pk=pk)
-    description = organization.description
-    # description = description.replace(r'\n', ' ').replace(r'\r', '')
-    description1 = re.sub("\n|\r", " ", description)
-
-    context = {
-        'organization': organization,
-        'description': description1
-    }
-    return render(request, 'dist/index.html', context)

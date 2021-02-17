@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
 
-from common.views import index, organization_detail_view
 from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
 
 v1 = ([
@@ -22,12 +21,8 @@ urlpatterns = [
     path('rest-auth/', include('rest_auth.urls')),
     path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
     path('api/v1/devicesSettings/', FCMDeviceSettingsAPIView.as_view(), name='device_settings'),
-    path('organizations/<int:pk>', organization_detail_view, name='organization_detail_view'),
 ]
 
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-urlpatterns += [
-    re_path(r'^.*', index, name='unmatched')
-]
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -2,6 +2,7 @@ import factory
 from rest_framework.authtoken.models import Token
 
 from users.models import User, TemporaryCode, TemporaryPhoneNumber
+from common.tests.factories import FileFactory
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -9,6 +10,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = User
 
     phone_number = factory.Sequence(lambda n: f'+996777000{n}')
+    avatar = factory.SubFactory(FileFactory)
 
 
 class TokenFactory(factory.django.DjangoModelFactory):

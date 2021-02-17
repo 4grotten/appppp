@@ -98,6 +98,22 @@ class Notification(TimestampModel):
                 'mutable_content': True,
             },
         }
+        notification_payload_android = {
+            'data': {
+                'title': title,
+                'body': description,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'extra_data': extra_data,
+                'type': type
+            }
+        }
         notification_payload_ru = {
             'title': title_ru,
             'body': description_ru,
@@ -119,10 +135,31 @@ class Notification(TimestampModel):
             },
         }
 
-        fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru')
+        notification_payload_ru_android = {
+            'data': {
+                'title': title_ru,
+                'body': description_ru,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'extra_data': extra_data,
+                'type': type
+            }
+        }
+
+        fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru').exclude(type='android')
         fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
-        fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en')
+        fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en').exclude(type='android')
         fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')
+        fcm_devices_en_android = notification_setting.fcm_device.filter(settingstotoken__language='en', type='android')
+        fcm_devices_en_android.send_message(**notification_payload_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru_android.send_message(**notification_payload_ru_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
     @staticmethod
     def get_organization_small_image(organization: Organization):

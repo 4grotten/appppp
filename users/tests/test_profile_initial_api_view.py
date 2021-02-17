@@ -14,8 +14,6 @@ from users.tests.factories import (
 
 
 class ProfileInitialAPIViewTestCase(APITestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self.url = reverse('v1:init_profile')
 

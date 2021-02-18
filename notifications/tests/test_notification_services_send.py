@@ -1,8 +1,8 @@
 from django.test import TestCase
-from notifications.models import Notification, NotificationMode
+from notifications.models import Notification, PARTNER_MODE
 from unittest.mock import patch, Mock, call
 
-from notifications.tests.factories import NotificationSettingFactory, NotificationFactory, NotificationModeFactory, \
+from notifications.tests.factories import NotificationSettingFactory, NotificationFactory, \
     FCMDeviceFactory
 from users.tests.factories import UserFactory
 
@@ -25,7 +25,7 @@ class NotificationSendMessageTest(TestCase):
                                        title_ru=self.notification.title_ru,
                                        description=self.notification.description,
                                        description_ru=self.notification.description_ru,
-                                       mode=self.notification.mode.name,
+                                       mode=self.notification.mode,
                                        notification_id=self.notification.id,
                                        organization=self.notification.organization,
                                        type=self.notification.type,
@@ -36,8 +36,7 @@ class NotificationSendMessageTest(TestCase):
     def test_do_not_sent_because_of_settings_send_notification(self, mocked_send_message: Mock):
         user = UserFactory(phone_number='+996555422122')
         notification_settings = NotificationSettingFactory(user=user, organization_notifications=False)
-        mode, _ = NotificationMode.objects.get_or_create(name='partner')
-        notification = NotificationFactory(mode=mode)
+        notification = NotificationFactory(mode=PARTNER_MODE)
         notification_android_device = FCMDeviceFactory(type='android')
         notification_ios_device = FCMDeviceFactory(type='ios')
         notification_web_device = FCMDeviceFactory(type='web')
@@ -48,7 +47,7 @@ class NotificationSendMessageTest(TestCase):
                                        title_ru=notification.title_ru,
                                        description=notification.description,
                                        description_ru=notification.description_ru,
-                                       mode=notification.mode.name,
+                                       mode=notification.mode,
                                        notification_id=notification.id,
                                        organization=notification.organization,
                                        type=notification.type,

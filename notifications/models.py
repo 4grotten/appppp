@@ -7,6 +7,7 @@ from organizations.models import Organization
 from django.conf import settings
 from .constants import (get_titles_descriptions_from_type,
                         DISCOUNT_NOTIFICATION_MODE,
+                        NOTIFICATION_MODES,
                         SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
                         NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE, PRODUCT_MODE)
 
@@ -29,7 +30,7 @@ class Notification(TimestampModel):
     is_read = models.BooleanField(default=False)
     organization = models.ForeignKey('organizations.Organization', on_delete=models.SET_NULL, blank=True, null=True,
                                      related_name='organization_notifications')
-    mode = models.ForeignKey(NotificationMode, on_delete=models.PROTECT, related_name='notifications')
+    mode = models.CharField(max_length=255, choices=NOTIFICATION_MODES)
     type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
     extra_data = models.JSONField(null=True)
 
@@ -56,7 +57,7 @@ class Notification(TimestampModel):
             title_ru=self.title_ru,
             description=self.description,
             description_ru=self.description_ru,
-            mode=self.mode.name,
+            mode=self.mode,
             notification_id=self.id,
             organization=self.organization,
             extra_data=self.extra_data

@@ -1,4 +1,5 @@
 import factory
+from factory import fuzzy
 from rest_framework.authtoken.models import Token
 
 from users.models import (
@@ -6,6 +7,7 @@ from users.models import (
     TemporaryCode,
     TemporaryPhoneNumber,
     PhoneNumber,
+    SocialNetworkContact,
 )
 from common.tests.factories import FileFactory
 
@@ -45,3 +47,11 @@ class PhoneNumberFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     phone_number = factory.Sequence(lambda n: f'+996550000{n}')
+
+
+class SocialNetworkContactFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = SocialNetworkContact
+
+    user = factory.SubFactory(UserFactory)
+    url = fuzzy.FuzzyText(prefix="https://instagram.com/")

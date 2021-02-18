@@ -36,7 +36,8 @@ class NotificationSendMessageTest(TestCase):
     def test_do_not_sent_because_of_settings_send_notification(self, mocked_send_message: Mock):
         user = UserFactory(phone_number='+996555422122')
         notification_settings = NotificationSettingFactory(user=user, organization_notifications=False)
-        notification = NotificationFactory(mode=NotificationMode.objects.filter(name='partner')[0])
+        mode, _ = NotificationMode.objects.get_or_create(name='partner')
+        notification = NotificationFactory(mode=mode)
         notification_android_device = FCMDeviceFactory(type='android')
         notification_ios_device = FCMDeviceFactory(type='ios')
         notification_web_device = FCMDeviceFactory(type='web')

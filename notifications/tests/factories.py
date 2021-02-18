@@ -3,7 +3,7 @@ import random
 
 from fcm_django.models import FCMDevice
 
-from notifications.constants import NOTIFICATION_TYPES, NOTIFICATION_MODES
+from notifications.constants import NOTIFICATION_TYPES, NOTIFICATION_MODES, SYSTEM_NOTIFICATION_MODE
 from notifications.models import NotificationSetting, Notification, NotificationMode
 from users.tests.factories import UserFactory
 
@@ -32,7 +32,7 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Notification
 
-    mode = NotificationMode.objects.all().exclude(name='subscription')[random.randint(0, 4)]
+    mode, _ = NotificationMode.objects.get_or_create(name=SYSTEM_NOTIFICATION_MODE)
     type = factory.Sequence(lambda n: NOTIFICATION_TYPES[n % 37][1])
     title = factory.Sequence(lambda n: f'Notifications {n}')
     recipient = factory.SubFactory(UserFactory)

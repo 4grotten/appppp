@@ -29,13 +29,10 @@ class NotificationService:
     def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
                             sender=None, extra_data=None):
         try:
-
-            mode_object = NotificationMode.objects.get(name=mode)  # move to services
-
             notification, _ = cls.model.objects.get_or_create(
                 recipient=recipient,
                 sender=sender,
-                mode=mode_object,
+                mode=mode,
                 title=title,
                 description=description,
                 organization=organization,

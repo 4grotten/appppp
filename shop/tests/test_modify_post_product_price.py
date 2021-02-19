@@ -20,18 +20,25 @@ class ModifyPostProductPriceTestCase(APITestCase):
             title="Хуй пизда джигурда",
             owner=self.user
         )
-        self.shop_item = ShopItemFactory(
+        self.product = ShopItemFactory(
             organization=self.organization,
             price=12.5,
             discount=10,
             article="123ART",
         )
 
-    def test_user_not_register(self):
+        self.post = ShopItemFactory(
+            organization=self.organization,
+            article="123ART",
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_modify_product_to_post_not_acceptable(self):
         self.client.force_authenticate(user=self.user)
         do_change_item_count_response = self.client.post(
             reverse("v1:add_cart_item"),
-            data=json.dumps({"item": self.shop_item.id, "change": 1}),
+            data=json.dumps({"item": self.product.id, "change": 1}),
             content_type='application/json'
         )
         self.assertEqual(
@@ -39,32 +46,36 @@ class ModifyPostProductPriceTestCase(APITestCase):
             status.HTTP_200_OK
         )
 
-        item_data = {
+        product_data = {
             "organization": self.organization.id,
             "name": "Да похуй ебани что-нибудь",
-            "price": 0,
-            "discount": 0
+            "price": None
         }
+
         item_details_response = self.client.put(
-            reverse("v1:item_details", kwargs={"pk": self.shop_item.id}),
-            data=json.dumps(item_data),
+            reverse("v1:item_details", kwargs={"pk": self.product.id}),
+            data=json.dumps(product_data),
             content_type='application/json'
         )
-        self.assertEqual(
+
+        self.assertNotEqual(
             item_details_response.status_code,
             status.HTTP_200_OK
         )
 
-        carts_response = self.client.get(
-            reverse("v1:user_cart_list"),
+    def test_modify_product_to_product_acceptable(self):
+        post_data = {
+            "organization": self.organization.id,
+            "name": "Да похуй ебани что-нибудь",
+        }
+
+        item_details_response = self.client.put(
+            reverse("v1:item_details", kwargs={"pk": self.product.id}),
+            data=json.dumps(post_data),
             content_type='application/json'
         )
-        cart_id = carts_response.json().get("list")[0].get("id")
-        cart_response = self.client.get(
-            reverse("v1:user_cart_details", kwargs={"pk": cart_id}),
-            content_type='application/json'
-        )
+
         self.assertEqual(
-            cart_response.json().get("items")[0].get("item").get("id"),
-            self.shop_item.id
+            item_details_response.status_code,
+            status.HTTP_200_OK
         )

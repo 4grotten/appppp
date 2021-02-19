@@ -77,6 +77,12 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def update(self, instance, validated_data):
+        if 'price' in validated_data and validated_data.get('price') is None:
+            raise NotAcceptableException('Cannot update to empty price')
+
+        return super().update(instance, validated_data)
+
     def save(self, **kwargs):
         images = self.validated_data.get('images', [])
         for index, image in enumerate(images):

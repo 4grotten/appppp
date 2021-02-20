@@ -31,8 +31,11 @@ RUN pipenv install --dev --system --deploy
 
 
 FROM env as production
-ARG UNIT_VERSION=1.21.0
+# Prod env
+ENV DEBUG=False
+
 # -------- Building Nginx Unit --------
+ARG UNIT_VERSION=1.22.0
 RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
     tar xzf unit-$UNIT_VERSION.tar.gz && \
     rm -f unit-$UNIT_VERSION.tar.gz && \
@@ -41,7 +44,7 @@ RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
             --state="/var/lib/unit" \
             --control="unix:/run/control.unit.sock" \
             --pid="/run/unit.pid" \
-            --log="/var/log/unit.log" \
+            --log="/dev/stdout" \
             --modules="/usr/lib/unit/modules" \
             --user=unit \
             --group=unit \
@@ -55,6 +58,13 @@ RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
     rm -rf unit-$UNIT_VERSION
 
 STOPSIGNAL SIGTERM
-
-RUN ln -sf /dev/stdout /var/log/unit.log
 # -------------------------------------
+
+# Unit config
+RUN ln -s /app/unit.json /var/lib/unit/conf.json
+
+# Collect static
+RUN mv /app/gag.env /app/.env && python manage.py collectstatic --noinput --link && rm /app/.env
+
+# Unit startup
+CMD unitd --no-daemon

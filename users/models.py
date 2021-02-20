@@ -31,7 +31,7 @@ class User(AbstractUser, TimestampModel):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return self.phone_number
+        return str(self.phone_number)
 
     def save(self, *args, **kwargs):
         if not self.pk:

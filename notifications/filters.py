@@ -21,7 +21,7 @@ class MultipleListFilter(filters.Filter):
 
 
 class NotificationFilter(filters.FilterSet):
-    mode = MultipleListFilter(field_name='mode__name')
+    mode = MultipleListFilter(field_name='mode')
 
     class Meta:
         model = Notification

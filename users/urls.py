@@ -26,5 +26,5 @@ urlpatterns = [
     path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
     path('users/doValidateOldNumber/', ValidateOldNumberAPIView.as_view(), name='validate_old_number'),
     path('users/doSendCode/', SendCodeToNewNumberAPIView.as_view(), name='send_code_to_new_number'),
-    path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='validate_old_number'),
+    path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='change_and_verify_new_number'),
 ]

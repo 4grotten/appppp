@@ -14,7 +14,7 @@ from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
 
 
-class CompleteTransactionTestCase(APITestCase):
+class LIstTransactionTestCase(APITestCase):
     maxDiff = None
 
     def setUp(self):

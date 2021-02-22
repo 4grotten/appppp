@@ -1,4 +1,4 @@
-FROM python:3.9-slim as env
+FROM python:3.9.2-slim as env
 
 ENV PYTHONUNBUFFERED=1
 ENV prometheus_multiproc_dir=/dev/shm/prometheus

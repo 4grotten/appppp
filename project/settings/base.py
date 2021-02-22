@@ -18,6 +18,9 @@ SECRET_KEY = config('SECRET_KEY', default='notasecret')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+# Prometheus Monitoring
+MONITORING = config('MONITORING', default=False, cast=bool)
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='*')
 
 # Application definition
@@ -281,3 +284,11 @@ if not DEBUG:
             },
         }
     }
+
+if MONITORING:
+    INSTALLED_APPS += ['django_prometheus']
+    MIDDLEWARE = \
+        ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + \
+        MIDDLEWARE + \
+        ['django_prometheus.middleware.PrometheusAfterMiddleware']
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgis'

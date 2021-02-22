@@ -1,26 +1,44 @@
 {
   "listeners": {
     "*:80": {
-      "pass": "routes"
+      "pass": "routes/public"
+    },
+    "*:8000": {
+      "pass": "routes/metrics"
     }
   },
 
-  "routes": [
-    {
-      "match": {
-        "uri": "/internal-static/*"
+  "routes": {
+    "public": [
+      {
+        "match": {
+          "uri": "/internal-static/*"
+        },
+        "action": {
+          "share": "/app/"
+        }
       },
+      {
+        "match": {
+          "uri": [ "!/metrics" ]
+        },
+        "action": {
+          "pass": "applications/django"
+        }
+      }
+    ],
 
-      "action": {
-        "share": "/app/"
+    "metrics": [
+      {
+        "match": {
+          "uri": "/metrics"
+        },
+        "action": {
+          "pass": "applications/django"
+        }
       }
-    },
-    {
-      "action": {
-        "pass": "applications/django"
-      }
-    }
-  ],
+    ]
+  },
 
   "applications": {
     "django": {

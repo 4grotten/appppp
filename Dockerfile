@@ -1,8 +1,6 @@
 FROM python:3.9.2-slim as env
 
 ENV PYTHONUNBUFFERED=1
-ENV prometheus_multiproc_dir=/dev/shm/prometheus
-ENV STATIC_ROOT=/app/static/
 
 RUN apt-get update
 RUN apt-get install --no-install-recommends --yes \
@@ -33,6 +31,7 @@ RUN pipenv install --dev --system --deploy
 FROM env as production
 # Prod env
 ENV DEBUG=False
+ENV prometheus_multiproc_dir=/dev/shm
 
 # -------- Building Nginx Unit --------
 ARG UNIT_VERSION=1.22.0

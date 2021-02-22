@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+import datetime
 from unittest.mock import patch, Mock
 
 from django.urls import reverse
@@ -38,6 +38,9 @@ class LIstTransactionTestCase(APITestCase):
         transaction_offline = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
             original_amount=51.0, is_processed=True, status='accepted')
+        transaction_offline_with_another_client = TransactionFactory(
+            client=self.client_user2, processed_by=self.user, organization=self.organization, currency=self.currency,
+            original_amount=51.0, is_processed=True, status='accepted')
         transaction_offline_rejected = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
             original_amount=51.0, is_processed=False, status='rejected')
@@ -61,7 +64,11 @@ class LIstTransactionTestCase(APITestCase):
             client=self.client_user, processed_by=self.user_admin, organization=self.organization, type='online',
             currency=self.currency, original_amount=51.0, is_processed=True, status='accepted')
 
-        url_parameters = {'organization': self.organization.id, 'processed_by': self.user.id}
+        start_date = datetime.datetime.now() - datetime.timedelta(days=7)
+
+        url_parameters = {'organization': self.organization.id, 'processed_by': self.user.id,
+                          'client': self.client_user.id, 'start': start_date.strftime("%Y-%m-%d"),
+                          'end': datetime.datetime.now().strftime("%Y-%m-%d")}
 
         expected_data = {
             'total_count': 4,
@@ -120,6 +127,54 @@ class LIstTransactionTestCase(APITestCase):
                     "status": transaction_offline.status}]
         }
 
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), expected_data)
+
+    def test_fail_on_serializer_data_with_processed_by_filter(self):
+        url_parameters = {'processed_by': self.user.id}
+        response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
+        self.assertEqual(response.status_code, 406)
+
+    def test_fail_no_permission_data_with_processed_by_filter(self):
+        role_security = RoleFactory(
+            title='security', organization=self.organization, can_sale=True,
+            can_check_attendance=True, can_see_stats=False, can_edit_organization=True,
+            can_send_message=True, can_edit_partner=True)
+        user_security = UserFactory(phone_number='+996777009955')
+        membership_security = MembershipFactory(organization=self.organization, user=user_security,
+                                                role=
+                                                role_security)
+        token = TokenFactory(user=user_security)
+        header = {"HTTP_AUTHORIZATION": f"Token {token}"}
+        url_parameters = {'organization': self.organization.id, 'processed_by': self.user.id}
+        response = self.client.get(self.url, url_parameters, **header, content_type='application/json')
+        expected_data = {"message": "No rights to see stats of organization"}
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.json(), expected_data)
+
+    def test_accepted_search(self):
+        transaction_offline = TransactionFactory(
+            client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
+            original_amount=51.0, is_processed=True, status='accepted')
+        url_parameters = {'organization': self.organization.id, 'search': transaction_offline.id}
+        expected_data = {
+            'total_count': 1,
+            'total_pages': 1,
+            'list': [
+                {
+                    "id": transaction_offline.pk, "currency": transaction_offline.currency.code,
+                    "original_amount": float(transaction_offline.original_amount),
+                    "discount_percent": transaction_offline.discount_percent,
+                    "savings": float(transaction_offline.savings),
+                    "from_cashback": float(transaction_offline.from_cashback),
+                    "to_cashback": float(transaction_offline.to_cashback),
+                    "final_amount": float(transaction_offline.final_amount),
+                    "updated_at": transaction_offline.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "created_at": transaction_offline.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "type": transaction_offline.type,
+                    "status": transaction_offline.status}]
+        }
         response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), expected_data)

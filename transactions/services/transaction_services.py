@@ -408,7 +408,7 @@ class TransactionService:
                                       start_date=None, end_date=None, search_id: int = None, client: User = None):
 
         transactions = Transaction.objects.filter(Q(organization=organization) & ~Q(
-            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.IN_PROGRESS))).annotate(
+            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).annotate(
             in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
                                    When(status=Transaction.ACCEPTED, then=1),
                                    When(status=Transaction.REJECTED, then=1), output_field=IntegerField())

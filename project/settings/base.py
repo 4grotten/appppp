@@ -21,6 +21,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 # Prometheus Monitoring
 MONITORING = config('MONITORING', default=False, cast=bool)
 
+# JSON Logging
+JSON_LOGGING = config('JSON_LOGGING', default=False, cast=bool)
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='*')
 
 # Application definition
@@ -260,7 +263,7 @@ FCM_DRY_RUN_ENABLE = config('FCM_DRY_RUN_ENABLE', default=True, cast=bool)
 HOST_URL = config('DJANGO_HOST_URL', default='https://apofiz.com/media/')
 CELERY_BROKER_URL = config('CELERY_DSN', default='amqp://localhost:5672')
 
-if not DEBUG:
+if not DEBUG and JSON_LOGGING:
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': True,

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "df8b33301b717db7cf9a76f07a6ab20f7ab53c77476605aef0a8fe066d61deed"
+            "sha256": "0a5685074d6237b971968c8098893fe61cb4361861d9caf363cdea48b5ce9ab8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -156,6 +156,14 @@
             ],
             "index": "pypi",
             "version": "==5.0.0"
+        },
+        "django-prometheus": {
+            "hashes": [
+                "sha256:c338d6efde1ca336e90c540b5e87afe9287d7bcc82d651a778f302b0be17a933",
+                "sha256:dd3f8da1399140fbef5c00d1526a23d1ade286b144281c325f8e409a781643f2"
+            ],
+            "index": "pypi",
+            "version": "==2.1.0"
         },
         "django-rest-auth": {
             "hashes": [
@@ -374,6 +382,13 @@
             ],
             "version": "==0.1.9"
         },
+        "prometheus-client": {
+            "hashes": [
+                "sha256:9da7b32f02439d8c04f7777021c304ed51d9ec180604700c1ba72a4d44dceb03",
+                "sha256:b08c34c328e1bf5961f0b4352668e6c8f145b4a087e09b7296ef62cbe4693d35"
+            ],
+            "version": "==0.9.0"
+        },
         "psycopg2": {
             "hashes": [
                 "sha256:132efc7ee46a763e68a815f4d26223d9c679953cd190f1f218187cb60decf535",
@@ -457,6 +472,13 @@
             ],
             "index": "pypi",
             "version": "==3.3"
+        },
+        "python-json-logger": {
+            "hashes": [
+                "sha256:f26eea7898db40609563bed0a7ca11af12e2a79858632706d835a0f961b7d398"
+            ],
+            "index": "pypi",
+            "version": "==2.0.1"
         },
         "pytz": {
             "hashes": [
@@ -610,11 +632,11 @@
         },
         "faker": {
             "hashes": [
-                "sha256:3971803f32728314c54ba051139cd433fc93fde371e18d07a2cec960a7a2222a",
-                "sha256:b27f9bc97490a11f14c1501cc25f1109cf68c75f11c6ef97714757a4298c33e5"
+                "sha256:31a58ec5a8f4672f24da3b5ddea02c82a712de1de3179b432948e5c34d787aca",
+                "sha256:aadfe0efe11ecbbbc5b3b0b0fab050c2acbd2d8e5201769546d43d236bfff663"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==6.3.0"
+            "version": "==6.4.1"
         },
         "idna": {
             "hashes": [

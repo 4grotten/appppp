@@ -1,0 +1,59 @@
+{
+  "listeners": {
+    "*:80": {
+      "pass": "routes/public"
+    },
+    "*:8000": {
+      "pass": "routes/metrics"
+    }
+  },
+
+  "routes": {
+    "public": [
+      {
+        "match": {
+          "uri": "/internal-static/*"
+        },
+        "action": {
+          "share": "/app/"
+        }
+      },
+      {
+        "match": {
+          "uri": [ "!/metrics" ]
+        },
+        "action": {
+          "pass": "applications/django"
+        }
+      }
+    ],
+
+    "metrics": [
+      {
+        "match": {
+          "uri": "/metrics"
+        },
+        "action": {
+          "pass": "applications/django"
+        }
+      }
+    ]
+  },
+
+  "applications": {
+    "django": {
+      "type": "python 3",
+      "path": "/app/",
+      "module": "project.wsgi",
+      "limits": {
+        "timeout": 30,
+        "requests": 1000
+      },
+      "processes": {
+        "max": 8,
+        "spare": 4,
+        "idle_timeout": 60
+      }
+    }
+  }
+}

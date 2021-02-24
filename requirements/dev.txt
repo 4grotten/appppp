@@ -1,4 +1,0 @@
--r ./prod.txt
-
-coverage==5.1
-factory-boy==3.0.1

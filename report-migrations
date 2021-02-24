@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+if ! migrations=$(python manage.py showmigrations); then
+  exit 1
+fi
+
+current_app=""
+migration_exp='\[ \] ([0-9]+)_'
+i=0
+
+while read -r line ; do
+  if [[ $line != "--" ]] || [[ $line == \[ ]]; then
+    if [[ $line =~ $migration_exp ]]; then
+      echo "MIGRATION START:" "$current_app" "${BASH_REMATCH[1]}"
+      python manage.py sqlmigrate "$current_app" "${BASH_REMATCH[1]}"
+      echo "MIGRATION END:"
+      printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' +
+
+      (( i+=1 ))
+    else
+      current_app=$line
+    fi
+  fi
+done < <(grep '\[ \]\|^[a-z]' <<< "$migrations" | grep '[  ]' -B 1)
+
+exit "$i"

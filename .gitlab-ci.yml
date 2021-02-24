@@ -1,12 +1,73 @@
 image: dind-local:latest
 
-#variables:
-#  DOCKER_HOST: tcp://docker:2375/
+
+.staging-skeleton:
+  variables:
+    GIT_STRATEGY: none
+    ENV_FILE_LOCATION: "/root/.stage-backend-env"
+  before_script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_STAGING_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan test.apofiz.com >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
+
+.staging-only:
+  only:
+    refs:
+      - master
+
+
+.prod-skeleton:
+  variables:
+    GIT_STRATEGY: none
+    ENV_FILE_LOCATION: "/root/.prod-backend-env"
+  before_script:
+      - echo "PROD BEFORE SCRIPT"
+#      - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+#      - eval $(ssh-agent -s)
+#      - echo "$SSH_PROD_KEY" | tr -d '\r' | ssh-add -
+#      - mkdir -p ~/.ssh
+#      - chmod 700 ~/.ssh
+#      - ssh-keyscan test.apofiz.com >> ~/.ssh/known_hosts
+#      - chmod 644 ~/.ssh/known_hosts
+
+
+.prod-only:
+  only:
+    - /^v(\d+\.)?(\d+\.)?(\*|\d+)$/
+  except:
+    - branches
+
+
+variables:
+  DOCKER_BUILDKIT: 1
+  BUILD_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+
+  RUN_STAGING_CONTAINER_WEB: apofiz-staging-web
+  RUN_STAGING_CONTAINER_CELERY: apofiz-staging-celery
+  RUN_STAGING_NETWORK_NAME: apofiz-docker-network
+
+  RUN_PROD_CONTAINER_WEB: apofiz-prod-web
+  RUN_PROD_CONTAINER_CELERY: apofiz-prod-celery
+  RUN_PROD_NETWORK_NAME: apofiz-docker-network
+
 
 stages:
   - test
+  - build
+  - staging prepare
+  - staging migrations
+  - staging deploy
+  - prod prepare
+  - prod migrations
+  - prod deploy
 
-run_tests:
+
+tests:
   stage: test
   script:
     - docker-compose -f docker-compose.base.yml -f docker-compose.tests.yml -p backend_$CI_COMMIT_SHORT_SHA up --build --exit-code-from app app
@@ -19,5 +80,204 @@ run_tests:
   only:
     refs:
       - merge_requests
-      - dev
       - master
+
+
+build:
+  stage: build
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $BUILD_IMAGE_NAME || true
+    - docker build --cache-from $BUILD_IMAGE_NAME --target production --tag $BUILD_IMAGE_NAME .
+    - docker push $BUILD_IMAGE_NAME
+  only:
+    refs:
+      - master
+      - tags
+
+
+#====================== STAGING ======================
+staging pull image:
+  extends:
+    - .staging-skeleton
+    - .staging-only
+  stage: staging prepare
+  script:
+    - >
+      ssh root@test.apofiz.com
+      "
+      docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY &&
+      docker pull $BUILD_IMAGE_NAME
+      "
+
+
+staging migrations check:
+  extends:
+    - .staging-skeleton
+    - .staging-only
+  stage: staging migrations
+  allow_failure: false
+  script:
+    - >
+      ssh root@test.apofiz.com
+      "
+      docker run --rm --network $RUN_STAGING_NETWORK_NAME
+      --shm-size=128m --name $RUN_STAGING_CONTAINER_WEB-migrations
+      --env-file $ENV_FILE_LOCATION
+      $BUILD_IMAGE_NAME
+      ./report-migrations
+      "
+
+
+staging migrations apply:
+  when: manual
+  extends:
+    - .staging-skeleton
+    - .staging-only
+  stage: staging migrations
+  script:
+    - >
+      ssh root@test.apofiz.com
+      "
+      docker run --rm --network $RUN_STAGING_NETWORK_NAME
+      --shm-size=128m --name $RUN_STAGING_CONTAINER_WEB-migrations
+      --env-file $ENV_FILE_LOCATION
+      $BUILD_IMAGE_NAME
+      python manage.py migrate
+      "
+
+
+staging deploy web:
+  extends:
+    - .staging-skeleton
+    - .staging-only
+  stage: staging deploy
+  script:
+    - >
+      ssh root@test.apofiz.com
+      "
+      docker stop $RUN_STAGING_CONTAINER_WEB || true &&
+      docker rm $RUN_STAGING_CONTAINER_WEB || true &&
+      docker run -d --network $RUN_STAGING_NETWORK_NAME
+      -p 127.0.0.1:8000:80 -p 127.0.0.1:8001:8000
+      --shm-size=128m --name $RUN_STAGING_CONTAINER_WEB
+      --restart always --env-file $ENV_FILE_LOCATION
+      $BUILD_IMAGE_NAME
+      "
+
+
+staging deploy celery:
+  extends:
+    - .staging-skeleton
+    - .staging-only
+  stage: staging deploy
+  script:
+    - >
+      ssh root@test.apofiz.com
+      "
+      docker stop $RUN_STAGING_CONTAINER_CELERY || true &&
+      docker rm $RUN_STAGING_CONTAINER_CELERY || true &&
+      docker run -d --network $RUN_STAGING_NETWORK_NAME
+      --shm-size=128m --name $RUN_STAGING_CONTAINER_CELERY
+      --restart always --env-file $ENV_FILE_LOCATION
+      $BUILD_IMAGE_NAME
+      celery -A project worker --loglevel=INFO
+      "
+
+#=====================================================
+
+
+#======================== PROD =======================
+prod pull image:
+  extends:
+    - .prod-skeleton
+    - .prod-only
+  stage: prod prepare
+  script:
+    - echo "prod pull image"
+#    - >
+#      ssh root@apofiz.com
+#      "
+#      docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY &&
+#      docker pull $BUILD_IMAGE_NAME
+#      "
+
+
+prod migrations check:
+  extends:
+    - .prod-skeleton
+    - .prod-only
+  stage: prod migrations
+  allow_failure: false
+  script:
+    - echo "prod migrations check"
+#    - >
+#      ssh root@apofiz.com
+#      "
+#      docker run --rm --network $RUN_PROD_NETWORK_NAME
+#      --shm-size=128m --name $RUN_PROD_CONTAINER_WEB-migrations
+#      $BUILD_IMAGE_NAME
+#      ./report-migrations
+#      "
+
+
+prod migrations apply:
+  when: manual
+  extends:
+    - .prod-skeleton
+    - .prod-only
+  stage: prod migrations
+  script:
+    - echo "prod migrations apply"
+#    - >
+#      ssh root@apofiz.com
+#      "
+#      docker run --rm --network $RUN_PROD_NETWORK_NAME
+#      --shm-size=128m --name $RUN_PROD_CONTAINER_WEB-migrations
+#      $BUILD_IMAGE_NAME
+#      python manage.py migrate
+#      "
+
+
+prod deploy web:
+  extends:
+    - .prod-skeleton
+    - .prod-only
+  stage: prod deploy
+  script:
+    - echo "prod deploy web"
+#    - >
+#      ssh root@apofiz.com
+#      "
+#      docker stop $RUN_PROD_CONTAINER_WEB || true &&
+#      docker rm $RUN_PROD_CONTAINER_WEB || true &&
+#      docker run -d --network $RUN_PROD_NETWORK_NAME
+#      -p 127.0.0.1:8000:80 -p 127.0.0.1:8001:8000
+#      --shm-size=128m --name $RUN_PROD_CONTAINER_WEB
+#      --restart always
+#      $BUILD_IMAGE_NAME
+#      "
+
+
+prod deploy celery:
+  extends:
+    - .prod-skeleton
+    - .prod-only
+  stage: prod deploy
+  script:
+    - echo "prod deploy celery"
+#    - >
+#      ssh root@apofiz.com
+#      "
+#      docker stop $RUN_PROD_CONTAINER_CELERY || true &&
+#      docker rm $RUN_PROD_CONTAINER_CELERY || true &&
+#      docker run -d --network $RUN_PROD_NETWORK_NAME
+#      --shm-size=128m --name $RUN_PROD_CONTAINER_CELERY
+#      --restart always
+#      $BUILD_IMAGE_NAME
+#      celery -A project worker --loglevel=INFO
+#      "
+
+
+#=====================================================

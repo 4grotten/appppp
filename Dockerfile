@@ -16,8 +16,7 @@ RUN pipenv install --system --deploy
 COPY . /app/
 
 
-
-FROM env as celery
+FROM env as celery-dev
 
 RUN pip install flower
 

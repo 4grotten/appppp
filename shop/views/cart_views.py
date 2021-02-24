@@ -12,6 +12,7 @@ from shop.serializers.cart_serializers import (
     CartAllItemsCountSerializer, CartUpdateSerializer
 )
 from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
+from transactions.serializers.transaction_serializers import TransactionWithClientSerializer
 from transactions.services.transaction_services import TransactionService
 
 
@@ -37,12 +38,13 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        try:
-            cart = Cart.objects.get(id=kwargs['pk'])
-        except Exception:
-            raise ObjectNotFoundException('Cart not found')
-        CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
-        return Response({'message': 'ok'})
+        cart = CartService.get_related(id=kwargs['pk'])
+
+        cart = CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
+        data = {'message': 'Ok'}
+        if cart.transaction:
+            data = TransactionWithClientSerializer(cart.transaction, context={'request': request}).data
+        return Response(data)
 
 
 class CartItemCountChangeView(GenericAPIView):

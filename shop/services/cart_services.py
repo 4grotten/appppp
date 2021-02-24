@@ -27,6 +27,15 @@ class CartService:
             raise ObjectNotFoundException('Cart not found')
 
     @classmethod
+    def get_related(cls, *args, **kwargs):
+        try:
+            return Cart.objects \
+                .select_related('transaction', 'organization') \
+                .get(*args, **kwargs)
+        except Cart.DoesNotExist:
+            raise ObjectNotFoundException('Cart not found')
+
+    @classmethod
     def get_total_prices_in_cart(cls, cart: Cart) -> Tuple[Decimal, Decimal]:
         totals = cart.items.aggregate(
             original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
@@ -56,7 +65,7 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
         if not cart.is_open:
             raise BadRequestException('Cart is already closed')
-        current_transaction = cls.create_transaction(cart)
+        cart.transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
             cart.save()
@@ -64,24 +73,24 @@ class CartService:
             raise IntegrityException('Could not add transaction')
         finally:
             sent_notification.delay(
-                recipient_id=current_transaction.client_id,
+                recipient_id=cart.transaction.client_id,
                 mode=PRODUCT_MODE,
                 notification_type=REQUEST_ORDER_CLIENT_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=str(current_transaction.final_amount),
-                                currency=current_transaction.currency.code)
+                organization_id=cart.transaction.organization_id,
+                extra_data=dict(transaction_id=cart.transaction.id,
+                                total_price=str(cart.transaction.final_amount),
+                                currency=cart.transaction.currency.code)
             )
             send_notifications_organization_members.delay(
-                members_organization_id=current_transaction.organization_id,
+                members_organization_id=cart.transaction.organization_id,
                 mode=PRODUCT_MODE,
-                sender_id=current_transaction.client_id,
+                sender_id=cart.transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
                 notification_type=REQUEST_ORDER_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=str(current_transaction.final_amount),
-                                currency=current_transaction.currency.code)
+                organization_id=cart.transaction.organization_id,
+                extra_data=dict(transaction_id=cart.transaction.id,
+                                total_price=str(cart.transaction.final_amount),
+                                currency=cart.transaction.currency.code)
             )
             return cart
 
@@ -110,18 +119,37 @@ class CartService:
 
     @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
-        if not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
-                user=user, cart=cart)):
+
+        if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
+                user=user, cart=cart)) or (cart.transaction and cart.transaction.status != 'in_progress')):
             raise PermissionDeniedException('No rights to change this cart')
-        if not (cart.is_open or cls.can_user_change_closed_cart(
-                user=user, cart=cart)):
-            raise ObjectNotFoundException(message="Cart was closed")
+
         CartItem.objects.filter(cart=cart).delete()
+
         for data in items:
-            if data['count']:
+            if data['count'] and data['item'].organization == cart.organization:
                 CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])
-        if not CartItem.objects.filter(cart=cart):
-            cart.delete()
+
+        if cart.transaction and not cart.is_open:
+            totals = cart.items.aggregate(
+                original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
+            )
+            original_price = totals['original_price']
+            discounted_price = totals['discounted_price']
+            try:
+                cart.transaction.currency = cart.organization.currency
+                cart.transaction.processed_by = user
+                cart.transaction.employee_name = user.full_name
+                cart.transaction.employee_avatar = user.avatar
+                cart.transaction.status = Transaction.ACCEPTED
+                cart.transaction.original_amount = original_price
+                cart.transaction.savings = original_price - discounted_price
+                cart.transaction.save()
+            except IntegrityError:
+                raise IntegrityException('Could not complete transaction')
+
+        return cart
 
 
 class CartItemService:

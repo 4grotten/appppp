@@ -36,7 +36,7 @@ services:
   celery:
     build:
       context: .
-      target: celery
+      target: celery-dev
     depends_on:
       - rabbit
     environment:

@@ -65,7 +65,7 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
         if not cart.is_open:
             raise BadRequestException('Cart is already closed')
-        cart.transaction = cls.create_transaction(cart)
+        current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
             cart.save()
@@ -73,24 +73,24 @@ class CartService:
             raise IntegrityException('Could not add transaction')
         finally:
             sent_notification.delay(
-                recipient_id=cart.transaction.client_id,
+                recipient_id=current_transaction.client_id,
                 mode=PRODUCT_MODE,
                 notification_type=REQUEST_ORDER_CLIENT_TYPE,
-                organization_id=cart.transaction.organization_id,
-                extra_data=dict(transaction_id=cart.transaction.id,
-                                total_price=str(cart.transaction.final_amount),
-                                currency=cart.transaction.currency.code)
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=str(current_transaction.final_amount),
+                                currency=current_transaction.currency.code)
             )
             send_notifications_organization_members.delay(
-                members_organization_id=cart.transaction.organization_id,
+                members_organization_id=current_transaction.organization_id,
                 mode=PRODUCT_MODE,
-                sender_id=cart.transaction.client_id,
+                sender_id=current_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
                 notification_type=REQUEST_ORDER_TYPE,
-                organization_id=cart.transaction.organization_id,
-                extra_data=dict(transaction_id=cart.transaction.id,
-                                total_price=str(cart.transaction.final_amount),
-                                currency=cart.transaction.currency.code)
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=str(current_transaction.final_amount),
+                                currency=current_transaction.currency.code)
             )
             return cart
 

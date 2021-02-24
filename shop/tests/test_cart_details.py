@@ -56,7 +56,6 @@ class UpdateCartTestCase(APITestCase):
         header = {"HTTP_AUTHORIZATION": f"Token {token_client}"}
         response = self.client.put(reverse(self.url, kwargs={"pk": cart.id}), **header,
                                    content_type='application/json', data=json.dumps(data))
-        cart1 = Cart.objects.get(id=cart.id)
         self.assertEqual(response.status_code, 200)
 
     def test_update_cart_fail_on_transaction_status(self):
@@ -99,14 +98,13 @@ class UpdateCartTestCase(APITestCase):
         header = {"HTTP_AUTHORIZATION": f"Token {token_client}"}
         response = self.client.put(reverse(self.url, kwargs={"pk": cart.id}), **header,
                                    content_type='application/json', data=json.dumps(data))
-        cart1 = Cart.objects.get(id=cart.id)
         self.assertEqual(response.status_code, 403)
 
     def test_organization_update_cart_accepted_on_closed_cart(self):
         shop_item1 = ShopItemFactory(organization=self.organization, price=100, discount=10)
         shop_item2 = ShopItemFactory(organization=self.organization, price=200, discount=10)
         transaction = TransactionFactory(status='in_progress')
-        cart = CartFactory(user=self.client_user, organization=self.organization, is_open=True, transaction=transaction)
+        cart = CartFactory(user=self.client_user, organization=self.organization, is_open=False, transaction=transaction)
         cart_item1 = CartItemFactory(cart=cart, item=shop_item1, count=5)
         cart_item2 = CartItemFactory(cart=cart, item=shop_item2, count=10)
         token_client = TokenFactory(user=self.client_user)
@@ -121,7 +119,6 @@ class UpdateCartTestCase(APITestCase):
         header = {"HTTP_AUTHORIZATION": f"Token {self.token_owner}"}
         response = self.client.put(reverse(self.url, kwargs={"pk": cart.id}), **header,
                                    content_type='application/json', data=json.dumps(data))
-        cart1 = Cart.objects.get(id=cart.id)
         self.assertEqual(response.status_code, 200)
 
     def test_user_update_cart_fail_on_serializer(self):
@@ -143,5 +140,4 @@ class UpdateCartTestCase(APITestCase):
         header = {"HTTP_AUTHORIZATION": f"Token {self.token_owner}"}
         response = self.client.put(reverse(self.url, kwargs={"pk": cart.id}), **header,
                                    content_type='application/json', data=json.dumps(data))
-        cart1 = Cart.objects.get(id=cart.id)
         self.assertEqual(response.status_code, 406)

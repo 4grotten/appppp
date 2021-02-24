@@ -40,9 +40,9 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.get_related(id=kwargs['pk'])
 
-        CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
-
-        return Response({'message': 'Ok'})
+        cart = CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
+        data = TransactionWithClientSerializer(cart.transaction, context={'request': request}).data
+        return Response(data)
 
 
 class CartItemCountChangeView(GenericAPIView):

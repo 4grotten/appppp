@@ -137,10 +137,13 @@ class CartService:
             )
             original_price = totals['original_price']
             discounted_price = totals['discounted_price']
+            role = OrganizationService.get_user_role_in_organization(organization=cart.organization,
+                                                                     user=user)
             try:
                 cart.transaction.currency = cart.organization.currency
                 cart.transaction.processed_by = user
                 cart.transaction.employee_name = user.full_name
+                cart.transaction.employee_role = role
                 cart.transaction.employee_avatar = user.avatar
                 cart.transaction.status = Transaction.ACCEPTED
                 cart.transaction.original_amount = original_price

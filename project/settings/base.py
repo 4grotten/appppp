@@ -3,7 +3,7 @@ import os
 from distutils.util import strtobool
 
 from corsheaders.defaults import default_headers
-from decouple import config
+from decouple import config, Csv
 from django.utils.translation import gettext_lazy as _
 from kombu.serialization import registry
 
@@ -13,12 +13,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='notasecret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = strtobool(config('DEBUG', default='false'))
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
+# Prometheus Monitoring
+MONITORING = config('MONITORING', default=False, cast=bool)
+
+# JSON Logging
+JSON_LOGGING = config('JSON_LOGGING', default=False, cast=bool)
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='*')
 
 # Application definition
 
@@ -153,12 +159,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/internal-static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'internal-static')
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'frontend'),  # update the STATICFILES_DIRS
-)
+STATICFILES_DIRS = ()
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
@@ -226,7 +230,7 @@ NIKITA_URL = 'https://smspro.nikita.kg/api/message'
 NIKITA_USERNAME = config('NIKITA_USERNAME')
 NIKITA_PASSWORD = config('NIKITA_PASSWORD')
 NIKITA_SENDER = config('NIKITA_SENDER')
-NIKITA_TEST_MODE = int(config('NIKITA_TEST_MODE', default=1))
+NIKITA_TEST_MODE = config('NIKITA_TEST_MODE', default=1, cast=int)
 
 OER_APP_ID = config('OER_APP_ID')
 OER_CACHE_TIMEOUT = 60 * 60 * 5
@@ -257,4 +261,37 @@ FCM_DJANGO_SETTINGS = {
 FCM_DRY_RUN_ENABLE = config('FCM_DRY_RUN_ENABLE', default=True, cast=bool)
 
 HOST_URL = config('DJANGO_HOST_URL', default='https://apofiz.com/media/')
-CELERY_BROKER_URL = config('CELERY_DSN', 'amqp://localhost:5672')
+CELERY_BROKER_URL = config('CELERY_DSN', default='amqp://localhost:5672')
+
+if not DEBUG and JSON_LOGGING:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'formatters': {
+            'json': {
+                '()': 'common.logs.LogFormatter',
+                'timestamp': True
+            }
+        },
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'json',
+            }
+        },
+        'loggers': {
+            'django.request': {
+                'handlers': ['console'],
+                'level': 'ERROR',
+            },
+        }
+    }
+
+if MONITORING:
+    INSTALLED_APPS += ['django_prometheus']
+    MIDDLEWARE = \
+        ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + \
+        MIDDLEWARE + \
+        ['django_prometheus.middleware.PrometheusAfterMiddleware']
+    DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgis'

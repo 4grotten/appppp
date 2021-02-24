@@ -432,7 +432,12 @@ class TransactionService:
     def refund_transaction(cls, old_transaction: Transaction, user: User):
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
+
+        role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
+            old_transaction.employee_name = user.full_name,
+            old_transaction.employee_role = role,
+            old_transaction.employee_avatar = user.avatar
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user

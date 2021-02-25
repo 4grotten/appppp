@@ -1,7 +1,9 @@
 import factory
 
+from common.tests.factories import CurrencyFactory, FileFactory
 from organizations.models import (
-    Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership, CashbackGroup, Membership, Role
+    Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership,
+    CashbackGroup, Membership, Role, PhoneNumber
 )
 from users.tests.factories import UserFactory
 
@@ -18,6 +20,8 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     cashback_group = factory.SubFactory(CashbackGroupFactory)
     title = factory.Sequence(lambda n: f'Organization {n}')
+    currency = factory.SubFactory(CurrencyFactory)
+    image = factory.SubFactory(FileFactory)
 
 
 class PartnershipFactory(factory.django.DjangoModelFactory):
@@ -34,6 +38,7 @@ class DiscountCardFactory(factory.django.DjangoModelFactory):
 
     organization = factory.SubFactory(OrganizationFactory)
     percent = 0
+    image = factory.SubFactory(FileFactory)
 
 
 class OrganizationClientFinancialStatusFactory(factory.django.DjangoModelFactory):
@@ -60,3 +65,10 @@ class MembershipFactory(factory.django.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
     user = factory.SubFactory(UserFactory)
     role = factory.SubFactory(RoleFactory)
+
+
+class OrganizationPhoneNumberFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = PhoneNumber
+
+    organization = factory.SubFactory(OrganizationFactory)

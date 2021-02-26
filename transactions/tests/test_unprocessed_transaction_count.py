@@ -1,14 +1,9 @@
-import json
-import datetime
-from unittest.mock import patch, Mock
-
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from unittest import expectedFailure
+
 from common.tests.factories import CurrencyFactory
-from organizations.models import OrganizationClientFinancialStatus, DiscountCard
 from organizations.tests.factories import (
-    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory, RoleFactory, MembershipFactory
+    OrganizationFactory, RoleFactory, MembershipFactory
 )
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
@@ -61,6 +56,8 @@ class UnprocessedTransactionCountTestCase(APITestCase):
             client=self.client_user, organization=self.organization2, currency=self.currency,
             original_amount=52.0, is_processed=False, status='in_progress', type='offline')
 
+        # Transactions that we count
+
         TransactionFactory(
             client=self.client_user, organization=self.organization1, currency=self.currency,
             original_amount=52.0, is_processed=False, status='in_progress', type='online')
@@ -79,43 +76,3 @@ class UnprocessedTransactionCountTestCase(APITestCase):
         response = self.client.get(self.url, **self.header, content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected_data)
-
-        def test_accepted_unprocessed_transaction_count(self):
-            # Transactions that do not count
-            TransactionFactory(
-                client=self.client_user, processed_by=self.user, organization=self.organization1,
-                currency=self.currency,
-                original_amount=51.0, is_processed=False, status='rejected')
-
-            TransactionFactory(
-                client=self.client_user, processed_by=self.user, organization=self.organization1,
-                currency=self.currency,
-                original_amount=51.0, is_processed=True, status='accepted')
-
-            TransactionFactory(
-                client=self.client_user, processed_by=self.user, organization=self.organization1,
-                currency=self.currency,
-                original_amount=51.0, is_processed=True, status='accepted')
-
-            TransactionFactory(
-                client=self.client_user, organization=self.organization2, currency=self.currency,
-                original_amount=52.0, is_processed=False, status='in_progress', type='offline')
-
-            TransactionFactory(
-                client=self.client_user, organization=self.organization1, currency=self.currency,
-                original_amount=52.0, is_processed=False, status='in_progress', type='online')
-
-            TransactionFactory(
-                client=self.client_user, organization=self.organization1, currency=self.currency,
-                original_amount=52.0, is_processed=False, status='in_progress', type='online')
-
-            TransactionFactory(
-                client=self.client_user, organization=self.organization1, currency=self.currency,
-                original_amount=52.0, is_processed=False, status='in_progress', type='online')
-
-            expected_data = {
-                'count': 3
-            }
-            response = self.client.get(self.url, **self.header, content_type='application/json')
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data, expected_data)

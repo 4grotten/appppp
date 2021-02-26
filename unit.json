@@ -1,4 +1,10 @@
 {
+  "settings": {
+    "http": {
+      "max_body_size": 33554432
+    }
+  },
+
   "listeners": {
     "*:80": {
       "pass": "routes/public"

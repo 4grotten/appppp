@@ -39,6 +39,7 @@ RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
     rm -f unit-$UNIT_VERSION.tar.gz && \
     cd unit-$UNIT_VERSION && \
     ./configure --prefix="/usr" \
+            --tmp="/tmp" \
             --state="/var/lib/unit" \
             --control="unix:/run/control.unit.sock" \
             --pid="/run/unit.pid" \

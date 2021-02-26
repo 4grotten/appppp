@@ -127,7 +127,8 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         return organization.latest_transaction_time
 
     def get_unprocessed_transaction_count(self, organization: Organization):
-        return Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS).count()
+        return Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.ONLINE).count()
 
     class Meta:
         model = Organization

@@ -24,7 +24,7 @@ urlpatterns = [
     path('statistics/transactions/<int:pk>/', UserTransactionDetailView.as_view(), name='user_transaction_detail'),
     path('statistics/organizations/', UserTransactionOrganizationView.as_view(), name='transaction_organizations'),
     path('statistics/saleOrganizations/', UserSaleTransactionOrganizationView.as_view(),
-         name='transaction_organizations'),
+         name='sale_transaction_organizations'),
     path('statistics/unprocessedTranCount/', UserUnprocessedTransactionCountView.as_view(),
          name='unprocessed_transaction_count'),
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),

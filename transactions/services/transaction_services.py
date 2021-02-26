@@ -502,7 +502,8 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
-        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS, ).count()
+        return Transaction.objects.filter(organization__in=organization,
+                                          status=Transaction.IN_PROGRESS, type=Transaction.ONLINE).count()
 
     @classmethod
     def get_user_sale_transactions(cls, user: User):
@@ -523,6 +524,7 @@ class TransactionService:
         # ==
         # Q(organization__in=organization) & (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         transactions = Transaction.objects.filter(
-            Q(organization__in=organization) & (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
+            Q(organization__in=organization) & (
+                    Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         )
         return transactions

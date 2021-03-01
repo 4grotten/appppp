@@ -4,7 +4,8 @@ from common.models import Currency
 from common.tests.factories import FileFactory
 from organizations.models import (
     Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership,
-    CashbackGroup, Membership, Role, PhoneNumber
+    CashbackGroup, Membership, Role, PhoneNumber,
+    Subscription,
 )
 from users.tests.factories import UserFactory
 
@@ -79,3 +80,9 @@ class OrganizationPhoneNumberFactory(factory.django.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
 
 
+class SubscriptionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Subscription
+
+    organization = factory.SubFactory(OrganizationFactory)
+    user = factory.SubFactory(UserFactory)

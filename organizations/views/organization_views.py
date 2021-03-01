@@ -260,8 +260,7 @@ class HomepageSearchView(ListAPIView):
 
     def get_queryset(self):
         serializer = PartnerQueryParamSerializer(data=self.request.GET)
-        if not serializer.is_valid():
-            raise ValidationException('Provide proper partner id')
+        serializer.is_valid(raise_exception=True)
 
         partner = serializer.validated_data['partner']
         if partner is None:

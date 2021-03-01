@@ -11,8 +11,6 @@ from users.tests.factories import UserFactory
 
 
 class OrganizationPartnersCountAPIViewTestCase(APITestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self.user_one = UserFactory()
         self.user_two = UserFactory()

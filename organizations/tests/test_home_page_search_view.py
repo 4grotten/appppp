@@ -13,8 +13,8 @@ class HomepageSearchViewTestCase(APITestCase):
     def setUp(self) -> None:
         self.url = reverse("v1:homepage_search")
         self.user = UserFactory()
-        self.org_one = OrganizationFactory()
-        self.org_two = OrganizationFactory()
+        self.org_one = OrganizationFactory(owner=self.user)
+        self.org_two = OrganizationFactory(owner=self.user)
 
     def test_get_organizations_without_partner_id(self):
         expected_data = {
@@ -68,7 +68,7 @@ class HomepageSearchViewTestCase(APITestCase):
             can_share_cashback=True
         )
         quary_params = {
-            "partner": partner.id
+            "partner": partner.requested_by.id
         }
         expected_data = {
             "total_count": 1,
@@ -97,6 +97,5 @@ class HomepageSearchViewTestCase(APITestCase):
             content_type='application/json'
         )
 
-        print(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)

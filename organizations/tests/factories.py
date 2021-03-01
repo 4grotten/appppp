@@ -33,8 +33,8 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Partnership
 
-    requested_by = factory.SubFactory(UserFactory)
-    accepted_by = factory.SubFactory(UserFactory)
+    requested_by = factory.SubFactory(OrganizationFactory)
+    accepted_by = factory.SubFactory(OrganizationFactory)
 
 
 class DiscountCardFactory(factory.django.DjangoModelFactory):

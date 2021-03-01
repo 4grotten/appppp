@@ -1,11 +1,16 @@
 import factory
 
-from common.tests.factories import CurrencyFactory, FileFactory
+from common.models import Currency
+from common.tests.factories import FileFactory
 from organizations.models import (
     Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership,
     CashbackGroup, Membership, Role, PhoneNumber
 )
 from users.tests.factories import UserFactory
+
+
+def get_currency_usd():
+    return Currency.objects.get(code="USD")
 
 
 class CashbackGroupFactory(factory.django.DjangoModelFactory):
@@ -20,7 +25,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     cashback_group = factory.SubFactory(CashbackGroupFactory)
     title = factory.Sequence(lambda n: f'Organization {n}')
-    currency = factory.SubFactory(CurrencyFactory)
+    currency = factory.LazyFunction(get_currency_usd)
     image = factory.SubFactory(FileFactory)
 
 
@@ -72,3 +77,5 @@ class OrganizationPhoneNumberFactory(factory.django.DjangoModelFactory):
         model = PhoneNumber
 
     organization = factory.SubFactory(OrganizationFactory)
+
+

@@ -97,5 +97,6 @@ class HomepageSearchViewTestCase(APITestCase):
             content_type='application/json'
         )
 
+        print(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)

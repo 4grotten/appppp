@@ -10,8 +10,6 @@ from users.tests.factories import UserFactory, TokenFactory
 
 
 class UnprocessedTransactionCountTestCase(APITestCase):
-    maxDiff = None
-
     def setUp(self):
         self.user = UserFactory(phone_number='+996555421221')
         self.user2 = UserFactory(phone_number='+996555421222')

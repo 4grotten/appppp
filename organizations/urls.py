@@ -51,7 +51,11 @@ organization_urls = [
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
     path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view(), name="org_get_partners_count"),
-    path('organizations/<int:pk>/getPartnersFollowersCount/', OrganizationPartnersFollowersCountAPIView.as_view())
+    path(
+        'organizations/<int:pk>/getPartnersFollowersCount/',
+        OrganizationPartnersFollowersCountAPIView.as_view(),
+        name="org_partners_followers_count"
+    )
 ]
 
 membership_urls = [

@@ -5,7 +5,7 @@ from common.tests.factories import FileFactory
 from organizations.models import (
     Organization, DiscountCard, OrganizationClientFinancialStatus, Partnership,
     CashbackGroup, Membership, Role, PhoneNumber,
-    Subscription,
+    Subscription, Message
 )
 from users.tests.factories import UserFactory
 
@@ -78,6 +78,36 @@ class OrganizationPhoneNumberFactory(factory.django.DjangoModelFactory):
         model = PhoneNumber
 
     organization = factory.SubFactory(OrganizationFactory)
+
+
+class MessageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Message
+
+    sender = factory.SubFactory(UserFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
+    @factory.post_generation
+    def receivers(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        if extracted:
+            # A list of groups were passed in, use them
+            for receiver in extracted:
+                self.receivers.add(receiver)
+
+    @factory.post_generation
+    def receiver_partners(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        if extracted:
+            # A list of groups were passed in, use them
+            for receiver_partner in extracted:
+                self.receiver_partners.add(receiver_partner)
 
 
 class SubscriptionFactory(factory.django.DjangoModelFactory):

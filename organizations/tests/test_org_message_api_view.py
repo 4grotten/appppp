@@ -63,7 +63,6 @@ class OrgMessageAPIViewTestCase(APITestCase):
                     "sender": {
                         "id": self.user.id,
                         "full_name": self.user.full_name,
-                        "username": self.user.username,
                         "avatar": {
                             "id": self.user.avatar.id,
                             "file": f"http://testserver{self.user.avatar.file.url}",
@@ -72,7 +71,8 @@ class OrgMessageAPIViewTestCase(APITestCase):
                             "large": f"http://testserver{self.user.avatar.large.url}",
                             "medium": f"http://testserver{self.user.avatar.medium.url}",
                             "small": f"http://testserver{self.user.avatar.small.url}",
-                        }
+                        },
+                        "username": self.user.username,
                     },
                     "message_to": message_one.message_to,
                     "content": message_one.content,
@@ -81,19 +81,6 @@ class OrgMessageAPIViewTestCase(APITestCase):
                     ),
                     "receivers_count": 2,
                     "receivers": [
-                        {
-                            "id": user_receiver_one.id,
-                            "full_name": user_receiver_one.full_name,
-                            "avatar": {
-                                "id": user_receiver_one.avatar.id,
-                                "file": f"http://testserver{user_receiver_one.avatar.file.url}",
-                                "name": os.path.basename(
-                                    user_receiver_one.avatar.file.name),
-                                "large": f"http://testserver{user_receiver_one.avatar.large.url}",
-                                "medium": f"http://testserver{user_receiver_one.avatar.medium.url}",
-                                "small": f"http://testserver{user_receiver_one.avatar.small.url}",
-                            }
-                        },
                         {
                             "id": user_receiver_two.id,
                             "full_name": user_receiver_two.full_name,
@@ -105,8 +92,23 @@ class OrgMessageAPIViewTestCase(APITestCase):
                                 "large": f"http://testserver{user_receiver_two.avatar.large.url}",
                                 "medium": f"http://testserver{user_receiver_two.avatar.medium.url}",
                                 "small": f"http://testserver{user_receiver_two.avatar.small.url}",
-                            }
-                        }
+                            },
+                            "username": None
+                        },
+                        {
+                            "id": user_receiver_one.id,
+                            "full_name": user_receiver_one.full_name,
+                            "avatar": {
+                                "id": user_receiver_one.avatar.id,
+                                "file": f"http://testserver{user_receiver_one.avatar.file.url}",
+                                "name": os.path.basename(
+                                    user_receiver_one.avatar.file.name),
+                                "large": f"http://testserver{user_receiver_one.avatar.large.url}",
+                                "medium": f"http://testserver{user_receiver_one.avatar.medium.url}",
+                                "small": f"http://testserver{user_receiver_one.avatar.small.url}",
+                            },
+                            "username": None
+                        },
                     ],
                     "sender_role": membership.role.title,
                     "receiver_partner_count": 2,

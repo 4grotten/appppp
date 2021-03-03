@@ -1,4 +1,6 @@
+import json
 import os
+from unittest.mock import patch, Mock, call
 
 from django.urls import reverse
 from rest_framework import status
@@ -17,7 +19,7 @@ class OrgMessageAPIViewTestCase(APITestCase):
             full_name="Johnny Sins",
             username="PornActor"
         )
-        self.organization = OrganizationFactory()
+        self.organization = OrganizationFactory(owner=self.user)
 
     def test_user_unauthorized(self):
         expected_data = {
@@ -32,6 +34,25 @@ class OrgMessageAPIViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertJSONEqual(response.content, expected_data)
+
+    def test_required_fields(self):
+        self.client.force_authenticate(user=self.user)
+        expected_data = {
+            "message": "Invalid input",
+            "errors": {
+                "content": ["This field is required."],
+            }
+        }
+
+        response = self.client.post(
+            reverse("v1:organization_messages", kwargs={
+                "pk": self.organization.id
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
         self.assertJSONEqual(response.content, expected_data)
 
     def test_get_organization_messages(self):
@@ -151,4 +172,57 @@ class OrgMessageAPIViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertJSONEqual(response.content, expected_data)
+
+    def test_user_can_not_to_create_organization_message(self):
+        another_user = UserFactory()
+        self.client.force_authenticate(user=another_user)
+        data = {
+            "content": "Тут какое-то сообщение от Ахмеда",
+            "message_to": Message.ORGANIZATION_FOLLOWERS
+        }
+        expected_data = {
+            "message": "No rights to send message to followers of this organization"
+        }
+
+        response = self.client.post(
+            reverse("v1:organization_messages", kwargs={
+                "pk": self.organization.id
+            }),
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertJSONEqual(response.content, expected_data)
+
+    @patch("organizations.services.organization_services.OrgMessageService.send_message")
+    def test_send_organization_message(
+            self, send_message_mock: Mock,):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "content": "Тут какое-то сообщение от Ахмеда",
+            "message_to": Message.ORGANIZATION_FOLLOWERS
+        }
+        expected_data = {
+            "message": "Message is created"
+        }
+
+        response = self.client.post(
+            reverse("v1:organization_messages", kwargs={
+                "pk": self.organization.id
+            }),
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        send_message_mock.assert_has_calls([
+            call(
+                organization=self.organization,
+                content=data.get("content"),
+                sender=self.user,
+                message_to=data.get("message_to")
+            )
+        ])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(response.content, expected_data)

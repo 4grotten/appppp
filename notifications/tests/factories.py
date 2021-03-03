@@ -6,6 +6,7 @@ from fcm_django.models import FCMDevice
 from notifications.constants import NOTIFICATION_TYPES, NOTIFICATION_MODES, SYSTEM_NOTIFICATION_MODE
 from notifications.models import NotificationSetting, Notification
 from users.tests.factories import UserFactory
+from organizations.tests.factories import OrganizationFactory
 
 DEVICE_TYPES = ['ios', 'android', 'web']
 
@@ -32,3 +33,4 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: f'Notifications {n}')
     recipient = factory.SubFactory(UserFactory)
     description = factory.Sequence(lambda n: f'Notification Description {n}')
+    organization = factory.SubFactory(OrganizationFactory)

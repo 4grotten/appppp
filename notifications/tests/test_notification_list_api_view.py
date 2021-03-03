@@ -10,8 +10,6 @@ from users.tests.factories import UserFactory
 
 
 class NotificationListAPIViewTestCase(APITestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self.user = UserFactory()
 

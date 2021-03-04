@@ -272,14 +272,22 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_receivers(self, obj):
         receivers = Message.objects.get(id=obj.id).receivers.all()[0:3]
-        return UserShortInfoSerializer(receivers, many=True).data
+        return UserShortInfoSerializer(
+            receivers,
+            many=True,
+            context={"request": self.context.get("request")}
+        ).data
 
     def get_receivers_count(self, obj):
         return Message.objects.get(id=obj.id).receivers.count()
 
     def get_receiver_partners(self, obj):
         partners = Message.objects.get(id=obj.id).receiver_partners.all()[0:3]
-        return OrganizationWithImageSerializer(partners, many=True).data
+        return OrganizationWithImageSerializer(
+            partners,
+            many=True,
+            context={"request": self.context.get("request")}
+        ).data
 
     def get_receiver_partner_count(self, obj):
         return Message.objects.get(id=obj.id).receiver_partners.count()

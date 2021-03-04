@@ -1,6 +1,9 @@
 FROM python:3.9.2-slim as env
 
+ARG build_version_report=none
+
 ENV PYTHONUNBUFFERED=1
+ENV BACKEND_VERSION_REPORT=${build_version_report}
 
 RUN apt-get update
 RUN apt-get install --no-install-recommends --yes \

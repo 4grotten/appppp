@@ -249,6 +249,13 @@ class TransactionService:
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        from shop.serializers.cart_serializers import CartSerializer
+        try:
+            fixed_cart_info = json.dumps(CartSerializer(current_transaction.cart).data,
+                                         cls=DjangoJSONEncoder)
+        except:
+            fixed_cart_info = None
+
         try:
             current_transaction.is_processed = True
             current_transaction.processed_by = processed_by
@@ -432,7 +439,12 @@ class TransactionService:
     def refund_transaction(cls, old_transaction: Transaction, user: User):
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
-
+        from shop.serializers.cart_serializers import CartSerializer
+        try:
+            fixed_cart_info = json.dumps(CartSerializer(old_transaction.cart).data,
+                                         cls=DjangoJSONEncoder)
+        except:
+            fixed_cart_info = None
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
             old_transaction.employee_name = user.full_name,

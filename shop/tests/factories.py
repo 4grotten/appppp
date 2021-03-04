@@ -1,7 +1,7 @@
 import factory
 
 from organizations.tests.factories import OrganizationFactory
-from shop.models import ShopItem, Cart, CartItem
+from shop.models import ShopItem, Cart, CartItem, ItemLike
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory
 
@@ -29,3 +29,11 @@ class CartItemFactory(factory.django.DjangoModelFactory):
     cart = factory.SubFactory(CartFactory)
     item = factory.SubFactory(ShopItemFactory)
     count = factory.Sequence(lambda n: int(n + 5))
+
+
+class ItemLikeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ItemLike
+
+    user = factory.SubFactory(UserFactory)
+    item = factory.SubFactory(ShopItemFactory)

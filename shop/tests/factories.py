@@ -1,8 +1,10 @@
 import factory
 
 from organizations.tests.factories import OrganizationFactory
-from shop.models import ShopItem, Cart, CartItem, ItemLike
-from transactions.tests.factories import TransactionFactory
+from shop.models import (
+    ShopItem, Cart,
+    CartItem, ItemLike, ItemBookmark
+)
 from users.tests.factories import UserFactory
 
 
@@ -34,6 +36,14 @@ class CartItemFactory(factory.django.DjangoModelFactory):
 class ItemLikeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ItemLike
+
+    user = factory.SubFactory(UserFactory)
+    item = factory.SubFactory(ShopItemFactory)
+
+
+class ItemBookmarkFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ItemBookmark
 
     user = factory.SubFactory(UserFactory)
     item = factory.SubFactory(ShopItemFactory)

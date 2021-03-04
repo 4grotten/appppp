@@ -89,7 +89,7 @@ build:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker pull $BUILD_IMAGE_NAME || true
-    - docker build --cache-from $BUILD_IMAGE_NAME --target production --tag $BUILD_IMAGE_NAME .
+    - docker build --cache-from $BUILD_IMAGE_NAME --target production --tag $BUILD_IMAGE_NAME --build-arg build_version_report=$(git describe --always --tags) .
     - docker push $BUILD_IMAGE_NAME
   only:
     refs:

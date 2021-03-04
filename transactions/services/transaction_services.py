@@ -1,9 +1,11 @@
+import json
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
+from django.core.serializers.json import DjangoJSONEncoder
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException,
@@ -258,6 +260,8 @@ class TransactionService:
 
         try:
             current_transaction.is_processed = True
+            from shop.serializers.cart_serializers import CartSerializer
+            current_transaction.fixed_cart = fixed_cart_info
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -449,6 +453,7 @@ class TransactionService:
         try:
             old_transaction.employee_name = user.full_name,
             old_transaction.employee_role = role,
+            old_transaction.fixed_cart = fixed_cart_info
             old_transaction.employee_avatar = user.avatar
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False

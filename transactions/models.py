@@ -58,6 +58,7 @@ class Transaction(TimestampModel):
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
+    fixed_cart = models.JSONField(null=True)
 
     discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
     type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)

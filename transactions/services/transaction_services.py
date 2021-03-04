@@ -42,7 +42,6 @@ from organizations.services.cumulative_group_services import (
 )
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from shop.serializers.cart_serializers import CartSerializer
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -457,6 +456,7 @@ class TransactionService:
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
 
+        from shop.serializers.cart_serializers import CartSerializer
         try:
             fixed_cart_info = json.dumps(
                 CartSerializer(old_transaction.cart).data,

@@ -6,12 +6,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from organizations.tests.factories import OrganizationFactory
-from users.tests.factories import (
-    UserFactory,
-    TokenFactory,
-)
 from shop.tests.factories import (
     ShopItemFactory, ItemLikeFactory,
+)
+from users.tests.factories import (
+    UserFactory,
 )
 
 

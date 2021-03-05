@@ -81,6 +81,7 @@ tests:
     refs:
       - merge_requests
       - master
+      - tags
 
 
 build:

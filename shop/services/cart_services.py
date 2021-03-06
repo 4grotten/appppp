@@ -137,8 +137,10 @@ class CartService:
             )
             original_price = totals['original_price']
             discounted_price = totals['discounted_price']
-            role = OrganizationService.get_user_role_in_organization(organization=cart.organization,
-                                                                     user=user)
+            role = OrganizationService.get_user_role_in_organization(
+                organization=cart.organization,
+                user=user
+            )
             try:
                 cart.transaction.currency = cart.organization.currency
                 cart.transaction.processed_by = user
@@ -148,7 +150,16 @@ class CartService:
                 cart.transaction.status = Transaction.ACCEPTED
                 cart.transaction.original_amount = original_price
                 cart.transaction.savings = original_price - discounted_price
-                cart.transaction.save()
+                cart.transaction.save(update_fields=[
+                    "currency",
+                    "processed_by",
+                    "employee_name",
+                    "employee_role",
+                    "employee_avatar",
+                    "status",
+                    "original_amount",
+                    "savings"
+                ])
             except IntegrityError:
                 raise IntegrityException('Could not complete transaction')
 

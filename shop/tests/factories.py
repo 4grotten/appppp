@@ -5,6 +5,7 @@ from shop.models import (
     ShopItem, Cart,
     CartItem, ItemLike, ItemBookmark
 )
+from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory
 
 

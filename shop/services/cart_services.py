@@ -155,7 +155,6 @@ class CartService:
                     "employee_name",
                     "employee_role",
                     "employee_avatar",
-                    "status",
                     "original_amount",
                     "savings"
                 ])

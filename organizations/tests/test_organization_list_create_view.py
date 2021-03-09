@@ -1,5 +1,6 @@
 import json
 import os
+from unittest import expectedFailure
 
 from django.urls import reverse
 from rest_framework import status
@@ -10,7 +11,6 @@ from organizations.models import DiscountCard
 from organizations.services.organization_services import OrganizationService
 from organizations.tests.factories import OrganizationFactory
 from users.tests.factories import UserFactory
-from unittest import expectedFailure
 
 
 class OrganizationsListCreateViewTestCase(APITestCase):
@@ -139,3 +139,42 @@ class OrganizationsListCreateViewTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(response.json(), expected_data)
+
+    def test_create_organization_with_image_id_not_exist(self):
+        self.client.force_authenticate(user=self.user)
+        card_image = FileFactory()
+        data = {
+            "title": "Ahmed organization",
+            "image_id": 1,
+            "numbers": [1, 2],
+            "accounts": [1, 2, 3],
+            "cards": [{
+                "type": DiscountCard.FIXED,
+                "percent": 5,
+                "image": {
+                    "id": card_image.id,
+                    "file": f"http://testserver{card_image.file.url}",
+                    "name": os.path.basename(card_image.file.name),
+                    "large": f"http://testserver{card_image.large.url}",
+                    "medium": f"http://testserver{card_image.medium.url}",
+                    "small": f"http://testserver{card_image.small.url}",
+                }
+            }],
+            "longitude": -73.989308,
+            "latitude": 40.741895,
+        }
+        expected_data = {
+            "message": "Invalid input",
+            "errors": {
+                "image_id": ['Invalid pk "1" - object does not exist.']
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertJSONEqual(response.content, expected_data)

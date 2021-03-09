@@ -12,6 +12,7 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
+from common.models import File
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -227,7 +228,9 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):
-    image_id = serializers.IntegerField()
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all()
+    )
     numbers = serializers.ListSerializer(child=serializers.CharField())
     accounts = serializers.ListSerializer(child=serializers.CharField())
     longitude = serializers.FloatField(allow_null=True)

@@ -145,7 +145,6 @@ class CartService:
                 cart.transaction.employee_name = user.full_name
                 cart.transaction.employee_role = role
                 cart.transaction.employee_avatar = user.avatar
-                cart.transaction.status = Transaction.ACCEPTED
                 cart.transaction.original_amount = original_price
                 cart.transaction.savings = original_price - discounted_price
                 cart.transaction.save()

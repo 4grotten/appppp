@@ -90,7 +90,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
 class TransactionWithClientSerializer(TransactionDetailSerializer):
     client = ProfileBriefWithPhotoSerializer()
-    cart = CartSerializer()
+    cart = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
     processed_by = serializers.SerializerMethodField()
     employee_name = serializers.SerializerMethodField()
@@ -98,6 +98,9 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationUserTransactionSerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
+
+    def get_cart(self, instance: Transaction):
+        return instance.fixed_cart or CartSerializer(instance=instance.cart, context=self.context).data
 
     def get_employee_avatar(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(

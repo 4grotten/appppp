@@ -113,6 +113,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             user_carts_list_response.content, user_carts_list_expected_data)
 
         cart_id = user_carts_list_response.json().get("list")[0].get("id")
+
         # Оформляем заказ на адрес и номер
         order_delivery_url = reverse(
             "v1:order_delivery",
@@ -234,7 +235,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                     }
                 ]
             },
-            "status": Transaction.ACCEPTED,
+            "status": Transaction.IN_PROGRESS,
             "current_user_can_see_stats": True,
             "delivery_info": None,
             "fixed_cart": None
@@ -253,13 +254,15 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
 
         transaction_id = user_cart_details_response.json().get("id")
         from_cashback = user_cart_details_response.json().get("from_cashback")
+
+        # Завершаем транзакцию.
         online_transaction_complete_url = reverse("v1:online_transaction_complete")
         online_transaction_complete_data = {
             "transaction_id": transaction_id,
             "from_cashback": from_cashback
         }
         online_transaction_complete_expected_data = {
-
+            "message": "Transaction successfully completed"
         }
 
         online_transaction_complete_response = self.client.post(
@@ -268,7 +271,6 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             content_type='application/json'
         )
 
-        print("online_transaction_complete_response=", online_transaction_complete_response.content)
         self.assertEqual(
             online_transaction_complete_response.status_code,
             status.HTTP_200_OK

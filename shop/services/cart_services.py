@@ -68,7 +68,7 @@ class CartService:
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
-            cart.save()
+            cart.save(update_fields=["is_open"])
         except IntegrityError:
             raise IntegrityException('Could not add transaction')
         finally:
@@ -121,7 +121,7 @@ class CartService:
     def bulk_update(cls, cart: Cart, items, user: User):
 
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
-                user=user, cart=cart)) or (cart.transaction and cart.transaction.status != 'in_progress')):
+                user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException('No rights to change this cart')
 
         CartItem.objects.filter(cart=cart).delete()

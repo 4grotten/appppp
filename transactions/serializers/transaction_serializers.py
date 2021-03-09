@@ -100,10 +100,16 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     current_user_can_see_stats = serializers.SerializerMethodField()
 
     def get_employee_avatar(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=instance.organization):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(
+                user=self.context['request'].user,
+                organization=instance.organization
+        ):
             return ImageSerializer(self.context['request'].user.avatar).data
-        return ImageSerializer(instance.employee_avatar).data
+
+        return ImageSerializer(
+            instance.employee_avatar,
+            context={"request": self.context.get("request")}
+        ).data
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context['request'].user,

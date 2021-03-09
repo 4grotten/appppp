@@ -49,8 +49,8 @@ class DeclineTransactionTestCase(APITestCase):
         self.assertEqual(changed_transaction.type, 'offline')
         self.assertEqual(changed_transaction.status, 'rejected')
         self.assertEqual(changed_transaction.processed_by, self.user)
-        self.assertEqual(re.sub(r'[^A-Za-z0-9 ]+', '', changed_transaction.employee_name), self.user.full_name)
-        self.assertEqual(re.sub(r'[^A-Za-z0-9 ]+', '', changed_transaction.employee_role), 'Owner')
+        self.assertEqual(changed_transaction.employee_name, self.user.full_name)
+        self.assertEqual(changed_transaction.employee_role, 'Owner')
         self.assertEqual(changed_transaction.employee_avatar, self.user.avatar)
 
     def test_fail_on_two_time_reject_transaction_decline(self):

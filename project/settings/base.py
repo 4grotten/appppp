@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.exception_handler_middleware.RequestExceptionHandlerMiddleware',
+    'common.middleware.BackendVersionHeaderMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -212,6 +213,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 SESSION_COOKIE_SAMESITE = None
 
 CORS_PREFLIGHT_MAX_AGE = 86400
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # REST FRAMEWORK
 REST_FRAMEWORK = {

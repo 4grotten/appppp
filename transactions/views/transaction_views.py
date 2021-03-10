@@ -288,7 +288,7 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
         if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
             raise PermissionDeniedException('Permission denied')
 
-        TransactionService.refund_transaction(old_transaction=instance, user=self.request.user)
+        TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
 
 
 class OrgFollowersTransactionsListAPIView(ListAPIView):

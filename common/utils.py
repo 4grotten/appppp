@@ -1,3 +1,4 @@
+import json
 import posixpath
 import hashlib
 import datetime
@@ -72,3 +73,13 @@ def method_permission_classes(classes):
         return decorated_func
 
     return decorator
+
+
+import decimal
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return 'dec:' + str(o)
+        return super(DecimalEncoder, self).default(o)

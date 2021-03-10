@@ -42,6 +42,7 @@ from organizations.services.cumulative_group_services import (
 )
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
+from shop.models import Cart
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -464,7 +465,7 @@ class TransactionService:
         try:
             fixed_cart = CartSerializer(old_transaction.cart, context={
                 'request': request}).data
-        except old_transaction._meta.model.cart.RelatedObjectDoesNotExist:
+        except Cart.DoesNotExist:
             fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)

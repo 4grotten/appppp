@@ -246,7 +246,7 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_online_transaction(cls,
+    def complete_online_transaction(cls, request,
                                     transaction_id: int,
                                     processed_by: User,
                                     ) -> Transaction:
@@ -265,7 +265,7 @@ class TransactionService:
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         from shop.serializers.cart_serializers import CartSerializer
         try:
-            fixed_cart_info = json.dumps(CartSerializer(current_transaction.cart).data,
+            fixed_cart_info = json.dumps(CartSerializer(current_transaction.cart, context={'request': request}).data,
                                          cls=DjangoJSONEncoder)
         except:
             fixed_cart_info = None

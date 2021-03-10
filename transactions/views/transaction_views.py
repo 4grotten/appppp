@@ -112,7 +112,8 @@ class OnlineTransactionCompleteView(GenericAPIView):
 
         TransactionService.complete_online_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
-            processed_by=request.user
+            processed_by=request.user,
+            request=request
         )
 
         return Response(data={

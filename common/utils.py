@@ -2,10 +2,13 @@ import json
 import posixpath
 import hashlib
 import datetime
+import decimal
 import uuid
 import os
 from pathlib import Path
 from django.conf import settings
+
+from django.core.serializers.json import DjangoJSONEncoder
 
 from django.utils.crypto import get_random_string
 from imagekit.cachefiles.namers import hash, source_name_dot_hash
@@ -75,11 +78,20 @@ def method_permission_classes(classes):
     return decorator
 
 
-import decimal
-
-
-class DecimalEncoder(json.JSONEncoder):
+class DecimalEncoder(DjangoJSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
-            return 'dec:' + str(o)
-        return super(DecimalEncoder, self).default(o)
+            return {"__type__": "decimal", "__value__": str(o)}
+        else:
+            return super().default(o)
+
+
+class DecimalDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj: dict):
+        if "__type__" in obj and "__value__" in obj:
+            if obj["__type__"] == "decimal":
+                return decimal.Decimal(obj["__value__"])
+        return obj

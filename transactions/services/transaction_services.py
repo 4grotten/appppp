@@ -267,7 +267,8 @@ class TransactionService:
         try:
             current_transaction.is_processed = True
             from shop.serializers.cart_serializers import CartSerializer
-            current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={'request': request}).data
+            current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
+                'request': request}).data if current_transaction.cart else None
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -460,20 +461,15 @@ class TransactionService:
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
         from shop.serializers.cart_serializers import CartSerializer
-        try:
-            fixed_cart_info = json.dumps(
-                CartSerializer(old_transaction.cart, context={'request': request}).data,
-                cls=DjangoJSONEncoder
-            )
-        except:
-            fixed_cart_info = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
             old_transaction.employee_name = user.full_name
             old_transaction.employee_role = role
             old_transaction.employee_avatar = user.avatar
-            old_transaction.fixed_cart = fixed_cart_info
+            if not old_transaction.fixed_cart:
+                old_transaction.fixed_cart = old_transaction.fixed_cart = CartSerializer(old_transaction.cart, context={
+                    'request': request}).data if old_transaction.cart else None
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user

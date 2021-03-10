@@ -639,7 +639,111 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         )
         self.assertEqual(item_details_response.status_code, status.HTTP_200_OK)
 
+        # Check if transaction is not updated
+
+        user_transaction_details_response = self.client.get(
+            user_transaction_details_url,
+            content_type='application/json'
+        )
+        self.assertEqual(user_transaction_details_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(user_transaction_details_response.json(), expected_user_transaction_info)
+
+        # We are Reject the Transaction waiting that transaction fixed_cart will not change
+
+        user_transaction_details_response = self.client.delete(
+            user_transaction_details_url,
+            content_type='application/json'
+        )
+        self.assertEqual(user_transaction_details_response.status_code, status.HTTP_204_NO_CONTENT)
+
         # Check transaction details. Waiting that it will not change
+
+        expected_user_transaction_info = {
+            "id": self.transaction.id,
+            "currency": "USD",
+            "original_amount": 100.0,
+            "discount_percent": 0,
+            "savings": 10.0,
+            "from_cashback": 0.0,
+            "to_cashback": 0.0,
+            "final_amount": 0.0,
+            "processed_by": self.transaction.processed_by.id,
+            "employee_name": self.cart.transaction.employee_name,
+            "employee_avatar": {
+                "id": self.user.avatar.id,
+                "file": f"http://testserver{self.user.avatar.file.url}",
+                "name": os.path.basename(
+                    str(self.user.avatar.file)
+                ),
+                "large": f"http://testserver{self.user.avatar.large.url}",
+                "medium": f"http://testserver{self.user.avatar.medium.url}",
+                "small": f"http://testserver{self.user.avatar.small.url}",
+            },
+            "employee_role": self.cart.transaction.employee_role,
+            "updated_at": self.cart.transaction.updated_at.strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            ),
+            "created_at": self.cart.transaction.created_at.strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            ),
+            "client": {
+                "id": self.cart.transaction.client.id,
+                "full_name": self.cart.transaction.client.full_name,
+                "avatar": {
+                    "id": self.cart.transaction.client.avatar.id,
+                    "file": f"http://testserver{self.cart.transaction.client.avatar.file.url}",
+                    "name": os.path.basename(
+                        str(self.cart.transaction.client.avatar.file)
+                    ),
+                    "large": f"http://testserver{self.cart.transaction.client.avatar.large.url}",
+                    "medium": f"http://testserver{self.cart.transaction.client.avatar.medium.url}",
+                    "small": f"http://testserver{self.cart.transaction.client.avatar.small.url}",
+                },
+            },
+            "delivery_type": Transaction.CASH_COURIER,
+            "type": Transaction.ONLINE,
+            "cart": {
+                "id": self.cart.id,
+                "organization": {
+                    "id": self.organization.id,
+                    "title": self.organization.title,
+                    "currency": "USD",
+                    "types": [],
+                    "image": {
+                        "id": self.organization.image.id,
+                        "file": f"http://testserver{self.organization.image.file.url}",
+                        "name": os.path.basename(
+                            str(self.organization.image.file)),
+                        "large": f"http://testserver{self.organization.image.large.url}",
+                        "medium": f"http://testserver{self.organization.image.medium.url}",
+                        "small": f"http://testserver{self.organization.image.small.url}",
+                    },
+                    "address": self.organization.address
+                },
+                "totals": {
+                    "original_price": 100.0,
+                    "discounted_price": 90.0
+                },
+                "items": [
+                    {
+                        "item": {
+                            "id": item.id,
+                            "name": item.name,
+                            "price": 100.0,
+                            "discounted_price": 90.0,
+                            "image": {
+                                "file": None,
+                                "is_watermarked": False
+                            }
+                        },
+                        "count": 1
+                    }
+                ]
+            },
+            "status": Transaction.REJECTED,
+            "current_user_can_see_stats": True,
+            "delivery_info": None,
+        }
 
         user_transaction_details_response = self.client.get(
             user_transaction_details_url,

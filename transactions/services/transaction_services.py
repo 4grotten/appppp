@@ -461,15 +461,19 @@ class TransactionService:
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
         from shop.serializers.cart_serializers import CartSerializer
+        try:
+            fixed_cart = CartSerializer(old_transaction.cart, context={
+                'request': request}).data
+        except:
+            fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
             old_transaction.employee_name = user.full_name
             old_transaction.employee_role = role
-            old_transaction.employee_avatar = user.avatar
             if not old_transaction.fixed_cart:
-                old_transaction.fixed_cart = old_transaction.fixed_cart = CartSerializer(old_transaction.cart, context={
-                    'request': request}).data if old_transaction.cart else None
+                old_transaction.fixed_cart = fixed_cart
+            old_transaction.employee_avatar = user.avatar
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user

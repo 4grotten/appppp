@@ -14,7 +14,7 @@ while read -r line ; do
       echo "MIGRATION START:" "$current_app" "${BASH_REMATCH[1]}"
       python manage.py sqlmigrate "$current_app" "${BASH_REMATCH[1]}"
       echo "MIGRATION END:"
-      printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' +
+      echo "----------------------------"
 
       (( i+=1 ))
     else

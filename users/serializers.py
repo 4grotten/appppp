@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import EmailValidator
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
@@ -7,7 +9,6 @@ from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_services import OrganizationService
 from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
-from phonenumber_field.serializerfields import PhoneNumberField
 
 User = get_user_model()
 
@@ -47,7 +48,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         fields = ('avatar_id', 'full_name', 'username',
                   'date_of_birth', 'email', 'gender')
         extra_kwargs = {
-            'email': {'validators': []},
+            "email": {"validators": [EmailValidator]},
         }
 
 

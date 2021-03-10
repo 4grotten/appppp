@@ -464,7 +464,7 @@ class TransactionService:
         try:
             fixed_cart = CartSerializer(old_transaction.cart, context={
                 'request': request}).data
-        except:
+        except old_transaction._meta.model.cart.RelatedObjectDoesNotExist:
             fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)

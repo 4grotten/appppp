@@ -90,7 +90,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
 class TransactionWithClientSerializer(TransactionDetailSerializer):
     client = ProfileBriefWithPhotoSerializer()
-    cart = CartSerializer()
+    cart = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
     processed_by = serializers.SerializerMethodField()
     employee_name = serializers.SerializerMethodField()
@@ -99,11 +99,20 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     organization = OrganizationUserTransactionSerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
 
+    def get_cart(self, instance: Transaction):
+        return instance.fixed_cart or CartSerializer(instance=instance.cart, context=self.context).data
+
     def get_employee_avatar(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=instance.organization):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(
+                user=self.context['request'].user,
+                organization=instance.organization
+        ):
             return ImageSerializer(self.context['request'].user.avatar).data
-        return ImageSerializer(instance.employee_avatar).data
+
+        return ImageSerializer(
+            instance.employee_avatar,
+            context={"request": self.context.get("request")}
+        ).data
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context['request'].user,
@@ -134,7 +143,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status',
-            'current_user_can_see_stats', 'delivery_info'
+            'current_user_can_see_stats', 'delivery_info',
         )
 
 

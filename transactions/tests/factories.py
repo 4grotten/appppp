@@ -1,6 +1,6 @@
 import factory
 
-from common.tests.factories import CurrencyFactory
+from common.tests.factories import CurrencyFactory, FileFactory
 from organizations.tests.factories import OrganizationFactory, DiscountCardFactory
 from transactions.models import Transaction
 from users.tests.factories import UserFactory
@@ -15,3 +15,4 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
     currency = factory.SubFactory(CurrencyFactory)
     source_card = factory.SubFactory(DiscountCardFactory)
+    employee_avatar = factory.SubFactory(FileFactory)

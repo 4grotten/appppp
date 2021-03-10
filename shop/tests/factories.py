@@ -5,6 +5,7 @@ from shop.models import (
     ShopItem, Cart,
     CartItem, ItemLike, ItemBookmark
 )
+from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory
 
 
@@ -22,6 +23,7 @@ class CartFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     organization = factory.SubFactory(OrganizationFactory)
+    transaction = factory.SubFactory(TransactionFactory)
 
 
 class CartItemFactory(factory.django.DjangoModelFactory):

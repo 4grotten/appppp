@@ -1,8 +1,14 @@
+import json
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
+
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, Count, DecimalField, Case, When, IntegerField
+from django.db.models import (
+    Sum, OuterRef, Subquery, F, QuerySet, Q,
+    DecimalField, Case, When, IntegerField
+)
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
@@ -11,20 +17,29 @@ from common.exceptions import (
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
-    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE, ACCEPT_SELLER_DISCOUNT_TYPE,
-    WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
-    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
-    DECLINE_DISCOUNT_TYPE, TRANSACTION_DECLINED_NOTIFICATION_TITLE, TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION,
-    YOU_DECLINED_NOTIFICATION_TITLE, PERSONAL_MODE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE, ACCEPT_ORDER_CLIENT_TYPE,
-    ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE, REQUEST_PARTNERSHIP_TYPE,
-    REQUEST_PARTNERSHIP_RECIPIENT_TYPE, REQUEST_ORDER_TYPE
+    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE,
+    ACCEPT_SELLER_DISCOUNT_TYPE,
+    WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE,
+    CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
+    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT,
+    WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
+    DECLINE_DISCOUNT_TYPE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
+    ACCEPT_ORDER_CLIENT_TYPE,
+    ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
+    REQUEST_ORDER_TYPE
 )
 from notifications.models import Notification
-from notifications.services import NotificationService
 from notifications.tasks import sent_notification
-from organizations.models import Organization, DiscountCard, Subscription, Membership
-from organizations.services.client_status_services import OrganizationClientFinancialStatusService
-from organizations.services.cumulative_group_services import CumulativeGroupService
+from organizations.models import (
+    Organization, DiscountCard,
+    Subscription, Membership
+)
+from organizations.services.client_status_services import (
+    OrganizationClientFinancialStatusService
+)
+from organizations.services.cumulative_group_services import (
+    CumulativeGroupService
+)
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
@@ -232,7 +247,7 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_online_transaction(cls,
+    def complete_online_transaction(cls, request,
                                     transaction_id: int,
                                     processed_by: User,
                                     ) -> Transaction:
@@ -249,8 +264,12 @@ class TransactionService:
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        from shop.serializers.cart_serializers import CartSerializer
         try:
             current_transaction.is_processed = True
+            from shop.serializers.cart_serializers import CartSerializer
+            current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
+                'request': request}).data if current_transaction.cart else None
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -258,7 +277,17 @@ class TransactionService:
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
-            current_transaction.save()
+            current_transaction.save(update_fields=[
+                "is_processed",
+                "fixed_cart",
+                "processed_by",
+                "employee_role",
+                "employee_name",
+                "employee_avatar",
+                "status",
+                "original_amount",
+                "savings",
+            ])
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
         client_status = OrganizationClientFinancialStatusService.get_or_create(
@@ -429,21 +458,38 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def refund_transaction(cls, old_transaction: Transaction, user: User):
+    def refund_transaction(cls, request, old_transaction: Transaction, user: User):
         if old_transaction.status == Transaction.REJECTED:
             raise BadRequestException(message='This transaction already was rejected')
+        from shop.serializers.cart_serializers import CartSerializer
+        try:
+            fixed_cart = CartSerializer(old_transaction.cart, context={
+                'request': request}).data
+        except Cart.DoesNotExist:
+            fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
             old_transaction.employee_name = user.full_name
             old_transaction.employee_role = role
+            if not old_transaction.fixed_cart:
+                old_transaction.fixed_cart = fixed_cart
             old_transaction.employee_avatar = user.avatar
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user
-            old_transaction.save()
+            old_transaction.save(update_fields=[
+                "employee_name",
+                "employee_role",
+                "employee_avatar",
+                "fixed_cart",
+                "status",
+                "is_processed",
+                "processed_by"
+            ])
         except:
             raise IntegrityException()
+
         client_status = OrganizationClientFinancialStatusService.get(
             user=old_transaction.client, organization=old_transaction.organization
         )

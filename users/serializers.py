@@ -47,9 +47,6 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('avatar_id', 'full_name', 'username',
                   'date_of_birth', 'email', 'gender')
-        extra_kwargs = {
-            "email": {"validators": [EmailValidator]},
-        }
 
 
 class ProfileBriefSerializer(serializers.ModelSerializer):

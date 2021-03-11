@@ -88,9 +88,8 @@ class UserService:
     @classmethod
     def init_or_update_user_email(cls, user, email):
         if not cls.is_email_updated(user=user, email=email):
-            if user.email != email:
-                user.email = email
-                user.save(update_fields=["email"])
+            user.email = email
+            user.save(update_fields=["email"])
 
 
 class TemporaryCodeService:

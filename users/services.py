@@ -45,7 +45,14 @@ class UserService:
             user.gender = gender
             user.is_new_user = False
 
-            user.save()
+            user.save(update_fields=[
+                "avatar_id",
+                "full_name",
+                "username",
+                "date_of_birth",
+                "gender",
+                "is_new_user",
+            ])
 
             return user
 
@@ -56,7 +63,7 @@ class UserService:
     def set_password(cls, user: User, password: str):
         user.set_password(password)
         user.is_new_user = False
-        user.save()
+        user.save(update_fields=["password", "is_new_user"])
 
     @classmethod
     def change_password(cls, user: User, new_password: str, old_password: str):
@@ -64,13 +71,13 @@ class UserService:
             raise ValidationException('Incorrect old password')
 
         user.set_password(new_password)
-        user.save()
+        user.save(update_fields=["password"])
 
     @classmethod
     def change_phone_number(cls, user: User, new_phone_number: str):
         try:
             user.phone_number = new_phone_number
-            user.save()
+            user.save(update_fields=["phone_number"])
         except Exception:
             raise IntegrityException('Error while changing number')
 
@@ -82,7 +89,7 @@ class UserService:
     def init_or_update_user_email(cls, user, email):
         if not cls.is_email_updated(user=user, email=email):
             user.email = email
-            user.save()
+            user.save(update_fields=["email"])
 
 
 class TemporaryCodeService:

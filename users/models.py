@@ -46,7 +46,7 @@ class TemporaryCode(TimestampModel):
     expiration_datetime = models.DateTimeField(blank=True)
 
     def __str__(self):
-        return self.user.phone_number
+        return str(self.user.phone_number)
 
     def save(self, *args, **kwargs):
         if not self.pk:

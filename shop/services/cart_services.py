@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from sqlite3 import IntegrityError
 from typing import Tuple
@@ -16,6 +17,9 @@ from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
 from notifications.tasks import sent_notification, send_notifications_organization_members
+
+
+logger = logging.getLogger(__name__)
 
 
 class CartService:
@@ -96,16 +100,23 @@ class CartService:
 
     @classmethod
     def create_transaction(cls, cart: Cart):
-        try:
+        with transaction.atomic():
+            logger.info(f"Cart id = {cart.id}")
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
-            transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
-                                                     type="online", original_amount=original_price,
-                                                     currency=cart.organization.currency,
-                                                     status=Transaction.IN_PROGRESS,
-                                                     savings=original_price - discounted_price)
-            return transaction
-        except IntegrityError:
-            raise IntegrityException('Could not create transaction')
+            tr, _ = Transaction.objects.get_or_create(
+                cart=cart,
+                client=cart.user,
+                defaults={
+                    "organization": cart.organization,
+                    "type": "online",
+                    "original_amount": original_price,
+                    "currency": cart.organization.currency,
+                    "status": Transaction.IN_PROGRESS,
+                    "savings": original_price - discounted_price
+                }
+            )
+            logger.info(f"Transaction was created with id - {tr.id}")
+            return tr
 
     @classmethod
     def can_user_change_cart(cls, user: User, cart: Cart) -> bool:

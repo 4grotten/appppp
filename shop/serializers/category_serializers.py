@@ -2,6 +2,7 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
+from common.serializers import ImageSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
 from shop.services.category_services import ItemSubcategoryService
@@ -35,13 +36,16 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 
 
 class ItemCategorySerializer(serializers.ModelSerializer):
+    icon = ImageSerializer()
+
     class Meta:
         model = ItemCategory
-        fields = ('id', 'name',)
+        fields = ('id', 'name', 'icon')
 
 
 class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
+    icon = ImageSerializer()
 
     def get_subcategories(self, main_category: ItemCategory) -> dict:
         organization = self.context.get('organization', None)
@@ -54,11 +58,12 @@ class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemCategory
-        fields = ('id', 'name', 'subcategories')
+        fields = ('id', 'name', 'icon', 'subcategories')
 
 
 class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
+    icon = ImageSerializer()
 
     def get_subcategories(self, main_category: ItemCategory) -> dict:
         subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(
@@ -68,4 +73,4 @@ class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerialize
 
     class Meta:
         model = ItemCategory
-        fields = ('id', 'name', 'subcategories')
+        fields = ('id', 'icon', 'name', 'subcategories')

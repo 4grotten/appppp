@@ -1,4 +1,3 @@
-import logging
 from decimal import Decimal
 from sqlite3 import IntegrityError
 from typing import Tuple
@@ -17,9 +16,6 @@ from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
 from notifications.tasks import sent_notification, send_notifications_organization_members
-
-
-logger = logging.getLogger(__name__)
 
 
 class CartService:
@@ -72,7 +68,7 @@ class CartService:
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
-            cart.save(update_fields=["is_open"])
+            cart.save()
         except IntegrityError:
             raise IntegrityException('Could not add transaction')
         finally:
@@ -101,7 +97,6 @@ class CartService:
     @classmethod
     def create_transaction(cls, cart: Cart):
         with transaction.atomic():
-            logger.info(f"Cart id = {cart.id}")
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
             tr, _ = Transaction.objects.get_or_create(
                 cart=cart,
@@ -115,7 +110,6 @@ class CartService:
                     "savings": original_price - discounted_price
                 }
             )
-            logger.info(f"Transaction was created with id - {tr.id}")
             return tr
 
     @classmethod

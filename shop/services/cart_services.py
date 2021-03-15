@@ -68,7 +68,7 @@ class CartService:
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
-            cart.save(update_fields=["is_open"])
+            cart.save()
         except IntegrityError:
             raise IntegrityException('Could not add transaction')
         finally:
@@ -96,16 +96,21 @@ class CartService:
 
     @classmethod
     def create_transaction(cls, cart: Cart):
-        try:
+        with transaction.atomic():
             original_price, discounted_price = cls.get_total_prices_in_cart(cart)
-            transaction = Transaction.objects.create(client=cart.user, organization=cart.organization, cart=cart,
-                                                     type="online", original_amount=original_price,
-                                                     currency=cart.organization.currency,
-                                                     status=Transaction.IN_PROGRESS,
-                                                     savings=original_price - discounted_price)
-            return transaction
-        except IntegrityError:
-            raise IntegrityException('Could not create transaction')
+            tr, _ = Transaction.objects.get_or_create(
+                cart=cart,
+                client=cart.user,
+                defaults={
+                    "organization": cart.organization,
+                    "type": "online",
+                    "original_amount": original_price,
+                    "currency": cart.organization.currency,
+                    "status": Transaction.IN_PROGRESS,
+                    "savings": original_price - discounted_price
+                }
+            )
+            return tr
 
     @classmethod
     def can_user_change_cart(cls, user: User, cart: Cart) -> bool:

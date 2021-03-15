@@ -38,7 +38,6 @@ class ProfileInitialAPIViewTestCase(APITestCase):
             "message": "Invalid input",
             "errors": {
                 "avatar_id": ["This field is required."],
-                "email": ["This field is required."],
                 "gender": ["This field is required."]
             }
         }
@@ -89,30 +88,4 @@ class ProfileInitialAPIViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertJSONEqual(response.content, expected_data)
-
-    def test_email_already_exist(self):
-        user = UserFactory(
-            email="zoxon470@gmail.com"
-        )
-        self.client.force_authenticate(user=user)
-        data = {
-            "avatar_id": 1,
-            "email": user.email,
-            "gender": "male",
-        }
-        expected_data = {
-            "message": "Invalid input",
-            "errors": {
-                "email": ["user with this Email already exists."]
-            }
-        }
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps(data),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
         self.assertJSONEqual(response.content, expected_data)

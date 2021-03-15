@@ -296,8 +296,8 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "from_cashback": 0.0,
             "to_cashback": 0.0,
             "final_amount": 90.0,
-            "processed_by": transaction.processed_by.id,
-            "employee_name": transaction.employee_name,
+            "processed_by": self.user.id,
+            "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
                 "file": f"http://testserver{self.user.avatar.file.url}",
@@ -308,7 +308,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "medium": f"http://testserver{self.user.avatar.medium.url}",
                 "small": f"http://testserver{self.user.avatar.small.url}",
             },
-            "employee_role": transaction.employee_role,
+            "employee_role": "Owner",
             "updated_at": transaction.updated_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
@@ -371,7 +371,10 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             },
             "status": Transaction.IN_PROGRESS,
             "current_user_can_see_stats": True,
-            "delivery_info": None,
+            "delivery_info": {
+                "address": "Боконбаева",
+                "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
+                "comment": None},
         }
 
         user_cart_details_response = self.client.put(
@@ -420,17 +423,18 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "v1:organization_transaction_detail",
             kwargs={"pk": transaction_id}
         )
+
         expected_user_transaction_info = {
-            "id": self.transaction.id,
+            "id": transaction.id,
             "currency": "USD",
             "original_amount": 100.0,
             "discount_percent": 0,
             "savings": 10.0,
             "from_cashback": 0.0,
             "to_cashback": 0.0,
-            "final_amount": 0.0,
-            "processed_by": self.transaction.processed_by.id,
-            "employee_name": self.cart.transaction.employee_name,
+            "final_amount": 90.0,
+            "processed_by": self.user.id,
+            "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
                 "file": f"http://testserver{self.user.avatar.file.url}",
@@ -441,25 +445,25 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "medium": f"http://testserver{self.user.avatar.medium.url}",
                 "small": f"http://testserver{self.user.avatar.small.url}",
             },
-            "employee_role": self.cart.transaction.employee_role,
-            "updated_at": self.cart.transaction.updated_at.strftime(
+            "employee_role": "Owner",
+            "updated_at": transaction.updated_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
-            "created_at": self.cart.transaction.created_at.strftime(
+            "created_at": transaction.created_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "client": {
-                "id": self.cart.transaction.client.id,
-                "full_name": self.cart.transaction.client.full_name,
+                "id": transaction.client.id,
+                "full_name": transaction.client.full_name,
                 "avatar": {
-                    "id": self.cart.transaction.client.avatar.id,
-                    "file": f"http://testserver{self.cart.transaction.client.avatar.file.url}",
+                    "id": transaction.client.avatar.id,
+                    "file": f"http://testserver{transaction.client.avatar.file.url}",
                     "name": os.path.basename(
-                        str(self.cart.transaction.client.avatar.file)
+                        str(transaction.client.avatar.file)
                     ),
-                    "large": f"http://testserver{self.cart.transaction.client.avatar.large.url}",
-                    "medium": f"http://testserver{self.cart.transaction.client.avatar.medium.url}",
-                    "small": f"http://testserver{self.cart.transaction.client.avatar.small.url}",
+                    "large": f"http://testserver{transaction.client.avatar.large.url}",
+                    "medium": f"http://testserver{transaction.client.avatar.medium.url}",
+                    "small": f"http://testserver{transaction.client.avatar.small.url}",
                 },
             },
             "delivery_type": Transaction.CASH_COURIER,
@@ -504,7 +508,10 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             },
             "status": Transaction.ACCEPTED,
             "current_user_can_see_stats": True,
-            "delivery_info": None,
+            "delivery_info": {
+                "address": "Боконбаева",
+                "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
+                "comment": None},
         }
         user_transaction_details_response = self.client.get(
             user_transaction_details_url,
@@ -554,16 +561,16 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         # Check transaction details. Waiting that it will not change
 
         expected_user_transaction_info = {
-            "id": self.transaction.id,
+            "id": transaction.id,
             "currency": "USD",
             "original_amount": 100.0,
             "discount_percent": 0,
             "savings": 10.0,
             "from_cashback": 0.0,
             "to_cashback": 0.0,
-            "final_amount": 0.0,
-            "processed_by": self.transaction.processed_by.id,
-            "employee_name": self.cart.transaction.employee_name,
+            "final_amount": 90.0,
+            "processed_by": self.user.id,
+            "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
                 "file": f"http://testserver{self.user.avatar.file.url}",
@@ -574,25 +581,25 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "medium": f"http://testserver{self.user.avatar.medium.url}",
                 "small": f"http://testserver{self.user.avatar.small.url}",
             },
-            "employee_role": self.cart.transaction.employee_role,
-            "updated_at": self.cart.transaction.updated_at.strftime(
+            "employee_role": "Owner",
+            "updated_at": transaction.updated_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
-            "created_at": self.cart.transaction.created_at.strftime(
+            "created_at": transaction.created_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "client": {
-                "id": self.cart.transaction.client.id,
-                "full_name": self.cart.transaction.client.full_name,
+                "id": transaction.client.id,
+                "full_name": transaction.client.full_name,
                 "avatar": {
-                    "id": self.cart.transaction.client.avatar.id,
-                    "file": f"http://testserver{self.cart.transaction.client.avatar.file.url}",
+                    "id": transaction.client.avatar.id,
+                    "file": f"http://testserver{transaction.client.avatar.file.url}",
                     "name": os.path.basename(
-                        str(self.cart.transaction.client.avatar.file)
+                        str(transaction.client.avatar.file)
                     ),
-                    "large": f"http://testserver{self.cart.transaction.client.avatar.large.url}",
-                    "medium": f"http://testserver{self.cart.transaction.client.avatar.medium.url}",
-                    "small": f"http://testserver{self.cart.transaction.client.avatar.small.url}",
+                    "large": f"http://testserver{transaction.client.avatar.large.url}",
+                    "medium": f"http://testserver{transaction.client.avatar.medium.url}",
+                    "small": f"http://testserver{transaction.client.avatar.small.url}",
                 },
             },
             "delivery_type": Transaction.CASH_COURIER,
@@ -637,7 +644,10 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             },
             "status": Transaction.REJECTED,
             "current_user_can_see_stats": True,
-            "delivery_info": None,
+            "delivery_info": {
+                "address": "Боконбаева",
+                "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
+                "comment": None},
         }
 
         user_transaction_details_response = self.client.get(

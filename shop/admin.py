@@ -1,9 +1,11 @@
 from django.contrib import admin
 
 from shop.models import (
-    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem, DeliveryInfo,
+    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint,
+    Cart, CartItem, DeliveryInfo,
     ItemInstagramData
 )
+from .forms import ItemSubcategoryAdminForm
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
@@ -18,6 +20,7 @@ class InstagramDataInline(admin.TabularInline):
 class ItemSubcategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'name_ru', 'organization',)
     list_filter = ('category', 'organization',)
+    form = ItemSubcategoryAdminForm
 
 
 class ShopItemAdmin(admin.ModelAdmin):

@@ -1,7 +1,6 @@
 from django import forms
 
 from .models import ItemSubcategory
-from .tasks import upload_item_subcategories
 
 
 class ItemSubcategoryAdminForm(forms.ModelForm):
@@ -25,10 +24,15 @@ class ItemSubcategoryAdminForm(forms.ModelForm):
         csv_data = self.cleaned_data.get("csv_field")
         category_id = self.cleaned_data.get("category").id
         if csv_data:
-            upload_item_subcategories.delay(
-                csv_data=csv_data,
-                category_id=category_id
-            )
+            splited_data = csv_data.splitlines()
+            for line in splited_data:
+                (category_ru, category_en, category_tr) = line.split(";")
+                _, _ = ItemSubcategory.objects.update_or_create(
+                    category_id=category_id,
+                    name_ru=category_ru,
+                    name_en=category_en,
+                    name_tr=category_tr
+                )
 
         if commit:
             instance.save()

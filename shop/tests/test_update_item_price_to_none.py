@@ -28,7 +28,7 @@ class UpdateItemPriceToNoNeTestCase(APITestCase):
         self.client_user = UserFactory(phone_number='777777777')
         self.client_user2 = UserFactory(phone_number='777777755')
 
-    def test_client_update_open_cart_successfully(self):
+    def test_item_price_O_delete_cart_item_and_cart_successfully(self):
         shop_item1 = ShopItemFactory(organization=self.organization, price=100, discount=10)
         shop_item2 = ShopItemFactory(organization=self.organization, price=200, discount=10)
         cart = CartFactory(user=self.user_owner, organization=self.organization, is_open=True)

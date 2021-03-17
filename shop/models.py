@@ -49,6 +49,7 @@ class ShopItem(models.Model):
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
     youtube_links = models.JSONField(null=True)
+    is_updated = models.BooleanField(default=False)
 
     is_published = models.BooleanField(default=True)
 
@@ -56,12 +57,9 @@ class ShopItem(models.Model):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            now = timezone.now()
-            self.created_at = now
-            self.updated_at = now
         if self.id:
             self.updated_at = timezone.now()
+            self.is_updated = True
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         super().save(*args, **kwargs)

@@ -50,7 +50,7 @@ class ItemSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
-            'instagram_data'
+            'instagram_data', 'is_updated'
         )
 
 
@@ -62,6 +62,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'name', 'description',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'youtube_links',
+            'is_updated'
         )
 
     def validate(self, attrs):
@@ -173,7 +174,7 @@ class ItemListSerializer(serializers.ModelSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images',
-            'instagram_data'
+            'instagram_data', 'is_updated'
         )
 
 
@@ -188,7 +189,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
-            'instagram_data'
+            'instagram_data', 'is_updated'
         )
 
 

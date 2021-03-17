@@ -293,7 +293,9 @@ if not DEBUG and JSON_LOGGING:
 
 # Sentry
 if not DEBUG:
-    SENTRY_DSN = config("SENTRY_DSN", cast=str)
+    SENTRY_DSN = config(
+        "SENTRY_DSN", cast=str, default="https://1@91.ingest.sentry.io/228"
+    )
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 

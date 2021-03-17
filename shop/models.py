@@ -56,6 +56,10 @@ class ShopItem(models.Model):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
+        if not self.id:
+            now = timezone.now()
+            self.created_at = now
+            self.updated_at = now
         if self.id:
             self.updated_at = timezone.now()
         if self.price is not None:

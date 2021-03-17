@@ -13,6 +13,8 @@ from users.tests.factories import (
 
 
 class OrganizationItemListViewTestCase(APITestCase):
+    maxDiff = None
+
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
@@ -76,7 +78,8 @@ class OrganizationItemListViewTestCase(APITestCase):
                     "instagram_data": {
                         "videos": [],
                         "images": []
-                    }
+                    },
+                    "is_updated": False
                 },
                 {
                     "id": self.shop_item_one.id,
@@ -102,7 +105,8 @@ class OrganizationItemListViewTestCase(APITestCase):
                     "instagram_data": {
                         "videos": [],
                         "images": []
-                    }
+                    },
+                    "is_updated": False
                 }
             ]
         }

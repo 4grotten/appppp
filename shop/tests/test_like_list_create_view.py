@@ -112,7 +112,8 @@ class LikeListCreateViewTestCase(APITestCase):
                         {
                             "videos": [],
                             "images": []
-                        }
+                        },
+                    "is_updated": False
                 }
             ]
         }

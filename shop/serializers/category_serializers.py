@@ -23,16 +23,25 @@ class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
 
 class ItemSubcategorySerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, subcategory: ItemSubcategory):
+        return ImageSerializer(subcategory.category.icon).data if subcategory.category.icon else None
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization',)
+        fields = ('id', 'name', 'organization', 'icon')
 
 
 class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, subcategory: ItemSubcategory):
+        return ImageSerializer(subcategory.category.icon).data if subcategory.category.icon else None
+
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name',)
+        fields = ('id', 'name', 'icon')
 
 
 class ItemCategorySerializer(serializers.ModelSerializer):

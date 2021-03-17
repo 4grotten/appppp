@@ -10,6 +10,7 @@ from users.models import User
 
 class ItemCategory(models.Model):
     name = models.CharField(max_length=64)
+    icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'

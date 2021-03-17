@@ -15,6 +15,9 @@ class ItemSubcategoryAdminForm(forms.ModelForm):
             "id",
             "category",
             "name",
+            "name_ru",
+            "name_en",
+            "name_tr",
             "organization",
             "csv_field"
         )

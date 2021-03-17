@@ -23,6 +23,7 @@
 | POSTGRES_USER         | postgres             | PostgresQL  User's username                        |
 | POSTGRES_HOST         | postgres             | Name of the host                                   |
 | POSTGRES_PORT         | 5432                 | Port of the connection                             |
+| SENTRY_DSN         |                  | Sentry DSN                             |
 
 ### Running with Docker
 

@@ -1,6 +1,7 @@
+from celery import shared_task
+
 from instagram_parsers.parsers.parser import get_video_url_from_post
 from shop.models import ItemInstagramData
-from celery import shared_task
 
 
 @shared_task

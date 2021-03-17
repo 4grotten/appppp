@@ -198,7 +198,6 @@ class CartItemService:
     @transaction.atomic
     def delete_item_from_all_carts(cls, item: ShopItem):
         cart_items = CartItem.objects.filter(item=item)
-
         for cart_item in cart_items:
             cart = Cart.objects.get(items=cart_item)
             cart_item.delete()

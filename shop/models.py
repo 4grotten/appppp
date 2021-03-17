@@ -34,7 +34,7 @@ class ItemSubcategory(models.Model):
         ordering = ('-organization', 'name',)
 
 
-class ShopItem(TimestampModel):
+class ShopItem(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')

@@ -34,7 +34,7 @@ class ModifyPostProductPriceTestCase(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-    def test_modify_product_to_post_not_acceptable(self):
+    def test_modify_product_to_post_acceptable_item_price_none(self):
         self.client.force_authenticate(user=self.user)
         do_change_item_count_response = self.client.post(
             reverse("v1:add_cart_item"),
@@ -58,7 +58,7 @@ class ModifyPostProductPriceTestCase(APITestCase):
             content_type='application/json'
         )
 
-        self.assertNotEqual(
+        self.assertEqual(
             item_details_response.status_code,
             status.HTTP_200_OK
         )

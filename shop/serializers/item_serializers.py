@@ -7,6 +7,7 @@ from organizations.serializers.organization_serializers import ItemFeedOrganizat
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
+from shop.services.cart_services import CartService, CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
 
@@ -79,7 +80,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if 'price' in validated_data and validated_data.get('price') is None:
-            raise NotAcceptableException('Cannot update to empty price')
+            CartItemService.delete_item_from_all_carts(self.instance)
 
         return super().update(instance, validated_data)
 

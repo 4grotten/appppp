@@ -18,8 +18,6 @@ from users.tests.factories import UserFactory, TokenFactory
 
 
 class CompleteTransactionTestCase(APITestCase):
-    maxDiff = None
-
     def setUp(self):
         self.user = UserFactory(phone_number='123456789')
         self.token = TokenFactory(user=self.user)

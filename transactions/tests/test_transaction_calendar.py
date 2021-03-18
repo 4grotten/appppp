@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from unittest.mock import patch, Mock
 
@@ -17,6 +18,8 @@ from users.tests.factories import UserFactory, TokenFactory
 
 
 class CompleteTransactionTestCase(APITestCase):
+    maxDiff = None
+
     def setUp(self):
         self.user = UserFactory(phone_number='123456789')
         self.token = TokenFactory(user=self.user)
@@ -73,10 +76,21 @@ class CompleteTransactionTestCase(APITestCase):
             type='offline',
             organization=self.organization, currency=self.currency,
         )
-        expected_data = {"calendar": ["2021-02-06", "2021-02-05", "2021-02-03"]}
+        expected_data = {"client": {"id": self.client_user.id, "full_name": self.client_user.full_name,
+                                    "avatar":
+                                        {
+                                            "id": self.client_user.avatar.id,
+                                            "file": f"http://testserver{self.client_user.avatar.file.url}",
+                                            "name": os.path.basename(self.client_user.avatar.file.name),
+                                            "large": f"http://testserver{self.client_user.avatar.large.url}",
+                                            "medium": f"http://testserver{self.client_user.avatar.medium.url}",
+                                            "small": f"http://testserver{self.client_user.avatar.small.url}",
+                                        },
+                                    "role": "Client"},
+                         "calendar": ["2021-02-06", "2021-02-05", "2021-02-03"]}
         response = self.client.get(self.url, url_parameters, **self.header, content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(response.json(), expected_data)
 
     def test_serializer_fail_on_client_get_calendar(self):
         url_parameters = {'organization': self.organization.id, }

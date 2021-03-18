@@ -1,16 +1,15 @@
 from django.conf import settings
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.utils.timezone import now
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
-from organizations.serializers.query_param_serializers import MonthYearQueryParamSerializer
 from organizations.services.organization_services import OrganizationService
 from transactions.serializers.stats_serializers import (
     StartEndDateSerializer, TotalStatsSerializer, StartEndProcessedByQueryParamSerializer,
-    OrganizationCalendarSerializer
+    OrganizationCalendarSerializer, CalendarClientSerializer
 )
 from transactions.services.stats_services import StatisticsService
 
@@ -77,10 +76,9 @@ class OrganizationTransactionCalendarView(GenericAPIView):
         if month_year is None:
             month_year = now().date()
 
-        calendar_days = StatisticsService.get_days_when_client_did_transactions(organization=organization,
-                                                                                client=serializer.validated_data[
-                                                                                    'client'], month_year=month_year)
-        data = {
-            'calendar': calendar_days
-        }
+        data = CalendarClientSerializer(serializer.validated_data['client'],
+                                        context={'organization': organization, 'request': request,
+                                                 'month_year': month_year,
+                                                 'client': serializer.validated_data['client'],
+                                                 }).data
         return Response(data)

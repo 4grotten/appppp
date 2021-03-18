@@ -214,3 +214,16 @@ class FollowerInfoSerializer(serializers.ModelSerializer):
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(
             organization_id=self.context['organization_id'], user=user)
+
+
+class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+    role = serializers.SerializerMethodField()
+
+    def get_role(self, user: User) -> str:
+        return OrganizationService.get_user_role_in_organization_or_client(
+            organization_id=self.context['organization'].id, user=user)
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar', 'role')

@@ -7,6 +7,7 @@ from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
 from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer
 from organizations.services.organization_services import OrganizationService
+from shop.models import Cart
 from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
 from transactions.models import Transaction
 from users.models import User
@@ -70,9 +71,18 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
-    cart = CartSerializer()
+    cart = serializers.SerializerMethodField()
     current_user_can_see_stats = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
+
+    def get_cart(self, instance: Transaction):
+        if instance.fixed_cart:
+            return instance.fixed_cart
+        try:
+            cart = instance.cart
+        except Cart.DoesNotExist:
+            return None
+        return CartSerializer(instance=cart, context=self.context).data
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context.get('user'),
@@ -100,7 +110,13 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     current_user_can_see_stats = serializers.SerializerMethodField()
 
     def get_cart(self, instance: Transaction):
-        return instance.fixed_cart or CartSerializer(instance=instance.cart, context=self.context).data
+        if instance.fixed_cart:
+            return instance.fixed_cart
+        try:
+            cart = instance.cart
+        except Cart.DoesNotExist:
+            return None
+        return CartSerializer(instance=cart, context=self.context).data
 
     def get_employee_avatar(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(

@@ -71,9 +71,18 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
-    cart = CartSerializer()
+    cart = serializers.SerializerMethodField()
     current_user_can_see_stats = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
+
+    def get_cart(self, instance: Transaction):
+        if instance.fixed_cart:
+            return instance.fixed_cart
+        try:
+            cart = instance.cart
+        except Cart.DoesNotExist:
+            return None
+        return CartSerializer(instance=cart, context=self.context).data
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context.get('user'),

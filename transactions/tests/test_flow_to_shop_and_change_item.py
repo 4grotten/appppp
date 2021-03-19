@@ -375,6 +375,22 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "address": "Боконбаева",
                 "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
                 "comment": None},
+            "organization": {
+                "id": self.organization.id,
+                "title": self.organization.title,
+                "currency": "USD",
+                "types": [],
+                "image": {
+                    "id": self.organization.image.id,
+                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "name": os.path.basename(
+                        str(self.organization.image.file)),
+                    "large": f"http://testserver{self.organization.image.large.url}",
+                    "medium": f"http://testserver{self.organization.image.medium.url}",
+                    "small": f"http://testserver{self.organization.image.small.url}",
+                },
+                "address": self.organization.address
+            },
         }
 
         user_cart_details_response = self.client.put(
@@ -512,6 +528,22 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "address": "Боконбаева",
                 "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
                 "comment": None},
+            "organization": {
+                "id": self.organization.id,
+                "title": self.organization.title,
+                "currency": "USD",
+                "types": [],
+                "image": {
+                    "id": self.organization.image.id,
+                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "name": os.path.basename(
+                        str(self.organization.image.file)),
+                    "large": f"http://testserver{self.organization.image.large.url}",
+                    "medium": f"http://testserver{self.organization.image.medium.url}",
+                    "small": f"http://testserver{self.organization.image.small.url}",
+                },
+                "address": self.organization.address
+            },
         }
         user_transaction_details_response = self.client.get(
             user_transaction_details_url,
@@ -648,6 +680,22 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "address": "Боконбаева",
                 "apartment": None, "intercom": None, "entrance": None, "floor": None, "phone": "+996500441420",
                 "comment": None},
+            "organization": {
+                "id": self.organization.id,
+                "title": self.organization.title,
+                "currency": "USD",
+                "types": [],
+                "image": {
+                    "id": self.organization.image.id,
+                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "name": os.path.basename(
+                        str(self.organization.image.file)),
+                    "large": f"http://testserver{self.organization.image.large.url}",
+                    "medium": f"http://testserver{self.organization.image.medium.url}",
+                    "small": f"http://testserver{self.organization.image.small.url}",
+                },
+                "address": self.organization.address
+            },
         }
 
         user_transaction_details_response = self.client.get(

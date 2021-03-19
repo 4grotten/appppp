@@ -5,7 +5,8 @@ from rest_framework.fields import CurrentUserDefault
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
-from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer
+from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer, \
+    OrganizationShortInfoWithCurrencySerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
 from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
@@ -106,7 +107,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     employee_name = serializers.SerializerMethodField()
     employee_avatar = serializers.SerializerMethodField()
     employee_role = serializers.SerializerMethodField()
-    organization = OrganizationUserTransactionSerializer()
+    organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
 
     def get_cart(self, instance: Transaction):
@@ -159,7 +160,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status',
-            'current_user_can_see_stats', 'delivery_info',
+            'current_user_can_see_stats', 'delivery_info', 'organization'
         )
 
 

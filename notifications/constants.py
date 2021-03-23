@@ -127,16 +127,16 @@ CHECK_ATTENDANCE_OUT_TITLE_RU = 'Пропуск на выход {organization}'
 ATTENDANCE_DESCRIPTION_RU = ' '
 
 FOLLOWED_TO_ORGANIZATION_TITLE_RU = 'На вашу организацию подписались'
-ORGANIZATION_FOLLOWED_TITLE_RU = 'Вы подписались на {org_title}'
+ORGANIZATION_FOLLOWED_TITLE_RU = 'Вы подписались на организацию'
 DISCOUNT_COMPLETE_USER_TITLE_RU = 'Вам провели скидку {discount_percent} %'
 DISCOUNT_COMPLETE_DESCRIPTION_RU = 'Итого со скидкой: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE_RU = 'Вы провели скидку {discount_percent} %'
 
 NEW_DISCOUNT_TITLE_RU = 'Доступна новая скидка {percent} %'
-NEW_CASHBACK_TITLE_RU = 'Доступен новый кэшбек {percent} %'
+NEW_CASHBACK_TITLE_RU = 'Доступен новый кэшбэк {percent} %'
 
 NEW_DISCOUNT_DESCRIPTION_RU = '{address} '
-PARTNERSHIP_REQUEST_TITLE_RU = '{sender_organization} хочет стать партнером {recipient_organization}'
+PARTNERSHIP_REQUEST_TITLE_RU = '{sender_organization} запрашивает стать партнером {recipient_organization}'
 PARTNERSHIP_REQUEST_DESCRIPTION_RU = '{address} '
 SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU = '{address} '
 TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU = 'Вам отменили сделку'
@@ -149,7 +149,7 @@ NEW_ORGANIZATION_DESCRIPTION_RU = '{organization_title} '
 RECRUIT_JOB_TITLE_RU = 'Вы приняли на работу'
 RECRUIT_JOB_DESCRIPTION_RU = '{position} '
 
-GET_JOB_TITLE_RU = 'Вас приняли на работу {organization}'
+GET_JOB_TITLE_RU = 'Вас приняли на работу'
 GET_JOB_DESCRIPTION_RU = '{position} '
 
 CHANGE_JOB_POSITION_TITLE_RU = 'Вас назначили на новую должность'
@@ -158,7 +158,7 @@ CHANGE_JOB_POSITION_DESCRIPTION_RU = '{old_position} на {new_position}'
 CHANGE_JOB_POSITION_OWNER_TITLE_RU = 'Вы назначили другую должность'
 CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU = '{old_position} на {new_position}'
 
-QUIT_JOB_TITLE_RU = 'Вас уволили с работы {organization}'
+QUIT_JOB_TITLE_RU = 'Вас уволили с работы'
 QUIT_JOB_DESCRIPTION_RU = '{position} '
 
 DISMISS_JOB_TITLE_RU = 'Вы уволили с работы'
@@ -172,17 +172,17 @@ ORGANIZATION_OWNER_MESSAGE_TITLE_RU = 'Вы отправили сообщени�
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU = 'Вы отправили сообщение партнерам'
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Вы отправили сообщение подписчикам партнеров'
 
-ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника {organization}'
+ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника'
 ORGANIZATION_GAVE_DESCRIPTION_RU = ' '
 
-ORGANIZATION_OWN_TITLE_RU = 'Поздравляем Вы стали собственником {organization}'
+ORGANIZATION_OWN_TITLE_RU = 'Поздравляем Вы стали собственником'
 ORGANIZATION_OWN_DESCRIPTION_RU = ' '
 
 WITHDRAW_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
 CHARGE_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем вам начислили кешбэк {amount} {currency}'
 
-WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кешбека'
-CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кешбек {amount} {currency}'
+WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кэшбэка'
+CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кэшбэк {amount} {currency}'
 
 # _______________________ ENGLISH _______________________#
 
@@ -203,7 +203,7 @@ CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
 ATTENDANCE_DESCRIPTION = ' '
 
 FOLLOWED_TO_ORGANIZATION_TITLE = 'Subscribed to your organization'
-ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to {org_title}'
+ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to'
 DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
 DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
@@ -225,7 +225,7 @@ NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '
 RECRUIT_JOB_TITLE = 'You hired an employee'
 RECRUIT_JOB_DESCRIPTION = '{position} '
 
-GET_JOB_TITLE = 'You were hired as an employee {organization}'
+GET_JOB_TITLE = 'You were hired as an employee'
 GET_JOB_DESCRIPTION = '{position} '
 
 CHANGE_JOB_POSITION_TITLE = 'You have been appointed to new position'
@@ -234,7 +234,7 @@ CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
 CHANGE_JOB_POSITION_OWNER_TITLE = 'You have appointed different position'
 CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} to {new_position}'
 
-QUIT_JOB_TITLE = 'You got fired from {organization}'
+QUIT_JOB_TITLE = 'You got fired from'
 QUIT_JOB_DESCRIPTION = '{position} '
 
 DISMISS_JOB_TITLE = 'You fired from'
@@ -248,10 +248,10 @@ ORGANIZATION_OWNER_MESSAGE_TITLE = 'You have sent a message'
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = 'You have sent a message to partners'
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'You have sent message to your partners subscribers'
 
-ORGANIZATION_GAVE_TITLE = 'You have transferred ownership rights {organization}'
+ORGANIZATION_GAVE_TITLE = 'You have transferred ownership rights'
 ORGANIZATION_GAVE_DESCRIPTION = ' '
 
-ORGANIZATION_OWN_TITLE = 'Congratulations, you became an owner of {organization}'
+ORGANIZATION_OWN_TITLE = 'Congratulations, you became an owner of'
 ORGANIZATION_OWN_DESCRIPTION = ' '
 
 WITHDRAW_CASHBACK_CLIENT_TITLE = 'Congratulations you have paid,{amount} {currency} from cashback'
@@ -276,15 +276,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     organization_title=extra_data.get('organization_title')))
 
     elif notification_type == ORGANIZATION_OWN_TYPE:
-        notification_str = dict(title=ORGANIZATION_OWN_TITLE.format(organization=extra_data.get('organization')),
+        notification_str = dict(title=ORGANIZATION_OWN_TITLE,
                                 description=ORGANIZATION_OWN_DESCRIPTION,
-                                title_ru=ORGANIZATION_OWN_TITLE_RU.format(organization=extra_data.get('organization')),
+                                title_ru=ORGANIZATION_OWN_TITLE_RU,
                                 description_ru=ORGANIZATION_OWN_DESCRIPTION)
 
     elif notification_type == ORGANIZATION_GAVE_TYPE:
-        notification_str = dict(title=ORGANIZATION_GAVE_TITLE.format(organization=extra_data.get('organization')),
+        notification_str = dict(title=ORGANIZATION_GAVE_TITLE,
                                 description=ORGANIZATION_GAVE_DESCRIPTION,
-                                title_ru=ORGANIZATION_GAVE_TITLE_RU.format(organization=extra_data.get('organization')),
+                                title_ru=ORGANIZATION_GAVE_TITLE_RU,
                                 description_ru=ORGANIZATION_GAVE_DESCRIPTION)
 
     elif notification_type == ORGANIZATION_MESSAGE_TYPE:
@@ -450,10 +450,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     address=extra_data.get('address')))
 
     elif notification_type == ORGANIZATION_FOLLOWED_TYPE:
-        notification_str = dict(title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=extra_data.get('org_title')),
+        notification_str = dict(title=ORGANIZATION_FOLLOWED_TITLE,
                                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
                                     address=extra_data.get('address')),
-                                title_ru=ORGANIZATION_FOLLOWED_TITLE_RU.format(org_title=extra_data.get('org_title')),
+                                title_ru=ORGANIZATION_FOLLOWED_TITLE_RU,
                                 description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
                                     address=extra_data.get('address')))
 
@@ -494,9 +494,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')))
 
     elif notification_type == GET_JOB_TYPE:
-        notification_str = dict(title=GET_JOB_TITLE.format(organization=extra_data.get('organization')),
+        notification_str = dict(title=GET_JOB_TITLE,
                                 description=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=GET_JOB_TITLE_RU.format(organization=extra_data.get('organization')),
+                                title_ru=GET_JOB_TITLE_RU,
                                 description_ru=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')))
 
     elif notification_type == CHANGE_JOB_POSITION_TYPE:
@@ -517,9 +517,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 )
 
     elif notification_type == QUIT_JOB_TYPE:
-        notification_str = dict(title=QUIT_JOB_TITLE.format(organization=extra_data.get('organization')),
+        notification_str = dict(title=QUIT_JOB_TITLE,
                                 description=QUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=QUIT_JOB_TITLE_RU.format(organization=extra_data.get('organization')),
+                                title_ru=QUIT_JOB_TITLE_RU,
                                 description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
                                 )
 

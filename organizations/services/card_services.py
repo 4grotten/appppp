@@ -241,7 +241,7 @@ class DiscountCardService:
         not_dup_percents = list(dict.fromkeys(percents))
         str_percent = ', '.join(map(str, not_dup_percents))
         str_cashback = ', '.join(map(str, not_dup_cashbacks))
-        if percents is not None:
+        if percents:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 sender_id=updated_by.id,
                 organization_id=organization.id,
@@ -250,7 +250,7 @@ class DiscountCardService:
                 title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
             ))
-        if cashbacks is not None:
+        if cashbacks:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 sender_id=updated_by.id,
                 organization_id=organization.id,

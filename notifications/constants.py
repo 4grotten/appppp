@@ -109,12 +109,12 @@ NOTIFICATION_TYPES = (
 
 # ______________________RUSSIAN___________________________#
 
-ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ'
-DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ'
-REQUEST_ORDER_TITLE_RU = 'У вас новый заказ'
+ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
+DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
+REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
 
-ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли'
-DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ'
+ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
+DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжуться с Вами.'
 
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
@@ -186,12 +186,12 @@ CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кешбек {amount}
 
 # _______________________ ENGLISH _______________________#
 
-ACCEPT_ORDER_TITLE_EN = 'You accepted order'
-DECLINE_ORDER_TITLE_EN = 'You canceled order'
-REQUEST_ORDER_TITLE_EN = 'You got new order'
+ACCEPT_ORDER_TITLE_EN = 'You accepted order #{transaction_id}'
+DECLINE_ORDER_TITLE_EN = 'You canceled order #{transaction_id}'
+REQUEST_ORDER_TITLE_EN = 'You got new order #{transaction_id}'
 
-ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted'
-DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled'
+ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
+DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
@@ -565,47 +565,47 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
 
     elif notification_type == ACCEPT_ORDER_TYPE:
         notification_str = dict(
-            title=ACCEPT_ORDER_TITLE_EN,
+            title=ACCEPT_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ORDER_TITLE_RU,
+            title_ru=ACCEPT_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')),
             currency=extra_data.get('currency'))
 
     elif notification_type == DECLINE_ORDER_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_TITLE_EN,
+            title=DECLINE_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_TITLE_RU,
+            title_ru=DECLINE_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_TYPE:
         notification_str = dict(
-            title=REQUEST_ORDER_TITLE_EN,
+            title=REQUEST_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
-            title_ru=REQUEST_ORDER_TITLE_RU,
+            title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_ORDER_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ORDER_CLIENT_TITLE_EN,
+            title=ACCEPT_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU,
+            title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ORDER_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_CLIENT_TITLE_EN,
+            title=DECLINE_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_CLIENT_TITLE_RU,
+            title_ru=DECLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

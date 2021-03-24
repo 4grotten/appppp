@@ -478,15 +478,7 @@ class TransactionService:
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user
-            old_transaction.save(update_fields=[
-                "employee_name",
-                "employee_role",
-                "employee_avatar",
-                "fixed_cart",
-                "status",
-                "is_processed",
-                "processed_by"
-            ])
+            old_transaction.save()
         except:
             raise IntegrityException()
 

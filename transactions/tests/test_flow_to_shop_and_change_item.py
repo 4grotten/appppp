@@ -591,7 +591,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         self.assertEqual(user_transaction_details_response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Check transaction details. Waiting that it will not change
-
+        transaction = Transaction.objects.get(id=transaction_id)
         expected_user_transaction_info = {
             "id": transaction.id,
             "currency": "USD",

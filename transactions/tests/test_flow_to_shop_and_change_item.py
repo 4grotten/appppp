@@ -439,7 +439,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "v1:organization_transaction_detail",
             kwargs={"pk": transaction_id}
         )
-
+        transaction = Transaction.objects.get(id=transaction_id)
         expected_user_transaction_info = {
             "id": transaction.id,
             "currency": "USD",

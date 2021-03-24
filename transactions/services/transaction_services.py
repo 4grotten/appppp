@@ -277,17 +277,7 @@ class TransactionService:
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
-            current_transaction.save(update_fields=[
-                "is_processed",
-                "fixed_cart",
-                "processed_by",
-                "employee_role",
-                "employee_name",
-                "employee_avatar",
-                "status",
-                "original_amount",
-                "savings",
-            ])
+            current_transaction.save()
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
         client_status = OrganizationClientFinancialStatusService.get_or_create(

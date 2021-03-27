@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
-from common.models import Country, City
+from common.models import Country, City, File
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
@@ -211,7 +211,7 @@ class OrganizationService:
 
     @classmethod
     @transaction.atomic
-    def create_organization(cls, owner, title, description, image_id,
+    def create_organization(cls, owner, title, description, image_id: File,
                             opens_at, closes_at, address, longitude, latitude,
                             types, numbers, accounts, cards, currency="KGS", country="KG", city=None):
         from organizations.services.card_services import DiscountCardService
@@ -221,7 +221,7 @@ class OrganizationService:
         else:
             point = None
         organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
-                                                   description=description, image_id=image_id, address=address,
+                                                   description=description, image=image_id, address=address,
                                                    location=point, currency=currency, country=country, city=city)
         organization.types.set(types)
         for number in numbers:
@@ -338,7 +338,8 @@ class OrganizationService:
                                              country: Union[Country, None] = None,
                                              city: Union[City, None] = None) -> QuerySet:
         additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
-        queryset = Organization.objects.prefetch_related('types').select_related('image').filter(id__in=additional).order_by('?')
+        queryset = Organization.objects.prefetch_related('types').select_related('image').filter(
+            id__in=additional).order_by('?')
 
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))

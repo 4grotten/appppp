@@ -24,7 +24,7 @@ class FeedView(ListAPIView):
     filter_class = FeedItemFilter
 
     def get_queryset(self):
-        qs = ShopItem.objects.exclude(is_published=True, price__isnull=True)
+        qs = ShopItem.objects.filter(is_published=True, price__isnull=False)
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
 

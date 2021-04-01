@@ -6,7 +6,8 @@ from shop.views.cart_views import (
 )
 from shop.views.category_views import (
     ItemCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
-    OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView
+    OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
+    ItemCategoryAllSubcategoriesView
 )
 from shop.views.feed_views import FeedView, OrganizationItemListView, SubscriptionItemListView
 from shop.views.item_views import (
@@ -17,6 +18,9 @@ from shop.views.item_views import (
 urlpatterns = [
     path('shop/categories/', ItemCategoryListView.as_view(), name='item_categories'),
     path('shop/categories/<int:pk>/', ItemCategoryRetrieveView.as_view(), name='item_category_details'),
+    path('shop/categories/<int:pk>/all_subcategories/', ItemCategoryAllSubcategoriesView.as_view(),
+         name='all_category_subcategories'),
+
     path('shop/non_empty_categories/', NonEmptyCategoryListView.as_view(), name='non_empty_categories'),
     path('shop/subcategories/', ItemSubcategoryCreateView.as_view(), name='item_category_create'),
     path('shop/subcategories/<int:pk>/', SubcategoryRetrieveUpdateDestroyView.as_view(), name='subcategory_details'),

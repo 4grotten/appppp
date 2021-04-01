@@ -7,16 +7,34 @@ from organizations.serializers.query_param_serializers import OptionalOrganizati
 from shop.models import ItemCategory, ItemSubcategory
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
-    ItemCategoryWithSubcategoriesSerializer, ItemSubcategorySerializer, ItemSubcategoryCreateSerializer,
-    ItemSubcategoryBriefSerializer, ItemCategorySerializer, ItemCategoryWithNonEmptySubcategoriesSerializer
+    ItemSubcategorySerializer, ItemSubcategoryCreateSerializer,
+    ItemSubcategoryBriefSerializer, ItemCategorySerializer, ItemCategoryWithNonEmptySubcategoriesSerializer,
+    ItemCategoryWithSubcategoriesSerializer
 )
 from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
+
+
+# ToDo: write tests for this view
+class ItemCategoryAllSubcategoriesView(RetrieveAPIView):
+    permission_classes = ()
+    serializer_class = ItemCategoryWithSubcategoriesSerializer
+    queryset = ItemCategory.objects.all()
+
+    def get_serializer_context(self):
+        serializer = OptionalOrganizationQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException('Valid organization is required in query parameters')
+
+        context = super().get_serializer_context()
+        context['organization'] = serializer.validated_data['organization']
+
+        return context
 
 
 class ItemCategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
-    serializer_class = ItemCategoryWithSubcategoriesSerializer
+    serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
 
     def get_serializer_context(self):

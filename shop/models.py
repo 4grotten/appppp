@@ -1,7 +1,8 @@
-from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
+
 from common.models import TimestampModel, File
 from organizations.models import Organization
 from transactions.models import Transaction
@@ -27,7 +28,7 @@ class ItemSubcategory(models.Model):
                                      related_name='item_categories')
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.name}: {self.category.name}'
 
     class Meta:
         verbose_name_plural = 'Item subcategories'

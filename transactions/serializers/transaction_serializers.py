@@ -61,12 +61,10 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 class OnlineCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
-    from_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, default=0,
-                                             validators=[MinValueValidator(0)])
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'from_cashback')
+        fields = ('transaction_id',)
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):

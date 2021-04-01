@@ -37,15 +37,6 @@ class ItemCategoryListView(ListAPIView):
     serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
 
-    def get_serializer_context(self):
-        serializer = OptionalOrganizationQueryParamSerializer(data=self.request.GET)
-        if not serializer.is_valid():
-            raise NotAcceptableException('Valid organization is required in query parameters')
-
-        context = super().get_serializer_context()
-        context['organization'] = serializer.validated_data['organization']
-        return context
-
 
 class ItemCategoryRetrieveView(RetrieveAPIView):
     permission_classes = ()

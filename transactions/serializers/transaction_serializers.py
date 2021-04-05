@@ -1,15 +1,15 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
-from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer, \
-    OrganizationShortInfoWithCurrencySerializer
+from organizations.serializers.organization_serializers import (
+    OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
+)
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
-from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
+from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer

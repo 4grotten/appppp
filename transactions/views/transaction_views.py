@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
-from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer, \
-    PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+from organizations.serializers.organization_serializers import (
+    PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
+)
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
@@ -19,7 +20,7 @@ from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer
+    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService

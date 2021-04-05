@@ -115,7 +115,7 @@ REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
-REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжуться с Вами.'
+REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
 
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
 

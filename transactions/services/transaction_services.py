@@ -1,19 +1,13 @@
-import json
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError, transaction
-from django.db.models import (
-    Sum, OuterRef, Subquery, F, QuerySet, Q,
-    DecimalField, Case, When, IntegerField
-)
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
-    NotAcceptableException, ObjectNotFoundException, IntegrityException,
-    PermissionDeniedException, BadRequestException
+    NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
@@ -26,20 +20,13 @@ from notifications.constants import (
     DECLINE_DISCOUNT_TYPE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
     ACCEPT_ORDER_CLIENT_TYPE,
     ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
-    REQUEST_ORDER_TYPE
+    REQUEST_ORDER_TYPE,
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification
-from organizations.models import (
-    Organization, DiscountCard,
-    Subscription, Membership
-)
-from organizations.services.client_status_services import (
-    OrganizationClientFinancialStatusService
-)
-from organizations.services.cumulative_group_services import (
-    CumulativeGroupService
-)
+from organizations.models import Organization, DiscountCard, Subscription, Membership
+from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
@@ -247,10 +234,7 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_online_transaction(cls, request,
-                                    transaction_id: int,
-                                    processed_by: User,
-                                    ) -> Transaction:
+    def complete_online_transaction(cls, request, transaction_id: int, processed_by: User) -> Transaction:
         current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
                                       status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
@@ -267,7 +251,6 @@ class TransactionService:
         from shop.serializers.cart_serializers import CartSerializer
         try:
             current_transaction.is_processed = True
-            from shop.serializers.cart_serializers import CartSerializer
             current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
                 'request': request}).data if current_transaction.cart else None
             current_transaction.processed_by = processed_by

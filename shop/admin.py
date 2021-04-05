@@ -1,9 +1,8 @@
 from django.contrib import admin
 
 from shop.models import (
-    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint,
-    Cart, CartItem, DeliveryInfo,
-    ItemInstagramData
+    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem, DeliveryInfo,
+    ItemInstagramData,
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -42,7 +41,9 @@ class ItemBookmarkAdmin(admin.ModelAdmin):
 
 
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'organization',)
+    list_display = ('user', 'id', 'organization', 'is_open', 'transaction',)
+    list_filter = ('is_open',)
+    raw_id_fields = ('user',)
 
 
 class CartItemAdmin(admin.ModelAdmin):

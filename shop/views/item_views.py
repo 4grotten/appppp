@@ -4,15 +4,14 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView,
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from common.exceptions import IntegrityException, NotAcceptableException
-from organizations.services.organization_services import OrganizationService
+from common.exceptions import IntegrityException
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
 )
-from shop.serializers.other_serializers import ComplaintSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.serializers.other_serializers import ComplaintSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -43,7 +42,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'details': 'Not found'
             }, status=status.HTTP_404_NOT_FOUND)
 
-        self.serializer_class = ItemSerializer
+        self.serializer_class = ItemRetrieveSerializer
         return super().retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):

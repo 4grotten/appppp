@@ -8,7 +8,7 @@ from .forms import ItemSubcategoryAdminForm
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'name_ru',)
+    list_display = ('name', 'name_ru', 'is_adult',)
 
 
 class InstagramDataInline(admin.TabularInline):
@@ -23,7 +23,7 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
 
 
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'subcategory', 'price', 'is_published')
+    list_display = ('name', 'organization', 'subcategory', 'price', 'is_published', 'is_hidden',)
     list_filter = ('subcategory', 'organization',)
     inlines = (InstagramDataInline,)
 

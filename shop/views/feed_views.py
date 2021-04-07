@@ -1,5 +1,3 @@
-import datetime
-
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -9,8 +7,7 @@ from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
-from shop.serializers.item_serializers import ItemFeedSerializer, ItemListSerializer, \
-    StartDateTimeSerializer
+from shop.serializers.item_serializers import ItemFeedSerializer, ItemListSerializer, StartDateTimeSerializer
 from shop.services.item_services import ShopItemService
 
 

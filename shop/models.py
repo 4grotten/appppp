@@ -12,6 +12,7 @@ from users.models import User
 class ItemCategory(models.Model):
     name = models.CharField(max_length=64)
     icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
+    is_adult = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'
@@ -53,6 +54,7 @@ class ShopItem(models.Model):
     is_updated = models.BooleanField(default=False)
 
     is_published = models.BooleanField(default=True)
+    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'
@@ -63,6 +65,8 @@ class ShopItem(models.Model):
             self.is_updated = True
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
+        if self.subcategory.category.is_adult:
+            self.is_hidden = True
         super().save(*args, **kwargs)
 
 

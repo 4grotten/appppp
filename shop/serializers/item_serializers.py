@@ -1,4 +1,5 @@
 import datetime
+
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -7,11 +8,11 @@ from organizations.serializers.organization_serializers import ItemFeedOrganizat
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
-from shop.services.cart_services import CartService, CartItemService
+from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 
 
-class ItemSerializer(serializers.ModelSerializer):
+class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
@@ -47,7 +48,7 @@ class ItemSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'description', 'article',
             'price', 'discount',
-            'instagram_link', 'is_published', 'is_liked', 'is_bookmarked', 'like_count',
+            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',
             'instagram_data', 'is_updated'
@@ -170,7 +171,7 @@ class ItemListSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
-            'price', 'discount', 'instagram_link', 'is_published',
+            'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images',
@@ -185,7 +186,7 @@ class ItemFeedSerializer(ItemListSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'description', 'article',
-            'price', 'discount', 'instagram_link', 'is_published',
+            'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
             'youtube_links', 'subcategory', 'images', 'organization',

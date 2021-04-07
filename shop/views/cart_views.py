@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from shop.models import Cart
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
-    CartAllItemsCountSerializer, CartUpdateSerializer,
+    CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
 )
 from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer
@@ -27,6 +27,10 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user, is_open=True)
+
+    def retrieve(self, request, *args, **kwargs):
+        self.serializer_class = EmployeeCartSerializer
+        return super().retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
         serializer = CartUpdateSerializer(data=request.data)

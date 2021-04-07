@@ -2,10 +2,8 @@ from rest_framework import serializers
 
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.serializers.organization_serializers import (
-    OrganizationTitleImageSerializer, OrganizationTitleCurrencySerializer, OrganizationTitleImageCurrencySerializer,
-    OrganizationShortInfoWithCurrencySerializer
-)
+from organizations.serializers.organization_serializers import OrganizationShortInfoWithCurrencySerializer
+from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Cart, CartItem, DeliveryInfo
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
@@ -41,6 +39,17 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ('id', 'organization', 'totals', 'items',)
+
+
+class EmployeeCartSerializer(CartSerializer):
+    can_sell = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = ('id', 'can_sell', 'organization', 'totals', 'items',)
+
+    def get_can_sell(self, cart: Cart) -> bool:
+        return OrganizationService.user_can_sell(organization=cart.organization, user=cart.user)
 
 
 class CartWithItemsSerializer(serializers.ModelSerializer):

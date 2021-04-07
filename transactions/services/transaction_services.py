@@ -20,7 +20,7 @@ from notifications.constants import (
     DECLINE_DISCOUNT_TYPE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
     ACCEPT_ORDER_CLIENT_TYPE,
     ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
-    REQUEST_ORDER_TYPE,
+    REQUEST_ORDER_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification
@@ -30,6 +30,7 @@ from organizations.services.cumulative_group_services import CumulativeGroupServ
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
+from shop.services.cart_services import CartService
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -44,15 +45,25 @@ class TransactionService:
             raise ObjectNotFoundException('Transaction not found')
 
     @classmethod
-    def preprocess_transaction(cls, client: User, organization: Organization, processed_by: User) -> Transaction:
+    @transaction.atomic
+    def preprocess_transaction(cls, client: User, organization: Organization, cart: Union[Cart, None],
+                               processed_by: User) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException('No rights to sell in this organization')
+
+        if cart is not None and not cart.user == processed_by:
+            raise NotAcceptableException('No rights to use this cart')
 
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
 
         instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
                                               employee_name=processed_by.full_name, employee_role=role,
                                               employee_avatar=processed_by.avatar, currency=organization.currency)
+
+        if cart is not None:
+            cart.transaction = instance
+            cart.save()
+
         return instance
 
     @classmethod
@@ -67,13 +78,9 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_transaction(cls,
-                             transaction_id: int,
-                             processed_by: User,
-                             original_amount: Decimal,
-                             discount_percent: int,
-                             source_card: Union[DiscountCard, None],
-                             from_cashback: Decimal,
+    def complete_transaction(cls, transaction_id: int, processed_by: User, original_amount: Decimal,
+                             discount_percent: int, source_card: Union[DiscountCard, None], from_cashback: Decimal,
+                             cart: Union[Cart, None],
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
@@ -91,6 +98,17 @@ class TransactionService:
         if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
                 client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
             raise NotAcceptableException('Not enough accrued cashback amount')
+
+        transaction_cart = getattr(current_transaction, 'cart', None)
+        if not transaction_cart == cart:
+            raise NotAcceptableException('Transaction and cart do not match')
+
+        if cart is not None:
+            cart_amount = CartService.get_total_prices_in_cart(cart=cart)[1]
+            if not original_amount == cart_amount:
+                raise NotAcceptableException('Original amount do not match with cart amounts')
+            cart.is_open = False
+            cart.save()
 
         discount_amount = (original_amount * discount_percent) / 100
         amount_to_pay = original_amount - discount_amount

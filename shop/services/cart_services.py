@@ -64,6 +64,7 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
         if not cart.is_open:
             raise BadRequestException('Cart is already closed')
+        # ToDo: try to get transaction from cart
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:

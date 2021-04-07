@@ -54,6 +54,7 @@ class UpdateItemPriceToNoNeTestCase(APITestCase):
 
         expected_data_cart_detail = {
             "id": cart.id,
+            "can_sell": True,
             "organization":
                 {
                     "id": self.organization.id,

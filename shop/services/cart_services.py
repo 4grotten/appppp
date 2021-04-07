@@ -6,16 +6,15 @@ from django.db import transaction
 from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
 
-from common.exceptions import ObjectNotFoundException, PermissionDeniedException, IntegrityException, \
-    BadRequestException
-from notifications.constants import ACCEPT_DISCOUNT_TYPE, ACCEPT_ORDER_CLIENT_TYPE, PRODUCT_MODE, \
-    REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
+from common.exceptions import (
+    ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException
+)
+from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
+from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem, DeliveryInfo
 from transactions.models import Transaction
-from transactions.services.transaction_services import TransactionService
 from users.models import User
-from notifications.tasks import sent_notification, send_notifications_organization_members
 
 
 class CartService:
@@ -65,6 +64,7 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
         if not cart.is_open:
             raise BadRequestException('Cart is already closed')
+        # ToDo: try to get transaction from cart
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:

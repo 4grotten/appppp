@@ -9,17 +9,19 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
-from organizations.serializers.organization_serializers import PartnerWithLatestTransactionSerializer, \
-    PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+from organizations.serializers.organization_serializers import (
+    PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
+)
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
+from shop.services.cart_services import CartService
 from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer
+    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
@@ -41,9 +43,10 @@ class TransactionPreprocessView(GenericAPIView):
 
         organization = serializer.validated_data['organization']
         client = serializer.validated_data['client']
+        cart = serializer.validated_data.get('cart', None)
 
         new_transaction = TransactionService.preprocess_transaction(
-            client=client, organization=organization, processed_by=request.user
+            client=client, organization=organization, cart=cart, processed_by=request.user
         )
 
         cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
@@ -58,13 +61,17 @@ class TransactionPreprocessView(GenericAPIView):
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
+        discounted_price = 0 if cart is None else CartService.get_total_prices_in_cart(cart=cart)[1]
+
         data = {
             'transaction_id': new_transaction.id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
             'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
             'accrued_cashback': accrued_cashback,
-            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data
+            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
+            'purchase_id': 1,  # ToDo: purchase_id unmock
+            'cart_amount': discounted_price,
         }
 
         return Response(data=data, status=status.HTTP_200_OK)
@@ -90,6 +97,7 @@ class TransactionCompleteView(GenericAPIView):
             discount_percent=serializer.validated_data['discount_percent'],
             source_card=serializer.validated_data['source_card'],
             from_cashback=serializer.validated_data['from_cashback'],
+            cart=serializer.validated_data.get('cart', None),
         )
 
         return Response(data={

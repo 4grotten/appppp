@@ -1,19 +1,13 @@
-import json
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import IntegrityError, transaction
-from django.db.models import (
-    Sum, OuterRef, Subquery, F, QuerySet, Q,
-    DecimalField, Case, When, IntegerField
-)
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
-    NotAcceptableException, ObjectNotFoundException, IntegrityException,
-    PermissionDeniedException, BadRequestException
+    NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
 )
 from notifications.constants import (
     DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
@@ -30,19 +24,13 @@ from notifications.constants import (
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification
-from organizations.models import (
-    Organization, DiscountCard,
-    Subscription, Membership
-)
-from organizations.services.client_status_services import (
-    OrganizationClientFinancialStatusService
-)
-from organizations.services.cumulative_group_services import (
-    CumulativeGroupService
-)
+from organizations.models import Organization, DiscountCard, Subscription, Membership
+from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
+from shop.services.cart_services import CartService
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -57,15 +45,25 @@ class TransactionService:
             raise ObjectNotFoundException('Transaction not found')
 
     @classmethod
-    def preprocess_transaction(cls, client: User, organization: Organization, processed_by: User) -> Transaction:
+    @transaction.atomic
+    def preprocess_transaction(cls, client: User, organization: Organization, cart: Union[Cart, None],
+                               processed_by: User) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException('No rights to sell in this organization')
+
+        if cart is not None and not cart.user == processed_by:
+            raise NotAcceptableException('No rights to use this cart')
 
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
 
         instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
                                               employee_name=processed_by.full_name, employee_role=role,
                                               employee_avatar=processed_by.avatar, currency=organization.currency)
+
+        if cart is not None:
+            cart.transaction = instance
+            cart.save()
+
         return instance
 
     @classmethod
@@ -80,13 +78,9 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_transaction(cls,
-                             transaction_id: int,
-                             processed_by: User,
-                             original_amount: Decimal,
-                             discount_percent: int,
-                             source_card: Union[DiscountCard, None],
-                             from_cashback: Decimal,
+    def complete_transaction(cls, transaction_id: int, processed_by: User, original_amount: Decimal,
+                             discount_percent: int, source_card: Union[DiscountCard, None], from_cashback: Decimal,
+                             cart: Union[Cart, None],
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
@@ -104,6 +98,17 @@ class TransactionService:
         if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
                 client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
             raise NotAcceptableException('Not enough accrued cashback amount')
+
+        transaction_cart = getattr(current_transaction, 'cart', None)
+        if not transaction_cart == cart:
+            raise NotAcceptableException('Transaction and cart do not match')
+
+        if cart is not None:
+            cart_amount = CartService.get_total_prices_in_cart(cart=cart)[1]
+            if not original_amount == cart_amount:
+                raise NotAcceptableException('Original amount do not match with cart amounts')
+            cart.is_open = False
+            cart.save()
 
         discount_amount = (original_amount * discount_percent) / 100
         amount_to_pay = original_amount - discount_amount
@@ -247,10 +252,7 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_online_transaction(cls, request,
-                                    transaction_id: int,
-                                    processed_by: User,
-                                    ) -> Transaction:
+    def complete_online_transaction(cls, request, transaction_id: int, processed_by: User) -> Transaction:
         current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
                                       status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
@@ -267,7 +269,6 @@ class TransactionService:
         from shop.serializers.cart_serializers import CartSerializer
         try:
             current_transaction.is_processed = True
-            from shop.serializers.cart_serializers import CartSerializer
             current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
                 'request': request}).data if current_transaction.cart else None
             current_transaction.processed_by = processed_by

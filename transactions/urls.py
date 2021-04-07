@@ -1,12 +1,13 @@
 from django.urls import path
 
-from transactions.views.stat_views import PartnersTotalStatsView, OrganizationTotalsView, \
-    OrganizationTransactionCalendarView
+from transactions.views.stat_views import (
+    PartnersTotalStatsView, OrganizationTotalsView, OrganizationTransactionCalendarView,
+)
 from transactions.views.transaction_views import (
-    TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView,
-    UserTotalsView, UserTransactionsListView, UserTransactionDetailView,
-    OrganizationTransactionListView, OrganizationTransactionRetrieveDestroyView, UserUnprocessedTransactionCountView,
-    UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView, UserSaleTotalsView
+    TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView, UserTotalsView,
+    UserTransactionsListView, UserTransactionDetailView, OrganizationTransactionListView,
+    OrganizationTransactionRetrieveDestroyView, UserUnprocessedTransactionCountView, UserSaleTotalsView,
+    UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView,
 )
 
 urlpatterns = [

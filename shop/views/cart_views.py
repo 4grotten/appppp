@@ -1,19 +1,16 @@
-from django.db.models import Count
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import ObjectNotFoundException
 from shop.models import Cart
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
-    CartAllItemsCountSerializer, CartUpdateSerializer
+    CartAllItemsCountSerializer, CartUpdateSerializer,
 )
 from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer
-from transactions.services.transaction_services import TransactionService
 
 
 class UserCartListView(ListAPIView):

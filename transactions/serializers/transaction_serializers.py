@@ -1,15 +1,15 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
-from organizations.serializers.organization_serializers import OrganizationUserTransactionSerializer, \
-    OrganizationShortInfoWithCurrencySerializer
+from organizations.serializers.organization_serializers import (
+    OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
+)
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
-from shop.serializers.cart_serializers import CartWithItemsSerializer, CartSerializer, DeliveryInfoSerializer
+from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
@@ -18,6 +18,8 @@ from users.serializers import ProfileBriefWithPhotoSerializer
 class PreprocessSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
+    cart = serializers.PrimaryKeyRelatedField(
+        queryset=Cart.objects.filter(is_open=True), allow_null=True, required=False)
 
 
 class CompleteSerializer(serializers.ModelSerializer):
@@ -29,10 +31,12 @@ class CompleteSerializer(serializers.ModelSerializer):
                                                validators=[MinValueValidator(0)])
     from_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, default=0,
                                              validators=[MinValueValidator(0)])
+    cart = serializers.PrimaryKeyRelatedField(
+        queryset=Cart.objects.filter(is_open=True), allow_null=True, required=False)
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card', 'from_cashback')
+        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card', 'from_cashback', 'cart',)
 
     def validate(self, attrs):
         original_amount = attrs['original_amount']
@@ -61,12 +65,10 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
 class OnlineCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
-    from_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, default=0,
-                                             validators=[MinValueValidator(0)])
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'from_cashback')
+        fields = ('transaction_id',)
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):

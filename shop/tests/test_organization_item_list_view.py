@@ -64,7 +64,6 @@ class OrganizationItemListViewTestCase(APITestCase):
                     "discount": 0,
                     "instagram_link": None,
                     "is_published": self.shop_item_two.is_published,
-                    "is_hidden": False,
                     "is_liked": False,
                     "is_bookmarked": False,
                     "like_count": 0,

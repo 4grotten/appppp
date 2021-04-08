@@ -73,7 +73,6 @@ class LikeListCreateViewTestCase(APITestCase):
                     "discount": shop_item.discount,
                     "instagram_link": shop_item.instagram_link,
                     "is_published": shop_item.is_published,
-                    "is_hidden": False,
                     "is_liked": True,
                     "is_bookmarked": False,
                     "like_count": 1,

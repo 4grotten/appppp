@@ -8,7 +8,7 @@ from common.exceptions import IntegrityException
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, ItemFeedSerializer
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer
@@ -69,7 +69,7 @@ class ItemChangePublishedStatusView(GenericAPIView):
 
 class LikeListCreateView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ItemFeedSerializer
+    serializer_class = SubscriptionItemSerializer
 
     def get_queryset(self):
         qs = ShopItemService.get_liked_items(user=self.request.user)
@@ -91,7 +91,7 @@ class LikeListCreateView(ListAPIView):
 
 class BookmarkListCreateView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ItemFeedSerializer
+    serializer_class = SubscriptionItemSerializer
 
     def get_queryset(self):
         qs = ShopItemService.get_bookmarked_items(user=self.request.user)

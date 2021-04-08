@@ -65,7 +65,7 @@ class ShopItem(models.Model):
             self.is_updated = True
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
-        if self.subcategory.category.is_adult:
+        if self.subcategory is not None and self.subcategory.category.is_adult:
             self.is_hidden = True
         super().save(*args, **kwargs)
 

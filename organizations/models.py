@@ -68,6 +68,7 @@ class Organization(TimestampModel):
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
+    is_banned = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('title',)

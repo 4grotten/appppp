@@ -25,9 +25,9 @@ class FeedView(ListAPIView):
     def get_queryset(self):
         search = self.request.GET.get('search', None)
         if search and search[0] == '#':  # Search among posts if hashtag is used
-            qs = ShopItem.objects.filter(is_published=True)
+            qs = ShopItem.objects.exclude(organization__is_banned=True).filter(is_published=True)
         else:
-            qs = ShopItem.objects.filter(is_published=True, price__isnull=False)
+            qs = ShopItem.objects.exclude(organization__is_banned=True).filter(is_published=True, price__isnull=False)
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

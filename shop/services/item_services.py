@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization

@@ -43,7 +43,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
     list_display = (
-        'title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'country', 'city', 'is_active',
+        'title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'country', 'city', 'is_active', 'is_banned',
         'cashback_group', 'cumulative_group',
     )
     list_filter = ('is_active', 'types__category', 'country', 'cashback_group',)

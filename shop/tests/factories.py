@@ -1,12 +1,25 @@
 import factory
 
 from organizations.tests.factories import OrganizationFactory
-from shop.models import (
-    ShopItem, Cart,
-    CartItem, ItemLike, ItemBookmark
-)
+from shop.models import ItemCategory, ItemSubcategory, ShopItem, Cart, CartItem, ItemLike, ItemBookmark
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory
+
+
+class ItemCategoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ItemCategory
+
+    name = factory.Sequence(lambda n: f'Item category {n}')
+
+
+class ItemSubcategoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ItemSubcategory
+
+    category = factory.SubFactory(ItemCategoryFactory)
+    name = factory.Sequence(lambda n: f'Item subcategory {n}')
+    organization = factory.SubFactory(OrganizationFactory)
 
 
 class ShopItemFactory(factory.django.DjangoModelFactory):
@@ -14,7 +27,7 @@ class ShopItemFactory(factory.django.DjangoModelFactory):
         model = ShopItem
 
     organization = factory.SubFactory(OrganizationFactory)
-    name = factory.Sequence(lambda n: f'Shop item{n}')
+    name = factory.Sequence(lambda n: f'Shop item {n}')
 
 
 class CartFactory(factory.django.DjangoModelFactory):

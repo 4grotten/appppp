@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from common.tests.factories import FileFactory
+from organizations.constants import MAX_ORGANIZATIONS_PER_USER
 from organizations.models import DiscountCard
 from organizations.services.organization_services import OrganizationService
 from organizations.tests.factories import OrganizationFactory
@@ -176,4 +177,32 @@ class OrganizationsListCreateViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertJSONEqual(response.content, expected_data)
+
+    def test_return_400_when_users_organization_limit_is_reached(self):
+        self.client.force_authenticate(user=self.user)
+
+        for i in range(MAX_ORGANIZATIONS_PER_USER):
+            OrganizationFactory(owner=self.user)
+
+        organization_image = FileFactory()
+        data = {
+            "title": "New organization",
+            "image_id": organization_image.id,
+            "numbers": [],
+            "accounts": [],
+            "cards": [],
+            "longitude": -73.989308,
+            "latitude": 40.741895,
+        }
+        expected_data = {
+            "message": f"Can not create more than {MAX_ORGANIZATIONS_PER_USER} organizations"
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertJSONEqual(response.content, expected_data)

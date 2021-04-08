@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
+    BadRequestException
 )
 from common.models import Country, City, File, Currency
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
@@ -21,7 +22,7 @@ from notifications.tasks import (
 )
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
-    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
+    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD, MAX_ORGANIZATIONS_PER_USER
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
@@ -209,10 +210,13 @@ class OrganizationService:
 
     @classmethod
     @transaction.atomic
-    def create_organization(cls, owner, title, image_id: File, longitude, latitude, numbers, accounts, cards,
+    def create_organization(cls, owner: User, title: str, image_id: File, longitude, latitude, numbers, accounts, cards,
                             types=None, description=None, opens_at=None, closes_at=None,
                             address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
+
+        if owner.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER:
+            raise BadRequestException(f'Can not create more than {MAX_ORGANIZATIONS_PER_USER} organizations')
 
         country = country or Country.objects.get(code='KG')
         currency = currency or Currency.objects.get(code='KGS')

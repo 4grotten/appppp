@@ -33,7 +33,6 @@ class OrganizationsListCreateViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertJSONEqual(response.content, expected_data)
 
-    @expectedFailure
     def test_required_fields(self):
         self.client.force_authenticate(user=self.user)
         expected_data = {
@@ -73,22 +72,22 @@ class OrganizationsListCreateViewTestCase(APITestCase):
                 ),
                 "title": organization_one.title
             },
-            {
-                "id": organization_two.id,
-                "image": organization_two.image,
-                "role": OrganizationService.get_user_role_in_organization(
-                    organization=organization_two, user=self.user
-                ),
-                "title": organization_two.title
-            },
-            {
-                "id": organization_three.id,
-                "image": organization_three.image,
-                "role": OrganizationService.get_user_role_in_organization(
-                    organization=organization_three, user=self.user
-                ),
-                "title": organization_three.title
-            }
+                {
+                    "id": organization_two.id,
+                    "image": organization_two.image,
+                    "role": OrganizationService.get_user_role_in_organization(
+                        organization=organization_two, user=self.user
+                    ),
+                    "title": organization_two.title
+                },
+                {
+                    "id": organization_three.id,
+                    "image": organization_three.image,
+                    "role": OrganizationService.get_user_role_in_organization(
+                        organization=organization_three, user=self.user
+                    ),
+                    "title": organization_three.title
+                }
             ],
             "total_count": 3,
             "total_pages": 1
@@ -100,7 +99,7 @@ class OrganizationsListCreateViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertJSONEqual(response.json(), expected_data)
+        self.assertJSONEqual(response.content, expected_data)
 
     @expectedFailure
     def test_create_organization(self):
@@ -138,7 +137,7 @@ class OrganizationsListCreateViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertJSONEqual(response.json(), expected_data)
+        self.assertJSONEqual(response.content, expected_data)
 
     def test_create_organization_with_image_id_not_exist(self):
         self.client.force_authenticate(user=self.user)

@@ -3,13 +3,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, \
-    CreateAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException, ValidationException, ObjectNotFoundException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration
 from organizations.serializers.categories_serializers import (
@@ -22,8 +21,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer, InstagramIntegrationCreatUpdateSerializer, OrganizationShortInfoSerializer,
-    InstagramIntegrationLinkSerializer
+    OrganizationUserTransactionSerializer, InstagramIntegrationCreatUpdateSerializer, InstagramIntegrationLinkSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer

@@ -1,17 +1,15 @@
-import random
 from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q
 from django.db.models.functions import Coalesce
-
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     ObjectNotFoundException, ValidationException, IntegrityException, NotAcceptableException, PermissionDeniedException,
 )
-from common.models import Country, City, File
+from common.models import Country, City, File, Currency
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
@@ -21,7 +19,6 @@ from notifications.constants import (
 from notifications.tasks import (
     send_notifications_to_all_users, sent_notification, send_notifications_organization_members
 )
-from organizations.tasks import parse_instagram_to_shop_items, delete_not_updated_posts_from_instagram
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
     HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD
@@ -31,6 +28,7 @@ from organizations.models import (
     Partnership, InstagramIntegration,
 )
 from organizations.services.membership_services import MembershipService
+from organizations.tasks import parse_instagram_to_shop_items, delete_not_updated_posts_from_instagram
 from users.models import User
 
 
@@ -211,10 +209,13 @@ class OrganizationService:
 
     @classmethod
     @transaction.atomic
-    def create_organization(cls, owner, title, description, image_id: File,
-                            opens_at, closes_at, address, longitude, latitude,
-                            types, numbers, accounts, cards, currency="KGS", country="KG", city=None):
+    def create_organization(cls, owner, title, image_id: File, longitude, latitude, numbers, accounts, cards,
+                            types=None, description=None, opens_at=None, closes_at=None,
+                            address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
+
+        country = country or Country.objects.get(code='KG')
+        currency = currency or Currency.objects.get(code='KGS')
 
         if longitude and latitude:
             point = Point(longitude, latitude)
@@ -223,7 +224,8 @@ class OrganizationService:
         organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
                                                    description=description, image=image_id, address=address,
                                                    location=point, currency=currency, country=country, city=city)
-        organization.types.set(types)
+        if types is not None:
+            organization.types.set(types)
         for number in numbers:
             OrgPhoneNumberService.create(organization=organization, number=number)
         for link in accounts:

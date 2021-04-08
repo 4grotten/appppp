@@ -9,6 +9,8 @@ from .forms import ItemSubcategoryAdminForm
 
 class MainCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru', 'is_adult',)
+    search_fields = ('name',)
+    raw_id_fields = ('icon',)
 
 
 class InstagramDataInline(admin.TabularInline):
@@ -17,14 +19,18 @@ class InstagramDataInline(admin.TabularInline):
 
 
 class ItemSubcategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'name_ru', 'organization',)
+    list_display = ('name', 'id', 'category', 'name_ru', 'organization',)
     list_filter = ('category', 'organization',)
+    search_fields = ('name',)
+    raw_id_fields = ('category', 'organization',)
     form = ItemSubcategoryAdminForm
 
 
 class ShopItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'organization', 'subcategory', 'price', 'is_published', 'is_hidden',)
-    list_filter = ('subcategory', 'organization',)
+    list_filter = ('is_published', 'is_hidden', 'subcategory', 'organization',)
+    search_fields = ('name',)
+    raw_id_fields = ('organization', 'subcategory',)
     inlines = (InstagramDataInline,)
 
 

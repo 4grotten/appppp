@@ -41,7 +41,7 @@ class ItemSubcategoryService:
                                                        city: Union[City, None]) -> QuerySet:
         subcategories = ItemSubcategory.objects.filter(organization__isnull=True, category=category)
 
-        item_filters = Q(items_in_category__is_published=True)
+        item_filters = Q(items_in_category__is_published=True) & Q(items_in_category__price__isnull=False)
         if city is not None:
             item_filters = item_filters & Q(items_in_category__organization__city=city)
         elif country is not None:

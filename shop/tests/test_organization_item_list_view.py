@@ -6,7 +6,8 @@ from rest_framework.test import APITestCase
 
 from organizations.tests.factories import OrganizationFactory
 from shop.tests.factories import (
-    ShopItemFactory, )
+    ShopItemFactory,
+)
 from users.tests.factories import (
     UserFactory,
 )
@@ -63,6 +64,7 @@ class OrganizationItemListViewTestCase(APITestCase):
                     "discount": 0,
                     "instagram_link": None,
                     "is_published": self.shop_item_two.is_published,
+                    "is_hidden": False,
                     "is_liked": False,
                     "is_bookmarked": False,
                     "like_count": 0,
@@ -90,6 +92,7 @@ class OrganizationItemListViewTestCase(APITestCase):
                     "discount": 0,
                     "instagram_link": None,
                     "is_published": self.shop_item_one.is_published,
+                    "is_hidden": False,
                     "is_liked": False,
                     "is_bookmarked": False,
                     "like_count": 0,

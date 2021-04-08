@@ -16,6 +16,7 @@ from users.tests.factories import (
 
 class BookmarkListCreateViewTestCase(APITestCase):
     maxDiff = None
+
     def setUp(self) -> None:
         self.user = UserFactory()
         self.url = reverse("v1:bookmark_list_create")
@@ -72,6 +73,7 @@ class BookmarkListCreateViewTestCase(APITestCase):
                     "discount": shop_item.discount,
                     "instagram_link": shop_item.instagram_link,
                     "is_published": shop_item.is_published,
+                    "is_hidden": False,
                     "is_liked": False,
                     "is_bookmarked": True,
                     "like_count": 0,

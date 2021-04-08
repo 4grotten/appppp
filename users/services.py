@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
@@ -35,8 +37,13 @@ class UserService:
 
     @classmethod
     def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
-                     date_of_birth, gender: str):
+                     date_of_birth, gender: str, email: Union[str, None]):
 
+        update_fields = ['avatar_id', 'full_name', 'username', 'date_of_birth', 'gender', 'is_new_user']
+
+        if email and not user.email == email:
+            user.email = email
+            update_fields.append('email')
         try:
             user.avatar_id = avatar_id
             user.full_name = full_name
@@ -45,14 +52,7 @@ class UserService:
             user.gender = gender
             user.is_new_user = False
 
-            user.save(update_fields=[
-                "avatar_id",
-                "full_name",
-                "username",
-                "date_of_birth",
-                "gender",
-                "is_new_user",
-            ])
+            user.save(update_fields=update_fields)
 
             return user
 
@@ -80,16 +80,6 @@ class UserService:
             user.save(update_fields=["phone_number"])
         except Exception:
             raise IntegrityException('Error while changing number')
-
-    @staticmethod
-    def is_email_updated(user, email):
-        return user == email
-
-    @classmethod
-    def init_or_update_user_email(cls, user, email):
-        if not cls.is_email_updated(user=user, email=email):
-            user.email = email
-            user.save(update_fields=["email"])
 
 
 class TemporaryCodeService:

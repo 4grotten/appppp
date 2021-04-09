@@ -16,7 +16,7 @@ from .views.organization_views import (
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreatAPIView,
-    InstagramAccountAPIView, InstagramParseLastDataAPIView,
+    InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
@@ -29,6 +29,7 @@ organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
     path('organization_all_types/', OrganizationAllTypesListView.as_view(), name='organization_types'),
 
+    path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
@@ -50,7 +51,8 @@ organization_urls = [
     path('instagramCheckAccount/', InstagramAccountAPIView.as_view()),
     path('organizations/<int:pk>/getFollowersCount/', OrganizationFollowersCountAPIView.as_view(),
          name='org_followers_count'),
-    path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view(), name="org_get_partners_count"),
+    path('organizations/<int:pk>/getPartnersCount/', OrganizationPartnersCountAPIView.as_view(),
+         name="org_get_partners_count"),
     path(
         'organizations/<int:pk>/getPartnersFollowersCount/',
         OrganizationPartnersFollowersCountAPIView.as_view(),

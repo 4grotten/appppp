@@ -36,6 +36,16 @@ from organizations.tasks import parse_instagram_last_updates
 from users.serializers import UserShortInfoSerializer
 
 
+class OrganizationCreationLimitView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        data = {
+            'can_add_organization': not OrganizationService.creation_limit_exceeded(user=request.user)
+        }
+        return Response(data=data)
+
+
 class OrganizationsListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationListSerializer

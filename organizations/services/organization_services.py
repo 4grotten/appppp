@@ -48,6 +48,12 @@ class OrganizationService:
             raise ObjectNotFoundException('Organization not found')
 
     @classmethod
+    def creation_limit_exceeded(cls, user: User) -> bool:
+        if user.is_staff:
+            return False
+        return user.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER
+
+    @classmethod
     def get_first_organization_of_user(cls, user: User):
         return Organization.objects.filter(memberships__user=user).first()
 

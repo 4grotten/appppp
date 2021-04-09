@@ -206,3 +206,27 @@ class OrganizationsListCreateViewTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertJSONEqual(response.content, expected_data)
+
+    def test_return_201_even_if_staff_user_organization_limit_is_reached(self):
+        staff_user = UserFactory(is_staff=True)
+        self.client.force_authenticate(user=staff_user)
+
+        for i in range(MAX_ORGANIZATIONS_PER_USER):
+            OrganizationFactory(owner=staff_user)
+
+        organization_image = FileFactory()
+        data = {
+            "title": "New organization",
+            "image_id": organization_image.id,
+            "numbers": [],
+            "accounts": [],
+            "cards": [],
+            "longitude": -73.989308,
+            "latitude": 40.741895,
+        }
+        response = self.client.post(
+            self.url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

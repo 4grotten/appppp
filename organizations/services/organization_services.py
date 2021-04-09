@@ -215,7 +215,7 @@ class OrganizationService:
                             address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
 
-        if owner.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER:
+        if not owner.is_staff and owner.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER:
             raise BadRequestException(f'Can not create more than {MAX_ORGANIZATIONS_PER_USER} organizations')
 
         country = country or Country.objects.get(code='KG')

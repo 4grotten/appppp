@@ -8,8 +8,10 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'full_name', 'username', 'gender', 'avatar')
-    list_filter = ('gender',)
+    list_display = (
+        'phone_number', 'full_name', 'username', 'gender', 'avatar', 'is_active', 'is_staff', 'is_superuser',
+    )
+    list_filter = ('gender', 'is_active', 'is_staff', 'is_superuser',)
     search_fields = ('phone_number', 'full_name',)
     raw_id_fields = ('avatar',)
 

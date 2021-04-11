@@ -105,3 +105,13 @@ class OrderSelfPickupView(GenericAPIView):
     def post(self, request, pk):
         CartService.close_the_cart(user=request.user, cart_id=pk)
         return Response({'message': 'Success'})
+
+
+class CartAnonymousCheckoutView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithClientSerializer
+
+    def post(self, request, pk):
+        transaction = CartService.checkout_cart_for_anonymous_client(request=request, employee=request.user, cart_id=pk)
+        data = self.serializer_class(transaction, context={'request': request}).data
+        return Response(data)

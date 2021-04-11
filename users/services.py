@@ -81,6 +81,10 @@ class UserService:
         except Exception:
             raise IntegrityException('Error while changing number')
 
+    @classmethod
+    def get_common_user(cls) -> User:
+        return cls.get(is_common_client=True)
+
 
 class TemporaryCodeService:
     model = TemporaryCode

@@ -71,12 +71,13 @@ class ShopItemService:
 
     @classmethod
     def get_liked_items(cls, user: User):
-        return ShopItem.objects.filter(is_published=True, liked_users__user=user).order_by('-liked_users').distinct()
+        return ShopItem.objects.filter(is_published=True, liked_users__user=user,
+                                       organization__is_deleted=False).order_by('-liked_users').distinct()
 
     @classmethod
     def get_bookmarked_items(cls, user: User):
-        return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user).order_by(
-            '-bookmarked_users').distinct()
+        return ShopItem.objects.filter(is_published=True, bookmarked_users__user=user,
+                                       organization__is_deleted=False).order_by('-bookmarked_users').distinct()
 
     @classmethod
     def delete_instagram_images(cls, item_id):

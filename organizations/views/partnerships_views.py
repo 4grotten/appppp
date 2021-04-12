@@ -7,8 +7,7 @@ from rest_framework.response import Response
 from common.exceptions import NotAcceptableException
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.organization_serializers import (
-    PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo, OrganizationWithImageSerializer,
-    OrganizationWithTypeImageSerializer
+    PartnerSerializer, HomepagePartnerSerializer, OrganizationBannerInfo, OrganizationWithTypeImageSerializer
 )
 from organizations.serializers.partnership_serializers import (
     PartnershipRequestSerializer, PartnershipSerializer, PartnershipDetailedSerializer, PartnershipUpdateSerializer

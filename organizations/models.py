@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, Currency, Country, City
+from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
 
@@ -69,6 +70,9 @@ class Organization(TimestampModel):
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
+
+    objects = OrganizationManager()
+    active_organizations = ActiveOrganizationManager()
 
     class Meta:
         ordering = ('title',)

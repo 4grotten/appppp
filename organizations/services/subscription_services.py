@@ -1,17 +1,17 @@
-from django.db.models import QuerySet, Subquery, OuterRef
+from django.db.models import QuerySet
+from django.db.models import Subquery, OuterRef
 
 from common.exceptions import PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
-    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, PERSONAL_MODE)
+    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, PERSONAL_MODE
+)
+from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
-from django.db.models import QuerySet
-
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
-from notifications.tasks import sent_notification
 
 
 class SubscriptionService:
@@ -54,7 +54,8 @@ class SubscriptionService:
 
     @classmethod
     def get_user_subscriptions(cls, user: User) -> QuerySet:
-        organizations = Organization.objects.filter(id__in=user.subscriptions.values('organization_id')).annotate(
+        organizations = Organization.active_organizations.filter(
+            id__in=user.subscriptions.values('organization_id')).annotate(
             subscription_time=Subquery(
                 Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
         ).order_by('-subscription_time')

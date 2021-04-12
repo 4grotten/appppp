@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -24,10 +25,11 @@ class FeedView(ListAPIView):
 
     def get_queryset(self):
         search = self.request.GET.get('search', None)
+        qs = ShopItem.objects.exclude(Q(organization__is_banned=True) | Q(organization__is_deleted=True))
         if search and search[0] == '#':  # Search among posts if hashtag is used
-            qs = ShopItem.objects.exclude(organization__is_banned=True).filter(is_published=True)
+            qs = qs.filter(is_published=True)
         else:
-            qs = ShopItem.objects.exclude(organization__is_banned=True).filter(is_published=True, price__isnull=False)
+            qs = qs.filter(is_published=True, price__isnull=False)
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

@@ -1,7 +1,7 @@
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet, Q, F
+from django.db.models import QuerySet, Q
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from notifications.constants import (
@@ -77,7 +77,8 @@ class PartnershipService:
             raise NotAcceptableException('No access to partner settings')
 
         partnerships = Partnership.objects.filter(
-            Q(accepted_by=organization) | (Q(requested_by=organization) & Q(is_accepted=False))
+            (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
+            | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
         ).order_by('is_accepted', '-id')
         return partnerships
 

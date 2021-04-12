@@ -3,7 +3,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView
+from rest_framework.generics import (
+    ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, GenericAPIView
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -116,8 +118,12 @@ class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
-    @method_permission_classes((IsAuthenticated,))
-    def delete(self, request, *args, **kwargs):
+
+class DeactivateOrganizationView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationDetailedSerializer
+
+    def post(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
             raise NotAcceptableException('No rights to edit organization')
@@ -272,7 +278,7 @@ class HomepageSearchView(ListAPIView):
 
         partner = serializer.validated_data['partner']
         if partner is None:
-            return Organization.objects.filter(is_active=True)
+            return Organization.active_organizations.filter(is_active=True)
 
         return OrganizationService.get_organization_partners(organization=partner)
 

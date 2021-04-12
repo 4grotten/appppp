@@ -16,7 +16,7 @@ from .views.organization_views import (
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreatAPIView,
-    InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView,
+    InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
@@ -32,6 +32,7 @@ organization_urls = [
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
+    path('organizations/<int:pk>/deactivate/', DeactivateOrganizationView.as_view(), name='deactivate_organization'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
     path('organizations/<int:pk>/messages/', OrgMessageAPIView.as_view(), name='organization_messages'),
     path('messages/', SubscriptionsMessageListAPIView.as_view(), name='messages_all_subscriptions'),

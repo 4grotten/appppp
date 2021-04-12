@@ -195,7 +195,7 @@ class OrganizationService:
 
     @classmethod
     def get_organization_partners(cls, organization: Organization) -> QuerySet:
-        return Organization.objects.select_related('image').filter(
+        return Organization.active_organizations.select_related('image').filter(
             id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
 
     @classmethod
@@ -287,13 +287,11 @@ class OrganizationService:
             raise IntegrityException('Can not update organization: {e}'.format(e=str(e)))
 
     @classmethod
-    def deactivate(cls, organization):
+    def deactivate(cls, organization: Organization):
         try:
             organization.is_deleted = True
             organization.save()
-
             return organization
-
         except Exception as e:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
 
@@ -329,7 +327,7 @@ class OrganizationService:
     def get_random_organizations_with_discounts(cls, limit: int = HOMEPAGE_BANNERS_COUNT,
                                                 country: Union[Country, None] = None,
                                                 city: Union[City, None] = None) -> list:
-        queryset = Organization.objects.exclude(discounts__isnull=True)
+        queryset = Organization.active_organizations.exclude(discounts__isnull=True)
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         queryset = queryset.order_by('?')[:limit]
@@ -349,8 +347,8 @@ class OrganizationService:
                                              partner: Organization = None,
                                              country: Union[Country, None] = None,
                                              city: Union[City, None] = None) -> QuerySet:
-        additional = Organization.objects.filter(is_active=True, types__in=category.types.all()).distinct()
-        queryset = Organization.objects.prefetch_related('types').select_related('image').filter(
+        additional = Organization.active_organizations.filter(is_active=True, types__in=category.types.all()).distinct()
+        queryset = Organization.active_organizations.prefetch_related('types').select_related('image').filter(
             id__in=additional).order_by('?')
 
         if partner is not None:

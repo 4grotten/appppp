@@ -7,7 +7,7 @@ from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
 
 from common.exceptions import (
-    ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException
+    ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException
 )
 from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
@@ -52,10 +52,21 @@ class CartService:
         return total
 
     @classmethod
-    def checkout_cart(cls, user: User, cart_id: int):
-        cart = cls.get(user=user, id=cart_id)
-        cart.delete()
-        # ToDo: Put cart contents to transaction
+    @transaction.atomic
+    def checkout_cart_for_anonymous_client(cls, request, employee: User, cart_id: int) -> Transaction:
+        cart = cls.get(user=employee, id=cart_id, is_open=True)
+        if not OrganizationService.user_can_sell(organization=cart.organization, user=employee):
+            raise NotAcceptableException('No rights to sell in this organization')
+
+        cart.is_open = False
+        try:
+            cart.save()
+        except IntegrityError:
+            raise IntegrityException('Could not checkout the cart')
+
+        from transactions.services.transaction_services import TransactionService
+        accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(request, cart=cart)
+        return accepted_offline_transaction
 
     @classmethod
     def close_the_cart(cls, user: User, cart_id: int):

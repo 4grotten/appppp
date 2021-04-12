@@ -34,6 +34,7 @@ from shop.services.cart_services import CartService
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
+from users.services import UserService
 
 
 class TransactionService:
@@ -80,7 +81,7 @@ class TransactionService:
     @transaction.atomic
     def complete_transaction(cls, transaction_id: int, processed_by: User, original_amount: Decimal,
                              discount_percent: int, source_card: Union[DiscountCard, None], from_cashback: Decimal,
-                             cart: Union[Cart, None],
+                             cart: Union[Cart, None] = None
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
@@ -308,6 +309,35 @@ class TransactionService:
                             currency=current_transaction.currency.code)
         )
         return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def create_offline_transaction_from_cart(cls, request, cart: Cart) -> Transaction:
+        processed_by = cart.user
+        client = UserService.get_common_user()
+        original_price, discounted_price = CartService.get_total_prices_in_cart(cart)
+        role = OrganizationService.get_user_role_in_organization(organization=cart.organization, user=processed_by)
+        from shop.serializers.cart_serializers import CartSerializer
+        fixed_cart = CartSerializer(cart, context={'request': request}).data
+        offline_transaction = Transaction.objects.create(
+            cart=cart,
+            client=client,
+            organization=cart.organization,
+            type='offline',
+            original_amount=original_price,
+            currency=cart.organization.currency,
+            status=Transaction.ACCEPTED,
+            savings=original_price - discounted_price,
+            is_processed=True,
+            processed_by=processed_by,
+            employee_name=processed_by.full_name,
+            employee_avatar=processed_by.avatar,
+            employee_role=role,
+            delivery_type=Transaction.CART_CHECKOUT,
+            fixed_cart=fixed_cart
+        )
+
+        return offline_transaction
 
     @classmethod
     def get_user_transaction_organizations(cls, client: User, start_date, end_date):

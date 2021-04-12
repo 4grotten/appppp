@@ -28,10 +28,12 @@ class Transaction(TimestampModel):
 
     CASH_COURIER = 'cash_courier'
     SELF_PICKUP = 'self_pickup'
+    CART_CHECKOUT = 'cart_checkout'
 
     DELIVERY_TYPE = (
         (CASH_COURIER, CASH_COURIER),
-        (SELF_PICKUP, SELF_PICKUP)
+        (SELF_PICKUP, SELF_PICKUP),
+        (CART_CHECKOUT, CART_CHECKOUT),
     )
 
     REJECTED = 'rejected'

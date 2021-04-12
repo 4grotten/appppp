@@ -2,9 +2,11 @@ import datetime
 import uuid
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from django.db import models
 from common.models import TimestampModel
 from common.utils import generate_random_code
 from .constants import GENDER_CHOICES
@@ -25,6 +27,8 @@ class User(AbstractUser, TimestampModel):
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
 
+    is_common_client = models.BooleanField(default=False, editable=False)
+
     objects = UserManager()
 
     class Meta:
@@ -32,6 +36,17 @@ class User(AbstractUser, TimestampModel):
 
     def __str__(self):
         return str(self.phone_number)
+
+    def clean_fields(self, exclude=None):
+        super().clean_fields(exclude)
+        errors = {}
+        if self.is_common_client:
+            common_users = User.objects.filter(is_common_client=True)
+            if common_users.count() > 0:
+                if not common_users.first().id == self.id:
+                    errors['is_common_client'] = _('Only one common client can exist')
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         if not self.pk:

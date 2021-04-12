@@ -292,6 +292,7 @@ class TransactionService:
                     Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
+            sender_id=current_transaction.processed_by_id,
             mode=PRODUCT_MODE,
             notification_type=ACCEPT_ORDER_CLIENT_TYPE,
             organization_id=current_transaction.organization_id,
@@ -301,6 +302,7 @@ class TransactionService:
         )
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,
+            sender_id=current_transaction.client_id,
             mode=PRODUCT_MODE,
             notification_type=ACCEPT_ORDER_TYPE,
             organization_id=current_transaction.organization_id,

@@ -85,4 +85,4 @@ class YoutubeEmbedView(GenericAPIView):
         if response.status_code == 200:
             return Response(response.json())
 
-        return Response('salam')
+        return Response({'message': 'Please provide valid youtube link'}, status=status.HTTP_400_BAD_REQUEST)

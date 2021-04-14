@@ -124,6 +124,7 @@ class TransactionService:
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
             current_transaction.status = 'accepted'
+            current_transaction.delivery_type = Transaction.CART_CHECKOUT
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()

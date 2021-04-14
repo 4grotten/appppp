@@ -77,6 +77,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     cart = serializers.SerializerMethodField()
     current_user_can_see_stats = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
+    purchase_id = serializers.SerializerMethodField()
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -91,11 +92,15 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
         return OrganizationService.user_can_see_stats(user=self.context.get('user'),
                                                       organization=instance.organization)
 
+    def get_purchase_id(self, transaction: Transaction) -> int:
+        # ToDo: purchase_id unmock
+        return 1
+
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
+            'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
+            'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'organization', 'delivery_type', 'type', 'cart', 'status',
             'current_user_can_see_stats', 'delivery_info'
         )

@@ -296,6 +296,15 @@ class OrganizationService:
             raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
 
     @classmethod
+    def reactivate(cls, organization: Organization):
+        try:
+            organization.is_deleted = False
+            organization.save()
+            return organization
+        except Exception as e:
+            raise IntegrityException('Can not reactivate organization: {e}'.format(e=str(e)))
+
+    @classmethod
     def get_organizations_ordered_by_num_of_partners(cls,
                                                      country: Union[Country, None] = None,
                                                      city: Union[City, None] = None) -> QuerySet:

@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
+from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-# from instagram_parser.get_id import get_username_from_instagram_url
-from organizations.models import PhoneNumber, SocialNetworkContact, Organization, Message, Membership, \
-    InstagramIntegration
+from organizations.models import (
+    PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration
+)
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -12,7 +13,6 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
-from common.models import File
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -224,7 +224,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'role')
+        fields = ('id', 'title', 'is_deleted', 'image', 'role')
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):

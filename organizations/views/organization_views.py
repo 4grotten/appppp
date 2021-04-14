@@ -133,6 +133,20 @@ class DeactivateOrganizationView(GenericAPIView):
         return Response(self.serializer_class(deactivated_organization, context={'request': request}).data)
 
 
+class ReactivateOrganizationView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationDetailedSerializer
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException('No rights to edit organization')
+
+        deactivated_organization = OrganizationService.reactivate(organization=organization)
+
+        return Response(self.serializer_class(deactivated_organization, context={'request': request}).data)
+
+
 class OrgPhonesListAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

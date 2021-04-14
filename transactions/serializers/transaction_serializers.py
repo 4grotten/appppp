@@ -164,8 +164,8 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
+            'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
+            'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status',
             'current_user_can_see_stats', 'delivery_info', 'organization'
         )

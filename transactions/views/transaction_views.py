@@ -65,12 +65,12 @@ class TransactionPreprocessView(GenericAPIView):
 
         data = {
             'transaction_id': new_transaction.id,
+            'purchase_id': organization.running_purchase_id,
             'cumulative': cumulative,
             'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
             'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
             'accrued_cashback': accrued_cashback,
             'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
-            'purchase_id': 1,  # ToDo: purchase_id unmock
             'cart_amount': discounted_price,
         }
 

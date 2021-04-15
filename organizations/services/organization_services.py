@@ -284,7 +284,7 @@ class OrganizationService:
             return organization
 
         except Exception as e:
-            raise IntegrityException('Can not update organization: {e}'.format(e=str(e)))
+            raise IntegrityException('Could not update organization: {e}'.format(e=str(e)))
 
     @classmethod
     def deactivate(cls, organization: Organization):
@@ -293,16 +293,25 @@ class OrganizationService:
             organization.save()
             return organization
         except Exception as e:
-            raise IntegrityException('Can not deactivate organization: {e}'.format(e=str(e)))
+            raise IntegrityException('Could not deactivate organization: {e}'.format(e=str(e)))
 
     @classmethod
-    def reactivate(cls, organization: Organization):
+    def reactivate(cls, organization: Organization) -> Organization:
         try:
             organization.is_deleted = False
             organization.save()
             return organization
         except Exception as e:
-            raise IntegrityException('Can not reactivate organization: {e}'.format(e=str(e)))
+            raise IntegrityException('Could not reactivate organization: {e}'.format(e=str(e)))
+
+    @classmethod
+    def reset_running_purchase_id(cls, organization: Organization) -> Organization:
+        try:
+            organization.running_purchase_id = 1
+            organization.save()
+            return organization
+        except Exception as e:
+            raise IntegrityException('Could not reset running purchase ID organization: {e}'.format(e=str(e)))
 
     @classmethod
     def get_organizations_ordered_by_num_of_partners(cls,

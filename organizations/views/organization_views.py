@@ -147,6 +147,19 @@ class ReactivateOrganizationView(GenericAPIView):
         return Response(self.serializer_class(deactivated_organization, context={'request': request}).data)
 
 
+class ResetPurchaseIDView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationDetailedSerializer
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException('No rights to edit organization')
+
+        OrganizationService.reset_running_purchase_id(organization=organization)
+        return Response(data={'message': 'Successfully reset running purchase ID'}, status=status.HTTP_200_OK)
+
+
 class OrgPhonesListAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

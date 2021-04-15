@@ -86,6 +86,7 @@ class TransactionService:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
                                       status=Transaction.IN_PROGRESS)
+        organization = current_transaction.organization
 
         if source_card is not None and not OrganizationClientFinancialStatusService.can_use_given_card(
                 client=current_transaction.client, card=source_card):
@@ -97,7 +98,7 @@ class TransactionService:
             discount_percent = 0
 
         if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
-                client=current_transaction.client, organization=current_transaction.organization, amount=from_cashback):
+                client=current_transaction.client, organization=organization, amount=from_cashback):
             raise NotAcceptableException('Not enough accrued cashback amount')
 
         transaction_cart = getattr(current_transaction, 'cart', None)
@@ -125,6 +126,12 @@ class TransactionService:
             current_transaction.is_processed = True
             current_transaction.status = 'accepted'
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
+            current_transaction.purchase_id = organization.running_purchase_id
+
+            organization.running_purchase_id = F('running_purchase_id') + 1
+            organization.save()
+            organization.refresh_from_db()
+
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
@@ -165,7 +172,7 @@ class TransactionService:
 
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
-            organization=current_transaction.organization
+            organization=organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
@@ -179,7 +186,7 @@ class TransactionService:
             if to_subtract < from_cashback:
                 remaining_amount = from_cashback - to_subtract
                 OrganizationClientFinancialStatusService.use_corporate_cashback(
-                    client=current_transaction.client, organization=current_transaction.organization,
+                    client=current_transaction.client, organization=organization,
                     amount=remaining_amount
                 )
 

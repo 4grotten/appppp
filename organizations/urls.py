@@ -17,7 +17,7 @@ from .views.organization_views import (
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreatAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
-    ReactivateOrganizationView,
+    ReactivateOrganizationView, ResetPurchaseIDView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
@@ -35,6 +35,7 @@ organization_urls = [
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organizations/<int:pk>/deactivate/', DeactivateOrganizationView.as_view(), name='deactivate_organization'),
     path('organizations/<int:pk>/reactivate/', ReactivateOrganizationView.as_view(), name='reactivate_organization'),
+    path('organizations/<int:pk>/resetPurchaseID/', ResetPurchaseIDView.as_view(), name='reset_purchase_id'),
     path('organizations/<int:pk>/phone_numbers/', OrgPhonesListAPIView.as_view(), name='organization_phones'),
     path('organizations/<int:pk>/messages/', OrgMessageAPIView.as_view(), name='organization_messages'),
     path('messages/', SubscriptionsMessageListAPIView.as_view(), name='messages_all_subscriptions'),
@@ -60,7 +61,7 @@ organization_urls = [
         'organizations/<int:pk>/getPartnersFollowersCount/',
         OrganizationPartnersFollowersCountAPIView.as_view(),
         name="org_partners_followers_count"
-    )
+    ),
 ]
 
 membership_urls = [

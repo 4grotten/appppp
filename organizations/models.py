@@ -66,11 +66,13 @@ class Organization(TimestampModel):
                                        related_name='organizations')
     cumulative_group = models.ForeignKey(CumulativeGroup, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='organizations')
+    running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
 
+    # Managers
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()
 

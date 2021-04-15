@@ -289,6 +289,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         transaction = Transaction.objects.get(id=transaction_id)
         user_cart_details_expected_data = {
             "id": transaction.id,
+            "purchase_id": None,
             "currency": "USD",
             "original_amount": 100.0,
             "discount_percent": 0,
@@ -442,6 +443,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         transaction = Transaction.objects.get(id=transaction_id)
         expected_user_transaction_info = {
             "id": transaction.id,
+            "purchase_id": 1,
             "currency": "USD",
             "original_amount": 100.0,
             "discount_percent": 0,
@@ -594,6 +596,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         transaction = Transaction.objects.get(id=transaction_id)
         expected_user_transaction_info = {
             "id": transaction.id,
+            "purchase_id": 1,
             "currency": "USD",
             "original_amount": 100.0,
             "discount_percent": 0,

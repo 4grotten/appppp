@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
 from organizations.services.subscription_services import SubscriptionService
-from users.serializers import UserShortInfoSerializer, FollowerInfoSerializer
+from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 
 User = get_user_model()
 
@@ -57,6 +57,5 @@ class OrgFollowersDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = SubscriptionService.get_follower(organization_id=kwargs['organization_id'],
                                                 requested_by=self.request.user, user_id=kwargs['user_id'])
-        data = FollowerInfoSerializer(user, context={'organization_id': kwargs['organization_id']},
-                                      many=False).data
+        data = FollowerOrClientSerializer(user, context={'organization_id': kwargs['organization_id']}).data
         return Response(data, status=status.HTTP_200_OK)

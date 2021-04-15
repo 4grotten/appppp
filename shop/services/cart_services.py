@@ -114,7 +114,7 @@ class CartService:
                 client=cart.user,
                 defaults={
                     "organization": cart.organization,
-                    "type": "online",
+                    "type": Transaction.ONLINE,
                     "original_amount": original_price,
                     "currency": cart.organization.currency,
                     "status": Transaction.IN_PROGRESS,

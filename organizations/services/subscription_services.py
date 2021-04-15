@@ -66,7 +66,7 @@ class SubscriptionService:
         return User.objects.filter(subscriptions__organization_id=organization_id)
 
     @classmethod
-    def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> QuerySet:
+    def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:
         organization = OrganizationService.get(id=organization_id)
         user = User.objects.get(id=user_id)
         if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):

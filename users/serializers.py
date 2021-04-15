@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import EmailValidator
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
@@ -203,7 +202,7 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name', 'avatar', 'username')
 
 
-class FollowerInfoSerializer(serializers.ModelSerializer):
+class FollowerOrClientSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
     role = serializers.SerializerMethodField()
 

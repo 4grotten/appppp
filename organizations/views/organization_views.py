@@ -35,7 +35,7 @@ from organizations.services.organization_services import (
 )
 from organizations.services.subscription_services import SubscriptionService
 from organizations.tasks import parse_instagram_last_updates
-from users.serializers import UserShortInfoSerializer
+from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 
 
 class OrganizationCreationLimitView(APIView):
@@ -466,3 +466,13 @@ class OrganizationPartnersFollowersCountAPIView(APIView):
             'followers': UserShortInfoSerializer(users, many=True, context={'request': request}).data,
             'count': count
         }, status=status.HTTP_200_OK)
+
+
+class OrganizationClientDetailsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        user = OrganizationService.get_online_client(organization_id=kwargs['organization_id'],
+                                                     requested_by=self.request.user, user_id=kwargs['user_id'])
+        data = FollowerOrClientSerializer(user, context={'organization_id': kwargs['organization_id']}).data
+        return Response(data, status=status.HTTP_200_OK)

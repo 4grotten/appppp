@@ -30,6 +30,7 @@ from organizations.models import (
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import parse_instagram_to_shop_items, delete_not_updated_posts_from_instagram
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -426,6 +427,18 @@ class OrganizationService:
 
         except IntegrityError:
             raise IntegrityException('Could not change owner')
+
+    @classmethod
+    def get_online_client(cls, user_id: int, organization_id: int, requested_by: User) -> QuerySet:
+        organization = OrganizationService.get(id=organization_id)
+        user = User.objects.get(id=user_id)
+        if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
+            raise PermissionDeniedException('Permission denied')
+
+        if Transaction.objects.filter(client=user, organization=organization, type=Transaction.ONLINE).exists():
+            return user
+
+        raise ObjectNotFoundException('Client not found')
 
 
 class OrgPhoneNumberService:

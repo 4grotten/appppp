@@ -2,7 +2,7 @@ from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet, Count, Q
+from django.db.models import QuerySet, Count, Q, F
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 
@@ -314,6 +314,11 @@ class OrganizationService:
             raise IntegrityException('Could not reset running purchase ID organization: {e}'.format(e=str(e)))
 
     @classmethod
+    def increment_running_purchase_id(cls, organization: Organization):
+        organization.running_purchase_id = F('running_purchase_id') + 1
+        organization.save()
+        organization.refresh_from_db()
+
     def get_organizations_ordered_by_num_of_partners(cls,
                                                      country: Union[Country, None] = None,
                                                      city: Union[City, None] = None) -> QuerySet:

@@ -128,9 +128,7 @@ class TransactionService:
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
 
-            organization.running_purchase_id = F('running_purchase_id') + 1
-            organization.save()
-            organization.refresh_from_db()
+            OrganizationService.increment_running_purchase_id(organization=organization)
 
             if source_card is not None:
                 current_transaction.discount_type = source_card.type
@@ -287,7 +285,10 @@ class TransactionService:
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
+            current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.save()
+
+            OrganizationService.increment_running_purchase_id(organization=organization)
         except IntegrityError:
             raise IntegrityException('Could not complete transaction')
         client_status = OrganizationClientFinancialStatusService.get_or_create(
@@ -323,19 +324,20 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def create_offline_transaction_from_cart(cls, request, cart: Cart) -> Transaction:
+        organization = cart.organization
         processed_by = cart.user
         client = UserService.get_common_user()
         original_price, discounted_price = CartService.get_total_prices_in_cart(cart)
-        role = OrganizationService.get_user_role_in_organization(organization=cart.organization, user=processed_by)
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         from shop.serializers.cart_serializers import CartSerializer
         fixed_cart = CartSerializer(cart, context={'request': request}).data
         offline_transaction = Transaction.objects.create(
             cart=cart,
             client=client,
-            organization=cart.organization,
+            organization=organization,
             type='offline',
             original_amount=original_price,
-            currency=cart.organization.currency,
+            currency=organization.currency,
             status=Transaction.ACCEPTED,
             savings=original_price - discounted_price,
             is_processed=True,
@@ -344,8 +346,11 @@ class TransactionService:
             employee_avatar=processed_by.avatar,
             employee_role=role,
             delivery_type=Transaction.CART_CHECKOUT,
-            fixed_cart=fixed_cart
+            fixed_cart=fixed_cart,
+            purchase_id=organization.running_purchase_id
         )
+
+        OrganizationService.increment_running_purchase_id(organization=organization)
 
         return offline_transaction
 

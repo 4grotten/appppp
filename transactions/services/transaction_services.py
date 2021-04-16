@@ -17,7 +17,7 @@ from notifications.constants import (
     CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
     CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT,
     WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
-    DECLINE_DISCOUNT_TYPE, REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
+    REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
     ACCEPT_ORDER_CLIENT_TYPE,
     ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
     REQUEST_ORDER_TYPE
@@ -526,50 +526,31 @@ class TransactionService:
                 client_status=client_status, refunded_transaction=old_transaction
             )
             OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-        if old_transaction.type == Transaction.OFFLINE:
-            sent_notification.delay(
-                recipient_id=old_transaction.client_id,
-                sender_id=old_transaction.processed_by_id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=DECLINE_DISCOUNT_TYPE,
-                organization_id=old_transaction.organization_id,
-                extra_data=dict(savings=str(old_transaction.savings),
-                                currency=old_transaction.currency.code,
-                                recipient='client'),
-            )
-            sent_notification.delay(
-                recipient_id=user.id,
-                mode=DISCOUNT_NOTIFICATION_MODE,
-                notification_type=DECLINE_DISCOUNT_TYPE,
-                organization_id=old_transaction.organization_id,
-                extra_data=dict(savings=str(old_transaction.savings),
-                                currency=old_transaction.currency.code,
-                                recipient='seller')
-            )
-        else:
+        if old_transaction.type == Transaction.ONLINE:
             Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
                         Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
-            sent_notification.delay(
-                recipient_id=user.id,
-                sender_id=old_transaction.client_id,
-                mode=PRODUCT_MODE,
-                notification_type=DECLINE_ORDER_TYPE,
-                organization_id=old_transaction.organization_id,
-                extra_data=dict(transaction_id=old_transaction.id,
-                                total_price=old_transaction.final_amount,
-                                currency=old_transaction.currency.code)
-            )
-            sent_notification.delay(
-                recipient_id=old_transaction.client_id,
-                sender_id=old_transaction.processed_by_id,
-                mode=PRODUCT_MODE,
-                notification_type=DECLINE_ORDER_CLIENT_TYPE,
-                organization_id=old_transaction.organization_id,
-                extra_data=dict(transaction_id=old_transaction.id,
-                                total_price=old_transaction.final_amount,
-                                currency=old_transaction.currency.code)
-            )
+
+        sent_notification.delay(
+            recipient_id=user.id,
+            sender_id=old_transaction.client_id,
+            mode=PRODUCT_MODE,
+            notification_type=DECLINE_ORDER_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=PRODUCT_MODE,
+            notification_type=DECLINE_ORDER_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            currency=old_transaction.currency.code)
+        )
 
     @classmethod
     def get_unprocessed_transactions_count(cls, user: User):

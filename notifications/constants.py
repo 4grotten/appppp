@@ -45,6 +45,7 @@ ATTENDANCE_OUT = 'attendance_out'
 CHECK_ATTENDANCE_IN = 'check_attendance_in'
 CHECK_ATTENDANCE_OUT = 'check_attendance_out'
 
+# Following three are no longer used
 ACCEPT_DISCOUNT_TYPE = 'accept_discount'
 ACCEPT_SELLER_DISCOUNT_TYPE = 'accepted_seller_discount'
 DECLINE_DISCOUNT_TYPE = 'decline_discount'

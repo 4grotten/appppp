@@ -10,16 +10,10 @@ from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
 )
 from notifications.constants import (
-    DISCOUNT_NOTIFICATION_MODE, ACCEPT_DISCOUNT_TYPE, DISCOUNT_COMPLETE_TITLE,
-    DISCOUNT_COMPLETE_DESCRIPTION, DISCOUNT_COMPLETE_USER_TITLE,
-    ACCEPT_SELLER_DISCOUNT_TYPE,
-    WITHDRAW_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT_TITLE,
-    CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER,
-    CHARGE_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_CLIENT,
-    WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER,
-    REQUEST_ORDER_CLIENT_TYPE, PRODUCT_MODE,
-    ACCEPT_ORDER_CLIENT_TYPE,
-    ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
+    DISCOUNT_NOTIFICATION_MODE, DISCOUNT_COMPLETE_DESCRIPTION, WITHDRAW_CASHBACK_CLIENT_TITLE,
+    CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER, CHARGE_CASHBACK_SELLER_TITLE,
+    WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER, REQUEST_ORDER_CLIENT_TYPE,
+    PRODUCT_MODE, ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
     REQUEST_ORDER_TYPE
 )
 from notifications.models import Notification
@@ -138,30 +132,21 @@ class TransactionService:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
-                    notification_type=ACCEPT_DISCOUNT_TYPE,
-                    title=DISCOUNT_COMPLETE_USER_TITLE.format(
-                        discount_percent=str(current_transaction.discount_percent)),
-                    description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                     currency=current_transaction.currency.code),
+                    mode=PRODUCT_MODE,
+                    notification_type=ACCEPT_ORDER_CLIENT_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
-                                    discount_percent=str(current_transaction.discount_percent),
-                                    final_amount=str(current_transaction.final_amount),
+                                    total_price=current_transaction.final_amount,
                                     currency=current_transaction.currency.code)
                 )
                 sent_notification.delay(
                     recipient_id=current_transaction.processed_by_id,
                     sender_id=current_transaction.client_id,
-                    mode=DISCOUNT_NOTIFICATION_MODE,
-                    notification_type=ACCEPT_SELLER_DISCOUNT_TYPE,
-                    title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=str(current_transaction.discount_percent)),
-                    description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
-                                                                     currency=current_transaction.currency.code),
+                    mode=PRODUCT_MODE,
+                    notification_type=ACCEPT_ORDER_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
-                                    discount_percent=str(current_transaction.discount_percent),
-                                    final_amount=str(current_transaction.final_amount),
+                                    total_price=current_transaction.final_amount,
                                     currency=current_transaction.currency.code)
                 )
 

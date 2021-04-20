@@ -18,7 +18,7 @@ class UserCartListView(ListAPIView):
     serializer_class = CartListSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user, is_open=True).order_by('-id')
+        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).order_by('-id')
 
 
 class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -26,7 +26,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user, is_open=True)
+        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False)
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = EmployeeCartSerializer

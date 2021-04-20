@@ -41,6 +41,9 @@ class OrganizationItemListView(FeedView):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException('Valid organization is required in query parameters')
+        organization = serializer.validated_data['organization']
+        if organization.is_deleted:
+            return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user

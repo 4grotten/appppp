@@ -1,10 +1,11 @@
+from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from shop.models import Cart
+from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
     CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
@@ -26,7 +27,9 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False)
+        return Cart.objects.filter(
+            user=self.request.user, is_open=True, organization__is_deleted=False
+        ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at')))
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = EmployeeCartSerializer

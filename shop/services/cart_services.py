@@ -141,7 +141,7 @@ class CartService:
             raise PermissionDeniedException('No rights to change this cart')
 
         CartItem.objects.filter(cart=cart).delete()
-
+        items.reverse()
         for data in items:
             if data['count'] and data['item'].organization == cart.organization:
                 CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])

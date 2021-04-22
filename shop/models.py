@@ -145,7 +145,7 @@ class DeliveryInfo(TimestampModel):
     entrance = models.CharField(max_length=36, null=True, blank=True)
     floor = models.CharField(max_length=36, null=True, blank=True)
     phone = models.CharField(max_length=36)
-    comment = models.CharField(max_length=36, null=True, blank=True)
+    comment = models.CharField(max_length=150, null=True, blank=True)
 
     def __str__(self):
         return f'Delivery info of {self.user}'

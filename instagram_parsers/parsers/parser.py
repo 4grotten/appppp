@@ -46,14 +46,15 @@ def get_posts(user_id):
         return "Connection Error"
 
 
-def get_video_url_from_post(post_pk: int):
+def get_video_url_from_post(post_url: str):
     settings = LOGIN_SETTINGS
     proxy = ProxyServices.get_random_formed_proxy()
     if proxy is not None:
         cl = Client(settings=settings, proxy=proxy)
     else:
         cl = Client(settings=settings)
-    return dict(cl.media_info(media_pk=post_pk))['video_url']
+    post_pk_from_url = cl.media_pk_from_url(url=post_url)
+    return dict(cl.media_info(media_pk=post_pk_from_url))['video_url']
 
 
 def get_latest_posts(user_id: int):

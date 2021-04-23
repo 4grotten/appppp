@@ -103,14 +103,6 @@ class ItemChangePublishedSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 
-class ItemInstagramDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ItemInstagramData
-        fields = (
-            'id', 'item', 'post_pk', 'thumbnail_url', 'video_url'
-        )
-
-
 class ItemInstagramVideoSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField()
 

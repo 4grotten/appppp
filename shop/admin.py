@@ -35,7 +35,7 @@ class ShopItemAdmin(admin.ModelAdmin):
 
 
 class ItemInstagramDataAdmin(admin.ModelAdmin):
-    list_display = ('item', 'post_pk', 'thumbnail_url', 'video_url')
+    list_display = ('item', 'thumbnail_url', 'video_url')
 
 
 class ItemLikeAdmin(admin.ModelAdmin):

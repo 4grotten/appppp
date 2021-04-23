@@ -8,6 +8,6 @@ from shop.models import ItemInstagramData
 def update_instagram_videos():
     instagram_data = ItemInstagramData.objects.filter(video_url__isnull=False)
     for data in instagram_data:
-        video_url = get_video_url_from_post(data.post_pk)
+        video_url = get_video_url_from_post(post_url=data.item.instagram_link)
         data.video_url = video_url
         data.save()

@@ -266,6 +266,15 @@ FCM_DRY_RUN_ENABLE = config('FCM_DRY_RUN_ENABLE', default=True, cast=bool)
 HOST_URL = config('DJANGO_HOST_URL', default='https://apofiz.com/media/')
 CELERY_BROKER_URL = config('CELERY_DSN', default='amqp://localhost:5672')
 
+CELERY_TASK_ROUTES = {
+    'imagekit.cachefiles.backends._generate_file': {'queue': 'high'},
+    'notifications.tasks.*': {'queue': 'default'},
+    'organizations.tasks.parse_instagram_to_shop_items': {'queue': 'insta_high'},
+    'organizations.tasks.parse_instagram_last_updates': {'queue': 'insta_high'},
+    'organizations.tasks.delete_not_updated_posts_from_instagram': {'queue': 'insta_low'},
+    'shop.tasks.update_instagram_videos': {'queue': 'insta_low'},
+}
+
 if not DEBUG and JSON_LOGGING:
     LOGGING = {
         'version': 1,
@@ -294,7 +303,7 @@ if not DEBUG and JSON_LOGGING:
 # Sentry
 if not DEBUG:
     SENTRY_DSN = config(
-        "SENTRY_DSN", cast=str, default="https://1@91.ingest.sentry.io/228"
+        "SENTRY_DSN", cast=str, default="https://9830f4ac6ea04f83aed2d7b2abdd24e5@o173421.ingest.sentry.io/5733313"
     )
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration

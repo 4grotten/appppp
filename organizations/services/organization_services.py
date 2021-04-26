@@ -320,6 +320,7 @@ class OrganizationService:
         organization.save()
         organization.refresh_from_db()
 
+    @classmethod
     def get_organizations_ordered_by_num_of_partners(cls,
                                                      country: Union[Country, None] = None,
                                                      city: Union[City, None] = None) -> QuerySet:

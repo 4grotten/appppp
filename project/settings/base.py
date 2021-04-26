@@ -276,6 +276,10 @@ CELERY_TASK_ROUTES = {
     'shop.tasks.update_instagram_videos': {'queue': 'insta_low'},
 }
 
+INSTAGRAM_VIDEO_EXPIRE_DAYS = config('INSTAGRAM_VIDEO_EXPIRE_DAYS', default=1)
+INSTAGRAM_POSTS_UPDATE_BATCH_SIZE = config('INSTAGRAM_POSTS_UPDATE_BATCH_SIZE', default=30)
+INSTAGRAM_DAYS_TO_KEEP = config('INSTAGRAM_DAYS_TO_KEEP', default=14)
+
 if not DEBUG and JSON_LOGGING:
     LOGGING = {
         'version': 1,

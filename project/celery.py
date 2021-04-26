@@ -16,6 +16,6 @@ app.conf.beat_schedule = {
     },
     'update-insta-videos': {
         'task': 'shop.tasks.update_instagram_videos',
-        'schedule': crontab(hour=0, minute=30)
+        'schedule': crontab(hour=0, minute='*/5')
     },
 }

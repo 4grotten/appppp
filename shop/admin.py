@@ -27,7 +27,7 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
 
 
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'subcategory', 'price', 'is_published', 'is_hidden',)
+    list_display = ('name', 'organization', 'subcategory', 'price', 'discount', 'is_published', 'is_hidden',)
     list_filter = ('is_published', 'is_hidden', 'subcategory', 'organization',)
     search_fields = ('name',)
     raw_id_fields = ('organization', 'subcategory',)
@@ -35,7 +35,7 @@ class ShopItemAdmin(admin.ModelAdmin):
 
 
 class ItemInstagramDataAdmin(admin.ModelAdmin):
-    list_display = ('item', 'thumbnail_url', 'video_url')
+    list_display = ('item', 'thumbnail_url', 'video_url', 'updated_at', 'created_at',)
 
 
 class ItemLikeAdmin(admin.ModelAdmin):

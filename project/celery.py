@@ -10,8 +10,12 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'add-every-day': {
+    'delete-old-insta-posts': {
+        'task': 'shop.tasks.delete_old_instagram_posts',
+        'schedule': crontab(hour=0, minute=5)
+    },
+    'update-insta-videos': {
         'task': 'shop.tasks.update_instagram_videos',
-        'schedule': crontab(hour=0, minute=0)
+        'schedule': crontab(hour=0, minute=30)
     },
 }

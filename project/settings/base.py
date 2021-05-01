@@ -273,7 +273,7 @@ CELERY_TASK_ROUTES = {
     'organizations.tasks.parse_instagram_last_updates': {'queue': 'insta_high'},
     'organizations.tasks.delete_not_updated_posts_from_instagram': {'queue': 'insta_low'},
     'shop.tasks.delete_old_instagram_posts': {'queue': 'insta_low'},
-    'shop.tasks.update_instagram_videos': {'queue': 'insta_low'},
+    'shop.tasks.update_instagram_videos': {'queue': 'insta_video'},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config('INSTAGRAM_VIDEO_EXPIRE_DAYS', default=1, cast=int)

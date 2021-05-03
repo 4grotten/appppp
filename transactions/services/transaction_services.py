@@ -99,21 +99,24 @@ class TransactionService:
         if not transaction_cart == cart:
             raise NotAcceptableException('Transaction and cart do not match')
 
+        total_savings = (original_amount * discount_percent) / 100
+
         if cart is not None:
-            cart_amount = CartService.get_total_prices_in_cart(cart=cart)[1]
-            if not original_amount == cart_amount:
+            items_price, discounted_items = CartService.get_total_prices_in_cart(cart=cart)
+            if not original_amount == discounted_items:
                 raise NotAcceptableException('Original amount do not match with cart amounts')
             cart.is_open = False
             cart.save()
+            original_amount = items_price
+            total_savings = total_savings + (items_price - discounted_items)
 
-        discount_amount = (original_amount * discount_percent) / 100
-        amount_to_pay = original_amount - discount_amount
+        amount_to_pay = original_amount - total_savings
         if amount_to_pay < from_cashback:
             raise NotAcceptableException('Cashback amount is greater than original amount')
 
         try:
             current_transaction.original_amount = original_amount
-            current_transaction.savings = discount_amount
+            current_transaction.savings = total_savings
             current_transaction.discount_percent = max(discount_percent, cashback_percent)
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card

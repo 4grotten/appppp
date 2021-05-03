@@ -75,7 +75,7 @@ class TransactionService:
     @transaction.atomic
     def complete_transaction(cls, transaction_id: int, processed_by: User, original_amount: Decimal,
                              discount_percent: int, source_card: Union[DiscountCard, None], from_cashback: Decimal,
-                             cart: Union[Cart, None] = None
+                             utc_offset_minutes: int, cart: Union[Cart, None] = None,
                              ) -> Transaction:
 
         current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
@@ -124,6 +124,7 @@ class TransactionService:
             current_transaction.status = 'accepted'
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
+            current_transaction.display_time = F('updated_at') + timedelta(minutes=utc_offset_minutes)
 
             OrganizationService.increment_running_purchase_id(organization=organization)
 
@@ -247,7 +248,8 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_online_transaction(cls, request, transaction_id: int, processed_by: User) -> Transaction:
+    def complete_online_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
+                                    processed_by: User) -> Transaction:
         current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
                                       status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
@@ -274,6 +276,8 @@ class TransactionService:
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
+            current_transaction.display_time = F('updated_at') + timedelta(minutes=utc_offset_minutes)
+
             current_transaction.save()
 
             OrganizationService.increment_running_purchase_id(organization=organization)

@@ -33,10 +33,14 @@ class CompleteSerializer(serializers.ModelSerializer):
                                              validators=[MinValueValidator(0)])
     cart = serializers.PrimaryKeyRelatedField(
         queryset=Cart.objects.filter(is_open=True), allow_null=True, required=False)
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id', 'original_amount', 'discount_percent', 'source_card', 'from_cashback', 'cart',)
+        fields = (
+            'transaction_id', 'original_amount', 'discount_percent', 'source_card', 'from_cashback',
+            'cart', 'utc_offset_minutes',
+        )
 
     def validate(self, attrs):
         original_amount = attrs['original_amount']
@@ -55,20 +59,26 @@ class CompleteSerializer(serializers.ModelSerializer):
 
 
 class TransactionsSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+
+    def get_display_time(self, transaction: Transaction):
+        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'type', 'status'
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status'
         )
 
 
 class OnlineCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
     class Meta:
         model = Transaction
-        fields = ('transaction_id',)
+        fields = ('transaction_id', 'utc_offset_minutes',)
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
@@ -77,6 +87,10 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     cart = serializers.SerializerMethodField()
     current_user_can_see_stats = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
+    display_time = serializers.SerializerMethodField()
+
+    def get_display_time(self, transaction: Transaction):
+        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -96,7 +110,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
-            'updated_at', 'created_at', 'organization', 'delivery_type', 'type', 'cart', 'status',
+            'updated_at', 'created_at', 'display_time', 'organization', 'delivery_type', 'type', 'cart', 'status',
             'current_user_can_see_stats', 'delivery_info'
         )
 
@@ -111,6 +125,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
+    display_time = serializers.SerializerMethodField()
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -156,12 +171,15 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
                                                                      user=self.context['request'].user)
         return instance.employee_role
 
+    def get_display_time(self, transaction: Transaction):
+        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+
     class Meta:
         model = Transaction
         fields = (
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
-            'updated_at', 'created_at', 'client', 'delivery_type', 'type', 'cart', 'status',
+            'updated_at', 'created_at', 'display_time', 'client', 'delivery_type', 'type', 'cart', 'status',
             'current_user_can_see_stats', 'delivery_info', 'organization'
         )
 

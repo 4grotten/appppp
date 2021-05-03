@@ -72,6 +72,8 @@ class Transaction(TimestampModel):
     status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
     purchase_id = models.PositiveSmallIntegerField(null=True, blank=True)
 
+    display_time = models.DateTimeField(null=True)
+
     def __str__(self):  # pragma: no cover
         return f'Transaction #{self.id} for {self.original_amount} in {self.organization.title}'
 

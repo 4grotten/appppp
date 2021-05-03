@@ -97,6 +97,7 @@ class TransactionCompleteView(GenericAPIView):
             discount_percent=serializer.validated_data['discount_percent'],
             source_card=serializer.validated_data['source_card'],
             from_cashback=serializer.validated_data['from_cashback'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             cart=serializer.validated_data.get('cart', None),
         )
 
@@ -120,6 +121,7 @@ class OnlineTransactionCompleteView(GenericAPIView):
 
         TransactionService.complete_online_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             processed_by=request.user,
             request=request
         )

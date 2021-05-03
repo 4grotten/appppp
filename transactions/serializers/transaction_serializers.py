@@ -62,7 +62,9 @@ class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
 
     def get_display_time(self, transaction: Transaction):
-        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
 
     class Meta:
         model = Transaction
@@ -90,7 +92,9 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
 
     def get_display_time(self, transaction: Transaction):
-        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -125,7 +129,6 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
-    display_time = serializers.SerializerMethodField()
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -170,9 +173,6 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             return OrganizationService.get_user_role_in_organization(organization=instance.organization,
                                                                      user=self.context['request'].user)
         return instance.employee_role
-
-    def get_display_time(self, transaction: Transaction):
-        return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
 
     class Meta:
         model = Transaction

@@ -5,6 +5,7 @@ from typing import Union
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
+from django.utils.timezone import now
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
@@ -124,7 +125,7 @@ class TransactionService:
             current_transaction.status = 'accepted'
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
-            current_transaction.display_time = F('updated_at') + timedelta(minutes=utc_offset_minutes)
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
 
             OrganizationService.increment_running_purchase_id(organization=organization)
 
@@ -276,7 +277,7 @@ class TransactionService:
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
-            current_transaction.display_time = F('updated_at') + timedelta(minutes=utc_offset_minutes)
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
 
             current_transaction.save()
 
@@ -315,7 +316,7 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def create_offline_transaction_from_cart(cls, request, cart: Cart) -> Transaction:
+    def create_offline_transaction_from_cart(cls, request, cart: Cart, utc_offset_minutes: int) -> Transaction:
         organization = cart.organization
         processed_by = cart.user
         client = UserService.get_common_user()
@@ -339,7 +340,8 @@ class TransactionService:
             employee_role=role,
             delivery_type=Transaction.CART_CHECKOUT,
             fixed_cart=fixed_cart,
-            purchase_id=organization.running_purchase_id
+            purchase_id=organization.running_purchase_id,
+            display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
 
         OrganizationService.increment_running_purchase_id(organization=organization)

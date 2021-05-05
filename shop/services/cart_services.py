@@ -53,7 +53,8 @@ class CartService:
 
     @classmethod
     @transaction.atomic
-    def checkout_cart_for_anonymous_client(cls, request, employee: User, cart_id: int) -> Transaction:
+    def checkout_cart_for_anonymous_client(cls, request, employee: User, cart_id: int,
+                                           utc_offset_minutes: int) -> Transaction:
         cart = cls.get(user=employee, id=cart_id, is_open=True)
         if not OrganizationService.user_can_sell(organization=cart.organization, user=employee):
             raise NotAcceptableException('No rights to sell in this organization')
@@ -65,7 +66,9 @@ class CartService:
             raise IntegrityException('Could not checkout the cart')
 
         from transactions.services.transaction_services import TransactionService
-        accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(request, cart=cart)
+        accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(
+            request, cart=cart, utc_offset_minutes=utc_offset_minutes
+        )
         return accepted_offline_transaction
 
     @classmethod

@@ -15,6 +15,10 @@ from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
 
 
+class OffsetUTCSerializer(serializers.Serializer):
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+
 class PreprocessSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())

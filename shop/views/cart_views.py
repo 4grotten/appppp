@@ -11,7 +11,7 @@ from shop.serializers.cart_serializers import (
     CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
 )
 from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
-from transactions.serializers.transaction_serializers import TransactionWithClientSerializer
+from transactions.serializers.transaction_serializers import TransactionWithClientSerializer, OffsetUTCSerializer
 
 
 class UserCartListView(ListAPIView):
@@ -115,6 +115,16 @@ class CartAnonymousCheckoutView(GenericAPIView):
     serializer_class = TransactionWithClientSerializer
 
     def post(self, request, pk):
-        transaction = CartService.checkout_cart_for_anonymous_client(request=request, employee=request.user, cart_id=pk)
+        serializer = OffsetUTCSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        transaction = CartService.checkout_cart_for_anonymous_client(
+            request=request, employee=request.user, cart_id=pk,
+            utc_offset_minutes=serializer.validated_data['utc_offset_minutes']
+        )
         data = self.serializer_class(transaction, context={'request': request}).data
         return Response(data)

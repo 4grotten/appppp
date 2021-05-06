@@ -210,7 +210,22 @@ class ItemInCartSerializer(serializers.ModelSerializer):
 
     def get_image(self, item: ShopItem) -> dict:
         image = item.images.filter(order=0).first()
-        return ImageSerializer(image, context=self.context).data
+        if image:
+            return ImageSerializer(image, context=self.context).data
+
+        image_data = None
+        insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
+        if insta_data is not None:
+            item_video_thumbnail_url = insta_data.thumbnail_url
+            image_data = {
+                "id": 0,
+                "file": item_video_thumbnail_url,
+                "name": "Cart thumbnail",
+                "large": item_video_thumbnail_url,
+                "medium": item_video_thumbnail_url,
+                "small": item_video_thumbnail_url
+            }
+        return image_data
 
     class Meta:
         model = ShopItem

@@ -206,8 +206,8 @@ class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        token_key = request.headers['Authorization'].split()[1]
-        Token.objects.filter(key=token_key).delete()
+        # token_key = request.headers['Authorization'].split()[1]
+        # Token.objects.filter(key=token_key).delete()
 
         return Response(data={
             'message': 'Successfully logged out',

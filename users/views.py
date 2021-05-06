@@ -206,6 +206,7 @@ class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
+        # ToDo: MULTI-TOKEN AUTH
         # token_key = request.headers['Authorization'].split()[1]
         # Token.objects.filter(key=token_key).delete()
 

@@ -21,11 +21,11 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         self.client_user = UserFactory()
         self.organization = OrganizationFactory(
             title="TOYJOY",
-            address="Улица хуево дом кукуева",
+            address="Privet Drive",
             owner=self.user
         )
         self.item = ShopItemFactory(
-            name="Фалловибратор Baile. F9",
+            name="Sony WH-1000 XM-4",
             organization=self.organization
         )
         self.cart = CartFactory(
@@ -154,7 +154,8 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         online_transaction_complete_url = reverse("v1:online_transaction_complete")
         online_transaction_complete_data = {
             "transaction_id": _transaction_id,
-            "from_cashback": from_cashback
+            "from_cashback": from_cashback,
+            "utc_offset_minutes": 0
         }
         online_transaction_complete_expected_data = {
             "message": "Transaction successfully completed"
@@ -180,7 +181,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
 
         item = ShopItemFactory(
-            name="Фалловибратор Baile. F9 faf",
+            name="Sony WH-1000 XM-4",
             organization=self.organization,
             price=100.0,
             discount=10.0
@@ -316,6 +317,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "created_at": transaction.created_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
+            "display_time": None,
             "client": {
                 "id": transaction.client.id,
                 "full_name": transaction.client.full_name,
@@ -412,7 +414,8 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
         online_transaction_complete_url = reverse("v1:online_transaction_complete")
         online_transaction_complete_data = {
             "transaction_id": transaction_id,
-            "from_cashback": from_cashback
+            "from_cashback": from_cashback,
+            "utc_offset_minutes": 0
         }
         online_transaction_complete_expected_data = {
             "message": "Transaction successfully completed"
@@ -470,6 +473,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "created_at": transaction.created_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
+            "display_time": transaction.display_time.strftime("%Y-%m-%dT%H:%M:00"),
             "client": {
                 "id": transaction.client.id,
                 "full_name": transaction.client.full_name,
@@ -623,6 +627,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "created_at": transaction.created_at.strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
+            "display_time": transaction.display_time.strftime("%Y-%m-%dT%H:%M:00"),
             "client": {
                 "id": transaction.client.id,
                 "full_name": transaction.client.full_name,

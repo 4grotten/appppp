@@ -1,23 +1,18 @@
-import json
 import os
 from datetime import datetime
-from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from unittest import expectedFailure
 
 from common.tests.factories import CurrencyFactory
-from organizations.models import OrganizationClientFinancialStatus, DiscountCard
-from organizations.tests.factories import (
-    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory
-)
-from organizations.tests.test_utils import PartnershipUtils
+from organizations.tests.factories import OrganizationFactory
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
 
 
 class CompleteTransactionTestCase(APITestCase):
+    maxDiff = None
+
     def setUp(self):
         self.user = UserFactory(phone_number='123456789')
         self.token = TokenFactory(user=self.user)
@@ -32,47 +27,51 @@ class CompleteTransactionTestCase(APITestCase):
                                                           organization=self.organization, currency=self.currency)
         self.url = reverse('v1:org_client_calendar')
 
-    @patch('django.utils.timezone.now')
-    def test_accepted_get_calendar(self, patched_now: Mock):
+    def test_accepted_get_calendar(self):
         url_parameters = {'client': self.client_user.id, 'organization': self.organization.id, 'month_year': '2021-02'}
 
-        patched_now.return_value = datetime(2021, 2, 3, 11, 15, 0)
+        display_time = datetime(2021, 2, 3, 11, 15, 0)
 
         processed_transaction_online = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=True, status='accepted', type='online',
-            organization=self.organization, currency=self.currency
+            organization=self.organization, currency=self.currency,
+            display_time=display_time,
         )
 
         processed_transaction_online_at_same_day = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=True, status='accepted', type='online',
             organization=self.organization, currency=self.currency,
+            display_time=display_time,
         )
 
-        patched_now.return_value = datetime(2021, 2, 5, 11, 15, 0)
+        display_time = datetime(2021, 2, 5, 11, 15, 0)
 
         processed_transaction_offline = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=True, status='accepted', type='offline',
             organization=self.organization, currency=self.currency,
+            display_time=display_time,
         )
 
-        patched_now.return_value = datetime(2021, 2, 6, 11, 15, 0)
+        display_time = datetime(2021, 2, 6, 11, 15, 0)
 
         processed_transaction_unprocessed = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=False, status='in_progress',
             type='online',
             organization=self.organization, currency=self.currency,
+            display_time=display_time,
         )
-        patched_now.return_value = datetime(2021, 2, 7, 11, 15, 0)
+        display_time = datetime(2021, 2, 7, 11, 15, 0)
 
         processed_transaction_unprocessed = TransactionFactory(
             client=self.client_user, processed_by=self.user,
             is_processed=False, status='in_progress',
             type='offline',
             organization=self.organization, currency=self.currency,
+            display_time=display_time,
         )
         expected_data = {"client": {"id": self.client_user.id, "full_name": self.client_user.full_name,
                                     "avatar":

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q, Case, When, IntegerField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -388,7 +389,7 @@ class InstagramParseLastDataAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         if not InstagramIntegration.objects.get(organization=organization):
             raise ObjectNotFoundException('Instagram Integration Link not found')
-        parse_instagram_last_updates.delay(organization_id=organization.id)
+        transaction.on_commit(lambda: parse_instagram_last_updates.delay(organization_id=organization.id))
         return Response({'message': 'Success'})
 
 

@@ -23,4 +23,4 @@ def update_instagram_videos():
 @shared_task
 def delete_old_instagram_posts():
     delete_until = now() - timedelta(days=settings.INSTAGRAM_DAYS_TO_KEEP)
-    ShopItem.objects.filter(created_at__lte=delete_until, instagram_data__isnull=False).delete()
+    ShopItem.objects.filter(updated_at__lte=delete_until, instagram_data__isnull=False).delete()

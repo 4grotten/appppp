@@ -35,7 +35,7 @@ from organizations.services.organization_services import (
     OrgSocialNetworkContactService, OrgMessageService, OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
-from organizations.tasks import parse_instagram_last_updates
+from organizations.tasks import parse_instagram_to_shop_items
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 
 
@@ -92,14 +92,7 @@ class OrganizationAllTypesListView(ListAPIView):
 
 class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = OrganizationDetailedSerializer
-
-    def get_queryset(self):
-        organization = OrganizationService.get(id=self.kwargs['pk'])
-        if self.request.user.is_authenticated:
-            if OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
-                pass
-                # parse_instagram_last_updates.delay(organization_id=organization.id)
-        return Organization.objects.all()
+    queryset = Organization.objects.all()
 
     @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):
@@ -389,7 +382,9 @@ class InstagramParseLastDataAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         if not InstagramIntegration.objects.get(organization=organization):
             raise ObjectNotFoundException('Instagram Integration Link not found')
-        transaction.on_commit(lambda: parse_instagram_last_updates.delay(organization_id=organization.id))
+        transaction.on_commit(
+            lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, posts_count=20)
+        )
         return Response({'message': 'Success'})
 
 

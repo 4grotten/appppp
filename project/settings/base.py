@@ -270,7 +270,6 @@ CELERY_TASK_ROUTES = {
     'imagekit.cachefiles.backends._generate_file': {'queue': 'high'},
     'notifications.tasks.*': {'queue': 'default'},
     'organizations.tasks.parse_instagram_to_shop_items': {'queue': 'insta_high'},
-    'organizations.tasks.parse_instagram_last_updates': {'queue': 'insta_high'},
     'organizations.tasks.delete_not_updated_posts_from_instagram': {'queue': 'insta_low'},
     'shop.tasks.delete_old_instagram_posts': {'queue': 'insta_low'},
     'shop.tasks.update_instagram_videos': {'queue': 'insta_video'},

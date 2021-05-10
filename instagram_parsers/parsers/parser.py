@@ -4,7 +4,7 @@ from instagram_parsers.constants import LOGIN_SETTINGS
 from instagram_parsers.services.proxy_services import ProxyServices
 
 
-def get_posts(user_id):
+def get_posts(user_id: int, posts_count: int):
     try:
         settings = LOGIN_SETTINGS
         proxy = ProxyServices.get_random_formed_proxy()
@@ -12,7 +12,7 @@ def get_posts(user_id):
             cl = Client(settings=settings, proxy=proxy)
         else:
             cl = Client(settings=settings)
-        media_list = cl.user_medias(user_id=user_id, amount=100)
+        media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:
             data_s = list()

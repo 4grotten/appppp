@@ -1,5 +1,9 @@
+from datetime import timedelta
+
 from celery import shared_task
+from django.conf import settings
 from django.db.models import F
+from django.utils.timezone import now
 
 from instagram_parsers.parsers import parser
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
@@ -30,3 +34,22 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
 @shared_task
 def delete_not_updated_posts_from_instagram(organization_id: int):
     ShopItem.objects.filter(organization_id=organization_id, name='Instagram', updated_at=F('created_at')).delete()
+
+
+@shared_task
+def delete_old_instagram_posts():
+    delete_until = now() - timedelta(days=settings.INSTAGRAM_DAYS_TO_KEEP)
+    ShopItem.objects.filter(name='Instagram', instagram_data__isnull=False,
+                            instagram_data__updated_at__lte=delete_until).delete()
+
+
+@shared_task
+def update_instagram_videos():
+    update_posts_before = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
+    data_with_video = ItemInstagramData.objects.filter(
+        updated_at__lte=update_posts_before, video_url__isnull=False
+    ).order_by('updated_at')[:settings.INSTAGRAM_POSTS_UPDATE_BATCH_SIZE]
+    for data in data_with_video:
+        video_url = parser.get_video_url_from_post(post_url=data.item.instagram_link)
+        data.video_url = video_url
+        data.save()

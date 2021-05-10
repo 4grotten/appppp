@@ -160,8 +160,8 @@ class StatisticsService:
         transactions = Transaction.objects.filter(
             (Q(organization=organization) & Q(client=client)) & ~Q(
                 Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).filter(
-            updated_at__year=month_year.year).filter(updated_at__month=month_year.month).values('updated_at')
+            display_time__year=month_year.year).filter(display_time__month=month_year.month).values('display_time')
         data = []
         for transaction in transactions:
-            data.append(transaction.get('updated_at').strftime('%Y-%m-%d'))
+            data.append(transaction.get('display_time').strftime('%Y-%m-%d'))
         return list(dict.fromkeys(data))

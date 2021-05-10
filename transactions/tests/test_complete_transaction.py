@@ -2,7 +2,6 @@ import json
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from unittest import expectedFailure
 
 from common.tests.factories import CurrencyFactory
 from organizations.models import OrganizationClientFinancialStatus, DiscountCard
@@ -38,7 +37,8 @@ class CompleteTransactionTestCase(APITestCase):
             'original_amount': 100,
             'discount_percent': 0,
             'source_card': None,
-            'from_cashback': 50
+            'from_cashback': 50,
+            "utc_offset_minutes": 0
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
@@ -56,7 +56,8 @@ class CompleteTransactionTestCase(APITestCase):
             'original_amount': 1000,
             'discount_percent': 15,
             'source_card': cashback_card.id,
-            'from_cashback': 0
+            'from_cashback': 0,
+            "utc_offset_minutes": 0
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
@@ -84,7 +85,8 @@ class CompleteTransactionTestCase(APITestCase):
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,
-            'from_cashback': 500
+            'from_cashback': 500,
+            "utc_offset_minutes": 0
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
@@ -116,7 +118,8 @@ class CompleteTransactionTestCase(APITestCase):
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,
-            'from_cashback': 700
+            'from_cashback': 700,
+            "utc_offset_minutes": 0
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')
@@ -154,7 +157,8 @@ class CompleteTransactionTestCase(APITestCase):
             'original_amount': 1000,
             'discount_percent': 0,
             'source_card': None,
-            'from_cashback': 1000
+            'from_cashback': 1000,
+            "utc_offset_minutes": 0
         }
 
         response = self.client.post(self.url, data=json.dumps(data), **self.header, content_type='application/json')

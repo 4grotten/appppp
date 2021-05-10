@@ -7,10 +7,10 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'client', 'organization', 'processed_by', 'is_processed', 'currency',
         'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount',
-        'discount_type', 'created_at', 'updated_at', 'status'
+        'type', 'discount_type', 'created_at', 'updated_at', 'display_time', 'status'
     )
     list_filter = (
-        'is_processed', 'discount_percent', 'discount_type',
+        'is_processed', 'type', 'discount_type', 'discount_percent',
         'organization', 'client', 'processed_by', 'currency',
     )
     search_fields = ('id',)

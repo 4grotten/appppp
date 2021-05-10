@@ -1,14 +1,11 @@
-import json
 import datetime
-from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from unittest import expectedFailure
+
 from common.tests.factories import CurrencyFactory
-from organizations.models import OrganizationClientFinancialStatus, DiscountCard
 from organizations.tests.factories import (
-    OrganizationFactory, OrganizationClientFinancialStatusFactory, DiscountCardFactory, RoleFactory, MembershipFactory
+    OrganizationFactory, RoleFactory, MembershipFactory
 )
 from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory, TokenFactory
@@ -37,10 +34,10 @@ class LIstTransactionTestCase(APITestCase):
     def test_get_accepted_data_with_processed_by_filter(self):
         transaction_offline = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
-            original_amount=51.0, is_processed=True, status='accepted')
+            original_amount=51.0, is_processed=True, status='accepted', display_time=datetime.datetime.now())
         transaction_offline_with_another_client = TransactionFactory(
             client=self.client_user2, processed_by=self.user, organization=self.organization, currency=self.currency,
-            original_amount=51.0, is_processed=True, status='accepted')
+            original_amount=51.0, is_processed=True, status='accepted', display_time=datetime.datetime.now())
         transaction_offline_rejected = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
             original_amount=51.0, is_processed=False, status='rejected')
@@ -49,20 +46,26 @@ class LIstTransactionTestCase(APITestCase):
             original_amount=52.0, is_processed=False, status='in_progress')
         transaction_offline_processed_by_admin = TransactionFactory(
             client=self.client_user, processed_by=self.user_admin, organization=self.organization,
-            currency=self.currency, original_amount=52.0, is_processed=True, status='accepted')
+            currency=self.currency, original_amount=52.0, is_processed=True, status='accepted',
+            display_time=datetime.datetime.now()
+        )
         transaction_offline_processed_by_admin = TransactionFactory(
             client=self.client_user, processed_by=self.user_admin, organization=self.organization,
             currency=self.currency, original_amount=52.0, is_processed=False, status='rejected')
 
         transaction_online = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
-            type='online', original_amount=51.0, is_processed=True, status='accepted')
+            type='online', original_amount=51.0, is_processed=True, status='accepted',
+            display_time=datetime.datetime.now()
+        )
         transaction_online_in_progress = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
             type='online', original_amount=51.0, is_processed=False, status='in_progress')
         transaction_online_processed_by_admin = TransactionFactory(
             client=self.client_user, processed_by=self.user_admin, organization=self.organization, type='online',
-            currency=self.currency, original_amount=51.0, is_processed=True, status='accepted')
+            currency=self.currency, original_amount=51.0, is_processed=True, status='accepted',
+            display_time=datetime.datetime.now()
+        )
 
         start_date = datetime.datetime.now() - datetime.timedelta(days=7)
 
@@ -84,6 +87,7 @@ class LIstTransactionTestCase(APITestCase):
                     "final_amount": float(transaction_online_in_progress.final_amount),
                     "updated_at": transaction_online_in_progress.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "created_at": transaction_online_in_progress.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "display_time": None,
                     "type": transaction_online_in_progress.type,
                     "status": transaction_online_in_progress.status
                 },
@@ -97,6 +101,7 @@ class LIstTransactionTestCase(APITestCase):
                     "final_amount": float(transaction_online.final_amount),
                     "updated_at": transaction_online.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "created_at": transaction_online.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "display_time": transaction_online.display_time.strftime("%Y-%m-%dT%H:%M:00"),
                     "type": transaction_online.type,
                     "status": transaction_online.status
                 },
@@ -110,6 +115,7 @@ class LIstTransactionTestCase(APITestCase):
                     "final_amount": float(transaction_offline_rejected.final_amount),
                     "updated_at": transaction_offline_rejected.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "created_at": transaction_offline_rejected.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "display_time": None,
                     "type": transaction_offline_rejected.type,
                     "status": transaction_offline_rejected.status
                 },
@@ -123,6 +129,7 @@ class LIstTransactionTestCase(APITestCase):
                     "final_amount": float(transaction_offline.final_amount),
                     "updated_at": transaction_offline.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "created_at": transaction_offline.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "display_time": transaction_offline.display_time.strftime("%Y-%m-%dT%H:%M:00"),
                     "type": transaction_offline.type,
                     "status": transaction_offline.status}]
         }
@@ -156,7 +163,9 @@ class LIstTransactionTestCase(APITestCase):
     def test_accepted_search(self):
         transaction_offline = TransactionFactory(
             client=self.client_user, processed_by=self.user, organization=self.organization, currency=self.currency,
-            original_amount=51.0, is_processed=True, status='accepted')
+            original_amount=51.0, is_processed=True, status='accepted',
+            display_time=datetime.datetime(2021, 2, 3, 11, 15, 0)
+        )
         url_parameters = {'organization': self.organization.id, 'search': transaction_offline.id}
         expected_data = {
             'total_count': 1,
@@ -172,6 +181,7 @@ class LIstTransactionTestCase(APITestCase):
                     "final_amount": float(transaction_offline.final_amount),
                     "updated_at": transaction_offline.updated_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "created_at": transaction_offline.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "display_time": transaction_offline.display_time.strftime("%Y-%m-%dT%H:%M:00"),
                     "type": transaction_offline.type,
                     "status": transaction_offline.status}]
         }

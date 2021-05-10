@@ -151,8 +151,8 @@ class ItemListSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
 
     def get_instagram_data(self, item: ShopItem):
-        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
-        images = ItemInstagramData.objects.filter(item=item, video_url=None)
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None).order_by('created_at')
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('created_at')
         return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
                     images=ItemInstagramImageSerializer(images, many=True).data)
 

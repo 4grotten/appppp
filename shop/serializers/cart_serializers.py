@@ -89,7 +89,25 @@ class CartListSerializer(serializers.ModelSerializer):
     def get_images(self, cart: Cart) -> list:
         item_image_ids = cart.items.values_list('item__images', flat=True)
         images = File.objects.filter(id__in=item_image_ids, order=0)[:3]
-        return ImageSerializer(images, many=True, context=self.context).data
+
+        images_to_fill = 3 - images.count()
+        images_list = ImageSerializer(images, many=True, context=self.context).data
+
+        if images_to_fill > 0:
+            cart_items_with_only_insta_video = cart.items.filter(item__images__isnull=True)[:images_to_fill]
+            for cart_item in cart_items_with_only_insta_video:
+                insta_data = cart_item.item.instagram_data.filter(thumbnail_url__isnull=False).first()
+                if insta_data is not None:
+                    item_video_thumbnail_url = insta_data.thumbnail_url
+                    images_list.append({
+                        "id": 0,
+                        "file": item_video_thumbnail_url,
+                        "name": "Cart thumbnail",
+                        "large": item_video_thumbnail_url,
+                        "medium": item_video_thumbnail_url,
+                        "small": item_video_thumbnail_url
+                    })
+        return images_list
 
     class Meta:
         model = Cart

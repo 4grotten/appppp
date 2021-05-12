@@ -50,6 +50,7 @@ def update_instagram_videos():
         updated_at__lte=update_posts_before, video_url__isnull=False
     ).order_by('updated_at')[:settings.INSTAGRAM_POSTS_UPDATE_BATCH_SIZE]
     for data in data_with_video:
-        video_url = parser.get_video_url_from_post(post_url=data.item.instagram_link)
+        video_url, thumbnail_url = parser.get_video_urls_from_post(post_url=data.item.instagram_link)
         data.video_url = video_url
+        data.thumbnail_url = thumbnail_url
         data.save()

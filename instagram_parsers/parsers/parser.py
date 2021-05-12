@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from instagrapi import Client
 
 from instagram_parsers.constants import LOGIN_SETTINGS
@@ -46,7 +48,7 @@ def get_posts(user_id: int, posts_count: int):
         return "Connection Error"
 
 
-def get_video_url_from_post(post_url: str):
+def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
     settings = LOGIN_SETTINGS
     proxy = ProxyServices.get_random_formed_proxy()
     if proxy is not None:
@@ -54,7 +56,8 @@ def get_video_url_from_post(post_url: str):
     else:
         cl = Client(settings=settings)
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
-    return dict(cl.media_info(media_pk=post_pk_from_url))['video_url']
+    media_info = cl.media_info(media_pk=post_pk_from_url)
+    return media_info.video_url, media_info.thumbnail_url
 
 
 def get_latest_posts(user_id: int):

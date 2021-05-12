@@ -52,5 +52,6 @@ def update_instagram_videos():
     for data in data_with_video:
         video_url, thumbnail_url = parser.get_video_urls_from_post(post_url=data.item.instagram_link)
         data.video_url = video_url
-        data.thumbnail_url = thumbnail_url
+        if thumbnail_url is not None:
+            data.thumbnail_url = thumbnail_url
         data.save()

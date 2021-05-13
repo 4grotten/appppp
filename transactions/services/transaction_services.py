@@ -510,6 +510,8 @@ class TransactionService:
             old_transaction.status = Transaction.REJECTED
             old_transaction.is_processed = False
             old_transaction.processed_by = user
+            if old_transaction.display_time is None:
+                old_transaction.display_time = now()
             old_transaction.save()
         except:
             raise IntegrityException()

@@ -122,7 +122,7 @@ class TransactionService:
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
-            current_transaction.status = 'accepted'
+            current_transaction.status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)

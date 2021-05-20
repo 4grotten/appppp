@@ -23,6 +23,13 @@ class CumulativeGroup(TimestampModel):
         return f'{self.name}'
 
 
+class CommonItemsGroup(TimestampModel):
+    name = models.CharField(max_length=64, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class OrganizationCategory(models.Model):
     name = models.CharField(max_length=255)
 
@@ -66,6 +73,8 @@ class Organization(TimestampModel):
                                        related_name='organizations')
     cumulative_group = models.ForeignKey(CumulativeGroup, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='organizations')
+    items_group = models.ForeignKey(CommonItemsGroup, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
 
     is_active = models.BooleanField(default=True)
@@ -264,6 +273,7 @@ class Partnership(TimestampModel):
     can_edit_organization = models.BooleanField(default=False)
     can_share_cashback = models.BooleanField(default=False)
     can_share_cumulative = models.BooleanField(default=False)
+    can_share_items = models.BooleanField(default=False)
 
     class Meta:
         constraints = (

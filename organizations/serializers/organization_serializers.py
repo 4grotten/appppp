@@ -1,5 +1,7 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
@@ -262,9 +264,17 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
 
 class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
+    has_delivery = serializers.BooleanField(required=True, allow_null=False)
+    has_self_pick_up = serializers.BooleanField(required=True, allow_null=False)
+
     class Meta:
         model = Organization
         fields = ('has_delivery', 'has_self_pick_up',)
+
+    def validate(self, attrs):
+        if not attrs['has_delivery'] and not attrs['has_self_pick_up']:
+            raise NotAcceptableException(_('Should have at least one enabled delivery option'))
+        return attrs
 
 
 class MessageSerializer(serializers.ModelSerializer):

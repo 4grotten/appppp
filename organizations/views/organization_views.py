@@ -2,7 +2,7 @@ from django.db import transaction
 from django.db.models import Q, Case, When, IntegerField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
     ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView
@@ -128,6 +128,18 @@ class DeliverySettingsView(UpdateAPIView):
         if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
             raise NotAcceptableException('No rights to edit organization')
         return organization
+
+    def put(self, request, *args, **kwargs):
+        try:
+            return super().put(request, *args, **kwargs)
+        except ValidationError as error:
+            return Response(
+                data={
+                    'message': 'Invalid input',
+                    'errors': error.detail
+                },
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
 
 
 class DeactivateOrganizationView(GenericAPIView):

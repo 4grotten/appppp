@@ -77,6 +77,9 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
 
+    has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
+    has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
+
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)

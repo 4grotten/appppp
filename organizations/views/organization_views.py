@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, GenericAPIView
+    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,7 +24,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer, InstagramIntegrationCreatUpdateSerializer, InstagramIntegrationLinkSerializer
+    OrganizationUserTransactionSerializer, InstagramIntegrationCreatUpdateSerializer,
+    InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
@@ -90,7 +91,7 @@ class OrganizationAllTypesListView(ListAPIView):
     queryset = OrganizationType.objects.all()
 
 
-class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
+class OrganizationRetrieveUpdateView(RetrieveAPIView):
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()
 
@@ -111,6 +112,22 @@ class OrganizationRetrieveUpdateView(RetrieveUpdateAPIView):
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
+
+
+class DeliverySettingsView(UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = DeliverySettingsUpdateSerializer
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.serializer_class(instance)
+        return Response(serializer.data)
+
+    def get_object(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException('No rights to edit organization')
+        return organization
 
 
 class DeactivateOrganizationView(GenericAPIView):

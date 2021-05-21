@@ -51,12 +51,12 @@ class OrganizationAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
     list_display = (
-        'title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'country', 'city', 'is_active', 'is_banned',
-        'cashback_group', 'cumulative_group',
+        'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned',
+        'cashback_group', 'cumulative_group', 'items_group',
     )
-    list_filter = ('is_active', 'types__category', 'country', 'cashback_group',)
+    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group')
     search_fields = ('title',)
-    raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group',)
+    raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
     inlines = (PhoneInline, SocialInline, DiscountInline,)
 

@@ -209,8 +209,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
-            'types', 'phone_numbers', 'social_contacts', 'discounts',
-            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
+            'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery', 'has_self_pick_up',
+            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
         )
 
 
@@ -259,6 +259,12 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',)
+
+
+class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('has_delivery', 'has_self_pick_up',)
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -358,6 +364,12 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address')
+
+
+class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',)
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):

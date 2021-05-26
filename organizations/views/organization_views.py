@@ -441,10 +441,10 @@ class InstagramIntegrationCreatAPIView(APIView):
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': 'No rights to edit organization'})
-        data = OrganizationInstagramIntegrationService.create(organization=organization,
-                                                              url=serializer.validated_data.get('url'))
-        return Response(data=dict(url=serializer.validated_data.get('url'), user_profile=data),
-                        status=status.HTTP_201_CREATED)
+        instance = OrganizationInstagramIntegrationService.create(organization=organization,
+                                                                  url=serializer.validated_data.get('url'))
+        data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data,
+        return Response(data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])

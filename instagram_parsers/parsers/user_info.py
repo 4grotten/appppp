@@ -1,12 +1,11 @@
-from instagram_parsers.constants import LOGIN_SETTINGS
-from instagram_parsers.parsers.get_id import usernametoid
 from instagrapi import Client
 
-from instagram_parsers.services.proxy_services import ProxyServices
+from instagram_parsers.parsers.get_id import usernametoid
+from instagram_parsers.services.proxy_services import ProxyServices, LoginDeviceService
 
 
 def get_instagram_user_info(username: str):
-    settings = LOGIN_SETTINGS
+    settings = LoginDeviceService.get_random_login_settings()
     proxy = ProxyServices.get_random_formed_proxy()
     if proxy is not None:
         cl = Client(settings=settings, proxy=proxy)

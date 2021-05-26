@@ -2,13 +2,12 @@ from typing import Tuple
 
 from instagrapi import Client
 
-from instagram_parsers.constants import LOGIN_SETTINGS
-from instagram_parsers.services.proxy_services import ProxyServices
+from instagram_parsers.services.proxy_services import ProxyServices, LoginDeviceService
 
 
 def get_posts(user_id: int, posts_count: int):
     try:
-        settings = LOGIN_SETTINGS
+        settings = LoginDeviceService.get_random_login_settings()
         proxy = ProxyServices.get_random_formed_proxy()
         if proxy is not None:
             cl = Client(settings=settings, proxy=proxy)
@@ -49,7 +48,7 @@ def get_posts(user_id: int, posts_count: int):
 
 
 def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
-    settings = LOGIN_SETTINGS
+    settings = LoginDeviceService.get_random_login_settings()
     proxy = ProxyServices.get_random_formed_proxy()
     if proxy is not None:
         cl = Client(settings=settings, proxy=proxy)
@@ -62,7 +61,7 @@ def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
 
 def get_latest_posts(user_id: int):
     try:
-        settings = LOGIN_SETTINGS
+        settings = LoginDeviceService.get_random_login_settings()
         proxy = ProxyServices.get_random_formed_proxy()
         if proxy is not None:
             cl = Client(settings=settings, proxy=proxy)

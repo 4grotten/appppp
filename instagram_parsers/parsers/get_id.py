@@ -1,14 +1,14 @@
 import re
-from instagrapi import Client
-from common.exceptions import ObjectNotFoundException
-from instagram_parsers.constants import LOGIN_SETTINGS
 
-from instagram_parsers.services.proxy_services import ProxyServices
+from instagrapi import Client
+
+from common.exceptions import ObjectNotFoundException
+from instagram_parsers.services.proxy_services import ProxyServices, LoginDeviceService
 
 
 def usernametoid(name: str):
     try:
-        settings = LOGIN_SETTINGS
+        settings = LoginDeviceService.get_random_login_settings()
         proxy = ProxyServices.get_random_formed_proxy()
         if proxy is not None:
             cl = Client(settings=settings, proxy=proxy)

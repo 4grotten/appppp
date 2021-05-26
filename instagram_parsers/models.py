@@ -1,4 +1,5 @@
 from django.db import models
+
 from common.models import TimestampModel
 
 
@@ -10,3 +11,10 @@ class Proxy(TimestampModel):
 
     def __str__(self):
         return f'{self.login}'
+
+
+class LoginDevice(TimestampModel):
+    settings = models.JSONField(null=False, blank=False)
+
+    def __str__(self):
+        return f'{self.updated_at.date()}'

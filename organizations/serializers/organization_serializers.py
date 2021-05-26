@@ -1,5 +1,7 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
@@ -209,8 +211,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
-            'types', 'phone_numbers', 'social_contacts', 'discounts',
-            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted'
+            'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery', 'has_self_pick_up',
+            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
         )
 
 
@@ -259,6 +261,20 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',)
+
+
+class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
+    has_delivery = serializers.BooleanField(required=True, allow_null=False)
+    has_self_pick_up = serializers.BooleanField(required=True, allow_null=False)
+
+    class Meta:
+        model = Organization
+        fields = ('has_delivery', 'has_self_pick_up',)
+
+    def validate(self, attrs):
+        if not attrs['has_delivery'] and not attrs['has_self_pick_up']:
+            raise NotAcceptableException(_('Should have at least one enabled delivery option'))
+        return attrs
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -358,6 +374,12 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address')
+
+
+class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',)
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):

@@ -5,7 +5,8 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
-    CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration
+    CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
+    CommonItemsGroup
 )
 
 
@@ -17,6 +18,13 @@ class CashbackGroupAdmin(admin.ModelAdmin):
 
 
 class CumulativeGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'organizations_in_group', 'created_at',)
+
+    def organizations_in_group(self, group: CumulativeGroup) -> int:
+        return group.organizations.count()
+
+
+class CommonItemsGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'organizations_in_group', 'created_at',)
 
     def organizations_in_group(self, group: CumulativeGroup) -> int:
@@ -43,12 +51,12 @@ class OrganizationAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
     list_display = (
-        'title', 'owner', 'opens_at', 'closes_at', 'currency', 'address', 'country', 'city', 'is_active', 'is_banned',
-        'cashback_group', 'cumulative_group',
+        'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned',
+        'cashback_group', 'cumulative_group', 'items_group',
     )
-    list_filter = ('is_active', 'types__category', 'country', 'cashback_group',)
+    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group')
     search_fields = ('title',)
-    raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group',)
+    raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
     inlines = (PhoneInline, SocialInline, DiscountInline,)
 
@@ -129,6 +137,7 @@ class PartnershipAdmin(admin.ModelAdmin):
     list_display = (
         'requested_by', 'accepted_by', 'is_accepted',
         'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback', 'can_share_cumulative',
+        'can_share_items',
     )
 
 
@@ -147,6 +156,7 @@ class InstagramIntegrationLinkAdmin(admin.ModelAdmin):
 
 admin.site.register(CashbackGroup, CashbackGroupAdmin)
 admin.site.register(CumulativeGroup, CumulativeGroupAdmin)
+admin.site.register(CommonItemsGroup, CommonItemsGroupAdmin)
 admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)
 admin.site.register(OrganizationType, OrganizationTypeAdmin)
 admin.site.register(InstagramIntegration, InstagramIntegrationLinkAdmin)

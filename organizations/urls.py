@@ -17,7 +17,7 @@ from .views.organization_views import (
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreatAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
-    ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView,
+    ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
@@ -33,6 +33,7 @@ organization_urls = [
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
+    path('organizations/<int:pk>/delivery_settings/', DeliverySettingsView.as_view(), name='delivery_settings'),
     path('organizations/<int:pk>/deactivate/', DeactivateOrganizationView.as_view(), name='deactivate_organization'),
     path('organizations/<int:pk>/reactivate/', ReactivateOrganizationView.as_view(), name='reactivate_organization'),
     path('organizations/<int:pk>/resetPurchaseID/', ResetPurchaseIDView.as_view(), name='reset_purchase_id'),

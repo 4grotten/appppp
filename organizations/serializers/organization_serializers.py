@@ -426,6 +426,15 @@ class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
         fields = ('url',)
 
 
+class InstagramIntegrationUserProfile(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='account_full_name')
+    profile_image = serializers.ImageField(source='avatar.medium')
+
+    class Meta:
+        model = InstagramIntegration
+        fields = ('full_name', 'profile_image',)
+
+
 class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
     organization = OrganizationShortInfoSerializer
     user_profile = serializers.SerializerMethodField()
@@ -434,6 +443,5 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
         model = InstagramIntegration
         fields = ('id', 'url', 'user_profile')
 
-    def get_user_profile(self, obj):
-        user_profile = dict(full_name=obj.account_full_name, profile_image=obj.profile_photo)
-        return user_profile
+    def get_user_profile(self, obj: InstagramIntegration):
+        return InstagramIntegrationUserProfile(obj, context=self.context).data

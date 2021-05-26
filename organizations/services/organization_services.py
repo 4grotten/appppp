@@ -507,10 +507,11 @@ class OrganizationInstagramIntegrationService:
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
+            avatar = File.objects.create(image_url=user_info.get('profile_image'))
             InstagramIntegration.objects.create(organization=organization, url=url, account_user_name=username,
                                                 account_user_id=user_info.pop('user_id'),
                                                 account_full_name=user_info.get('full_name'),
-                                                profile_photo=user_info.get('profile_image'))
+                                                avatar=avatar)
             transaction.on_commit(
                 lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id)
             )

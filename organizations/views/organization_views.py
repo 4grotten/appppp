@@ -426,7 +426,7 @@ class InstagramIntegrationCreatAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         data = OrganizationInstagramIntegrationService.get_from_org(organization=organization)
         return Response(
-            InstagramIntegrationLinkSerializer(data).data, status=status.HTTP_200_OK)
+            InstagramIntegrationLinkSerializer(data, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = InstagramIntegrationCreatUpdateSerializer(data=request.data, many=False)

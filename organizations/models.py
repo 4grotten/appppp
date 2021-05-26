@@ -127,6 +127,8 @@ class InstagramIntegration(TimestampModel):
     account_user_name = models.CharField(null=True, blank=True, max_length=50)
     account_user_id = models.CharField(null=True, blank=True, max_length=50)
     profile_photo = models.URLField(null=True, max_length=500)
+    avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                               related_name='instagram_integrations')
 
     def __str__(self):
         return f'{self.url}'

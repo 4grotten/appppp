@@ -428,7 +428,7 @@ class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
 
 class InstagramIntegrationUserProfile(serializers.ModelSerializer):
     full_name = serializers.CharField(source='account_full_name')
-    profile_image = serializers.ImageField(source='avatar.medium')
+    profile_image = serializers.ImageField(source='avatar.medium', allow_null=True)
 
     class Meta:
         model = InstagramIntegration

@@ -24,7 +24,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer, InstagramIntegrationCreatUpdateSerializer,
+    OrganizationUserTransactionSerializer, InstagramIntegrationCreateUpdateSerializer,
     InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer
 )
 from organizations.serializers.query_param_serializers import (
@@ -390,7 +390,7 @@ class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
 
 class InstagramAccountAPIView(APIView):
     def post(self, request):
-        serializer = InstagramIntegrationCreatUpdateSerializer(data=request.data, many=False)
+        serializer = InstagramIntegrationCreateUpdateSerializer(data=request.data, many=False)
 
         if not serializer.is_valid():
             return Response(data={
@@ -429,7 +429,7 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
             InstagramIntegrationLinkSerializer(data, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        serializer = InstagramIntegrationCreatUpdateSerializer(data=request.data, many=False)
+        serializer = InstagramIntegrationCreateUpdateSerializer(data=request.data, many=False)
 
         if not serializer.is_valid():
             return Response(data={
@@ -443,15 +443,15 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         instance = OrganizationInstagramIntegrationService.create(organization=organization,
                                                                   url=serializer.validated_data.get('url'))
-        data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data,
+        data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': 'No rights to edit organization'})
-        data = OrganizationInstagramIntegrationService.delete(organization=organization)
-        return Response(data)
+        OrganizationInstagramIntegrationService.delete(organization=organization)
+        return Response({'message': 'Successfully deleted'})
 
 
 class OrganizationFollowersCountAPIView(APIView):

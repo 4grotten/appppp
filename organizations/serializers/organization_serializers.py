@@ -420,7 +420,7 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
         }
 
 
-class InstagramIntegrationCreatUpdateSerializer(serializers.ModelSerializer):
+class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstagramIntegration
         fields = ('url',)
@@ -436,7 +436,6 @@ class InstagramIntegrationUserProfile(serializers.ModelSerializer):
 
 
 class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
-    organization = OrganizationShortInfoSerializer
     user_profile = serializers.SerializerMethodField()
 
     class Meta:

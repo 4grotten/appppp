@@ -503,7 +503,7 @@ class OrganizationInstagramIntegrationService:
             raise ObjectNotFoundException('Instagram user not found')
 
     @classmethod
-    def create(cls, organization: Organization, url: str):
+    def create(cls, organization: Organization, url: str) -> InstagramIntegration:
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
@@ -530,7 +530,6 @@ class OrganizationInstagramIntegrationService:
             insta.delete()
             transaction.on_commit(
                 lambda: delete_not_updated_posts_from_instagram.delay(organization_id=organization.id))
-            return "Deleted"
         except:
             raise ObjectNotFoundException('Instagram Integration Link not found')
 

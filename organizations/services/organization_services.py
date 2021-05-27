@@ -29,10 +29,7 @@ from organizations.models import (
     Partnership, InstagramIntegration,
 )
 from organizations.services.membership_services import MembershipService
-from organizations.tasks import (
-    delete_not_updated_posts_from_instagram,
-    create_instagram_integration
-)
+from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
 from transactions.models import Transaction
 from users.models import User
 
@@ -507,7 +504,24 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def create(cls, organization: Organization, url: str):
-        create_instagram_integration.delay(organization_id=organization.id, insta_url=url)
+        try:
+            username = get_username_from_instagram_url(url)
+            user_info = get_instagram_user_info(username)
+
+            avatar = File.objects.create(image_url=user_info.get('profile_image'))
+            instance = InstagramIntegration.objects.create(organization=organization,
+                                                           url=url,
+                                                           account_user_name=username,
+                                                           account_user_id=user_info.get('user_id'),
+                                                           account_full_name=user_info.get('full_name'),
+                                                           avatar=avatar)
+
+            transaction.on_commit(
+                lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id)
+            )
+            return instance
+        except Exception as e:
+            raise BadRequestException('Instagram user not found : {e}'.format(e=str(e)))
 
     @classmethod
     def delete(cls, organization: Organization):

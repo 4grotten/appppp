@@ -20,6 +20,12 @@ class FeedItemFilter(filters.FilterSet):
         fields = ['id', 'subcategories', 'organization', 'category', 'country', 'city', 'current_timestamp_lt']
 
 
+class FeedItemFilterWithoutOrganization(FeedItemFilter):
+    class Meta:
+        model = ShopItem
+        fields = ['id', 'subcategories', 'category', 'country', 'city', 'current_timestamp_lt']
+
+
 class FeedItemOrderingFilter(OrderingFilter):
     def filter_queryset(self, request, queryset, view):
         ordering = self.get_ordering(request, queryset, view)

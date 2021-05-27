@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
@@ -55,13 +55,25 @@ class ShopItemService:
 
     @classmethod
     def get_organization_items_queryset_for_user(cls, organization: Organization, user: User) -> QuerySet:
-        queryset = ShopItem.objects.filter(organization=organization)
+        can_see_own_unpublished = user.is_authenticated and OrganizationService.user_can_edit_organization(
+            user=user, organization=organization)
 
-        if (user.is_authenticated and not OrganizationService.user_can_edit_organization(
-                user=user, organization=organization)) or not user.is_authenticated:
-            queryset = queryset.exclude(is_published=False)
+        if organization.items_group is not None:
+            if not can_see_own_unpublished:
+                queryset = ShopItem.objects.filter(
+                    organization__in=organization.items_group.organizations.values_list('id'), is_published=True
+                )
+            else:
+                queryset = ShopItem.objects.filter(
+                    Q(organization=organization) |
+                    Q(organization__in=organization.items_group.organizations.values_list('id'))
+                )
+        else:
+            queryset = ShopItem.objects.filter(organization=organization)
+            if not can_see_own_unpublished:
+                queryset = queryset.exclude(is_published=False)
 
-        return queryset
+        return queryset.distinct()
 
     @classmethod
     def get_items_of_subscribed_organizations(cls, user: User) -> QuerySet:

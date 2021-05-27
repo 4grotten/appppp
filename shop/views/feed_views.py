@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
-from shop.filters import FeedItemFilter, FeedItemOrderingFilter
+from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
 from shop.serializers.item_serializers import (
     ItemFeedSerializer, ItemListSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
@@ -36,6 +36,7 @@ class FeedView(ListAPIView):
 
 class OrganizationItemListView(FeedView):
     serializer_class = ItemListSerializer
+    filter_class = FeedItemFilterWithoutOrganization
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

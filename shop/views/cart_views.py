@@ -63,7 +63,8 @@ class CartItemCountChangeView(GenericAPIView):
 
         new_count = CartItemService.change_cart_item_count(
             user=request.user, shop_item=serializer.validated_data['item'],
-            change=serializer.validated_data['change']
+            change=serializer.validated_data['change'],
+            organization=serializer.validated_data.get('organization', None),
         )
 
         data = {

@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from common.models import File
 from common.serializers import ImageSerializer
+from organizations.models import Organization
 from organizations.serializers.organization_serializers import (
     OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer
 )
@@ -119,6 +120,9 @@ class CartListSerializer(serializers.ModelSerializer):
 class CartItemCountChangeSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
     change = serializers.IntegerField()
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.active_organizations.all(), required=False, allow_null=True
+    )
 
 
 class BulkCartItemCountChangeSerializer(serializers.Serializer):

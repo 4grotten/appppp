@@ -1,6 +1,6 @@
 from decimal import Decimal
 from sqlite3 import IntegrityError
-from typing import Tuple
+from typing import Tuple, Optional
 
 from django.db import transaction
 from django.db.models import F, Sum, DecimalField
@@ -12,6 +12,8 @@ from common.exceptions import (
 )
 from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
+from organizations.models import Organization
+from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem, DeliveryInfo
 from transactions.models import Transaction
@@ -146,7 +148,6 @@ class CartService:
 
     @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
-
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException('No rights to change this cart')
@@ -154,7 +155,10 @@ class CartService:
         CartItem.objects.filter(cart=cart).delete()
         items.reverse()
         for data in items:
-            if data['count'] and data['item'].organization == cart.organization:
+            if data['count'] and (
+                    data['item'].organization == cart.organization or
+                    CommonItemsGroupService.have_common_items(first=data['item'].organization, second=cart.organization)
+            ):
                 CartItem.objects.create(cart=cart, item=data['item'], count=data['count'])
 
         if cart.transaction and not cart.is_open:
@@ -194,8 +198,16 @@ class CartService:
 class CartItemService:
     @classmethod
     @transaction.atomic
-    def change_cart_item_count(cls, user: User, shop_item: ShopItem, change: int) -> int:
-        cart, created = Cart.objects.get_or_create(user=user, organization=shop_item.organization, is_open=True)
+    def change_cart_item_count(
+            cls, user: User, shop_item: ShopItem, change: int, organization: Optional[Organization]) -> int:
+        cart_organization = shop_item.organization
+        if organization is not None:
+            if not organization == shop_item.organization:
+                if not CommonItemsGroupService.have_common_items(first=organization, second=shop_item.organization):
+                    raise BadRequestException(_('The item is not related to this organization'))
+                cart_organization = organization
+
+        cart, created = Cart.objects.get_or_create(user=user, organization=cart_organization, is_open=True)
 
         if created:
             if change <= 0:

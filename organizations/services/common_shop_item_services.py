@@ -34,3 +34,7 @@ class CommonItemsGroupService:
         else:
             second.items_group = first.items_group
             second.save(update_fields=('items_group',))
+
+    @classmethod
+    def have_common_items(cls, first: Organization, second: Organization) -> bool:
+        return first.items_group == second.items_group

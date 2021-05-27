@@ -417,7 +417,7 @@ class InstagramParseLastDataAPIView(APIView):
         return Response({'message': 'Success'})
 
 
-class InstagramIntegrationCreatAPIView(APIView):
+class InstagramIntegrationCreateRetrieveAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
@@ -441,10 +441,10 @@ class InstagramIntegrationCreatAPIView(APIView):
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': 'No rights to edit organization'})
-        instance = OrganizationInstagramIntegrationService.create(organization=organization,
-                                                                  url=serializer.validated_data.get('url'))
-        data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data,
-        return Response(data, status=status.HTTP_201_CREATED)
+
+        OrganizationInstagramIntegrationService.create(organization=organization,
+                                                       url=serializer.validated_data.get('url'))
+        return Response({'message': 'Success'}, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])

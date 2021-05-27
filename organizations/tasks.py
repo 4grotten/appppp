@@ -5,10 +5,35 @@ from django.conf import settings
 from django.db.models import F
 from django.utils.timezone import now
 
+from common.exceptions import BadRequestException
+from common.models import File
 from instagram_parsers.parsers import parser
+from instagram_parsers.parsers.get_id import get_username_from_instagram_url
+from instagram_parsers.parsers.user_info import get_instagram_user_info
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
-from organizations.models import Organization, InstagramIntegration
+from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
+
+
+@shared_task
+def create_instagram_integration(organization_id: int, insta_url: str):
+    try:
+        organization = Organization.objects.get(id=organization_id)
+        username = get_username_from_instagram_url(insta_url)
+        user_info = get_instagram_user_info(username)
+
+        avatar = File.objects.create(image_url=user_info.get('profile_image'))
+        instance = InstagramIntegration.objects.create(organization=organization,
+                                                       url=insta_url,
+                                                       account_user_name=username,
+                                                       account_user_id=user_info.pop('user_id'),
+                                                       account_full_name=user_info.get('full_name'),
+                                                       avatar=avatar)
+
+        parse_instagram_to_shop_items.delay(organization_id=organization.id)
+        return instance
+    except Exception as e:
+        raise BadRequestException('Instagram user not found : {e}'.format(e=str(e)))
 
 
 @shared_task

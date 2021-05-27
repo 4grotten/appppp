@@ -8,12 +8,15 @@ class Proxy(TimestampModel):
     socks5 = models.CharField(null=True, blank=True, max_length=25, help_text='Example : 91.238.224.165:20196')
     login = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
+    for_getting_username = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.login}'
 
 
 class LoginDevice(TimestampModel):
+    for_getting_username = models.BooleanField(default=False)
     settings = models.JSONField(null=False, blank=False)
 
     def __str__(self):

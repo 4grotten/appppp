@@ -7,7 +7,7 @@ from django.utils.timezone import now
 
 from instagram_parsers.parsers import parser
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
-from organizations.models import Organization, InstagramIntegration
+from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
 
 

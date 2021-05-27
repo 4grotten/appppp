@@ -15,7 +15,7 @@ from .views.organization_views import (
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
     OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
-    OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreatAPIView,
+    OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreateRetrieveAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
 )
@@ -51,7 +51,7 @@ organization_urls = [
          name='org_follower_detail'),
     path('organizations/<int:organization_id>/followers/<int:user_id>/transactions/',
          OrgFollowersTransactionsListAPIView.as_view(), name='org_followers_transactions'),
-    path('organizations/<int:pk>/instagramIntegration/', InstagramIntegrationCreatAPIView.as_view(),
+    path('organizations/<int:pk>/instagramIntegration/', InstagramIntegrationCreateRetrieveAPIView.as_view(),
          name='item_create'),
     path('organizations/<int:pk>/instagramUpdate/', InstagramParseLastDataAPIView.as_view(),
          name='last_instagram_data'),

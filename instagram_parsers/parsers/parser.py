@@ -1,18 +1,11 @@
 from typing import Tuple
 
-from instagrapi import Client
-
-from instagram_parsers.services.proxy_services import ProxyServices, LoginDeviceService
+from instagram_parsers.services.proxy_services import InstagramClientService
 
 
 def get_posts(user_id: int, posts_count: int):
     try:
-        settings = LoginDeviceService.get_random_login_settings()
-        proxy = ProxyServices.get_random_formed_proxy()
-        if proxy is not None:
-            cl = Client(settings=settings, proxy=proxy)
-        else:
-            cl = Client(settings=settings)
+        cl = InstagramClientService.get_client()
         media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:
@@ -48,12 +41,7 @@ def get_posts(user_id: int, posts_count: int):
 
 
 def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
-    settings = LoginDeviceService.get_random_login_settings()
-    proxy = ProxyServices.get_random_formed_proxy()
-    if proxy is not None:
-        cl = Client(settings=settings, proxy=proxy)
-    else:
-        cl = Client(settings=settings)
+    cl = InstagramClientService.get_client()
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
     media_info = cl.media_info(media_pk=post_pk_from_url)
     return media_info.video_url, media_info.thumbnail_url
@@ -61,12 +49,7 @@ def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
 
 def get_latest_posts(user_id: int):
     try:
-        settings = LoginDeviceService.get_random_login_settings()
-        proxy = ProxyServices.get_random_formed_proxy()
-        if proxy is not None:
-            cl = Client(settings=settings, proxy=proxy)
-        else:
-            cl = Client(settings=settings)
+        cl = InstagramClientService.get_client()
         media_list = cl.user_medias(user_id=user_id, amount=20)
         post = list()
         for media in media_list:

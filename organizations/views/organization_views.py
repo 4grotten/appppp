@@ -417,7 +417,7 @@ class InstagramParseLastDataAPIView(APIView):
         return Response({'message': 'Success'})
 
 
-class InstagramIntegrationCreatAPIView(APIView):
+class InstagramIntegrationCreateRetrieveAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):

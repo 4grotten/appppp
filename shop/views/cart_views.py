@@ -11,6 +11,7 @@ from shop.serializers.cart_serializers import (
     CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
 )
 from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
+from transactions.models import Transaction
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer, OffsetUTCSerializer
 
 
@@ -92,7 +93,7 @@ class OrderDeliveryView(GenericAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        cart = CartService.close_the_cart(user=request.user, cart_id=pk)
+        cart = CartService.close_the_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, user=request.user, transaction=cart.transaction, )
         return Response(
             {
@@ -106,7 +107,7 @@ class OrderSelfPickupView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
-        CartService.close_the_cart(user=request.user, cart_id=pk)
+        CartService.close_the_cart(user=request.user, cart_id=pk, delivery_type=Transaction.SELF_PICKUP)
         return Response({'message': 'Success'})
 
 

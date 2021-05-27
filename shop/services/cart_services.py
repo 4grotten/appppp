@@ -5,6 +5,7 @@ from typing import Tuple
 from django.db import transaction
 from django.db.models import F, Sum, DecimalField
 from django.db.models.functions import Coalesce
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException
@@ -72,19 +73,26 @@ class CartService:
         return accepted_offline_transaction
 
     @classmethod
-    def close_the_cart(cls, user: User, cart_id: int):
+    def close_the_cart(cls, user: User, cart_id: int, delivery_type: str):
         cart = cls.get(id=cart_id)
         if cart.user != user:
-            raise PermissionDeniedException('No rights to change this cart')
+            raise PermissionDeniedException(_('No rights to change this cart'))
         if not cart.is_open:
-            raise BadRequestException('Cart is already closed')
+            raise BadRequestException(_('Cart is already closed'))
+        if delivery_type == Transaction.CASH_COURIER:
+            if not cart.organization.has_delivery:
+                raise BadRequestException(_('Organization does not have courier delivery'))
+        elif delivery_type == Transaction.SELF_PICKUP:
+            if not cart.organization.has_self_pick_up:
+                raise BadRequestException(_('Organization does not have self pick up option'))
+
         # ToDo: try to get transaction from cart
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
         try:
             cart.save()
         except IntegrityError:
-            raise IntegrityException('Could not add transaction')
+            raise IntegrityException(_('Could not add transaction'))
         finally:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,

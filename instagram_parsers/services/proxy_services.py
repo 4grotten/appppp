@@ -1,17 +1,27 @@
 import random
+from typing import Optional
+
+from django.utils.timezone import now
+from instagrapi import Client
 
 from instagram_parsers.models import Proxy, LoginDevice
 
 
-class ProxyServices:
+class InstagramClientService:
     @classmethod
-    def get_random_formed_proxy(cls):
-        proxies = Proxy.objects.all()
+    def get_client(cls, for_getting_username: bool = False) -> Client:
+        settings = LoginDeviceService.get_random_login_settings()
+        proxy = ProxyService.get_random_formed_proxy(for_getting_username=for_getting_username)
+        return Client(settings=settings, proxy=proxy)
+
+
+class ProxyService:
+    @classmethod
+    def get_random_formed_proxy(cls, for_getting_username: bool = False) -> Optional[str]:
+        proxies = Proxy.objects.filter(for_getting_username=for_getting_username, expires_at__gt=now())
         if proxies:
             random_proxy = random.choice(proxies)
-            str_proxy = 'https://' + str(random_proxy.login) + ':' + str(
-                random_proxy.password) + '@' + str(random_proxy.http_s)
-            return str_proxy
+            return f'https://{random_proxy.login}:{random_proxy.password}@{random_proxy.http_s}'
         return None
 
 

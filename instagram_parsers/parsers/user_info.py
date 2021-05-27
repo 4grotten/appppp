@@ -1,15 +1,8 @@
-from instagrapi import Client
-
-from instagram_parsers.services.proxy_services import ProxyServices, LoginDeviceService
+from instagram_parsers.services.proxy_services import InstagramClientService
 
 
 def get_instagram_user_info(username: str):
-    settings = LoginDeviceService.get_random_login_settings()
-    proxy = ProxyServices.get_random_formed_proxy()
-    if proxy is not None:
-        cl = Client(settings=settings, proxy=proxy)
-    else:
-        cl = Client(settings=settings)
+    cl = InstagramClientService.get_client(for_getting_username=True)
     response_dict = dict(cl.user_info_by_username(username=username))
     user_info = {
         'user_id': response_dict['pk'],

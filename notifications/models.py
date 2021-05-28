@@ -172,7 +172,7 @@ class NotificationSetting(TimestampModel):
     fcm_device = models.ManyToManyField(FCMDevice, through='SettingsToToken')
     discount_notifications = models.BooleanField(default=True)
     private_notifications = models.BooleanField(default=True)
-    organization_notifications = models.BooleanField(default=True)
+    organization_notifications = models.BooleanField(default=False)
     product_notifications = models.BooleanField(default=True)
 
     def __str__(self):

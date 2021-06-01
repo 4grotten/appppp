@@ -6,6 +6,7 @@ from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
+from .views.hotlink_views import HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
     MembershipRetrieveUpdateDestroyView, TransferOwnershipView, BriefUserInfoView
@@ -114,6 +115,11 @@ banner_urls = [
     path('banners/<int:pk>/', BannerDetailsView.as_view(), name='banner_delete'),
 ]
 
+hotlink_urls = [
+    path('hotlinks/', HotlinkListCreateView.as_view(), name='hotlinks'),
+    path('hotlinks/<int:pk>/', HotlinkRetrieveUpdateDestroyView.as_view(), name='hotlink_details'),
+]
+
 urlpatterns = [
     path('', include(organization_urls)),
     path('', include(membership_urls)),
@@ -122,6 +128,7 @@ urlpatterns = [
     path('', include(partnership_urls)),
     path('', include(homepage_urls)),
     path('', include(banner_urls)),
+    path('', include(hotlink_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
 

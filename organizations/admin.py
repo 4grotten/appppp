@@ -6,10 +6,11 @@ from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
-    CommonItemsGroup
+    CommonItemsGroup, Hotlink
 )
 
 
+@admin.register(CashbackGroup)
 class CashbackGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'organizations_in_group', 'created_at',)
 
@@ -17,6 +18,7 @@ class CashbackGroupAdmin(admin.ModelAdmin):
         return group.organizations.count()
 
 
+@admin.register(CumulativeGroup)
 class CumulativeGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'organizations_in_group', 'created_at',)
 
@@ -24,6 +26,7 @@ class CumulativeGroupAdmin(admin.ModelAdmin):
         return group.organizations.count()
 
 
+@admin.register(CommonItemsGroup)
 class CommonItemsGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'organizations_in_group', 'created_at',)
 
@@ -46,6 +49,7 @@ class DiscountInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
@@ -61,35 +65,42 @@ class OrganizationAdmin(admin.ModelAdmin):
     inlines = (PhoneInline, SocialInline, DiscountInline,)
 
 
+@admin.register(OrganizationType)
 class OrganizationTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'title_ru', 'title_tr',)
     list_filter = ('category',)
     search_fields = ('title', 'title_ru', 'title_tr', 'category__name',)
 
 
+@admin.register(OrganizationCategory)
 class OrganizationCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru', 'name_tr',)
     search_fields = ('name',)
 
 
+@admin.register(PhoneNumber)
 class PhoneNumberAdmin(admin.ModelAdmin):
     list_display = ('organization', 'phone_number',)
 
 
+@admin.register(SocialNetworkContact)
 class SocialNetworkContactAdmin(admin.ModelAdmin):
     list_display = ('organization', 'url',)
 
 
+@admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     list_display = ('title', 'organization', 'can_sale', 'can_check_attendance',
                     'can_see_stats', 'can_edit_organization',)
 
 
+@admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user', 'role',)
     list_filter = ('organization', 'user', 'role',)
 
 
+@admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
     list_display = (
         'user', 'organization', 'arrival_time', 'arrival_checked_by', 'arrival_checker_role', 'is_active',
@@ -99,6 +110,7 @@ class AttendanceAdmin(admin.ModelAdmin):
     date_hierarchy = 'arrival_time'
 
 
+@admin.register(DiscountCard)
 class DiscountCardAdmin(admin.ModelAdmin):
     list_display = ('organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative',)
     list_filter = ('type', 'is_published', 'organization',)
@@ -107,6 +119,7 @@ class DiscountCardAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(OrganizationClientFinancialStatus)
 class OrganizationClientFinancialStatusAdmin(admin.ModelAdmin):
     list_display = ('user', 'card', 'organization', 'accrued_cashback', 'get_currency',)
     list_filter = ('card', 'user',)
@@ -124,15 +137,18 @@ class OrganizationClientFinancialStatusAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+@admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user',)
     list_filter = ('organization', 'user',)
 
 
+@admin.register(CardBackground)
 class CardBackgroundAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(Partnership)
 class PartnershipAdmin(admin.ModelAdmin):
     list_display = (
         'requested_by', 'accepted_by', 'is_accepted',
@@ -141,35 +157,23 @@ class PartnershipAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(Banner)
 class BannerAdmin(admin.ModelAdmin):
     list_display = ('id', 'host_organization', 'linked_organization', 'updated_at')
     list_filter = ('host_organization',)
 
 
+@admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'sender', 'organization', 'content')
 
 
+@admin.register(Hotlink)
+class HotlinkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'organization', 'link', 'link_type')
+    raw_id_fields = ('organization', 'image')
+
+
+@admin.register(InstagramIntegration)
 class InstagramIntegrationLinkAdmin(admin.ModelAdmin):
     list_display = ('id', 'organization', 'url')
-
-
-admin.site.register(CashbackGroup, CashbackGroupAdmin)
-admin.site.register(CumulativeGroup, CumulativeGroupAdmin)
-admin.site.register(CommonItemsGroup, CommonItemsGroupAdmin)
-admin.site.register(OrganizationCategory, OrganizationCategoryAdmin)
-admin.site.register(OrganizationType, OrganizationTypeAdmin)
-admin.site.register(InstagramIntegration, InstagramIntegrationLinkAdmin)
-admin.site.register(Organization, OrganizationAdmin)
-admin.site.register(PhoneNumber, PhoneNumberAdmin)
-admin.site.register(SocialNetworkContact, SocialNetworkContactAdmin)
-admin.site.register(Role, RoleAdmin)
-admin.site.register(Membership, MembershipAdmin)
-admin.site.register(Attendance, AttendanceAdmin)
-admin.site.register(DiscountCard, DiscountCardAdmin)
-admin.site.register(OrganizationClientFinancialStatus, OrganizationClientFinancialStatusAdmin)
-admin.site.register(Subscription, SubscriptionAdmin)
-admin.site.register(CardBackground, CardBackgroundAdmin)
-admin.site.register(Partnership, PartnershipAdmin)
-admin.site.register(Banner, BannerAdmin)
-admin.site.register(Message, MessageAdmin)

@@ -1,20 +1,22 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, DestroyAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from common.permissions import ReadOnly
 from organizations.models import Banner
 from organizations.serializers.banner_serializers import (
-    BannerSerializer, OrganizationIDSerializer, BannerCreateSerializer, BannerUpdateSerializer
+    BannerSerializer, BannerCreateSerializer, BannerUpdateSerializer
 )
+from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.banner_services import BannerService
 
 
 class BannerView(GenericAPIView):
-    permission_classes = ()
+    permission_classes = [IsAuthenticated | ReadOnly]
 
     def get(self, request, *args, **kwargs):
-        serializer = OrganizationIDSerializer(data=request.GET)
+        serializer = OrganizationQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',

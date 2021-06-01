@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, Currency, Country, City
+from organizations.constants import HOTLINK_TYPES, HOTLINK_EXTERNAL
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
@@ -327,3 +328,13 @@ class Message(TimestampModel):
         if not self.pk:
             self.organization_address = self.organization.address
         super(Message, self).save()
+
+
+class Hotlink(TimestampModel):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hotlinks')
+    link = models.URLField(max_length=500)
+    link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES, default=HOTLINK_EXTERNAL)
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='hotlinks')
+
+    def __str__(self):
+        return f'Hotlink of {self.organization}'

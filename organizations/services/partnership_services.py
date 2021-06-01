@@ -2,8 +2,10 @@ from typing import Union
 
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet, Q
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
+from common.models import Currency
 from notifications.constants import (
     REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
     PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
@@ -154,6 +156,10 @@ class PartnershipService:
         is_sharing_cumulative = can_share_cumulative and not partnership.can_share_cumulative
         is_sharing_items = can_share_items and not partnership.can_share_items
 
+        if is_sharing_items or is_sharing_cumulative or is_sharing_cashback:
+            if not partnership.requested_by.currency == partnership.accepted_by.currency:
+                raise NotAcceptableException(_('Should have same currency to have shared discounts and items'))
+
         try:
             partnership.is_accepted = True
             partnership.can_check_attendance = can_check_attendance
@@ -257,3 +263,17 @@ class PartnershipService:
 
         CommonItemsGroupService.link_organizations_with_common_items_group(first=one_way_partnership.accepted_by,
                                                                            second=one_way_partnership.requested_by)
+
+    @classmethod
+    def can_change_currency(cls, organization: Organization, currency: Currency):
+        currency_partnerships = Partnership.objects.filter(
+            is_accepted=True, can_share_cashback=True, can_share_cumulative=True, can_share_items=True
+        )
+        different_currency_requesting_partners_exist = currency_partnerships.filter(
+            accepted_by=organization, requested_by__is_deleted=False
+        ).exclude(requested_by__currency=currency).exists()
+        different_currency_accepting_partners = currency_partnerships.filter(
+            requested_by=organization, accepted_by__is_deleted=False
+        ).exclude(accepted_by__currency=currency).exists()
+
+        return not (different_currency_requesting_partners_exist | different_currency_accepting_partners)

@@ -271,6 +271,10 @@ class OrganizationService:
             organization.closes_at = closes_at
             organization.address = address
             if not organization.currency == currency:
+                from organizations.services.partnership_services import PartnershipService
+                if not PartnershipService.can_change_currency(organization=organization, currency=currency):
+                    raise NotAcceptableException(_('Can not update currency. It is different from partners'))
+
                 from organizations.services.card_services import DiscountCardService
                 DiscountCardService.update_discount_currency(organization=organization, new_currency=currency.code)
 

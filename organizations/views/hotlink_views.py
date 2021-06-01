@@ -4,6 +4,7 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from common.exceptions import NotAcceptableException
 from common.permissions import ReadOnly
 from organizations.serializers.hotlink_serializers import (
     HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer
@@ -19,10 +20,7 @@ class HotlinkListCreateView(ListCreateAPIView):
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise NotAcceptableException(_('Wrong organization parameter'))
         return HotlinkService.get_hotlinks(organization=serializer.validated_data['organization'])
 
     def post(self, request, *args, **kwargs):

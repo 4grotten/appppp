@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException
 from common.models import File
@@ -14,7 +15,7 @@ class BannerService:
         try:
             Banner.objects.create(*args, **kwargs)
         except IntegrityError:
-            raise IntegrityException('Could not save banner')
+            raise IntegrityException(_('Could not save banner'))
 
     @classmethod
     def get_banners(cls, organization: Organization):
@@ -23,28 +24,28 @@ class BannerService:
     @classmethod
     def create_banner(cls, user: User, host: Organization, linked_to: Organization, image: File):
         if not OrganizationService.user_can_edit_partner(user=user, organization=host):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
         if not PartnershipService.are_partners(requested_by=host, accepted_by=linked_to):
-            raise NotAcceptableException('The organizations are not partners')
+            raise NotAcceptableException(_('The organizations are not partners'))
 
         cls.create(host_organization=host, linked_organization=linked_to, image=image)
 
     @classmethod
     def update_banner(cls, banner: Banner, user: User, image: File, linked_organization: Organization):
         if not OrganizationService.user_can_edit_partner(user=user, organization=banner.host_organization):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
         if not PartnershipService.are_partners(requested_by=banner.host_organization, accepted_by=linked_organization):
-            raise NotAcceptableException('The organizations are not partners')
+            raise NotAcceptableException(_('The organizations are not partners'))
         try:
             banner.image = image
             banner.linked_organization = linked_organization
             banner.save()
             return banner
         except Exception as e:
-            raise IntegrityException('Can not update banner: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Can not update banner: {e}').format(e=str(e)))
 
     @classmethod
     def delete_banner(cls, user: User, banner: Banner):
         if not OrganizationService.user_can_edit_partner(user=user, organization=banner.host_organization):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
         banner.delete()

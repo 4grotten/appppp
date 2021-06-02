@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -7,8 +8,9 @@ from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer
 from organizations.models import DiscountCard
-from organizations.serializers.card_serializers import DiscountBulkCreateSerializer, DiscountGroupSerializer, \
-    DiscountCardUpdateSerializer, DiscountCardSerializer
+from organizations.serializers.card_serializers import (
+    DiscountBulkCreateSerializer, DiscountGroupSerializer, DiscountCardUpdateSerializer, DiscountCardSerializer
+)
 from organizations.services.card_services import DiscountCardService
 from organizations.services.organization_services import OrganizationService
 
@@ -66,7 +68,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
 
         if not OrganizationService.user_can_edit_organization(organization=instance.organization,
                                                               user=request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         serializer = self.get_serializer(instance, data=request.data, partial=False)
         if not serializer.is_valid():

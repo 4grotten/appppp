@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 
@@ -7,9 +8,8 @@ from organizations.serializers.query_param_serializers import OptionalOrganizati
 from shop.models import ItemCategory, ItemSubcategory
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
-    ItemSubcategorySerializer, ItemSubcategoryCreateSerializer,
-    ItemSubcategoryBriefSerializer, ItemCategorySerializer, ItemCategoryWithNonEmptySubcategoriesSerializer,
-    ItemCategoryWithSubcategoriesSerializer
+    ItemSubcategorySerializer, ItemSubcategoryCreateSerializer, ItemSubcategoryBriefSerializer, ItemCategorySerializer,
+    ItemCategoryWithNonEmptySubcategoriesSerializer, ItemCategoryWithSubcategoriesSerializer
 )
 from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
 
@@ -23,7 +23,7 @@ class ItemCategoryAllSubcategoriesView(RetrieveAPIView):
     def get_serializer_context(self):
         serializer = OptionalOrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid organization is required in query parameters')
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
 
         context = super().get_serializer_context()
         context['organization'] = serializer.validated_data['organization']
@@ -48,7 +48,7 @@ class ItemCategoryRetrieveView(RetrieveAPIView):
 
         qp_serializer = CountryCityQueryParamSerializer(data=self.request.GET)
         if not qp_serializer.is_valid():
-            raise NotAcceptableException('Valid country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid country and city are required in query parameters'))
 
         context['city'] = qp_serializer.validated_data['city']
         context['country'] = qp_serializer.validated_data['country']
@@ -64,7 +64,7 @@ class NonEmptyCategoryListView(ListAPIView):
     def get_queryset(self):
         qp_serializer = CountryCityQueryParamSerializer(data=self.request.GET)
         if not qp_serializer.is_valid():
-            raise NotAcceptableException('Valid country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid country and city are required in query parameters'))
 
         return ItemCategoryService.get_nonempty_general_categories(country=qp_serializer.validated_data['country'],
                                                                    city=qp_serializer.validated_data['city'])

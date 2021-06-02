@@ -1,15 +1,17 @@
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet, Q
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
-from notifications.constants import (PARTNER_MODE, RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION,
-                                     PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TITLE,
-                                     CHANGE_JOB_POSITION_DESCRIPTION, QUIT_JOB_TITLE, QUIT_JOB_DESCRIPTION,
-                                     QUIT_JOB_TYPE, DISMISS_JOB_TITLE, DISMISS_JOB_TYPE, DISMISS_JOB_DESCRIPTION,
-                                     GET_JOB_TYPE, GET_JOB_TITLE, GET_JOB_DESCRIPTION, CHANGE_JOB_POSITION_OWNER_TYPE,
-                                     CHANGE_JOB_POSITION_OWNER_TITLE, CHANGE_JOB_POSITION_OWNER_DESCRIPTION)
-from organizations.models import Membership, Organization, Role
+from notifications.constants import (
+    RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION, PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE,
+    CHANGE_JOB_POSITION_TITLE, CHANGE_JOB_POSITION_DESCRIPTION, QUIT_JOB_TITLE, QUIT_JOB_DESCRIPTION,
+    QUIT_JOB_TYPE, DISMISS_JOB_TITLE, DISMISS_JOB_TYPE, DISMISS_JOB_DESCRIPTION, GET_JOB_TYPE, GET_JOB_TITLE,
+    GET_JOB_DESCRIPTION, CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TITLE,
+    CHANGE_JOB_POSITION_OWNER_DESCRIPTION
+)
 from notifications.tasks import sent_notification, send_notifications_organization_members
+from organizations.models import Membership, Organization, Role
 from users.models import User
 
 
@@ -19,7 +21,7 @@ class MembershipService:
         try:
             return Membership.objects.get(*args, **kwargs)
         except Membership.DoesNotExist:
-            raise ObjectNotFoundException('Membership not found')
+            raise ObjectNotFoundException(_('Membership not found'))
 
     @classmethod
     def create(cls, *args, **kwargs):
@@ -53,7 +55,7 @@ class MembershipService:
             )
             return membership
         except IntegrityError:
-            raise IntegrityException('Could not add employee')
+            raise IntegrityException(_('Could not add employee'))
 
     @classmethod
     def get_organization_employees(cls, organization: Organization) -> QuerySet:
@@ -90,20 +92,20 @@ class MembershipService:
         from organizations.services.organization_services import OrganizationService
 
         if employee == organization.owner:
-            raise NotAcceptableException('Insufficient rights')
+            raise NotAcceptableException(_('Insufficient rights'))
 
         if not role.organization == organization:
-            raise NotAcceptableException('No such role in organization')
+            raise NotAcceptableException(_('No such role in organization'))
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=added_by):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         return cls.create(organization=organization, user=employee, role=role, added_by=added_by)
 
     @classmethod
     def update_role(cls, membership: Membership, new_role: Role) -> Membership:
         if not new_role.organization == membership.organization:
-            raise NotAcceptableException('No such role in organization')
+            raise NotAcceptableException(_('No such role in organization'))
         try:
             old_position = membership.role
             membership.role = new_role
@@ -139,7 +141,7 @@ class MembershipService:
             ))
             return membership
         except IntegrityError:
-            raise IntegrityException('Could not update role')
+            raise IntegrityException(_('Could not update role'))
 
     @classmethod
     def has_edit_rights_in_any_organization(cls, user: User) -> bool:
@@ -149,7 +151,8 @@ class MembershipService:
     def has_seller_stats_rights_in_any_organization(cls, user: User, organization: Organization) -> bool:
         member = Membership.objects.filter(Q(user=user) & Q(organization=organization))
         return member.filter(role__can_see_stats=True).exists() or member.filter(
-            role__can_edit_organization=True).exists() or member.filter(role__can_sale=True).exists() or user == organization.owner
+            role__can_edit_organization=True).exists() or member.filter(
+            role__can_sale=True).exists() or user == organization.owner
 
     @classmethod
     def is_organization_member(cls, user: User, organization: Organization):
@@ -166,7 +169,7 @@ class RoleService:
         try:
             return Role.objects.get(*args, **kwargs)
         except Role.DoesNotExist:
-            raise ObjectNotFoundException('Role not found')
+            raise ObjectNotFoundException(_('Role not found'))
 
     @classmethod
     def filter(cls, *args, **kwargs):

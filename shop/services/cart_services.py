@@ -26,7 +26,7 @@ class CartService:
         try:
             return Cart.objects.get(*args, **kwargs)
         except Cart.DoesNotExist:
-            raise ObjectNotFoundException('Cart not found')
+            raise ObjectNotFoundException(_('Cart not found'))
 
     @classmethod
     def get_related(cls, *args, **kwargs):
@@ -35,7 +35,7 @@ class CartService:
                 .select_related('transaction', 'organization') \
                 .get(*args, **kwargs)
         except Cart.DoesNotExist:
-            raise ObjectNotFoundException('Cart not found')
+            raise ObjectNotFoundException(_('Cart not found'))
 
     @classmethod
     def get_total_prices_in_cart(cls, cart: Cart) -> Tuple[Decimal, Decimal]:
@@ -60,13 +60,13 @@ class CartService:
                                            utc_offset_minutes: int) -> Transaction:
         cart = cls.get(user=employee, id=cart_id, is_open=True)
         if not OrganizationService.user_can_sell(organization=cart.organization, user=employee):
-            raise NotAcceptableException('No rights to sell in this organization')
+            raise NotAcceptableException(_('No rights to sell in this organization'))
 
         cart.is_open = False
         try:
             cart.save()
         except IntegrityError:
-            raise IntegrityException('Could not checkout the cart')
+            raise IntegrityException(_('Could not checkout the cart'))
 
         from transactions.services.transaction_services import TransactionService
         accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(
@@ -150,7 +150,7 @@ class CartService:
     def bulk_update(cls, cart: Cart, items, user: User):
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
-            raise PermissionDeniedException('No rights to change this cart')
+            raise PermissionDeniedException(_('No rights to change this cart'))
 
         CartItem.objects.filter(cart=cart).delete()
         items.reverse()
@@ -190,7 +190,7 @@ class CartService:
                     "savings"
                 ])
             except IntegrityError:
-                raise IntegrityException('Could not complete transaction')
+                raise IntegrityException(_('Could not complete transaction'))
 
         return cart
 

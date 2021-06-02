@@ -1,5 +1,6 @@
 from django.db.models import QuerySet
 from django.db.models import Subquery, OuterRef
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import (
@@ -70,10 +71,10 @@ class SubscriptionService:
         organization = OrganizationService.get(id=organization_id)
         user = User.objects.get(id=user_id)
         if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         if not Subscription.objects.filter(user=user, organization=organization).exists():
-            raise ObjectNotFoundException('Follower not found')
+            raise ObjectNotFoundException(_('Follower not found'))
         return user
 
     @classmethod

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -46,7 +47,7 @@ class OrganizationTotalsView(GenericAPIView):
 
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_see_stats(organization=organization, user=request.user):
-            raise NotAcceptableException('No rights to see stats of organization')
+            raise NotAcceptableException(_('No rights to see stats of organization'))
 
         stats = StatisticsService.get_totals_of_organization(organization=organization,
                                                              start_date=serializer.validated_data['start'],
@@ -70,7 +71,7 @@ class OrganizationTransactionCalendarView(GenericAPIView):
 
         organization = serializer.validated_data['organization']
         if not OrganizationService.user_can_see_stats(organization=organization, user=request.user):
-            raise PermissionDeniedException('No rights to check attendance in this organization')
+            raise PermissionDeniedException(_('No rights to check attendance in this organization'))
 
         month_year = serializer.validated_data['month_year']
         if month_year is None:

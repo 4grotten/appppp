@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -120,4 +121,4 @@ class ComplaintCreateView(CreateAPIView):
         try:
             super().perform_create(serializer)
         except IntegrityError:
-            raise IntegrityException('You have already complained about this item')
+            raise IntegrityException(_('You have already complained about this item'))

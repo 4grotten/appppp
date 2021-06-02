@@ -4,7 +4,7 @@ from fcm_django.models import FCMDevice
 from rest_framework import serializers
 
 from common.exceptions import IntegrityException
-from notifications.models import Notification, NotificationSetting, SettingsToToken
+from notifications.models import Notification, NotificationSetting
 from organizations.serializers.organization_serializers import OrganizationNotificationInfo
 from users.serializers import ProfileSerializer
 

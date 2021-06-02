@@ -1,5 +1,6 @@
 from django.db.models import ProtectedError
 from django.http import HttpResponse
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, RetrieveAPIView
@@ -29,11 +30,11 @@ class MembershipListCreateView(ListCreateAPIView):
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid organization is required in query parameters')
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
 
         organization = serializer.validated_data['organization']
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         return MembershipService.get_organization_employees(organization=organization)
 
     def create(self, request, *args, **kwargs):
@@ -61,7 +62,7 @@ class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         membership = MembershipService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=membership.organization,
                                                               user=self.request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         return membership
 
     def delete(self, request, *args, **kwargs):
@@ -92,11 +93,11 @@ class RolesListCreateView(ListCreateAPIView):
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid organization is required in query parameters')
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
 
         organization = serializer.validated_data['organization']
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         return RoleService.filter(organization=organization)
 
     def create(self, request, *args, **kwargs):
@@ -112,14 +113,14 @@ class RoleRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     def get_object(self):
         role = RoleService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=role.organization, user=self.request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         return role
 
     def perform_destroy(self, instance):
         try:
             instance.delete()
         except ProtectedError:
-            raise NotAcceptableException('There are existing employees with this role')
+            raise NotAcceptableException(_('There are existing employees with this role'))
 
 
 class TransferOwnershipView(GenericAPIView):

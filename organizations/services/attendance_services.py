@@ -4,11 +4,13 @@ from typing import Union
 
 from django.db.models import Q
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
-from notifications.constants import (PERSONAL_MODE, ATTENDANCE_IN, ATTENDANCE_IN_TITLE, ATTENDANCE_DESCRIPTION,
-                                     CHECK_ATTENDANCE_IN, CHECK_ATTENDANCE_IN_TITLE, ATTENDANCE_OUT,
-                                     ATTENDANCE_OUT_TITLE, CHECK_ATTENDANCE_OUT, CHECK_ATTENDANCE_OUT_TITLE)
+from notifications.constants import (
+    PERSONAL_MODE, ATTENDANCE_IN, ATTENDANCE_IN_TITLE, ATTENDANCE_DESCRIPTION, CHECK_ATTENDANCE_IN,
+    CHECK_ATTENDANCE_IN_TITLE, ATTENDANCE_OUT, ATTENDANCE_OUT_TITLE, CHECK_ATTENDANCE_OUT, CHECK_ATTENDANCE_OUT_TITLE
+)
 from notifications.tasks import sent_notification
 from organizations.models import Organization, Attendance, Partnership, Membership
 from organizations.services.membership_services import MembershipService
@@ -41,7 +43,7 @@ class AttendanceService:
         cls._auto_depart_by_system(employee=employee, organization=organization)
 
         if not MembershipService.is_organization_member(user=employee, organization=organization):
-            raise NotAcceptableException('Given user is not a member of this organization')
+            raise NotAcceptableException(_('Given user is not a member of this organization'))
 
         # ToDo search why this code is needed
         if not checker_role:

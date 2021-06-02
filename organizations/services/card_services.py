@@ -4,12 +4,14 @@ from typing import Union
 
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet, F
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from common.services.currency import CurrencyConverterService
-from notifications.constants import (NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE,
-                                     NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE, NEW_CASHBACK_TITLE,
-                                     NEW_CASHBACK)
+from notifications.constants import (
+    NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE, NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE, NEW_CASHBACK_TITLE,
+    NEW_CASHBACK
+)
 from notifications.tasks import send_notifications_to_all_users
 from organizations.models import DiscountCard, Organization
 from organizations.services.organization_services import OrganizationService
@@ -22,14 +24,14 @@ class DiscountCardService:
         try:
             return DiscountCard.objects.get(*args, **kwargs)
         except DiscountCard.DoesNotExist:
-            raise ObjectNotFoundException('Discount not found')
+            raise ObjectNotFoundException(_('Discount not found'))
 
     @classmethod
     def create(cls, *args, **kwargs):
         try:
             DiscountCard.objects.create(*args, **kwargs)
         except IntegrityError:
-            raise IntegrityException('Duplicate cards are not allowed')
+            raise IntegrityException(_('Duplicate cards are not allowed'))
 
     @classmethod
     def create_or_reactivate(cls, organization: Organization, percent: int, type: str, **kwargs):
@@ -55,10 +57,10 @@ class DiscountCardService:
     @classmethod
     def delete_discount(cls, discount: DiscountCard, user: User) -> DiscountCard:
         if not OrganizationService.user_can_edit_organization(organization=discount.organization, user=user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         if not cls.is_card_editable(discount=discount):
-            raise NotAcceptableException('Discount card can not be deleted')
+            raise NotAcceptableException(_('Discount card can not be deleted'))
 
         if discount.type == DiscountCard.FIXED:
             discount.is_published = False
@@ -71,10 +73,10 @@ class DiscountCardService:
     def update_discount(cls, discount: DiscountCard, user: User,
                         limit: Decimal = None, percent: int = None) -> DiscountCard:
         if not OrganizationService.user_can_edit_organization(organization=discount.organization, user=user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         if not cls.is_card_editable(discount=discount):
-            raise NotAcceptableException('Discount card can not be updated')
+            raise NotAcceptableException(_('Discount card can not be updated'))
 
         if discount.type == DiscountCard.FIXED:
             discount = cls.swap_or_update(discount=discount, percent=percent)
@@ -87,14 +89,14 @@ class DiscountCardService:
         try:
             discount.save()
         except IntegrityError:
-            raise IntegrityException('Duplicate cards are not allowed')
+            raise IntegrityException(_('Duplicate cards are not allowed'))
         return discount
 
     @classmethod
     @transaction.atomic
     def swap_or_update(cls, discount: DiscountCard, percent: Union[int, None]):
         if not percent:
-            raise IntegrityException('Percent is required for fixed discount')
+            raise IntegrityException(_('Percent is required for fixed discount'))
 
         temp = 999
         updated = DiscountCard.objects.filter(is_published=False, percent=percent).update(percent=temp)
@@ -104,7 +106,7 @@ class DiscountCardService:
             try:
                 discount.save(update_fields=('percent',))
             except IntegrityError:
-                raise IntegrityException('Duplicate cards are not allowed')
+                raise IntegrityException(_('Duplicate cards are not allowed'))
             return discount
 
         old_value = discount.percent
@@ -199,9 +201,9 @@ class DiscountCardService:
 
         for card in cards:
             if not card.organization == organization:
-                raise NotAcceptableException('Card does not belong to this organization')
+                raise NotAcceptableException(_('Card does not belong to this organization'))
             if not cls.is_card_editable(discount=card):
-                raise NotAcceptableException('Card is not editable')
+                raise NotAcceptableException(_('Card is not editable'))
             if card.type == DiscountCard.CUMULATIVE:
                 should_organize = True
             cls.delete_discount(discount=card, user=deleted_by)
@@ -219,9 +221,9 @@ class DiscountCardService:
         for card_data in cards_data:
             card = card_data.pop('id')
             if not card.organization == organization:
-                raise NotAcceptableException('Card does not belong to this organization')
+                raise NotAcceptableException(_('Card does not belong to this organization'))
             if not cls.is_card_editable(discount=card):
-                raise NotAcceptableException('Card is not editable')
+                raise NotAcceptableException(_('Card is not editable'))
             if card.type == DiscountCard.CUMULATIVE:
                 should_organize = True
 

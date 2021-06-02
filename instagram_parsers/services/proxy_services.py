@@ -2,6 +2,7 @@ import random
 from typing import Optional
 
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from instagrapi import Client
 
 from instagram_parsers.models import Proxy, LoginDevice
@@ -30,6 +31,6 @@ class LoginDeviceService:
     def get_random_login_settings(cls) -> dict:
         login_settings = LoginDevice.objects.all()
         if not login_settings:
-            raise Exception('Need at least one LoginDevice')
+            raise Exception(_('Need at least one LoginDevice'))
         random_device = random.choice(login_settings)
         return random_device.settings

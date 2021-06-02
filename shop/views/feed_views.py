@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -8,9 +9,7 @@ from common.exceptions import NotAcceptableException
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
-from shop.serializers.item_serializers import (
-    ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
-)
+from shop.serializers.item_serializers import ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
 from shop.services.item_services import ShopItemService
 
 
@@ -41,7 +40,7 @@ class OrganizationItemListView(FeedView):
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid organization is required in query parameters')
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
         organization = serializer.validated_data['organization']
         if organization.is_deleted:
             return ShopItem.objects.none()
@@ -63,7 +62,7 @@ class SubscriptionItemListView(FeedView):
     def list(self, request, *args, **kwargs):
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Validation Error')
+            raise NotAcceptableException(_('Validation Error'))
         response = super().list(request, args, kwargs)
         response.data['has_new'] = ShopItemService.has_new(timestamp=serializer.validated_data['start_time'],
                                                            user=request.user)

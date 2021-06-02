@@ -27,19 +27,19 @@ class PartnershipService:
         try:
             return Partnership.objects.get(*args, **kwargs)
         except Partnership.DoesNotExist:
-            raise ObjectNotFoundException('Partnership not found')
+            raise ObjectNotFoundException(_('Partnership not found'))
 
     @classmethod
     def create(cls, *args, **kwargs) -> Partnership:
         try:
             return Partnership.objects.create(*args, **kwargs)
         except IntegrityError:
-            raise IntegrityException('Could not create partnership request')
+            raise IntegrityException(_('Could not create partnership request'))
 
     @classmethod
     def create_request(cls, user: User, requested_by: Organization, accepted_by: Organization):
         if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
@@ -77,7 +77,7 @@ class PartnershipService:
     @classmethod
     def get_organization_partnerships(cls, organization: Organization, user: User) -> QuerySet:
         if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
 
         partnerships = Partnership.objects.filter(
             (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
@@ -90,7 +90,7 @@ class PartnershipService:
         partnership = cls.get(id=partnership_id)
 
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
 
         try:
             return Partnership.objects.filter(accepted_by=partnership.accepted_by).filter(id=partnership_id)
@@ -103,7 +103,7 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(
                 organization=partnership.requested_by, user=user
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
 
         transaction.on_commit(lambda: Notification.objects.filter(extra_data__partnership_id=partnership_id).filter(
             extra_data__should_be_deleted=True).delete())
@@ -149,7 +149,7 @@ class PartnershipService:
                         can_edit_organization: bool = False, can_share_cashback: bool = False,
                         can_share_cumulative: bool = False, can_share_items: bool = False) -> Partnership:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
-            raise NotAcceptableException('No access to partner settings')
+            raise NotAcceptableException(_('No access to partner settings'))
 
         is_new_request = not partnership.is_accepted
         is_sharing_cashback = can_share_cashback and not partnership.can_share_cashback
@@ -220,7 +220,7 @@ class PartnershipService:
 
             return partnership
         except IntegrityError:
-            raise IntegrityException('Could not update partnership permissions')
+            raise IntegrityException(_('Could not update partnership permissions'))
 
     @classmethod
     def check_and_create_mutual_cashback(cls, one_way_partnership: Partnership):

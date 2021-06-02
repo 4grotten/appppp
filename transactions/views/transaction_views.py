@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -266,7 +267,7 @@ class OrganizationTransactionListView(ListAPIView):
 
         if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
                                                       user=request.user):
-            raise NotAcceptableException('No rights to see stats of organization')
+            raise NotAcceptableException(_('No rights to see stats of organization'))
 
         queryset = TransactionService.get_organization_transactions(
             organization=serializer.validated_data['organization'],
@@ -296,7 +297,7 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     def perform_destroy(self, instance: Transaction):
         # ToDo: implement proper cancellation of transactions
         if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
 

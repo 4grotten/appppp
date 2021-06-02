@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -16,7 +17,7 @@ class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         return attrs
 

@@ -46,7 +46,7 @@ class OrganizationService:
         try:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Organization not found')
+            raise ObjectNotFoundException(_('Organization not found'))
 
     @classmethod
     def creation_limit_exceeded(cls, user: User) -> bool:
@@ -213,7 +213,7 @@ class OrganizationService:
             return organization
 
         except Exception:
-            raise ValidationException('Something went wrong')
+            raise ValidationException(_('Something went wrong'))
 
     @classmethod
     @transaction.atomic
@@ -289,7 +289,7 @@ class OrganizationService:
             return organization
 
         except Exception as e:
-            raise IntegrityException('Could not update organization: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Could not update organization: {e}').format(e=str(e)))
 
     @classmethod
     def deactivate(cls, organization: Organization):
@@ -298,7 +298,7 @@ class OrganizationService:
             organization.save()
             return organization
         except Exception as e:
-            raise IntegrityException('Could not deactivate organization: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Could not deactivate organization: {e}').format(e=str(e)))
 
     @classmethod
     def reactivate(cls, organization: Organization) -> Organization:
@@ -307,7 +307,7 @@ class OrganizationService:
             organization.save()
             return organization
         except Exception as e:
-            raise IntegrityException('Could not reactivate organization: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Could not reactivate organization: {e}').format(e=str(e)))
 
     @classmethod
     def reset_running_purchase_id(cls, organization: Organization) -> Organization:
@@ -316,7 +316,7 @@ class OrganizationService:
             organization.save()
             return organization
         except Exception as e:
-            raise IntegrityException('Could not reset running purchase ID organization: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Could not reset running purchase ID organization: {e}').format(e=str(e)))
 
     @classmethod
     def increment_running_purchase_id(cls, organization: Organization):
@@ -406,7 +406,7 @@ class OrganizationService:
     @classmethod
     def change_organization_owner(cls, organization: Organization, new_owner: User, current_owner: User):
         if not organization.owner == current_owner:
-            raise PermissionDeniedException('No rights to change owner')
+            raise PermissionDeniedException(_('No rights to change owner'))
         try:
             organization.owner = new_owner
             organization.save()
@@ -431,19 +431,19 @@ class OrganizationService:
             )
 
         except IntegrityError:
-            raise IntegrityException('Could not change owner')
+            raise IntegrityException(_('Could not change owner'))
 
     @classmethod
     def get_online_client(cls, user_id: int, organization_id: int, requested_by: User) -> QuerySet:
         organization = OrganizationService.get(id=organization_id)
         user = User.objects.get(id=user_id)
         if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         if Transaction.objects.filter(client=user, organization=organization, type=Transaction.ONLINE).exists():
             return user
 
-        raise ObjectNotFoundException('Client not found')
+        raise ObjectNotFoundException(_('Client not found'))
 
 
 class OrgPhoneNumberService:
@@ -461,7 +461,7 @@ class OrgPhoneNumberService:
     def update_phone_numbers(cls, organization_id: int, user: User, numbers: list):
         organization = OrganizationService.get(id=organization_id)
         if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         with transaction.atomic():
             PhoneNumber.objects.filter(organization_id=organization_id).delete()
@@ -485,7 +485,7 @@ class OrgSocialNetworkContactService:
     def update_social_networks(cls, organization_id: int, user: User, urls: list):
         organization = OrganizationService.get(id=organization_id)
         if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         with transaction.atomic():
             SocialNetworkContact.objects.filter(organization_id=organization_id).delete()
@@ -504,7 +504,7 @@ class OrganizationInstagramIntegrationService:
             user_info = get_instagram_user_info(username)
             return user_info
         except:
-            raise ObjectNotFoundException('Instagram user not found')
+            raise ObjectNotFoundException(_('Instagram user not found'))
 
     @classmethod
     def create(cls, organization: Organization, url: str) -> InstagramIntegration:
@@ -525,7 +525,7 @@ class OrganizationInstagramIntegrationService:
             )
             return instance
         except Exception as e:
-            raise BadRequestException('Instagram user not found : {e}'.format(e=str(e)))
+            raise BadRequestException(_('Instagram user not found : {e}').format(e=str(e)))
 
     @classmethod
     def delete(cls, organization: Organization):
@@ -535,7 +535,7 @@ class OrganizationInstagramIntegrationService:
             transaction.on_commit(
                 lambda: delete_not_updated_posts_from_instagram.delay(organization_id=organization.id))
         except:
-            raise ObjectNotFoundException('Instagram Integration Link not found')
+            raise ObjectNotFoundException(_('Instagram Integration Link not found'))
 
     @classmethod
     def get_from_org(cls, organization: Organization):
@@ -543,7 +543,7 @@ class OrganizationInstagramIntegrationService:
             return InstagramIntegration.objects.get(organization=organization)
 
         except:
-            raise ObjectNotFoundException('Instagram Integration Link not found')
+            raise ObjectNotFoundException(_('Instagram Integration Link not found'))
 
 
 class OrgMessageService:

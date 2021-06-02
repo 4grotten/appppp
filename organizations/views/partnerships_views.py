@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
@@ -106,7 +107,7 @@ class HomepageRandomPartnersView(ListAPIView):
     def get_queryset(self):
         serializer = CountryCityQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid country and city are required in query parameters'))
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 
@@ -121,7 +122,7 @@ class HomepagePartnersListView(ListAPIView):
     def get_queryset(self):
         serializer = CountryCityQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid country and city are required in query parameters'))
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 
@@ -135,7 +136,7 @@ class HomepageBannersView(ListAPIView):
     def get_queryset(self):
         serializer = CountryCityQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid country and city are required in query parameters'))
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 

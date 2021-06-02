@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
@@ -15,8 +16,7 @@ from .serializers import (
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer,
 )
 from .services import (
-    UserService, TemporaryCodeService, PhoneNumberService,
-    SocialNetworkContactService, TemporaryPhoneNumberService
+    UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
 )
 
 
@@ -112,7 +112,7 @@ class ResendTemporaryCodeAPIView(APIView):
         if resend_type == CHANGE_AUTH_NUMBER_TYPE:
             temporary_codes = TemporaryPhoneNumberService.filter(phone_number=phone_number)
             if not temporary_codes:
-                raise ObjectNotFoundException('You can not resend')
+                raise ObjectNotFoundException(_('You can not resend'))
 
             temporary_code = temporary_codes.last()
 
@@ -261,7 +261,7 @@ class ForgotPasswordAPIView(APIView):
         #            user = UserService.get(email=serializer.validated_data.get('email'))
         #            # TODO send code to email
         #        else:
-        #            raise ValidationException('Invalid input')
+        #            raise ValidationException(_('Invalid input'))
 
         return Response(data={
             'message': 'Code sent'
@@ -364,7 +364,7 @@ class ChangeAndVerifyNewNumber(APIView):
         user = UserService.get(phone_number=old_phone_number)
 
         if user != request.user:
-            raise NotAcceptableException('You have not permission to do this operation')
+            raise NotAcceptableException(_('You have not permission to do this operation'))
 
         TemporaryPhoneNumberService.validate(
             code=serializer.validated_data.get('code'), phone_number=old_phone_number

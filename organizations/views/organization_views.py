@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Q, Case, When, IntegerField
+from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -15,8 +16,8 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer, HomepageOrganizationsSerializer,
-    OrganizationWithDiscountsSerializer, OrganizationTypeSerializer
+    OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
+    OrganizationTypeSerializer
 )
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
@@ -32,8 +33,8 @@ from organizations.serializers.query_param_serializers import (
 )
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
-    OrganizationService, OrgPhoneNumberService,
-    OrgSocialNetworkContactService, OrgMessageService, OrganizationInstagramIntegrationService
+    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
+    OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
 from organizations.tasks import parse_instagram_to_shop_items
@@ -107,7 +108,7 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
 
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
 
@@ -126,7 +127,7 @@ class DeliverySettingsView(UpdateAPIView):
     def get_object(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
         return organization
 
     def put(self, request, *args, **kwargs):
@@ -149,7 +150,7 @@ class DeactivateOrganizationView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         deactivated_organization = OrganizationService.deactivate(organization=organization)
 
@@ -163,7 +164,7 @@ class ReactivateOrganizationView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         deactivated_organization = OrganizationService.reactivate(organization=organization)
 
@@ -177,7 +178,7 @@ class ResetPurchaseIDView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         OrganizationService.reset_running_purchase_id(organization=organization)
         return Response(data={'message': 'Successfully reset running purchase ID'}, status=status.HTTP_200_OK)
@@ -250,7 +251,7 @@ class SetOrganizationLocationAPIView(APIView):
         organization = OrganizationService.get(pk=pk)
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         changed_organization = OrganizationService.set_location(
             organization=organization,
@@ -276,7 +277,7 @@ class HomepageOrganizationsView(ListAPIView):
     def get_queryset(self):
         serializer = PartnerQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException('Valid partner id, country and city are required in query parameters')
+            raise NotAcceptableException(_('Valid partner id, country and city are required in query parameters'))
         self.partner = serializer.validated_data['partner']
         self.city = serializer.validated_data['city']
         if self.city is None:
@@ -410,7 +411,7 @@ class InstagramParseLastDataAPIView(APIView):
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': 'No rights to edit organization'})
         if not InstagramIntegration.objects.get(organization=organization):
-            raise ObjectNotFoundException('Instagram Integration Link not found')
+            raise ObjectNotFoundException(_('Instagram Integration Link not found'))
         transaction.on_commit(
             lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, posts_count=20)
         )

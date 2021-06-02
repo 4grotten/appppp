@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -41,7 +42,7 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
 
         if not queryset or not OrganizationService.user_can_edit_organization(
                 organization=organization, user=request.user):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         return queryset
 

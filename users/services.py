@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from mailer.services import MailerService
@@ -22,7 +23,7 @@ class UserService:
         try:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('User not found')
+            raise ObjectNotFoundException(_('User not found'))
 
     @classmethod
     def filter(cls, **filters):
@@ -33,7 +34,7 @@ class UserService:
         try:
             return cls.model.objects.create(phone_number=phone_number)
         except IntegrityError:
-            raise IntegrityException('Error while creating user')
+            raise IntegrityException(_('Error while creating user'))
 
     @classmethod
     def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
@@ -57,7 +58,7 @@ class UserService:
             return user
 
         except Exception as e:
-            raise IntegrityException('Error while initializing profile')
+            raise IntegrityException(_('Error while initializing profile'))
 
     @classmethod
     def set_password(cls, user: User, password: str):
@@ -68,7 +69,7 @@ class UserService:
     @classmethod
     def change_password(cls, user: User, new_password: str, old_password: str):
         if not user.check_password(old_password):
-            raise ValidationException('Incorrect old password')
+            raise ValidationException(_('Incorrect old password'))
 
         user.set_password(new_password)
         user.save(update_fields=["password"])
@@ -79,7 +80,7 @@ class UserService:
             user.phone_number = new_phone_number
             user.save(update_fields=["phone_number"])
         except Exception:
-            raise IntegrityException('Error while changing number')
+            raise IntegrityException(_('Error while changing number'))
 
     @classmethod
     def get_common_user(cls) -> User:
@@ -94,7 +95,7 @@ class TemporaryCodeService:
         try:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Code not found')
+            raise ObjectNotFoundException(_('Code not found'))
 
     @classmethod
     def filter(cls, **filters):
@@ -108,11 +109,11 @@ class TemporaryCodeService:
 
             if cls.model.objects.filter(user=user,
                                         created_at__range=(max_datetime, current_datetime)).count() >= 3:
-                raise ValidationException('Limit exceeded')
+                raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
         except IntegrityError:
-            raise IntegrityException('Error while creating temporary code')
+            raise IntegrityException(_('Error while creating temporary code'))
 
         message = SMS_CODE_MESSAGE.format(code.code)
         sms_id = f'{user.id}{code.code}'
@@ -127,12 +128,12 @@ class TemporaryCodeService:
             temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number, is_used=False)
 
             if temporary_code.expiration_datetime < timezone.now():
-                raise ValidationException('Code expired')
+                raise ValidationException(_('Code expired'))
 
             cls.model.objects.filter(user__phone_number=phone_number).update(is_used=True)
 
         except cls.model.DoesNotExist:
-            raise ValidationException('Code not found')
+            raise ValidationException(_('Code not found'))
 
 
 class PhoneNumberService:
@@ -175,7 +176,7 @@ class TemporaryPhoneNumberService:
         try:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Temporary phone number not found')
+            raise ObjectNotFoundException(_('Temporary phone number not found'))
 
     @classmethod
     def filter(cls, **filters):
@@ -190,7 +191,7 @@ class TemporaryPhoneNumberService:
 
             if cls.model.objects.filter(user=user,
                                         created_at__range=(max_datetime, current_datetime)).count() >= 2:
-                raise ValidationException('Limit exceeded')
+                raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user, phone_number=phone_number)
 
@@ -199,7 +200,7 @@ class TemporaryPhoneNumberService:
             MessageService.send_sms(numbers=[phone_number], message=message, sms_id=sms_id)
 
         except IntegrityError:
-            raise IntegrityException('Error while creating temporary code for new phone_number')
+            raise IntegrityException(_('Error while creating temporary code for new phone_number'))
 
     @classmethod
     def validate(cls, code: str, phone_number: str):
@@ -207,9 +208,9 @@ class TemporaryPhoneNumberService:
             temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number)
 
             if temporary_code.expiration_datetime < timezone.now():
-                raise ValidationException('Code expired')
+                raise ValidationException(_('Code expired'))
 
             cls.model.objects.filter(user__phone_number=phone_number).delete()
 
         except cls.model.DoesNotExist:
-            raise ValidationException('Code not found')
+            raise ValidationException(_('Code not found'))

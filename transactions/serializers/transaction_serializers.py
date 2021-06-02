@@ -1,4 +1,5 @@
 from django.core.validators import MinValueValidator
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -51,13 +52,13 @@ class CompleteSerializer(serializers.ModelSerializer):
         from_cashback = attrs['from_cashback']
 
         if from_cashback > original_amount:
-            raise NotAcceptableException('Cashback amount is greater than original amount')
+            raise NotAcceptableException(_('Cashback amount is greater than original amount'))
 
         card = attrs['source_card']
         percent = attrs['discount_percent']
 
         if card is not None and not card.percent == percent:
-            raise NotAcceptableException('Discount percent does not match with cards percent')
+            raise NotAcceptableException(_('Discount percent does not match with cards percent'))
 
         return attrs
 

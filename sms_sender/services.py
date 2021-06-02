@@ -1,7 +1,7 @@
 import requests
 from django.conf import settings
-
 from django.template import Template, Context
+from django.utils.translation import gettext_lazy as _
 
 
 class MessageService:
@@ -46,4 +46,4 @@ class MessageService:
         if response.status_code == 200:
             return response.content.decode('utf-8')
 
-        return Exception('Error while sending SMS')
+        return Exception(_('Error while sending SMS'))

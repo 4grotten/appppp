@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import django_filters
+from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters, Filter
 
 from common.exceptions import ValidationException
@@ -18,7 +19,7 @@ class MultipleListFilter(Filter):
         values = value.split(',')
 
         if len(values) > self.MAX_LIMIT:
-            raise ValidationException('Max number of ids should be less than equal 20')
+            raise ValidationException(_('Max number of ids should be less than equal 20'))
 
         return super(MultipleListFilter, self).filter(qs, values).distinct()
 

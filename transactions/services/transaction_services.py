@@ -6,6 +6,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
@@ -38,17 +39,17 @@ class TransactionService:
         try:
             return Transaction.objects.get(**kwargs)
         except Transaction.DoesNotExist:
-            raise ObjectNotFoundException('Transaction not found')
+            raise ObjectNotFoundException(_('Transaction not found'))
 
     @classmethod
     @transaction.atomic
     def preprocess_transaction(cls, client: User, organization: Organization, cart: Union[Cart, None],
                                processed_by: User) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
-            raise NotAcceptableException('No rights to sell in this organization')
+            raise NotAcceptableException(_('No rights to sell in this organization'))
 
         if cart is not None and not cart.user == processed_by:
-            raise NotAcceptableException('No rights to use this cart')
+            raise NotAcceptableException(_('No rights to use this cart'))
 
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
 
@@ -68,7 +69,7 @@ class TransactionService:
 
         if instance.client != requested_by and not OrganizationService.user_can_see_stats(
                 organization=instance.organization, user=requested_by):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         return instance
 
@@ -85,7 +86,7 @@ class TransactionService:
 
         if source_card is not None and not OrganizationClientFinancialStatusService.can_use_given_card(
                 client=current_transaction.client, card=source_card):
-            raise NotAcceptableException('Client cannot use this card')
+            raise NotAcceptableException(_('Client cannot use this card'))
 
         cashback_percent = 0
         if source_card is not None and source_card.type == DiscountCard.CASHBACK:
@@ -94,18 +95,18 @@ class TransactionService:
 
         if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
                 client=current_transaction.client, organization=organization, amount=from_cashback):
-            raise NotAcceptableException('Not enough accrued cashback amount')
+            raise NotAcceptableException(_('Not enough accrued cashback amount'))
 
         transaction_cart = getattr(current_transaction, 'cart', None)
         if not transaction_cart == cart:
-            raise NotAcceptableException('Transaction and cart do not match')
+            raise NotAcceptableException(_('Transaction and cart do not match'))
 
         total_savings = (original_amount * discount_percent) / 100
 
         if cart is not None:
             items_price, discounted_items = CartService.get_total_prices_in_cart(cart=cart)
             if not original_amount == discounted_items:
-                raise NotAcceptableException('Original amount do not match with cart amounts')
+                raise NotAcceptableException(_('Original amount do not match with cart amounts'))
             cart.is_open = False
             cart.save()
             original_amount = items_price
@@ -113,7 +114,7 @@ class TransactionService:
 
         amount_to_pay = original_amount - total_savings
         if amount_to_pay < from_cashback:
-            raise NotAcceptableException('Cashback amount is greater than original amount')
+            raise NotAcceptableException(_('Cashback amount is greater than original amount'))
 
         try:
             current_transaction.original_amount = original_amount
@@ -156,7 +157,7 @@ class TransactionService:
                 )
 
         except IntegrityError:
-            raise IntegrityException('Could not complete transaction')
+            raise IntegrityException(_('Could not complete transaction'))
 
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
@@ -255,7 +256,7 @@ class TransactionService:
                                       status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
-            raise NotAcceptableException('No rights to sell in this organization')
+            raise NotAcceptableException(_('No rights to sell in this organization'))
 
         totals = current_transaction.cart.items.aggregate(
             original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
@@ -283,7 +284,7 @@ class TransactionService:
 
             OrganizationService.increment_running_purchase_id(organization=organization)
         except IntegrityError:
-            raise IntegrityException('Could not complete transaction')
+            raise IntegrityException(_('Could not complete transaction'))
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
             organization=current_transaction.organization
@@ -443,10 +444,10 @@ class TransactionService:
         user = User.objects.get(id=follower_id)
         if not MembershipService.has_seller_stats_rights_in_any_organization(user=requested_by,
                                                                              organization=organization):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         if not Subscription.objects.filter(user=user, organization=organization).exists():
-            raise ObjectNotFoundException('Follower not found')
+            raise ObjectNotFoundException(_('Follower not found'))
 
         transactions = Transaction.objects.filter(organization_id=organization_id, client_id=follower_id)
         return transactions
@@ -456,10 +457,10 @@ class TransactionService:
         organization = OrganizationService.get(id=organization_id)
         user = User.objects.get(id=user_id)
         if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
-            raise PermissionDeniedException('Permission denied')
+            raise PermissionDeniedException(_('Permission denied'))
 
         if not Subscription.objects.filter(user=user, organization=organization).exists():
-            raise ObjectNotFoundException('Follower not found')
+            raise ObjectNotFoundException(_('Follower not found'))
         return user
 
     @classmethod

@@ -3,6 +3,7 @@ from decimal import Decimal
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
 from ..exceptions import NotAcceptableException
@@ -14,7 +15,7 @@ class CurrencyConverterService:
         query = f'app_id={settings.OER_APP_ID}&symbols={from_currency},{to_currency}'
         response = requests.get(f'https://openexchangerates.org/api/latest.json?{query}')
         if response.status_code != status.HTTP_200_OK:
-            raise NotAcceptableException('Bad response from openexchangerates.org')
+            raise NotAcceptableException(_('Bad response from openexchangerates.org'))
 
         try:
             from_rate_to_base = response.json()['rates'][from_currency.upper()]

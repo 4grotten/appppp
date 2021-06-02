@@ -1,4 +1,5 @@
 from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
@@ -16,12 +17,12 @@ class ShopItemService:
         try:
             return ShopItem.objects.get(**filters)
         except ShopItem.DoesNotExist:
-            raise ObjectNotFoundException('ShopItem not found')
+            raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
     def update_published_status(cls, user: User, item: ShopItem, is_published: bool):
         if not OrganizationService.user_can_edit_organization(user=user, organization=item.organization):
-            raise NotAcceptableException('No rights to edit this item')
+            raise NotAcceptableException(_('No rights to edit this item'))
         if not is_published:
             CartItemService.delete_item_from_all_carts(item=item)
         item.is_published = is_published

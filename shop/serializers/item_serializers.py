@@ -1,5 +1,6 @@
 import datetime
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -73,10 +74,10 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         subcategory = attrs.get('subcategory', None)
         subcategory_organization = getattr(subcategory, 'organization', None)
         if subcategory_organization is not None and not subcategory_organization == organization:
-            raise NotAcceptableException('Organization does not have this subcategory')
+            raise NotAcceptableException(_('Organization does not have this subcategory'))
 
         if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
-            raise NotAcceptableException('No rights to edit organization')
+            raise NotAcceptableException(_('No rights to edit organization'))
 
         return attrs
 

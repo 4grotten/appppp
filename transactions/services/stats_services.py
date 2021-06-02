@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db.models import Sum, QuerySet, Q
 from django.db.models.functions import Coalesce
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
 from common.services.currency import CurrencyConverterService
@@ -37,7 +38,7 @@ class StatisticsService:
     def get_total_stats_of_partners(cls, organization: Organization, requesting_user: User, currency: str,
                                     start_date=None, end_date=None) -> dict:
         if not OrganizationService.user_can_see_stats(organization=organization, user=requesting_user):
-            raise NotAcceptableException('No rights to see stats of organization')
+            raise NotAcceptableException(_('No rights to see stats of organization'))
 
         partners = organization.requested_partnerships.filter(is_accepted=True).values('accepted_by')
         transactions = Transaction.objects.filter(is_processed=True).filter(organization__in=partners)

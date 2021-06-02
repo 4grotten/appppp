@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-20 01:50+0000\n"
+"POT-Creation-Date: 2021-06-02 11:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,22 +20,463 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: organizations/models.py:192 organizations/models.py:194
+#: common/services/currency.py:18
+msgid "Bad response from openexchangerates.org"
+msgstr ""
+
+#: instagram_parsers/services/proxy_services.py:34
+msgid "Need at least one LoginDevice"
+msgstr ""
+
+#: notifications/filters.py:19 transactions/services/filters.py:22
+msgid "Max number of ids should be less than equal 20"
+msgstr ""
+
+#: organizations/models.py:83
+msgid "For transaction purchase ids"
+msgstr ""
+
+#: organizations/models.py:85
+msgid "Does organization have courier delivery?"
+msgstr ""
+
+#: organizations/models.py:86
+msgid "Does organization have self pick up?"
+msgstr ""
+
+#: organizations/models.py:231 organizations/models.py:233
 msgid "This field is required"
 msgstr "Это поле обязательное"
 
-#: organizations/services/organization_services.py:59
+#: organizations/serializers/card_serializers.py:45
+#: organizations/services/card_services.py:60
+#: organizations/services/card_services.py:76
+#: organizations/services/hotlink_services.py:43
+#: organizations/services/membership_services.py:101
+#: organizations/services/organization_services.py:464
+#: organizations/services/organization_services.py:488
+#: organizations/services/partnership_services.py:42
+#: organizations/views/card_views.py:71
+#: organizations/views/membership_views.py:37
+#: organizations/views/membership_views.py:65
+#: organizations/views/membership_views.py:100
+#: organizations/views/membership_views.py:116
+#: organizations/views/organization_views.py:111
+#: organizations/views/organization_views.py:130
+#: organizations/views/organization_views.py:153
+#: organizations/views/organization_views.py:167
+#: organizations/views/organization_views.py:181
+#: organizations/views/organization_views.py:254
+#: shop/serializers/category_serializers.py:20
+#: shop/serializers/item_serializers.py:80
+msgid "No rights to edit organization"
+msgstr ""
+
+#: organizations/serializers/organization_serializers.py:276
+msgid "Should have at least one enabled delivery option"
+msgstr ""
+
+#: organizations/services/attendance_services.py:46
+msgid "Given user is not a member of this organization"
+msgstr ""
+
+#: organizations/services/banner_services.py:18
+msgid "Could not save banner"
+msgstr ""
+
+#: organizations/services/banner_services.py:27
+#: organizations/services/banner_services.py:36
+#: organizations/services/banner_services.py:50
+#: organizations/services/partnership_services.py:80
+#: organizations/services/partnership_services.py:93
+#: organizations/services/partnership_services.py:106
+#: organizations/services/partnership_services.py:152
+msgid "No access to partner settings"
+msgstr ""
+
+#: organizations/services/banner_services.py:29
+#: organizations/services/banner_services.py:38
+msgid "The organizations are not partners"
+msgstr ""
+
+#: organizations/services/banner_services.py:45
+#, python-brace-format
+msgid "Can not update banner: {e}"
+msgstr ""
+
+#: organizations/services/card_services.py:27
+msgid "Discount not found"
+msgstr ""
+
+#: organizations/services/card_services.py:34
+#: organizations/services/card_services.py:92
+#: organizations/services/card_services.py:109
+msgid "Duplicate cards are not allowed"
+msgstr ""
+
+#: organizations/services/card_services.py:63
+msgid "Discount card can not be deleted"
+msgstr ""
+
+#: organizations/services/card_services.py:79
+msgid "Discount card can not be updated"
+msgstr ""
+
+#: organizations/services/card_services.py:99
+msgid "Percent is required for fixed discount"
+msgstr ""
+
+#: organizations/services/card_services.py:204
+#: organizations/services/card_services.py:224
+msgid "Card does not belong to this organization"
+msgstr ""
+
+#: organizations/services/card_services.py:206
+#: organizations/services/card_services.py:226
+msgid "Card is not editable"
+msgstr ""
+
+#: organizations/services/hotlink_services.py:20
+#: organizations/services/hotlink_services.py:37
+msgid "Hotlink not found"
+msgstr ""
+
+#: organizations/services/hotlink_services.py:27
+msgid "Could not save hotlink"
+msgstr ""
+
+#: organizations/services/hotlink_services.py:55
+msgid "Can not update hotlink: {}"
+msgstr ""
+
+#: organizations/services/membership_services.py:24
+msgid "Membership not found"
+msgstr ""
+
+#: organizations/services/membership_services.py:58
+msgid "Could not add employee"
+msgstr ""
+
+#: organizations/services/membership_services.py:95
+msgid "Insufficient rights"
+msgstr ""
+
+#: organizations/services/membership_services.py:98
+#: organizations/services/membership_services.py:108
+msgid "No such role in organization"
+msgstr ""
+
+#: organizations/services/membership_services.py:144
+msgid "Could not update role"
+msgstr ""
+
+#: organizations/services/membership_services.py:172
+msgid "Role not found"
+msgstr ""
+
+#: organizations/services/organization_services.py:49
+msgid "Organization not found"
+msgstr ""
+
+#: organizations/services/organization_services.py:64
+#: organizations/services/organization_services.py:72
 msgid "Owner"
 msgstr "Собственник"
 
-#: project/settings/base.py:130
+#: organizations/services/organization_services.py:216
+msgid "Something went wrong"
+msgstr ""
+
+#: organizations/services/organization_services.py:276
+msgid "Can not update currency. It is different from partners"
+msgstr ""
+
+#: organizations/services/organization_services.py:292
+#, python-brace-format
+msgid "Could not update organization: {e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:301
+#, python-brace-format
+msgid "Could not deactivate organization: {e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:310
+#, python-brace-format
+msgid "Could not reactivate organization: {e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:319
+#, python-brace-format
+msgid "Could not reset running purchase ID organization: {e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:409
+msgid "No rights to change owner"
+msgstr ""
+
+#: organizations/services/organization_services.py:434
+msgid "Could not change owner"
+msgstr ""
+
+#: organizations/services/organization_services.py:441
+#: organizations/services/subscription_services.py:74
+#: transactions/services/transaction_services.py:72
+#: transactions/services/transaction_services.py:447
+#: transactions/services/transaction_services.py:460
+#: transactions/views/transaction_views.py:300
+msgid "Permission denied"
+msgstr ""
+
+#: organizations/services/organization_services.py:446
+msgid "Client not found"
+msgstr ""
+
+#: organizations/services/organization_services.py:507
+msgid "Instagram user not found"
+msgstr ""
+
+#: organizations/services/organization_services.py:528
+#, python-brace-format
+msgid "Instagram user not found : {e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:538
+#: organizations/services/organization_services.py:546
+#: organizations/views/organization_views.py:414
+msgid "Instagram Integration Link not found"
+msgstr ""
+
+#: organizations/services/partnership_services.py:30
+msgid "Partnership not found"
+msgstr ""
+
+#: organizations/services/partnership_services.py:37
+msgid "Could not create partnership request"
+msgstr ""
+
+#: organizations/services/partnership_services.py:161
+msgid "Should have same currency to have shared discounts and items"
+msgstr ""
+
+#: organizations/services/partnership_services.py:223
+msgid "Could not update partnership permissions"
+msgstr ""
+
+#: organizations/services/subscription_services.py:77
+#: transactions/services/transaction_services.py:450
+#: transactions/services/transaction_services.py:463
+msgid "Follower not found"
+msgstr ""
+
+#: organizations/views/attendance_views.py:33
+#: organizations/views/attendance_views.py:53
+#: organizations/views/attendance_views.py:81
+#: transactions/views/stat_views.py:74
+msgid "No rights to check attendance in this organization"
+msgstr ""
+
+#: organizations/views/hotlink_views.py:23
+msgid "Wrong organization parameter"
+msgstr ""
+
+#: organizations/views/hotlink_views.py:30
+#: organizations/views/hotlink_views.py:58
+msgid "Invalid input"
+msgstr ""
+
+#: organizations/views/membership_views.py:33
+#: organizations/views/membership_views.py:96 shop/views/category_views.py:26
+#: shop/views/feed_views.py:43
+msgid "Valid organization is required in query parameters"
+msgstr ""
+
+#: organizations/views/membership_views.py:123
+msgid "There are existing employees with this role"
+msgstr ""
+
+#: organizations/views/organization_views.py:280
+msgid "Valid partner id, country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/partnerships_views.py:110
+#: organizations/views/partnerships_views.py:125
+#: organizations/views/partnerships_views.py:139
+#: shop/views/category_views.py:51 shop/views/category_views.py:67
+msgid "Valid country and city are required in query parameters"
+msgstr ""
+
+#: project/settings/base.py:142
 msgid "Russian"
 msgstr "Русский"
 
-#: project/settings/base.py:131
+#: project/settings/base.py:143
 msgid "English"
 msgstr "Английский"
 
-#: project/settings/base.py:132
+#: project/settings/base.py:144
 msgid "Turkish"
 msgstr "Турецкий"
+
+#: shop/serializers/item_serializers.py:77
+msgid "Organization does not have this subcategory"
+msgstr ""
+
+#: shop/services/cart_services.py:29 shop/services/cart_services.py:38
+msgid "Cart not found"
+msgstr ""
+
+#: shop/services/cart_services.py:63
+#: transactions/services/transaction_services.py:49
+#: transactions/services/transaction_services.py:259
+msgid "No rights to sell in this organization"
+msgstr ""
+
+#: shop/services/cart_services.py:69
+msgid "Could not checkout the cart"
+msgstr ""
+
+#: shop/services/cart_services.py:81 shop/services/cart_services.py:153
+msgid "No rights to change this cart"
+msgstr ""
+
+#: shop/services/cart_services.py:83
+msgid "Cart is already closed"
+msgstr ""
+
+#: shop/services/cart_services.py:86
+msgid "Organization does not have courier delivery"
+msgstr ""
+
+#: shop/services/cart_services.py:89
+msgid "Organization does not have self pick up option"
+msgstr ""
+
+#: shop/services/cart_services.py:97
+msgid "Could not add transaction"
+msgstr ""
+
+#: shop/services/cart_services.py:193
+#: transactions/services/transaction_services.py:160
+#: transactions/services/transaction_services.py:287
+msgid "Could not complete transaction"
+msgstr ""
+
+#: shop/services/cart_services.py:207
+msgid "The item is not related to this organization"
+msgstr ""
+
+#: shop/services/item_services.py:20
+msgid "ShopItem not found"
+msgstr ""
+
+#: shop/services/item_services.py:25
+msgid "No rights to edit this item"
+msgstr ""
+
+#: shop/views/feed_views.py:65
+msgid "Validation Error"
+msgstr ""
+
+#: shop/views/item_views.py:124
+msgid "You have already complained about this item"
+msgstr ""
+
+#: sms_sender/services.py:49
+msgid "Error while sending SMS"
+msgstr ""
+
+#: transactions/serializers/transaction_serializers.py:55
+#: transactions/services/transaction_services.py:117
+msgid "Cashback amount is greater than original amount"
+msgstr ""
+
+#: transactions/serializers/transaction_serializers.py:61
+msgid "Discount percent does not match with cards percent"
+msgstr ""
+
+#: transactions/services/stats_services.py:41
+#: transactions/views/stat_views.py:50
+#: transactions/views/transaction_views.py:270
+msgid "No rights to see stats of organization"
+msgstr ""
+
+#: transactions/services/transaction_services.py:42
+msgid "Transaction not found"
+msgstr ""
+
+#: transactions/services/transaction_services.py:52
+msgid "No rights to use this cart"
+msgstr ""
+
+#: transactions/services/transaction_services.py:89
+msgid "Client cannot use this card"
+msgstr ""
+
+#: transactions/services/transaction_services.py:98
+msgid "Not enough accrued cashback amount"
+msgstr ""
+
+#: transactions/services/transaction_services.py:102
+msgid "Transaction and cart do not match"
+msgstr ""
+
+#: transactions/services/transaction_services.py:109
+msgid "Original amount do not match with cart amounts"
+msgstr ""
+
+#: users/models.py:47
+msgid "Only one common client can exist"
+msgstr ""
+
+#: users/services.py:26
+msgid "User not found"
+msgstr ""
+
+#: users/services.py:37
+msgid "Error while creating user"
+msgstr ""
+
+#: users/services.py:61
+msgid "Error while initializing profile"
+msgstr ""
+
+#: users/services.py:72
+msgid "Incorrect old password"
+msgstr ""
+
+#: users/services.py:83
+msgid "Error while changing number"
+msgstr ""
+
+#: users/services.py:98 users/services.py:136 users/services.py:216
+msgid "Code not found"
+msgstr ""
+
+#: users/services.py:112 users/services.py:194
+msgid "Limit exceeded"
+msgstr ""
+
+#: users/services.py:116
+msgid "Error while creating temporary code"
+msgstr ""
+
+#: users/services.py:131 users/services.py:211
+msgid "Code expired"
+msgstr ""
+
+#: users/services.py:179
+msgid "Temporary phone number not found"
+msgstr ""
+
+#: users/services.py:203
+msgid "Error while creating temporary code for new phone_number"
+msgstr ""
+
+#: users/views.py:115
+msgid "You can not resend"
+msgstr ""
+
+#: users/views.py:367
+msgid "You have not permission to do this operation"
+msgstr ""

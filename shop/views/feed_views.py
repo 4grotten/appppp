@@ -9,7 +9,7 @@ from organizations.serializers.query_param_serializers import OrganizationQueryP
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
 from shop.serializers.item_serializers import (
-    ItemFeedSerializer, ItemListSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
+    ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
 )
 from shop.services.item_services import ShopItemService
 
@@ -35,7 +35,7 @@ class FeedView(ListAPIView):
 
 
 class OrganizationItemListView(FeedView):
-    serializer_class = ItemListSerializer
+    serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
 
     def get_queryset(self):

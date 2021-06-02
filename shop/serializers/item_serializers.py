@@ -81,6 +81,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        validated_data.pop('organization', None)
         if 'price' in validated_data and validated_data.get('price') is None:
             CartItemService.delete_item_from_all_carts(self.instance)
 

@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -5,7 +7,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, Currency, Country, City
-from organizations.constants import HOTLINK_TYPES, HOTLINK_EXTERNAL
+from organizations.constants import (
+    HOTLINK_TYPES, HOTLINK_EXTERNAL, HOTLINK_ITEM, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_ORGANIZATION
+)
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
@@ -335,6 +339,27 @@ class Hotlink(TimestampModel):
     link = models.URLField(max_length=500)
     link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES, default=HOTLINK_EXTERNAL)
     image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='hotlinks')
+    linked_item_id = models.SlugField(max_length=225, null=True, blank=True)
 
     def __str__(self):
         return f'Hotlink of {self.organization}'
+
+    def save(self, *args, **kwargs):
+        parsed_link = urlparse(self.link)
+        is_internal = False
+
+        if parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
+            if parsed_link.path.startswith('/p/'):
+                self.link_type = HOTLINK_ITEM
+                self.linked_item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+                is_internal = True
+            elif parsed_link.path.startswith('/organizations/'):
+                self.link_type = HOTLINK_ORGANIZATION
+                self.linked_item_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
+                is_internal = True
+
+        if not is_internal:
+            self.link_type = HOTLINK_EXTERNAL
+            self.linked_item_id = None
+
+        super().save(*args, **kwargs)

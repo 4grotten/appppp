@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.models import Hotlink
+from organizations.services.hotlink_services import HotlinkService
 
 
 class HotlinkSerializer(serializers.ModelSerializer):
@@ -9,8 +10,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
 
     def get_title(self, hotlink: Hotlink) -> str:
-        # ToDo: return item title or organization title according to link_type
-        return hotlink.link
+        return HotlinkService.get_hotlink_title(hotlink=hotlink)
 
     class Meta:
         model = Hotlink

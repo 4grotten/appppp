@@ -1,10 +1,14 @@
+from urllib.parse import urlparse
+
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import File
+from organizations.constants import HOTLINK_ITEM, HOTLINK_ORGANIZATION
 from organizations.models import Hotlink, Organization
 from organizations.services.organization_services import OrganizationService
+from shop.services.item_services import ShopItemService
 from users.models import User
 
 
@@ -42,9 +46,7 @@ class HotlinkService:
         cls.create(organization=organization, link=link, image=image)
 
     @classmethod
-    def update_hotlink(cls, hotlink: Hotlink, user: User, image: File, link: str):
-        if not OrganizationService.user_can_edit_organization(user=user, organization=hotlink.organization):
-            raise NotAcceptableException(_('No rights to edit organization'))
+    def update_hotlink(cls, hotlink: Hotlink, image: File, link: str):
         try:
             hotlink.image = image
             hotlink.link = link
@@ -52,3 +54,17 @@ class HotlinkService:
             return hotlink
         except Exception as e:
             raise IntegrityException(_('Can not update hotlink: {}').format(str(e)))
+
+    @classmethod
+    def get_hotlink_title(cls, hotlink: Hotlink) -> str:
+        try:
+            if hotlink.link_type == HOTLINK_ITEM:
+                item = ShopItemService.get(id=int(hotlink.linked_item_id))
+                return item.name
+            if hotlink.link_type == HOTLINK_ORGANIZATION:
+                organization = OrganizationService.get(id=hotlink.linked_item_id)
+                return organization.title
+        except ObjectNotFoundException:
+            return urlparse(hotlink.link).netloc
+
+        return urlparse(hotlink.link).netloc

@@ -61,7 +61,6 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
         hotlink = HotlinkService.update_hotlink(
             hotlink=instance,
-            user=request.user,
             link=serializer.validated_data['link'],
             image=serializer.validated_data['image']
         )

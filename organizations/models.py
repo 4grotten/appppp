@@ -339,7 +339,10 @@ class Hotlink(TimestampModel):
     link = models.URLField(max_length=500)
     link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES, default=HOTLINK_EXTERNAL)
     image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='hotlinks')
-    linked_item_id = models.SlugField(max_length=225, null=True, blank=True)
+    linked_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='hotlinks_to_organization')
+    linked_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
+                                            related_name='hotlinks_to_organization')
 
     def __str__(self):
         return f'Hotlink of {self.organization}'
@@ -350,16 +353,31 @@ class Hotlink(TimestampModel):
 
         if parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
             if parsed_link.path.startswith('/p/'):
-                self.link_type = HOTLINK_ITEM
-                self.linked_item_id = parsed_link.path.replace('/p/', '').replace('/', '')
-                is_internal = True
+                item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+                try:
+                    from shop.models import ShopItem
+                    linked_item = ShopItem.objects.get(id=item_id)
+                    self.link_type = HOTLINK_ITEM
+                    self.linked_item = linked_item
+                    self.linked_organization = None
+                    is_internal = True
+                except Organization.DoesNotExist:
+                    pass
             elif parsed_link.path.startswith('/organizations/'):
-                self.link_type = HOTLINK_ORGANIZATION
-                self.linked_item_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
-                is_internal = True
+                organization_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
+                try:
+                    linked_organization = Organization.objects.get(id=organization_id)
+                    self.link_type = HOTLINK_ORGANIZATION
+                    self.linked_organization = linked_organization
+                    self.linked_item = None
+                    is_internal = True
+                except Organization.DoesNotExist:
+                    pass
 
         if not is_internal:
             self.link_type = HOTLINK_EXTERNAL
             self.linked_item_id = None
+            self.linked_organization = None
+            self.linked_item = None
 
         super().save(*args, **kwargs)

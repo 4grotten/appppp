@@ -8,7 +8,6 @@ from common.models import File
 from organizations.constants import HOTLINK_ITEM, HOTLINK_ORGANIZATION
 from organizations.models import Hotlink, Organization
 from organizations.services.organization_services import OrganizationService
-from shop.services.item_services import ShopItemService
 from users.models import User
 
 
@@ -59,11 +58,9 @@ class HotlinkService:
     def get_hotlink_title(cls, hotlink: Hotlink) -> str:
         try:
             if hotlink.link_type == HOTLINK_ITEM:
-                item = ShopItemService.get(id=int(hotlink.linked_item_id))
-                return item.name
+                return hotlink.linked_item.name
             if hotlink.link_type == HOTLINK_ORGANIZATION:
-                organization = OrganizationService.get(id=hotlink.linked_item_id)
-                return organization.title
+                return hotlink.linked_organization.title
         except ObjectNotFoundException:
             return urlparse(hotlink.link).netloc
 

@@ -232,3 +232,11 @@ class ItemInCartSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'price', 'discounted_price', 'image'
         )
+
+
+class ItemInHotlinkSerializer(ItemInCartSerializer):
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'image'
+        )

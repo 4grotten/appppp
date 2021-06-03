@@ -18,4 +18,4 @@ HOTLINK_TYPES = (
     (HOTLINK_EXTERNAL, HOTLINK_EXTERNAL),
 )
 
-HOTLINK_INTERNAL_LINK_DOMAINS = ('apofiz.com', 'www.apofiz.com')
+HOTLINK_INTERNAL_LINK_DOMAINS = ('apofiz.com', 'www.apofiz.com', 'test.apofiz.com', 'www.test.apofiz.com')

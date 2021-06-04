@@ -3,6 +3,8 @@ from typing import Union
 from django.db.models import QuerySet, Count, Q
 
 from common.models import City, Country
+from organizations.services.common_shop_item_services import CommonItemsGroupService
+from organizations.services.organization_services import OrganizationService
 from shop.models import ItemSubcategory, ItemCategory
 
 
@@ -29,10 +31,16 @@ class ItemCategoryService:
 class ItemSubcategoryService:
     @classmethod
     def get_orgs_nonempty_subcategories(cls, organization_id: int) -> QuerySet:
-        subcategories = ItemSubcategory.objects.filter(
-            Q(organization__isnull=True) | Q(organization_id=organization_id))
+        organization = OrganizationService.get(id=organization_id)
+        common_item_partner_ids = CommonItemsGroupService.get_partners_with_common_items(organization=organization)
+        common_item_partner_ids.append(organization_id)
 
-        item_filters = Q(items_in_category__is_published=True) & Q(items_in_category__organization_id=organization_id)
+        subcategories = ItemSubcategory.objects.filter(
+            Q(organization__isnull=True) | Q(organization_id__in=common_item_partner_ids)
+        )
+        item_filters = Q(items_in_category__is_published=True) & Q(
+            items_in_category__organization_id__in=common_item_partner_ids
+        )
 
         return subcategories.annotate(items_count=Count('items_in_category', item_filters)).filter(items_count__gt=0)
 

@@ -381,3 +381,29 @@ class Hotlink(TimestampModel):
             self.linked_item = None
 
         super().save(*args, **kwargs)
+
+
+class OrganizationPromo(TimestampModel):
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='promo')
+    total_cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='org_promos')
+
+    def __str__(self):
+        return f'{self.organization} cashback promo'
+
+
+class PromoEditLog(models.Model):
+    promo = models.ForeignKey(OrganizationPromo, on_delete=models.CASCADE, related_name='edit_logs')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    changed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='promo_edit_logs')
+    employee_name = models.CharField(max_length=255, null=True, blank=True)
+    employee_role = models.CharField(max_length=255, null=True)
+    employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.changed_by} edited {self.promo}'

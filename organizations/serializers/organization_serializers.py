@@ -361,12 +361,6 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
         fields = ('id', 'title', 'max_discount', 'types', 'image',)
 
 
-class OrganizationTitleCurrencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization
-        fields = ('id', 'title', 'currency')
-
-
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     image = ImageSerializer()

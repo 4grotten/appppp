@@ -25,8 +25,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer, InstagramIntegrationCreateUpdateSerializer,
-    InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer
+    InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
+    OrganizationTitleSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
@@ -379,7 +379,7 @@ class OrgMessageAPIView(ListAPIView):
 
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
-    serializer_class = OrganizationUserTransactionSerializer
+    serializer_class = OrganizationTitleSerializer
     queryset = OrganizationService.filter()
 
     def get_serializer_context(self):

@@ -6,14 +6,21 @@ from organizations.serializers.organization_serializers import OrganizationWithI
 from organizations.serializers.promo_log_serializers import PromoEditLogSerializer
 
 
-class OrganizationPromoSerializer(serializers.ModelSerializer):
+class OrganizationPromoListSerializer(serializers.ModelSerializer):
     organization = OrganizationWithImageSerializer()
     image = ImageSerializer()
+
+    class Meta:
+        model = OrganizationPromo
+        fields = ('id', 'total_cashback', 'cashback', 'image', 'organization',)
+
+
+class OrganizationPromoDetailedSerializer(OrganizationPromoListSerializer):
     edit_logs = PromoEditLogSerializer(many=True)
 
     class Meta:
         model = OrganizationPromo
-        fields = ('id', 'total_cashback', 'cashback', 'organization', 'image', 'edit_logs',)
+        fields = ('id', 'total_cashback', 'cashback', 'image', 'organization', 'edit_logs',)
 
 
 class OrganizationPromoCreateSerializer(serializers.ModelSerializer):

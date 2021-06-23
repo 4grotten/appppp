@@ -22,6 +22,10 @@ class OrganizationPromoService:
             raise ObjectNotFoundException(_('Organization promo not found'))
 
     @classmethod
+    def filter(cls, *args, **kwargs):
+        return OrganizationPromo.objects.filter(*args, **kwargs)
+
+    @classmethod
     def create(cls, *args, **kwargs):
         try:
             return OrganizationPromo.objects.create(*args, **kwargs)

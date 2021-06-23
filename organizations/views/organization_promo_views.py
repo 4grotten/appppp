@@ -1,18 +1,23 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organizations.serializers.organization_promo_serializers import (
-    OrganizationPromoSerializer, OrganizationPromoCreateSerializer, OrganizationPromoUpdateSerializer
+    OrganizationPromoDetailedSerializer, OrganizationPromoCreateSerializer, OrganizationPromoUpdateSerializer,
+    OrganizationPromoListSerializer
 )
 from organizations.services.organization_promo_services import OrganizationPromoService
 
 
-class OrganizationPromoCreateView(CreateAPIView):
+class OrganizationPromoListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OrganizationPromoCreateSerializer
+    serializer_class = OrganizationPromoListSerializer
+
+    def get_queryset(self):
+        # ToDo: get only promos with available cashback
+        return OrganizationPromoService.filter().order_by('-updated_at')
 
     def post(self, request, *args, **kwargs):
         serializer = OrganizationPromoCreateSerializer(data=request.data)
@@ -29,13 +34,13 @@ class OrganizationPromoCreateView(CreateAPIView):
             cashback=serializer.validated_data['cashback'],
             image=serializer.validated_data['image']
         )
-        data = OrganizationPromoSerializer(promo, context={'request': request}).data
+        data = OrganizationPromoDetailedSerializer(promo, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
 
 class OrganizationPromoRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OrganizationPromoSerializer
+    serializer_class = OrganizationPromoDetailedSerializer
 
     def get_object(self):
         return OrganizationPromoService.get_promo_for_user(
@@ -58,5 +63,5 @@ class OrganizationPromoRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             image=serializer.validated_data['image'],
             changed_by=request.user
         )
-        promo_data = OrganizationPromoSerializer(promo, context={'request': request}).data
+        promo_data = OrganizationPromoDetailedSerializer(promo, context={'request': request}).data
         return Response(promo_data)

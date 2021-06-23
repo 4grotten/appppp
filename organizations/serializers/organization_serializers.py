@@ -163,6 +163,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    promo_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, source='promo.cashback')
     client_status = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
@@ -212,7 +213,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery', 'has_self_pick_up',
-            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
+            'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
         )
 
 

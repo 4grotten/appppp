@@ -70,6 +70,7 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
+    promo_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, source='promo.cashback')
     permissions = serializers.SerializerMethodField()
     phone_numbers = OrgPhoneNumberSerializer(many=True)
 
@@ -82,7 +83,7 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'currency', 'types', 'phone_numbers', 'permissions',
+            'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
         )
 
 

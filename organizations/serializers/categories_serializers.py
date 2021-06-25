@@ -53,10 +53,11 @@ class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
     discounts = serializers.SerializerMethodField()
+    promo_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, source='promo.cashback')
 
     def get_discounts(self, organization: Organization) -> list:
         return DiscountCardService.get_unique_discount_percents_to_display(organization=organization)
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'types', 'image', 'discounts')
+        fields = ('id', 'title', 'promo_cashback', 'discounts', 'types', 'image',)

@@ -202,6 +202,18 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name', 'avatar', 'username')
 
 
+class FollowerListSerializer(UserShortInfoSerializer):
+    has_promo_cashback = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar')
+
+    def get_has_promo_cashback(self, user: User) -> bool:
+        # ToDo: unmock (return True if only request user can see this status)
+        return False
+
+
 class FollowerOrClientSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
     role = serializers.SerializerMethodField()

@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
 from organizations.services.subscription_services import SubscriptionService
-from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
 
 User = get_user_model()
 
@@ -45,7 +45,7 @@ class SubscriptionsView(ListAPIView):
 
 class OrgFollowersListAPIView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = UserShortInfoSerializer
+    serializer_class = FollowerListSerializer
 
     def get_queryset(self):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])

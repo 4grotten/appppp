@@ -214,13 +214,12 @@ class FollowerListSerializer(UserShortInfoSerializer):
         return False
 
 
-class FollowerOrClientSerializer(serializers.ModelSerializer):
-    avatar = ImageSerializer()
+class FollowerOrClientSerializer(FollowerListSerializer):
     role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number', 'role')
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role',)
 
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(

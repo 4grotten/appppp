@@ -500,5 +500,8 @@ class OrganizationClientDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = OrganizationService.get_online_client(organization_id=kwargs['organization_id'],
                                                      requested_by=self.request.user, user_id=kwargs['user_id'])
-        data = FollowerOrClientSerializer(user, context={'organization_id': kwargs['organization_id']}).data
+        data = FollowerOrClientSerializer(
+            user,
+            context={'request': request, 'organization_id': kwargs['organization_id']}
+        ).data
         return Response(data, status=status.HTTP_200_OK)

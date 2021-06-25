@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -65,3 +65,11 @@ class OrganizationPromoRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         )
         promo_data = OrganizationPromoDetailedSerializer(promo, context={'request': request}).data
         return Response(promo_data)
+
+
+class OrganizationPromoStatsView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, org_id: int):
+        data = OrganizationPromoService.get_promo_stats_for_user(organization_id=org_id, user=request.user)
+        return Response(data)

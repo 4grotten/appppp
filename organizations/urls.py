@@ -11,7 +11,9 @@ from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
     MembershipRetrieveUpdateDestroyView, TransferOwnershipView, BriefUserInfoView
 )
-from .views.organization_promo_views import OrganizationPromoRetrieveUpdateDestroyView, OrganizationPromoListCreateView
+from .views.organization_promo_views import (
+    OrganizationPromoRetrieveUpdateDestroyView, OrganizationPromoListCreateView, OrganizationPromoStatsView
+)
 from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
@@ -124,6 +126,7 @@ hotlink_urls = [
 organization_promo_urls = [
     path('promos/', OrganizationPromoListCreateView.as_view(), name='org_promo_list_create'),
     path('organizations/<int:org_id>/promo/', OrganizationPromoRetrieveUpdateDestroyView.as_view(), name='org_promo'),
+    path('organizations/<int:org_id>/promo_stats/', OrganizationPromoStatsView.as_view(), name='promo_stats'),
 ]
 
 urlpatterns = [

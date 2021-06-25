@@ -44,6 +44,15 @@ class OrganizationPromoService:
         return promo
 
     @classmethod
+    def get_promo_stats_for_user(cls, organization_id: int, user: User) -> dict:
+        organization = OrganizationService.get(id=organization_id)
+        if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
+            raise PermissionDeniedException(_('No rights to get promo details'))
+        return {
+            'subscribers_count': organization.promo_subscribers.count()
+        }
+
+    @classmethod
     @transaction.atomic
     def create_organization_promo(cls, user: User, organization: Organization, total_cashback: Decimal,
                                   cashback: Decimal, image: File) -> OrganizationPromo:

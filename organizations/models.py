@@ -407,3 +407,15 @@ class PromoEditLog(models.Model):
 
     def __str__(self):
         return f'{self.changed_by} edited {self.promo}'
+
+
+class PromoSubscriber(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='promo_subscribers')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='promo_subscriptions')
+    cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = (
+            models.constraints.UniqueConstraint(fields=('organization', 'subscriber'), name='unique_promo_subscriber'),
+        )

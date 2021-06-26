@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
+from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
 
@@ -49,6 +50,18 @@ class OrgFollowersListAPIView(ListAPIView):
 
     def get_queryset(self):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            context['can_edit'] = False
+        else:
+            context['can_edit'] = True
+            context['organization'] = organization
+
+        return context
 
 
 class OrgFollowersDetailsAPIView(APIView):

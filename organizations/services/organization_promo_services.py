@@ -2,13 +2,15 @@ from decimal import Decimal
 from typing import Optional
 
 from django.db import IntegrityError, transaction
+from django.db.models import F, QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     NotAcceptableException, IntegrityException, ObjectNotFoundException, PermissionDeniedException
 )
 from common.models import File
-from organizations.models import Organization, OrganizationPromo, PromoEditLog
+from organizations.models import Organization, OrganizationPromo, PromoEditLog, PromoSubscriber
+from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -78,6 +80,26 @@ class OrganizationPromoService:
         except Exception as e:
             raise IntegrityException(_('Can not update organization_promo: {}').format(str(e)))
 
+    @classmethod
+    def get_usable_promo(cls, organization: Organization) -> Optional[OrganizationPromo]:
+        promo = getattr(organization, 'promo', None)
+        if promo is None:
+            return None
+        if promo.granted_amount <= promo.total_cashback - promo.cashback:
+            return promo
+        return None
+
+    @classmethod
+    def get_available_promo_cashback_amount(cls, organization: Organization) -> Optional[Decimal]:
+        promo = cls.get_usable_promo(organization=organization)
+        if promo is None:
+            return None
+        return promo.cashback
+
+    @classmethod
+    def get_active_promos(cls) -> QuerySet:
+        return OrganizationPromo.objects.filter(cashback__lte=F('total_cashback') - F('granted_amount'))
+
 
 class PromoEditLogService:
     @classmethod
@@ -92,3 +114,25 @@ class PromoEditLogService:
         role = OrganizationService.get_user_role_in_organization(organization=promo.organization, user=changed_by)
         cls.create(promo=promo, changed_by=changed_by, employee_name=changed_by.full_name,
                    employee_role=role, employee_avatar=changed_by.avatar)
+
+
+class PromoSubscriberService:
+    @classmethod
+    @transaction.atomic
+    def use_promo_for_new_subscriber(cls, organization: Organization, follower: User):
+        promo = OrganizationPromoService.get_usable_promo(organization=organization)
+        if promo is None:
+            return
+        try:
+            PromoSubscriber.objects.create(organization=organization, subscriber=follower, cashback=promo.cashback)
+            promo.granted_amount = F('granted_amount') + promo.cashback
+            promo.save()
+            promo.refresh_from_db()
+            OrganizationClientFinancialStatusService.change_accrued_cashback(user=follower, organization=organization,
+                                                                             change_amount=promo.cashback)
+        except IntegrityError:
+            return
+
+    @classmethod
+    def user_has_promo_cashback(cls, organization: Organization, user: User):
+        return PromoSubscriber.objects.filter(organization=organization, subscriber=user).exists()

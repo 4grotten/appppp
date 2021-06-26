@@ -387,6 +387,7 @@ class OrganizationPromo(TimestampModel):
     organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='promo')
     total_cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
     cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    granted_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='org_promos')
 
     def __str__(self):

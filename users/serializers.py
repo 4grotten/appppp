@@ -5,6 +5,7 @@ from rest_framework import serializers
 from common.serializers import ImageSerializer
 from organizations.models import Organization
 from organizations.services.attendance_services import AttendanceService
+from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
@@ -210,8 +211,9 @@ class FollowerListSerializer(UserShortInfoSerializer):
         fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar')
 
     def get_has_promo_cashback(self, user: User) -> bool:
-        # ToDo: unmock (return True if only request user can see this status)
-        return False
+        if not self.context['can_edit']:
+            return False
+        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
 
 
 class FollowerOrClientSerializer(FollowerListSerializer):

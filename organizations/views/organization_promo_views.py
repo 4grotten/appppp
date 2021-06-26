@@ -16,8 +16,7 @@ class OrganizationPromoListCreateView(ListCreateAPIView):
     serializer_class = OrganizationPromoListSerializer
 
     def get_queryset(self):
-        # ToDo: get only promos with available cashback
-        return OrganizationPromoService.filter().order_by('-updated_at')
+        return OrganizationPromoService.get_active_promos().order_by('-updated_at')
 
     def post(self, request, *args, **kwargs):
         serializer = OrganizationPromoCreateSerializer(data=request.data)

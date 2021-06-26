@@ -1,9 +1,13 @@
+from decimal import Decimal
+from typing import Optional
+
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.constants import HOMEPAGE_ORGS_IN_CATEGORIES_COUNT
 from organizations.models import OrganizationType, OrganizationCategory, Organization
 from organizations.services.card_services import DiscountCardService
+from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 
 
@@ -53,7 +57,10 @@ class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
     discounts = serializers.SerializerMethodField()
-    promo_cashback = serializers.DecimalField(max_digits=16, decimal_places=2, source='promo.cashback')
+    promo_cashback = serializers.SerializerMethodField()
+
+    def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
+        return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
 
     def get_discounts(self, organization: Organization) -> list:
         return DiscountCardService.get_unique_discount_percents_to_display(organization=organization)

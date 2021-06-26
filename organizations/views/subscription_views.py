@@ -8,8 +8,9 @@ from rest_framework.views import APIView
 
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
+from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
-from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
 
 User = get_user_model()
 
@@ -45,10 +46,22 @@ class SubscriptionsView(ListAPIView):
 
 class OrgFollowersListAPIView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = UserShortInfoSerializer
+    serializer_class = FollowerListSerializer
 
     def get_queryset(self):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            context['can_edit'] = False
+        else:
+            context['can_edit'] = True
+            context['organization'] = organization
+
+        return context
 
 
 class OrgFollowersDetailsAPIView(APIView):
@@ -57,5 +70,8 @@ class OrgFollowersDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = SubscriptionService.get_follower(organization_id=kwargs['organization_id'],
                                                 requested_by=self.request.user, user_id=kwargs['user_id'])
-        data = FollowerOrClientSerializer(user, context={'organization_id': kwargs['organization_id']}).data
+        data = FollowerOrClientSerializer(
+            user,
+            context={'request': request, 'organization_id': kwargs['organization_id']}
+        ).data
         return Response(data, status=status.HTTP_200_OK)

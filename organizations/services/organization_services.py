@@ -74,7 +74,7 @@ class OrganizationService:
             membership = MembershipService.get(organization=organization, user=user)
             return membership.role.title
         except:
-            return "Client"
+            return _('Client')
 
     @classmethod
     def user_can_edit_organization(cls, organization: Organization, user: User) -> bool:

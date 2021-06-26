@@ -25,8 +25,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
-    OrganizationUserTransactionSerializer, InstagramIntegrationCreateUpdateSerializer,
-    InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer
+    InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
+    OrganizationTitleSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
@@ -379,7 +379,7 @@ class OrgMessageAPIView(ListAPIView):
 
 
 class OrganizationTitleRetrieveAPIView(RetrieveAPIView):
-    serializer_class = OrganizationUserTransactionSerializer
+    serializer_class = OrganizationTitleSerializer
     queryset = OrganizationService.filter()
 
     def get_serializer_context(self):
@@ -500,5 +500,8 @@ class OrganizationClientDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = OrganizationService.get_online_client(organization_id=kwargs['organization_id'],
                                                      requested_by=self.request.user, user_id=kwargs['user_id'])
-        data = FollowerOrClientSerializer(user, context={'organization_id': kwargs['organization_id']}).data
+        data = FollowerOrClientSerializer(
+            user,
+            context={'request': request, 'organization_id': kwargs['organization_id']}
+        ).data
         return Response(data, status=status.HTTP_200_OK)

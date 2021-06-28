@@ -223,6 +223,10 @@ class FollowerOrClientSerializer(FollowerListSerializer):
         model = User
         fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role',)
 
+    def get_has_promo_cashback(self, user: User) -> bool:
+        organization = OrganizationService.get(id=self.context['organization_id'])
+        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=organization)
+
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(
             organization_id=self.context['organization_id'], user=user)

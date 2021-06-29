@@ -127,10 +127,9 @@ class ComplaintCreateView(CreateAPIView):
 
 class TranslateItemTextView(GenericAPIView):
 
-    def get(self, request):
+    def post(self, request):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
-        print(lang)
         try:
             translator = google_translator()
             translate_name = translator.translate(data['title'], lang_tgt=lang)

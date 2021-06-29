@@ -1,3 +1,4 @@
+from google_trans_new import google_translator
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions
@@ -122,3 +123,25 @@ class ComplaintCreateView(CreateAPIView):
             super().perform_create(serializer)
         except IntegrityError:
             raise IntegrityException(_('You have already complained about this item'))
+
+
+class TranslateItemTextView(GenericAPIView):
+
+    def get(self, request):
+        data = request.data
+        lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
+        print(lang)
+        try:
+            translator = google_translator()
+            translate_name = translator.translate(data['title'], lang_tgt=lang)
+            translate_description = translator.translate(data['description'], lang_tgt=lang)
+            return Response(data={
+                'name': translate_name,
+                'description': translate_description,
+            }, status=status.HTTP_200_OK)
+        except KeyError as e:
+            error = str(e)
+            return Response(data={
+                "message": "Invalid input",
+                'This field is required': error
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)

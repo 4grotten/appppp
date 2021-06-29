@@ -12,7 +12,7 @@ from shop.views.category_views import (
 from shop.views.feed_views import FeedView, OrganizationItemListView, SubscriptionItemListView
 from shop.views.item_views import (
     ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView, ComplaintCreateView,
+    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView
 )
 
 urlpatterns = [
@@ -29,6 +29,7 @@ urlpatterns = [
     path('shop/items/', ItemCreateView.as_view(), name='item_create'),
     path('shop/items/<str:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),
     path('shop/doChangeItemPublishedStatus/', ItemChangePublishedStatusView.as_view(), name='item_published_status'),
+    path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),

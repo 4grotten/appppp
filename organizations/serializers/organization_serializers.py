@@ -1,3 +1,6 @@
+from decimal import Decimal
+from typing import Optional
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -11,6 +14,7 @@ from organizations.serializers.card_serializers import DiscountGroupSerializer, 
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from transactions.models import Transaction
@@ -70,8 +74,12 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
+    promo_cashback = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     phone_numbers = OrgPhoneNumberSerializer(many=True)
+
+    def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
+        return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -82,7 +90,7 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'currency', 'types', 'phone_numbers', 'permissions',
+            'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
         )
 
 
@@ -163,6 +171,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     subscribers = serializers.SerializerMethodField()
     discounts = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    promo_cashback = serializers.SerializerMethodField()
     client_status = serializers.SerializerMethodField()
     partners = serializers.SerializerMethodField()
     country = CountrySerializer()
@@ -191,6 +200,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             return
         return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
+    def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
+        return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
+
     def get_client_status(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
             return
@@ -212,7 +224,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
             'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery', 'has_self_pick_up',
-            'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
+            'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted',
         )
 
 
@@ -361,12 +373,6 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
         fields = ('id', 'title', 'max_discount', 'types', 'image',)
 
 
-class OrganizationTitleCurrencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization
-        fields = ('id', 'title', 'currency')
-
-
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     image = ImageSerializer()
@@ -418,6 +424,12 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
             'count': count,
             'list': OrganizationWithImageSerializer(partners, many=True).data
         }
+
+
+class OrganizationTitleSerializer(OrganizationUserTransactionSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'currency', 'address', 'image', 'types', 'partners')
 
 
 class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):

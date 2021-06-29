@@ -160,3 +160,10 @@ class OrganizationClientFinancialStatusService:
         client_status.accrued_cashback = F('accrued_cashback') + cashback_change
         client_status.save(update_fields=('accrued_cashback',))
         client_status.refresh_from_db()
+
+    @classmethod
+    def change_accrued_cashback(cls, user: User, organization: Organization, change_amount: Decimal):
+        client_status = OrganizationClientFinancialStatusService.get_or_create(user=user, organization=organization)
+        client_status.accrued_cashback = F('accrued_cashback') + change_amount
+        client_status.save(update_fields=('accrued_cashback',))
+        client_status.refresh_from_db()

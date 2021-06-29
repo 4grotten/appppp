@@ -41,7 +41,6 @@ class HotlinkService:
     def create_hotlink(cls, user: User, organization: Organization, link: str, image: File):
         if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-        # ToDo: parse link and set link_type accordingly
         cls.create(organization=organization, link=link, image=image)
 
     @classmethod

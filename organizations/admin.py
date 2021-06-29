@@ -6,7 +6,7 @@ from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
-    CommonItemsGroup, Hotlink
+    CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog
 )
 
 
@@ -177,3 +177,19 @@ class HotlinkAdmin(admin.ModelAdmin):
 @admin.register(InstagramIntegration)
 class InstagramIntegrationLinkAdmin(admin.ModelAdmin):
     list_display = ('id', 'organization', 'url')
+
+
+@admin.register(OrganizationPromo)
+class OrganizationPromoAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'total_cashback', 'cashback', 'granted_amount')
+
+
+@admin.register(PromoEditLog)
+class PromoEditLogAdmin(admin.ModelAdmin):
+    list_display = ('promo', 'changed_by', 'created_at')
+
+
+@admin.register(PromoSubscriber)
+class PromoSubscriberAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'subscriber', 'cashback', 'created_at')
+    raw_id_fields = ('organization', 'subscriber')

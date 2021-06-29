@@ -11,6 +11,7 @@ from notifications.constants import (
 from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
 from organizations.services.membership_services import MembershipService
+from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -28,6 +29,8 @@ class SubscriptionService:
     def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:
         subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
         if created:
+            PromoSubscriberService.use_promo_for_new_subscriber(organization=organization, follower=user)
+
             sent_notification.delay(
                 recipient_id=organization.owner_id,
                 sender_id=user.id,
@@ -38,7 +41,6 @@ class SubscriptionService:
                 organization_id=organization.id,
                 extra_data=dict(address=organization.address)
             )
-
             sent_notification.delay(
                 recipient_id=user.id,
                 mode=PERSONAL_MODE,
@@ -48,8 +50,8 @@ class SubscriptionService:
                 organization_id=organization.id,
                 extra_data=dict(org_title=organization.title, address=organization.address)
             )
-
             return True
+
         subscription.delete()
         return False
 

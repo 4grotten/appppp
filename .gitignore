@@ -1,4 +1,4 @@
-
+/backups/
 # Created by https://www.gitignore.io/api/linux,python,django,pycharm
 
 ### Django ###
@@ -169,7 +169,7 @@ coverage.xml
 .pytest_cache/
 
 # Translations
-*.mo
+#*.mo
 
 # Django stuff:
 
@@ -230,3 +230,4 @@ dmypy.json
 
 # Posgres dev path
 .postgres
+/backups/qrcode.bak

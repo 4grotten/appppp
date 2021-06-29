@@ -5,6 +5,7 @@ from rest_framework import serializers
 from common.serializers import ImageSerializer
 from organizations.models import Organization
 from organizations.services.attendance_services import AttendanceService
+from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
@@ -202,13 +203,29 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name', 'avatar', 'username')
 
 
-class FollowerOrClientSerializer(serializers.ModelSerializer):
-    avatar = ImageSerializer()
+class FollowerListSerializer(UserShortInfoSerializer):
+    has_promo_cashback = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar')
+
+    def get_has_promo_cashback(self, user: User) -> bool:
+        if not self.context['can_edit']:
+            return False
+        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
+
+
+class FollowerOrClientSerializer(FollowerListSerializer):
     role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number', 'role')
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role',)
+
+    def get_has_promo_cashback(self, user: User) -> bool:
+        organization = OrganizationService.get(id=self.context['organization_id'])
+        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=organization)
 
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(

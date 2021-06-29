@@ -1,4 +1,4 @@
-
+/backups/
 # Created by https://www.gitignore.io/api/linux,python,django,pycharm
 
 ### Django ###
@@ -230,3 +230,4 @@ dmypy.json
 
 # Posgres dev path
 .postgres
+/backups/qrcode.bak

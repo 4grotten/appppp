@@ -38,6 +38,7 @@ sentry-sdk = "==1.0.0"
 pip = "*"
 install = "*"
 google-trans-new = "==1.1.9"
+gevent = "*"
 
 [dev-packages]
 coverage = "*"

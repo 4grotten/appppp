@@ -52,6 +52,9 @@ class DiscountCardService:
         for discount_type, group in groupby(discounts, lambda x: x.type):
             discounts_dict[discount_type] = list(group)
 
+        if len(discounts_dict[DiscountCard.CASHBACK]) > 1 and discounts_dict[DiscountCard.CASHBACK][0].percent == 0:
+            discounts_dict[DiscountCard.CASHBACK] = discounts_dict[DiscountCard.CASHBACK][1:]
+
         return discounts_dict
 
     @classmethod
@@ -65,6 +68,9 @@ class DiscountCardService:
         if discount.type == DiscountCard.FIXED:
             discount.is_published = False
             discount.save(update_fields=('is_published',))
+            return discount
+
+        if discount.type == DiscountCard.CASHBACK and discount.percent == 0:
             return discount
 
         discount.delete()
@@ -187,7 +193,14 @@ class DiscountCardService:
 
     @classmethod
     def get_cashback_discounts_of_organization(cls, organization: Organization) -> QuerySet:
-        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.CASHBACK, is_published=True)
+        return DiscountCard.objects.filter(organization=organization, type=DiscountCard.CASHBACK, is_published=True,
+                                           percent__gt=0)
+
+    @classmethod
+    def create_zero_cashback_card(cls, organization: Organization):
+        DiscountCard.objects.update_or_create(
+            organization=organization, type=DiscountCard.CASHBACK, percent=0, defaults={'is_published': True}
+        )
 
     @classmethod
     def get_lowest_cumulative_card(cls, organization: Organization) -> Union[DiscountCard, None]:
@@ -265,7 +278,7 @@ class DiscountCardService:
     @classmethod
     def get_unique_discount_percents_to_display(cls, organization: Organization) -> list:
         values = DiscountCard.objects.filter(
-            is_published=True, organization=organization
+            is_published=True, organization=organization, percent__gt=0
         ).distinct('percent').order_by('percent').values_list('percent', flat=True)
         return values
 

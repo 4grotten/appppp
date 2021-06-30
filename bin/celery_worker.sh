@@ -7,4 +7,5 @@ EOF
 
 set -ex
 cd /app
-celery -A project worker  -l info
+celery celery worker -A project --loglevel=INFO -Q high,default,insta_high,insta_low
+

@@ -10,6 +10,7 @@ from common.exceptions import (
 )
 from common.models import File
 from organizations.models import Organization, OrganizationPromo, PromoEditLog, PromoSubscriber
+from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -63,6 +64,7 @@ class OrganizationPromoService:
 
         promo = cls.create(organization=organization, total_cashback=total_cashback, cashback=cashback, image=image)
         PromoEditLogService.record_action(promo=promo, changed_by=user)
+        DiscountCardService.create_zero_cashback_card(organization=organization)
         return promo
 
     @classmethod

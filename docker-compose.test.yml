@@ -11,36 +11,35 @@ services:
         dockerfile: Dockerfile
     image: apofiz/backend
     ports:
-      - "0.0.0.0:8000:8000"
+      - "8000:8000"
     links:
       - postgres:postgres
       - rabbitmq:rabbimq
     depends_on:
       - rabbitmq
       - postgres
-    env_file: ./env/development.env
+    env_file: ./env/test.env
     volumes:
       - .:/app
       - ./static:/app/static
       - ./media:/app/media
-    command: /runserver.sh
+    command: /gunicorn.sh
   woker:
     <<: *django
     ports: [ ]
     command: /celery_worker.sh
-    env_file: ./env/development.env
+    env_file: ./env/test.env
 
 
   postgres:
-
     image: mdillon/postgis:10
-    ports:
-      - "0.0.0.0:5430:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
       - postgres_backup_dev:/backups
-    env_file: ./env/development.env
+    env_file: ./env/test.env
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
-    env_file: ./env/development.env
+    env_file: ./env/test.env
+
+

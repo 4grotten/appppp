@@ -17,7 +17,17 @@ RUN pip install pipenv
 RUN pipenv install --system --deploy
 
 COPY . /app/
+COPY ./bin/gunicorn.sh ./bin/entrypoint.sh ./bin/celery_worker.sh ./bin/runserver.sh /
 
+
+RUN sed -i 's/\r//' /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+RUN sed -i 's/\r//' /gunicorn.sh && \
+    sed -i 's/\r//' /runserver.sh && \
+    sed -i 's/\r//' /celery_worker.sh && \
+    chmod +x /gunicorn.sh && \
+    chmod +x /runserver.sh && \
+    chmod +x /celery_worker.sh
 
 FROM env as celery-dev
 

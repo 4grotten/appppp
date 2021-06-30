@@ -24,6 +24,8 @@ services:
       - ./static:/app/static
       - ./media:/app/media
     command: /gunicorn.sh
+    restart: always
+
   celery_worker:
     <<: *django
     ports: [ ]
@@ -37,9 +39,11 @@ services:
       - postgres_data_dev:/var/lib/postgresql/data
       - postgres_backup_dev:/backups
     env_file: ./env/test.env
+    restart: always
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
     env_file: ./env/test.env
+    restart: always
 
 

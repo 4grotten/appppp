@@ -24,7 +24,7 @@ services:
       - ./static:/app/static
       - ./media:/app/media
     command: /gunicorn.sh
-  woker:
+  celery_worker:
     <<: *django
     ports: [ ]
     command: /celery_worker.sh

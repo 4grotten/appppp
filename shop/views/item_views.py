@@ -1,6 +1,6 @@
-from googletrans import Translator, constants
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
+from googletrans import Translator
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -135,7 +135,7 @@ class TranslateItemTextView(GenericAPIView):
             translate_name = translator.translate(data['title'], dest=lang)
             translate_description = translator.translate(data['description'], dest=lang)
             return Response(data={
-                'name': translate_name.text,
+                'title': translate_name.text,
                 'description': translate_description.text,
             }, status=status.HTTP_200_OK)
         except KeyError as e:

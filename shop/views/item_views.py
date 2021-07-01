@@ -1,4 +1,4 @@
-from google_trans_new import google_translator
+from googletrans import Translator, constants
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions
@@ -131,12 +131,12 @@ class TranslateItemTextView(GenericAPIView):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         try:
-            translator = google_translator()
-            translate_name = translator.translate(data['title'], lang_tgt=lang)
-            translate_description = translator.translate(data['description'], lang_tgt=lang)
+            translator = Translator()
+            translate_name = translator.translate(data['title'], dest=lang)
+            translate_description = translator.translate(data['description'], dest=lang)
             return Response(data={
-                'name': translate_name,
-                'description': translate_description,
+                'name': translate_name.text,
+                'description': translate_description.text,
             }, status=status.HTTP_200_OK)
         except KeyError as e:
             error = str(e)

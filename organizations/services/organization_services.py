@@ -296,6 +296,8 @@ class OrganizationService:
         try:
             organization.is_deleted = True
             organization.save()
+            from shop.services.cart_services import CartService
+            CartService.delete_organization_carts(organization=organization)
             return organization
         except Exception as e:
             raise IntegrityException(_('Could not deactivate organization: {e}').format(e=str(e)))

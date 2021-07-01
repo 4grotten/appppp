@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
@@ -16,11 +18,15 @@ class OrganizationPromoListSerializer(serializers.ModelSerializer):
 
 
 class OrganizationPromoDetailedSerializer(OrganizationPromoListSerializer):
+    total_cashback = serializers.SerializerMethodField()
     edit_logs = PromoEditLogSerializer(many=True)
 
     class Meta:
         model = OrganizationPromo
         fields = ('id', 'total_cashback', 'cashback', 'image', 'organization', 'edit_logs',)
+
+    def get_total_cashback(self, promo: OrganizationPromo) -> Decimal:
+        return promo.total_cashback - promo.granted_amount
 
 
 class OrganizationPromoCreateSerializer(serializers.ModelSerializer):

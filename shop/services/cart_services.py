@@ -75,7 +75,7 @@ class CartService:
         return accepted_offline_transaction
 
     @classmethod
-    def close_the_cart(cls, user: User, cart_id: int, delivery_type: str):
+    def process_cart(cls, user: User, cart_id: int, delivery_type: str):
         cart = cls.get(id=cart_id)
         if cart.user != user:
             raise PermissionDeniedException(_('No rights to change this cart'))
@@ -193,6 +193,10 @@ class CartService:
                 raise IntegrityException(_('Could not complete transaction'))
 
         return cart
+
+    @classmethod
+    def delete_organization_carts(cls, organization: Organization):
+        Cart.objects.filter(organization=organization, is_open=True).delete()
 
 
 class CartItemService:

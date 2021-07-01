@@ -10,6 +10,7 @@ from common.exceptions import (
 )
 from common.models import File
 from organizations.models import Organization, OrganizationPromo, PromoEditLog, PromoSubscriber
+from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -63,6 +64,7 @@ class OrganizationPromoService:
 
         promo = cls.create(organization=organization, total_cashback=total_cashback, cashback=cashback, image=image)
         PromoEditLogService.record_action(promo=promo, changed_by=user)
+        DiscountCardService.create_zero_cashback_card(organization=organization)
         return promo
 
     @classmethod
@@ -70,8 +72,7 @@ class OrganizationPromoService:
     def update_organization_promo(cls, organization_promo: OrganizationPromo, total_cashback: Decimal,
                                   cashback: Decimal, image: File, changed_by: User):
         try:
-            # ToDo: add check logic
-            organization_promo.total_cashback = total_cashback
+            organization_promo.total_cashback = organization_promo.granted_amount + total_cashback
             organization_promo.cashback = cashback
             organization_promo.image = image
             organization_promo.save()
@@ -85,7 +86,7 @@ class OrganizationPromoService:
         promo = getattr(organization, 'promo', None)
         if promo is None:
             return None
-        if promo.granted_amount <= promo.total_cashback - promo.cashback:
+        if promo.total_cashback - promo.granted_amount >= promo.cashback:
             return promo
         return None
 

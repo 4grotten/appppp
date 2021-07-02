@@ -20,7 +20,8 @@ services:
       - postgres
     env_file: ./env/production.env
     command: /gunicorn.sh
-  worker:
+
+  celery_worker_backend:
     <<: *django
     ports: [ ]
     command: /celery_worker.sh

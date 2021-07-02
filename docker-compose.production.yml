@@ -20,6 +20,7 @@ services:
       - postgres
     env_file: ./env/production.env
     command: /gunicorn.sh
+    restart: always
 
   celery_worker_backend:
     <<: *django
@@ -59,7 +60,9 @@ services:
       - postgres_data_dev:/var/lib/postgresql/data
       - postgres_backup_dev:/backups
     env_file: ./env/production.env
+    restart: always
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
     env_file: ./env/production.env
+    restart: always

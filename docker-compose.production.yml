@@ -11,7 +11,7 @@ services:
         dockerfile: Dockerfile
     image: apofiz/backend
     ports:
-      - "0.0.0.0:8000:8000"
+      - "8000:8000"
     links:
       - postgres:postgres
       - rabbitmq:rabbimq
@@ -19,6 +19,10 @@ services:
       - rabbitmq
       - postgres
     env_file: ./env/production.env
+    volumes:
+      - .:/app
+      - ./static:/app/static
+      - ./media:/app/media
     command: /gunicorn.sh
     restart: always
 

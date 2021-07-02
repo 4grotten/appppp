@@ -89,11 +89,13 @@ class OrderDeliveryView(GenericAPIView):
 
     def post(self, request, pk):
         serializer = DeliveryInfoSerializer(data=request.data)
+
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         cart = CartService.close_the_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, user=request.user, transaction=cart.transaction, )
         return Response(

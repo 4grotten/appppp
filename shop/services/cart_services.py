@@ -252,10 +252,8 @@ class CartItemService:
 
 class DeliveryInfoService:
     @classmethod
-    def create(cls, *args, **kwargs):
+    def create(cls, longitude, latitude, *args, **kwargs):
         try:
-            longitude = kwargs['longitude']
-            latitude = kwargs['latitude']
             if longitude and latitude:
                 point = Point(longitude, latitude)
             else:

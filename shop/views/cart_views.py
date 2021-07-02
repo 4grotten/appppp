@@ -88,7 +88,7 @@ class OrderDeliveryView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
-        serializer = DeliveryInfoSerializer(data=request.data, context={'request': request})
+        serializer = DeliveryInfoSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={

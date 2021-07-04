@@ -50,11 +50,11 @@ services:
     command: celery worker -n "instagram_videos" -A project --loglevel=INFO -Q insta_video --autoscale 16,1
     env_file: ./env/production.env
 
-  celery_beat:
-    <<: *django
-    ports: [ ]
-    command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
-    env_file: ./env/production.env
+#  celery_beat:
+#    <<: *django
+#    ports: [ ]
+#    command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
+#    env_file: ./env/production.env
 
   postgres:
     image: mdillon/postgis:10

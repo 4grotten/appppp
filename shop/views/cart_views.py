@@ -89,6 +89,7 @@ class OrderDeliveryView(GenericAPIView):
 
     def post(self, request, pk):
         serializer = DeliveryInfoSerializer(data=request.data)
+
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',

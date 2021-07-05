@@ -11,7 +11,7 @@ services:
         dockerfile: Dockerfile
     image: apofiz/backend
     ports:
-      - "0.0.0.0:8000:8000"
+      - "8000:8000"
     links:
       - postgres:postgres
       - rabbitmq:rabbimq
@@ -19,22 +19,54 @@ services:
       - rabbitmq
       - postgres
     env_file: ./env/production.env
+    volumes:
+      - .:/app
+      - ./static:/app/static
+      - ./media:/app/media
     command: /gunicorn.sh
-  worker:
+    restart: always
+
+  celery_worker_backend:
     <<: *django
     ports: [ ]
-    command: /celery_worker.sh
+    command: celery worker -A project --loglevel=INFO -Q celery,default --autoscale 16,4
     env_file: ./env/production.env
+
+  celery_worker_high:
+    <<: *django
+    ports: [ ]
+    command: celery worker -A project -n "thumbnails" --loglevel=INFO -Q high
+    env_file: ./env/production.env
+
+  celery_worker_instagram:
+    <<: *django
+    ports: [ ]
+    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low --autoscale 16,4
+    env_file: ./env/production.env
+
+  celery_worker_insta_video:
+    <<: *django
+    ports: [ ]
+    command: celery worker -n "instagram_videos" -A project --loglevel=INFO -Q insta_video --autoscale 16,1
+    env_file: ./env/production.env
+
+#  celery_beat:
+#    <<: *django
+#    ports: [ ]
+#    command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
+#    env_file: ./env/production.env
 
   postgres:
     image: mdillon/postgis:10
-    ports:
-      - "0.0.0.0:5430:5432"
+#    ports:
+#      - "0.0.0.0:5430:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
       - postgres_backup_dev:/backups
     env_file: ./env/production.env
+    restart: always
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
     env_file: ./env/production.env
+    restart: always

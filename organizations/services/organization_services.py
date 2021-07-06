@@ -521,10 +521,7 @@ class OrganizationInstagramIntegrationService:
                                                            account_user_id=user_info.get('user_id'),
                                                            account_full_name=user_info.get('full_name'),
                                                            avatar=avatar)
-
-            transaction.on_commit(
-                lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id)
-            )
+            parse_instagram_to_shop_items.delay(organization_id=organization.id)
             return instance
         except Exception as e:
             raise BadRequestException(_('Instagram user not found : {e}').format(e=str(e)))

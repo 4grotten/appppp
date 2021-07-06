@@ -29,7 +29,7 @@ class ProxyService:
 class LoginDeviceService:
     @classmethod
     def get_random_login_settings(cls) -> dict:
-        login_settings = LoginDevice.objects.all()
+        login_settings = LoginDevice.objects.filter(for_getting_username=True)
         if not login_settings:
             raise Exception(_('Need at least one LoginDevice'))
         random_device = random.choice(login_settings)

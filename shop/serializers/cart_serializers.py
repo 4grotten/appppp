@@ -135,9 +135,12 @@ class CartAllItemsCountSerializer(serializers.Serializer):
 
 
 class DeliveryInfoSerializer(serializers.ModelSerializer):
-    longitude = serializers.FloatField(allow_null=True)
-    latitude = serializers.FloatField(allow_null=True)
+    longitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
+    latitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
 
     class Meta:
         model = DeliveryInfo
-        fields = ('address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'longitude', 'latitude')
+        fields = (
+            'address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'longitude', 'latitude',
+            'full_location',
+        )

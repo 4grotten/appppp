@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from common.exceptions import IntegrityException
+from instagram_parsers.services.proxy_services import ProxyService
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
@@ -131,7 +132,8 @@ class TranslateItemTextView(GenericAPIView):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         try:
-            translator = Translator()
+            random_proxy = ProxyService.get_random_formed_proxy(True).replace("http://", '')
+            translator = Translator(proxies={'http': random_proxy, 'https': random_proxy})
             translate_name = translator.translate(data['title'], dest=lang)
             translate_description = translator.translate(data['description'], dest=lang)
             return Response(data={

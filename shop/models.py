@@ -156,11 +156,12 @@ class DeliveryInfo(TimestampModel):
 
     @property
     def full_location(self):
-        full_location = dict(
-            latitude=None if not self.location or not self.location.y else self.location.y,
-            longitude=None if not self.location or not self.location.x else self.location.x
-        )
-        return full_location
+        if self.location and self.location.y and self.location.x:
+            return dict(
+                latitude=self.location.y,
+                longitude=self.location.x
+            )
+        return None
 
 
 class Complaint(TimestampModel):

@@ -1,12 +1,13 @@
-from google_trans_new import google_translator
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
+from googletrans import Translator
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from common.exceptions import IntegrityException
+from instagram_parsers.services.proxy_services import ProxyService
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
@@ -131,12 +132,14 @@ class TranslateItemTextView(GenericAPIView):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         try:
-            translator = google_translator()
-            translate_name = translator.translate(data['title'], lang_tgt=lang)
-            translate_description = translator.translate(data['description'], lang_tgt=lang)
+            random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
+            proxies = {'http': random_proxy}
+            translator = Translator(proxies=proxies)
+            translate_name = translator.translate(data['title'], dest=lang)
+            translate_description = translator.translate(data['description'], dest=lang)
             return Response(data={
-                'name': translate_name,
-                'description': translate_description,
+                'title': translate_name.text,
+                'description': translate_description.text,
             }, status=status.HTTP_200_OK)
         except KeyError as e:
             error = str(e)

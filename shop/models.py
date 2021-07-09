@@ -1,3 +1,4 @@
+from django.contrib.gis.db.models import PointField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
@@ -148,9 +149,18 @@ class DeliveryInfo(TimestampModel):
     floor = models.CharField(max_length=36, null=True, blank=True)
     phone = models.CharField(max_length=36)
     comment = models.CharField(max_length=150, null=True, blank=True)
+    location = PointField(help_text="Для создания местоположения", null=True, blank=True)
 
     def __str__(self):
         return f'Delivery info of {self.user}'
+
+    @property
+    def full_location(self):
+        full_location = dict(
+            latitude=None if not self.location or not self.location.y else self.location.y,
+            longitude=None if not self.location or not self.location.x else self.location.x
+        )
+        return full_location
 
 
 class Complaint(TimestampModel):

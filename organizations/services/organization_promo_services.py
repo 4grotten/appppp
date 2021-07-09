@@ -101,6 +101,14 @@ class OrganizationPromoService:
     def get_active_promos(cls) -> QuerySet:
         return OrganizationPromo.objects.filter(cashback__lte=F('total_cashback') - F('granted_amount'))
 
+    @classmethod
+    def get_filtering_promos_by_country(cls, country) -> QuerySet:
+        query = cls.get_active_promos()
+        if not country:
+            return query
+        else:
+            return query.filter(organization__country__code=country)
+
 
 class PromoEditLogService:
     @classmethod

@@ -132,8 +132,9 @@ class TranslateItemTextView(GenericAPIView):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         try:
-            random_proxy = ProxyService.get_random_formed_proxy(True).replace("http://", '')
-            translator = Translator(proxies={'http': random_proxy, 'https': random_proxy})
+            random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
+            proxies = {'http': random_proxy}
+            translator = Translator(proxies=proxies)
             translate_name = translator.translate(data['title'], dest=lang)
             translate_description = translator.translate(data['description'], dest=lang)
             return Response(data={

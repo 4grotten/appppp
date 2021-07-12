@@ -385,7 +385,10 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',)
+        fields = (
+            'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
+            'opens_at', 'closes_at',
+        )
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):

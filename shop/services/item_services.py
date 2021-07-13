@@ -36,6 +36,12 @@ class ShopItemService:
         return queryset.exists()
 
     @classmethod
+    def feed_has_new_items(cls, timestamp: str) -> bool:
+        queryset = ShopItem.objects.filter(is_published=True, price__isnull=False, updated_at__gt=timestamp).exclude(
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True))
+        return queryset.exists()
+
+    @classmethod
     def annotate_likes_and_bookmarks(cls, queryset: QuerySet, user: User) -> QuerySet:
         if not user.is_authenticated:
             return queryset.annotate(

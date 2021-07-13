@@ -32,6 +32,14 @@ class FeedView(ListAPIView):
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        serializer = StartDateTimeSerializer(data=request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Validation Error'))
+        response = super().list(request, args, kwargs)
+        response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=serializer.validated_data['start_time'])
+        return response
+
 
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer

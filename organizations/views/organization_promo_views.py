@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from organizations.serializers.organization_promo_serializers import (
@@ -12,7 +12,7 @@ from organizations.services.organization_promo_services import OrganizationPromo
 
 
 class OrganizationPromoListCreateView(ListCreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = OrganizationPromoListSerializer
 
     def get_queryset(self):

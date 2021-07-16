@@ -76,7 +76,7 @@ class OrganizationPartnersView(ListAPIView):
         return OrganizationService.get_organization_partners(organization=organization)
 
 
-class OrgPartnershipsView(ListAPIView):
+class OrgPartnershipsListView(ListAPIView):
     serializer_class = PartnershipSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('requested_by__title', 'accepted_by__title',)

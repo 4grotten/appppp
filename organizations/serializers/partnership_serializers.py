@@ -23,7 +23,7 @@ class PartnershipSerializer(serializers.ModelSerializer):
         else:
             partner = partnership.accepted_by
 
-        return PartnerSerializer(partner).data
+        return PartnerSerializer(partner, context={'request': self.context.get('request')}).data
 
     class Meta:
         model = Partnership

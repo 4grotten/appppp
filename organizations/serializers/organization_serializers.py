@@ -109,7 +109,8 @@ class PartnerSerializer(serializers.ModelSerializer):
         count, partners = OrganizationService.get_partners_dict(organization=organization)
         return {
             'count': count,
-            'list': OrganizationWithImageSerializer(partners, many=True).data
+            'list': OrganizationWithImageSerializer(partners, many=True,
+                                                    context={'request': self.context.get('request')}).data
         }
 
     class Meta:

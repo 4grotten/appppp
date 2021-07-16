@@ -5,12 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from delivery.delivery_services import DeliveryInfoService
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
     CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
 )
-from shop.services.cart_services import CartItemService, CartService, DeliveryInfoService
+from shop.services.cart_services import CartItemService, CartService
 from transactions.models import Transaction
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer, OffsetUTCSerializer
 

@@ -32,13 +32,12 @@ services:
 
 
   postgres:
-
     image: mdillon/postgis:10
     ports:
       - "0.0.0.0:5430:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
-      - postgres_backup_dev:/backups
+      - ./backups:/backups
     env_file: ./env/development.env
 
   rabbitmq:

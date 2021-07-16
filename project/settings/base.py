@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'drf_multiple_model',
     'storages',
     'phonenumber_field',
+    'delivery',
 ]
 
 MIDDLEWARE = [

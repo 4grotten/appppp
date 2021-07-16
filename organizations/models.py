@@ -66,7 +66,7 @@ class Organization(TimestampModel):
     closes_at = models.TimeField(null=True, blank=True)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')
     country = models.ForeignKey(Country, on_delete=models.PROTECT, related_name='organizations', default='KG')
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='organizations', null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='organizations', null=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='organizations')
     show_contacts = models.BooleanField(default=False)
@@ -89,6 +89,7 @@ class Organization(TimestampModel):
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
 
+    is_delivery_service = models.BooleanField(default=False)
     # Managers
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()

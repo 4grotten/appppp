@@ -1,6 +1,7 @@
 from django.contrib.gis.db.models import PointField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from django.utils import timezone
 
@@ -138,30 +139,6 @@ class CartItem(TimestampModel):
         ]
         ordering = ['-created_at']
 
-
-class DeliveryInfo(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='delivery_infos')
-    transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, null=True, related_name='delivery_info')
-    address = models.CharField(max_length=225)
-    apartment = models.CharField(max_length=36, null=True, blank=True)
-    intercom = models.CharField(max_length=36, null=True, blank=True)
-    entrance = models.CharField(max_length=36, null=True, blank=True)
-    floor = models.CharField(max_length=36, null=True, blank=True)
-    phone = models.CharField(max_length=36)
-    comment = models.CharField(max_length=150, null=True, blank=True)
-    location = PointField(help_text="Для создания местоположения", null=True, blank=True)
-
-    def __str__(self):
-        return f'Delivery info of {self.user}'
-
-    @property
-    def full_location(self):
-        if self.location and self.location.y and self.location.x:
-            return dict(
-                latitude=self.location.y,
-                longitude=self.location.x
-            )
-        return None
 
 
 class Complaint(TimestampModel):

@@ -3,7 +3,7 @@ from django.contrib.gis.db import models
 from mapwidgets.widgets import GooglePointFieldWidget
 
 from shop.models import (
-    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem, DeliveryInfo,
+    ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
     ItemInstagramData,
 )
 from .forms import ItemSubcategoryAdminForm
@@ -58,11 +58,7 @@ class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'item', 'count',)
 
 
-class DeliveryInfoAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.PointField: {"widget": GooglePointFieldWidget}
-    }
-    list_display = ('user', 'address', 'phone',)
+
 
 
 class ComplaintAdmin(admin.ModelAdmin):
@@ -77,5 +73,5 @@ admin.site.register(ItemLike, ItemLikeAdmin)
 admin.site.register(ItemBookmark, ItemBookmarkAdmin)
 admin.site.register(Cart, CartAdmin)
 admin.site.register(CartItem, CartItemAdmin)
-admin.site.register(DeliveryInfo, DeliveryInfoAdmin)
+
 admin.site.register(Complaint, ComplaintAdmin)

@@ -2,12 +2,13 @@ from rest_framework import serializers
 
 from common.models import File
 from common.serializers import ImageSerializer
+from delivery.models import DeliveryInfo
 from organizations.models import Organization
 from organizations.serializers.organization_serializers import (
     OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, Cart, CartItem, DeliveryInfo
+from shop.models import ShopItem, Cart, CartItem
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
 

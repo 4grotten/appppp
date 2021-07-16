@@ -332,3 +332,14 @@ if MONITORING:
         MIDDLEWARE + \
         ['django_prometheus.middleware.PrometheusAfterMiddleware']
     DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgis'
+
+
+MAP_WIDGETS = {
+    # "GooglePointFieldWidget": (
+    #     ("zoom", 15),
+    #     ("mapCenterLocationName", "london"),
+    #     ("GooglePlaceAutocompleteOptions", {'componentRestrictions': {'country': 'uk'}}),
+    #     ("markerFitZoom", 12),
+    # ),
+    "GOOGLE_MAP_API_KEY": "AIzaSyBqsPpFSiHwmvV1xz0hqkSWeNLbuChKqg0"
+}

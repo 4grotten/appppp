@@ -170,7 +170,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(Hotlink)
 class HotlinkAdmin(admin.ModelAdmin):
-    list_display = ('id', 'organization', 'link', 'link_type', 'linked_item_id',)
+    list_display = ('id', 'organization', 'content', 'link_type', 'linked_item', 'linked_organization',)
     raw_id_fields = ('organization', 'image')
 
 

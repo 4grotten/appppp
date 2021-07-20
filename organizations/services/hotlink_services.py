@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import File
-from organizations.constants import HOTLINK_ITEM, HOTLINK_ORGANIZATION
 from organizations.models import Hotlink, Organization
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -38,16 +37,17 @@ class HotlinkService:
         return hotlink
 
     @classmethod
-    def create_hotlink(cls, user: User, organization: Organization, link: str, image: File):
+    def create_hotlink(cls, user: User, organization: Organization, content: str, link_type: str, image: File):
         if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-        cls.create(organization=organization, link=link, image=image)
+        cls.create(organization=organization, content=content, link_type=link_type, image=image)
 
     @classmethod
-    def update_hotlink(cls, hotlink: Hotlink, image: File, link: str):
+    def update_hotlink(cls, hotlink: Hotlink, image: File, content: str, link_type: str):
         try:
             hotlink.image = image
-            hotlink.link = link
+            hotlink.content = content
+            hotlink.link_type = link_type
             hotlink.save()
             return hotlink
         except Exception as e:
@@ -56,11 +56,11 @@ class HotlinkService:
     @classmethod
     def get_hotlink_title(cls, hotlink: Hotlink) -> str:
         try:
-            if hotlink.link_type == HOTLINK_ITEM:
+            if hotlink.linked_item is not None:
                 return hotlink.linked_item.name
-            if hotlink.link_type == HOTLINK_ORGANIZATION:
+            if hotlink.linked_organization is not None:
                 return hotlink.linked_organization.title
         except ObjectNotFoundException:
-            return urlparse(hotlink.link).netloc
+            return urlparse(hotlink.content).netloc
 
-        return urlparse(hotlink.link).netloc
+        return urlparse(hotlink.content).netloc

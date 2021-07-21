@@ -11,6 +11,7 @@ v1 = ([
           path('', include('common.urls')),
           path('', include('transactions.urls')),
           path('', include('shop.urls')),
+          path('', include('delivery.urls')),
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 

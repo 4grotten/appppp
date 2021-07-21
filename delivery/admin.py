@@ -9,7 +9,8 @@ class DeliveryInfoAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
-    list_display = ('transaction', 'address', 'phone',)
+    raw_id_fields = ('transaction',)
+    list_display = ('transaction', 'country', 'city', 'address', 'phone', 'delivery_organization')
 
 
 admin.site.register(DeliveryInfo, DeliveryInfoAdmin)

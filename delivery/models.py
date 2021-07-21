@@ -2,7 +2,8 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from common.models import TimestampModel
+from common.models import TimestampModel, Country, City
+from organizations.models import Organization
 from transactions.models import Transaction
 
 
@@ -22,7 +23,9 @@ class DeliveryInfo(TimestampModel):
         (DELIVERY_STATUS_DELIVERED, _("Delivered")),
         (DELIVERY_STATUS_REJECTED_BY_CUSTOMER, _("Rejected by customer")),
     )
-
+    delivery_organization = models.ForeignKey(Organization, null=True, related_name='delivery_infos', on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, on_delete=models.PROTECT, related_name='delivery_infos', default='KG')
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='delivery_infos', null=True)
     transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, null=True, related_name='delivery_info')
     address = models.CharField(max_length=225)
     apartment = models.CharField(max_length=36, null=True, blank=True)

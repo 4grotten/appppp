@@ -142,6 +142,8 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryInfo
         fields = (
-            'address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'longitude', 'latitude',
+            'address', 'country', 'city', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'longitude',
+            'latitude',
             'full_location',
         )
+

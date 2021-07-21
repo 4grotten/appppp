@@ -7,6 +7,7 @@ from django.utils import timezone
 from common.models import TimestampModel, File
 from organizations.models import Organization
 from transactions.models import Transaction
+from translator.translator import GoogleTranslator
 from users.models import User
 
 
@@ -44,7 +45,9 @@ class ShopItem(models.Model):
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.SET_NULL, related_name='items_in_category',
                                     null=True, blank=True)
     name = models.CharField(max_length=64)
+    name_lang = models.CharField(max_length=4, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    description_lang = models.CharField(max_length=4, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, editable=False)
@@ -61,6 +64,9 @@ class ShopItem(models.Model):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
+        self.name_lang = GoogleTranslator().get_lang(self.name)
+        if self.description:
+            self.description_lang = GoogleTranslator().get_lang(self.description)
         if self.id:
             self.updated_at = timezone.now()
             self.is_updated = True

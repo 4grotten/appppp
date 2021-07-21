@@ -1,11 +1,12 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
-from delivery.serializers import DeliveryAllItemsCountSerializer
+from delivery.models import DeliveryInfo
+from delivery.serializers import DeliveryAllItemsCountSerializer, DeliveryInfoListSerializer
 
 
 class DeliveryItemsCountView(APIView):
@@ -18,13 +19,13 @@ class DeliveryItemsCountView(APIView):
         data = DeliveryAllItemsCountSerializer({"count": count}).data
         return Response(data, status=status.HTTP_200_OK)
 
-    # def get_queryset(self):
-    #     pass
-    #     # return Cart.objects.filter(
-    #     #     user=self.request.user, is_open=True, organization__is_deleted=False
-    #     # ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at')))
-    #
-    # def retrieve(self, request, *args, **kwargs):
-    #     pass
-    #     # self.serializer_class = EmployeeCartSerializer
-    #     # return super().retrieve(request, *args, **kwargs)
+
+class DeliveryInfoListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = DeliveryInfoListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return DeliveryInfoService.get_available_orders(user)
+
+        # return DeliveryInfo.objects.all()

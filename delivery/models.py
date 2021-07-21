@@ -38,7 +38,7 @@ class DeliveryInfo(TimestampModel):
     status = models.CharField(max_length=255, choices=DELIVERY_STATUSES, default=DELIVERY_STATUS_SET_FOR_DELIVERY)
 
     def __str__(self):
-        return f'Delivery info of {self.transaction.user}'
+        return f'Delivery info of {self.transaction.client}'
 
     @property
     def full_location(self):

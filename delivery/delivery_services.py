@@ -24,5 +24,10 @@ class DeliveryInfoService:
     def get_all_items_count(cls, user: User) -> int:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return DeliveryInfo.objects.filter(country__in=countries).count()
+        return DeliveryInfo.objects.filter(country__in=countries, status__in=(DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY, )).count()
 
+    @classmethod
+    def get_available_orders(cls, user: User) -> list:
+        delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        countries = [o.country for o in delivery_service_organizations]
+        return DeliveryInfo.objects.filter(country__in=countries, status__in=(DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,)).order_by('-created_at')

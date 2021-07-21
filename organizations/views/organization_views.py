@@ -46,7 +46,8 @@ class OrganizationCreationLimitView(APIView):
 
     def get(self, request):
         data = {
-            'can_add_organization': not OrganizationService.creation_limit_exceeded(user=request.user)
+            'can_add_organization': not OrganizationService.creation_limit_exceeded(user=request.user),
+            'is_delivery_service': OrganizationService.is_delivery_service(user=request.user)
         }
         return Response(data=data)
 

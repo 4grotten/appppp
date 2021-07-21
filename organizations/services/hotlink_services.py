@@ -61,6 +61,10 @@ class HotlinkService:
             if hotlink.linked_organization is not None:
                 return hotlink.linked_organization.title
         except ObjectNotFoundException:
-            return urlparse(hotlink.content).netloc
+            pass
 
-        return urlparse(hotlink.content).netloc
+        domain = urlparse(hotlink.content).netloc
+        if not domain == '':
+            return domain
+
+        return hotlink.content

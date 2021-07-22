@@ -59,7 +59,9 @@ class Organization(TimestampModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
 
     title = models.CharField(max_length=255)
+    title_lang = models.CharField(max_length=8, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    description_lang = models.CharField(max_length=8, null=True, blank=True)
     opens_at = models.TimeField(null=True, blank=True)
     closes_at = models.TimeField(null=True, blank=True)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')

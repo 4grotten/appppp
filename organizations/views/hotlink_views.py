@@ -31,12 +31,10 @@ class HotlinkListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        HotlinkService.create_hotlink(
-            user=request.user,
-            organization=serializer.validated_data['organization'],
-            link=serializer.validated_data['link'],
-            image=serializer.validated_data['image']
-        )
+        HotlinkService.create_hotlink(user=request.user, organization=serializer.validated_data['organization'],
+                                      content=serializer.validated_data['content'],
+                                      link_type=serializer.validated_data['link_type'],
+                                      image=serializer.validated_data['image'])
 
         return Response(data={
             'message': 'Successfully created',
@@ -59,10 +57,8 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        hotlink = HotlinkService.update_hotlink(
-            hotlink=instance,
-            link=serializer.validated_data['link'],
-            image=serializer.validated_data['image']
-        )
+        hotlink = HotlinkService.update_hotlink(hotlink=instance, image=serializer.validated_data['image'],
+                                                content=serializer.validated_data['content'],
+                                                link_type=serializer.validated_data['link_type'])
         hotlink = HotlinkSerializer(hotlink, context={'request': request}).data
         return Response(hotlink)

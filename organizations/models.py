@@ -7,9 +7,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, Currency, Country, City
-from organizations.constants import (
-    HOTLINK_TYPES, HOTLINK_EXTERNAL, HOTLINK_ITEM, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_ORGANIZATION
-)
+from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
@@ -337,8 +335,8 @@ class Message(TimestampModel):
 
 class Hotlink(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hotlinks')
-    link = models.URLField(max_length=500)
-    link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES, default=HOTLINK_EXTERNAL)
+    content = models.CharField(max_length=500)
+    link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES)
     image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='hotlinks')
     linked_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='hotlinks_to_organization')
@@ -349,16 +347,15 @@ class Hotlink(TimestampModel):
         return f'Hotlink of {self.organization}'
 
     def save(self, *args, **kwargs):
-        parsed_link = urlparse(self.link)
+        parsed_link = urlparse(self.content)
         is_internal = False
 
-        if parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
+        if self.link_type == HOTLINK_URL and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
             if parsed_link.path.startswith('/p/'):
                 item_id = parsed_link.path.replace('/p/', '').replace('/', '')
                 try:
                     from shop.models import ShopItem
                     linked_item = ShopItem.objects.get(id=item_id)
-                    self.link_type = HOTLINK_ITEM
                     self.linked_item = linked_item
                     self.linked_organization = None
                     is_internal = True
@@ -368,7 +365,6 @@ class Hotlink(TimestampModel):
                 organization_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
                 try:
                     linked_organization = Organization.objects.get(id=organization_id)
-                    self.link_type = HOTLINK_ORGANIZATION
                     self.linked_organization = linked_organization
                     self.linked_item = None
                     is_internal = True
@@ -376,7 +372,6 @@ class Hotlink(TimestampModel):
                     pass
 
         if not is_internal:
-            self.link_type = HOTLINK_EXTERNAL
             self.linked_item_id = None
             self.linked_organization = None
             self.linked_item = None

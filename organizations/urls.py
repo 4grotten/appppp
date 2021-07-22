@@ -24,7 +24,7 @@ from .views.organization_views import (
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
 )
 from .views.partnerships_views import (
-    PartnershipView, OrganizationPartnersView, OrgPartnershipsView, PartnershipRetrieveUpdateDestroyView,
+    PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
     HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
@@ -98,7 +98,7 @@ discounts_urls = [
 partnership_urls = [
     path('partnerships/', PartnershipView.as_view(), name='partnerships'),
     path('partnerships/<int:pk>/', PartnershipRetrieveUpdateDestroyView.as_view(), name='partnership_details'),
-    path('organizations/<int:pk>/partnerships/', OrgPartnershipsView.as_view(), name='organization_partnerships'),
+    path('organizations/<int:pk>/partnerships/', OrgPartnershipsListView.as_view(), name='organization_partnerships'),
     path('organizations/<int:pk>/partners_short_info/', OrgPartnershipsInShortView.as_view(),
          name='organization_editable_partnerships'),
 ]

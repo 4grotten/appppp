@@ -18,16 +18,16 @@ class HotlinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Hotlink
-        fields = ('id', 'title', 'link', 'link_type', 'linked_organization', 'linked_item', 'image',)
+        fields = ('id', 'title', 'content', 'link_type', 'linked_organization', 'linked_item', 'image',)
 
 
 class HotlinkCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotlink
-        fields = ('organization', 'link', 'image',)
+        fields = ('organization', 'content', 'link_type', 'image',)
 
 
 class HotlinkUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotlink
-        fields = ('link', 'image',)
+        fields = ('content', 'link_type', 'image',)

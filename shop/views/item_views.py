@@ -16,7 +16,7 @@ from shop.serializers.other_serializers import ComplaintSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
-from translator.translator import GoogleTranslator
+from utils.translator import GoogleTranslator
 
 
 class ItemCreateView(CreateAPIView):

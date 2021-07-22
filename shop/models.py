@@ -7,7 +7,7 @@ from django.utils import timezone
 from common.models import TimestampModel, File
 from organizations.models import Organization
 from transactions.models import Transaction
-from translator.translator import GoogleTranslator
+from utils.translator import GoogleTranslator
 from users.models import User
 
 

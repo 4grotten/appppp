@@ -55,7 +55,7 @@ class OrganizationService:
         return user.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER
 
     @classmethod
-    def is_delivery_service(cls, user: User)->bool:
+    def is_delivery_service(cls, user: User) -> bool:
         return bool(user.owned_organizations.filter(is_delivery_service=True).count())
 
     @classmethod

@@ -56,9 +56,9 @@ class OrganizationAdmin(admin.ModelAdmin):
     }
     list_display = (
         'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned',
-        'cashback_group', 'cumulative_group', 'items_group',
+        'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service'
     )
-    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group')
+    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service')
     search_fields = ('title',)
     raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 

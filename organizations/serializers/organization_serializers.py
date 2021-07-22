@@ -238,7 +238,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'is_deleted', 'image', 'role')
+        fields = ('id', 'title', 'is_deleted', 'image', 'role', 'is_delivery_service')
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):

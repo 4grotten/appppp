@@ -6,10 +6,9 @@ from instagram_parsers.services.proxy_services import ProxyService
 class GoogleTranslator:
 
     def __init__(self):
-        # self.random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
-        # self.proxies = {'http': self.random_proxy}
-        # self.translator = Translator(proxies=self.proxies)
-        self.translator = Translator()
+        self.random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
+        self.proxies = {'http': self.random_proxy}
+        self.translator = Translator(proxies=self.proxies)
 
     def translate(self, text, lang):
         translated_text = self.translator.translate(text, dest=lang)

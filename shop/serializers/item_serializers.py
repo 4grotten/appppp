@@ -61,7 +61,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'organization', 'subcategory',
-            'name', 'description',
+            'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'youtube_links',
             'is_updated'

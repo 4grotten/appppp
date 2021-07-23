@@ -1,13 +1,11 @@
 from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
-from googletrans import Translator
 from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from common.exceptions import IntegrityException
-from instagram_parsers.services.proxy_services import ProxyService
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
@@ -18,6 +16,7 @@ from shop.serializers.other_serializers import ComplaintSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
+from utils.translator import GoogleTranslator
 
 
 class ItemCreateView(CreateAPIView):
@@ -132,11 +131,8 @@ class TranslateItemTextView(GenericAPIView):
         data = request.data
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         try:
-            random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
-            proxies = {'http': random_proxy}
-            translator = Translator(proxies=proxies)
-            translate_name = translator.translate(data['title'], dest=lang)
-            translate_description = translator.translate(data['description'], dest=lang)
+            translate_name = GoogleTranslator().translate(data['title'], lang)
+            translate_description = GoogleTranslator().translate(data['description'], lang)
             return Response(data={
                 'title': translate_name.text,
                 'description': translate_description.text,

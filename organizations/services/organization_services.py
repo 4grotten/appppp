@@ -32,6 +32,7 @@ from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
 from transactions.models import Transaction
 from users.models import User
+from utils.translator import GoogleTranslator
 
 
 class OrganizationService:
@@ -236,7 +237,15 @@ class OrganizationService:
             point = Point(longitude, latitude)
         else:
             point = None
-        organization = Organization.objects.create(owner=owner, title=title, opens_at=opens_at, closes_at=closes_at,
+
+        title_lang = GoogleTranslator().get_lang(title)
+        if description:
+            description_lang = GoogleTranslator().get_lang(description)
+        else:
+            description_lang = None
+
+        organization = Organization.objects.create(owner=owner, title=title, title_lang=title_lang, opens_at=opens_at,
+                                                   closes_at=closes_at, description_lang=description_lang,
                                                    description=description, image=image_id, address=address,
                                                    location=point, currency=currency, country=country, city=city)
         if types is not None:

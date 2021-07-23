@@ -222,7 +222,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'subscribers', 'description', 'show_contacts', 'opens_at', 'closes_at',
+            'id', 'title', 'title_lang', 'image', 'subscribers', 'description', 'description_lang', 'show_contacts',
+            'opens_at', 'closes_at',
             'currency', 'currency_country', 'country', 'city', 'address', 'full_location',
             'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery', 'has_self_pick_up',
             'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners', 'is_deleted', 'is_delivery_service',

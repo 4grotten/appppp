@@ -270,13 +270,22 @@ class OrganizationService:
 
     @classmethod
     @transaction.atomic
-    def update(cls, organization, image_id, longitude, latitude, description, types,
-               title, opens_at, closes_at, address, currency, show_contacts, country, city=None):
+    def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at, address, currency,
+               show_contacts, country, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
             else:
                 point = None
+
+            title_lang = GoogleTranslator().get_lang(title)
+            if description:
+                description_lang = GoogleTranslator().get_lang(description)
+            else:
+                description_lang = None
+
+            organization.title_lang = title_lang
+            organization.description_lang = description_lang
             organization.image_id = image_id
             organization.location = point
             organization.title = title

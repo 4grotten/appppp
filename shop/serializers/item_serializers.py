@@ -47,7 +47,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'description', 'article',
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount',
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at',
@@ -57,6 +57,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ItemCreateUpdateSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = ShopItem
         fields = (
@@ -66,6 +67,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'instagram_link', 'images', 'youtube_links',
             'is_updated'
         )
+        read_only_fields = ['name_lang', 'description_lang']
 
     def validate(self, attrs):
         user = self.context['request'].user

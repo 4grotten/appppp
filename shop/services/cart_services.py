@@ -67,11 +67,22 @@ class CartService:
             cart.save()
         except IntegrityError:
             raise IntegrityException(_('Could not checkout the cart'))
-
-        from transactions.services.transaction_services import TransactionService
-        accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(
-            request, cart=cart, utc_offset_minutes=utc_offset_minutes
-        )
+        finally:
+            from transactions.services.transaction_services import TransactionService
+            accepted_offline_transaction = TransactionService.create_offline_transaction_from_cart(
+                request, cart=cart, utc_offset_minutes=utc_offset_minutes
+            )
+            send_notifications_organization_members.delay(
+                members_organization_id=accepted_offline_transaction.organization_id,
+                mode=PRODUCT_MODE,
+                sender_id=accepted_offline_transaction.client_id,
+                with_permissions=dict(can_see_stats=True),
+                notification_type=REQUEST_ORDER_TYPE,
+                organization_id=accepted_offline_transaction.organization_id,
+                extra_data=dict(transaction_id=accepted_offline_transaction.id,
+                                total_price=str(accepted_offline_transaction.final_amount),
+                                currency=accepted_offline_transaction.currency.code)
+            )
         return accepted_offline_transaction
 
     @classmethod

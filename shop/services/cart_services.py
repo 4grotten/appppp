@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import (
     ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException
 )
-from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE
+from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
@@ -77,7 +77,7 @@ class CartService:
                 mode=PRODUCT_MODE,
                 sender_id=accepted_offline_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
-                notification_type=REQUEST_ORDER_TYPE,
+                notification_type=ACCEPT_ORDER_TYPE,
                 organization_id=accepted_offline_transaction.organization_id,
                 extra_data=dict(transaction_id=accepted_offline_transaction.id,
                                 total_price=str(accepted_offline_transaction.final_amount),

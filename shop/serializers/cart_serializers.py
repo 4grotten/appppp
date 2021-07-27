@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
 from common.models import File
-from common.serializers import ImageSerializer
+from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from delivery.models import DeliveryInfo
 from organizations.models import Organization
 from organizations.serializers.organization_serializers import (
-    OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer
+    OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer, OrganizationDetailedSerializer
 )
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Cart, CartItem
@@ -138,12 +138,16 @@ class CartAllItemsCountSerializer(serializers.Serializer):
 class DeliveryInfoSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
     latitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
+    delivery_organization = OrganizationDetailedSerializer(allow_null=True, required=False)
+    country = CountrySerializer(allow_null=True, required=False)
+    city = CitySerializer(allow_null=True, required=False)
 
     class Meta:
         model = DeliveryInfo
         fields = (
-            'address', 'country', 'city', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'longitude',
+            'id', 'delivery_organization', 'country', 'city', 'transaction',
+            'address', 'apartment', 'intercom', 'entrance', 'floor',
+            'phone', 'comment', 'status', 'longitude',
             'latitude',
             'full_location',
         )
-

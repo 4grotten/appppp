@@ -3,6 +3,8 @@ from rest_framework import serializers
 from common.serializers import CountrySerializer, CitySerializer
 from delivery.models import DeliveryInfo
 from organizations.serializers.organization_serializers import OrganizationDetailedSerializer
+from shop.models import Cart
+from shop.serializers.cart_serializers import CartListSerializer
 from transactions.serializers.transaction_serializers import TransactionDetailSerializer
 
 
@@ -25,3 +27,11 @@ class DeliveryInfoListSerializer(serializers.ModelSerializer):
                   'phone', 'comment', 'status', 'longitude',
                   'latitude',
                   'full_location',)
+
+
+class CartListWithDeliveryInfoSerializer(CartListSerializer):
+    transaction = TransactionDetailSerializer()
+
+    class Meta:
+        fields = ('id', 'items_count', 'totals', 'organization', 'images', 'transaction')
+        model = Cart

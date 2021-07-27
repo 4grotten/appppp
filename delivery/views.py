@@ -6,7 +6,8 @@ from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
-from delivery.serializers import DeliveryAllItemsCountSerializer, DeliveryInfoListSerializer
+from delivery.serializers import DeliveryAllItemsCountSerializer, DeliveryInfoListSerializer, \
+    CartListWithDeliveryInfoSerializer
 
 
 class DeliveryItemsCountView(APIView):
@@ -22,10 +23,11 @@ class DeliveryItemsCountView(APIView):
 
 class DeliveryInfoListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = DeliveryInfoListSerializer
+    serializer_class = CartListWithDeliveryInfoSerializer
 
     def get_queryset(self):
         user = self.request.user
+        
         return DeliveryInfoService.get_available_orders(user)
 
         # return DeliveryInfo.objects.all()

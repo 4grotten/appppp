@@ -67,7 +67,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -103,7 +103,7 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -137,7 +137,7 @@ class DeliverySettingsView(UpdateAPIView):
         except ValidationError as error:
             return Response(
                 data={
-                    'message': 'Invalid input',
+                    'message': _('Invalid input'),
                     'errors': error.detail
                 },
                 status=status.HTTP_406_NOT_ACCEPTABLE
@@ -182,7 +182,7 @@ class ResetPurchaseIDView(GenericAPIView):
             raise NotAcceptableException(_('No rights to edit organization'))
 
         OrganizationService.reset_running_purchase_id(organization=organization)
-        return Response(data={'message': 'Successfully reset running purchase ID'}, status=status.HTTP_200_OK)
+        return Response(data={'message': _('Successfully reset running purchase ID')}, status=status.HTTP_200_OK)
 
 
 class OrgPhonesListAPIView(APIView):
@@ -198,7 +198,7 @@ class OrgPhonesListAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -206,7 +206,7 @@ class OrgPhonesListAPIView(APIView):
             organization_id=kwargs['pk'], user=request.user, numbers=serializer.validated_data['phone_numbers'])
         data = OrgPhoneNumberSerializer(numbers, many=True).data
         return Response(data={
-            'message': 'Successfully updated',
+            'message': _('Successfully updated'),
             'numbers': data
         }, status=status.HTTP_200_OK)
 
@@ -224,7 +224,7 @@ class OrgNetworksListAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -232,7 +232,7 @@ class OrgNetworksListAPIView(APIView):
             organization_id=kwargs['pk'], user=request.user, urls=serializer.validated_data['networks'])
         data = OrgSocialNetworkContactSerializer(networks, many=True).data
         return Response(data={
-            'message': 'Successfully updated',
+            'message': _('Successfully updated'),
             'networks': data
         }, status=status.HTTP_200_OK)
 
@@ -245,7 +245,7 @@ class SetOrganizationLocationAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -264,7 +264,7 @@ class SetOrganizationLocationAPIView(APIView):
         data = OrganizationSerializer(changed_organization, context={'request': request}).data
 
         return Response(data={
-            'message': 'Successfully updated',
+            'message': _('Successfully updated'),
             'data': data
         }, status=status.HTTP_200_OK)
 
@@ -305,7 +305,7 @@ class OrganizationsInCategoryView(ListAPIView):
         serializer = OrganizationAndCategorySerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(
-                'Valid category, partner id, country and city are required in query parameters')
+                _('Valid category, partner id, country and city are required in query parameters'))
 
         category = serializer.validated_data['category']
         partner = serializer.validated_data['partner']
@@ -359,17 +359,17 @@ class OrgMessageAPIView(ListAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = OrganizationService.get(pk=kwargs['pk'])
 
         if not OrganizationService.user_can_send_message(organization_id=kwargs['pk'], user=request.user):
-            raise PermissionDenied({'message': 'No rights to send message to followers of this organization'})
+            raise PermissionDenied({'message': _('No rights to send message to followers of this organization')})
         OrgMessageService.send_message(organization=organization, content=serializer.validated_data.get('content'),
                                        sender=request.user, message_to=serializer.validated_data.get('message_to'))
-        return Response(data={'message': 'Message is created'},
+        return Response(data={'message': _('Message is created')},
                         status=status.HTTP_201_CREATED)
 
     def get_serializer_context(self):
@@ -396,7 +396,7 @@ class InstagramAccountAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         data = OrganizationInstagramIntegrationService.check_instagram_account(url=serializer.validated_data.get('url'))
@@ -410,13 +410,13 @@ class InstagramParseLastDataAPIView(APIView):
     def post(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
-            raise PermissionDenied({'message': 'No rights to edit organization'})
+            raise PermissionDenied({'message': _('No rights to edit organization')})
         if not InstagramIntegration.objects.get(organization=organization):
             raise ObjectNotFoundException(_('Instagram Integration Link not found'))
         transaction.on_commit(
             lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, posts_count=20)
         )
-        return Response({'message': 'Success'})
+        return Response({'message': _('Success')})
 
 
 class InstagramIntegrationCreateRetrieveAPIView(APIView):
@@ -425,7 +425,7 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
     def get(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
-            raise PermissionDenied({'message': 'No rights to edit organization'})
+            raise PermissionDenied({'message': _('No rights to edit organization')})
         data = OrganizationInstagramIntegrationService.get_from_org(organization=organization)
         return Response(
             InstagramIntegrationLinkSerializer(data, context={'request': request}).data, status=status.HTTP_200_OK)
@@ -435,14 +435,14 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = OrganizationService.get(pk=kwargs['pk'])
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
-            raise PermissionDenied({'message': 'No rights to edit organization'})
+            raise PermissionDenied({'message': _('No rights to edit organization')})
         instance = OrganizationInstagramIntegrationService.create(organization=organization,
                                                                   url=serializer.validated_data.get('url'))
         data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data
@@ -451,9 +451,9 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
     def delete(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
-            raise PermissionDenied({'message': 'No rights to edit organization'})
+            raise PermissionDenied({'message': _('No rights to edit organization')})
         OrganizationInstagramIntegrationService.delete(organization=organization)
-        return Response({'message': 'Successfully deleted'})
+        return Response({'message': _('Successfully deleted')})
 
 
 class OrganizationFollowersCountAPIView(APIView):

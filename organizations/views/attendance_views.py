@@ -23,7 +23,7 @@ class AttendanceUserInfoView(GenericAPIView):
         serializer = OrganizationUserQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -44,7 +44,7 @@ class AttendanceView(GenericAPIView):
         serializer = CreateAttendanceSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -70,7 +70,7 @@ class AttendanceStatsView(GenericAPIView):
         serializer = MonthYearQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -106,7 +106,7 @@ class GlobalAttendanceView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

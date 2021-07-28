@@ -37,7 +37,7 @@ class OrganizationCategory(models.Model):
     name = models.CharField(max_length=255)
 
     class Meta:
-        verbose_name_plural = 'Organization categories'
+        verbose_name_plural = _('Organization categories')
         ordering = ('name',)
 
     def __str__(self):
@@ -256,7 +256,7 @@ class OrganizationClientFinancialStatus(TimestampModel):
         return f'{self.user} status in {self.organization.title}'
 
     class Meta:
-        verbose_name_plural = 'Organization client financial statuses'
+        verbose_name_plural = _('Organization client financial statuses')
         constraints = [
             models.UniqueConstraint(fields=('user', 'organization'), name='unique_statuses_of_user_in_organization')
         ]

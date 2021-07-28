@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -26,7 +27,7 @@ class SubscriptionsView(ListAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -34,7 +35,7 @@ class SubscriptionsView(ListAPIView):
             organization=serializer.validated_data['organization'], user=request.user)
 
         return Response(data={
-            'message': 'Successfully updated subscription status',
+            'message': _('Successfully updated subscription status'),
             'data': {
                 'is_subscribed': is_subscribed
             }

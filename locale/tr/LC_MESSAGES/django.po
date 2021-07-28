@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 15:04+0600\n"
+"POT-Creation-Date: 2021-07-28 15:12+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,6 +139,15 @@ msgstr ""
 
 #: delivery/models.py:37
 msgid "Customer location coordinates"
+msgstr ""
+
+#: instagram_parsers/models.py:8 instagram_parsers/models.py:9
+msgid "Example : 91.238.224.165:20196"
+msgstr ""
+
+#: instagram_parsers/parsers/parser.py:41
+#: instagram_parsers/parsers/parser.py:85
+msgid "Connection Error"
 msgstr ""
 
 #: instagram_parsers/services/proxy_services.py:34

@@ -1,4 +1,5 @@
 from typing import Tuple
+from django.utils.translation import gettext_lazy as _
 
 from instagram_parsers.services.proxy_services import InstagramClientService
 
@@ -37,7 +38,7 @@ def get_posts(user_id: int, posts_count: int):
                      post_url=post_url, pk=pk, data=data_s))
         return post
     except ConnectionError as e:
-        return "Connection Error"
+        return _("Connection Error")
 
 
 def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
@@ -81,4 +82,4 @@ def get_latest_posts(user_id: int):
                      post_url=post_url, pk=pk, data=data_s))
         return post
     except ConnectionError as e:
-        return "Connection Error"
+        return _("Connection Error")

@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import BadRequestException
 from delivery.models import DeliveryInfo
 from shop.models import Cart
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -35,6 +36,7 @@ class DeliveryInfoService:
         countries = [o.country for o in delivery_service_organizations]
         return list(Cart.objects.filter(
             transaction__delivery_info__country__in=countries,
+            transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
             )).order_by('-created_at'))

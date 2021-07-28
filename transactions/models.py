@@ -39,6 +39,7 @@ class Transaction(TimestampModel):
     REJECTED = 'rejected'
     IN_PROGRESS = 'in_progress'
     ACCEPTED = 'accepted'
+
     STATUS = (
         (IN_PROGRESS, IN_PROGRESS),
         (ACCEPTED, ACCEPTED),

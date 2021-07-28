@@ -22,7 +22,7 @@ class PartnersTotalStatsView(GenericAPIView):
         serializer = StartEndDateSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -41,7 +41,7 @@ class OrganizationTotalsView(GenericAPIView):
         serializer = StartEndProcessedByQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -65,7 +65,7 @@ class OrganizationTransactionCalendarView(GenericAPIView):
         serializer = OrganizationCalendarSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 17:31+0600\n"
+"POT-Creation-Date: 2021-07-28 17:47+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -128,7 +128,16 @@ msgstr ""
 #: shop/views/cart_views.py:62 shop/views/cart_views.py:97
 #: shop/views/cart_views.py:126 shop/views/item_views.py:62
 #: shop/views/item_views.py:84 shop/views/item_views.py:106
-#: shop/views/item_views.py:143
+#: shop/views/item_views.py:143 transactions/views/stat_views.py:25
+#: transactions/views/stat_views.py:44 transactions/views/stat_views.py:68
+#: transactions/views/transaction_views.py:41
+#: transactions/views/transaction_views.py:90
+#: transactions/views/transaction_views.py:119
+#: transactions/views/transaction_views.py:143
+#: transactions/views/transaction_views.py:161
+#: transactions/views/transaction_views.py:178
+#: transactions/views/transaction_views.py:204
+#: transactions/views/transaction_views.py:264
 msgid "Invalid input"
 msgstr ""
 
@@ -734,6 +743,15 @@ msgstr ""
 
 #: transactions/services/transaction_services.py:109
 msgid "Original amount do not match with cart amounts"
+msgstr ""
+
+#: transactions/services/transaction_services.py:496
+msgid "This transaction already was rejected"
+msgstr ""
+
+#: transactions/views/transaction_views.py:106
+#: transactions/views/transaction_views.py:131
+msgid "Transaction successfully completed"
 msgstr ""
 
 #: users/models.py:47

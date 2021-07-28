@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 15:12+0600\n"
+"POT-Creation-Date: 2021-07-28 15:18+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -154,6 +154,10 @@ msgstr ""
 
 #: instagram_parsers/services/proxy_services.py:34
 msgid "Need at least one LoginDevice"
+msgstr ""
+
+#: mailer/exceptions.py:6
+msgid "Email was not sent"
 msgstr ""
 
 #: notifications/filters.py:19 transactions/services/filters.py:22

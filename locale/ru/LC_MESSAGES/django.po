@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 15:18+0600\n"
+"POT-Creation-Date: 2021-07-28 15:41+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -95,7 +95,8 @@ msgstr ""
 msgid "No currency with code {to_currency.upper()}"
 msgstr ""
 
-#: common/views.py:37 organizations/views/hotlink_views.py:30
+#: common/views.py:37 notifications/views.py:43 notifications/views.py:82
+#: organizations/views/hotlink_views.py:30
 #: organizations/views/hotlink_views.py:56
 #: organizations/views/organization_promo_views.py:26
 #: organizations/views/organization_promo_views.py:55
@@ -162,6 +163,37 @@ msgstr ""
 
 #: notifications/filters.py:19 transactions/services/filters.py:22
 msgid "Max number of ids should be less than equal 20"
+msgstr ""
+
+#: notifications/serializers.py:39
+#, python-brace-format
+msgid "Error while creating notification setting: {e}"
+msgstr ""
+
+#: notifications/services.py:23
+msgid "Notification not found"
+msgstr ""
+
+#: notifications/services.py:46
+#, python-brace-format
+msgid "Error while creating notification: {e}"
+msgstr ""
+
+#: notifications/services.py:70
+msgid "Settings not found"
+msgstr ""
+
+#: notifications/services.py:93
+#, python-brace-format
+msgid "Can not update: {e}"
+msgstr ""
+
+#: notifications/services.py:110
+msgid "Device not found"
+msgstr ""
+
+#: notifications/views.py:69 notifications/views.py:88
+msgid "Success"
 msgstr ""
 
 #: organizations/models.py:83

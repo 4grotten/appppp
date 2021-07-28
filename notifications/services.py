@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
 
-from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
+from common.exceptions import ObjectNotFoundException, IntegrityException
 from .models import (
     Notification,
     NotificationSetting,
-    NotificationMode, SettingsToToken)
+    SettingsToToken)
 
 User = get_user_model()
 
@@ -19,7 +20,7 @@ class NotificationService:
         try:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Notification not found')
+            raise ObjectNotFoundException(_('Notification not found'))
 
     @classmethod
     def filter(cls, **filters):
@@ -42,7 +43,7 @@ class NotificationService:
 
             return notification
         except Exception as e:
-            raise IntegrityException('Error while creating notification: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Error while creating notification: {e}').format(e=str(e)))
 
     @classmethod
     def get_own_notifications(cls, user: User):
@@ -66,7 +67,7 @@ class NotificationSettingService:
             settings, _ = NotificationSetting.objects.get_or_create(user=user)
             return settings
         except IntegrityError:
-            raise IntegrityException('Settings not found')
+            raise IntegrityException(_('Settings not found'))
 
     @classmethod
     def filter(cls, **filters):
@@ -89,7 +90,7 @@ class NotificationSettingService:
             notification_setting.save()
             return notification_setting
         except Exception as e:
-            raise IntegrityException('Can not update: {e}'.format(e=str(e)))
+            raise IntegrityException(_('Can not update: {e}').format(e=str(e)))
 
 
 class FCMDeviceSettingsService:
@@ -106,5 +107,5 @@ class FCMDeviceSettingsService:
             device_settings.language = language
             device_settings.save()
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException('Device not found')
+            raise ObjectNotFoundException(_('Device not found'))
         return device_settings

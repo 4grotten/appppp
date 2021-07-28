@@ -2,6 +2,7 @@ from django.db import transaction
 from fcm_django.api.rest_framework import FCMDeviceSerializer
 from fcm_django.models import FCMDevice
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import IntegrityException
 from notifications.models import Notification, NotificationSetting
@@ -35,7 +36,7 @@ class CustomFCMDeviceSerializer(FCMDeviceSerializer):
                     )
                     notification_setting.fcm_device.add(fcm_device)
             except Exception as e:
-                raise IntegrityException('Error while creating notification setting: {e}'.format(e=str(e)))
+                raise IntegrityException(_('Error while creating notification setting: {e}').format(e=str(e)))
 
             return fcm_device
 

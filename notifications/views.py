@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.utils.translation import gettext_lazy as _
 from .filters import NotificationFilter
 from .serializers import (NotificationSerializer, CustomFCMDeviceSerializer, NotificationSettingSerializer,
                           FCMDeviceSettingsSerializer)
@@ -40,7 +40,7 @@ class NotificationSettingAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -66,7 +66,7 @@ class NotificationsCountAPIView(APIView):
         NotificationService.do_read_notifications(user=request.user)
 
         return Response(data={
-            'message': 'Success'
+            'message': _('Success')
         })
 
 
@@ -79,11 +79,11 @@ class FCMDeviceSettingsAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         FCMDeviceSettingsService.create(**serializer.validated_data, user=request.user)
 
         return Response(data={
-            'message': 'Success'
+            'message': _('Success')
         })

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 17:03+0600\n"
+"POT-Creation-Date: 2021-07-28 17:31+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -124,7 +124,11 @@ msgstr ""
 #: organizations/views/organization_views.py:438
 #: organizations/views/partnerships_views.py:28
 #: organizations/views/partnerships_views.py:54
-#: organizations/views/subscription_views.py:30
+#: organizations/views/subscription_views.py:30 shop/views/cart_views.py:45
+#: shop/views/cart_views.py:62 shop/views/cart_views.py:97
+#: shop/views/cart_views.py:126 shop/views/item_views.py:62
+#: shop/views/item_views.py:84 shop/views/item_views.py:106
+#: shop/views/item_views.py:143
 msgid "Invalid input"
 msgstr ""
 
@@ -218,7 +222,8 @@ msgid "Device not found"
 msgstr ""
 
 #: notifications/views.py:70 notifications/views.py:89
-#: organizations/views/organization_views.py:419
+#: organizations/views/organization_views.py:419 shop/views/cart_views.py:104
+#: shop/views/cart_views.py:115
 msgid "Success"
 msgstr ""
 
@@ -604,6 +609,14 @@ msgstr "Английский"
 msgid "Turkish"
 msgstr "Турецкий"
 
+#: shop/models.py:24
+msgid "Item categories"
+msgstr ""
+
+#: shop/models.py:38
+msgid "Item subcategories"
+msgstr ""
+
 #: shop/serializers/item_serializers.py:79
 msgid "Organization does not have this subcategory"
 msgstr ""
@@ -658,6 +671,22 @@ msgstr ""
 
 #: shop/services/item_services.py:25
 msgid "No rights to edit this item"
+msgstr ""
+
+#: shop/views/item_views.py:44
+msgid "Not found"
+msgstr ""
+
+#: shop/views/item_views.py:69
+msgid "Successfully updated published status"
+msgstr ""
+
+#: shop/views/item_views.py:91
+msgid "Successfully updated like status"
+msgstr ""
+
+#: shop/views/item_views.py:113
+msgid "Successfully updated bookmark status"
 msgstr ""
 
 #: shop/views/item_views.py:125

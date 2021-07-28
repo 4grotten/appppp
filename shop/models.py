@@ -21,7 +21,7 @@ class ItemCategory(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name_plural = 'Item categories'
+        verbose_name_plural = _('Item categories')
 
 
 class ItemSubcategory(models.Model):
@@ -35,7 +35,7 @@ class ItemSubcategory(models.Model):
         return f'{self.name}: {self.category.name}'
 
     class Meta:
-        verbose_name_plural = 'Item subcategories'
+        verbose_name_plural = _('Item subcategories')
         ordering = ('-organization', 'name',)
 
 

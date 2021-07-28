@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import Point
+from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
 from delivery.models import DeliveryInfo
@@ -19,7 +20,7 @@ class DeliveryInfoService:
             transaction.save()
             return DeliveryInfo.objects.create(*args, location=point, **kwargs)
         except Exception as e:
-            raise BadRequestException(f'Could not add delivery info , {e}')
+            raise BadRequestException(_(f'Could not add delivery info , {e}'))
 
     @classmethod
     def get_all_items_count(cls, user: User) -> int:

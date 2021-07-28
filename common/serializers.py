@@ -77,7 +77,7 @@ class TimezoneField(serializers.Field):
             return pytz.timezone(str(time_zone))
         except pytz.UnknownTimeZoneError:
             raise serializers.ValidationError(
-                _("Unknown time zone: '%(time_zone)s'" % {"time_zone": time_zone})
+                _("Unknown time zone: '%(time_zone)s'") % {"time_zone": time_zone}
             )
 
 

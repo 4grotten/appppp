@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 17:47+0600\n"
+"POT-Creation-Date: 2021-07-28 18:11+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,7 +135,10 @@ msgstr ""
 #: transactions/views/transaction_views.py:161
 #: transactions/views/transaction_views.py:178
 #: transactions/views/transaction_views.py:204
-#: transactions/views/transaction_views.py:264
+#: transactions/views/transaction_views.py:264 users/views.py:76
+#: users/views.py:105 users/views.py:138 users/views.py:163 users/views.py:226
+#: users/views.py:248 users/views.py:296 users/views.py:326 users/views.py:358
+#: users/views.py:390
 msgid "Invalid input"
 msgstr ""
 
@@ -568,7 +571,8 @@ msgstr ""
 
 #: organizations/views/organization_views.py:209
 #: organizations/views/organization_views.py:235
-#: organizations/views/organization_views.py:267
+#: organizations/views/organization_views.py:267 users/views.py:304
+#: users/views.py:334
 msgid "Successfully updated"
 msgstr ""
 
@@ -752,6 +756,10 @@ msgstr ""
 msgid "Transaction successfully completed"
 msgstr ""
 
+#: users/managers.py:12
+msgid "User must have an phone_number address"
+msgstr ""
+
 #: users/models.py:47
 msgid "Only one common client can exist"
 msgstr ""
@@ -800,10 +808,54 @@ msgstr ""
 msgid "Error while creating temporary code for new phone_number"
 msgstr ""
 
+#: users/views.py:61
+msgid "User found"
+msgstr ""
+
+#: users/views.py:90
+msgid "Successfully validated"
+msgstr ""
+
 #: users/views.py:115
 msgid "You can not resend"
 msgstr ""
 
+#: users/views.py:126
+msgid "Code has successfully sent"
+msgstr ""
+
+#: users/views.py:170
+msgid "You have successfully set password"
+msgstr ""
+
+#: users/views.py:194
+msgid "Successfully logged in"
+msgstr ""
+
+#: users/views.py:214
+msgid "Successfully logged out"
+msgstr ""
+
+#: users/views.py:236
+msgid "Password has successfully changed"
+msgstr ""
+
+#: users/views.py:267
+msgid "Code sent"
+msgstr ""
+
+#: users/views.py:346
+msgid "Code sent to old number and email"
+msgstr ""
+
 #: users/views.py:367
 msgid "You have not permission to do this operation"
+msgstr ""
+
+#: users/views.py:378
+msgid "You have successfully changed auth number"
+msgstr ""
+
+#: users/views.py:400
+msgid "Code sent to new phone number"
 msgstr ""

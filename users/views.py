@@ -58,7 +58,7 @@ class RegisterAuthAPIView(APIView):
                 TemporaryCodeService.create_and_send(user=user)
 
         return Response(data={
-            'message': 'User found',
+            'message': _('User found'),
             'is_new_user': user.is_new_user,
             'token': token.key if token else None
         })
@@ -73,7 +73,7 @@ class VerifyTemporaryCodeAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -87,7 +87,7 @@ class VerifyTemporaryCodeAPIView(APIView):
         token, created = Token.objects.get_or_create(user=user)
 
         return Response(data={
-            'message': 'Successfully validated',
+            'message': _('Successfully validated'),
             'token': token.key if token else None,
             'is_new_user': user.is_new_user
         }, status=status.HTTP_200_OK)
@@ -102,7 +102,7 @@ class ResendTemporaryCodeAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -123,7 +123,7 @@ class ResendTemporaryCodeAPIView(APIView):
             TemporaryCodeService.create_and_send(user=user)
 
         return Response(data={
-            'message': 'Code has successfully sent'
+            'message': _('Code has successfully sent')
         }, status=status.HTTP_200_OK)
 
 
@@ -135,7 +135,7 @@ class ProfileInitialAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -160,14 +160,14 @@ class SetPasswordAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         UserService.set_password(user=request.user, password=serializer.validated_data.get('password'))
 
         return Response(data={
-            'message': 'You have successfully set password'
+            'message': _('You have successfully set password')
         }, status=status.HTTP_200_OK)
 
 
@@ -191,7 +191,7 @@ class LoginAPIView(APIView):
             token, _ = Token.objects.get_or_create(user=user)
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
-                'message': 'Successfully logged in',
+                'message': _('Successfully logged in'),
                 'token': token.key,
                 'user': user_data
             }, status=status.HTTP_200_OK)
@@ -211,7 +211,7 @@ class LogoutAPIView(APIView):
         # Token.objects.filter(key=token_key).delete()
 
         return Response(data={
-            'message': 'Successfully logged out',
+            'message': _('Successfully logged out'),
         }, status=status.HTTP_200_OK)
 
 
@@ -223,7 +223,7 @@ class UserChangePasswordAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -233,7 +233,7 @@ class UserChangePasswordAPIView(APIView):
             new_password=serializer.validated_data.get('new_password', None)
         )
 
-        return Response(data={'message': 'Password has successfully changed'}, status=status.HTTP_200_OK)
+        return Response(data={'message': _('Password has successfully changed')}, status=status.HTTP_200_OK)
 
 
 class ForgotPasswordAPIView(APIView):
@@ -245,7 +245,7 @@ class ForgotPasswordAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -264,7 +264,7 @@ class ForgotPasswordAPIView(APIView):
         #            raise ValidationException(_('Invalid input'))
 
         return Response(data={
-            'message': 'Code sent'
+            'message': _('Code sent')
         }, status=status.HTTP_200_OK)
 
 
@@ -293,7 +293,7 @@ class UserPhoneNumbersUpdateAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -301,7 +301,7 @@ class UserPhoneNumbersUpdateAPIView(APIView):
                                                           numbers=serializer.validated_data['phone_numbers'])
         data = PhoneNumberSerializer(numbers, many=True).data
         return Response(data={
-            'message': 'Successfully updated',
+            'message': _('Successfully updated'),
             'numbers': data
         }, status=status.HTTP_200_OK)
 
@@ -323,7 +323,7 @@ class UserSocialNetworksUpdateAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -331,7 +331,7 @@ class UserSocialNetworksUpdateAPIView(APIView):
                                                                       urls=serializer.validated_data['networks'])
         data = SocialNetworkContactSerializer(networks, many=True).data
         return Response(data={
-            'message': 'Successfully updated',
+            'message': _('Successfully updated'),
             'networks': data
         }, status=status.HTTP_200_OK)
 
@@ -343,7 +343,7 @@ class ValidateOldNumberAPIView(APIView):
         TemporaryCodeService.create_and_send(user=request.user)
 
         return Response(data={
-            'message': 'Code sent to old number and email'
+            'message': _('Code sent to old number and email')
         })
 
 
@@ -355,7 +355,7 @@ class ChangeAndVerifyNewNumber(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -375,7 +375,7 @@ class ChangeAndVerifyNewNumber(APIView):
         )
 
         return Response(data={
-            'message': 'You have successfully changed auth number'
+            'message': _('You have successfully changed auth number')
         })
 
 
@@ -387,7 +387,7 @@ class SendCodeToNewNumberAPIView(APIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -397,5 +397,5 @@ class SendCodeToNewNumberAPIView(APIView):
         )
 
         return Response(data={
-            'message': 'Code sent to new phone number'
+            'message': _('Code sent to new phone number')
         })

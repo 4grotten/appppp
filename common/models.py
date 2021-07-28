@@ -12,6 +12,8 @@ from urllib.request import urlretrieve, urlopen
 from common.processors import ResizeWatermarkedSpec
 from common.utils import upload_file_with_unique_name
 
+from django.utils.translation import gettext_lazy as _
+
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
     height = 600
@@ -47,7 +49,7 @@ class File(TimestampModel):
 
     file = models.ImageField(
         upload_to=upload_file_with_unique_name,
-        help_text='Image that you want to store',
+        help_text=_('Image that you want to store'),
         max_length=1000
     )
 
@@ -83,7 +85,7 @@ class Currency(models.Model):
 
     class Meta:
         ordering = ('name',)
-        verbose_name_plural = 'Currencies'
+        verbose_name_plural = _('Currencies')
 
 
 class Country(models.Model):
@@ -100,7 +102,7 @@ class Country(models.Model):
 
     class Meta:
         ordering = ('-is_priority', 'code',)
-        verbose_name_plural = 'Countries'
+        verbose_name_plural = _('Countries')
 
 
 class City(models.Model):
@@ -115,4 +117,4 @@ class City(models.Model):
 
     class Meta:
         ordering = ('name', 'country',)
-        verbose_name_plural = 'Cities'
+        verbose_name_plural = _('Cities')

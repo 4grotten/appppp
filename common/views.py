@@ -1,4 +1,5 @@
 import requests
+from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
@@ -33,7 +34,7 @@ class WatermarkImageCreateView(ImageCreateView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -78,11 +79,11 @@ class YoutubeEmbedView(GenericAPIView):
     def get(self, request):
         youtube_link = request.GET.get('url', None)
         if not youtube_link:
-            return Response({'message': 'Please pass the full youtube link'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _('Please pass the full youtube link')}, status=status.HTTP_400_BAD_REQUEST)
 
         embed_url = f'https://www.youtube.com/oembed?format=json&url={youtube_link}'
         response = requests.get(embed_url)
         if response.status_code == 200:
             return Response(response.json())
 
-        return Response({'message': 'Please provide valid youtube link'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': _('Please provide valid youtube link')}, status=status.HTTP_400_BAD_REQUEST)

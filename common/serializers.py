@@ -1,5 +1,6 @@
 import pytz
 import six
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from .models import File, Currency, Country, City
@@ -76,14 +77,14 @@ class TimezoneField(serializers.Field):
             return pytz.timezone(str(time_zone))
         except pytz.UnknownTimeZoneError:
             raise serializers.ValidationError(
-                "Unknown time zone: '%s'" % time_zone
+                _("Unknown time zone: '%(time_zone)s'" % {"time_zone": time_zone})
             )
 
 
 class FileRelatedField(serializers.RelatedField):
     default_error_messages = {
-        'invalid': 'A valid integer is required.',
-        'not_found': 'File does not exist.'
+        'invalid': _('A valid integer is required.'),
+        'not_found': _('File does not exist.')
     }
 
     def to_representation(self, value):

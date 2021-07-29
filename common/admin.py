@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.gis.db import models
 from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City
+from .models import File, Country, Currency, City, Version
 
 
 @admin.register(File)
@@ -30,3 +30,8 @@ class CityAdmin(admin.ModelAdmin):
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'name_ru', 'name_tr',)
+
+
+@admin.register(Version)
+class VersionAdmin(admin.ModelAdmin):
+    list_display = ('device', 'version', 'created_at', 'updated_at', 'required_to_update')

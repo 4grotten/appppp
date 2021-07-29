@@ -41,7 +41,7 @@ class MembershipListCreateView(ListCreateAPIView):
         serializer = MembershipCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -50,7 +50,7 @@ class MembershipListCreateView(ListCreateAPIView):
                                        role=serializer.validated_data['role'],
                                        added_by=request.user)
 
-        return Response(data={'message': 'Successfully created'}, status=status.HTTP_201_CREATED)
+        return Response(data={'message': _('Successfully created')}, status=status.HTTP_201_CREATED)
 
 
 class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -76,7 +76,7 @@ class MembershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -131,7 +131,7 @@ class TransferOwnershipView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -139,7 +139,7 @@ class TransferOwnershipView(GenericAPIView):
                                                       new_owner=serializer.validated_data['new_owner'],
                                                       current_owner=request.user)
 
-        return Response(data={'message': 'Successfully transferred ownership'}, status=status.HTTP_200_OK)
+        return Response(data={'message': _('Successfully transferred ownership')}, status=status.HTTP_200_OK)
 
 
 class BriefUserInfoView(RetrieveAPIView):

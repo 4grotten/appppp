@@ -25,7 +25,7 @@ class PartnershipView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -36,7 +36,7 @@ class PartnershipView(GenericAPIView):
         )
 
         return Response(data={
-            'message': 'Successfully sent partnership request'
+            'message': _('Successfully sent partnership request')
         }, status=status.HTTP_200_OK)
 
 
@@ -51,7 +51,7 @@ class PartnershipRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         serializer = PartnershipUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

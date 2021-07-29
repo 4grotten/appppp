@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 15:41+0600\n"
+"POT-Creation-Date: 2021-07-28 18:11+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -95,11 +95,52 @@ msgstr ""
 msgid "No currency with code {to_currency.upper()}"
 msgstr ""
 
-#: common/views.py:37 notifications/views.py:43 notifications/views.py:82
+#: common/views.py:37 notifications/views.py:44 notifications/views.py:83
+#: organizations/views/attendance_views.py:26
+#: organizations/views/attendance_views.py:47
+#: organizations/views/attendance_views.py:73
+#: organizations/views/attendance_views.py:109
+#: organizations/views/banner_views.py:23
+#: organizations/views/banner_views.py:36
+#: organizations/views/banner_views.py:67 organizations/views/card_views.py:39
+#: organizations/views/card_views.py:76
+#: organizations/views/discount_views.py:20
+#: organizations/views/discount_views.py:41
 #: organizations/views/hotlink_views.py:30
 #: organizations/views/hotlink_views.py:56
+#: organizations/views/membership_views.py:44
+#: organizations/views/membership_views.py:79
+#: organizations/views/membership_views.py:134
 #: organizations/views/organization_promo_views.py:26
 #: organizations/views/organization_promo_views.py:55
+#: organizations/views/organization_views.py:70
+#: organizations/views/organization_views.py:106
+#: organizations/views/organization_views.py:140
+#: organizations/views/organization_views.py:201
+#: organizations/views/organization_views.py:227
+#: organizations/views/organization_views.py:248
+#: organizations/views/organization_views.py:362
+#: organizations/views/organization_views.py:399
+#: organizations/views/organization_views.py:438
+#: organizations/views/partnerships_views.py:28
+#: organizations/views/partnerships_views.py:54
+#: organizations/views/subscription_views.py:30 shop/views/cart_views.py:45
+#: shop/views/cart_views.py:62 shop/views/cart_views.py:97
+#: shop/views/cart_views.py:126 shop/views/item_views.py:62
+#: shop/views/item_views.py:84 shop/views/item_views.py:106
+#: shop/views/item_views.py:143 transactions/views/stat_views.py:25
+#: transactions/views/stat_views.py:44 transactions/views/stat_views.py:68
+#: transactions/views/transaction_views.py:41
+#: transactions/views/transaction_views.py:90
+#: transactions/views/transaction_views.py:119
+#: transactions/views/transaction_views.py:143
+#: transactions/views/transaction_views.py:161
+#: transactions/views/transaction_views.py:178
+#: transactions/views/transaction_views.py:204
+#: transactions/views/transaction_views.py:264 users/views.py:76
+#: users/views.py:105 users/views.py:138 users/views.py:163 users/views.py:226
+#: users/views.py:248 users/views.py:296 users/views.py:326 users/views.py:358
+#: users/views.py:390
 msgid "Invalid input"
 msgstr ""
 
@@ -192,8 +233,14 @@ msgstr ""
 msgid "Device not found"
 msgstr ""
 
-#: notifications/views.py:69 notifications/views.py:88
+#: notifications/views.py:70 notifications/views.py:89
+#: organizations/views/organization_views.py:419 shop/views/cart_views.py:104
+#: shop/views/cart_views.py:115
 msgid "Success"
+msgstr ""
+
+#: organizations/models.py:40
+msgid "Organization categories"
 msgstr ""
 
 #: organizations/models.py:83
@@ -211,6 +258,10 @@ msgstr ""
 #: organizations/models.py:232 organizations/models.py:234
 msgid "This field is required"
 msgstr "Это поле обязательное"
+
+#: organizations/models.py:259
+msgid "Organization client financial statuses"
+msgstr ""
 
 #: organizations/serializers/card_serializers.py:45
 #: organizations/services/card_services.py:63
@@ -232,6 +283,10 @@ msgstr "Это поле обязательное"
 #: organizations/views/organization_views.py:168
 #: organizations/views/organization_views.py:182
 #: organizations/views/organization_views.py:255
+#: organizations/views/organization_views.py:413
+#: organizations/views/organization_views.py:428
+#: organizations/views/organization_views.py:445
+#: organizations/views/organization_views.py:454
 #: shop/serializers/category_serializers.py:20
 #: shop/serializers/item_serializers.py:82
 msgid "No rights to edit organization"
@@ -377,6 +432,11 @@ msgstr "Собственник"
 msgid "Client"
 msgstr ""
 
+#: organizations/services/organization_services.py:231
+#, python-brace-format
+msgid "Can not create more than {MAX_ORGANIZATIONS_PER_USER} organizations"
+msgstr ""
+
 #: organizations/services/organization_services.py:298
 msgid "Can not update currency. It is different from partners"
 msgstr ""
@@ -466,6 +526,29 @@ msgstr ""
 msgid "No rights to check attendance in this organization"
 msgstr ""
 
+#: organizations/views/banner_views.py:48 organizations/views/card_views.py:47
+#: organizations/views/hotlink_views.py:40
+#: organizations/views/membership_views.py:53
+msgid "Successfully created"
+msgstr ""
+
+#: organizations/views/card_views.py:28
+msgid "Please provide organization id as a query parameter"
+msgstr ""
+
+#: organizations/views/card_views.py:63
+#: organizations/views/organization_views.py:456
+msgid "Successfully deleted"
+msgstr ""
+
+#: organizations/views/discount_views.py:28
+msgid "Successfully updated cards"
+msgstr ""
+
+#: organizations/views/discount_views.py:49
+msgid "Successfully deleted cards"
+msgstr ""
+
 #: organizations/views/hotlink_views.py:23
 msgid "Wrong organization parameter"
 msgstr ""
@@ -480,8 +563,40 @@ msgstr ""
 msgid "There are existing employees with this role"
 msgstr ""
 
+#: organizations/views/membership_views.py:142
+msgid "Successfully transferred ownership"
+msgstr ""
+
+#: organizations/views/organization_views.py:185
+msgid "Successfully reset running purchase ID"
+msgstr ""
+
+#: organizations/views/organization_views.py:209
+#: organizations/views/organization_views.py:235
+#: organizations/views/organization_views.py:267 users/views.py:304
+#: users/views.py:334
+msgid "Successfully updated"
+msgstr ""
+
 #: organizations/views/organization_views.py:281
 msgid "Valid partner id, country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/organization_views.py:308
+msgid ""
+"Valid category, partner id, country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/organization_views.py:369
+msgid "No rights to send message to followers of this organization"
+msgstr ""
+
+#: organizations/views/organization_views.py:372
+msgid "Message is created"
+msgstr ""
+
+#: organizations/views/partnerships_views.py:39
+msgid "Successfully sent partnership request"
 msgstr ""
 
 #: organizations/views/partnerships_views.py:110
@@ -489,6 +604,10 @@ msgstr ""
 #: organizations/views/partnerships_views.py:139
 #: shop/views/category_views.py:51 shop/views/category_views.py:67
 msgid "Valid country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/subscription_views.py:38
+msgid "Successfully updated subscription status"
 msgstr ""
 
 #: project/settings/base.py:143
@@ -502,6 +621,14 @@ msgstr "Английский"
 #: project/settings/base.py:145
 msgid "Turkish"
 msgstr "Турецкий"
+
+#: shop/models.py:24
+msgid "Item categories"
+msgstr ""
+
+#: shop/models.py:38
+msgid "Item subcategories"
+msgstr ""
 
 #: shop/serializers/item_serializers.py:79
 msgid "Organization does not have this subcategory"
@@ -559,6 +686,22 @@ msgstr ""
 msgid "No rights to edit this item"
 msgstr ""
 
+#: shop/views/item_views.py:44
+msgid "Not found"
+msgstr ""
+
+#: shop/views/item_views.py:69
+msgid "Successfully updated published status"
+msgstr ""
+
+#: shop/views/item_views.py:91
+msgid "Successfully updated like status"
+msgstr ""
+
+#: shop/views/item_views.py:113
+msgid "Successfully updated bookmark status"
+msgstr ""
+
 #: shop/views/item_views.py:125
 msgid "You have already complained about this item"
 msgstr ""
@@ -604,6 +747,19 @@ msgstr ""
 
 #: transactions/services/transaction_services.py:109
 msgid "Original amount do not match with cart amounts"
+msgstr ""
+
+#: transactions/services/transaction_services.py:496
+msgid "This transaction already was rejected"
+msgstr ""
+
+#: transactions/views/transaction_views.py:106
+#: transactions/views/transaction_views.py:131
+msgid "Transaction successfully completed"
+msgstr ""
+
+#: users/managers.py:12
+msgid "User must have an phone_number address"
 msgstr ""
 
 #: users/models.py:47
@@ -654,12 +810,56 @@ msgstr ""
 msgid "Error while creating temporary code for new phone_number"
 msgstr ""
 
+#: users/views.py:61
+msgid "User found"
+msgstr ""
+
+#: users/views.py:90
+msgid "Successfully validated"
+msgstr ""
+
 #: users/views.py:115
 msgid "You can not resend"
 msgstr ""
 
+#: users/views.py:126
+msgid "Code has successfully sent"
+msgstr ""
+
+#: users/views.py:170
+msgid "You have successfully set password"
+msgstr ""
+
+#: users/views.py:194
+msgid "Successfully logged in"
+msgstr ""
+
+#: users/views.py:214
+msgid "Successfully logged out"
+msgstr ""
+
+#: users/views.py:236
+msgid "Password has successfully changed"
+msgstr ""
+
+#: users/views.py:267
+msgid "Code sent"
+msgstr ""
+
+#: users/views.py:346
+msgid "Code sent to old number and email"
+msgstr ""
+
 #: users/views.py:367
 msgid "You have not permission to do this operation"
+msgstr ""
+
+#: users/views.py:378
+msgid "You have successfully changed auth number"
+msgstr ""
+
+#: users/views.py:400
+msgid "Code sent to new phone number"
 msgstr ""
 
 #, fuzzy

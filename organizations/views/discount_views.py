@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -16,7 +17,7 @@ class DiscountsBulkUpdateView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -24,7 +25,7 @@ class DiscountsBulkUpdateView(GenericAPIView):
                                                   organization=serializer.validated_data['organization'],
                                                   updated_by=request.user)
         return Response(data={
-            'message': 'Successfully updated cards',
+            'message': _('Successfully updated cards'),
         }, status=status.HTTP_200_OK)
 
 
@@ -37,7 +38,7 @@ class DiscountsBulkDeleteView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -45,5 +46,5 @@ class DiscountsBulkDeleteView(GenericAPIView):
                                                   organization=serializer.validated_data['organization'],
                                                   deleted_by=request.user)
         return Response(data={
-            'message': 'Successfully deleted cards',
+            'message': _('Successfully deleted cards'),
         }, status=status.HTTP_200_OK)

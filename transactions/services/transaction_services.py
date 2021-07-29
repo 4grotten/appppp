@@ -493,7 +493,7 @@ class TransactionService:
     @transaction.atomic
     def refund_transaction(cls, request, old_transaction: Transaction, user: User):
         if old_transaction.status == Transaction.REJECTED:
-            raise BadRequestException(message='This transaction already was rejected')
+            raise BadRequestException(message=_('This transaction already was rejected'))
         from shop.serializers.cart_serializers import CartSerializer
         try:
             fixed_cart = CartSerializer(old_transaction.cart, context={

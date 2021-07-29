@@ -25,7 +25,7 @@ class DiscountsListBulkCreateAPIView(ListAPIView):
 
         if organization_id is None or organization_id == '':
             return Response(data={
-                'message': 'Please provide organization id as a query parameter',
+                'message': _('Please provide organization id as a query parameter'),
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         discounts = DiscountCardService.get_grouped_discounts(organization_id=organization_id)
@@ -36,7 +36,7 @@ class DiscountsListBulkCreateAPIView(ListAPIView):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -44,7 +44,7 @@ class DiscountsListBulkCreateAPIView(ListAPIView):
                                                   organization=serializer.validated_data['organization'])
 
         return Response(data={
-            'message': 'Successfully created',
+            'message': _('Successfully created'),
         }, status=status.HTTP_201_CREATED)
 
 
@@ -60,7 +60,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
             DiscountCardService.organize_cumulative_cards(organization=discount.organization)
 
         return Response(data={
-            'message': 'Successfully deleted',
+            'message': _('Successfully deleted'),
         }, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
@@ -73,7 +73,7 @@ class OrganizationDiscountsDeleteUpdateView(UpdateAPIView, DestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=False)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

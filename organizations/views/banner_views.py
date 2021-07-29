@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.utils.translation import gettext_lazy as _
 
 from common.permissions import ReadOnly
 from organizations.models import Banner
@@ -19,7 +20,7 @@ class BannerView(GenericAPIView):
         serializer = OrganizationQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -32,7 +33,7 @@ class BannerView(GenericAPIView):
         serializer = BannerCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -44,7 +45,7 @@ class BannerView(GenericAPIView):
         )
 
         return Response(data={
-            'message': 'Successfully created',
+            'message': _('Successfully created'),
         }, status=status.HTTP_201_CREATED)
 
 
@@ -63,7 +64,7 @@ class BannerDetailsView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

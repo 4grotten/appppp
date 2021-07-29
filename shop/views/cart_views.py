@@ -1,4 +1,5 @@
 from django.db.models import Prefetch
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -41,7 +42,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         serializer = CartUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.get_related(id=kwargs['pk'])
@@ -58,7 +59,7 @@ class CartItemCountChangeView(GenericAPIView):
         serializer = CartItemCountChangeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -93,14 +94,14 @@ class OrderDeliveryView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
         return Response(
             {
-                "message": "Success",
+                "message": _("Success"),
                 "transaction_id": cart.transaction_id
             }
         )
@@ -111,7 +112,7 @@ class OrderSelfPickupView(GenericAPIView):
 
     def post(self, request, pk):
         CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.SELF_PICKUP)
-        return Response({'message': 'Success'})
+        return Response({'message': _('Success')})
 
 
 class CartAnonymousCheckoutView(GenericAPIView):
@@ -122,7 +123,7 @@ class CartAnonymousCheckoutView(GenericAPIView):
         serializer = OffsetUTCSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

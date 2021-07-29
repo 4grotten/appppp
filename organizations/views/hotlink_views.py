@@ -37,7 +37,7 @@ class HotlinkListCreateView(ListCreateAPIView):
                                       image=serializer.validated_data['image'])
 
         return Response(data={
-            'message': 'Successfully created',
+            'message': _('Successfully created'),
         }, status=status.HTTP_201_CREATED)
 
 

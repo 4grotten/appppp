@@ -41,7 +41,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         if not kwargs['pk'].isdigit():
             return Response(data={
-                'details': 'Not found'
+                'details': _('Not found')
             }, status=status.HTTP_404_NOT_FOUND)
 
         self.serializer_class = ItemRetrieveSerializer
@@ -59,14 +59,14 @@ class ItemChangePublishedStatusView(GenericAPIView):
         serializer = ItemChangePublishedSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         ShopItemService.update_published_status(user=request.user, item=serializer.validated_data['item'],
                                                 is_published=serializer.validated_data['is_published'])
 
-        return Response(data={'message': 'Successfully updated published status'})
+        return Response(data={'message': _('Successfully updated published status')})
 
 
 class LikeListCreateView(ListAPIView):
@@ -81,14 +81,14 @@ class LikeListCreateView(ListAPIView):
         serializer = LikeSerializer(data=self.request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         LikeService.like_unlike_item(user=request.user, item=serializer.validated_data['item'],
                                      is_liked=serializer.validated_data['is_liked'])
 
-        return Response(data={'message': 'Successfully updated like status'})
+        return Response(data={'message': _('Successfully updated like status')})
 
 
 class BookmarkListCreateView(ListAPIView):
@@ -103,14 +103,14 @@ class BookmarkListCreateView(ListAPIView):
         serializer = BookmarkSerializer(data=self.request.data)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['item'],
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
-        return Response(data={'message': 'Successfully updated bookmark status'})
+        return Response(data={'message': _('Successfully updated bookmark status')})
 
 
 class ComplaintCreateView(CreateAPIView):
@@ -140,6 +140,6 @@ class TranslateItemTextView(GenericAPIView):
         except KeyError as e:
             error = str(e)
             return Response(data={
-                "message": "Invalid input",
+                "message": _("Invalid input"),
                 'This field is required': error
             }, status=status.HTTP_406_NOT_ACCEPTABLE)

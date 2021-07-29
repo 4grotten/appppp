@@ -38,7 +38,7 @@ class TransactionPreprocessView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -87,7 +87,7 @@ class TransactionCompleteView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -103,7 +103,7 @@ class TransactionCompleteView(GenericAPIView):
         )
 
         return Response(data={
-            'message': 'Transaction successfully completed'
+            'message': _('Transaction successfully completed')
         }, status=status.HTTP_200_OK)
 
 
@@ -116,7 +116,7 @@ class OnlineTransactionCompleteView(GenericAPIView):
 
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -128,7 +128,7 @@ class OnlineTransactionCompleteView(GenericAPIView):
         )
 
         return Response(data={
-            'message': 'Transaction successfully completed'
+            'message': _('Transaction successfully completed')
         }, status=status.HTTP_200_OK)
 
 
@@ -140,7 +140,7 @@ class UserTransactionOrganizationView(ListAPIView):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         return TransactionService.get_user_transaction_organizations(
@@ -158,7 +158,7 @@ class UserSaleTransactionOrganizationView(ListAPIView):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         return TransactionService.get_user_sale_transaction_organizations(
@@ -175,7 +175,7 @@ class UserTotalsView(APIView):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -201,7 +201,7 @@ class UserSaleTotalsView(APIView):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -261,7 +261,7 @@ class OrganizationTransactionListView(ListAPIView):
         serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
-                'message': 'Invalid input',
+                'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 

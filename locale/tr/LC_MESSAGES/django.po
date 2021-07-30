@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-28 18:11+0600\n"
+"POT-Creation-Date: 2021-07-30 15:22+0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,10 +135,10 @@ msgstr ""
 #: transactions/views/transaction_views.py:161
 #: transactions/views/transaction_views.py:178
 #: transactions/views/transaction_views.py:204
-#: transactions/views/transaction_views.py:264 users/views.py:76
-#: users/views.py:105 users/views.py:138 users/views.py:163 users/views.py:226
-#: users/views.py:248 users/views.py:296 users/views.py:326 users/views.py:358
-#: users/views.py:390
+#: transactions/views/transaction_views.py:264 users/views.py:33
+#: users/views.py:76 users/views.py:105 users/views.py:138 users/views.py:163
+#: users/views.py:184 users/views.py:226 users/views.py:248 users/views.py:296
+#: users/views.py:326 users/views.py:358 users/views.py:390
 msgid "Invalid input"
 msgstr ""
 
@@ -150,7 +150,7 @@ msgstr ""
 msgid "Please provide valid youtube link"
 msgstr ""
 
-#: delivery/delivery_services.py:23
+#: delivery/delivery_services.py:24
 #, python-brace-format
 msgid "Could not add delivery info , {e}"
 msgstr ""
@@ -808,6 +808,10 @@ msgstr ""
 msgid "Error while creating temporary code for new phone_number"
 msgstr ""
 
+#: users/views.py:47
+msgid "User has successfully created"
+msgstr ""
+
 #: users/views.py:61
 msgid "User found"
 msgstr ""
@@ -830,6 +834,10 @@ msgstr ""
 
 #: users/views.py:194
 msgid "Successfully logged in"
+msgstr ""
+
+#: users/views.py:200
+msgid "Wrong credentials"
 msgstr ""
 
 #: users/views.py:214

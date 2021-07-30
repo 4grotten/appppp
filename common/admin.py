@@ -34,4 +34,4 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 @admin.register(Version)
 class VersionAdmin(admin.ModelAdmin):
-    list_display = ('device', 'version', 'created_at', 'updated_at', 'required_to_update')
+    list_display = ('device', 'version', 'created_at', 'updated_at', 'force_update')

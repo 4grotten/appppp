@@ -119,9 +119,9 @@ class City(models.Model):
 
 
 class Version(TimestampModel):
-    device = models.CharField(max_length=255, choices=DEVICE_TYPES)
+    device = models.CharField(max_length=255, choices=DEVICE_TYPES, unique=True)
     version = models.CharField(max_length=255)
-    required_to_update = models.BooleanField(default=False)
+    force_update = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.device}- {self.version}'

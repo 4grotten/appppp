@@ -1,5 +1,5 @@
-ANDROID = 'Android'
-IOS = 'iOS'
+ANDROID = 'android'
+IOS = 'ios'
 
 DEVICE_TYPES = (
     (ANDROID, ANDROID),

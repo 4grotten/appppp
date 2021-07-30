@@ -110,9 +110,6 @@ class FileRelatedField(serializers.RelatedField):
 
 
 class VersionSerializer(serializers.ModelSerializer):
-    device = serializers.CharField(write_only=True)
-    version = serializers.CharField(write_only=True)
-
     class Meta:
         model = Version
-        fields = ('device', 'version')
+        fields = ('device', 'version', 'force_update')

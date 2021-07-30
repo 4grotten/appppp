@@ -2,7 +2,7 @@ from django.urls import path
 
 from common.views import (
     ImageCreateView, CountriesListView, CountryCitySearchView, WatermarkImageCreateView, ImageCreateFromUrlView,
-    YoutubeEmbedView, CheckVersionPo
+    YoutubeEmbedView, GetLatestAppVersion
 )
 
 urlpatterns = [
@@ -14,5 +14,5 @@ urlpatterns = [
 
     path('youtube_embed/', YoutubeEmbedView.as_view(), name='youtube_embed'),
 
-    path('check_version/', CheckVersionPo.as_view(), name='check_version')
+    path('app_version/<slug:device>/', GetLatestAppVersion.as_view(), name='latest_app_version')
 ]

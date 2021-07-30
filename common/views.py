@@ -7,10 +7,13 @@ from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import File, Country
-from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer
+from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
+    VersionSerializer
 from .services.country_city import CountryCityService
+from .services.version import VersionService
 
 
 class ImageCreateView(CreateAPIView):
@@ -87,3 +90,26 @@ class YoutubeEmbedView(GenericAPIView):
             return Response(response.json())
 
         return Response({'message': _('Please provide valid youtube link')}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckVersionPo(APIView):
+    serializer_class = VersionSerializer
+
+    def post(self, request):
+        data = request.data
+        need_to_update = False
+        version = VersionService.check_version_in_database(data=data)
+
+        if not version:
+            serializer = self.serializer_class(data=data)
+            if not serializer.is_valid():
+                return Response(data={
+                    'message': _('Invalid input'),
+                    'errors': serializer.errors
+                }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            else:
+                serializer.save()
+        else:
+            need_to_update = VersionService.check_if_need_update(device=data['device'], version=data['version'])
+
+        return Response({'need_to_update': need_to_update})

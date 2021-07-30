@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Optional
 
 from django.db import IntegrityError, transaction
-from django.db.models import F, QuerySet
+from django.db.models import F, QuerySet, Q
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
@@ -99,10 +99,11 @@ class OrganizationPromoService:
 
     @classmethod
     def get_active_promos(cls) -> QuerySet:
-        return OrganizationPromo.objects.filter(cashback__lte=F('total_cashback') - F('granted_amount'))
+        return OrganizationPromo.objects.filter(cashback__lte=F('total_cashback') - F('granted_amount')).exclude(
+            Q(organization__is_active=False) | Q(organization__is_deleted=True) | Q(organization__is_banned=True))
 
     @classmethod
-    def get_filtering_promos_by_country(cls, country) -> QuerySet:
+    def get_filtering_promos_by_country(cls, country: Optional[str]) -> QuerySet:
         query = cls.get_active_promos()
         if not country:
             return query

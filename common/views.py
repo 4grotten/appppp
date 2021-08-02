@@ -3,14 +3,17 @@ from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import File, Country
-from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer
+from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
+    VersionSerializer
 from .services.country_city import CountryCityService
+from .services.version import VersionService
 
 
 class ImageCreateView(CreateAPIView):
@@ -87,3 +90,10 @@ class YoutubeEmbedView(GenericAPIView):
             return Response(response.json())
 
         return Response({'message': _('Please provide valid youtube link')}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetLatestAppVersion(RetrieveAPIView):
+    serializer_class = VersionSerializer
+
+    def get_object(self):
+        return VersionService.get(device=self.kwargs['device'])

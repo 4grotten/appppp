@@ -1,18 +1,16 @@
 import os
-from tempfile import NamedTemporaryFile
 from urllib import request
-from django.core.files import File as Files
-from django.core.files.base import ContentFile
+
 from django.contrib.gis.db.models import PointField
+from django.core.files import File as Files
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from imagekit import register
 from imagekit.models import ImageSpecField
-from urllib.request import urlretrieve, urlopen
 
+from common.constants import DEVICE_TYPES
 from common.processors import ResizeWatermarkedSpec
 from common.utils import upload_file_with_unique_name
-
-from django.utils.translation import gettext_lazy as _
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -118,3 +116,16 @@ class City(models.Model):
     class Meta:
         ordering = ('name', 'country',)
         verbose_name_plural = _('Cities')
+
+
+class Version(TimestampModel):
+    device = models.CharField(max_length=255, choices=DEVICE_TYPES, unique=True)
+    version = models.CharField(max_length=255)
+    force_update = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.device}- {self.version}'
+
+    class Meta:
+        verbose_name = _('Version')
+        verbose_name_plural = _('Versions')

@@ -1,9 +1,11 @@
+from abc import ABC
+
 import pytz
 import six
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import File, Currency, Country, City
+from .models import File, Currency, Country, City, Version
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -105,3 +107,9 @@ class FileRelatedField(serializers.RelatedField):
             self.fail('invalid')
         except File.DoesNotExist:
             self.fail('not_found')
+
+
+class VersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Version
+        fields = ('device', 'version', 'force_update')

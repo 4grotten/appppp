@@ -1,11 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
-from common.permissions import ReadOnly
 from organizations.serializers.hotlink_serializers import (
     HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer
 )
@@ -14,7 +13,7 @@ from organizations.services.hotlink_services import HotlinkService
 
 
 class HotlinkListCreateView(ListCreateAPIView):
-    permission_classes = [IsAuthenticated | ReadOnly]
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = HotlinkSerializer
 
     def get_queryset(self):

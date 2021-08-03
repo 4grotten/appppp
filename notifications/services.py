@@ -4,10 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
 
 from common.exceptions import ObjectNotFoundException, IntegrityException
-from .models import (
-    Notification,
-    NotificationSetting,
-    SettingsToToken)
+from .models import Notification, NotificationSetting, SettingsToToken
 
 User = get_user_model()
 
@@ -30,7 +27,7 @@ class NotificationService:
     def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
                             sender=None, extra_data=None):
         try:
-            notification, _ = cls.model.objects.get_or_create(
+            notification, created = cls.model.objects.get_or_create(
                 recipient=recipient,
                 sender=sender,
                 mode=mode,

@@ -1,5 +1,3 @@
-from abc import ABC
-
 import pytz
 import six
 from django.utils.translation import gettext_lazy as _

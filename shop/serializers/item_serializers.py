@@ -57,7 +57,6 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ItemCreateUpdateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ShopItem
         fields = (

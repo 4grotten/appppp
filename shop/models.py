@@ -1,15 +1,14 @@
-from django.contrib.gis.db.models import PointField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, File
 from organizations.models import Organization
 from transactions.models import Transaction
-from utils.translator import GoogleTranslator
 from users.models import User
+from utils.translator import GoogleTranslator
 
 
 class ItemCategory(models.Model):
@@ -144,7 +143,6 @@ class CartItem(TimestampModel):
             models.UniqueConstraint(fields=('cart', 'item'), name='unique_item_in_user_cart')
         ]
         ordering = ['-created_at']
-
 
 
 class Complaint(TimestampModel):

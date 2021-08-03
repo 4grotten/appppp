@@ -1,10 +1,9 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from django.utils.translation import gettext_lazy as _
 
-from common.permissions import ReadOnly
 from organizations.models import Banner
 from organizations.serializers.banner_serializers import (
     BannerSerializer, BannerCreateSerializer, BannerUpdateSerializer
@@ -14,7 +13,7 @@ from organizations.services.banner_services import BannerService
 
 
 class BannerView(GenericAPIView):
-    permission_classes = [IsAuthenticated | ReadOnly]
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request, *args, **kwargs):
         serializer = OrganizationQueryParamSerializer(data=request.GET)

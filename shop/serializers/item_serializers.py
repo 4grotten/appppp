@@ -90,7 +90,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def save(self, **kwargs):
-        images = reversed(self.validated_data.get('images', []))
+        images = self.validated_data.get('images', [])
         for index, image in enumerate(images):
             image.order = index
             image.save(update_fields=('order',))

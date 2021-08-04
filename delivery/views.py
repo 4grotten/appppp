@@ -39,7 +39,7 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             return Response(data={
                 'message': _('This user is not delivery service'),
                 'errors': _("Not delivery service")
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.status not in (
         DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE, DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY):
@@ -83,13 +83,13 @@ class DeliveredByDeliveryServiceView(APIView):
             return Response(data={
                 'message': _('This user is not delivery service'),
                 'errors': _("Not delivery service")
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.delivery_organization != delivery_organization:
             return Response(data={
                 'message': _('This delivery service is not owner of this delivery'),
-                'errors': _("Not your order")
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+                'errors': _("Not your delivery")
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
         if delivery_info.status == DeliveryInfo.DELIVERY_STATUS_DELIVERED:
             return Response(data={

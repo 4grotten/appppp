@@ -10,7 +10,8 @@ class DeliveryInfoAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
     raw_id_fields = ('transaction', 'delivery_organization', 'city')
-    list_display = ('transaction', 'country', 'city', 'address', 'phone', 'delivery_organization')
+    list_display = ('transaction', 'country', 'city', 'address', 'phone', 'delivery_organization', 'status')
+    list_filter = ('status', )
 
 
 admin.site.register(DeliveryInfo, DeliveryInfoAdmin)

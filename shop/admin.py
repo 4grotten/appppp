@@ -38,7 +38,7 @@ class ShopItemAdmin(admin.ModelAdmin):
 
 class ItemInstagramDataAdmin(admin.ModelAdmin):
     list_display = ('item', 'thumbnail_url', 'video_url', 'updated_at', 'created_at',)
-
+    raw_id_fields = ('item',)
 
 class ItemLikeAdmin(admin.ModelAdmin):
     list_display = ('user', 'item',)

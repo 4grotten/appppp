@@ -58,14 +58,25 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        # serializer = DeliveryTakeSerializer(data=request.data)
-        # if not serializer.is_valid():
-        #     return Response(data={
-        #         'message': _('Invalid input'),
-        #         'errors': serializer.errors
-        #     }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        # delivery_organization = serializer.data['delivery_organization']
+        delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
+                                                                        is_banned=False, is_deleted=False).first()
+
+        if not delivery_organization:
+            return Response(data={
+                'message': _('This user is not delivery service'),
+                'errors': _("Not delivery service")
+            }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
+        if delivery_info.delivery_organization != delivery_organization:
+            return Response(data={
+                'message': _('This delivery service is not owner of this delivery'),
+                'errors': _("Not your delivery")
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if delivery_info.status == DeliveryInfo.DELIVERY_STATUS_DELIVERED:
+            return Response(data={
+                'message': _('This order is already delivered'),
+                'errors': _("Delivered")
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
 
         delivery_info.save()

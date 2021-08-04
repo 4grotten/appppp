@@ -112,3 +112,12 @@ class DeliveredByDeliveryServiceView(APIView):
         delivery_info.save()
 
         return Response({'status': 'ok'})
+
+
+class DeliveryServiceHistoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CartListWithDeliveryInfoSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return DeliveryInfoService.get_history_items(user)

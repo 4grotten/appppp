@@ -35,3 +35,9 @@ class CartListWithDeliveryInfoSerializer(CartListSerializer):
     class Meta:
         fields = ('id', 'items_count', 'totals', 'organization', 'images', 'transaction')
         model = Cart
+
+
+# class DeliveryTakeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = DeliveryInfo
+#         fields = ('delivery_organization_id',)

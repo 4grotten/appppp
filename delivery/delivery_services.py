@@ -19,7 +19,9 @@ class DeliveryInfoService:
             transaction = kwargs['transaction']
             transaction.delivery_type = 'cash_courier'
             transaction.save()
-            return DeliveryInfo.objects.create(*args, location=point, **kwargs)
+            country = transaction.cart.organization.country
+            city = transaction.cart.organization.city
+            return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
         except Exception as e:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
 
@@ -27,8 +29,12 @@ class DeliveryInfoService:
     def get_all_items_count(cls, user: User) -> int:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return DeliveryInfo.objects.filter(country__in=countries,
-                                           status__in=(DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,)).count()
+        return DeliveryInfo.objects.filter(
+            country__in=countries,
+            status__in=(
+                DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
+            )).count()
 
     @classmethod
     def get_available_orders(cls, user: User) -> list:
@@ -39,4 +45,17 @@ class DeliveryInfoService:
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
+            )).order_by('-created_at'))
+
+    @classmethod
+    def get_history_items(cls, user: User) -> list:
+        delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        countries = [o.country for o in delivery_service_organizations]
+        return list(Cart.objects.filter(
+            transaction__delivery_info__country__in=countries,
+            transaction__status=Transaction.ACCEPTED,
+            transaction__delivery_info__status__in=(
+                DeliveryInfo.DELIVERY_STATUS_DELIVERED,
+                # DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
             )).order_by('-created_at'))

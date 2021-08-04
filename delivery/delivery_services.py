@@ -19,7 +19,9 @@ class DeliveryInfoService:
             transaction = kwargs['transaction']
             transaction.delivery_type = 'cash_courier'
             transaction.save()
-            return DeliveryInfo.objects.create(*args, location=point, **kwargs)
+            country = transaction.cart.organization.country
+            city = transaction.cart.organization.city
+            return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
         except Exception as e:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
 

@@ -27,8 +27,12 @@ class DeliveryInfoService:
     def get_all_items_count(cls, user: User) -> int:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return DeliveryInfo.objects.filter(country__in=countries,
-                                           status__in=(DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,)).count()
+        return DeliveryInfo.objects.filter(
+            country__in=countries,
+            status__in=(
+                DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
+            )).count()
 
     @classmethod
     def get_available_orders(cls, user: User) -> list:
@@ -39,4 +43,5 @@ class DeliveryInfoService:
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
             )).order_by('-created_at'))

@@ -3,17 +3,16 @@ from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.utils.translation import gettext_lazy as _
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
 from delivery.serializers import DeliveryAllItemsCountSerializer, DeliveryInfoListSerializer, \
     CartListWithDeliveryInfoSerializer
+from shop.serializers.cart_serializers import DeliveryInfoSerializer
 
 
 class DeliveryItemsCountView(APIView):
     permission_classes = (IsAuthenticated,)
-
-    # serializer_class = CartSerializer
 
     def get(self, request):
         count = DeliveryInfoService.get_all_items_count(user=self.request.user)
@@ -27,7 +26,47 @@ class DeliveryInfoListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        
         return DeliveryInfoService.get_available_orders(user)
 
-        # return DeliveryInfo.objects.all()
+
+class AcceptOrderForDeliveryByDeliveryService(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True, is_banned=False, is_deleted=False).first()
+        if not delivery_organization:
+            return Response(data={
+                'message': _('This user is not delivery service'),
+                'errors': _("Not delivery service")
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
+        if delivery_info.status not in (DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE, DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY):
+            return Response(data={
+                'message': _('Already taken'),
+                'errors': _("Delivery is already taken")
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        delivery_info.status = DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY
+        delivery_info.delivery_organization = delivery_organization
+        delivery_info.save()
+        return Response({'status': 'ok'})
+
+
+
+class RejectOrderForDeliveryByDeliveryService(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        # serializer = DeliveryTakeSerializer(data=request.data)
+        # if not serializer.is_valid():
+        #     return Response(data={
+        #         'message': _('Invalid input'),
+        #         'errors': serializer.errors
+        #     }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        # delivery_organization = serializer.data['delivery_organization']
+        delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
+        delivery_info.status = DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
+
+        delivery_info.save()
+        data = DeliveryInfoSerializer(delivery_info, context={'request': request})
+        return Response({'status': 'ok'})

@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
+from delivery.models import DeliveryInfo
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
-    CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer,
+    CartAllItemsCountSerializer, CartUpdateSerializer, EmployeeCartSerializer, DeliveryInfoStatusUpdateSerializer,
 )
 from shop.services.cart_services import CartItemService, CartService
 from transactions.models import Transaction
@@ -99,6 +100,41 @@ class OrderDeliveryView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": cart.transaction_id
+            }
+        )
+
+
+class UpdateDeliveryToSendByCourierView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = DeliveryInfoStatusUpdateSerializer(data=request.data)
+        owned_organizations = list(request.user.owned_organizations.all())
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        cart = Cart.objects.get(pk=pk)
+        if cart.organization not in owned_organizations:
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': "Not owner of the organization"
+            }, status=status.HTTP_403_FORBIDDEN)
+        delivery_info = cart.transaction.delivery_info
+        if delivery_info.status in (DeliveryInfo.DELIVERY_STATUS_DELIVERED, DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY):
+            return Response(data={
+                'message': _('Already delivered'),
+                'errors': "Already delivered"
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        delivery_info.who_pays = serializer.initial_data['who_pays']
+        delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
+        delivery_info.currency = cart.organization.currency
+        delivery_info.save()
         return Response(
             {
                 "message": _("Success"),

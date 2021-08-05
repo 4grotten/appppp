@@ -24,9 +24,11 @@ class DeliveryInfoListSerializer(serializers.ModelSerializer):
         model = DeliveryInfo
         fields = ('id', 'delivery_organization', 'country', 'city', 'transaction',
                   'address', 'apartment', 'intercom', 'entrance', 'floor',
-                  'phone', 'comment', 'status', 'longitude',
-                  'latitude',
-                  'full_location',)
+                  'phone', 'comment', 'status',
+                  'longitude', 'latitude',
+                  'full_location',
+                  'who_pays', 'amount', 'currency'
+                  )
 
 
 class CartListWithDeliveryInfoSerializer(CartListSerializer):

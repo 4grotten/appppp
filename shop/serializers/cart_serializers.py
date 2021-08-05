@@ -144,10 +144,16 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeliveryInfo
-        fields = (
-            'id', 'delivery_organization', 'country', 'city', 'transaction',
-            'address', 'apartment', 'intercom', 'entrance', 'floor',
-            'phone', 'comment', 'status', 'longitude',
-            'latitude',
-            'full_location',
-        )
+        fields = ('id', 'delivery_organization', 'country', 'city', 'transaction',
+                  'address', 'apartment', 'intercom', 'entrance', 'floor',
+                  'phone', 'comment', 'status',
+                  'longitude', 'latitude',
+                  'full_location',
+                  'who_pays', 'amount', 'currency'
+                  )
+
+
+class DeliveryInfoStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryInfo
+        fields = ('who_pays',)

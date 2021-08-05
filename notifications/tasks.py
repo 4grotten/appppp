@@ -120,6 +120,38 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
 
 
 @shared_task
+def send_notifications_to_deliveres(sender_id: Union[int, None] = None, mode='system', notification_type='system',
+                                      title='Title was not sent', description='Description was not sent',
+                                      extra_data=None, organization_id=None):
+    sender = sender_id
+    if sender_id:
+        sender = User.objects.get(id=sender_id)
+    recipients = User.objects.filter(owned_organizations__is_delivery_service=True).distinct()
+    organization = Organization.objects.get(id=organization_id)
+    country = organization.country
+    city = organization.city
+    print(recipients)
+    # recipients = User.objects.filter(subscriptions__organization_id=organization_id)
+    # for recipient in recipients:
+    #     if not extra_data:
+    #         extra_data = dict()
+    #         can_send_message = user_can_send_message(user=recipient, organization_id=organization_id)
+    #         extra_data['can_send_message'] = can_send_message
+    #
+    #     NotificationService.create_notification(
+    #         recipient=recipient,
+    #         sender=sender,
+    #         mode=mode,
+    #         notification_type=notification_type,
+    #         title=title,
+    #         description=description,
+    #         organization=organization,
+    #         extra_data=extra_data
+    #     )
+
+
+
+@shared_task
 def sent_notification(recipient_id: int, sender_id=None, mode='system', notification_type='system', extra_data=None,
                       title='Title was not sent', description='Description was not sent', organization_id=None):
     recipient = User.objects.get(id=recipient_id)

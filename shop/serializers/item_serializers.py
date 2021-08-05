@@ -25,7 +25,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
-        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('-pk')
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('pk')
         return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
                     images=ItemInstagramImageSerializer(images, many=True).data)
 

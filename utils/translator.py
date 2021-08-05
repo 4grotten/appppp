@@ -1,4 +1,5 @@
 from googletrans import Translator
+from httpx import URLLib3Transport, Proxy
 
 from instagram_parsers.services.proxy_services import ProxyService
 
@@ -6,8 +7,8 @@ from instagram_parsers.services.proxy_services import ProxyService
 class GoogleTranslator:
 
     def __init__(self):
-        self.random_proxy = ProxyService.get_random_formed_proxy(True).replace("https://", '')
-        self.proxies = {'http': self.random_proxy}
+        self.random_proxy = ProxyService.get_random_formed_proxy(True)  #.replace("https://", '')
+        self.proxies = {'http': URLLib3Transport(proxy=Proxy(self.random_proxy))}
         self.translator = Translator(proxies=self.proxies)
 
     def translate(self, text, lang):

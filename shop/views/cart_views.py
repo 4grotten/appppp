@@ -134,6 +134,7 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         delivery_info.who_pays = serializer.initial_data['who_pays']
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.currency = cart.organization.currency
+        # TODO: Find out how to get amount
         delivery_info.save()
         return Response(
             {

@@ -346,7 +346,7 @@ class Hotlink(TimestampModel):
                                             related_name='hotlinks_to_organization')
 
     def __str__(self):
-        return f'Hotlink of {self.organization}'
+        return f'#{self.id} | Hotlink of {self.organization}'
 
     def save(self, *args, **kwargs):
         parsed_link = urlparse(self.content)
@@ -379,6 +379,33 @@ class Hotlink(TimestampModel):
             self.linked_item = None
 
         super().save(*args, **kwargs)
+
+
+class HotlinkCollectionItem(TimestampModel):
+    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_items')
+    item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, related_name='hotlinks')
+
+    def __str__(self):
+        return f'{self.item} in collection {self.hotlink.content}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('hotlink', 'item'), name='one_item_per_hotlink_collection')
+        ]
+
+
+class HotlinkCollectionSubcategory(TimestampModel):
+    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_subcategories')
+    subcategory = models.ForeignKey('shop.ItemSubcategory', on_delete=models.CASCADE, related_name='hotlinks')
+
+    def __str__(self):
+        return f'{self.subcategory} in collection {self.hotlink.content}'
+
+    class Meta:
+        verbose_name_plural = _('hotlink collection subcategories')
+        constraints = [
+            models.UniqueConstraint(fields=('hotlink', 'subcategory'), name='one_subcategory_per_hotlink_collection')
+        ]
 
 
 class OrganizationPromo(TimestampModel):

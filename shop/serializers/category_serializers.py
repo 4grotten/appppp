@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
+from organizations.models import HotlinkCollectionSubcategory
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
 from shop.services.category_services import ItemSubcategoryService
@@ -22,27 +23,37 @@ class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ItemSubcategorySerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
-        return ImageSerializer(subcategory.category.icon).data if subcategory.category.icon else None
+        return ImageSerializer(
+            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
+
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name', 'icon')
+
+
+class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ItemSubcategory
         fields = ('id', 'name', 'organization', 'icon')
 
 
-class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
-    icon = serializers.SerializerMethodField()
-
-    def get_icon(self, subcategory: ItemSubcategory):
-        return ImageSerializer(subcategory.category.icon).data if subcategory.category.icon else None
+class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
+    category_name = serializers.CharField(source='category.name')
+    is_selected = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'icon')
+        fields = ('id', 'name', 'category_name', 'is_selected', 'icon')
+
+    def get_is_selected(self, subcategory: ItemSubcategory) -> bool:
+        return HotlinkCollectionSubcategory.objects.filter(
+            hotlink=self.context['hotlink'], subcategory=subcategory).exists()
 
 
 class ItemCategorySerializer(serializers.ModelSerializer):

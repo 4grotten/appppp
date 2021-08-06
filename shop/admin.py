@@ -1,6 +1,4 @@
 from django.contrib import admin
-from django.contrib.gis.db import models
-from mapwidgets.widgets import GooglePointFieldWidget
 
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
@@ -40,6 +38,7 @@ class ItemInstagramDataAdmin(admin.ModelAdmin):
     list_display = ('item', 'thumbnail_url', 'video_url', 'updated_at', 'created_at',)
     raw_id_fields = ('item',)
 
+
 class ItemLikeAdmin(admin.ModelAdmin):
     list_display = ('user', 'item',)
 
@@ -56,9 +55,6 @@ class CartAdmin(admin.ModelAdmin):
 
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'item', 'count',)
-
-
-
 
 
 class ComplaintAdmin(admin.ModelAdmin):

@@ -1,15 +1,17 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
+from organizations.constants import HOTLINK_COLLECTION
 from organizations.serializers.hotlink_serializers import (
-    HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer
+    HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer, HotlinkSubcategoriesEditSerializer
 )
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService
+from shop.serializers.category_serializers import ItemSubcategoryForHotlinksSerializer
 
 
 class HotlinkListCreateView(ListCreateAPIView):
@@ -61,3 +63,33 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                                                 link_type=serializer.validated_data['link_type'])
         hotlink = HotlinkSerializer(hotlink, context={'request': request}).data
         return Response(hotlink)
+
+
+class HotlinkSubcategoriesListUpdateView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = HotlinkSerializer
+
+    def get(self, request, *args, **kwargs):
+        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        queryset = HotlinkService.get_hotlink_collection_subcategories(hotlink=hotlink, user=self.request.user)
+        serializer = ItemSubcategoryForHotlinksSerializer(
+            queryset, many=True, context={'request': request, 'hotlink': hotlink}
+        )
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = HotlinkSubcategoriesEditSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        HotlinkService.edit_hotlink_selected_subcategories(
+            hotlink=hotlink, added=serializer.validated_data['added'], removed=serializer.validated_data['removed'],
+            user=request.user
+        )
+        serializer = self.get_serializer(hotlink)
+        return Response(serializer.data)

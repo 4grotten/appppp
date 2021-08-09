@@ -11,7 +11,8 @@ from organizations.constants import HOTLINK_COLLECTION
 from organizations.models import HotlinkCollectionLink
 from organizations.serializers.hotlink_serializers import (
     HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer, HotlinkSubcategoriesEditSerializer,
-    HotlinkItemsEditSerializer, HotlinkCollectionLinkSerializer, HotlinkCollectionLinkUpdateSerializer
+    HotlinkItemsEditSerializer, HotlinkCollectionLinkSerializer, HotlinkCollectionLinkUpdateSerializer,
+    HotlinkWithCountsSerializer
 )
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService, HotlinkCollectionLinkService
@@ -49,7 +50,7 @@ class HotlinkListCreateView(ListCreateAPIView):
 
 class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = HotlinkSerializer
+    serializer_class = HotlinkWithCountsSerializer
 
     def get_object(self):
         return HotlinkService.get_editable_hotlink_for_user(hotlink_id=self.kwargs['pk'], user=self.request.user)
@@ -66,13 +67,12 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         hotlink = HotlinkService.update_hotlink(hotlink=instance, image=serializer.validated_data['image'],
                                                 content=serializer.validated_data['content'],
                                                 link_type=serializer.validated_data['link_type'])
-        hotlink = HotlinkSerializer(hotlink, context={'request': request}).data
-        return Response(hotlink)
+        return Response(self.get_serializer(hotlink).data)
 
 
 class HotlinkItemsListUpdateView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = HotlinkSerializer
+    serializer_class = HotlinkWithCountsSerializer
 
     def get(self, request, *args, **kwargs):
         hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
@@ -104,7 +104,7 @@ class HotlinkItemsListUpdateView(GenericAPIView):
 
 class HotlinkSubcategoriesListUpdateView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = HotlinkSerializer
+    serializer_class = HotlinkWithCountsSerializer
 
     def get(self, request, *args, **kwargs):
         hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)

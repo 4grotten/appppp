@@ -14,9 +14,6 @@ from shop.serializers.item_serializers import ItemInHotlinkSerializer
 class HotlinkSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
     link_type = serializers.SerializerMethodField()
-    items_count = serializers.SerializerMethodField()
-    links_count = serializers.SerializerMethodField()
-    subcategories_count = serializers.SerializerMethodField()
     linked_organization = OrganizationWithTypeImageSerializer()
     linked_item = ItemInHotlinkSerializer()
     image = ImageSerializer()
@@ -32,6 +29,18 @@ class HotlinkSerializer(serializers.ModelSerializer):
         if hotlink.linked_organization:
             return HOTLINK_URL_ORGANIZATION
         return HOTLINK_URL_EXTERNAL
+
+    class Meta:
+        model = Hotlink
+        fields = (
+            'id', 'title', 'content', 'link_type', 'linked_organization', 'linked_item', 'image',
+        )
+
+
+class HotlinkWithCountsSerializer(HotlinkSerializer):
+    items_count = serializers.SerializerMethodField()
+    links_count = serializers.SerializerMethodField()
+    subcategories_count = serializers.SerializerMethodField()
 
     def get_items_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:

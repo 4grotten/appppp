@@ -87,3 +87,14 @@ class HotlinkCollectionItemListView(ListAPIView):
         hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
         qs = ShopItemService.get_items_in_hotlink_collection(hotlink=hotlink)
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        qs = ShopItemService.get_items_in_hotlink_collection(hotlink=hotlink)
+        queryset = ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data['collection_title'] = hotlink.content
+        return response

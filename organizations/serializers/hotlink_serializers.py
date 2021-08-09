@@ -67,6 +67,14 @@ class HotlinkSubcategoriesEditSerializer(serializers.Serializer):
 
 
 class HotlinkCollectionLinkSerializer(serializers.ModelSerializer):
+    hotlink = serializers.PrimaryKeyRelatedField(queryset=Hotlink.objects.all(), write_only=True)
+
     class Meta:
         model = HotlinkCollectionLink
         fields = ('id', 'hotlink', 'content')
+
+
+class HotlinkCollectionLinkUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotlinkCollectionLink
+        fields = ('content',)

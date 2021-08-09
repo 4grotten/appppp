@@ -136,6 +136,22 @@ class HotlinkCollectionLinkService:
         return HotlinkCollectionLink.objects.create(hotlink=hotlink, content=content)
 
     @classmethod
+    def get_collection_links(cls, hotlink: Hotlink, user: User) -> QuerySet:
+        if not OrganizationService.user_can_edit_organization(organization=hotlink.organization, user=user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return HotlinkCollectionLink.objects.filter(hotlink=hotlink).order_by('id')
+
+    @classmethod
+    def update_collection_link(cls, collection_link: HotlinkCollectionLink, content: str,
+                               user: User) -> HotlinkCollectionLink:
+        if not OrganizationService.user_can_edit_organization(
+                organization=collection_link.hotlink.organization, user=user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        collection_link.content = content
+        collection_link.save(update_fields=['content'])
+        return collection_link
+
+    @classmethod
     def delete_collection_link(cls, collection_link: HotlinkCollectionLink, user: User):
         if not OrganizationService.user_can_edit_organization(
                 organization=collection_link.hotlink.organization, user=user):

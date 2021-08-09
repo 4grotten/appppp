@@ -11,7 +11,7 @@ from organizations.constants import HOTLINK_COLLECTION
 from organizations.models import HotlinkCollectionLink
 from organizations.serializers.hotlink_serializers import (
     HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer, HotlinkSubcategoriesEditSerializer,
-    HotlinkItemsEditSerializer, HotlinkCollectionLinkSerializer
+    HotlinkItemsEditSerializer, HotlinkCollectionLinkSerializer, HotlinkCollectionLinkUpdateSerializer
 )
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService, HotlinkCollectionLinkService
@@ -149,18 +149,37 @@ class CollectionLinksCreateView(CreateAPIView):
             user=request.user
         )
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data={'message': _('Successfully created')}, status=status.HTTP_201_CREATED)
 
 
 class CollectionLinksListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    queryset = HotlinkCollectionLink.objects.all().order_by('-id')
     serializer_class = HotlinkCollectionLinkSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        hotlink = HotlinkService.get(id=self.kwargs['pk'])
+        return HotlinkCollectionLinkService.get_collection_links(hotlink=hotlink, user=self.request.user)
 
 
-class CollectionLinkDestroyView(DestroyAPIView):
+class CollectionLinkUpdateDestroyView(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = HotlinkCollectionLink.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        instance = HotlinkCollectionLinkService.get(id=kwargs['pk'])
+        serializer = HotlinkCollectionLinkUpdateSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        instance = HotlinkCollectionLinkService.update_collection_link(
+            collection_link=instance, content=serializer.validated_data['content'], user=request.user
+        )
+        return Response(HotlinkCollectionLinkSerializer(instance).data)
 
     def delete(self, request, *args, **kwargs):
         instance = HotlinkCollectionLinkService.get(id=kwargs['pk'])

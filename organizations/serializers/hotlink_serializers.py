@@ -5,7 +5,7 @@ from organizations.constants import HOTLINK_COLLECTION
 from organizations.models import Hotlink
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.hotlink_services import HotlinkService
-from shop.models import ItemSubcategory
+from shop.models import ItemSubcategory, ShopItem
 from shop.serializers.item_serializers import ItemInHotlinkSerializer
 
 
@@ -54,6 +54,11 @@ class HotlinkUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotlink
         fields = ('content', 'link_type', 'image',)
+
+
+class HotlinkItemsEditSerializer(serializers.Serializer):
+    added = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), many=True)
+    removed = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), many=True)
 
 
 class HotlinkSubcategoriesEditSerializer(serializers.Serializer):

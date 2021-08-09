@@ -7,7 +7,8 @@ from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscou
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.hotlink_views import (
-    HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView, HotlinkSubcategoriesListUpdateView
+    HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView, HotlinkSubcategoriesListUpdateView,
+    HotlinkItemsListUpdateView
 )
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
@@ -123,8 +124,9 @@ banner_urls = [
 hotlink_urls = [
     path('hotlinks/', HotlinkListCreateView.as_view(), name='hotlinks'),
     path('hotlinks/<int:pk>/', HotlinkRetrieveUpdateDestroyView.as_view(), name='hotlink_details'),
+    path('hotlinks/<int:pk>/items/', HotlinkItemsListUpdateView.as_view(), name='hotlink_shop_items'),
     path('hotlinks/<int:pk>/subcategories/', HotlinkSubcategoriesListUpdateView.as_view(),
-         name='hotlink_details'),
+         name='hotlink_subcategories'),
 ]
 
 organization_promo_urls = [

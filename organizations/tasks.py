@@ -55,3 +55,18 @@ def update_instagram_videos():
         if thumbnail_url is not None:
             data.thumbnail_url = thumbnail_url
         data.save()
+
+
+@shared_task
+def update_videos_by_user_entering_on_page(organization_id):
+    update_posts_before_this_date = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
+    data_with_video = ItemInstagramData.objects.filter(item__organization=organization_id,
+                                                       updated_at__lte=update_posts_before_this_date,
+                                                       video_url__isnull=False).order_by('-updated_at')
+    if data_with_video:
+        for data in data_with_video:
+            video_url, thumbnail_url = parser.get_video_urls_from_post(post_url=data.item.instagram_link)
+            data.video_url = video_url
+            if thumbnail_url is not None:
+                data.thumbnail_url = thumbnail_url
+            data.save()

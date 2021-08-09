@@ -37,7 +37,7 @@ from organizations.services.organization_services import (
     OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
-from organizations.tasks import parse_instagram_to_shop_items
+from organizations.tasks import parse_instagram_to_shop_items, update_videos_by_user_entering_on_page
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 
 
@@ -114,6 +114,11 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
+
+    def retrieve(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        update_videos_by_user_entering_on_page.delay(organization.pk)
+        return super().retrieve(request, *args, **kwargs)
 
 
 class DeliverySettingsView(UpdateAPIView):

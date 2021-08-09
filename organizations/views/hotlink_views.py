@@ -1,17 +1,20 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
+from rest_framework.generics import (
+    RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, CreateAPIView, ListAPIView, DestroyAPIView
+)
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
 from organizations.constants import HOTLINK_COLLECTION
+from organizations.models import HotlinkCollectionLink
 from organizations.serializers.hotlink_serializers import (
     HotlinkSerializer, HotlinkCreateSerializer, HotlinkUpdateSerializer, HotlinkSubcategoriesEditSerializer,
-    HotlinkItemsEditSerializer
+    HotlinkItemsEditSerializer, HotlinkCollectionLinkSerializer
 )
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
-from organizations.services.hotlink_services import HotlinkService
+from organizations.services.hotlink_services import HotlinkService, HotlinkCollectionLinkService
 from shop.serializers.category_serializers import ItemSubcategoryForHotlinksSerializer
 from shop.serializers.item_serializers import ItemInHotlinkCollectionSerializer
 
@@ -127,3 +130,39 @@ class HotlinkSubcategoriesListUpdateView(GenericAPIView):
         )
         serializer = self.get_serializer(hotlink)
         return Response(serializer.data)
+
+
+class CollectionLinksCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = HotlinkCollectionLinkSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        HotlinkCollectionLinkService.create_collection_link(
+            hotlink=serializer.validated_data['hotlink'], content=serializer.validated_data['content'],
+            user=request.user
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CollectionLinksListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = HotlinkCollectionLink.objects.all().order_by('-id')
+    serializer_class = HotlinkCollectionLinkSerializer
+
+
+class CollectionLinkDestroyView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = HotlinkCollectionLink.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        instance = HotlinkCollectionLinkService.get(id=kwargs['pk'])
+        HotlinkCollectionLinkService.delete_collection_link(collection_link=instance, user=request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)

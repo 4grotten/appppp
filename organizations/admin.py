@@ -7,7 +7,7 @@ from .models import (
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
-    HotlinkCollectionSubcategory
+    HotlinkCollectionSubcategory, HotlinkCollectionLink
 )
 
 
@@ -187,6 +187,13 @@ class HotlinkCollectionItemAdmin(admin.ModelAdmin):
 class HotlinkCollectionSubcategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'hotlink', 'subcategory')
     raw_id_fields = ('hotlink', 'subcategory')
+
+
+@admin.register(HotlinkCollectionLink)
+class HotlinkCollectionLinkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'hotlink', 'content', 'linked_item')
+    list_filter = ('hotlink',)
+    raw_id_fields = ('hotlink', 'linked_item')
 
 
 @admin.register(InstagramIntegration)

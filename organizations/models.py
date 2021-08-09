@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
 from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
@@ -355,13 +356,13 @@ class Hotlink(TimestampModel):
         if self.link_type == HOTLINK_URL and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
             if parsed_link.path.startswith('/p/'):
                 item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+                from shop.models import ShopItem
                 try:
-                    from shop.models import ShopItem
                     linked_item = ShopItem.objects.get(id=item_id)
                     self.linked_item = linked_item
                     self.linked_organization = None
                     is_internal = True
-                except Organization.DoesNotExist:
+                except ShopItem.DoesNotExist:
                     pass
             elif parsed_link.path.startswith('/organizations/'):
                 organization_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
@@ -406,6 +407,35 @@ class HotlinkCollectionSubcategory(TimestampModel):
         constraints = [
             models.UniqueConstraint(fields=('hotlink', 'subcategory'), name='one_subcategory_per_hotlink_collection')
         ]
+
+
+class HotlinkCollectionLink(TimestampModel):
+    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_links')
+    content = models.CharField(max_length=500)
+    linked_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, related_name='links_in_collections')
+
+    def __str__(self):
+        return f'{self.linked_item} in collection {self.hotlink.content}'
+
+    def save(self, *args, **kwargs):
+        parsed_link = urlparse(self.content)
+
+        if parsed_link.netloc not in HOTLINK_INTERNAL_LINK_DOMAINS:
+            raise NotAcceptableException(_('Wrong url for shop item'))
+        if not parsed_link.path.startswith('/p/'):
+            raise NotAcceptableException(_('Wrong url for shop item'))
+
+        item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+        from shop.models import ShopItem
+        try:
+            linked_item = ShopItem.objects.get(id=item_id)
+            self.linked_item = linked_item
+        except ValueError:
+            raise NotAcceptableException(_('Wrong url for shop item'))
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item with given id is not found'))
+
+        super().save(*args, **kwargs)
 
 
 class OrganizationPromo(TimestampModel):

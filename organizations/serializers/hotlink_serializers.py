@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.constants import HOTLINK_COLLECTION
-from organizations.models import Hotlink
+from organizations.models import Hotlink, HotlinkCollectionLink
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.hotlink_services import HotlinkService
 from shop.models import ItemSubcategory, ShopItem
@@ -28,7 +28,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
 
     def get_links_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:
-            return 0  # ToDo: unmock after implementing links for collection
+            return hotlink.collection_links.count()
         return 0
 
     def get_subcategories_count(self, hotlink: Hotlink) -> int:
@@ -64,3 +64,9 @@ class HotlinkItemsEditSerializer(serializers.Serializer):
 class HotlinkSubcategoriesEditSerializer(serializers.Serializer):
     added = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), many=True)
     removed = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), many=True)
+
+
+class HotlinkCollectionLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotlinkCollectionLink
+        fields = ('id', 'hotlink', 'content')

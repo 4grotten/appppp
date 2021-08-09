@@ -6,7 +6,9 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import File
-from organizations.models import Hotlink, Organization, HotlinkCollectionSubcategory, HotlinkCollectionItem
+from organizations.models import (
+    Hotlink, Organization, HotlinkCollectionSubcategory, HotlinkCollectionItem, HotlinkCollectionLink
+)
 from organizations.services.organization_services import OrganizationService
 from users.models import User
 
@@ -117,3 +119,25 @@ class HotlinkService:
                 to_create_list.append(HotlinkCollectionSubcategory(hotlink=hotlink, subcategory=subcategory))
 
         HotlinkCollectionSubcategory.objects.bulk_create(to_create_list)
+
+
+class HotlinkCollectionLinkService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return HotlinkCollectionLink.objects.get(*args, **kwargs)
+        except HotlinkCollectionLink.DoesNotExist:
+            raise ObjectNotFoundException(_('Hotlink collection link not found'))
+
+    @classmethod
+    def create_collection_link(cls, hotlink: Hotlink, content: str, user: User) -> HotlinkCollectionLink:
+        if not OrganizationService.user_can_edit_organization(organization=hotlink.organization, user=user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return HotlinkCollectionLink.objects.create(hotlink=hotlink, content=content)
+
+    @classmethod
+    def delete_collection_link(cls, collection_link: HotlinkCollectionLink, user: User):
+        if not OrganizationService.user_can_edit_organization(
+                organization=collection_link.hotlink.organization, user=user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        collection_link.delete()

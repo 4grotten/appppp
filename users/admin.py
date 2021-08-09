@@ -1,23 +1,29 @@
-from html import escape
-
 from django import forms
-from django.contrib import admin, messages
-from django.contrib.admin.options import IS_POPUP_VAR
-from django.contrib.admin.utils import unquote
-from django.contrib.auth import get_user_model, update_session_auth_hash
-from django.contrib.auth.admin import sensitive_post_parameters_m, UserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField, UsernameField
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, Http404
-from django.template.response import TemplateResponse
-from django.urls import path, reverse
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, UsernameField, UserChangeForm
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from rest_framework.authtoken.admin import TokenChangeList, TokenAdmin
+from rest_framework.authtoken.models import TokenProxy, Token
+
 from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
 User = get_user_model()
 
+class ApofizUserChangeForm(UserChangeForm):
+
+    class Meta:
+        model = User
+        fields = '__all__'
+        field_classes = {}
+
+
+
 @admin.register(User)
 class ApofizUserAdmin(UserAdmin):
+    form = ApofizUserChangeForm
     list_display = (
         'phone_number', 'full_name', 'username', 'gender', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'id',
     )
@@ -57,3 +63,11 @@ class SocialNetworkContactAdmin(admin.ModelAdmin):
 @admin.register(TemporaryPhoneNumber)
 class TemporaryPhoneNumberAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone_number', 'code')
+
+admin.site.unregister(TokenProxy)
+
+
+class ApofizTokenAdmin(TokenAdmin):
+    raw_id_fields = ('user',)
+
+admin.site.register(TokenProxy, ApofizTokenAdmin)

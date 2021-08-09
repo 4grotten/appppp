@@ -2,7 +2,7 @@ from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from organizations.models import Organization
+from organizations.models import Organization, Hotlink
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, ItemInstagramData
@@ -11,7 +11,6 @@ from users.models import User
 
 
 class ShopItemService:
-
     @classmethod
     def get(cls, **filters):
         try:
@@ -87,6 +86,24 @@ class ShopItemService:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
         queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True).distinct()
         return queryset
+
+    @classmethod
+    def get_items_in_hotlink_collection(cls, hotlink: Hotlink) -> QuerySet:
+        hotlink_subcategories = hotlink.collection_subcategories.values_list('subcategory_id', flat=True)
+        subcategory_items = ShopItem.objects.filter(subcategory__in=hotlink_subcategories)
+
+        if hotlink.organization.items_group is None:
+            subcategory_items = subcategory_items.filter(organization=hotlink.organization)
+        else:
+            subcategory_items = subcategory_items.filter(
+                organization__in=hotlink.organization.items_group.organizations.values_list('id')
+            )
+
+        shop_item_ids = hotlink.collection_items.values_list('item_id', flat=True).union(
+            hotlink.collection_links.values_list('linked_item_id', flat=True)).union(
+            subcategory_items.values_list('id', flat=True)
+        )
+        return ShopItem.objects.filter(is_published=True, id__in=shop_item_ids).distinct().order_by('-updated_at')
 
     @classmethod
     def get_liked_items(cls, user: User):

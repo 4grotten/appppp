@@ -6,7 +6,9 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
+from organizations.constants import HOTLINK_COLLECTION
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
+from organizations.services.hotlink_services import HotlinkService
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
@@ -75,3 +77,13 @@ class SubscriptionItemListView(FeedView):
         response.data['has_new'] = ShopItemService.has_new(timestamp=serializer.validated_data['start_time'],
                                                            user=request.user)
         return response
+
+
+class HotlinkCollectionItemListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SubscriptionItemSerializer
+
+    def get_queryset(self):
+        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        qs = ShopItemService.get_items_in_hotlink_collection(hotlink=hotlink)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)

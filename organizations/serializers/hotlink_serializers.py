@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from organizations.constants import HOTLINK_COLLECTION
+from organizations.constants import (
+    HOTLINK_COLLECTION, HOTLINK_URL, HOTLINK_URL_ITEM, HOTLINK_URL_ORGANIZATION, HOTLINK_URL_EXTERNAL
+)
 from organizations.models import Hotlink, HotlinkCollectionLink
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.hotlink_services import HotlinkService
@@ -11,6 +13,7 @@ from shop.serializers.item_serializers import ItemInHotlinkSerializer
 
 class HotlinkSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
+    link_type = serializers.SerializerMethodField()
     items_count = serializers.SerializerMethodField()
     links_count = serializers.SerializerMethodField()
     subcategories_count = serializers.SerializerMethodField()
@@ -20,6 +23,15 @@ class HotlinkSerializer(serializers.ModelSerializer):
 
     def get_title(self, hotlink: Hotlink) -> str:
         return HotlinkService.get_hotlink_title(hotlink=hotlink)
+
+    def get_link_type(self, hotlink: Hotlink) -> str:
+        if not hotlink.link_type == HOTLINK_URL:
+            return hotlink.link_type
+        if hotlink.linked_item:
+            return HOTLINK_URL_ITEM
+        if hotlink.linked_organization:
+            return HOTLINK_URL_ORGANIZATION
+        return HOTLINK_URL_EXTERNAL
 
     def get_items_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:

@@ -3,7 +3,7 @@ import random
 
 from fcm_django.models import FCMDevice
 
-from notifications.constants import NOTIFICATION_TYPES, NOTIFICATION_MODES, SYSTEM_NOTIFICATION_MODE
+from notifications.constants import NOTIFICATION_TYPES, NOTIFICATION_MODES, NOTIFICATION_MODE_SYSTEM
 from notifications.models import NotificationSetting, Notification
 from users.tests.factories import UserFactory
 from organizations.tests.factories import OrganizationFactory

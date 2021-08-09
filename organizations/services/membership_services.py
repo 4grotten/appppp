@@ -4,10 +4,10 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
 from notifications.constants import (
-    RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION, PERSONAL_MODE, CHANGE_JOB_POSITION_TYPE,
+    NOTIFICATION_TYPE_RECRUIT_JOB_TYPE, RECRUIT_JOB_TITLE, RECRUIT_JOB_DESCRIPTION, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_TYPE_CHANGE_JOB_POSITION,
     CHANGE_JOB_POSITION_TITLE, CHANGE_JOB_POSITION_DESCRIPTION, QUIT_JOB_TITLE, QUIT_JOB_DESCRIPTION,
-    QUIT_JOB_TYPE, DISMISS_JOB_TITLE, DISMISS_JOB_TYPE, DISMISS_JOB_DESCRIPTION, GET_JOB_TYPE, GET_JOB_TITLE,
-    GET_JOB_DESCRIPTION, CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TITLE,
+    NOTIFICATION_TYPE_QUIT_JOB, DISMISS_JOB_TITLE, NOTIFICATION_TYPE_DISMISS_JOB, DISMISS_JOB_DESCRIPTION, NOTIFICATION_TYPE_GET_JOB_TYPE, GET_JOB_TITLE,
+    GET_JOB_DESCRIPTION, NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER, CHANGE_JOB_POSITION_OWNER_TITLE,
     CHANGE_JOB_POSITION_OWNER_DESCRIPTION
 )
 from notifications.tasks import sent_notification, send_notifications_organization_members
@@ -32,8 +32,8 @@ class MembershipService:
                 exclusion=[membership.user_id],
                 members_organization_id=membership.organization_id,
                 sender_id=membership.user_id,
-                mode=PERSONAL_MODE,
-                notification_type=RECRUIT_JOB_TYPE,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NOTIFICATION_TYPE_RECRUIT_JOB_TYPE,
                 title=RECRUIT_JOB_TITLE,
                 description=RECRUIT_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
@@ -44,8 +44,8 @@ class MembershipService:
             sent_notification.delay(
                 recipient_id=membership.user_id,
                 sender_id=membership.added_by_id,
-                mode=PERSONAL_MODE,
-                notification_type=GET_JOB_TYPE,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NOTIFICATION_TYPE_GET_JOB_TYPE,
                 title=GET_JOB_TITLE.format(organization=membership.organization.title),
                 description=GET_JOB_DESCRIPTION.format(position=membership.role.title),
                 organization_id=membership.organization_id,
@@ -67,8 +67,8 @@ class MembershipService:
         transaction.on_commit(lambda: sent_notification.delay(
             recipient_id=membership.user_id,
             sender_id=membership.added_by_id,
-            mode=PERSONAL_MODE,
-            notification_type=QUIT_JOB_TYPE,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=NOTIFICATION_TYPE_QUIT_JOB,
             title=QUIT_JOB_TITLE.format(organization=membership.organization.title),
             description=QUIT_JOB_DESCRIPTION.format(position=membership.role.title),
             organization_id=membership.organization_id,
@@ -78,8 +78,8 @@ class MembershipService:
             with_permissions=dict(can_edit_organization=True),
             members_organization_id=membership.organization_id,
             sender_id=membership.user_id,
-            mode=PERSONAL_MODE,
-            notification_type=DISMISS_JOB_TYPE,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=NOTIFICATION_TYPE_DISMISS_JOB,
             title=DISMISS_JOB_TITLE,
             description=DISMISS_JOB_DESCRIPTION.format(position=membership.role.title),
             organization_id=membership.organization_id,
@@ -113,8 +113,8 @@ class MembershipService:
             transaction.on_commit(lambda: sent_notification.delay(
                 recipient_id=membership.user_id,
                 sender_id=membership.added_by_id,
-                mode=PERSONAL_MODE,
-                notification_type=CHANGE_JOB_POSITION_TYPE,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NOTIFICATION_TYPE_CHANGE_JOB_POSITION,
                 title=CHANGE_JOB_POSITION_TITLE,
                 description=CHANGE_JOB_POSITION_DESCRIPTION.format(old_position=old_position.title,
                                                                    new_position=new_role.title),
@@ -129,8 +129,8 @@ class MembershipService:
                 exclusion=[membership.user_id],
                 members_organization_id=membership.organization_id,
                 sender_id=membership.user_id,
-                mode=PERSONAL_MODE,
-                notification_type=CHANGE_JOB_POSITION_OWNER_TYPE,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER,
                 title=CHANGE_JOB_POSITION_OWNER_TITLE,
                 description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(old_position=old_position.title,
                                                                          new_position=new_role.title),

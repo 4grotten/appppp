@@ -7,7 +7,7 @@ ENV BACKEND_VERSION_REPORT=${build_version_report}
 
 RUN apt-get update
 RUN apt-get install --no-install-recommends --yes \
-    netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin
+    netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev
 
 WORKDIR /app
 

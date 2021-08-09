@@ -6,7 +6,7 @@ from common.exceptions import PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
-    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, PERSONAL_MODE
+    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, NOTIFICATION_MODE_PERSONAL
 )
 from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
@@ -34,7 +34,7 @@ class SubscriptionService:
             sent_notification.delay(
                 recipient_id=organization.owner_id,
                 sender_id=user.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
                 title=FOLLOWED_TO_ORGANIZATION_TITLE,
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
@@ -43,7 +43,7 @@ class SubscriptionService:
             )
             sent_notification.delay(
                 recipient_id=user.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=ORGANIZATION_FOLLOWED_TYPE,
                 title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
                 description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),

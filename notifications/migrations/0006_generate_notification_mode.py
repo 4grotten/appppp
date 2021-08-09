@@ -4,19 +4,19 @@ from django.db import migrations
 
 from notifications.constants import (
     NOTIFICATION_MODES,
-    DISCOUNT_NOTIFICATION_MODE,
-    SUBSCRIPTION_NOTIFICATION_MODE,
-    SYSTEM_NOTIFICATION_MODE, PARTNER_MODE
+    NOTIFICATION_MODE_DISCOUNT,
+    NOTIFICATION_MODE_SUBSCRIPTION,
+    NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_PARTNER
 )
 
 
 def create_notification_modes(apps, _):
     NotificationMode = apps.get_model('notifications', 'NotificationMode')
 
-    NotificationMode.objects.create(name=DISCOUNT_NOTIFICATION_MODE)
-    NotificationMode.objects.create(name=SUBSCRIPTION_NOTIFICATION_MODE)
-    NotificationMode.objects.create(name=SYSTEM_NOTIFICATION_MODE)
-    NotificationMode.objects.create(name=PARTNER_MODE)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_DISCOUNT)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_SUBSCRIPTION)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_SYSTEM)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_PARTNER)
 
 
 class Migration(migrations.Migration):

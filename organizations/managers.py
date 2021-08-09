@@ -8,4 +8,4 @@ class OrganizationManager(models.Manager):
 
 class ActiveOrganizationManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().exclude(is_deleted=True)
+        return super().get_queryset().exclude(is_deleted=True, is_active=False, is_banned=True)

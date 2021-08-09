@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
 from notifications.constants import (
-    PERSONAL_MODE, ATTENDANCE_IN, ATTENDANCE_IN_TITLE, ATTENDANCE_DESCRIPTION, CHECK_ATTENDANCE_IN,
+    NOTIFICATION_MODE_PERSONAL, ATTENDANCE_IN, ATTENDANCE_IN_TITLE, ATTENDANCE_DESCRIPTION, CHECK_ATTENDANCE_IN,
     CHECK_ATTENDANCE_IN_TITLE, ATTENDANCE_OUT, ATTENDANCE_OUT_TITLE, CHECK_ATTENDANCE_OUT, CHECK_ATTENDANCE_OUT_TITLE
 )
 from notifications.tasks import sent_notification
@@ -61,7 +61,7 @@ class AttendanceService:
             sent_notification.delay(
                 recipient_id=employee.id,
                 sender_id=recorded_by.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=ATTENDANCE_IN,
                 title=ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
@@ -71,7 +71,7 @@ class AttendanceService:
             sent_notification.delay(
                 recipient_id=recorded_by.id,
                 sender_id=employee.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=CHECK_ATTENDANCE_IN,
                 title=CHECK_ATTENDANCE_IN_TITLE.format(organization=organization.title),
                 description=ATTENDANCE_DESCRIPTION,
@@ -82,7 +82,7 @@ class AttendanceService:
         sent_notification.delay(
             recipient_id=employee.id,
             sender_id=recorded_by.id,
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             notification_type=ATTENDANCE_OUT,
             title=ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,
@@ -92,7 +92,7 @@ class AttendanceService:
         sent_notification.delay(
             recipient_id=recorded_by.id,
             sender_id=employee.id,
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             notification_type=CHECK_ATTENDANCE_OUT,
             title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=organization.title),
             description=ATTENDANCE_DESCRIPTION,

@@ -6,10 +6,10 @@ from common.models import TimestampModel
 from organizations.models import Organization
 from django.conf import settings
 from .constants import (get_titles_descriptions_from_type,
-                        DISCOUNT_NOTIFICATION_MODE,
+                        NOTIFICATION_MODE_DISCOUNT,
                         NOTIFICATION_MODES,
-                        SYSTEM_NOTIFICATION_MODE, PARTNER_MODE,
-                        NOTIFICATION_TYPES, SYSTEM_TYPE, PERSONAL_MODE, PRODUCT_MODE)
+                        NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_PARTNER,
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PRODUCT)
 
 User = get_user_model()
 
@@ -72,11 +72,11 @@ class Notification(TimestampModel):
 
         notification_setting = NotificationSetting.objects.get(user=user)
 
-        if not ((mode == DISCOUNT_NOTIFICATION_MODE and notification_setting.discount_notifications) or
-                (mode == PERSONAL_MODE and notification_setting.private_notifications) or
-                (mode == SYSTEM_NOTIFICATION_MODE and notification_setting.private_notifications) or
-                (mode == PARTNER_MODE and notification_setting.organization_notifications) or
-                (mode == PRODUCT_MODE and notification_setting.product_notifications)):
+        if not ((mode == NOTIFICATION_MODE_DISCOUNT and notification_setting.discount_notifications) or
+                (mode == NOTIFICATION_MODE_PERSONAL and notification_setting.private_notifications) or
+                (mode == NOTIFICATION_MODE_SYSTEM and notification_setting.private_notifications) or
+                (mode == NOTIFICATION_MODE_PARTNER and notification_setting.organization_notifications) or
+                (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications)):
             return
 
         notification_payload = {
@@ -166,7 +166,7 @@ class Notification(TimestampModel):
     def get_organization_small_image(organization: Organization):
         return organization.image.medium.url if organization.image else None
 
-
+# FIXME: Add type field and get rid of 5 diffrent types of notifications.
 class NotificationSetting(TimestampModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     fcm_device = models.ManyToManyField(FCMDevice, through='SettingsToToken')
@@ -174,6 +174,7 @@ class NotificationSetting(TimestampModel):
     private_notifications = models.BooleanField(default=True)
     organization_notifications = models.BooleanField(default=False)
     product_notifications = models.BooleanField(default=True)
+    delivery_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)

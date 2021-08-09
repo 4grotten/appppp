@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_celery_beat',
+    'django_extensions',
 
     'common.apps.CoreConfig',
     'transactions.apps.TransactionsConfig',

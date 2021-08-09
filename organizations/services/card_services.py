@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from common.services.currency import CurrencyConverterService
 from notifications.constants import (
-    NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE, NEW_DISCOUNT_DESCRIPTION, SYSTEM_NOTIFICATION_MODE, NEW_CASHBACK_TITLE,
+    NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TITLE, NEW_DISCOUNT_DESCRIPTION, NOTIFICATION_MODE_SYSTEM, NEW_CASHBACK_TITLE,
     NEW_CASHBACK
 )
 from notifications.tasks import send_notifications_to_all_users
@@ -158,7 +158,7 @@ class DiscountCardService:
         if percents:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 organization_id=organization.id,
-                mode=SYSTEM_NOTIFICATION_MODE,
+                mode=NOTIFICATION_MODE_SYSTEM,
                 notification_type=NEW_DISCOUNT_TYPE,
                 title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address),
@@ -167,7 +167,7 @@ class DiscountCardService:
         if cashbacks:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 organization_id=organization.id,
-                mode=SYSTEM_NOTIFICATION_MODE,
+                mode=NOTIFICATION_MODE_SYSTEM,
                 notification_type=NEW_CASHBACK,
                 title=NEW_CASHBACK_TITLE.format(percent=str_cashback),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address),
@@ -260,7 +260,7 @@ class DiscountCardService:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 sender_id=updated_by.id,
                 organization_id=organization.id,
-                mode=SYSTEM_NOTIFICATION_MODE,
+                mode=NOTIFICATION_MODE_SYSTEM,
                 notification_type=NEW_DISCOUNT_TYPE,
                 title=NEW_DISCOUNT_TITLE.format(percent=str_percent),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)
@@ -269,7 +269,7 @@ class DiscountCardService:
             transaction.on_commit(lambda: send_notifications_to_all_users.delay(
                 sender_id=updated_by.id,
                 organization_id=organization.id,
-                mode=SYSTEM_NOTIFICATION_MODE,
+                mode=NOTIFICATION_MODE_SYSTEM,
                 notification_type=NEW_DISCOUNT_TYPE,
                 title=NEW_CASHBACK_TITLE.format(percent=str_cashback),
                 description=NEW_DISCOUNT_DESCRIPTION.format(address=organization.address)

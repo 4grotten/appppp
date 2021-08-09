@@ -1,33 +1,34 @@
-DISCOUNT_NOTIFICATION_MODE = 'discount'
-SUBSCRIPTION_NOTIFICATION_MODE = 'subscription'
-SYSTEM_NOTIFICATION_MODE = 'system'
-PARTNER_MODE = 'partner'
-PERSONAL_MODE = 'personal'
-PRODUCT_MODE = 'product'
+NOTIFICATION_MODE_DISCOUNT = 'discount'
+NOTIFICATION_MODE_SUBSCRIPTION = 'subscription'
+NOTIFICATION_MODE_SYSTEM = 'system'
+NOTIFICATION_MODE_PARTNER = 'partner'
+NOTIFICATION_MODE_PERSONAL = 'personal'
+NOTIFICATION_MODE_PRODUCT = 'product'
 
 NOTIFICATION_MODES = (
-    (DISCOUNT_NOTIFICATION_MODE, DISCOUNT_NOTIFICATION_MODE.capitalize()),
-    (SUBSCRIPTION_NOTIFICATION_MODE, SUBSCRIPTION_NOTIFICATION_MODE.capitalize()),
-    (SYSTEM_NOTIFICATION_MODE, SYSTEM_NOTIFICATION_MODE.capitalize()),
-    (PARTNER_MODE, PARTNER_MODE.capitalize()),
-    (PERSONAL_MODE, PERSONAL_MODE.capitalize()),
-    (PRODUCT_MODE, PRODUCT_MODE.capitalize())
+    (NOTIFICATION_MODE_DISCOUNT, NOTIFICATION_MODE_DISCOUNT.capitalize()),
+    (NOTIFICATION_MODE_SUBSCRIPTION, NOTIFICATION_MODE_SUBSCRIPTION.capitalize()),
+    (NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_SYSTEM.capitalize()),
+    (NOTIFICATION_MODE_PARTNER, NOTIFICATION_MODE_PARTNER.capitalize()),
+    (NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PERSONAL.capitalize()),
+    (NOTIFICATION_MODE_PRODUCT, NOTIFICATION_MODE_PRODUCT.capitalize())
 )
 
-ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
-DECLINE_PARTNERSHIP_TYPE = 'declined_partnership'
-REQUEST_PARTNERSHIP_TYPE = 'requested_partnership'
+NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
+NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE = 'declined_partnership'
+NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE = 'requested_partnership'
 
-ACCEPT_PARTNERSHIP_RECIPIENT_TYPE = 'accepted_partnership_recipient'
-DECLINE_PARTNERSHIP_RECIPIENT_TYPE = 'declined_partnership_recipient'
-REQUEST_PARTNERSHIP_RECIPIENT_TYPE = 'requested_partnership_recipient'
+NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE = 'accepted_partnership_recipient'
+NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE = 'declined_partnership_recipient'
+NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE = 'requested_partnership_recipient'
+NOTIFICATION_TYPE_REQUEST_FOR_DELIVERY = 'request_for_delivery'
 
-RECRUIT_JOB_TYPE = 'recruit'
-GET_JOB_TYPE = 'get_job'
-CHANGE_JOB_POSITION_TYPE = 'changed_position'
-CHANGE_JOB_POSITION_OWNER_TYPE = 'changed_position_as_owner'
-DISMISS_JOB_TYPE = 'dismissed'
-QUIT_JOB_TYPE = 'quit'
+NOTIFICATION_TYPE_RECRUIT_JOB_TYPE = 'recruit'
+NOTIFICATION_TYPE_GET_JOB_TYPE = 'get_job'
+NOTIFICATION_TYPE_CHANGE_JOB_POSITION = 'changed_position'
+NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER = 'changed_position_as_owner'
+NOTIFICATION_TYPE_DISMISS_JOB = 'dismissed'
+NOTIFICATION_TYPE_QUIT_JOB = 'quit'
 
 NEW_DISCOUNT_TYPE = 'new_discount'
 NEW_ORGANIZATION = 'new_organization'
@@ -66,6 +67,14 @@ ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
 DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
 
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = 'accepted_by_delivery'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'accepted_by_delivery_for_client'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE = 'rejected_by_delivery'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'rejected_by_delivery_for_client'
+NOTIFICATION_TYPE_DELIVERED = 'delivery_delivered'
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT = 'delivery_delivered_for_client'
+
 NOTIFICATION_TYPES = (
     (ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_CLIENT_TYPE),
     (DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_CLIENT_TYPE),
@@ -89,23 +98,32 @@ NOTIFICATION_TYPES = (
     (FOLLOWED_TO_ORGANIZATION_TYPE, FOLLOWED_TO_ORGANIZATION_TYPE),
     (ORGANIZATION_FOLLOWED_TYPE, ORGANIZATION_FOLLOWED_TYPE),
     (SYSTEM_TYPE, SYSTEM_TYPE),
-    (ACCEPT_PARTNERSHIP_TYPE, ACCEPT_PARTNERSHIP_TYPE),
-    (DECLINE_PARTNERSHIP_TYPE, DECLINE_PARTNERSHIP_TYPE),
-    (REQUEST_PARTNERSHIP_TYPE, REQUEST_PARTNERSHIP_TYPE),
+    (NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE),
+    (NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE),
+    (NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE),
     (ACCEPT_SELLER_DISCOUNT_TYPE, ACCEPT_SELLER_DISCOUNT_TYPE),
-    (GET_JOB_TYPE, GET_JOB_TYPE),
-    (RECRUIT_JOB_TYPE, RECRUIT_JOB_TYPE),
-    (CHANGE_JOB_POSITION_TYPE, CHANGE_JOB_POSITION_TYPE),
-    (DISMISS_JOB_TYPE, DISMISS_JOB_TYPE),
-    (QUIT_JOB_TYPE, QUIT_JOB_TYPE),
-    (CHANGE_JOB_POSITION_OWNER_TYPE, CHANGE_JOB_POSITION_OWNER_TYPE),
+    (NOTIFICATION_TYPE_GET_JOB_TYPE, NOTIFICATION_TYPE_GET_JOB_TYPE),
+    (NOTIFICATION_TYPE_RECRUIT_JOB_TYPE, NOTIFICATION_TYPE_RECRUIT_JOB_TYPE),
+    (NOTIFICATION_TYPE_CHANGE_JOB_POSITION, NOTIFICATION_TYPE_CHANGE_JOB_POSITION),
+    (NOTIFICATION_TYPE_DISMISS_JOB, NOTIFICATION_TYPE_DISMISS_JOB),
+    (NOTIFICATION_TYPE_QUIT_JOB, NOTIFICATION_TYPE_QUIT_JOB),
+    (NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER, NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER),
     (ORGANIZATION_MESSAGE_TYPE, ORGANIZATION_MESSAGE_TYPE),
     (ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TYPE),
     (ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TYPE),
     (ORGANIZATION_MESSAGE_SENDER_TYPE, ORGANIZATION_MESSAGE_SENDER_TYPE),
-    (ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE),
-    (DECLINE_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_RECIPIENT_TYPE),
-    (REQUEST_PARTNERSHIP_RECIPIENT_TYPE, REQUEST_PARTNERSHIP_RECIPIENT_TYPE)
+    (NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE),
+    (NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE),
+    (NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE),
+    (NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_AVAILABLE_DELIVERY),
+    (NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE),
+    (NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+     NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT),
+    (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE),
+    (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT),
+    (NOTIFICATION_TYPE_DELIVERED, NOTIFICATION_TYPE_DELIVERED),
+    (NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
 )
 
 # ______________________RUSSIAN___________________________#
@@ -185,6 +203,20 @@ CHARGE_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем вам начисли�
 WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кэшбэка'
 CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кэшбэк {amount} {currency}'
 
+DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU = 'Доступен новый заказ!!!'
+DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы взяли заказ к доставке'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Ваш заказ отправлен в курьерскую службу. С вами свяжутся '
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы отменили заказ'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Доставка Вашего заказа отмена'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_DELIVERED_TITLE_RU = ''
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_RU = 'Ваш заказ доставлен'
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU = ''
 # _______________________ ENGLISH _______________________#
 
 ACCEPT_ORDER_TITLE_EN = 'You accepted order #{transaction_id}'
@@ -260,6 +292,21 @@ CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} 
 
 WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer {amount} {currency} from cashback'
 CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
+DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN = 'New delivery order available!!!'
+DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN = ' '
+
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You took an order for delivery'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Your order already sent to delivery service and will contact with you.'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You canceled order '
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Delivery of your order cancelled'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_DELIVERED_TITLE_EN = ''
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_EN = 'Your order delivered'
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN = ''
 
 
 def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -> dict:
@@ -422,7 +469,6 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                                    currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_DISCOUNT_TYPE:
-
         if extra_data.get('recipient') == 'client':
             notification_str = dict(
                 title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
@@ -458,7 +504,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
                                     address=extra_data.get('address')))
 
-    elif notification_type == ACCEPT_PARTNERSHIP_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -468,7 +514,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              'recipient_organization')),
             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
 
-    elif notification_type == DECLINE_PARTNERSHIP_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -478,7 +524,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              'recipient_organization')),
             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
 
-    elif notification_type == REQUEST_PARTNERSHIP_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -488,19 +534,19 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              'recipient_organization')),
             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
 
-    elif notification_type == RECRUIT_JOB_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_RECRUIT_JOB_TYPE:
         notification_str = dict(title=RECRUIT_JOB_TITLE,
                                 description=RECRUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=RECRUIT_JOB_TITLE_RU,
                                 description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')))
 
-    elif notification_type == GET_JOB_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_GET_JOB_TYPE:
         notification_str = dict(title=GET_JOB_TITLE,
                                 description=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=GET_JOB_TITLE_RU,
                                 description_ru=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')))
 
-    elif notification_type == CHANGE_JOB_POSITION_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION:
         notification_str = dict(title=CHANGE_JOB_POSITION_TITLE,
                                 description=CHANGE_JOB_POSITION_DESCRIPTION.format(
                                     old_position=extra_data.get('old_position'),
@@ -510,21 +556,21 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     old_position=extra_data.get('old_position'),
                                     new_position=extra_data.get('new_position'))
                                 )
-    elif notification_type == DISMISS_JOB_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_DISMISS_JOB:
         notification_str = dict(title=DISMISS_JOB_TITLE,
                                 description=DISMISS_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=DISMISS_JOB_TITLE_RU,
                                 description_ru=DISMISS_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
                                 )
 
-    elif notification_type == QUIT_JOB_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_QUIT_JOB:
         notification_str = dict(title=QUIT_JOB_TITLE,
                                 description=QUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=QUIT_JOB_TITLE_RU,
                                 description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
                                 )
 
-    elif notification_type == CHANGE_JOB_POSITION_OWNER_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER:
         notification_str = dict(title=CHANGE_JOB_POSITION_OWNER_TITLE,
                                 description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(
                                     old_position=extra_data.get('old_position'),
@@ -534,7 +580,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     old_position=extra_data.get('old_position'),
                                     new_position=extra_data.get('new_position')),
                                 )
-    elif notification_type == ACCEPT_PARTNERSHIP_RECIPIENT_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -544,7 +590,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              'recipient_organization')),
             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
 
-    elif notification_type == DECLINE_PARTNERSHIP_RECIPIENT_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -554,7 +600,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              'recipient_organization')),
             description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
 
-    elif notification_type == REQUEST_PARTNERSHIP_RECIPIENT_TYPE:
+    elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
                                                    recipient_organization=extra_data.get('recipient_organization')),
@@ -618,5 +664,136 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=REQUEST_ORDER_CLIENT_TITLE_RU,
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
+    elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY:
+        notification_str = dict(
+            title=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN,
+            description=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN.format(
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU,
+            description_ru=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU.format(
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE:
+        notification_str = dict(
+            title=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN,
+            description=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN.format(
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU,
+            description_ru=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU.format(
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN,
+            description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id'),
+
+            ),
+            title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN,
+            description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN,
+            description=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN,
+            description=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_EN,
+            description=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU.format(
+                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                organization=extra_data.get('organization'),
+                total_price=extra_data.get('total_price'),
+                currency=extra_data.get('currency'),
+                transaction_id=extra_data.get('transaction_id')
+            )
+        )
+
 
     return notification_str

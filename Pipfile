@@ -39,6 +39,9 @@ install = "*"
 google-trans-new = "==1.1.9"
 gevent = "*"
 googletrans = "==3.1.0a0"
+django-extensions = "*"
+django-phonenumber-field = {version = "==5.0.0", extras = [ "phonenumbers",]}
+pygraphviz = "*"
 
 [dev-packages]
 coverage = "*"
@@ -48,7 +51,3 @@ unittest-xml-reporting = "*"
 
 [requires]
 python_version = "3.9"
-
-[packages.django-phonenumber-field]
-version = "==5.0.0"
-extras = [ "phonenumbers",]

@@ -3,8 +3,10 @@ from typing import Union
 from celery import shared_task
 
 from common.exceptions import ObjectNotFoundException
+from notifications import constants
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription, Membership
+from shop.models import Cart
 from users.models import User
 
 
@@ -120,35 +122,84 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
 
 
 @shared_task
-def send_notifications_to_deliveres(sender_id: Union[int, None] = None, mode='system', notification_type='system',
-                                      title='Title was not sent', description='Description was not sent',
-                                      extra_data=None, organization_id=None):
+def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None,
+                                     mode=constants.NOTIFICATION_MODE_PRODUCT,
+                                     notification_type=constants.NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+                                     title='Title was not sent', description='Description was not sent',
+                                     extra_data=None):
     sender = sender_id
     if sender_id:
         sender = User.objects.get(id=sender_id)
-    recipients = User.objects.filter(owned_organizations__is_delivery_service=True).distinct()
-    organization = Organization.objects.get(id=organization_id)
-    country = organization.country
-    city = organization.city
-    print(recipients)
-    # recipients = User.objects.filter(subscriptions__organization_id=organization_id)
-    # for recipient in recipients:
-    #     if not extra_data:
-    #         extra_data = dict()
-    #         can_send_message = user_can_send_message(user=recipient, organization_id=organization_id)
-    #         extra_data['can_send_message'] = can_send_message
-    #
-    #     NotificationService.create_notification(
-    #         recipient=recipient,
-    #         sender=sender,
-    #         mode=mode,
-    #         notification_type=notification_type,
-    #         title=title,
-    #         description=description,
-    #         organization=organization,
-    #         extra_data=extra_data
-    #     )
 
+    cart = Cart.objects.get(pk=cart_id)
+    organization = cart.organization
+    country = cart.organization.country
+    city = cart.organization.city
+    recipients = User.objects.filter(
+        owned_organizations__is_delivery_service=True,
+        owned_organizations__country=country,
+        owned_organizations__is_active=True,
+        owned_organizations__is_banned=False,
+        owned_organizations__is_deleted=False,
+    ).distinct()
+
+    extra_data = {
+        'organization': organization.title,
+        'final_price': str(cart.transaction.final_amount),
+        'currency': cart.transaction.currency.code,
+        'who_pays': cart.transaction.delivery_info.who_pays,
+        'transaction_id': cart.transaction.id,
+        'delivery_amount': str(cart.transaction.delivery_info.amount),
+        'delivery_currency': str(cart.transaction.delivery_info.currency.code),
+
+    }
+
+    for recipient in recipients:
+        NotificationService.create_notification(
+            recipient=recipient,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
+
+
+def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, sender_id: Union[int, None] = None,
+
+                                                         mode=constants.NOTIFICATION_MODE_PRODUCT,
+                                                         title='Title was not sent',
+                                                         description='Description was not sent',
+                                                         extra_data=None):
+    sender = sender_id
+    if sender_id:
+        sender = User.objects.get(id=sender_id)
+
+    cart = Cart.objects.get(pk=cart_id)
+    organization = cart.organization
+    extra_data = {
+        'organization': organization.title,
+        'delivery_organization': cart.transaction.delivery_info.delivery_organization.title,
+        'final_price': str(cart.transaction.final_amount),
+        'currency': cart.transaction.currency.code,
+        'who_pays': cart.transaction.delivery_info.who_pays,
+        'transaction_id': cart.transaction.id,
+        'delivery_amount': str(cart.transaction.delivery_info.amount),
+        'delivery_currency': str(cart.transaction.delivery_info.currency.code),
+
+    }
+    NotificationService.create_notification(
+        recipient=recipient,
+        sender=sender,
+        mode=mode,
+        notification_type=notification_type,
+        title=title,
+        description=description,
+        organization=organization,
+        extra_data=extra_data
+    )
 
 
 @shared_task

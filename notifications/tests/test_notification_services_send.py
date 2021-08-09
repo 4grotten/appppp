@@ -1,5 +1,5 @@
 from django.test import TestCase
-from notifications.models import Notification, PARTNER_MODE
+from notifications.models import Notification, NOTIFICATION_MODE_PARTNER
 from unittest.mock import patch, Mock, call
 
 from notifications.tests.factories import NotificationSettingFactory, NotificationFactory, \
@@ -36,7 +36,7 @@ class NotificationSendMessageTest(TestCase):
     def test_do_not_sent_because_of_settings_send_notification(self, mocked_send_message: Mock):
         user = UserFactory(phone_number='+996555422122')
         notification_settings = NotificationSettingFactory(user=user, organization_notifications=False)
-        notification = NotificationFactory(mode=PARTNER_MODE)
+        notification = NotificationFactory(mode=NOTIFICATION_MODE_PARTNER)
         notification_android_device = FCMDeviceFactory(type='android')
         notification_ios_device = FCMDeviceFactory(type='ios')
         notification_web_device = FCMDeviceFactory(type='web')

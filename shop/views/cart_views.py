@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
+from notifications.tasks import send_notifications_to_deliverers
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
@@ -126,7 +127,10 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
                 'errors': "Not owner of the organization"
             }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = cart.transaction.delivery_info
-        if delivery_info.status in (DeliveryInfo.DELIVERY_STATUS_DELIVERED, DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY):
+        if delivery_info.status in (
+                DeliveryInfo.DELIVERY_STATUS_DELIVERED,
+                DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY
+        ):
             return Response(data={
                 'message': _('Already delivered'),
                 'errors': "Already delivered"
@@ -135,7 +139,12 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.currency = cart.organization.currency
         # TODO: Find out how to get amount
+
         delivery_info.save()
+
+        send_notifications_to_deliverers.delay(
+            cart.id,
+        )
         return Response(
             {
                 "message": _("Success"),

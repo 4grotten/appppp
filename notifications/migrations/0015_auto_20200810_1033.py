@@ -2,15 +2,15 @@
 
 from django.db import migrations
 
-from notifications.constants import SUBSCRIPTION_NOTIFICATION_MODE, PERSONAL_MODE
+from notifications.constants import NOTIFICATION_MODE_SUBSCRIPTION, NOTIFICATION_MODE_PERSONAL
 
 
 def convert_subscription_mode_to_personal(apps, _):
     NotificationMode = apps.get_model('notifications', 'NotificationMode')
     Notification = apps.get_model('notifications', 'Notification')
 
-    subscription_notification_mode = NotificationMode.objects.get(name=SUBSCRIPTION_NOTIFICATION_MODE)
-    personal_notification_mode = NotificationMode.objects.get(name=PERSONAL_MODE)
+    subscription_notification_mode = NotificationMode.objects.get(name=NOTIFICATION_MODE_SUBSCRIPTION)
+    personal_notification_mode = NotificationMode.objects.get(name=NOTIFICATION_MODE_PERSONAL)
 
     Notification.objects.filter(mode=subscription_notification_mode).update(mode=personal_notification_mode)
 

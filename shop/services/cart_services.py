@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import (
     ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException
 )
-from notifications.constants import PRODUCT_MODE, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
+from notifications.constants import NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
@@ -74,7 +74,7 @@ class CartService:
             )
             send_notifications_organization_members.delay(
                 members_organization_id=accepted_offline_transaction.organization_id,
-                mode=PRODUCT_MODE,
+                mode=NOTIFICATION_MODE_PRODUCT,
                 sender_id=accepted_offline_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
                 notification_type=ACCEPT_ORDER_TYPE,
@@ -109,7 +109,7 @@ class CartService:
         finally:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
-                mode=PRODUCT_MODE,
+                mode=NOTIFICATION_MODE_PRODUCT,
                 notification_type=REQUEST_ORDER_CLIENT_TYPE,
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id,
@@ -118,7 +118,7 @@ class CartService:
             )
             send_notifications_organization_members.delay(
                 members_organization_id=current_transaction.organization_id,
-                mode=PRODUCT_MODE,
+                mode=NOTIFICATION_MODE_PRODUCT,
                 sender_id=current_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
                 notification_type=REQUEST_ORDER_TYPE,

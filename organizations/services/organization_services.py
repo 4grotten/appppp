@@ -14,7 +14,7 @@ from common.models import Country, City, File, Currency
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
-    SYSTEM_NOTIFICATION_MODE, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, PERSONAL_MODE,
+    NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, NOTIFICATION_MODE_PERSONAL,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
 )
 from notifications.tasks import (
@@ -260,7 +260,7 @@ class OrganizationService:
         transaction.on_commit(lambda: send_notifications_to_all_users.delay(
             organization_id=organization.id,
             # sender_id=owner.id,
-            mode=SYSTEM_NOTIFICATION_MODE,
+            mode=NOTIFICATION_MODE_SYSTEM,
             notification_type=NEW_ORGANIZATION,
             title=NEW_ORGANIZATION_TITLE,
             extra_data=dict(organization_title=organization.title)
@@ -438,7 +438,7 @@ class OrganizationService:
             sent_notification.delay(
                 recipient_id=new_owner.id,
                 sender_id=current_owner.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=ORGANIZATION_OWN_TYPE,
                 organization_id=organization.id,
                 extra_data=dict(organization=organization.title)
@@ -447,7 +447,7 @@ class OrganizationService:
             sent_notification.delay(
                 recipient_id=current_owner.id,
                 sender_id=new_owner.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=ORGANIZATION_GAVE_TYPE,
                 description=ORGANIZATION_GAVE_DESCRIPTION,
                 organization_id=organization.id,
@@ -611,13 +611,13 @@ class OrgMessageService:
                 sender_id=notification_sender_id,
                 organization_id=organization.id,
                 recipient_id=receiver.id,
-                mode=PERSONAL_MODE,
+                mode=NOTIFICATION_MODE_PERSONAL,
                 notification_type=ORGANIZATION_MESSAGE_TYPE,
                 extra_data=dict(message_to=message_to, content=content)
             )
         send_notifications_organization_members.delay(
             sender_id=sender.id,
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             notification_type=ORGANIZATION_MESSAGE_SENDER_TYPE,
             organization_id=organization.id,
             with_permissions=dict(can_send_message=True),

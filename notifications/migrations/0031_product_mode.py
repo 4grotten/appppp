@@ -7,14 +7,14 @@ from django.db import migrations
 from django.db import migrations
 
 from notifications.constants import (
-    PRODUCT_MODE
+    NOTIFICATION_MODE_PRODUCT
 )
 
 
 def create_notification_modes(apps, _):
     NotificationMode = apps.get_model('notifications', 'NotificationMode')
 
-    NotificationMode.objects.create(name=PRODUCT_MODE)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_PRODUCT)
 
 
 class Migration(migrations.Migration):

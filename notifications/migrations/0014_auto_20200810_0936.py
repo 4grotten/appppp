@@ -2,13 +2,13 @@
 
 from django.db import migrations
 
-from notifications.constants import PERSONAL_MODE
+from notifications.constants import NOTIFICATION_MODE_PERSONAL
 
 
 def create_notification_modes(apps, _):
     NotificationMode = apps.get_model('notifications', 'NotificationMode')
 
-    NotificationMode.objects.create(name=PERSONAL_MODE)
+    NotificationMode.objects.create(name=NOTIFICATION_MODE_PERSONAL)
 
 
 class Migration(migrations.Migration):

@@ -7,9 +7,9 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import Currency
 from notifications.constants import (
-    REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
-    PARTNERSHIP_REQUEST_DESCRIPTION, REQUEST_PARTNERSHIP_RECIPIENT_TYPE, DECLINE_PARTNERSHIP_TYPE,
-    DECLINE_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, ACCEPT_PARTNERSHIP_TYPE, PERSONAL_MODE
+    NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
+    PARTNERSHIP_REQUEST_DESCRIPTION, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
+    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_MODE_PERSONAL
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
@@ -43,9 +43,9 @@ class PartnershipService:
         partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             sender_id=user.id,
-            notification_type=REQUEST_PARTNERSHIP_TYPE,
+            notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
@@ -57,8 +57,8 @@ class PartnershipService:
                             recipient_organization=accepted_by.title, address=requested_by.address)
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=PERSONAL_MODE,
-            notification_type=REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
                                                    recipient_organization=accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
@@ -109,9 +109,9 @@ class PartnershipService:
             extra_data__should_be_deleted=True).delete())
 
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             sender_id=user.id,
-            notification_type=DECLINE_PARTNERSHIP_TYPE,
+            notification_type=NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
@@ -123,9 +123,9 @@ class PartnershipService:
                             address=partnership.requested_by.address),
         ))
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=PERSONAL_MODE,
+            mode=NOTIFICATION_MODE_PERSONAL,
             sender_id=user.id,
-            notification_type=DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
+            notification_type=NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                    recipient_organization=partnership.accepted_by.title),
             description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
@@ -188,9 +188,9 @@ class PartnershipService:
                         extra_data__should_be_deleted=True).delete())
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=PERSONAL_MODE,
+                    mode=NOTIFICATION_MODE_PERSONAL,
                     sender_id=user.id,
-                    notification_type=ACCEPT_PARTNERSHIP_TYPE,
+                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
                     description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
@@ -204,9 +204,9 @@ class PartnershipService:
                 ))
 
                 transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=PERSONAL_MODE,
+                    mode=NOTIFICATION_MODE_PERSONAL,
                     sender_id=user.id,
-                    notification_type=ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
                     title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
                                                            recipient_organization=partnership.accepted_by.title),
                     description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),

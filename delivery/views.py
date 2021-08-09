@@ -1,14 +1,17 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils.translation import gettext_lazy as _
+
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
-from delivery.serializers import DeliveryAllItemsCountSerializer, DeliveryInfoListSerializer, \
-    CartListWithDeliveryInfoSerializer
-from shop.serializers.cart_serializers import DeliveryInfoSerializer
+from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDeliveryInfoSerializer
+from notifications.constants import NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, \
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
+    NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT
+from notifications.tasks import send_delivery_notitication_to_organization_or_client
 
 
 class DeliveryItemsCountView(APIView):
@@ -48,9 +51,18 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
                 'errors': _("Delivery is already taken")
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY
         delivery_info.delivery_organization = delivery_organization
         delivery_info.save()
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.client,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT)
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.delivery_organization.owner,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE)
         return Response({'status': 'ok'})
 
 
@@ -78,7 +90,14 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
                 'errors': _("Delivered")
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
-
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.client,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT)
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.delivery_organization.owner,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE)
         delivery_info.save()
 
         return Response({'status': 'ok'})
@@ -110,7 +129,10 @@ class DeliveredByDeliveryServiceView(APIView):
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_DELIVERED
         delivery_info.save()
-
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.client,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
         return Response({'status': 'ok'})
 
 

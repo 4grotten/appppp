@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
+from organizations.models import HotlinkCollectionItem
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData
@@ -246,3 +247,15 @@ class ItemInHotlinkSerializer(ItemInCartSerializer):
         fields = (
             'id', 'name', 'image'
         )
+
+
+class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
+    subcategory_name = serializers.CharField(source='subcategory.name')
+    is_selected = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'name', 'subcategory_name', 'price', 'discounted_price', 'is_selected', 'image')
+
+    def get_is_selected(self, item: ShopItem) -> bool:
+        return HotlinkCollectionItem.objects.filter(hotlink=self.context['hotlink'], item=item).exists()

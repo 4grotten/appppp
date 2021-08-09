@@ -6,7 +6,8 @@ from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
-    CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog
+    CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
+    HotlinkCollectionSubcategory, HotlinkCollectionLink
 )
 
 
@@ -58,7 +59,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned',
         'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service'
     )
-    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service')
+    list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group',
+                   'is_delivery_service')
     search_fields = ('title',)
     raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
@@ -171,7 +173,27 @@ class MessageAdmin(admin.ModelAdmin):
 @admin.register(Hotlink)
 class HotlinkAdmin(admin.ModelAdmin):
     list_display = ('id', 'organization', 'content', 'link_type', 'linked_item', 'linked_organization',)
+    list_filter = ('link_type', 'organization',)
     raw_id_fields = ('organization', 'image')
+
+
+@admin.register(HotlinkCollectionItem)
+class HotlinkCollectionItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'hotlink', 'item')
+    raw_id_fields = ('hotlink', 'item')
+
+
+@admin.register(HotlinkCollectionSubcategory)
+class HotlinkCollectionSubcategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'hotlink', 'subcategory')
+    raw_id_fields = ('hotlink', 'subcategory')
+
+
+@admin.register(HotlinkCollectionLink)
+class HotlinkCollectionLinkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'hotlink', 'content', 'linked_item')
+    list_filter = ('hotlink',)
+    raw_id_fields = ('hotlink', 'linked_item')
 
 
 @admin.register(InstagramIntegration)

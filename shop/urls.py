@@ -9,7 +9,9 @@ from shop.views.category_views import (
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
     ItemCategoryAllSubcategoriesView
 )
-from shop.views.feed_views import FeedView, OrganizationItemListView, SubscriptionItemListView
+from shop.views.feed_views import (
+    FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
+)
 from shop.views.item_views import (
     ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
     BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView
@@ -34,6 +36,7 @@ urlpatterns = [
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
     path('shop/subscription_items/', SubscriptionItemListView.as_view(), name='subscribed_organization_items'),
+    path('shop/hotlink_items/<int:pk>/', HotlinkCollectionItemListView.as_view(), name='hotlink_collection_items'),
 
     path('shop/likes/', LikeListCreateView.as_view(), name='like_list_create'),
     path('shop/bookmarks/', BookmarkListCreateView.as_view(), name='bookmark_list_create'),

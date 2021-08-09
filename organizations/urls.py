@@ -6,7 +6,10 @@ from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
 from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
-from .views.hotlink_views import HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView
+from .views.hotlink_views import (
+    HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView, HotlinkSubcategoriesListUpdateView,
+    HotlinkItemsListUpdateView, CollectionLinksCreateView, CollectionLinksListView, CollectionLinkUpdateDestroyView
+)
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
     MembershipRetrieveUpdateDestroyView, TransferOwnershipView, BriefUserInfoView
@@ -121,6 +124,12 @@ banner_urls = [
 hotlink_urls = [
     path('hotlinks/', HotlinkListCreateView.as_view(), name='hotlinks'),
     path('hotlinks/<int:pk>/', HotlinkRetrieveUpdateDestroyView.as_view(), name='hotlink_details'),
+    path('hotlinks/<int:pk>/items/', HotlinkItemsListUpdateView.as_view(), name='hotlink_shop_items'),
+    path('hotlinks/<int:pk>/subcategories/', HotlinkSubcategoriesListUpdateView.as_view(),
+         name='hotlink_subcategories'),
+    path('hotlinks/<int:pk>/links/', CollectionLinksListView.as_view(), name='hotlink_links_list'),
+    path('hotlink_links/', CollectionLinksCreateView.as_view(), name='create_hotlink_link'),
+    path('hotlink_links/<int:pk>/', CollectionLinkUpdateDestroyView.as_view(), name='delete_hotlink_link'),
 ]
 
 organization_promo_urls = [

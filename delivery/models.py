@@ -12,7 +12,6 @@ class DeliveryInfo(TimestampModel):
     DELIVERY_STATUS_TAKEN_FOR_DELIVERY = 'delivery_status_taken_for_delivery'
     DELIVERY_STATUS_SET_FOR_DELIVERY = 'delivery_status_set_for_delivery'
     DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE = 'delivery_status_rejected_by_delivery_service'
-    DELIVERY_STATUS_ACCEPTED_BY_DELIVERY_SERVICE = 'delivery_status_accepted_by_delivery_service'
     DELIVERY_STATUS_DELIVERED = 'delivery_status_delivered'
     DELIVERY_STATUS_REJECTED_BY_CUSTOMER = 'delivery_status_rejected_by_customer'
 
@@ -20,7 +19,6 @@ class DeliveryInfo(TimestampModel):
         (DELIVERY_STATUS_TAKEN_FOR_DELIVERY, _("Taken for delivery")),
         (DELIVERY_STATUS_SET_FOR_DELIVERY, _("Set for delivery")),
         (DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE, _("Rejected by delivery service")),
-        (DELIVERY_STATUS_ACCEPTED_BY_DELIVERY_SERVICE, _("Accepted by delivery service")),
         (DELIVERY_STATUS_DELIVERED, _("Delivered")),
         (DELIVERY_STATUS_REJECTED_BY_CUSTOMER, _("Rejected by customer")),
     )

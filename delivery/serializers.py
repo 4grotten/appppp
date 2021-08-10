@@ -27,7 +27,7 @@ class DeliveryInfoListSerializer(serializers.ModelSerializer):
                   'phone', 'comment', 'status',
                   'longitude', 'latitude',
                   'full_location',
-                  'who_pays', 'amount', 'currency'
+                  'who_pays', 'amount', 'currency',
                   )
 
 
@@ -39,7 +39,3 @@ class CartListWithDeliveryInfoSerializer(CartListSerializer):
         model = Cart
 
 
-# class DeliveryTakeSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = DeliveryInfo
-#         fields = ('delivery_organization_id',)

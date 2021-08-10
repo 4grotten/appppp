@@ -57,5 +57,4 @@ class DeliveryInfoService:
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_DELIVERED,
-                # DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
             )).order_by('-created_at'))

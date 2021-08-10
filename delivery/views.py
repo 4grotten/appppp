@@ -51,7 +51,6 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
                 'errors': _("Delivery is already taken")
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY
         delivery_info.delivery_organization = delivery_organization
         delivery_info.save()

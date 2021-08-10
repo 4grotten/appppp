@@ -40,13 +40,22 @@ class DeliveryInfoService:
     def get_available_orders(cls, user: User) -> list:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return list(Cart.objects.filter(
+        queryset = Cart.objects.filter(
             transaction__delivery_info__country__in=countries,
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
                 DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
-            )).order_by('-created_at'))
+            )).order_by('-created_at')
+        in_progress = Cart.objects.filter(
+            transaction__delivery_info__country__in=countries,
+            transaction__status=Transaction.ACCEPTED,
+            transaction__delivery_info__status__in=(
+                DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
+            ),
+            transaction__delivery_info__delivery_organization__in=delivery_service_organizations
+        ).order_by('-created_at')
+        return list(in_progress) + list(queryset)
 
     @classmethod
     def get_history_items(cls, user: User) -> list:

@@ -48,7 +48,7 @@ class DeliveryInfo(TimestampModel):
     location = PointField(help_text=_("Customer location coordinates"), null=True, blank=True)
     status = models.CharField(max_length=255, choices=DELIVERY_STATUSES, default=None, null=True)
     amount = models.DecimalField(max_digits=16, decimal_places=2, null=True, default=200)
-    currency = models.ForeignKey(Currency, null=True, on_delete=models.SET_NULL)
+    currency = models.ForeignKey(Currency, null=True, on_delete=models.SET_NULL, default="KGS")
 
     def __str__(self):
         return f'Delivery info of {self.transaction.client}'

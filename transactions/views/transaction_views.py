@@ -249,7 +249,7 @@ class UserTransactionDetailView(APIView):
 
     def get(self, request, pk):
         instance = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(TransactionDetailSerializer(instance, context={"user": request.user}).data)
+        return Response(TransactionDetailSerializer(instance, context={'request':request, "user": request.user}).data)
 
 
 class OrganizationTransactionListView(ListAPIView):

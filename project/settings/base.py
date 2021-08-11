@@ -240,6 +240,14 @@ NIKITA_TEST_MODE = config('NIKITA_TEST_MODE', default=1, cast=int)
 OER_APP_ID = config('OER_APP_ID')
 OER_CACHE_TIMEOUT = 60 * 60 * 24
 OER_BASE_CURRENCY = 'USD'
+PROJECT_ENV = config('PROJECT_ENVIRONMENT', default='dev')
+if PROJECT_ENV != 'dev':
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+            'LOCATION': config('CACHE_SERVER_URL', default='memcached:11211'),
+        }
+    }
 
 APP_BASE_CURRENCY = 'KGS'
 

@@ -1,23 +1,25 @@
 version: '3'
 volumes:
-  postgres_data_dev: {}
-  postgres_backup_dev: {}
+  postgres_data_dev: { }
+  postgres_backup_dev: { }
 
 
 services:
   django: &django
     build:
-        context: .
-        dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile
     image: apofiz/backend
     ports:
       - "8000:8000"
     links:
       - postgres:postgres
       - rabbitmq:rabbimq
+      - memcached:memcached
     depends_on:
       - rabbitmq
       - postgres
+      - memcached
     env_file: ./env/test.env
     volumes:
       - .:/app
@@ -47,3 +49,6 @@ services:
     restart: always
 
 
+  memcached:
+    image: memcached:1.6-alpine
+    env_file: ./env/development.env

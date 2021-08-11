@@ -197,20 +197,22 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return DiscountGroupSerializer(discounts).data
 
     def get_is_subscribed(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
-            return
-        return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
+        if 'request' in self.context:
+            if self.context['request'].user.is_anonymous:
+                return
+            return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
 
     def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
         return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
 
     def get_client_status(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
-            return
-        data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
-            client=self.context['request'].user, organization=organization
-        )
-        return data
+        if 'request' in self.context:
+            if self.context['request'].user.is_anonymous:
+                return
+            data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
+                client=self.context['request'].user, organization=organization
+            )
+            return data
 
     def get_partners(self, organization: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organization)

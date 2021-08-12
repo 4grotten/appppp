@@ -68,6 +68,7 @@ DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
 
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION = 'for_delivery_for_organization'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = 'accepted_by_delivery'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'accepted_by_delivery_for_client'
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE = 'rejected_by_delivery'
@@ -123,7 +124,8 @@ NOTIFICATION_TYPES = (
     (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
      NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT),
     (NOTIFICATION_TYPE_DELIVERED, NOTIFICATION_TYPE_DELIVERED),
-    (NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
+    (NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT),
+    (NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
 )
 
 # ______________________RUSSIAN___________________________#
@@ -203,8 +205,12 @@ CHARGE_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем вам начисли�
 WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кэшбэка'
 CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кэшбэк {amount} {currency}'
 
-DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU = 'Доступен новый заказ!!!'
-DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU = ''
+
+
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU = 'Доступен новый заказ!!!'
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU = 'Курьерская служба может доставить ваш заказ'
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU = ''
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы взяли заказ к доставке'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Ваш заказ отправлен в курьерскую службу. С вами свяжутся '
@@ -292,11 +298,13 @@ CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} 
 
 WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer {amount} {currency} from cashback'
 CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
-DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN = 'New delivery order available!!!'
-DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN = ' '
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN = 'New delivery order available!!!'
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_EN = ' '
 
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You took an order for delivery'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_EN = 'Курьерская служба может доставить ваш заказ'
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_EN = ''
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Your order already sent to delivery service and will contact with you.'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You canceled order '
@@ -666,32 +674,32 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                        currency=extra_data.get('currency')))
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY:
         notification_str = dict(
-            title=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN,
-            description=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN.format(
+            title=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN,
+            description=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_EN.format(
                 organization=extra_data.get('organization'),
                 total_price=extra_data.get('total_price'),
                 currency=extra_data.get('currency'),
                 transaction_id=extra_data.get('transaction_id')
             ),
-            title_ru=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU,
-            description_ru=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU.format(
+            title_ru=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU,
+            description_ru=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU.format(
                 organization=extra_data.get('organization'),
                 total_price=extra_data.get('total_price'),
                 currency=extra_data.get('currency'),
                 transaction_id=extra_data.get('transaction_id')
             )
         )
-    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE:
+    elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION:
         notification_str = dict(
-            title=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_EN,
-            description=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_EN.format(
+            title=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_EN,
+            description=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_EN.format(
                 organization=extra_data.get('organization'),
                 total_price=extra_data.get('total_price'),
                 currency=extra_data.get('currency'),
                 transaction_id=extra_data.get('transaction_id')
             ),
-            title_ru=DELIVERY_NOTIFICATION_AVAILABLE_TITLE_RU,
-            description_ru=DELIVERY_NOTIFICATION_AVAILABLE_DESCRIPTION_RU.format(
+            title_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU.format(
                 organization=extra_data.get('organization'),
                 total_price=extra_data.get('total_price'),
                 currency=extra_data.get('currency'),

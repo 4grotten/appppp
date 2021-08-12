@@ -61,6 +61,12 @@ class DeliveryInfo(TimestampModel):
         return None
 
 
+class DeliveryActionHistory(TimestampModel):
+    delivery_info = models.ForeignKey(DeliveryInfo, related_name='history', on_delete=models.CASCADE)
+    delivery_organization = models.ForeignKey(Organization, related_name='delivery_history', on_delete=models.CASCADE)
+    status = models.CharField(max_length=255, choices=DeliveryInfo.DELIVERY_STATUSES)
+
+
 class DeliveryOrganizationProfile(models.Model):
     class Meta:
         pass

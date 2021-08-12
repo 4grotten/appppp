@@ -1,8 +1,12 @@
 from django.contrib.gis.geos import Point
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
-from delivery.models import DeliveryInfo
+from delivery.models import DeliveryInfo, DeliveryActionHistory
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.tasks import send_delivery_notitication_to_organization_or_client
+from organizations.models import Organization
 from shop.models import Cart
 from transactions.models import Transaction
 from users.models import User
@@ -21,6 +25,9 @@ class DeliveryInfoService:
             transaction.save()
             country = transaction.cart.organization.country
             city = transaction.cart.organization.city
+            send_delivery_notitication_to_organization_or_client(transaction.cart.organization.owner,
+                                                                 transaction.car_id,
+                                                                 NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
             return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
         except Exception as e:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
@@ -40,30 +47,45 @@ class DeliveryInfoService:
     def get_available_orders(cls, user: User) -> list:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        queryset = Cart.objects.filter(
+        queryset = Cart.objects.filter(Q(
             transaction__delivery_info__country__in=countries,
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
-                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
-            )).order_by('-created_at')
-        in_progress = Cart.objects.filter(
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,))
+                                       | Q(
+            transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
             transaction__delivery_info__country__in=countries,
             transaction__status=Transaction.ACCEPTED,
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
             ),
-            transaction__delivery_info__delivery_organization__in=delivery_service_organizations
-        ).order_by('-created_at')
-        return list(in_progress) + list(queryset)
+        )).exclude(
+            transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
+            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE).order_by(
+            '-created_at')
+        return queryset
 
     @classmethod
     def get_history_items(cls, user: User) -> list:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return list(Cart.objects.filter(
-            transaction__delivery_info__country__in=countries,
-            transaction__status=Transaction.ACCEPTED,
-            transaction__delivery_info__status__in=(
-                DeliveryInfo.DELIVERY_STATUS_DELIVERED,
-            )).order_by('-created_at'))
+        return Cart.objects.filter(
+            Q(
+                transaction__delivery_info__country__in=countries,
+                transaction__status=Transaction.ACCEPTED,
+                transaction__delivery_info__status__in=(
+                    DeliveryInfo.DELIVERY_STATUS_DELIVERED,
+                    DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
+                ),
+                transaction__delivery_info__delivery_organization__in=delivery_service_organizations
+            ) | Q(
+                transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
+                transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
+            )
+        ).order_by('-created_at')
+
+    @classmethod
+    def add_action_history_item(cls, delivery_info: DeliveryInfo, delivery_organization: Organization, status: str):
+        DeliveryActionHistory.objects.create(delivery_info=delivery_info, delivery_organization=delivery_organization,
+                                             status=status)

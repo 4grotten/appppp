@@ -25,10 +25,12 @@ class DeliveryInfoService:
             transaction.save()
             country = transaction.cart.organization.country
             city = transaction.cart.organization.city
+
+            created = DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
             send_delivery_notitication_to_organization_or_client(transaction.cart.organization.owner,
                                                                  transaction.cart.id,
                                                                  NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
-            return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
+            return created
         except Exception as e:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
 
@@ -53,7 +55,7 @@ class DeliveryInfoService:
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
                 DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,))
-            | Q(
+                                       | Q(
             transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
             transaction__delivery_info__country__in=countries,
             transaction__status=Transaction.ACCEPTED,

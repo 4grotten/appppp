@@ -142,6 +142,7 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
     country = CountrySerializer(allow_null=True, required=False)
     city = CitySerializer(allow_null=True, required=False)
 
+
     class Meta:
         model = DeliveryInfo
         fields = ('id', 'delivery_organization', 'country', 'city', 'transaction',

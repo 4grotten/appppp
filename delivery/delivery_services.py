@@ -26,7 +26,7 @@ class DeliveryInfoService:
             country = transaction.cart.organization.country
             city = transaction.cart.organization.city
             send_delivery_notitication_to_organization_or_client(transaction.cart.organization.owner,
-                                                                 transaction.cart_id,
+                                                                 transaction.cart.id,
                                                                  NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
             return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
         except Exception as e:
@@ -53,7 +53,7 @@ class DeliveryInfoService:
             transaction__delivery_info__status__in=(
                 DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
                 DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,))
-                                       | Q(
+            | Q(
             transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
             transaction__delivery_info__country__in=countries,
             transaction__status=Transaction.ACCEPTED,
@@ -76,7 +76,6 @@ class DeliveryInfoService:
                 transaction__status=Transaction.ACCEPTED,
                 transaction__delivery_info__status__in=(
                     DeliveryInfo.DELIVERY_STATUS_DELIVERED,
-                    DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
                 ),
                 transaction__delivery_info__delivery_organization__in=delivery_service_organizations
             ) | Q(

@@ -65,6 +65,8 @@ class CompleteSerializer(serializers.ModelSerializer):
 
 class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+
 
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
@@ -75,7 +77,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status'
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info'
         )
 
 

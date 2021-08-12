@@ -67,7 +67,6 @@ class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
 
-
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
             return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)

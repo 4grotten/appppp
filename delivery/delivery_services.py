@@ -26,7 +26,7 @@ class DeliveryInfoService:
             country = transaction.cart.organization.country
             city = transaction.cart.organization.city
             send_delivery_notitication_to_organization_or_client(transaction.cart.organization.owner,
-                                                                 transaction.car_id,
+                                                                 transaction.cart_id,
                                                                  NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
             return DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
         except Exception as e:

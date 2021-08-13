@@ -283,10 +283,11 @@ CELERY_TASK_ROUTES = {
     'organizations.tasks.delete_not_updated_posts_from_instagram': {'queue': 'insta_low'},
     'organizations.tasks.delete_old_instagram_posts': {'queue': 'insta_low'},
     'organizations.tasks.update_instagram_videos': {'queue': 'insta_video'},
-    'organizations.tasks.update_videos_by_user_entering_on_page': {'queue': 'update_insta_video'},
+    'organizations.tasks.update_media_url_by_user_entering_on_page': {'queue': 'update_insta_video'},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config('INSTAGRAM_VIDEO_EXPIRE_DAYS', default=1, cast=int)
+INSTAGRAM_IMG_EXPIRE_DAYS = config('INSTAGRAM_IMG_EXPIRE_DAYS', default=4, cast=int)
 INSTAGRAM_POSTS_UPDATE_BATCH_SIZE = config('INSTAGRAM_POSTS_UPDATE_BATCH_SIZE', default=30, cast=int)
 INSTAGRAM_DAYS_TO_KEEP = config('INSTAGRAM_DAYS_TO_KEEP', default=14, cast=int)
 

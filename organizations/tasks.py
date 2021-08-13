@@ -58,15 +58,21 @@ def update_instagram_videos():
 
 
 @shared_task
-def update_videos_by_user_entering_on_page(organization_id):
-    update_posts_before_this_date = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
-    data_with_video = ItemInstagramData.objects.filter(item__organization=organization_id,
-                                                       updated_at__lte=update_posts_before_this_date,
-                                                       video_url__isnull=False).order_by('-updated_at')
-    if data_with_video:
-        for data in data_with_video:
-            video_url, thumbnail_url = parser.get_video_urls_from_post(post_url=data.item.instagram_link)
-            data.video_url = video_url
-            if thumbnail_url is not None:
-                data.thumbnail_url = thumbnail_url
-            data.save()
+def update_media_url_by_user_entering_on_page(organization_id, without_video=False):
+    if not without_video:
+        expiration_time = settings.INSTAGRAM_VIDEO_EXPIRE_DAYS
+    else:
+        expiration_time = settings.INSTAGRAM_IMG_EXPIRE_DAYS
+    update_posts_before_this_date = now() - timedelta(days=expiration_time)
+
+    items = ShopItem.objects.filter(organization=organization_id,
+                                    instagram_data__updated_at__lte=update_posts_before_this_date,
+                                    instagram_data__video_url__isnull=without_video).order_by('-updated_at')
+
+    for item in items:
+        post_data = parser.get_urls_from_post(post_url=item.instagram_link)
+        item.instagram_data.all().delete()
+        for data in post_data:
+            ItemInstagramData.objects.create(item=item,
+                                             thumbnail_url=data.get('thumbnail_url'),
+                                             video_url=data.get('video_url'))

@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
-from notifications.tasks import send_notifications_to_deliverers
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.tasks import send_notifications_to_deliverers, send_delivery_notitication_to_organization_or_client
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
@@ -138,10 +139,13 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         delivery_info.who_pays = serializer.initial_data['who_pays']
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.currency = cart.organization.currency
+        delivery_info.amount = 200
         # TODO: Find out how to get amount
 
         delivery_info.save()
-
+        send_delivery_notitication_to_organization_or_client(cart.organization.owner,
+                                                             cart.id,
+                                                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
         send_notifications_to_deliverers.delay(
             cart.id,
         )

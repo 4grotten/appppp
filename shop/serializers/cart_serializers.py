@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-from delivery.models import DeliveryInfo
+from delivery.models import DeliveryInfo, DeliveryActionHistory
 from organizations.models import Organization
 from organizations.serializers.organization_serializers import (
     OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer, OrganizationDetailedSerializer
@@ -141,7 +141,19 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
     delivery_organization = OrganizationDetailedSerializer(allow_null=True, required=False)
     country = CountrySerializer(allow_null=True, required=False)
     city = CitySerializer(allow_null=True, required=False)
+    status = serializers.SerializerMethodField()
 
+    def get_status(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            user = request.user
+            delivery_organization = user.owned_organizations.filter(
+                is_delivery_service=True, is_active=True,
+                is_banned=False, is_deleted=False).first()
+            delivery_history = DeliveryActionHistory.objects.filter(delivery_organization=delivery_organization, delivery_info_id=obj.id).order_by('-created_at').first()
+            if delivery_history:
+                return delivery_history.status
+        return obj.status
 
     class Meta:
         model = DeliveryInfo

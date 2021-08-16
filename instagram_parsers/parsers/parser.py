@@ -4,6 +4,30 @@ from django.utils.translation import gettext_lazy as _
 from instagram_parsers.services.proxy_services import InstagramClientService
 
 
+def get_data_from_post(media):
+    data_s = list()
+    dict_list = media.dict()
+    if dict_list['resources']:
+        for resource in dict_list['resources']:
+            if resource.get('video_url'):
+                video_url = str(resource.get('video_url'))
+            else:
+                video_url = None
+            data = dict(thumbnail_url=str(resource.get('thumbnail_url')), video_url=video_url,
+                        pk=str((resource.get('pk'))))
+            data_s.append(data.copy())
+    else:
+        if dict_list.get('video_url'):
+            video_url = str(dict_list.get('video_url'))
+        else:
+            video_url = None
+        data = dict(thumbnail_url=str(dict_list.get('thumbnail_url')),
+                    video_url=video_url,
+                    pk=str((dict_list.get('pk'))))
+        data_s.append(data.copy())
+    return data_s
+
+
 def get_posts(user_id: int, posts_count: int):
     try:
         cl = InstagramClientService.get_client()
@@ -46,6 +70,14 @@ def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
     media_info = cl.media_info(media_pk=post_pk_from_url)
     return media_info.video_url, media_info.thumbnail_url
+
+
+def get_urls_from_post(post_url: str):
+    cl = InstagramClientService.get_client()
+    post_pk_from_url = cl.media_pk_from_url(url=post_url)
+    media_info = cl.media_info(media_pk=post_pk_from_url)
+    post_data = get_data_from_post(media_info)
+    return post_data
 
 
 def get_latest_posts(user_id: int):

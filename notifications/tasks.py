@@ -166,7 +166,7 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
             extra_data=extra_data
         )
 
-
+@shared_task
 def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, sender_id: Union[int, None] = None,
 
                                                          mode=constants.NOTIFICATION_MODE_PRODUCT,

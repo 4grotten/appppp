@@ -4,7 +4,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.utils import timezone
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
 from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDeliveryInfoSerializer
@@ -53,6 +53,7 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY
         delivery_info.delivery_organization = delivery_organization
+        delivery_info.delivery_started = timezone.now()
         delivery_info.save()
         DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization, DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY)
         send_delivery_notitication_to_organization_or_client(
@@ -101,6 +102,7 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.delivery_organization = None
+        delivery_info.delivery_rejected = timezone.now()
         delivery_info.save()
         DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,
                                                     DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE)
@@ -133,6 +135,7 @@ class DeliveredByDeliveryServiceView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_DELIVERED
+        delivery_info.delivery_finished = timezone.now()
         delivery_info.save()
 
         DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,

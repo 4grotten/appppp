@@ -89,7 +89,7 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
                 'message': _('This order is already delivered'),
                 'errors': _("Delivered")
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        delivery_info.status = DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
+
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
@@ -98,6 +98,9 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE)
+
+        delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
+        delivery_info.delivery_organization = None
         delivery_info.save()
         DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,
                                                     DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE)

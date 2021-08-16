@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c501eef846cb0780d3608517b254b94bfa69f49307e7b16f3f4d5ca993b8ebbc"
+            "sha256": "2e19ce2dbd37d23b4e3d8166702c4486359eb77b7422476e28350734f0586acc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -506,10 +506,10 @@
         },
         "phonenumbers": {
             "hashes": [
-                "sha256:42ea4f946d5cce0056cbce257842ea6b281e69828ad2e7f27b29d3908e5b06bd",
-                "sha256:f8ce05f82955d2faeefe2303350b2ccb7369dd39b6e45231a09475d67eb7e83b"
+                "sha256:885b7b4521bb9105b31a8597d3baa6da11155f819f1231434590db2f130a27cd",
+                "sha256:9a396a4d69ed4cf1f8513114869cbed4f12542644374a5d5f11bc7fd66a2098a"
             ],
-            "version": "==8.12.28"
+            "version": "==8.12.29"
         },
         "pilkit": {
             "hashes": [
@@ -662,6 +662,14 @@
             ],
             "index": "pypi",
             "version": "==2.0.1"
+        },
+        "python-memcached": {
+            "hashes": [
+                "sha256:4dac64916871bd3550263323fc2ce18e1e439080a2d5670c594cf3118d99b594",
+                "sha256:a2e28637be13ee0bf1a8b6843e7490f9456fd3f2a4cb60471733c7b5d5557e4f"
+            ],
+            "index": "pypi",
+            "version": "==1.59"
         },
         "pytz": {
             "hashes": [

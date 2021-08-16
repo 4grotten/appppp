@@ -184,10 +184,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return CountrySerializer(currency_country).data
 
     def get_permissions(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
-            return None
-        return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                             user=self.context['request'].user)
+        if 'request' in self.context:
+            if self.context['request'].user.is_anonymous:
+                return None
+            return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                                 user=self.context['request'].user)
 
     def get_subscribers(self, organization: Organization):
         return SubscriptionService.get_number_of_subscriptions(organization=organization)

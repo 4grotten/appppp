@@ -34,7 +34,6 @@ services:
     command: /celery_worker.sh
     env_file: ./env/test.env
 
-
   postgres:
     image: mdillon/postgis:10
     volumes:
@@ -48,7 +47,12 @@ services:
     env_file: ./env/test.env
     restart: always
 
-
   memcached:
     image: memcached:1.6-alpine
     env_file: ./env/development.env
+
+  celery_beat:
+    <<: *django
+    ports: [ ]
+    command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
+    env_file: ./env/test.env

@@ -18,3 +18,5 @@ Dockerfile
 media
 static
 internal-static
+beat.db
+celerybeat.pid

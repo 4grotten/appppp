@@ -1,5 +1,8 @@
+import time
 from typing import Tuple
+
 from django.utils.translation import gettext_lazy as _
+from instagrapi import Client
 
 from instagram_parsers.services.proxy_services import InstagramClientService
 
@@ -60,3 +63,19 @@ def get_urls_from_post(post_url: str):
     dict_list = media_info.dict()
     post_data = get_data_from_post(dict_list)
     return post_data
+
+
+def get_settings_login_device(username, password, wait=10):
+    time.sleep(wait)
+    result = {}
+    try:
+        cl = Client()
+        cl.login(username=username, password=password)
+        result = cl.get_settings()
+        return result
+    except Exception:
+        pass
+    if not result:
+        wait = wait + 30
+        result = get_settings_login_device(username, password, wait=wait)
+    return result

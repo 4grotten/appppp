@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db.models import F
 from django.utils.timezone import now
 
+from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization
@@ -76,3 +77,14 @@ def update_media_url_by_user_entering_on_page(organization_id, without_video=Fal
             ItemInstagramData.objects.create(item=item,
                                              thumbnail_url=data.get('thumbnail_url'),
                                              video_url=data.get('video_url'))
+
+
+@shared_task
+def update_login_device_settings():
+    expiration_time = settings.INSTAGRAM_LOGIN_DEVICE_EXPIRE_DAYS
+    update_login_device_before_this_date = now() - timedelta(days=expiration_time)
+    devices = LoginDevice.objects.filter(updated_at__lte=update_login_device_before_this_date)
+    if devices:
+        for device in devices:
+            device.settings = parser.get_settings_login_device(device.username, device.password)
+            device.save()

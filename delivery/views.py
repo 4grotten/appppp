@@ -8,7 +8,7 @@ from django.utils import timezone
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
 from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDeliveryInfoSerializer
-from notifications.constants import NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, \
+from notifications.constants import NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT, \
     NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT
 from notifications.tasks import send_delivery_notitication_to_organization_or_client
@@ -59,7 +59,7 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT)
+            NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT)
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,

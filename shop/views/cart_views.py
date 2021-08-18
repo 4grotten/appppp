@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
-from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
+    NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
 from notifications.tasks import send_notifications_to_deliverers, send_delivery_notitication_to_organization_or_client
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
@@ -146,6 +147,10 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         send_delivery_notitication_to_organization_or_client(cart.organization.owner,
                                                              cart.id,
                                                              NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
+
+        send_delivery_notitication_to_organization_or_client(cart.user,
+                                                             cart.id,
+                                                             NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT)
         send_notifications_to_deliverers.delay(
             cart.id,
         )

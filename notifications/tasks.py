@@ -184,15 +184,14 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
     cart = Cart.objects.get(pk=cart_id)
     organization = cart.organization
 
-    delivery_organiztion = cart.transaction.delivery_info.delivery_organization
-    # from organizations.serializers.organization_serializers import OrganizationSerializer
-    # delivery_organiztion_data = OrganizationSerializer(delivery_organiztion, context={'request': request}).data
+    delivery_organization = cart.transaction.delivery_info.delivery_organization
+
     extra_data = {
         'organization': organization.title,
-        'delivery_organization_id': delivery_organiztion.id if delivery_organiztion else None,
-        'delivery_organization_title': delivery_organiztion.title if delivery_organiztion else None,
-        'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
-        'delivery_organization_image': delivery_organiztion.image.small.url if delivery_organiztion else None,
+        'delivery_organization_id': delivery_organization.id if delivery_organization else None,
+        'delivery_organization_title': delivery_organization.title if delivery_organization else None,
+        'delivery_organization': delivery_organization.title if delivery_organization else None,
+        'delivery_organization_image': delivery_organization.image.small.url if delivery_organization else None,
         'final_price': str(cart.transaction.final_amount),
         'original_price': str(cart.transaction.original_amount),
         'currency': cart.transaction.currency.code,

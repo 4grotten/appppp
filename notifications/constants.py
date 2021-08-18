@@ -686,73 +686,73 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
         notification_str = dict(
             title=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN,
             description=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_EN.format(
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU,
             description_ru=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU.format(
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION:
         notification_str = dict(
             title=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_EN,
             description=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_EN.format(
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU.format(
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE:
         notification_str = dict(
             title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN,
             description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id'),
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id'),
 
             ),
             title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT:
         notification_str = dict(
             title=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_EN,
             description=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
 
@@ -760,76 +760,76 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
         notification_str = dict(
             title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN,
             description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE:
         notification_str = dict(
             title=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN,
             description=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
         notification_str = dict(
             title=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN,
             description=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT:
         notification_str = dict(
             title=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_EN,
             description=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             ),
             title_ru=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU.format(
-                delivery_orgnanization=extra_data.get('delivery_orgnanization'),
-                organization=extra_data.get('organization'),
-                total_price=extra_data.get('total_price'),
-                currency=extra_data.get('currency'),
-                transaction_id=extra_data.get('transaction_id')
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
 

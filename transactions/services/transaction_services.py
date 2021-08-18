@@ -314,12 +314,9 @@ class TransactionService:
                             total_price=current_transaction.final_amount,
                             currency=current_transaction.currency.code)
         )
-        send_delivery_notitication_to_organization_or_client(
-            current_transaction.cart.organization.owner,
-            current_transaction.cart.id,
-            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            request
-        )
+        send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
+                                                             current_transaction.cart.id,
+                                                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
         return current_transaction
 
     @classmethod

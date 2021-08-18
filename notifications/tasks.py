@@ -173,12 +173,11 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         )
 
 
-def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, request, sender_id: Union[int, None] = None,
-
+def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type,
+                                                         sender_id: Union[int, None] = None,
                                                          mode=constants.NOTIFICATION_MODE_PRODUCT,
                                                          title='Title was not sent',
-                                                         description='Description was not sent',
-                                                         extra_data=None):
+                                                         description='Description was not sent', extra_data=None):
     sender = sender_id
     if sender_id:
         sender = User.objects.get(id=sender_id)
@@ -195,6 +194,7 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
         'delivery_organization_image': delivery_organiztion.image.small.url if delivery_organiztion else None,
         'final_price': str(cart.transaction.final_amount),
+        'original_price': str(cart.transaction.original_amount),
         'currency': cart.transaction.currency.code,
         'who_pays': cart.transaction.delivery_info.who_pays,
         'transaction_id': cart.transaction.id,

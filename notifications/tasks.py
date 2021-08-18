@@ -6,6 +6,7 @@ from common.exceptions import ObjectNotFoundException
 from notifications import constants
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription, Membership
+from organizations.serializers.organization_serializers import OrganizationSerializer
 from shop.models import Cart
 from users.models import User
 
@@ -179,9 +180,10 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
     cart = Cart.objects.get(pk=cart_id)
     organization = cart.organization
     delivery_organiztion = cart.transaction.delivery_info.delivery_organization
+    delivery_organiztion_data = OrganizationSerializer(delivery_organiztion).data
     extra_data = {
         'organization': organization.title,
-        'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
+        'delivery_organization': delivery_organiztion_data if delivery_organiztion else None,
         'final_price': str(cart.transaction.final_amount),
         'currency': cart.transaction.currency.code,
         'who_pays': cart.transaction.delivery_info.who_pays,

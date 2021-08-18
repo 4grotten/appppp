@@ -317,7 +317,8 @@ class TransactionService:
         send_delivery_notitication_to_organization_or_client(
             current_transaction.cart.organization.owner,
             current_transaction.cart.id,
-            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+            request
         )
         return current_transaction
 

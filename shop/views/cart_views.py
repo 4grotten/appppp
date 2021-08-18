@@ -144,13 +144,18 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         # TODO: Find out how to get amount
 
         delivery_info.save()
-        send_delivery_notitication_to_organization_or_client(cart.organization.owner,
-                                                             cart.id,
-                                                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
+        send_delivery_notitication_to_organization_or_client(
+            cart.organization.owner,
+            cart.id,
+            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+            request)
 
-        send_delivery_notitication_to_organization_or_client(cart.user,
-                                                             cart.id,
-                                                             NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT)
+        send_delivery_notitication_to_organization_or_client(
+            cart.user,
+            cart.id,
+            NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+            request
+        )
         send_notifications_to_deliverers.delay(
             cart.id,
         )

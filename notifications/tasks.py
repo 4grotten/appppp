@@ -167,7 +167,7 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         )
 
 
-def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, sender_id: Union[int, None] = None,
+def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, request, sender_id: Union[int, None] = None,
 
                                                          mode=constants.NOTIFICATION_MODE_PRODUCT,
                                                          title='Title was not sent',
@@ -178,11 +178,10 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         sender = User.objects.get(id=sender_id)
     cart = Cart.objects.get(pk=cart_id)
     organization = cart.organization
-    delivery_organiztion = cart.transaction.delivery_info.delivery_organization
-    #
+
     delivery_organiztion = cart.transaction.delivery_info.delivery_organization
     from organizations.serializers.organization_serializers import OrganizationSerializer
-    delivery_organiztion_data = OrganizationSerializer(delivery_organiztion).data
+    delivery_organiztion_data = OrganizationSerializer(delivery_organiztion, context={'request': request}).data
     extra_data = {
         'organization': organization.title,
         'delivery_organization': delivery_organiztion_data if delivery_organiztion else None,

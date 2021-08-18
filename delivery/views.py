@@ -45,7 +45,8 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.status not in (
-        DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE, DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY):
+                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
+                DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY):
             return Response(data={
                 'message': _('Already taken'),
                 'errors': _("Delivery is already taken")
@@ -55,15 +56,20 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
         delivery_info.delivery_organization = delivery_organization
         delivery_info.delivery_started = timezone.now()
         delivery_info.save()
-        DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization, DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY)
+        DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,
+                                                    DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY)
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT)
+            NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+            request
+        )
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE)
+            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
+            request
+        )
         return Response({'status': 'ok'})
 
 
@@ -94,11 +100,15 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT)
+            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+            request
+        )
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE)
+            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
+            request
+        )
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.delivery_organization = None
@@ -144,7 +154,9 @@ class DeliveredByDeliveryServiceView(APIView):
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
-            NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
+            NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT,
+            request
+        )
         return Response({'status': 'ok'})
 
 

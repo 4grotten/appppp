@@ -47,8 +47,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
     types = serializers.StringRelatedField(many=True)
 
     def get_role(self, organization: Organization):
-        user = self.context['request'].user
-        return OrganizationService.get_user_role_in_organization(organization=organization, user=user)
+        if 'request' in self.context:
+            user = self.context['request'].user
+            return OrganizationService.get_user_role_in_organization(organization=organization, user=user)
 
     class Meta:
         model = Organization

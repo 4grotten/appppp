@@ -13,7 +13,8 @@ from shop.serializers.item_serializers import ItemInHotlinkSerializer
 
 class HotlinkSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
-    link_type = serializers.SerializerMethodField()
+    #Fixme: return this after mobile app release
+    # link_type = serializers.SerializerMethodField()
     linked_organization = OrganizationWithTypeImageSerializer()
     linked_item = ItemInHotlinkSerializer()
     image = ImageSerializer()
@@ -21,14 +22,15 @@ class HotlinkSerializer(serializers.ModelSerializer):
     def get_title(self, hotlink: Hotlink) -> str:
         return HotlinkService.get_hotlink_title(hotlink=hotlink)
 
-    def get_link_type(self, hotlink: Hotlink) -> str:
-        if not hotlink.link_type == HOTLINK_URL:
-            return hotlink.link_type
-        if hotlink.linked_item:
-            return HOTLINK_URL_ITEM
-        if hotlink.linked_organization:
-            return HOTLINK_URL_ORGANIZATION
-        return HOTLINK_URL_EXTERNAL
+    # Fixme: return this after mobile app release
+    # def get_link_type(self, hotlink: Hotlink) -> str:
+    #     if not hotlink.link_type == HOTLINK_URL:
+    #         return hotlink.link_type
+    #     if hotlink.linked_item:
+    #         return HOTLINK_URL_ITEM
+    #     if hotlink.linked_organization:
+    #         return HOTLINK_URL_ORGANIZATION
+    #     return HOTLINK_URL_EXTERNAL
 
     class Meta:
         model = Hotlink

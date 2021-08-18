@@ -151,6 +151,12 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         'transaction_id': cart.transaction.id,
         'delivery_amount': str(cart.transaction.delivery_info.amount),
         'delivery_currency': str(cart.transaction.delivery_info.currency.code),
+        'delivery_organization_id':  None,
+        'delivery_organization_title':  None,
+        'delivery_organization':  None,
+        'delivery_organization_image':  None,
+
+
 
     }
 
@@ -180,11 +186,14 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
     organization = cart.organization
 
     delivery_organiztion = cart.transaction.delivery_info.delivery_organization
-    from organizations.serializers.organization_serializers import OrganizationSerializer
-    delivery_organiztion_data = OrganizationSerializer(delivery_organiztion, context={'request': request}).data
+    # from organizations.serializers.organization_serializers import OrganizationSerializer
+    # delivery_organiztion_data = OrganizationSerializer(delivery_organiztion, context={'request': request}).data
     extra_data = {
         'organization': organization.title,
-        'delivery_organization': delivery_organiztion_data if delivery_organiztion else None,
+        'delivery_organization_id': delivery_organiztion.id if delivery_organiztion else None,
+        'delivery_organization_title': delivery_organiztion.title if delivery_organiztion else None,
+        'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
+        'delivery_organization_image': delivery_organiztion.image.small.url if delivery_organiztion else None,
         'final_price': str(cart.transaction.final_amount),
         'currency': cart.transaction.currency.code,
         'who_pays': cart.transaction.delivery_info.who_pays,
@@ -194,17 +203,6 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
 
     }
 
-    # extra_data = {
-    #     'organization': organization.title,
-    #     'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
-    #     'final_price': str(cart.transaction.final_amount),
-    #     'currency': cart.transaction.currency.code,
-    #     'who_pays': cart.transaction.delivery_info.who_pays,
-    #     'transaction_id': cart.transaction.id,
-    #     'delivery_amount': str(cart.transaction.delivery_info.amount),
-    #     'delivery_currency': str(cart.transaction.delivery_info.currency.code),
-    #
-    # }
     NotificationService.create_notification(
         recipient=recipient,
         sender=sender,

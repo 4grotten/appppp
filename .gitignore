@@ -230,3 +230,5 @@ dmypy.json
 # Posgres dev path
 .postgres
 /backups/qrcode.bak
+beat.db
+celerybeat.pid

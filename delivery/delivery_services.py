@@ -65,7 +65,7 @@ class DeliveryInfoService:
         ).exclude(
             transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
             transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE).order_by(
-            '-created_at')
+            '-created_at').distinct('id')
         return queryset
 
     @classmethod
@@ -85,7 +85,7 @@ class DeliveryInfoService:
                 transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
                 transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
             )
-        ).order_by('-created_at')
+        ).order_by('-created_at').distinct('id')
 
     @classmethod
     def add_action_history_item(cls, delivery_info: DeliveryInfo, delivery_organization: Organization, status: str):

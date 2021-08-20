@@ -34,12 +34,25 @@ class DeliveryInfoService:
     def get_all_items_count(cls, user: User) -> int:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         countries = [o.country for o in delivery_service_organizations]
-        return DeliveryInfo.objects.filter(
-            country__in=countries,
-            status__in=(
-                DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
-                DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
-            )).count()
+        return Cart.objects.filter(
+            Q(
+                transaction__delivery_info__country__in=countries,
+                transaction__status=Transaction.ACCEPTED,
+                transaction__delivery_info__status__in=(
+                    DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
+                    DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,))
+            | Q(
+                transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
+                transaction__delivery_info__country__in=countries,
+                transaction__status=Transaction.ACCEPTED,
+                transaction__delivery_info__status__in=(
+                    DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
+                ),
+            )
+        ).exclude(
+            transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
+            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE).order_by(
+            '-id').distinct('id').count()
 
     @classmethod
     def get_available_orders(cls, user: User) -> list:

@@ -1,6 +1,5 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -153,6 +152,10 @@ class DeliveredByDeliveryServiceView(APIView):
                                                     DeliveryInfo.DELIVERY_STATUS_DELIVERED)
 
         send_delivery_notitication_to_organization_or_client(delivery_info.transaction.client,
+                                                             delivery_info.transaction.cart.id,
+                                                             NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
+        
+        send_delivery_notitication_to_organization_or_client(delivery_info.transaction.cart.organization.owner,
                                                              delivery_info.transaction.cart.id,
                                                              NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
         return Response({'status': 'ok'})

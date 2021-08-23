@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -11,7 +12,8 @@ from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDe
 from notifications.constants import NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT, \
     NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, \
-    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.models import Notification
 from notifications.tasks import send_delivery_notitication_to_organization_or_client
 
 
@@ -71,6 +73,11 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
+
+        Notification.objects.filter(
+            Q(extra_data__transaction_id=delivery_info.transaction_id) &
+            Q(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)).delete()
+
         return Response({'status': 'ok'})
 
 

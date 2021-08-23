@@ -70,8 +70,9 @@ REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION = 'for_delivery_for_organization'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = 'accepted_by_delivery'
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT = 'sent_to_delivery_by_organization_for_client'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION = 'accepted_by_delivery_for_organization'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'accepted_by_delivery_for_client'
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT = 'sent_to_delivery_by_organization_for_client'
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE = 'rejected_by_delivery'
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'rejected_by_delivery_for_client'
 NOTIFICATION_TYPE_DELIVERED = 'delivery_delivered'
@@ -220,7 +221,8 @@ NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_RU = 'Ваш
 NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_RU = ''
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Ваш заказ в пути'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ''
-
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU = 'Ваш заказ взяли к доставке'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU = ''
 
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы отменили заказ'
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
@@ -316,6 +318,8 @@ NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_EN = 'Your o
 NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_EN = ''
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Your order on the way'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN = 'Your order was accepted by delivery organization'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN = ''
 
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You canceled order '
 NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
@@ -768,6 +772,25 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            )
+        )
+    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION:
+        notification_str = dict(
+            title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN,
+            description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU,
+            description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU.format(
                 # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),

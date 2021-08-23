@@ -12,7 +12,8 @@ from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDe
 from notifications.constants import NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, \
-    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, \
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION
 from notifications.tasks import send_delivery_notitication_to_organization_or_client
 
 
@@ -71,6 +72,12 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
+        )
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.organization.owner,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+            sender_id=delivery_info.transaction.delivery_info.delivery_organization.owner.id
         )
         return Response({'status': 'ok'})
 
@@ -154,7 +161,7 @@ class DeliveredByDeliveryServiceView(APIView):
         send_delivery_notitication_to_organization_or_client(delivery_info.transaction.client,
                                                              delivery_info.transaction.cart.id,
                                                              NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
-        
+
         send_delivery_notitication_to_organization_or_client(delivery_info.transaction.cart.organization.owner,
                                                              delivery_info.transaction.cart.id,
                                                              NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)

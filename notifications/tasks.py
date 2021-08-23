@@ -123,7 +123,7 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
 
 @shared_task
 def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None,
-                                     mode=constants.NOTIFICATION_MODE_PRODUCT,
+                                     mode=constants.NOTIFICATION_MODE_SYSTEM,
                                      notification_type=constants.NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
                                      title='Title was not sent', description='Description was not sent',
                                      extra_data=None):

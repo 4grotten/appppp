@@ -437,7 +437,7 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
 class OrganizationTitleSerializer(OrganizationUserTransactionSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'address', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'description', 'currency', 'address', 'image', 'types', 'partners')
 
 
 class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):

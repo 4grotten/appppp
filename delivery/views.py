@@ -1,19 +1,18 @@
-from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils import timezone
+
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
 from delivery.serializers import DeliveryAllItemsCountSerializer, CartListWithDeliveryInfoSerializer
-from notifications.constants import NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT, \
-    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
+from notifications.constants import NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, \
+    NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, \
-    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
-from notifications.models import Notification
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT
 from notifications.tasks import send_delivery_notitication_to_organization_or_client
 
 

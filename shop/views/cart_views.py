@@ -104,10 +104,6 @@ class OrderDeliveryView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
-        send_delivery_notitication_to_organization_or_client(
-            cart.organization.owner, cart.id,
-            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            mode=NOTIFICATION_MODE_SYSTEM)
 
         return Response(
             {
@@ -151,10 +147,6 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
 
         delivery_info.save()
 
-        send_delivery_notitication_to_organization_or_client(
-            cart.organization.owner, cart.id,
-            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            mode=NOTIFICATION_MODE_SYSTEM)
 
         send_delivery_notitication_to_organization_or_client(
             cart.user, cart.id,

@@ -73,11 +73,6 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
-
-        Notification.objects.filter(
-            Q(extra_data__transaction_id=delivery_info.transaction_id) &
-            Q(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)).delete()
-
         return Response({'status': 'ok'})
 
 

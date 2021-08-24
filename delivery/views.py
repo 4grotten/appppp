@@ -13,7 +13,8 @@ from notifications.constants import NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVI
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, \
     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, \
     NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT, \
-    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION
+    NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION, \
+    NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION, NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION
 from notifications.tasks import send_delivery_notitication_to_organization_or_client
 
 
@@ -110,13 +111,22 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             delivery_info.transaction.client,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
-            sender_id=delivery_info.transaction.client.id)
+            sender_id=delivery_info.transaction.client.id
+        )
 
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
-            sender_id=delivery_info.transaction.client.id)
+            sender_id=delivery_info.transaction.client.id
+        )
+
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.organization.owner,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+            sender_id=delivery_info.transaction.client.id
+        )
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.delivery_organization = None
@@ -156,16 +166,19 @@ class DeliveredByDeliveryServiceView(APIView):
         delivery_info.delivery_finished = timezone.now()
         delivery_info.save()
 
-        DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,
-                                                    DeliveryInfo.DELIVERY_STATUS_DELIVERED)
+        DeliveryInfoService.add_action_history_item(
+            delivery_info, delivery_organization,
+            DeliveryInfo.DELIVERY_STATUS_DELIVERED)
 
-        send_delivery_notitication_to_organization_or_client(delivery_info.transaction.client,
-                                                             delivery_info.transaction.cart.id,
-                                                             NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.client,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
 
-        send_delivery_notitication_to_organization_or_client(delivery_info.transaction.cart.organization.owner,
-                                                             delivery_info.transaction.cart.id,
-                                                             NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT)
+        send_delivery_notitication_to_organization_or_client(
+            delivery_info.transaction.cart.organization.owner,
+            delivery_info.transaction.cart.id,
+            NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION)
         return Response({'status': 'ok'})
 
 

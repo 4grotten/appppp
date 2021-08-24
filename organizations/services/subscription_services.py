@@ -71,15 +71,7 @@ class SubscriptionService:
                 organization_id=organization.id,
                 extra_data=dict(address=organization.address)
             )
-            sent_notification.delay(
-                recipient_id=user.id,
-                mode=NOTIFICATION_MODE_PERSONAL,
-                notification_type=ORGANIZATION_FOLLOWED_TYPE,
-                title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
-                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
-                organization_id=organization.id,
-                extra_data=dict(org_title=organization.title, address=organization.address)
-            )
+
         return True
 
     @classmethod

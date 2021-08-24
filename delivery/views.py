@@ -111,6 +111,7 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
             sender_id=delivery_info.transaction.client.id)
+
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,

@@ -56,6 +56,33 @@ class SubscriptionService:
         return False
 
     @classmethod
+    def subscribe_to_organization(cls, organization: Organization, user: User) -> bool:
+        subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
+        if created:
+            PromoSubscriberService.use_promo_for_new_subscriber(organization=organization, follower=user)
+
+            sent_notification.delay(
+                recipient_id=organization.owner_id,
+                sender_id=user.id,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+                title=FOLLOWED_TO_ORGANIZATION_TITLE,
+                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                organization_id=organization.id,
+                extra_data=dict(address=organization.address)
+            )
+            sent_notification.delay(
+                recipient_id=user.id,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=ORGANIZATION_FOLLOWED_TYPE,
+                title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
+                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                organization_id=organization.id,
+                extra_data=dict(org_title=organization.title, address=organization.address)
+            )
+        return True
+
+    @classmethod
     def get_user_subscriptions(cls, user: User) -> QuerySet:
         organizations = Organization.active_organizations.filter(
             id__in=user.subscriptions.values('organization_id')).annotate(

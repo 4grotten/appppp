@@ -75,10 +75,18 @@ class PartnershipService:
         return Partnership.objects.filter(requested_by=requested_by, accepted_by=accepted_by, is_accepted=True).exists()
 
     @classmethod
-    def get_organization_partnerships(cls, organization: Organization, user: User) -> QuerySet:
+    def get_organization_partnerships_by_user(cls, organization: Organization, user: User) -> QuerySet:
         if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
+        partnerships = Partnership.objects.filter(
+            (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
+            | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
+        ).order_by('is_accepted', '-id')
+        return partnerships
+
+    @classmethod
+    def get_organization_partnerships(cls, organization: Organization) -> QuerySet:
         partnerships = Partnership.objects.filter(
             (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
             | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))

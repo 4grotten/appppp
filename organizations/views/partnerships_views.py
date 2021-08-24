@@ -88,7 +88,7 @@ class OrgPartnershipsListView(ListAPIView):
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs['pk'])
-        return PartnershipService.get_organization_partnerships(organization=organization, user=self.request.user)
+        return PartnershipService.get_organization_partnerships_by_user(organization=organization, user=self.request.user)
 
 
 class OrgPartnershipsInShortView(ListAPIView):

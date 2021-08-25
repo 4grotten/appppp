@@ -15,11 +15,12 @@ from notifications.constants import (
     NOTIFICATION_MODE_DISCOUNT, DISCOUNT_COMPLETE_DESCRIPTION, WITHDRAW_CASHBACK_CLIENT_TITLE,
     CHARGE_CASHBACK_CLIENT_TITLE, CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_SELLER, CHARGE_CASHBACK_SELLER_TITLE,
     WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER, REQUEST_ORDER_CLIENT_TYPE,
-    NOTIFICATION_MODE_PRODUCT, ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_TYPE,
-    REQUEST_ORDER_TYPE
+    NOTIFICATION_MODE_PRODUCT, ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE,
+    DECLINE_ORDER_TYPE,
+    REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM
 )
 from notifications.models import Notification
-from notifications.tasks import sent_notification
+from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
 from organizations.models import Organization, DiscountCard, Subscription, Membership
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -313,6 +314,13 @@ class TransactionService:
                             total_price=current_transaction.final_amount,
                             currency=current_transaction.currency.code)
         )
+        try:
+            send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
+                                                                 current_transaction.cart.id,
+                                                                 NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                 mode=NOTIFICATION_MODE_SYSTEM)
+        except Exception:
+            pass
         return current_transaction
 
     @classmethod

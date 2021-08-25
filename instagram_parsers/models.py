@@ -18,7 +18,9 @@ class Proxy(TimestampModel):
 
 class LoginDevice(TimestampModel):
     for_getting_username = models.BooleanField(default=False)
-    settings = models.JSONField(null=False, blank=False)
+    settings = models.JSONField(null=False, blank=True)
+    username = models.CharField(max_length=255, default='nikabenod')
+    password = models.CharField(max_length=255, default='1234qwer/')
 
     def __str__(self):
         return f'{self.updated_at.date()}'

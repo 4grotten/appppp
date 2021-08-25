@@ -31,7 +31,8 @@ from .views.partnerships_views import (
     HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
-from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView
+from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView, \
+    MassPartnershipSubscriptionView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -150,6 +151,7 @@ urlpatterns = [
     path('', include(organization_promo_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
+    path('subscriptions/subscribe_to_partners/', MassPartnershipSubscriptionView.as_view(), name='subscribe_to_partners'),
 
     path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
     path('org_seo/<int:pk>/', org_detail)

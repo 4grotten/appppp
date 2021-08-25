@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer
 from organizations.services.organization_services import OrganizationService
+from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
 
@@ -76,3 +77,27 @@ class OrgFollowersDetailsAPIView(APIView):
             context={'request': request, 'organization_id': kwargs['organization_id']}
         ).data
         return Response(data, status=status.HTTP_200_OK)
+
+
+class MassPartnershipSubscriptionView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SubscriptionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        organization = serializer.validated_data['organization']
+        partner_organizations = PartnershipService.get_organization_partnerships(organization)
+        SubscriptionService.subscribe_to_organization(organization, request.user)
+        for partner in list(partner_organizations):
+            SubscriptionService.subscribe_to_organization(partner.accepted_by, request.user)
+            SubscriptionService.subscribe_to_organization(partner.requested_by, request.user)
+        return Response(data={
+            'message': _('Successfully updated subscription status'),
+            'data': {
+                'status': 'ok'
+            }
+        }, status=status.HTTP_200_OK)

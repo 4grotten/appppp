@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
@@ -8,7 +8,9 @@ from rest_framework.views import APIView
 
 from delivery.delivery_services import DeliveryInfoService
 from delivery.models import DeliveryInfo
-from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
+    NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT, NOTIFICATION_MODE_SYSTEM
+from notifications.models import Notification
 from notifications.tasks import send_notifications_to_deliverers, send_delivery_notitication_to_organization_or_client
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
@@ -102,6 +104,7 @@ class OrderDeliveryView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
+
         return Response(
             {
                 "message": _("Success"),
@@ -143,12 +146,19 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         # TODO: Find out how to get amount
 
         delivery_info.save()
-        send_delivery_notitication_to_organization_or_client(cart.organization.owner,
-                                                             cart.id,
-                                                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
+
+
+        send_delivery_notitication_to_organization_or_client(
+            cart.user, cart.id,
+            NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+            mode=NOTIFICATION_MODE_SYSTEM)
         send_notifications_to_deliverers.delay(
             cart.id,
         )
+        Notification.objects.filter(
+            Q(extra_data__transaction_id=delivery_info.transaction_id) &
+            Q(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)).delete()
+
         return Response(
             {
                 "message": _("Success"),

@@ -123,7 +123,7 @@ def send_notifications_to_subscribers(sender_id: Union[int, None] = None, mode='
 
 @shared_task
 def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None,
-                                     mode=constants.NOTIFICATION_MODE_PRODUCT,
+                                     mode=constants.NOTIFICATION_MODE_SYSTEM,
                                      notification_type=constants.NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
                                      title='Title was not sent', description='Description was not sent',
                                      extra_data=None):
@@ -151,6 +151,12 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         'transaction_id': cart.transaction.id,
         'delivery_amount': str(cart.transaction.delivery_info.amount),
         'delivery_currency': str(cart.transaction.delivery_info.currency.code),
+        'delivery_organization_id':  None,
+        'delivery_organization_title':  None,
+        'delivery_organization':  None,
+        'delivery_organization_image':  None,
+
+
 
     }
 
@@ -167,22 +173,27 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         )
 
 
-def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type, sender_id: Union[int, None] = None,
-
+def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type,
+                                                         sender_id: Union[int, None] = None,
                                                          mode=constants.NOTIFICATION_MODE_PRODUCT,
                                                          title='Title was not sent',
-                                                         description='Description was not sent',
-                                                         extra_data=None):
+                                                         description='Description was not sent', extra_data=None):
     sender = sender_id
     if sender_id:
         sender = User.objects.get(id=sender_id)
     cart = Cart.objects.get(pk=cart_id)
     organization = cart.organization
-    delivery_organiztion = cart.transaction.delivery_info.delivery_organization
+
+    delivery_organization = cart.transaction.delivery_info.delivery_organization
+
     extra_data = {
         'organization': organization.title,
-        'delivery_organization': delivery_organiztion.title if delivery_organiztion else None,
+        'delivery_organization_id': delivery_organization.id if delivery_organization else None,
+        'delivery_organization_title': delivery_organization.title if delivery_organization else None,
+        'delivery_organization': delivery_organization.title if delivery_organization else None,
+        'delivery_organization_image': delivery_organization.image.small.url if delivery_organization else None,
         'final_price': str(cart.transaction.final_amount),
+        'original_price': str(cart.transaction.original_amount),
         'currency': cart.transaction.currency.code,
         'who_pays': cart.transaction.delivery_info.who_pays,
         'transaction_id': cart.transaction.id,
@@ -190,6 +201,7 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         'delivery_currency': str(cart.transaction.delivery_info.currency.code),
 
     }
+
     NotificationService.create_notification(
         recipient=recipient,
         sender=sender,

@@ -162,7 +162,7 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
                   'phone', 'comment', 'status',
                   'longitude', 'latitude',
                   'full_location',
-                  'who_pays', 'amount', 'currency'
+                  'who_pays', 'amount', 'currency', 'delivery_started', 'delivery_finished', 'delivery_rejected'
                   )
 
 

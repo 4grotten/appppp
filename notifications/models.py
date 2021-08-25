@@ -31,7 +31,7 @@ class Notification(TimestampModel):
     organization = models.ForeignKey('organizations.Organization', on_delete=models.SET_NULL, blank=True, null=True,
                                      related_name='organization_notifications')
     mode = models.CharField(max_length=255, choices=NOTIFICATION_MODES)
-    type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
+    type = models.CharField(max_length=255, choices=NOTIFICATION_TYPES, default=SYSTEM_TYPE)
     extra_data = models.JSONField(null=True)
 
     class Meta:

@@ -56,12 +56,12 @@ class Transaction(TimestampModel):
 
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='transactions', default='KGS')
     original_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
+                                       validators=[MinValueValidator(0)])
     discount_percent = models.PositiveSmallIntegerField(default=0)
     savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
-    final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
-                                       validators=[MinValueValidator(0)])
     fixed_cart = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
 
     discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)

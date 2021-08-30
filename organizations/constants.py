@@ -21,6 +21,7 @@ HOTLINK_TYPES = (
     (HOTLINK_URL, HOTLINK_URL),
     (HOTLINK_CONTACT, HOTLINK_CONTACT),
     (HOTLINK_COLLECTION, HOTLINK_COLLECTION),
+    (HOTLINK_PARTNERS, HOTLINK_PARTNERS),
 )
 
 HOTLINK_INTERNAL_LINK_DOMAINS = ('apofiz.com', 'www.apofiz.com', 'test.apofiz.com', 'www.test.apofiz.com')

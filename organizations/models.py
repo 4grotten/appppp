@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
-from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS
+from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
@@ -370,6 +370,16 @@ class Hotlink(TimestampModel):
                     linked_organization = Organization.objects.get(id=organization_id)
                     self.linked_organization = linked_organization
                     self.linked_item = None
+                    is_internal = True
+                except Organization.DoesNotExist:
+                    pass
+            elif parsed_link.path.startswith('/home/partners/'):
+                organization_id = parsed_link.path.replace('/home/partners/', '').replace('/', '')
+                try:
+                    linked_organization = Organization.objects.get(id=organization_id)
+                    self.linked_organization = linked_organization
+                    self.linked_item = None
+                    self.link_type = HOTLINK_PARTNERS
                     is_internal = True
                 except Organization.DoesNotExist:
                     pass

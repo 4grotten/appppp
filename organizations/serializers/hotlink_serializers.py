@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.constants import (
-    HOTLINK_COLLECTION, HOTLINK_URL, HOTLINK_URL_ITEM, HOTLINK_URL_ORGANIZATION, HOTLINK_URL_EXTERNAL
+    HOTLINK_COLLECTION, HOTLINK_URL, HOTLINK_URL_ITEM, HOTLINK_URL_ORGANIZATION, HOTLINK_URL_EXTERNAL, HOTLINK_PARTNERS
 )
 from organizations.models import Hotlink, HotlinkCollectionLink
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
@@ -18,6 +18,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
     linked_organization = OrganizationWithTypeImageSerializer()
     linked_item = ItemInHotlinkSerializer()
     image = ImageSerializer()
+    partners_count = serializers.SerializerMethodField()
 
     def get_title(self, hotlink: Hotlink) -> str:
         return HotlinkService.get_hotlink_title(hotlink=hotlink)
@@ -31,11 +32,18 @@ class HotlinkSerializer(serializers.ModelSerializer):
     #     if hotlink.linked_organization:
     #         return HOTLINK_URL_ORGANIZATION
     #     return HOTLINK_URL_EXTERNAL
+    def get_partners_count(self, hotlink: Hotlink) -> int:
+        if hotlink.link_type == HOTLINK_PARTNERS:
+            requested_count = hotlink.linked_organization.requested_partnerships.filter(is_accepted=True).count()
+            accepted_count = hotlink.linked_organization.accepted_partnerships.filter(is_accepted=True).count()
+            return requested_count+accepted_count
+        return 0
 
     class Meta:
         model = Hotlink
         fields = (
             'id', 'title', 'content', 'link_type', 'linked_organization', 'linked_item', 'image',
+            'partners_count'
         )
 
 

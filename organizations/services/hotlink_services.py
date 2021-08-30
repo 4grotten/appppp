@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import File
+from organizations.constants import HOTLINK_PARTNERS, HOTLINK_URL
 from organizations.models import (
     Hotlink, Organization, HotlinkCollectionSubcategory, HotlinkCollectionItem, HotlinkCollectionLink
 )
@@ -37,6 +38,8 @@ class HotlinkService:
         hotlink = cls.get(id=hotlink_id)
         if not OrganizationService.user_can_edit_organization(user=user, organization=hotlink.organization):
             raise ObjectNotFoundException(_('Hotlink not found'))
+        if hotlink.link_type == HOTLINK_PARTNERS:
+            hotlink.link_type = HOTLINK_URL
         return hotlink
 
     @classmethod

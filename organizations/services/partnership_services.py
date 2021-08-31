@@ -79,7 +79,10 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=organization, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
-        partnerships = OrganizationService.get_organization_partners(organization).order_by('is_accepted', '-id')
+        partnerships = Partnership.objects.filter(
+            (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
+            | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
+        ).order_by('is_accepted', '-id')
         return partnerships
 
     @classmethod

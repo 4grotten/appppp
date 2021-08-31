@@ -86,8 +86,8 @@ class PartnershipService:
         return partnerships
 
     @classmethod
-    def get_organization_partnerships(cls, organization: Organization) -> QuerySet:
-        return OrganizationService.get_organization_partners(organization)\
+    def get_organization_partners(cls, organization: Organization) -> QuerySet:
+        return OrganizationService.get_organization_partners(organization)
 
     @classmethod
     def get_organization_partnerships_for_mass_subscription(cls, organization: Organization) -> QuerySet:

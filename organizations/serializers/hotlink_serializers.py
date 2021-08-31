@@ -35,7 +35,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
     #     return HOTLINK_URL_EXTERNAL
     def get_partners_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_PARTNERS:
-            return PartnershipService.get_organization_partnerships(hotlink.linked_organization).count()
+            return PartnershipService.get_organization_partners(hotlink.linked_organization).count()
         return 0
 
     class Meta:

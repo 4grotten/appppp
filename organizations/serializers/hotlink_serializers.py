@@ -7,6 +7,7 @@ from organizations.constants import (
 from organizations.models import Hotlink, HotlinkCollectionLink
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.hotlink_services import HotlinkService
+from organizations.services.partnership_services import PartnershipService
 from shop.models import ItemSubcategory, ShopItem
 from shop.serializers.item_serializers import ItemInHotlinkSerializer
 
@@ -34,9 +35,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
     #     return HOTLINK_URL_EXTERNAL
     def get_partners_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_PARTNERS:
-            requested_count = hotlink.linked_organization.requested_partnerships.filter(is_accepted=True).count()
-            accepted_count = hotlink.linked_organization.accepted_partnerships.filter(is_accepted=True).count()
-            return requested_count+accepted_count
+            return PartnershipService.get_organization_partnerships(hotlink.linked_organization).count()
         return 0
 
     class Meta:

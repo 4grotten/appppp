@@ -90,7 +90,7 @@ class MassPartnershipSubscriptionView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         organization = serializer.validated_data['organization']
-        partner_organizations = PartnershipService.get_organization_partnerships(organization)
+        partner_organizations = PartnershipService.get_organization_partnerships_for_mass_subscription(organization)
         SubscriptionService.subscribe_to_organization(organization, request.user)
         for partner in list(partner_organizations):
             SubscriptionService.subscribe_to_organization(partner.accepted_by, request.user)

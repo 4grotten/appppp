@@ -87,7 +87,15 @@ class PartnershipService:
 
     @classmethod
     def get_organization_partnerships(cls, organization: Organization) -> QuerySet:
-        return OrganizationService.get_organization_partners(organization)
+        return OrganizationService.get_organization_partners(organization)\
+
+    @classmethod
+    def get_organization_partnerships_for_mass_subscription(cls, organization: Organization) -> QuerySet:
+        partnerships = Partnership.objects.filter(
+            (Q(accepted_by=organization) & Q(requested_by__is_deleted=False))
+            | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
+        ).order_by('is_accepted', '-id')
+        return partnerships
 
 
     @classmethod

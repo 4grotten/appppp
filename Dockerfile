@@ -30,14 +30,14 @@ RUN sed -i 's/\r//' /gunicorn.sh && \
     chmod +x /runserver.sh && \
     chmod +x /celery_worker.sh
 
-FROM env as celery-dev
-
-RUN pip install flower
-
-
-FROM env as development
-
-RUN pipenv install --dev --system --deploy
+#FROM env as celery-dev
+#
+#RUN pip install flower
+#
+#
+#FROM env as development
+#
+#RUN pipenv install --dev --system --deploy
 
 #
 #

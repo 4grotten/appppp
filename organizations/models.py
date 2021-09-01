@@ -353,7 +353,7 @@ class Hotlink(TimestampModel):
         parsed_link = urlparse(self.content)
         is_internal = False
 
-        if self.link_type == HOTLINK_URL and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
+        if (self.link_type == HOTLINK_URL or self.link_type == HOTLINK_PARTNERS) and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
             if parsed_link.path.startswith('/p/'):
                 item_id = parsed_link.path.replace('/p/', '').replace('/', '')
                 from shop.models import ShopItem

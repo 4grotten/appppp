@@ -341,6 +341,7 @@ NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN = ''
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_EN = 'Your order delivered'
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_EN = ''
 
+
 def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -> dict:
     if not extra_data:
         extra_data = dict(empty=True)

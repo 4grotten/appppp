@@ -92,6 +92,8 @@ class Organization(TimestampModel):
     is_banned = models.BooleanField(default=False)
 
     is_delivery_service = models.BooleanField(default=False)
+    is_bank = models.BooleanField(default=False)
+
     # Managers
     objects = OrganizationManager()
     active_organizations = ActiveOrganizationManager()

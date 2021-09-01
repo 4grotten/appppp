@@ -18,5 +18,7 @@ Dockerfile
 media
 static
 internal-static
+venv
+frontend
 beat.db
 celerybeat.pid

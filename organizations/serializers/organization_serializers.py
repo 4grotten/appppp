@@ -179,6 +179,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     country = CountrySerializer()
     city = CitySerializer()
     currency_country = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
+
+    def get_address(self, organization: Organization):
+        if not organization.address:
+            return ""
 
     def get_currency_country(self, organization: Organization):
         currency_country = organization.currency.countries.first()

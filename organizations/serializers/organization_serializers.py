@@ -184,6 +184,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     def get_address(self, organization: Organization):
         if not organization.address:
             return ""
+        return organization.address
 
     def get_currency_country(self, organization: Organization):
         currency_country = organization.currency.countries.first()

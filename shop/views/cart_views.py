@@ -156,8 +156,10 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
             cart.id,
         )
         Notification.objects.filter(
-            Q(extra_data__transaction_id=delivery_info.transaction_id) &
-            Q(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)).delete()
+            extra_data__transaction_id=delivery_info.transaction_id,
+            type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+            recipient=request.user
+            ).delete()
 
         return Response(
             {

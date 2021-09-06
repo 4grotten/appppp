@@ -81,7 +81,7 @@ class OrgDownloadFollowersAPIView(APIView):
     def get(self, request, *args, **kwargs):
         organization = OrganizationService.get(pk=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
-            return Response({"error": _("Does not have rights to download followers")}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": _("Permission denied")}, status=status.HTTP_403_FORBIDDEN)
 
 
         queryset = list(self.get_queryset(*args, **kwargs))

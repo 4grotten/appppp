@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -49,8 +49,10 @@ class SubscriptionsView(ListAPIView):
 class OrgFollowersListAPIView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = FollowerListSerializer
+    search_fields = ['full_name']
+    filter_backends = [filters.SearchFilter]
 
-    def get_queryset(self):
+    def get_queryset(self, *args, **kwargs):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
 
     def get_serializer_context(self):

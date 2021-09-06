@@ -1,5 +1,9 @@
+import pandas as pd
+from io import BytesIO
+
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponse
 from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
@@ -66,6 +70,48 @@ class OrgFollowersListAPIView(ListAPIView):
             context['organization'] = organization
 
         return context
+
+
+class OrgDownloadFollowersAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
+
+    def get(self, request, *args, **kwargs):
+        organization = OrganizationService.get(pk=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            return Response({"error": _("Does not have rights to download followers")}, status=status.HTTP_403_FORBIDDEN)
+
+
+        queryset = list(self.get_queryset(*args, **kwargs))
+        full_names = []
+        nicknames = []
+        ids = []
+        phone_numbers = []
+        for item in queryset:
+            full_names.append(item.full_name)
+            nicknames.append(item.username)
+            ids.append(item.id)
+            phone_numbers.append(item.phone_number)
+        dict_data = {_('Full name'): full_names,
+                     _('Nickname'): nicknames,
+                     _("ID"): ids,
+                     _("Phone number"): phone_numbers}
+        df = pd.DataFrame(dict_data)
+        with BytesIO() as b:
+            # Use the StringIO object as the filehandle.
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df.to_excel(writer, sheet_name='Sheet1', index=False)
+            writer.save()
+            # Set up the Http response.
+            filename = '{title}_followers.xlsx'.format(title=organization.title.replace(" ", ""))
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
 
 
 class OrgFollowersDetailsAPIView(APIView):

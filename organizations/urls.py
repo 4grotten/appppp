@@ -32,7 +32,7 @@ from .views.partnerships_views import (
 )
 from .views.seo_views import org_detail
 from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView, \
-    MassPartnershipSubscriptionView
+    MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -53,6 +53,7 @@ organization_urls = [
     path('organizations/<int:pk>/partners/', OrganizationPartnersView.as_view(), name='organization_partners'),
     path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
+    path('organizations/<int:pk>/download_followers/', OrgDownloadFollowersAPIView.as_view(), name='org_followers'),
     path('organizations/<int:organization_id>/clients/<int:user_id>/', OrganizationClientDetailsAPIView.as_view(),
          name='org_client_detail'),
     path('organizations/<int:organization_id>/followers/<int:user_id>/', OrgFollowersDetailsAPIView.as_view(),

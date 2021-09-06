@@ -31,6 +31,6 @@ $(which gunicorn) project.wsgi \
     --timeout 600 \
     --worker-class gevent \
     --graceful-timeout 300 \
-    --max-requests 800 \
+    --max-requests 500 \
     --max-requests-jitter 100 \
     --error-logfile -

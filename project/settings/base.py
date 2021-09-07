@@ -285,6 +285,7 @@ CELERY_TASK_ROUTES = {
     'organizations.tasks.update_instagram_videos': {'queue': 'insta_video'},
     'organizations.tasks.update_media_url_by_user_entering_on_page': {'queue': 'update_insta_video'},
     'organizations.tasks.update_login_device_settings': {'queue': 'update_login_device'},
+    'organizations.tasks.delete_expired_video_url': {'queue': 'delete_expired_video'},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config('INSTAGRAM_VIDEO_EXPIRE_DAYS', default=1, cast=int)

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
 from rest_framework import status, filters
+from rest_framework.authtoken.models import TokenProxy
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -73,14 +74,17 @@ class OrgFollowersListAPIView(ListAPIView):
 
 
 class OrgDownloadFollowersAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def get_queryset(self, *args, **kwargs):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
 
     def get(self, request, *args, **kwargs):
+        token_key = request.query_params.get('token', request.auth)
+
+        token = TokenProxy.objects.get(key=token_key)
         organization = OrganizationService.get(pk=self.kwargs['pk'])
-        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=token.user):
             return Response({"message": _("Permission denied")}, status=status.HTTP_403_FORBIDDEN)
 
 

@@ -41,8 +41,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=False)
-    avatar_id = serializers.IntegerField()
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    avatar_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = User

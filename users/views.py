@@ -142,8 +142,8 @@ class ProfileInitialAPIView(APIView):
         user = UserService.init_profile(
             user=request.user,
             avatar_id=serializer.validated_data.get('avatar_id'),
-            username=serializer.validated_data.get('username'),
-            date_of_birth=serializer.validated_data.get('date_of_birth'),
+            username=serializer.validated_data.get('username', None),
+            date_of_birth=serializer.validated_data.get('date_of_birth', None),
             gender=serializer.validated_data.get('gender'),
             full_name=serializer.validated_data.get('full_name'),
             email=serializer.validated_data.get('email', None),

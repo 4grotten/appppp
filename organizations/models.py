@@ -48,6 +48,7 @@ class OrganizationCategory(models.Model):
 class OrganizationType(models.Model):
     title = models.CharField(max_length=255)
     category = models.ForeignKey(OrganizationCategory, on_delete=models.CASCADE, related_name='types')
+    is_adult = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('title',)

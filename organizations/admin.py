@@ -69,7 +69,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(OrganizationType)
 class OrganizationTypeAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'title_ru', 'title_tr',)
+    list_display = ('title', 'category', 'is_adult', 'title_ru', 'title_tr',)
     list_filter = ('category',)
     search_fields = ('title', 'title_ru', 'title_tr', 'category__name',)
 

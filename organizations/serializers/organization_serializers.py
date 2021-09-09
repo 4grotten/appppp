@@ -180,6 +180,10 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     city = CitySerializer()
     currency_country = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
+    is_adult_content = serializers.SerializerMethodField()
+
+    def get_is_adult_content(self, organization: Organization):
+        return bool(organization.types.filter(is_adult=True).count())
 
     def get_address(self, organization: Organization):
         if not organization.address:
@@ -236,7 +240,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service',
+            'is_deleted', 'is_delivery_service', 'is_adult_content',
         )
 
 

@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
 from django.utils.translation import gettext_lazy as _
 
@@ -119,3 +120,8 @@ class ShopItemService:
     def delete_instagram_images(cls, item_id):
         item = ShopItem.objects.get(id=int(item_id))
         return ItemInstagramData.objects.filter(item=item, video_url=None).delete()
+
+    @classmethod
+    def delete_expired_posts(cls):
+        ShopItem.objects.filter(name='Instagram', updated_at=F('created_at'),
+                                instagram_data__isnull=True, images__isnull=True, is_updated=False).delete()

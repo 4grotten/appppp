@@ -10,6 +10,7 @@ from instagram_parsers.parsers import parser
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
+from shop.services.item_services import ShopItemService
 
 
 @shared_task
@@ -45,15 +46,19 @@ def delete_old_instagram_posts():
 
 
 # @shared_task
-# def delete_expired_photo_posts():
+# def delete_expired_data_posts():
 #     delete_until = now() - timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
-#     ShopItem.objects.filter(name='Instagram', instagram_data__isnull=False,
-#                             instagram_data__updated_at__lte=delete_until).delete()
+#     s = ShopItem.objects.filter(name='Instagram', instagram_data__isnull=False, updated_at=F('created_at'),
+#                                 instagram_data__updated_at__lte=delete_until, is_updated=False)#.delete()
+#     for i in s:
+#         print(i.name)
+
 
 @shared_task
 def delete_expired_video_url():
     delete_until = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
     ItemInstagramData.objects.filter(updated_at__lte=delete_until, video_url__isnull=False).delete()
+    ShopItemService.delete_expired_posts()
 
 
 @shared_task

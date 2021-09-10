@@ -40,11 +40,6 @@ class UserService:
     def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
                      date_of_birth, gender: str, email: Union[str, None]):
 
-        update_fields = ['avatar_id', 'full_name', 'username', 'date_of_birth', 'gender', 'is_new_user']
-
-        # if email and not user.email == email:
-        #     user.email = email
-        #     update_fields.append('email')
         try:
             user.avatar_id = avatar_id
             user.full_name = full_name

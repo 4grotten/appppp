@@ -42,9 +42,9 @@ class UserService:
 
         update_fields = ['avatar_id', 'full_name', 'username', 'date_of_birth', 'gender', 'is_new_user']
 
-        if email and not user.email == email:
-            user.email = email
-            update_fields.append('email')
+        # if email and not user.email == email:
+        #     user.email = email
+        #     update_fields.append('email')
         try:
             user.avatar_id = avatar_id
             user.full_name = full_name
@@ -52,7 +52,7 @@ class UserService:
             user.date_of_birth = date_of_birth
             user.gender = gender
             user.is_new_user = False
-
+            user.email = email
             user.save(update_fields=update_fields)
 
             return user

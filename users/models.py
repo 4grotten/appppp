@@ -17,7 +17,7 @@ class User(AbstractUser, TimestampModel):
     first_name = models.CharField(max_length=255, verbose_name='First Name', null=True, blank=True)
     last_name = models.CharField(max_length=255, verbose_name='Last Name', null=True, blank=True)
     full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
-    email = models.EmailField(verbose_name='Email', unique=True)
+    email = models.EmailField(verbose_name='Email', blank=True, null=True)
     phone_number = PhoneNumberField(unique=True, max_length=255)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -48,10 +48,10 @@ class User(AbstractUser, TimestampModel):
         if errors:
             raise ValidationError(errors)
 
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.email = "{}@example.com".format(uuid.uuid4().hex[:6].upper())
-        super(User, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.pk:
+    #         self.email = "{}@example.com".format(uuid.uuid4().hex[:6].upper())
+    #     super(User, self).save(*args, **kwargs)
 
 
 class TemporaryCode(TimestampModel):

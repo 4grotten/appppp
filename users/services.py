@@ -53,7 +53,7 @@ class UserService:
             user.gender = gender
             user.is_new_user = False
             user.email = email
-            user.save(update_fields=update_fields)
+            user.save()
 
             return user
 

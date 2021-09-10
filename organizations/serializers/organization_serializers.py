@@ -183,7 +183,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     is_adult_content = serializers.SerializerMethodField()
 
     def get_is_adult_content(self, organization: Organization):
-        return bool(organization.types.filter(is_adult=True).count())
+        has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
+        has_adult_org_type = bool(organization.types.filter(is_adult=True).count())
+        if has_adults_item or has_adult_org_type:
+            return True
+        return False
 
     def get_address(self, organization: Organization):
         if not organization.address:

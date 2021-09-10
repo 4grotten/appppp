@@ -32,7 +32,7 @@ def get_data_from_post(dict_list):
 
 def get_posts(user_id: int, posts_count: int):
     try:
-        cl = InstagramClientService.get_client()
+        cl = InstagramClientService.get_client(for_getting_username=True)
         media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:
@@ -57,7 +57,7 @@ def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
 
 
 def get_urls_from_post(post_url: str):
-    cl = InstagramClientService.get_client()
+    cl = InstagramClientService.get_client(for_getting_username=True)
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
     media_info = cl.media_info(media_pk=post_pk_from_url)
     dict_list = media_info.dict()

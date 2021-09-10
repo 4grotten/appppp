@@ -22,4 +22,12 @@ app.conf.beat_schedule = {
         'task': 'organizations.tasks.update_login_device_settings',
         'schedule': crontab(hour=1, minute=0)
     },
+    'delete-expired-video': {
+        'task': 'organizations.tasks.delete_expired_video_url',
+        'schedule': crontab(hour='*/1', minute=0)
+    },
+    'delete-expired-photo-and-posts': {
+        'task': 'organizations.tasks.delete_expired_photo_and_posts',
+        'schedule': crontab(hour='*/1', minute=2)
+    },
 }

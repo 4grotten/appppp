@@ -31,7 +31,7 @@ services:
   celery_worker_backend:
     <<: *django
     ports: [ ]
-    command: celery worker -A project --loglevel=INFO -Q celery,default --autoscale 16,4
+    command: celery worker -A project --loglevel=INFO -Q celery,default
     env_file: ./env/production.env
 
   celery_worker_high:
@@ -43,14 +43,21 @@ services:
   celery_worker_instagram:
     <<: *django
     ports: [ ]
-    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low --autoscale 16,4
+    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,update_login_device,\
+                                              delete_expired_video,delete_expired_posts
     env_file: ./env/production.env
 
-  celery_worker_insta_video:
-    <<: *django
-    ports: [ ]
-    command: celery worker -n "instagram_videos" -A project --loglevel=INFO -Q insta_video --autoscale 16,1
-    env_file: ./env/production.env
+#  celery_worker_instagram:
+#    <<: *django
+#    ports: [ ]
+#    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low --autoscale 16,4
+#    env_file: ./env/production.env
+#
+#  celery_worker_insta_video:
+#    <<: *django
+#    ports: [ ]
+#    command: celery worker -n "instagram_videos" -A project --loglevel=INFO -Q insta_video --autoscale 16,1
+#    env_file: ./env/production.env
 
   celery_beat:
     <<: *django

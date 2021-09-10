@@ -117,12 +117,6 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
 
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
-    def retrieve(self, request, *args, **kwargs):
-        organization = OrganizationService.get(id=kwargs['pk'])
-        update_media_url_by_user_entering_on_page.delay(organization.pk, without_video=True)
-        update_media_url_by_user_entering_on_page.delay(organization.pk, without_video=False)
-        return super().retrieve(request, *args, **kwargs)
-
 
 class DeliverySettingsView(UpdateAPIView):
     permission_classes = (IsAuthenticated,)

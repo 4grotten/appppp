@@ -45,6 +45,22 @@ def delete_old_instagram_posts():
 
 
 @shared_task
+def delete_expired_photo_and_posts():
+    from shop.services.item_services import ShopItemService
+    delete_until = now() - timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
+    ItemInstagramData.objects.filter(updated_at__lte=delete_until).delete()
+    ShopItemService.delete_expired_posts()
+
+
+@shared_task
+def delete_expired_video_url():
+    from shop.services.item_services import ShopItemService
+    delete_until = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
+    ItemInstagramData.objects.filter(updated_at__lte=delete_until, video_url__isnull=False).delete()
+    ShopItemService.delete_expired_posts()
+
+
+@shared_task
 def update_instagram_videos():
     update_posts_before = now() - timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
     data_with_video = ItemInstagramData.objects.filter(

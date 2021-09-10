@@ -54,7 +54,7 @@ class SubscriptionsView(ListAPIView):
 class OrgFollowersListAPIView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = FollowerListSerializer
-    search_fields = ['full_name']
+    search_fields = ['full_name', 'username']
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self, *args, **kwargs):

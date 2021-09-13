@@ -122,6 +122,11 @@ class ShopItemService:
         return ItemInstagramData.objects.filter(item=item, video_url=None).delete()
 
     @classmethod
+    def delete_instagram_video(cls, item_id):
+        item = ShopItem.objects.get(id=int(item_id))
+        return ItemInstagramData.objects.filter(item=item, video_url__isnull=False).delete()
+
+    @classmethod
     def delete_expired_posts(cls):
-        item = ShopItem.objects.filter(name='Instagram', updated_at=F('created_at'), price=None, is_updated=False,
+        ShopItem.objects.filter(name='Instagram', updated_at=F('created_at'), price=None, is_updated=False,
                                        instagram_data__isnull=True, images__isnull=True).delete()

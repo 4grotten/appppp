@@ -25,7 +25,9 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
             created_at = instagram.pop('created_at')
             post_url = instagram.pop('post_url')
             shop_item = ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
-                                                updated_at=created_at, description=description, instagram_link=post_url)
+                                                updated_at=created_at, description=description, instagram_link=post_url,
+                                                is_instagram=True)
+
             for data in instagram.get('data'):
                 ItemInstagramData.objects.create(item=shop_item,
                                                  thumbnail_url=data.get('thumbnail_url'),

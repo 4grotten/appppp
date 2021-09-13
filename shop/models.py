@@ -56,6 +56,7 @@ class ShopItem(models.Model):
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
     youtube_links = models.JSONField(null=True)
     is_updated = models.BooleanField(default=False)
+    is_instagram = models.BooleanField(default=False)
 
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)

@@ -71,6 +71,7 @@ class ShopItem(models.Model):
         if self.id:
             self.updated_at = timezone.now()
             self.is_updated = True
+            self.is_instagram = False
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         if self.subcategory is not None and self.subcategory.category.is_adult:

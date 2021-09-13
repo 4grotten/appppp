@@ -44,7 +44,9 @@ class HotlinkListCreateView(ListCreateAPIView):
         HotlinkService.create_hotlink(user=request.user, organization=serializer.validated_data['organization'],
                                       content=serializer.validated_data['content'],
                                       link_type=serializer.validated_data['link_type'],
-                                      image=serializer.validated_data['image'])
+                                      image=serializer.validated_data['image'],
+                                      collection_items=serializer.validated_data['collection_items'],
+                                      collection_subcategories=serializer.validated_data['collection_subcategories'])
 
         return Response(data={
             'message': _('Successfully created'),

@@ -78,13 +78,17 @@ class HotlinkCreateSerializer(serializers.ModelSerializer):
     collection_items = serializers.PrimaryKeyRelatedField(
         queryset=ShopItem.objects.all(), many=True, required=False, default=[]
     )
+    collection_links = serializers.ListSerializer(child=serializers.CharField(), required=False, default=[])
     collection_subcategories = serializers.PrimaryKeyRelatedField(
         queryset=ItemSubcategory.objects.all(), many=True, required=False, default=[]
     )
 
     class Meta:
         model = Hotlink
-        fields = ('organization', 'content', 'link_type', 'image', 'collection_items', 'collection_subcategories')
+        fields = (
+            'organization', 'content', 'link_type', 'image', 'collection_items', 'collection_links',
+            'collection_subcategories'
+        )
 
 
 class HotlinkUpdateSerializer(serializers.ModelSerializer):

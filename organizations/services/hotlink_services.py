@@ -45,24 +45,27 @@ class HotlinkService:
     @classmethod
     @transaction.atomic
     def create_hotlink(cls, user: User, organization: Organization, content: str, link_type: str, image: File,
-                       collection_items: list, collection_subcategories: list):
+                       collection_items: list, collection_links: list, collection_subcategories: list):
         if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
         hotlink = cls.create(organization=organization, content=content, link_type=link_type, image=image)
 
         if link_type == HOTLINK_COLLECTION:
             shop_items_list_to_create = []
-            if collection_items:
-                for item in collection_items:
-                    shop_items_list_to_create.append(HotlinkCollectionItem(hotlink=hotlink, item=item))
+            for item in collection_items:
+                shop_items_list_to_create.append(HotlinkCollectionItem(hotlink=hotlink, item=item))
+            if shop_items_list_to_create:
                 HotlinkCollectionItem.objects.bulk_create(shop_items_list_to_create)
 
+            for content in collection_links:
+                HotlinkCollectionLink.objects.create(hotlink=hotlink, content=content)
+
             hotlink_subcategories_to_create = []
-            if collection_subcategories:
-                for subcategory in collection_subcategories:
-                    hotlink_subcategories_to_create.append(
-                        HotlinkCollectionSubcategory(hotlink=hotlink, subcategory=subcategory)
-                    )
+            for subcategory in collection_subcategories:
+                hotlink_subcategories_to_create.append(
+                    HotlinkCollectionSubcategory(hotlink=hotlink, subcategory=subcategory)
+                )
+            if hotlink_subcategories_to_create:
                 HotlinkCollectionSubcategory.objects.bulk_create(hotlink_subcategories_to_create)
 
     @classmethod

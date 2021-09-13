@@ -46,6 +46,7 @@ class HotlinkListCreateView(ListCreateAPIView):
                                       link_type=serializer.validated_data['link_type'],
                                       image=serializer.validated_data['image'],
                                       collection_items=serializer.validated_data['collection_items'],
+                                      collection_links=serializer.validated_data['collection_links'],
                                       collection_subcategories=serializer.validated_data['collection_subcategories'])
 
         return Response(data={

@@ -68,6 +68,7 @@ admin.site.unregister(TokenProxy)
 
 
 class ApofizTokenAdmin(TokenAdmin):
+    search_fields = ('user__phone_number','user__username','user__full_name' )
     raw_id_fields = ('user',)
 
 admin.site.register(TokenProxy, ApofizTokenAdmin)

@@ -52,6 +52,8 @@ class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
         fields = ('id', 'name', 'category_name', 'is_selected', 'icon')
 
     def get_is_selected(self, subcategory: ItemSubcategory) -> bool:
+        if 'hotlink' not in self.context:
+            return False
         return HotlinkCollectionSubcategory.objects.filter(
             hotlink=self.context['hotlink'], subcategory=subcategory).exists()
 

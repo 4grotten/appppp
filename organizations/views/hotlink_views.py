@@ -16,8 +16,11 @@ from organizations.serializers.hotlink_serializers import (
 )
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService, HotlinkCollectionLinkService
+from organizations.services.organization_services import OrganizationService
 from shop.serializers.category_serializers import ItemSubcategoryForHotlinksSerializer
 from shop.serializers.item_serializers import ItemInHotlinkCollectionSerializer
+from shop.services.category_services import ItemSubcategoryService
+from shop.services.item_services import ShopItemService
 
 
 class HotlinkListCreateView(ListCreateAPIView):
@@ -41,7 +44,10 @@ class HotlinkListCreateView(ListCreateAPIView):
         HotlinkService.create_hotlink(user=request.user, organization=serializer.validated_data['organization'],
                                       content=serializer.validated_data['content'],
                                       link_type=serializer.validated_data['link_type'],
-                                      image=serializer.validated_data['image'])
+                                      image=serializer.validated_data['image'],
+                                      collection_items=serializer.validated_data['collection_items'],
+                                      collection_links=serializer.validated_data['collection_links'],
+                                      collection_subcategories=serializer.validated_data['collection_subcategories'])
 
         return Response(data={
             'message': _('Successfully created'),
@@ -68,6 +74,16 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                                                 content=serializer.validated_data['content'],
                                                 link_type=serializer.validated_data['link_type'])
         return Response(self.get_serializer(hotlink).data)
+
+
+class OrganizationHotlinkShopItems(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemInHotlinkCollectionSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        return ShopItemService.get_organization_items_queryset_for_user(organization=organization,
+                                                                        user=self.request.user).order_by('-updated_at')
 
 
 class HotlinkItemsListUpdateView(GenericAPIView):
@@ -100,6 +116,17 @@ class HotlinkItemsListUpdateView(GenericAPIView):
         )
         serializer = self.get_serializer(hotlink)
         return Response(serializer.data)
+
+
+class OrganizationHotlinkSubcategories(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemSubcategoryForHotlinksSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=organization.id)
 
 
 class HotlinkSubcategoriesListUpdateView(GenericAPIView):

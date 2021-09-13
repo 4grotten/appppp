@@ -1,12 +1,12 @@
 from urllib.parse import urlparse
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, IntegrityException, ObjectNotFoundException
 from common.models import File
-from organizations.constants import HOTLINK_PARTNERS, HOTLINK_URL
+from organizations.constants import HOTLINK_PARTNERS, HOTLINK_URL, HOTLINK_COLLECTION
 from organizations.models import (
     Hotlink, Organization, HotlinkCollectionSubcategory, HotlinkCollectionItem, HotlinkCollectionLink
 )
@@ -23,9 +23,9 @@ class HotlinkService:
             raise ObjectNotFoundException(_('Hotlink not found'))
 
     @classmethod
-    def create(cls, *args, **kwargs):
+    def create(cls, *args, **kwargs) -> Hotlink:
         try:
-            Hotlink.objects.create(*args, **kwargs)
+            return Hotlink.objects.create(*args, **kwargs)
         except IntegrityError:
             raise IntegrityException(_('Could not save hotlink'))
 
@@ -43,10 +43,30 @@ class HotlinkService:
         return hotlink
 
     @classmethod
-    def create_hotlink(cls, user: User, organization: Organization, content: str, link_type: str, image: File):
+    @transaction.atomic
+    def create_hotlink(cls, user: User, organization: Organization, content: str, link_type: str, image: File,
+                       collection_items: list, collection_links: list, collection_subcategories: list):
         if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-        cls.create(organization=organization, content=content, link_type=link_type, image=image)
+        hotlink = cls.create(organization=organization, content=content, link_type=link_type, image=image)
+
+        if link_type == HOTLINK_COLLECTION:
+            shop_items_list_to_create = []
+            for item in collection_items:
+                shop_items_list_to_create.append(HotlinkCollectionItem(hotlink=hotlink, item=item))
+            if shop_items_list_to_create:
+                HotlinkCollectionItem.objects.bulk_create(shop_items_list_to_create)
+
+            for content in collection_links:
+                HotlinkCollectionLink.objects.create(hotlink=hotlink, content=content)
+
+            hotlink_subcategories_to_create = []
+            for subcategory in collection_subcategories:
+                hotlink_subcategories_to_create.append(
+                    HotlinkCollectionSubcategory(hotlink=hotlink, subcategory=subcategory)
+                )
+            if hotlink_subcategories_to_create:
+                HotlinkCollectionSubcategory.objects.bulk_create(hotlink_subcategories_to_create)
 
     @classmethod
     def update_hotlink(cls, hotlink: Hotlink, image: File, content: str, link_type: str):

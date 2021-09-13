@@ -258,4 +258,6 @@ class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
         fields = ('id', 'name', 'subcategory_name', 'price', 'discounted_price', 'is_selected', 'image')
 
     def get_is_selected(self, item: ShopItem) -> bool:
+        if 'hotlink' not in self.context:
+            return False
         return HotlinkCollectionItem.objects.filter(hotlink=self.context['hotlink'], item=item).exists()

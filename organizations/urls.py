@@ -8,7 +8,8 @@ from .views.category_views import CategoryDetailAPIView
 from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteView
 from .views.hotlink_views import (
     HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView, HotlinkSubcategoriesListUpdateView,
-    HotlinkItemsListUpdateView, CollectionLinksCreateView, CollectionLinksListView, CollectionLinkUpdateDestroyView
+    HotlinkItemsListUpdateView, CollectionLinksCreateView, CollectionLinksListView, CollectionLinkUpdateDestroyView,
+    OrganizationHotlinkShopItems, OrganizationHotlinkSubcategories
 )
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
@@ -31,8 +32,10 @@ from .views.partnerships_views import (
     HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
-from .views.subscription_views import SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView, \
+from .views.subscription_views import (
+    SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
     MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView
+)
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -124,6 +127,11 @@ banner_urls = [
 ]
 
 hotlink_urls = [
+    path('organizations/<int:pk>/collection_items/', OrganizationHotlinkShopItems.as_view(),
+         name='organization_hotlink_shop_items'),
+    path('organizations/<int:pk>/collection_subcategories/', OrganizationHotlinkSubcategories.as_view(),
+         name='organization_hotlink_shop_subcategories'),
+
     path('hotlinks/', HotlinkListCreateView.as_view(), name='hotlinks'),
     path('hotlinks/<int:pk>/', HotlinkRetrieveUpdateDestroyView.as_view(), name='hotlink_details'),
     path('hotlinks/<int:pk>/items/', HotlinkItemsListUpdateView.as_view(), name='hotlink_shop_items'),
@@ -152,7 +160,8 @@ urlpatterns = [
     path('', include(organization_promo_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
-    path('subscriptions/subscribe_to_partners/', MassPartnershipSubscriptionView.as_view(), name='subscribe_to_partners'),
+    path('subscriptions/subscribe_to_partners/', MassPartnershipSubscriptionView.as_view(),
+         name='subscribe_to_partners'),
 
     path('categories/<int:pk>/', CategoryDetailAPIView.as_view(), name='detail_category'),
     path('org_seo/<int:pk>/', org_detail)

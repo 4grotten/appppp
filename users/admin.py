@@ -90,11 +90,11 @@ class ApofizUserAdmin(UserAdmin):
             titles.append(organization.title)
             types.append(organization.types.first().title_ru)
             try:
-                phone_numbers_1.append((organization.phone_numbers.first()))
+                phone_numbers_1.append((organization.phone_numbers.order_by('id').first()))
             except:
                 phone_numbers_1.append("")
             try:
-                phone_numbers_2.append((organization.phone_numbers.all()[1]))
+                phone_numbers_2.append((organization.phone_numbers.all().order_by('id')[1]))
             except:
                 phone_numbers_2.append("")
             try:

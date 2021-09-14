@@ -250,7 +250,7 @@ class ItemInHotlinkSerializer(ItemInCartSerializer):
 
 
 class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
-    subcategory_name = serializers.CharField(source='subcategory.name')
+    subcategory_name = serializers.CharField(source='subcategory.name', default=None)
     is_selected = serializers.SerializerMethodField()
 
     class Meta:

@@ -251,11 +251,12 @@ class ItemInHotlinkSerializer(ItemInCartSerializer):
 
 class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
     subcategory_name = serializers.CharField(source='subcategory.name', default=None)
+    currency = serializers.CharField(source='organization.currency.code')
     is_selected = serializers.SerializerMethodField()
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'name', 'subcategory_name', 'price', 'discounted_price', 'is_selected', 'image')
+        fields = ('id', 'name', 'subcategory_name', 'price', 'discounted_price', 'currency', 'is_selected', 'image')
 
     def get_is_selected(self, item: ShopItem) -> bool:
         if 'hotlink' not in self.context:

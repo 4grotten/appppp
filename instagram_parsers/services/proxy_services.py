@@ -25,6 +25,15 @@ class ProxyService:
             return f'https://{random_proxy.login}:{random_proxy.password}@{random_proxy.http_s}'
         return None
 
+    @classmethod
+    def get_random_proxy_for_requests(cls, for_getting_username: bool = False):
+        proxies = Proxy.objects.filter(for_getting_username=for_getting_username, expires_at__gt=now())
+        if proxies:
+            proxy = random.choice(proxies)
+            list_proxies = [dict(https=f'http://{proxy.login}:{proxy.password}@{proxy.http_s}')]
+            return list_proxies
+        return None
+
 
 class LoginDeviceService:
     @classmethod

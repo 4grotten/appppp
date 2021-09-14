@@ -38,7 +38,7 @@ from organizations.services.organization_services import (
 )
 from organizations.services.subscription_services import SubscriptionService
 from organizations.tasks import (
-    parse_instagram_to_shop_items, update_media_url_by_user_entering_on_page
+    parse_instagram_to_shop_items
 )
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 

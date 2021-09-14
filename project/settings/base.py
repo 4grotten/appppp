@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'storages',
     'phonenumber_field',
     'delivery',
+    'cors',
 ]
 
 MIDDLEWARE = [

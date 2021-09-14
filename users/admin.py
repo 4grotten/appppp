@@ -94,7 +94,7 @@ class ApofizUserAdmin(UserAdmin):
             except:
                 phone_numbers_1.append("")
             try:
-                phone_numbers_2.append((organization.phone_numbers.all[2]))
+                phone_numbers_2.append((organization.phone_numbers.all()[1]))
             except:
                 phone_numbers_2.append("")
             try:

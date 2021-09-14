@@ -98,7 +98,7 @@ class ApofizUserAdmin(UserAdmin):
             except:
                 phone_numbers_2.append("")
             try:
-                instagrams.append(organization.instagram_integration.first().url)
+                instagrams.append(organization.instagram_integration_link.url)
             except:
                 instagrams.append("")
 

@@ -11,7 +11,13 @@ from instagram_parsers.services.proxy_services import ProxyService
 class CorsView(APIView):
 
     def get(self, request):
-        insta_url = request.data.get('url')
+        query_params = request.query_params
+        insta_url = ''
+        for key, value in query_params.items():
+            if key == 'url':
+                insta_url += value
+                continue
+            insta_url += '&' + key + '=' + value
         if insta_url is None or insta_url == '':
             return Response(
                 data={

@@ -1,14 +1,14 @@
 import requests
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
+from django.views import View
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from instagram_parsers.services.proxy_services import ProxyService
 
 
-class CorsView(APIView):
+class CorsView(View):
 
     def get(self, request):
         insta_url = request.META['QUERY_STRING'].replace('url=', '')
@@ -34,4 +34,5 @@ class CorsView(APIView):
                 print(key, value, flush=True)
             return  answer
         except Exception as e:
-            return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponse
+            # return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

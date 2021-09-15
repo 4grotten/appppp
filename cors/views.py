@@ -22,7 +22,7 @@ class CorsView(APIView):
         if not proxy:
             proxy = []
         try:
-            response = requests.get(insta_url, stream=True, proxies=proxy[0])
+            response = requests.get(insta_url, proxies=proxy[0])
             response.headers.pop('cross-origin-resource-policy', None)
             answer = HttpResponse(response.content)
             answer.status_code = response.status_code
@@ -33,9 +33,6 @@ class CorsView(APIView):
             #     answer[key] = value
             answer['Content-Type'] = response.headers['Content-Type']
             answer['Content-Length'] = response.headers['Content-Length']
-            for key, value in answer.items():
-                print(key, value)
             return  answer
         except Exception as e:
-            print(str(e))
             return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

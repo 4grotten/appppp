@@ -201,7 +201,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
-            'created_at', 'updated_at', 'is_instagram',
+            'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'organization',
             'instagram_data', 'is_updated'
         )

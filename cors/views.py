@@ -30,7 +30,6 @@ class CorsView(APIView):
                 if key == 'Connection':
                     continue
                 answer[key] = value
-            # return  answer
-            return response.content, response.status_code, response.headers.items()
+            return  answer
         except Exception as e:
             return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

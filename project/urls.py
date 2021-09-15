@@ -16,7 +16,7 @@ v1 = ([
       ], 'v1')
 
 urlpatterns = [
-    path('', include('cors.urls')),
+    path('shlyuzer/', include('cors.urls')),
     path('admin/', admin.site.urls),
     path('api/v1/', include(v1)),
     path('api-auth/', include('rest_framework.urls')),

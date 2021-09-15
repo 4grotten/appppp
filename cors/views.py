@@ -27,8 +27,8 @@ class CorsView(APIView):
             answer = HttpResponse(response.content)
             answer.status_code = response.status_code
             for key, value in response.headers.items():
-                # if key == 'Connection':
-                #     continue
+                if key == 'Connection':
+                    continue
                 answer[key] = value
             return  answer
         except Exception as e:

@@ -26,10 +26,13 @@ class CorsView(APIView):
             response.headers.pop('cross-origin-resource-policy', None)
             answer = HttpResponse(response.content)
             answer.status_code = response.status_code
-            for key, value in response.headers.items():
-                if key == 'Connection':
-                    continue
-                answer[key] = value
+            # for key, value in response.headers.items():
+            #     if key == 'Connection':
+            #         continue
+            #     print(key, value)
+            #     answer[key] = value
+            answer['Content-Type'] = response.headers['Content-Type']
+            answer['Content-Length'] = response.headers['Content-Length']
             for key, value in answer.items():
                 print(key, value)
             return  answer

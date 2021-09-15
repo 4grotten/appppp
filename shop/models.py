@@ -56,7 +56,7 @@ class ShopItem(models.Model):
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
     youtube_links = models.JSONField(null=True)
     is_updated = models.BooleanField(default=False)
-    is_instagram = models.BooleanField(default=False)
+    removed_at = models.DateTimeField(default=None, blank=True, null=True)
 
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)
@@ -70,8 +70,6 @@ class ShopItem(models.Model):
             self.description_lang = GoogleTranslator().get_lang(self.description)
         if self.id:
             self.updated_at = timezone.now()
-            self.is_updated = True
-            self.is_instagram = False
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         if self.subcategory is not None and self.subcategory.category.is_adult:

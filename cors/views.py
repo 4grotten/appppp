@@ -22,17 +22,23 @@ class CorsView(APIView):
         if not proxy:
             proxy = []
         try:
-            response = requests.get(insta_url, proxies=proxy[0])
-            response.headers.pop('cross-origin-resource-policy', None)
-            answer = HttpResponse(response.content)
-            answer.status_code = response.status_code
-            # for key, value in response.headers.items():
-            #     if key == 'Connection':
-            #         continue
-            #     print(key, value)
-            #     answer[key] = value
-            answer['Content-Type'] = response.headers['Content-Type']
-            answer['Content-Length'] = response.headers['Content-Length']
-            return  answer
+            response = requests.get(insta_url, stream=True, proxies=proxy)
         except Exception as e:
-            return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            return str(e), 400
+        response.headers.pop('cross-origin-resource-policy', None)
+        return response.content, response.status_code, response.headers.items()
+        # try:
+        #     response = requests.get(insta_url, proxies=proxy[0])
+        #     response.headers.pop('cross-origin-resource-policy', None)
+        #     answer = HttpResponse(response.content)
+        #     answer.status_code = response.status_code
+        #     # for key, value in response.headers.items():
+        #     #     if key == 'Connection':
+        #     #         continue
+        #     #     print(key, value)
+        #     #     answer[key] = value
+        #     answer['Content-Type'] = response.headers['Content-Type']
+        #     answer['Content-Length'] = response.headers['Content-Length']
+        #     return  answer
+        # except Exception as e:
+        #     return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

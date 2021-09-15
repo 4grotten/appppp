@@ -32,6 +32,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     def put(self, request, *args, **kwargs):
         ShopItemService.delete_instagram_images(item_id=kwargs['pk'])
         ShopItemService.delete_instagram_video(item_id=kwargs['pk'])
+        ShopItemService.change_is_updated_and_removed_at_field(item_id=kwargs['pk'])
         return super().put(request, *args, **kwargs)
 
     def get_permissions(self):

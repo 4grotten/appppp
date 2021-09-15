@@ -14,6 +14,10 @@ from shop.models import ShopItem, ItemInstagramData
 
 @shared_task
 def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTAGRAM_POSTS_TO_PARSE):
+
+    video_expired_time = now() + timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
+    mix_content_expired_time = now() + timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
+
     organization = Organization.objects.get(id=organization_id)
     instagram_integration = InstagramIntegration.objects.get(organization=organization)
     instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count)
@@ -26,12 +30,19 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
             post_url = instagram.pop('post_url')
             shop_item = ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
                                                 updated_at=created_at, description=description, instagram_link=post_url,
-                                                is_instagram=True)
+                                                )
 
             for data in instagram.get('data'):
                 ItemInstagramData.objects.create(item=shop_item,
                                                  thumbnail_url=data.get('thumbnail_url'),
                                                  video_url=data.get('video_url'))
+
+            if  ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
+                shop_item.removed_at = mix_content_expired_time
+                shop_item.save()
+            else:
+                shop_item.removed_at = video_expired_time
+                shop_item.save()
 
 
 @shared_task

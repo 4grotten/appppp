@@ -24,7 +24,7 @@ class CorsView(APIView):
         try:
             response = requests.get(insta_url, stream=True, proxies=proxy[0])
             response.headers.pop('cross-origin-resource-policy', None)
-            answer = HttpResponse(response)
+            answer = HttpResponse(response.content)
             answer.status_code = response.status_code
             for key, value in response.headers.items():
                 if key == 'Connection':

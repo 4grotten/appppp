@@ -30,7 +30,7 @@ class ProxyService:
         proxies = Proxy.objects.filter(for_getting_username=for_getting_username, expires_at__gt=now())
         if proxies:
             proxy = random.choice(proxies)
-            list_proxies = [dict(https=f'http://{proxy.login}:{proxy.password}@{proxy.http_s}')]
+            list_proxies = [dict(https=f'https://{proxy.login}:{proxy.password}@{proxy.http_s}')]
             return list_proxies
         return None
 

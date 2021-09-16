@@ -12,11 +12,11 @@ v1 = ([
           path('', include('transactions.urls')),
           path('', include('shop.urls')),
           path('', include('delivery.urls')),
+          path('', include('cors.urls')),
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 
 urlpatterns = [
-    path('shlyuzer/', include('cors.urls')),
     path('admin/', admin.site.urls),
     path('api/v1/', include(v1)),
     path('api-auth/', include('rest_framework.urls')),

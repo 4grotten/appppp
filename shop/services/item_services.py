@@ -128,7 +128,7 @@ class ShopItemService:
 
     @classmethod
     def delete_expired_posts(cls):
-        ShopItem.objects.filter(name='Instagram', price=None, is_updated=False, removed_at__isnull=False,
+        ShopItem.objects.filter(name='Instagram', price=None, is_updated=False,
                                 instagram_data__isnull=True, images__isnull=True).delete()
 
     @classmethod

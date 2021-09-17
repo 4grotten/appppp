@@ -11,6 +11,9 @@ from instagram_parsers.services.proxy_services import ProxyService
 class CorsView(View):
 
     def get(self, request):
+        hop_by_hop = ['Connection', 'Keep-Alive', 'Proxy-Authenticate',
+                      'Proxy-Authorization', 'TE', 'Trailers', 'Transfer-Encoding', 'Upgrade']
+
         insta_url = request.META['QUERY_STRING'].replace('url=', '')
         if insta_url is None or insta_url == '':
             return Response(
@@ -27,7 +30,7 @@ class CorsView(View):
             answer = HttpResponse(response.content)
             answer.status_code = response.status_code
             for key, value in response.headers.items():
-                if key == 'Connection':
+                if key in hop_by_hop:
                     continue
                 answer[key] = value
             return  answer

@@ -1,5 +1,5 @@
-from django.db.models import F
 from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
@@ -128,7 +128,7 @@ class ShopItemService:
 
     @classmethod
     def delete_expired_posts(cls):
-        ShopItem.objects.filter(name='Instagram', price=None, is_updated=False,
+        ShopItem.objects.filter(name='Instagram', price=None, removed_at__lte=now(),
                                 instagram_data__isnull=True, images__isnull=True).delete()
 
     @classmethod

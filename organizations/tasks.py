@@ -37,7 +37,7 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
                                                  thumbnail_url=data.get('thumbnail_url'),
                                                  video_url=data.get('video_url'))
 
-            if  ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
+            if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
                 shop_item.removed_at = mix_content_expired_time
                 shop_item.save()
             else:
@@ -60,8 +60,7 @@ def delete_old_instagram_posts():
 @shared_task
 def delete_expired_photo_and_posts():
     from shop.services.item_services import ShopItemService
-    delete_until = now() - timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
-    ItemInstagramData.objects.filter(updated_at__lte=delete_until).delete()
+    ItemInstagramData.objects.filter(instagram_data__removed_at__lte=now()).delete()
     ShopItemService.delete_expired_posts()
 
 

@@ -47,7 +47,7 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
 
 @shared_task
 def delete_not_updated_posts_from_instagram(organization_id: int):
-    ShopItem.objects.filter(organization_id=organization_id, name='Instagram', updated_at=F('created_at')).delete()
+    ShopItem.objects.filter(organization_id=organization_id, name='Instagram', is_updated=False).delete()
 
 
 @shared_task

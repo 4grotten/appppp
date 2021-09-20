@@ -68,8 +68,6 @@ class ShopItem(models.Model):
         self.name_lang = GoogleTranslator().get_lang(self.name)
         if self.description:
             self.description_lang = GoogleTranslator().get_lang(self.description)
-        if self.id:
-            self.updated_at = timezone.now()
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         if self.subcategory is not None and self.subcategory.category.is_adult:

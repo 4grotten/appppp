@@ -43,7 +43,7 @@ services:
   celery_worker_instagram:
     <<: *django
     ports: [ ]
-    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,update_login_device,\
+    command: celery worker -n "instagram" -A project --loglevel=INFO -Q insta_high,insta_low,update_login_device,\
                                               delete_expired_video,delete_expired_posts
     env_file: ./env/production.env
 

@@ -1,5 +1,6 @@
 from typing import Union
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet, Q
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +14,7 @@ from notifications.constants import (
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
-from organizations.models import Organization, Partnership
+from organizations.models import Organization, Partnership, CommonItemsGroup
 from organizations.services.cashback_group_services import CashbackGroupService
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -191,6 +192,21 @@ class PartnershipService:
 
             if is_sharing_items:
                 cls.check_and_create_common_items(one_way_partnership=partnership)
+
+            if not can_share_items:
+                try:
+                    common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.requested_by)
+                    partnership.requested_by.items_group = None
+                    partnership.requested_by.save(update_fields=('items_group',))
+                    partners = Partnership.objects.filter(requested_by=partnership.requested_by)
+                    for partner in partners:
+                        partner.can_share_items = False
+                        partner.save()
+                    count_org_in_common_group = common_shop_group.organizations.count()
+                    if count_org_in_common_group < 1:
+                        common_shop_group.delete()
+                except ObjectDoesNotExist:
+                    pass
 
             if is_new_request:
                 reverse_partnership = cls.create(requested_by=partnership.accepted_by,

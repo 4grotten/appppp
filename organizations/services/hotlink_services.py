@@ -154,6 +154,12 @@ class HotlinkService:
         return subcategories
 
     @classmethod
+    def get_selected_subcategories_in_hotlink_collection(cls, hotlink: Hotlink):
+        from shop.services.category_services import ItemSubcategoryService
+        subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=hotlink.organization.id)
+        return subcategories.filter(id__in=hotlink.collection_subcategories.values_list('subcategory_id'))
+
+    @classmethod
     def edit_hotlink_selected_subcategories(cls, hotlink: Hotlink, added: list, removed: list, user: User):
         if not OrganizationService.user_can_edit_organization(organization=hotlink.organization, user=user):
             raise NotAcceptableException(_('No rights to edit organization'))

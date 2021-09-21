@@ -14,21 +14,21 @@ from users.models import User
 
 
 class CashbackGroup(TimestampModel):
-    name = models.CharField(max_length=64, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'
 
 
 class CumulativeGroup(TimestampModel):
-    name = models.CharField(max_length=64, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'
 
 
 class CommonItemsGroup(TimestampModel):
-    name = models.CharField(max_length=64, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'

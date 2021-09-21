@@ -1,5 +1,6 @@
 from typing import Union
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet, Q
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +14,7 @@ from notifications.constants import (
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
-from organizations.models import Organization, Partnership
+from organizations.models import Organization, Partnership, CommonItemsGroup
 from organizations.services.cashback_group_services import CashbackGroupService
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -191,6 +192,41 @@ class PartnershipService:
 
             if is_sharing_items:
                 cls.check_and_create_common_items(one_way_partnership=partnership)
+
+
+            '''есть:
+организация №1
+организация №2
+организация №3
+—————————-
+№1 стала партнером с №2 взаимно с объединением товаров
+у каждой в ленте появились два сета товаров
+потом появилась в их партнерстве орг №3
+№3 стала партнером с №2 взаимно и с объединением товаров
+у каждой соответственно в ленте отображаются теперь по три сета 
+———————————
+орг №3 перестает делиться товаром с орг №2 (передвигат движок в off позицию)
+у орг №2 в ленте больше не появляются товары как орг №3 так и орг №1
+у орг №1 и №3 в лентах товары взаимно показываются
+движки - поделиться товаром у орг № 1 и №3 стали в поз OFF
+движки у орг №2 для организаций №1 и №3 остались в поз ON 
+так как обьедеинение было через эту компанию и она может разорвать связь между орг №3 и №1
+и им нужно будет создать свое партнерство в этом случае
+'''
+            if not can_share_items:
+                try:
+                    common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.requested_by)
+                    partnership.requested_by.items_group = None
+                    partnership.requested_by.save(update_fields=('items_group',))
+                    partners = Partnership.objects.filter(requested_by=partnership.requested_by)
+                    for partner in partners:
+                        partner.can_share_items = False
+                        partner.save()
+                    count_org_in_common_group = common_shop_group.organizations.count()
+                    if count_org_in_common_group < 1:
+                        common_shop_group.delete()
+                except ObjectDoesNotExist:
+                    pass
 
             if is_new_request:
                 reverse_partnership = cls.create(requested_by=partnership.accepted_by,

@@ -489,3 +489,9 @@ class PromoSubscriber(models.Model):
         constraints = (
             models.constraints.UniqueConstraint(fields=('organization', 'subscriber'), name='unique_promo_subscriber'),
         )
+
+
+class Service(models.Model):
+    name = models.CharField(max_length=255, verbose_name='Название сервиса')
+    icon = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
+    subcategory = models.ManyToManyField(OrganizationType, related_name='services')

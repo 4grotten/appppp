@@ -50,6 +50,9 @@ class HotlinkWithCountsSerializer(HotlinkSerializer):
     items_count = serializers.SerializerMethodField()
     links_count = serializers.SerializerMethodField()
     subcategories_count = serializers.SerializerMethodField()
+    collection_items = serializers.SlugRelatedField(many=True, read_only=True, slug_field='item_id')
+    collection_links = serializers.SlugRelatedField(many=True, read_only=True, slug_field='content')
+    collection_subcategories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='subcategory_id')
 
     def get_items_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:
@@ -71,6 +74,7 @@ class HotlinkWithCountsSerializer(HotlinkSerializer):
         fields = (
             'id', 'title', 'content', 'link_type', 'items_count', 'links_count', 'subcategories_count',
             'linked_organization', 'linked_item', 'image',
+            'collection_items', 'collection_links', 'collection_subcategories'
         )
 
 

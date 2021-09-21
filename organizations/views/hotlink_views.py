@@ -70,9 +70,14 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        hotlink = HotlinkService.update_hotlink(hotlink=instance, image=serializer.validated_data['image'],
-                                                content=serializer.validated_data['content'],
-                                                link_type=serializer.validated_data['link_type'])
+        hotlink = HotlinkService.update_hotlink(
+            hotlink=instance, image=serializer.validated_data['image'],
+            content=serializer.validated_data['content'],
+            link_type=serializer.validated_data['link_type'],
+            collection_items=serializer.validated_data['collection_items'],
+            collection_links=serializer.validated_data['collection_links'],
+            collection_subcategories=serializer.validated_data['collection_subcategories']
+        )
         return Response(self.get_serializer(hotlink).data)
 
 

@@ -69,12 +69,37 @@ class HotlinkService:
                 HotlinkCollectionSubcategory.objects.bulk_create(hotlink_subcategories_to_create)
 
     @classmethod
-    def update_hotlink(cls, hotlink: Hotlink, image: File, content: str, link_type: str):
+    @transaction.atomic
+    def update_hotlink(cls, hotlink: Hotlink, image: File, content: str, link_type: str, collection_items: list,
+                       collection_links: list, collection_subcategories: list):
         try:
             hotlink.image = image
             hotlink.content = content
             hotlink.link_type = link_type
             hotlink.save()
+
+            # This part is not the best solution with all the deletion and recreation
+            if link_type == HOTLINK_COLLECTION:
+                hotlink.collection_items.all().delete()
+                shop_items_list_to_create = []
+                for item in collection_items:
+                    shop_items_list_to_create.append(HotlinkCollectionItem(hotlink=hotlink, item=item))
+                if shop_items_list_to_create:
+                    HotlinkCollectionItem.objects.bulk_create(shop_items_list_to_create)
+
+                hotlink.collection_links.all().delete()
+                for content in collection_links:
+                    HotlinkCollectionLink.objects.create(hotlink=hotlink, content=content)
+
+                hotlink.collection_subcategories.all().delete()
+                hotlink_subcategories_to_create = []
+                for subcategory in collection_subcategories:
+                    hotlink_subcategories_to_create.append(
+                        HotlinkCollectionSubcategory(hotlink=hotlink, subcategory=subcategory)
+                    )
+                if hotlink_subcategories_to_create:
+                    HotlinkCollectionSubcategory.objects.bulk_create(hotlink_subcategories_to_create)
+
             return hotlink
         except Exception as e:
             raise IntegrityException(_('Can not update hotlink: {}').format(str(e)))

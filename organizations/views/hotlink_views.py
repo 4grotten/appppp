@@ -17,7 +17,7 @@ from organizations.serializers.hotlink_serializers import (
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService, HotlinkCollectionLinkService
 from organizations.services.organization_services import OrganizationService
-from shop.serializers.category_serializers import ItemSubcategoryForHotlinksSerializer
+from shop.serializers.category_serializers import ItemSubcategoryForHotlinksSerializer, ItemSubcategoryBriefSerializer
 from shop.serializers.item_serializers import ItemInHotlinkCollectionSerializer
 from shop.services.category_services import ItemSubcategoryService
 from shop.services.item_services import ShopItemService
@@ -162,6 +162,16 @@ class HotlinkSubcategoriesListUpdateView(GenericAPIView):
         )
         serializer = self.get_serializer(hotlink)
         return Response(serializer.data)
+
+
+class HotlinkSelectedSubcategoriesListView(ListAPIView):
+    permission_classes = ()
+    pagination_class = None
+    serializer_class = ItemSubcategoryBriefSerializer
+
+    def get_queryset(self):
+        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        return HotlinkService.get_selected_subcategories_in_hotlink_collection(hotlink=hotlink)
 
 
 class CollectionLinksCreateView(CreateAPIView):

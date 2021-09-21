@@ -9,7 +9,7 @@ from .views.discount_views import DiscountsBulkUpdateView, DiscountsBulkDeleteVi
 from .views.hotlink_views import (
     HotlinkListCreateView, HotlinkRetrieveUpdateDestroyView, HotlinkSubcategoriesListUpdateView,
     HotlinkItemsListUpdateView, CollectionLinksCreateView, CollectionLinksListView, CollectionLinkUpdateDestroyView,
-    OrganizationHotlinkShopItems, OrganizationHotlinkSubcategories
+    OrganizationHotlinkShopItems, OrganizationHotlinkSubcategories, HotlinkSelectedSubcategoriesListView
 )
 from .views.membership_views import (
     MembershipListCreateView, RolesListCreateView, RoleRetrieveUpdateDestroyView,
@@ -137,6 +137,8 @@ hotlink_urls = [
     path('hotlinks/<int:pk>/items/', HotlinkItemsListUpdateView.as_view(), name='hotlink_shop_items'),
     path('hotlinks/<int:pk>/subcategories/', HotlinkSubcategoriesListUpdateView.as_view(),
          name='hotlink_subcategories'),
+    path('hotlinks/<int:pk>/selected_subcategories/', HotlinkSelectedSubcategoriesListView.as_view(),
+         name='selected_collection_subcategories'),
     path('hotlinks/<int:pk>/links/', CollectionLinksListView.as_view(), name='hotlink_links_list'),
     path('hotlink_links/', CollectionLinksCreateView.as_view(), name='create_hotlink_link'),
     path('hotlink_links/<int:pk>/', CollectionLinkUpdateDestroyView.as_view(), name='delete_hotlink_link'),

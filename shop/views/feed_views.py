@@ -11,7 +11,6 @@ from organizations.serializers.query_param_serializers import OrganizationQueryP
 from organizations.services.hotlink_services import HotlinkService
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
-from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.serializers.item_serializers import ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer
 from shop.services.item_services import ShopItemService
 
@@ -95,11 +94,6 @@ class HotlinkCollectionItemListView(ListAPIView):
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         response = self.get_paginated_response(serializer.data)
-
-        subcategories = HotlinkService.get_selected_subcategories_in_hotlink_collection(hotlink=hotlink)
-        subcategories_data = ItemSubcategoryBriefSerializer(subcategories, many=True).data
-
         response.data['collection_title'] = hotlink.content
-        response.data['subcategories'] = subcategories_data
 
         return response

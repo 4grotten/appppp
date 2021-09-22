@@ -33,11 +33,19 @@ class SendCodeToNewNumberSerializer(serializers.Serializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer(many=False)
+    has_empty_fields = serializers.SerializerMethodField()
+
+    def get_has_empty_fields(self, user:User):
+        empty = {None, ''}
+        fields = set(list(User.objects.filter(id=user.id).values_list('email', 'date_of_birth', 'username'))[0])
+        if empty & fields:
+            return True
+        return False
 
     class Meta:
         model = User
         fields = ('id', 'avatar', 'full_name', 'username',
-                  'date_of_birth', 'email', 'gender', 'phone_number')
+                  'date_of_birth', 'email', 'gender', 'phone_number', 'has_empty_fields',)
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

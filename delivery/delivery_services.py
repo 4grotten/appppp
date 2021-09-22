@@ -51,7 +51,9 @@ class DeliveryInfoService:
             )
         ).exclude(
             transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
-            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE).order_by(
+            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
+
+        ).order_by(
             '-id').distinct('id').count()
 
     @classmethod
@@ -75,7 +77,9 @@ class DeliveryInfoService:
             )
         ).exclude(
             transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
-            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE).order_by(
+            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
+
+        ).order_by(
             '-id').distinct('id')
         return queryset
 

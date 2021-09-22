@@ -232,3 +232,4 @@ dmypy.json
 /backups/qrcode.bak
 beat.db
 celerybeat.pid
+internal-static

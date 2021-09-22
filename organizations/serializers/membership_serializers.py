@@ -38,6 +38,7 @@ class RoleCreateSerializer(serializers.ModelSerializer):
     can_edit_organization = serializers.BooleanField()
     can_send_message = serializers.BooleanField()
     can_edit_partner = serializers.BooleanField()
+    can_deliver = serializers.BooleanField()
 
     class Meta:
         model = Role

@@ -153,6 +153,7 @@ class Role(models.Model):
     can_edit_organization = models.BooleanField(default=False)
     can_send_message = models.BooleanField(default=True)
     can_edit_partner = models.BooleanField(default=False)
+    can_deliver = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.title} in {self.organization.title}'

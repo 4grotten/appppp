@@ -130,7 +130,7 @@ class OrganizationService:
     @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
-            return {
+            permissions_dict = {
                 'is_owner': True,
                 'can_sale': True,
                 'can_check_attendance': True,
@@ -139,18 +139,25 @@ class OrganizationService:
                 'can_send_message': True,
                 'can_edit_partner': True
             }
+            if organization.is_delivery_service:
+                permissions_dict['can_deliver'] = True
+            return permissions_dict
 
         try:
             role = MembershipService.get(organization=organization, user=user).role
-            return {
+            permissions_dict = {
                 'is_owner': False,
                 'can_sale': role.can_sale,
                 'can_check_attendance': role.can_check_attendance,
                 'can_see_stats': role.can_see_stats,
                 'can_edit_organization': role.can_edit_organization,
                 'can_send_message': role.can_send_message,
-                'can_edit_partner': role.can_edit_partner
+                'can_edit_partner': role.can_edit_partner,
+
             }
+            if organization.is_delivery_service:
+                permissions_dict['can_deliver'] = role.can_deliver
+            return permissions_dict
         except ObjectNotFoundException:
             pass
 
@@ -191,7 +198,9 @@ class OrganizationService:
             'can_see_stats': can_see_stats,
             'can_edit_organization': can_edit_organization,
             'can_send_message': False,
-            'can_edit_partner': False
+            'can_edit_partner': False,
+            'can_deliver': False,
+
         }
 
     @classmethod

@@ -98,7 +98,7 @@ class ApofizUserAdmin(UserAdmin):
             except:
                 phone_numbers_2.append("")
             try:
-                instagrams.append(organization.instagram_integration_link.url)
+                instagrams.append(", ".join([contact.url for contact in target_user.social_contacts.all()]))
             except:
                 instagrams.append("")
 
@@ -108,7 +108,6 @@ class ApofizUserAdmin(UserAdmin):
                 cities.append("")
             countries.append(organization.country.name_ru)
             addresses.append(organization.address)
-
 
         dict_data = {
             _('Название организации'): titles,
@@ -169,7 +168,7 @@ admin.site.unregister(TokenProxy)
 
 
 class ApofizTokenAdmin(TokenAdmin):
-    search_fields = ('user__phone_number','user__username','user__full_name' )
+    search_fields = ('user__phone_number', 'user__username', 'user__full_name')
     raw_id_fields = ('user',)
 
 

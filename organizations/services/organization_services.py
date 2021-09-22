@@ -14,7 +14,8 @@ from common.models import Country, City, File, Currency
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
-    NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, NOTIFICATION_MODE_PERSONAL,
+    NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE,
+    NOTIFICATION_MODE_PERSONAL,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
 )
 from notifications.tasks import (
@@ -152,7 +153,7 @@ class OrganizationService:
                 'can_edit_organization': role.can_edit_organization,
                 'can_send_message': role.can_send_message,
                 'can_edit_partner': role.can_edit_partner,
-                'can_deliver' :role.can_deliver
+                'can_deliver': role.can_deliver
             }
             return permissions_dict
         except ObjectNotFoundException:

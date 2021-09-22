@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
-from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration
+from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
     OrganizationTypeSerializer
@@ -26,7 +26,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer
+    OrganizationTitleSerializer, OrganizationServiceImageSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
@@ -316,8 +316,18 @@ class OrganizationsInCategoryView(ListAPIView):
 
         queryset = OrganizationService.get_organizations_in_category(category=category, partner=partner,
                                                                      country=country, city=city)
-
         return queryset
+
+
+class OrganizationsInServicesView(ListAPIView):
+    serializer_class = OrganizationServiceImageSerializer
+    queryset = Organization.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        service = Service.objects.get(id=kwargs['pk'])
+        queryset = OrganizationService.get_organizations_in_service(service=service)
+        data = self.serializer_class(queryset, many=True).data
+        return Response(data)
 
 
 class HomepageSearchView(ListAPIView):

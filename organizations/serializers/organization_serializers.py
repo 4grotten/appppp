@@ -17,6 +17,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from shop.models import ShopItem
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
@@ -72,6 +73,22 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'types')
+
+
+class OrganizationServiceImageSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    # shop_items = ImagesInOrganizationSerializer(many=True)
+    # shop_items = serializers.PrimaryKeyRelatedField(many=True, queryset=ShopItem.objects.all().order_by('-updated_at'))
+    shop_items = serializers.SerializerMethodField()
+    #
+    def get_shop_items(self, organization:Organization):
+        items = ShopItem.objects.filter(organization=organization).values('name', 'images', 'id', 'instagram_data',).order_by('-updated_at')[:3]
+        return items
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'shop_items',)
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):

@@ -137,10 +137,9 @@ class OrganizationService:
                 'can_see_stats': True,
                 'can_edit_organization': True,
                 'can_send_message': True,
-                'can_edit_partner': True
+                'can_edit_partner': True,
+                'can_deliver': True if organization.is_delivery_service else False,
             }
-            if organization.is_delivery_service:
-                permissions_dict['can_deliver'] = True
             return permissions_dict
 
         try:
@@ -153,10 +152,8 @@ class OrganizationService:
                 'can_edit_organization': role.can_edit_organization,
                 'can_send_message': role.can_send_message,
                 'can_edit_partner': role.can_edit_partner,
-
+                'can_deliver' :role.can_deliver
             }
-            if organization.is_delivery_service:
-                permissions_dict['can_deliver'] = role.can_deliver
             return permissions_dict
         except ObjectNotFoundException:
             pass
@@ -200,7 +197,6 @@ class OrganizationService:
             'can_send_message': False,
             'can_edit_partner': False,
             'can_deliver': False,
-
         }
 
     @classmethod

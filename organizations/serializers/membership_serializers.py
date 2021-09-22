@@ -44,7 +44,7 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         model = Role
         fields = (
             'id', 'title', 'organization', 'can_sale', 'can_check_attendance', 'can_see_stats',
-            'can_edit_organization', 'can_send_message', 'can_edit_partner'
+            'can_edit_organization', 'can_send_message', 'can_edit_partner', 'can_deliver'
         )
 
 

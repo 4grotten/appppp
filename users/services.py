@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from mailer.services import MailerService
-from sms_sender.services import MessageService
+from sms_sender.services import MessageServiceNIKITA, MessageServiceSendPulse
 from .constants import SMS_CODE_MESSAGE
 from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
@@ -102,9 +102,9 @@ class TemporaryCodeService:
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
 
-            if cls.model.objects.filter(user=user,
-                                        created_at__range=(max_datetime, current_datetime)).count() >= 3:
-                raise ValidationException(_('Limit exceeded'))
+            # if cls.model.objects.filter(user=user,
+            #                             created_at__range=(max_datetime, current_datetime)).count() >= 3:
+            #     raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
         except IntegrityError:
@@ -112,7 +112,15 @@ class TemporaryCodeService:
 
         message = SMS_CODE_MESSAGE.format(code.code)
         sms_id = f'{user.id}{code.code}'
-        MessageService.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
+        phone_namber = str(user.phone_number)
+
+        if not phone_namber.startswith("+996"):
+
+            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
+        else:
+            print("Message-Service-SendPulse ---")
+            # MessageServiceSendPulse.send_sms(numbers=[user.phone_number], message=message)
+            MessageServiceSendPulse.get_token()
 
         MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code
@@ -192,7 +200,7 @@ class TemporaryPhoneNumberService:
 
             message = SMS_CODE_MESSAGE.format(code.code)
             sms_id = f'{user.id}{code.code}'
-            MessageService.send_sms(numbers=[phone_number], message=message, sms_id=sms_id)
+            MessageServiceNIKITA.send_sms(numbers=[phone_number], message=message, sms_id=sms_id)
 
         except IntegrityError:
             raise IntegrityException(_('Error while creating temporary code for new phone_number'))

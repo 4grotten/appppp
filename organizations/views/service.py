@@ -9,3 +9,4 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
+    pagination_class = None

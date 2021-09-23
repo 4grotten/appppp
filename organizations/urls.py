@@ -159,8 +159,7 @@ organization_promo_urls = [
 ]
 
 services_urls = [
-    path('service/<int:pk>/organizations', OrganizationsInServicesView.as_view({'get': 'list'}),
-         name='organizations_in_services')
+    path('service/<int:pk>/organizations', OrganizationsInServicesView.as_view(), name='organizations_in_services')
 ]
 
 

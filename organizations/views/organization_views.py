@@ -12,7 +12,6 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
@@ -321,21 +320,20 @@ class OrganizationsInCategoryView(ListAPIView):
         return queryset
 
 
-class OrganizationsInServicesView(ReadOnlyModelViewSet):
+class OrganizationsInServicesView(ListAPIView):
     serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         try:
-            service = Service.objects.get(id=kwargs['pk'])
+            service = Service.objects.get(id=self.kwargs['pk'])
         except ObjectDoesNotExist as e:
             return Response(data={
             'errors': str(e)
         }, status=status.HTTP_404_NOT_FOUND)
 
         queryset = OrganizationService.get_organizations_in_service(service=service)
-        data = self.serializer_class(queryset, many=True).data
-        return Response(data)
+        return queryset
 
 
 

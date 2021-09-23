@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Case, When, IntegerField
 from django.utils.translation import gettext_lazy as _
@@ -324,10 +325,17 @@ class OrganizationsInServicesView(ListAPIView):
     queryset = Organization.objects.all()
 
     def get(self, request, *args, **kwargs):
-        service = Service.objects.get(id=kwargs['pk'])
+        try:
+            service = Service.objects.get(id=kwargs['pk'])
+        except ObjectDoesNotExist as e:
+            return Response(data={
+            'errors': str(e)
+        }, status=status.HTTP_404_NOT_FOUND)
+
         queryset = OrganizationService.get_organizations_in_service(service=service)
         data = self.serializer_class(queryset, many=True).data
         return Response(data)
+
 
 
 class HomepageSearchView(ListAPIView):

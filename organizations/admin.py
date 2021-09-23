@@ -223,7 +223,7 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
 @admin.register(Service)
 class OrganizationAdmin(admin.ModelAdmin):
 
-    list_display = ('preview', 'name',)
+    list_display = ('preview', 'name', 'name_ru', 'name_en', 'name_tr',)
     list_filter = ('name', )
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)

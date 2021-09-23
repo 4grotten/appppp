@@ -232,4 +232,4 @@ class OrganizationAdmin(admin.ModelAdmin):
     readonly_fields = ['preview']
 
     def preview(self, obj):
-        return mark_safe(f'<img src="{obj.icon.small.url}" style="max-height:50px max-width=50;>')
+        return mark_safe(f'<img src="{obj.icon.small.url}">')

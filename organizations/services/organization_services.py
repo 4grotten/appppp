@@ -14,7 +14,8 @@ from common.models import Country, City, File, Currency
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
-    NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE, NOTIFICATION_MODE_PERSONAL,
+    NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE,
+    NOTIFICATION_MODE_PERSONAL,
     ORGANIZATION_OWN_TYPE, ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_DESCRIPTION, ORGANIZATION_MESSAGE_SENDER_TYPE,
 )
 from notifications.tasks import (
@@ -434,7 +435,7 @@ class OrganizationService:
         queryset = Organization.objects.filter(is_active=True,
                                                types__in=service.subcategory.all(),
                                                shop_items__isnull=False
-                                               ).distinct().order_by('-closes_at')
+                                               ).distinct().order_by('opens_at', '-closes_at')
         # queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
         return queryset
 

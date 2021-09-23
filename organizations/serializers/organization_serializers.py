@@ -75,20 +75,13 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'types')
 
 
-class OrganizationServiceImageSerializer(serializers.ModelSerializer):
+class OrganizationServiceSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
-    # shop_items = ImagesInOrganizationSerializer(many=True)
-    # shop_items = serializers.PrimaryKeyRelatedField(many=True, queryset=ShopItem.objects.all().order_by('-updated_at'))
-    shop_items = serializers.SerializerMethodField()
-    #
-    def get_shop_items(self, organization:Organization):
-        items = ShopItem.objects.filter(organization=organization).values('name', 'images', 'id', 'instagram_data',).order_by('-updated_at')[:3]
-        return items
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'shop_items',)
+        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at',)
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):

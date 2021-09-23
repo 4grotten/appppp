@@ -26,7 +26,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer, OrganizationServiceImageSerializer
+    OrganizationTitleSerializer, OrganizationServiceSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer
@@ -320,7 +320,7 @@ class OrganizationsInCategoryView(ListAPIView):
 
 
 class OrganizationsInServicesView(ListAPIView):
-    serializer_class = OrganizationServiceImageSerializer
+    serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
 
     def get(self, request, *args, **kwargs):

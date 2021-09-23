@@ -12,6 +12,7 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
@@ -320,7 +321,7 @@ class OrganizationsInCategoryView(ListAPIView):
         return queryset
 
 
-class OrganizationsInServicesView(ListAPIView):
+class OrganizationsInServicesView(ReadOnlyModelViewSet):
     serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
 

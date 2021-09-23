@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.gis.db import models
+from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
 from .models import (
@@ -7,7 +8,7 @@ from .models import (
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
-    HotlinkCollectionSubcategory, HotlinkCollectionLink
+    HotlinkCollectionSubcategory, HotlinkCollectionLink, Service
 )
 
 
@@ -215,3 +216,20 @@ class PromoEditLogAdmin(admin.ModelAdmin):
 class PromoSubscriberAdmin(admin.ModelAdmin):
     list_display = ('organization', 'subscriber', 'cashback', 'created_at')
     raw_id_fields = ('organization', 'subscriber')
+
+
+
+
+@admin.register(Service)
+class OrganizationAdmin(admin.ModelAdmin):
+
+    list_display = ('preview', 'name',)
+    list_filter = ('name', )
+    search_fields = ('name', 'icon', 'subcategory',)
+    raw_id_fields = ('icon',)
+    filter_horizontal = ['subcategory',]
+
+    readonly_fields = ['preview']
+
+    def preview(self, obj):
+        return mark_safe(f'<img src="{obj.icon.small.url}" style="max-height:50px max-width=50;>')

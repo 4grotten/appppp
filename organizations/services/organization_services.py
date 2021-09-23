@@ -27,7 +27,7 @@ from organizations.constants import (
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership, InstagramIntegration,
+    Partnership, InstagramIntegration, Service
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
@@ -432,6 +432,18 @@ class OrganizationService:
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         return queryset
+
+
+    @classmethod
+    def get_organizations_in_service(cls, service: Service, country: Union[Country, None] = None,
+                                      city: Union[City, None] = None) -> QuerySet:
+        queryset = Organization.objects.filter(is_active=True,
+                                               types__in=service.subcategory.all(),
+                                               shop_items__isnull=False
+                                               ).distinct().order_by('opens_at', '-closes_at')
+        # queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+        return queryset
+
 
     @classmethod
     def change_organization_owner(cls, organization: Organization, new_owner: User, current_owner: User):

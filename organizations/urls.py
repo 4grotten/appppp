@@ -26,16 +26,24 @@ from .views.organization_views import (
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreateRetrieveAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
+    OrganizationsInServicesView,
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
     HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
+from .views.service import ServiceReadOnlySet
 from .views.subscription_views import (
     SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
     MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView
 )
+
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register('services', ServiceReadOnlySet)
+
 
 organization_urls = [
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
@@ -150,6 +158,12 @@ organization_promo_urls = [
     path('organizations/<int:org_id>/promo_stats/', OrganizationPromoStatsView.as_view(), name='promo_stats'),
 ]
 
+services_urls = [
+    path('service/<int:pk>/organizations', OrganizationsInServicesView.as_view(), name='organizations_in_services')
+]
+
+
+
 urlpatterns = [
     path('', include(organization_urls)),
     path('', include(membership_urls)),
@@ -160,6 +174,8 @@ urlpatterns = [
     path('', include(banner_urls)),
     path('', include(hotlink_urls)),
     path('', include(organization_promo_urls)),
+    path('', include(router.urls)),
+    path('', include(services_urls)),
 
     path('subscriptions/', SubscriptionsView.as_view(), name='subscriptions'),
     path('subscriptions/subscribe_to_partners/', MassPartnershipSubscriptionView.as_view(),

@@ -6,6 +6,7 @@ from common.exceptions import NotAcceptableException
 from organizations.models import Service, Organization
 from organizations.serializers.query_param_serializers import OrganizationCoutrySerializer
 from organizations.serializers.service_serializers import ServiceSerializer
+from organizations.services.organization_services import OrganizationService
 
 
 class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
@@ -21,9 +22,11 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
                 _('Valid country and city are required in query parameters'))
 
         country = serializer.validated_data['country']
+        print(country)
         city = serializer.validated_data['city']
 
-        organizations_in_country = Organization.objects.filter(country=country,
-                                                               city=city).values_list('types', flat=True)
-        queryset = Service.objects.filter(subcategory__in=organizations_in_country).distinct()
-        return queryset
+        organizations = Organization.objects.all()
+        organizations_in_country = OrganizationService._filter_by_country_and_city(queryset=organizations, country=country, city=city).distinct().values_list('types', flat=True)
+        print(organizations_in_country)
+        services = Service.objects.filter(subcategory__in=organizations_in_country).distinct()
+        return services

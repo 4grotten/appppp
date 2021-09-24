@@ -26,7 +26,8 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
         images = []
         for item in items:
             photo = item.images.last()
-            images.append(photo)
+            if photo not in images:
+                images.append(photo)
         return {
             'images': ImageSerializer(images, many=True, context={'request': self.context.get('request')}).data
         }

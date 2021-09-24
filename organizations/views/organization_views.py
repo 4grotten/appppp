@@ -27,11 +27,12 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer, OrganizationServiceSerializer
+    OrganizationTitleSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
 )
+from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
@@ -332,12 +333,11 @@ class OrganizationsInServicesView(ListAPIView):
 
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
+
         try:
             service = Service.objects.get(id=self.kwargs['pk'])
-        except ObjectDoesNotExist as e:
-            return Response(data={
-            'errors': str(e)
-        }, status=status.HTTP_404_NOT_FOUND)
+        except ObjectDoesNotExist:
+            raise ObjectNotFoundException
 
         queryset = OrganizationService.get_organizations_in_service(service=service, country=country, city=city)
         return queryset

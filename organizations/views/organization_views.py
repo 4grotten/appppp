@@ -342,6 +342,10 @@ class OrganizationsInServicesView(ListAPIView):
         queryset = OrganizationService.get_organizations_in_service(service=service, country=country, city=city)
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, args, kwargs)
+        response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True)[0]
+        return response
 
 
 class HomepageSearchView(ListAPIView):

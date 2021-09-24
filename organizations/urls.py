@@ -1,4 +1,5 @@
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
@@ -38,8 +39,6 @@ from .views.subscription_views import (
     SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
     MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView
 )
-
-from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('services', ServiceReadOnlySet)
@@ -159,7 +158,7 @@ organization_promo_urls = [
 ]
 
 services_urls = [
-    path('service/<int:pk>/organizations', OrganizationsInServicesView.as_view(), name='organizations_in_services')
+    path('service/<int:pk>/organizations/', OrganizationsInServicesView.as_view(), name='organizations_in_services')
 ]
 
 

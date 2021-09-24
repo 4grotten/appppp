@@ -19,6 +19,11 @@ class OrganizationAndCategorySerializer(serializers.Serializer):
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
 
 
+class OrganizationCoutrySerializer(serializers.Serializer):
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
+
+
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)

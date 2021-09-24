@@ -30,7 +30,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrganizationServiceSerializer
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer, OrganizationAndCategorySerializer
+    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
 )
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
@@ -325,6 +325,13 @@ class OrganizationsInServicesView(ListAPIView):
     queryset = Organization.objects.all()
 
     def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(
+                _('Valid country and city are required in query parameters'))
+
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
         try:
             service = Service.objects.get(id=self.kwargs['pk'])
         except ObjectDoesNotExist as e:
@@ -332,7 +339,7 @@ class OrganizationsInServicesView(ListAPIView):
             'errors': str(e)
         }, status=status.HTTP_404_NOT_FOUND)
 
-        queryset = OrganizationService.get_organizations_in_service(service=service)
+        queryset = OrganizationService.get_organizations_in_service(service=service, country=country, city=city)
         return queryset
 
 

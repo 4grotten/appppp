@@ -5,7 +5,6 @@ from organizations.models import Organization
 from organizations.models import Service
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from shop.models import ShopItem
-from shop.serializers.item_serializers import ItemsSerializer
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -22,9 +21,13 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     shop_items = serializers.SerializerMethodField()
 
     def get_shop_items(self, organization: Organization):
-        queryset = ShopItem.objects.filter(price__isnull=False, organization=organization).order_by('-updated_at')[:3]
+        items = ShopItem.objects.filter(price__isnull=False, organization=organization).order_by('-updated_at')[:3]
+        images = []
+        for item in items:
+            photo = item.images.last()
+            images.append(photo)
         return {
-            'items': ItemsSerializer(queryset, many=True, context={'request': self.context.get('request')}).data
+            'images': ImageSerializer(images, many=True, context={'request': self.context.get('request')}).data
         }
 
     class Meta:

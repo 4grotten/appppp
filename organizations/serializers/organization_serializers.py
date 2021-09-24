@@ -17,7 +17,6 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
-from shop.models import ShopItem
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
@@ -73,15 +72,6 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'types')
-
-
-class OrganizationServiceSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
-    types = OrganizationTypeSerializer(many=True)
-
-    class Meta:
-        model = Organization
-        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at',)
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):

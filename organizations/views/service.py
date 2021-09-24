@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from organizations.models import Service
-from organizations.serializers.service_serializer import ServiceSerializer
+from organizations.serializers.service_serializers import ServiceSerializer
 
 
 class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):

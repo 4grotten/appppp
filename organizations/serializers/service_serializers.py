@@ -21,7 +21,8 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     shop_items = serializers.SerializerMethodField()
 
     def get_shop_items(self, organization: Organization):
-        items = ShopItem.objects.filter(price__isnull=False, organization=organization).order_by('-updated_at')[:3]
+        items = ShopItem.objects.filter(price__isnull=False,
+                                        images__isnull=False, organization=organization).order_by('-updated_at')[:3]
         images = []
         for item in items:
             photo = item.images.last()

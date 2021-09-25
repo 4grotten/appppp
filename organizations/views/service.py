@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Service, Organization
+from organizations.models import Service
 from organizations.serializers.query_param_serializers import OrganizationCoutrySerializer
 from organizations.serializers.service_serializers import ServiceSerializer
 
@@ -21,17 +21,10 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
                 _('Valid country and city are required in query parameters'))
 
         country = serializer.validated_data['country']
-        print(country)
         city = serializer.validated_data['city']
-
-        queryset = Organization.objects.all()
-        print(queryset.count())
+        queryset = Service.objects.all()
         if country is not None:
-            queryset = queryset.filter(country=country)
+            queryset = queryset.filter(subcategory__organizations__country=country).distinct()
         if city is not None:
-            queryset = queryset.filter(city=city)
-        print(queryset.count())
-        organizations_in_country = queryset.values_list('types', flat=True).distinct()
-        print(organizations_in_country)
-        services = Service.objects.filter(subcategory__in=organizations_in_country).distinct()
-        return services
+            queryset = queryset.filter(subcategory__organizations__city=city).distinct()
+        return queryset

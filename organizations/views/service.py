@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Service
+from organizations.models import Service, Organization
 from organizations.serializers.query_param_serializers import OrganizationCoutrySerializer
 from organizations.serializers.service_serializers import ServiceSerializer
 
@@ -22,9 +22,11 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
 
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
-        queryset = Service.objects.all()
+
+        organizations = Organization.objects.filter(shop_items__price__isnull=False)
         if country is not None:
-            queryset = queryset.filter(subcategory__organizations__country=country).distinct()
+            organizations = organizations.filter(country=country)
         if city is not None:
-            queryset = queryset.filter(subcategory__organizations__city=city).distinct()
+            organizations = organizations.filter(city=city)
+        queryset = Service.objects.filter(subcategory__organizations__in=organizations).distinct()
         return queryset

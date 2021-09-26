@@ -23,7 +23,10 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 
-        organizations_in_country = Organization.objects.filter(country=country,
-                                                               city=city).values_list('types', flat=True)
-        queryset = Service.objects.filter(subcategory__in=organizations_in_country).distinct()
+        organizations = Organization.objects.filter(shop_items__price__isnull=False)
+        if country is not None:
+            organizations = organizations.filter(country=country)
+        if city is not None:
+            organizations = organizations.filter(city=city)
+        queryset = Service.objects.filter(subcategory__organizations__in=organizations).distinct()
         return queryset

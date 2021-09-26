@@ -2,8 +2,9 @@ from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet, Count, Q, F
+from django.db.models import QuerySet, Count, Q, F, Value, DateTimeField, ExpressionWrapper
 from django.db.models.functions import Coalesce
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
@@ -440,8 +441,12 @@ class OrganizationService:
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                ).order_by('opens_at', '-closes_at')
+        queryset = queryset.annotate(time_now=ExpressionWrapper(Value(now()), output_field=DateTimeField()))
+        print(queryset[0].time_now)
+        # queryset = queryset.filter(time_now__time__range=[F('opens_at'), F('closes_at')])
+
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city).distinct()
-        return queryset
+        return list(queryset)
 
 
     @classmethod

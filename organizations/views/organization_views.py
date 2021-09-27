@@ -344,7 +344,7 @@ class OrganizationsInServicesView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, args, kwargs)
-        response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True)[0]
+        response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True).first()
         return response
 
 

@@ -439,7 +439,8 @@ class OrganizationService:
                                       city: Union[City, None] = None) -> QuerySet:
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
-                                               ).order_by('opens_at', '-closes_at')
+                                               ).exclude(is_banned=True).exclude(is_deleted=True).order_by('opens_at',
+                                                                                                           '-closes_at')
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city).distinct()
         return queryset
 

@@ -440,27 +440,23 @@ class OrganizationService:
 
 
     @classmethod
-    def get_organizations_in_service(cls, service: Service, country: Union[Country, None] = None,
+    def get_organizations_in_service(cls, service: Service, locale_time=None, country: Union[Country, None] = None,
                                       city: Union[City, None] = None) -> QuerySet:
 
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                )
-        country = queryset.values_list('country', flat=True).first()
-        print(country)
-        get_timezone(now(), 'Bishkek')
 
-        queryset = queryset.annotate(time_now=ExpressionWrapper(Value(localtime(now()).time()), output_field=TimeField()))
-        queryset = queryset.annotate(all_time=Case(
+        queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
+        queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),
-            When(opens_at__gte=F('time_now'), closes_at__lte=F('time_now'), then=2),
+            When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
             default=Value(3),
             output_field=IntegerField(),
-        )).order_by('all_time')
+        )).order_by('time_working')
 
-        for i in queryset:
-            print(i.id, i.time_now, i.opens_at, i.closes_at, i.all_time)
-
+        # for i in queryset:
+        #     print(i.time_now, i.opens_at, i.closes_at, i.time_working)
 
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city).distinct()
         return queryset

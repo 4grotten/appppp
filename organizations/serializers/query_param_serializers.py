@@ -22,7 +22,7 @@ class OrganizationAndCategorySerializer(serializers.Serializer):
 class OrganizationCoutrySerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
-    current_timestamp_lt = serializers.DateTimeField()
+    current_timestamp_lt = serializers.DateTimeField(default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

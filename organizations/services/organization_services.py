@@ -442,7 +442,13 @@ class OrganizationService:
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                ).exclude(is_banned=True).exclude(is_deleted=True)
 
-        queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
+        try:
+            queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),
+                                                                    output_field=TimeField()))
+        except AttributeError:
+            raise NotAcceptableException(
+                _('Valid time are required in query parameters'))
+
         queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),
             When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),

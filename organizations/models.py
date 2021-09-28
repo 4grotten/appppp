@@ -496,3 +496,23 @@ class Service(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название сервиса')
     icon = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
     subcategory = models.ManyToManyField(OrganizationType, related_name='services')
+    ordering = models.SmallIntegerField(verbose_name='Service ordering',
+                                        validators=[MinValueValidator(1)],
+                                        null=True,
+                                        blank=True,
+                                        help_text='Не заполнять при создании!')
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def save(self, *args, **kwargs):
+        if not  self.id:
+            self.ordering = Service.objects.order_by('ordering').last().ordering + 1
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Service')
+        verbose_name_plural = _('Services')
+        ordering = ('ordering', )
+
+

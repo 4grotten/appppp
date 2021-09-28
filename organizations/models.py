@@ -507,7 +507,11 @@ class Service(models.Model):
 
     def save(self, *args, **kwargs):
         if not  self.id:
-            self.ordering = Service.objects.order_by('ordering').last().ordering + 1
+            has_obj = Service.objects.order_by('ordering').last()
+            if has_obj:
+                self.ordering = has_obj.ordering + 1
+            else:
+                self.ordering = 1
         super().save(*args, **kwargs)
 
     class Meta:

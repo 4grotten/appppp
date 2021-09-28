@@ -227,9 +227,9 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_filter = ('name', )
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)
-    filter_horizontal = ['subcategory', ]
+    filter_horizontal = ['subcategory']
 
-    readonly_fields = ['preview',]
+    readonly_fields = ['preview']
 
     def save_model(self, request, obj, form, change):
         change_service = Service.objects.filter(ordering=obj.ordering).first()
@@ -242,4 +242,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def preview(self, obj):
-        return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
+        try:
+            if obj.icon.file:
+                return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
+        except  AttributeError:
+            pass

@@ -4,7 +4,7 @@ from timezonefinder import TimezoneFinder
 from datetime import datetime
 import pytz
 
-def get_timezone(time, city):
+def get_timezone(date, city):
     print("Location address:", city)
     geolocator = Nominatim(user_agent="geoapiExercises")
     location = geolocator.geocode(city)
@@ -13,14 +13,19 @@ def get_timezone(time, city):
     time_zone = obj.timezone_at(lng=location.longitude, lat=location.latitude)   # pass the Latitude and Longitud into a timezone_at and it return timezone
     print("Time Zone : ", time_zone)
     tz = pytz.timezone(time_zone)
+    print(date)
+    local_dt = tz.localize(date)
+    print(local_dt)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    print(utc_dt)
     ct = datetime.now(tz=tz)
     diff_hours = ct.strftime('%Z')
     print(diff_hours)
 
-    naive = datetime.strptime(str(time), "%H:%M:%S")
-    local_dt = tz.localize(naive)
-    print(time)
-    print(local_dt)
+    # naive = datetime.strptime(str(time), "%H:%M:%S")
+    # local_dt = tz.localize(naive)
+    # print(time)
+    # print(local_dt)
     # utc_dt = local_dt.astimezone(pytz.utc)
     # print(utc_dt)
 

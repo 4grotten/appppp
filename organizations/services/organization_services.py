@@ -1,13 +1,9 @@
-import datetime
-import os
 from typing import Tuple, Union
-import pytz
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField
 from django.db.models.functions import Coalesce
-from django.utils.timezone import now, localtime, make_aware
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
@@ -33,7 +29,6 @@ from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
     Partnership, InstagramIntegration, Service
 )
-from organizations.services.city_time_zone import get_timezone
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
 from transactions.models import Transaction

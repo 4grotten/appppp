@@ -242,4 +242,4 @@ class OrganizationAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def preview(self, obj):
-        return mark_safe(f'<img src="{obj.icon.small.url}">')
+        return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')

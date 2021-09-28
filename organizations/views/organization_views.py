@@ -329,7 +329,7 @@ class OrganizationsInServicesView(ListAPIView):
         serializer = OrganizationCoutrySerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(
-                _('Valid country and city are required in query parameters'))
+                _('Valid country, city and locale_time are required in query parameters'))
 
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']

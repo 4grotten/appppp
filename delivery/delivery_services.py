@@ -1,5 +1,5 @@
 from django.contrib.gis.geos import Point
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
@@ -31,34 +31,22 @@ class DeliveryInfoService:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
 
     @classmethod
-    def get_all_items_count(cls, user: User) -> int:
+    def _get_queryset(self, user: User):
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
-        countries = [o.country for o in delivery_service_organizations]
-        return Cart.objects.filter(
+        memberships = list(user.memberships.filter(
+            Q(organization__is_delivery_service=True,
+              organization__is_active=True,
+              organization__is_banned=False,
+              organization__is_deleted=False,
+              ) &
             Q(
-                transaction__delivery_info__country__in=countries,
-                transaction__status=Transaction.ACCEPTED,
-                transaction__delivery_info__status__in=(
-                    DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY,
-                    DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,))
-            | Q(
-                transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
-                transaction__delivery_info__country__in=countries,
-                transaction__status=Transaction.ACCEPTED,
-                transaction__delivery_info__status__in=(
-                    DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY,
-                ),
+                Q(role__can_see_stats=True) |
+                Q(role__can_edit_organization=True) |
+                Q(role__can_deliver=True)
             )
-        ).exclude(
-            transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
-            transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
+        ).distinct())
 
-        ).order_by(
-            '-id').distinct('id').count()
-
-    @classmethod
-    def get_available_orders(cls, user: User) -> list:
-        delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        delivery_service_organizations.extend([membership.organization for membership in memberships])
         countries = [o.country for o in delivery_service_organizations]
         queryset = Cart.objects.filter(
             Q(
@@ -79,9 +67,22 @@ class DeliveryInfoService:
             transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
             transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE,
 
-        ).order_by(
-            '-id').distinct('id')
+        ).annotate(
+            relevancy=Count(
+                Case(When(transaction__delivery_info__status=DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY, then=1)))
+        ).order_by('-relevancy', '-transaction__delivery_info__updated_at')
+        print(queryset.query)
         return queryset
+
+    @classmethod
+    def get_all_items_count(cls, user: User) -> int:
+        queryset = DeliveryInfoService._get_queryset(user)
+        return queryset.count()
+
+    @classmethod
+    def get_available_orders(cls, user: User) -> list:
+        queryset = DeliveryInfoService._get_queryset(user)
+        return queryset.distinct()
 
     @classmethod
     def get_history_items(cls, user: User) -> list:

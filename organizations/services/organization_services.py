@@ -449,7 +449,7 @@ class OrganizationService:
             raise NotAcceptableException(
                 _('Valid time are required in query parameters'))
 
-        queryset = queryset.order_by('opens_at').order_by('-closes_at').annotate(time_working=Case(
+        queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),
             When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
             default=Value(3),

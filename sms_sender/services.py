@@ -62,14 +62,11 @@ class MessageServiceSendPulse:
         payload = {
             "sender":f"{settings.SEND_PULSE_SENDER}",
             "phones":[f"{numbers}"],
-            "body": f"{message}",
-            "transliterate":1,
-            "route":{"UA":"sim_ua"},
-            "emulate":0
+            "body": f"{message}"
         }
         data = json.dumps(payload)
         response = requests.post(url=sms_url, data=data, headers=headers)
-        print(response.content)
+        # print(response.content)
         if response.status_code == 200:
             return response.content
         return Exception(_('Error while sending SMS'))

@@ -40,13 +40,14 @@ google-trans-new = "==1.1.9"
 gevent = "*"
 googletrans = "==3.1.0a0"
 django-extensions = "*"
-django-phonenumber-field = {version = "==5.0.0", extras = [ "phonenumbers",]}
 pygraphviz = "*"
 python-memcached = "*"
 pandas = "==1.3.2"
 xlsxwriter = "==3.0.1"
 xlrd = "==2.0.1"
 openpyxl = "==3.0.7"
+geopy = "*"
+timezonefinder = "*"
 
 [dev-packages]
 coverage = "*"
@@ -56,3 +57,7 @@ unittest-xml-reporting = "*"
 
 [requires]
 python_version = "3.9"
+
+[packages.django-phonenumber-field]
+version = "==5.0.0"
+extras = [ "phonenumbers",]

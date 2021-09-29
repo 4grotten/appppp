@@ -1,10 +1,12 @@
+import json
+
 import requests
 from django.conf import settings
 from django.template import Template, Context
 from django.utils.translation import gettext_lazy as _
 
 
-class MessageService:
+class MessageServiceNIKITA:
     @classmethod
     def send_sms(cls, numbers: list, message: str, sms_id: str):
         if len(numbers) < 0:
@@ -47,3 +49,45 @@ class MessageService:
             return response.content.decode('utf-8')
 
         return Exception(_('Error while sending SMS'))
+
+
+class MessageServiceSendPulse:
+
+    @classmethod
+    def send_sms(cls, numbers: str, message: str):
+        if len(numbers) < 0:
+            return
+        sms_url = settings.SEND_PULSE_SMS_URL
+        headers = cls.get_headers()
+        payload = {
+            "sender":f"{settings.SEND_PULSE_SENDER}",
+            "phones":[f"{numbers}"],
+            "body": f"{message}"
+        }
+        data = json.dumps(payload)
+        response = requests.post(url=sms_url, data=data, headers=headers)
+        # print(response.content)
+        if response.status_code == 200:
+            return response.content
+        return Exception(_('Error while sending SMS'))
+
+    @classmethod
+    def get_headers(cls):
+        token = cls.login_send_pulse()
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}'
+        }
+        return headers
+
+    @classmethod
+    def login_send_pulse(cls):
+        login_url = settings.SEND_PULSE_LOGIN_URL
+        payload = {
+           "grant_type":f"{settings.SEND_PULSE_GRAND_TYPE}",
+           "client_id":f"{settings.SEND_PULSE_CLIENT_ID}",
+           "client_secret":f"{settings.SEND_PULSE_CLIENT_SECRET}"
+        }
+        login_response = requests.post(login_url, data=payload)
+        token = json.loads(login_response.text)["access_token"]
+        return token

@@ -2,7 +2,7 @@ from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet, Count, Q, F
+from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 
@@ -435,12 +435,30 @@ class OrganizationService:
 
 
     @classmethod
-    def get_organizations_in_service(cls, service: Service, country: Union[Country, None] = None,
+    def get_organizations_in_service(cls, service: Service, locale_time=None, country: Union[Country, None] = None,
                                       city: Union[City, None] = None) -> QuerySet:
+
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
-                                               ).exclude(is_banned=True).exclude(is_deleted=True).order_by('opens_at',
-                                                                                                           '-closes_at')
+                                               ).exclude(is_banned=True).exclude(is_deleted=True)
+
+        try:
+            queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),
+                                                                    output_field=TimeField()))
+        except AttributeError:
+            raise NotAcceptableException(
+                _('Valid time are required in query parameters'))
+
+        queryset = queryset.annotate(time_working=Case(
+            When(opens_at=F('closes_at'), then=1),
+            When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
+            default=Value(3),
+            output_field=IntegerField(),
+        )).order_by('time_working')
+
+        # for i in queryset:
+        #     print(i.time_now, i.opens_at, i.closes_at, i.time_working)
+
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city).distinct()
         return queryset
 

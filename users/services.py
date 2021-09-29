@@ -102,9 +102,9 @@ class TemporaryCodeService:
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
 
-            # if cls.model.objects.filter(user=user,
-            #                             created_at__range=(max_datetime, current_datetime)).count() >= 3:
-            #     raise ValidationException(_('Limit exceeded'))
+            if cls.model.objects.filter(user=user,
+                                        created_at__range=(max_datetime, current_datetime)).count() >= 3:
+                raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
         except IntegrityError:
@@ -114,13 +114,10 @@ class TemporaryCodeService:
         sms_id = f'{user.id}{code.code}'
         phone_namber = str(user.phone_number)
 
-        if not phone_namber.startswith("+996"):
-
+        if  phone_namber.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
         else:
-            print("Message-Service-SendPulse ---")
-            # MessageServiceSendPulse.send_sms(numbers=[user.phone_number], message=message)
-            MessageServiceSendPulse.get_token()
+            MessageServiceSendPulse.send_sms(numbers=str(user.phone_number), message=message)
 
         MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code

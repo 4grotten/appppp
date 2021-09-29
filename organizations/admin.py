@@ -234,11 +234,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         change_service = Service.objects.filter(ordering=obj.ordering).first()
         if change_service:
-            service = Service.objects.get(id=obj.id)
-            change_number = change_service.ordering
-            obj.ordering = change_number
-            change_service.ordering = service.ordering
-            change_service.save()
+            if obj.id:
+                service = Service.objects.get(id=obj.id)
+                change_number = change_service.ordering
+                obj.ordering = change_number
+                change_service.ordering = service.ordering
+                change_service.save()
         super().save_model(request, obj, form, change)
 
     def preview(self, obj):

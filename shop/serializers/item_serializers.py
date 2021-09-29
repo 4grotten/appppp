@@ -145,6 +145,17 @@ class ItemInstagramImageSerializer(serializers.ModelSerializer):
         )
 
 
+class ItemsSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'price','is_published', 'updated_at', 'images'
+        )
+
+
 class ItemListSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField()
     is_bookmarked = serializers.BooleanField()

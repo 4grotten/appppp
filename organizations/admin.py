@@ -223,13 +223,28 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
 @admin.register(Service)
 class OrganizationAdmin(admin.ModelAdmin):
 
-    list_display = ('preview', 'name',)
+    list_display = ('preview', 'ordering', 'name', 'name_ru', 'name_en', 'name_tr',)
     list_filter = ('name', )
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)
-    filter_horizontal = ['subcategory',]
+    filter_horizontal = ['subcategory']
 
     readonly_fields = ['preview']
 
+    def save_model(self, request, obj, form, change):
+        change_service = Service.objects.filter(ordering=obj.ordering).first()
+        if change_service:
+            if obj.id:
+                service = Service.objects.get(id=obj.id)
+                change_number = change_service.ordering
+                obj.ordering = change_number
+                change_service.ordering = service.ordering
+                change_service.save()
+        super().save_model(request, obj, form, change)
+
     def preview(self, obj):
-        return mark_safe(f'<img src="{obj.icon.small.url}" style="max-height:50px max-width=50;>')
+        try:
+            if obj.icon.file:
+                return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
+        except  AttributeError:
+            pass

@@ -27,11 +27,12 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer, OrganizationServiceSerializer
+    OrganizationTitleSerializer
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer, OrganizationAndCategorySerializer
+    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
 )
+from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
@@ -324,18 +325,29 @@ class OrganizationsInServicesView(ListAPIView):
     serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(
+                _('Valid country, city and locale_time are required in query parameters'))
+
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+        locale_time = serializer.validated_data['current_timestamp_lt']
+
         try:
-            service = Service.objects.get(id=kwargs['pk'])
-        except ObjectDoesNotExist as e:
-            return Response(data={
-            'errors': str(e)
-        }, status=status.HTTP_404_NOT_FOUND)
+            service = Service.objects.get(id=self.kwargs['pk'])
+        except ObjectDoesNotExist:
+            raise ObjectNotFoundException
 
-        queryset = OrganizationService.get_organizations_in_service(service=service)
-        data = self.serializer_class(queryset, many=True).data
-        return Response(data)
+        queryset = OrganizationService.get_organizations_in_service(service=service,
+                                                                    country=country, city=city, locale_time=locale_time)
+        return queryset
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, args, kwargs)
+        response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True).first()
+        return response
 
 
 class HomepageSearchView(ListAPIView):

@@ -25,7 +25,7 @@ class MessageServiceNIKITA:
             <test>{{ test }}</test>
         </message>
         '''
-        message = 'Code:' + message
+        message = message + 'Code:'
 
         context = {
             'login': settings.NIKITA_USERNAME,
@@ -63,7 +63,7 @@ class MessageServiceSendPulse:
         payload = {
             "sender":f"{settings.SEND_PULSE_SENDER}",
             "phones":[f"{numbers}"],
-            "body": f"Code:{message}"
+            "body": f"{message}Code:"
         }
         data = json.dumps(payload)
         response = requests.post(url=sms_url, data=data, headers=headers)

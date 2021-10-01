@@ -454,10 +454,15 @@ class OrganizationService:
         queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),
             When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
+            When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'),
+                 time_now__range=([F('opens_at'), '23:59:59']), then=2),
+            When(opens_at__gte=F('closes_at'), time_now__lte=F('closes_at'),
+                 time_now__range=(['00:00:00', F('closes_at')]), then=2),
             default=Value(3),
             output_field=IntegerField(),
         )).order_by('time_working')
 
+        # print(locale_time)
         # for i in queryset:
         #     print(i.id, i.time_now, i.opens_at, i.closes_at, i.time_working)
 

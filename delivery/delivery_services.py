@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.contrib.gis.geos import Point
 from django.db.models import Q, Count, Case, When
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
@@ -71,7 +74,6 @@ class DeliveryInfoService:
             relevancy=Count(
                 Case(When(transaction__delivery_info__status=DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY, then=1)))
         ).order_by('-relevancy', '-transaction__delivery_info__updated_at')
-        print(queryset.query)
         return queryset
 
     @classmethod

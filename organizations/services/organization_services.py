@@ -58,7 +58,14 @@ class OrganizationService:
 
     @classmethod
     def is_delivery_service(cls, user: User) -> bool:
-        return bool(user.owned_organizations.filter(is_delivery_service=True).count())
+        queryset = user.owned_organizations.filter(is_delivery_service=True, is_active=True,
+                                                   is_banned=False, is_deleted=False)
+        if not queryset.count():
+            queryset = user.memberships.filter(organization__is_delivery_service=True,
+                                               organization__is_active=True,
+                                               organization__is_banned=False,
+                                               organization__is_deleted=False)
+        return bool(queryset.count())
 
     @classmethod
     def get_first_organization_of_user(cls, user: User):
@@ -433,10 +440,9 @@ class OrganizationService:
 
         return queryset
 
-
     @classmethod
     def get_organizations_in_service(cls, service: Service, locale_time=None, country: Union[Country, None] = None,
-                                      city: Union[City, None] = None) -> QuerySet:
+                                     city: Union[City, None] = None) -> QuerySet:
 
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
@@ -467,7 +473,6 @@ class OrganizationService:
         #     print(i.id, i.time_now, i.opens_at, i.closes_at, i.time_working)
 
         return queryset
-
 
     @classmethod
     def change_organization_owner(cls, organization: Organization, new_owner: User, current_owner: User):

@@ -8,7 +8,7 @@ class GoogleTranslator:
 
     def __init__(self):
         self.random_proxy = ProxyService.get_random_formed_proxy(True)  #.replace("https://", '')
-        self.proxies = {'http': URLLib3Transport(proxy=Proxy(self.random_proxy))}
+        self.proxies = {'https': URLLib3Transport(proxy=Proxy(self.random_proxy))}
         self.translator = Translator(proxies=self.proxies)
 
     def translate(self, text, lang):

@@ -101,11 +101,18 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
         delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
                                                                         is_banned=False, is_deleted=False).first()
 
+        # if not delivery_organization:
+        #     return Response(data={
+        #         'message': _('This user is not delivery service'),
+        #         'errors': _("Not delivery service")
+        #     }, status=status.HTTP_403_FORBIDDEN)
         if not delivery_organization:
-            return Response(data={
-                'message': _('This user is not delivery service'),
-                'errors': _("Not delivery service")
-            }, status=status.HTTP_403_FORBIDDEN)
+            membership = request.user.memberships.filter(organization__is_delivery_service=True,
+                                                         organization__is_active=True,
+                                                         organization__is_banned=False,
+                                                         organization__is_deleted=False).first()
+            if membership:
+                delivery_organization = membership.organization
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.delivery_organization != delivery_organization:
             return Response(data={
@@ -155,11 +162,18 @@ class DeliveredByDeliveryServiceView(APIView):
     def get(self, request, *args, **kwargs):
         delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
                                                                         is_banned=False, is_deleted=False).first()
+        # if not delivery_organization:
+        #     return Response(data={
+        #         'message': _('This user is not delivery service'),
+        #         'errors': _("Not delivery service")
+        #     }, status=status.HTTP_403_FORBIDDEN)
         if not delivery_organization:
-            return Response(data={
-                'message': _('This user is not delivery service'),
-                'errors': _("Not delivery service")
-            }, status=status.HTTP_403_FORBIDDEN)
+            membership = request.user.memberships.filter(organization__is_delivery_service=True,
+                                                         organization__is_active=True,
+                                                         organization__is_banned=False,
+                                                         organization__is_deleted=False).first()
+            if membership:
+                delivery_organization = membership.organization
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.delivery_organization != delivery_organization:
             return Response(data={

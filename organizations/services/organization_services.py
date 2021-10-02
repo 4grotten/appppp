@@ -58,7 +58,14 @@ class OrganizationService:
 
     @classmethod
     def is_delivery_service(cls, user: User) -> bool:
-        return bool(user.owned_organizations.filter(is_delivery_service=True).count())
+        queryset = user.owned_organizations.filter(is_delivery_service=True, is_active=True,
+                                                   is_banned=False, is_deleted=False)
+        if not queryset.count():
+            queryset = user.memberships.filter(organization__is_delivery_service=True,
+                                               organization__is_active=True,
+                                               organization__is_banned=False,
+                                               organization__is_deleted=False)
+        return bool(queryset.count())
 
     @classmethod
     def get_first_organization_of_user(cls, user: User):
@@ -433,14 +440,15 @@ class OrganizationService:
 
         return queryset
 
-
     @classmethod
     def get_organizations_in_service(cls, service: Service, locale_time=None, country: Union[Country, None] = None,
-                                      city: Union[City, None] = None) -> QuerySet:
+                                     city: Union[City, None] = None) -> QuerySet:
 
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
-                                               ).exclude(is_banned=True).exclude(is_deleted=True)
+                                               ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         try:
             queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),
@@ -452,16 +460,19 @@ class OrganizationService:
         queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),
             When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
+            When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'),
+                 time_now__range=([F('opens_at'), '23:59:59']), then=2),
+            When(opens_at__gte=F('closes_at'), time_now__lte=F('closes_at'),
+                 time_now__range=(['00:00:00', F('closes_at')]), then=2),
             default=Value(3),
             output_field=IntegerField(),
         )).order_by('time_working')
 
+        # print(locale_time)
         # for i in queryset:
-        #     print(i.time_now, i.opens_at, i.closes_at, i.time_working)
+        #     print(i.id, i.time_now, i.opens_at, i.closes_at, i.time_working)
 
-        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city).distinct()
         return queryset
-
 
     @classmethod
     def change_organization_owner(cls, organization: Organization, new_owner: User, current_owner: User):

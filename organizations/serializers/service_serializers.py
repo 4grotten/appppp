@@ -19,6 +19,16 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
     shop_items = serializers.SerializerMethodField()
+    time_working = serializers.SerializerMethodField()
+
+    def get_time_working(self, organization: Organization):
+        working_type = organization.time_working
+        if working_type == 1:
+            return 'around_the_clock'
+        if working_type == 2:
+            return 'open'
+        if working_type == 3:
+            return 'closed'
 
     def get_shop_items(self, organization: Organization):
         items = ShopItem.objects.filter(price__isnull=False,
@@ -34,4 +44,4 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'shop_items',)
+        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'shop_items', 'time_working')

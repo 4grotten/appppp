@@ -1,6 +1,7 @@
 from typing import Union
 
 from celery import shared_task
+from django.db.models import Q
 
 from common.exceptions import ObjectNotFoundException
 from notifications import constants
@@ -141,8 +142,22 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         owned_organizations__is_active=True,
         owned_organizations__is_banned=False,
         owned_organizations__is_deleted=False,
+        # memberships__organization__is_delivery_service=True,
     ).distinct()
+    staff_recipients = User.objects.filter(
+        Q(memberships__organization__country=country,
+          memberships__organization__is_active=True,
+          memberships__organization__is_banned=False,
+          memberships__organization__is_deleted=False,
+          memberships__organization__is_delivery_service=True,
+          ) &
+        Q(
+            Q(memberships__role__can_see_stats=True) |
+            Q(memberships__role__can_edit_organization=True) |
+            Q(memberships__role__can_deliver=True)
+        )
 
+    ).distinct()
     extra_data = {
         'organization': organization.title,
         'final_price': str(cart.transaction.final_amount),
@@ -151,16 +166,26 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
         'transaction_id': cart.transaction.id,
         'delivery_amount': str(cart.transaction.delivery_info.amount),
         'delivery_currency': str(cart.transaction.delivery_info.currency.code),
-        'delivery_organization_id':  None,
-        'delivery_organization_title':  None,
-        'delivery_organization':  None,
-        'delivery_organization_image':  None,
-
-
+        'delivery_organization_id': None,
+        'delivery_organization_title': None,
+        'delivery_organization': None,
+        'delivery_organization_image': None,
 
     }
 
-    for recipient in recipients:
+    for recipient in list(recipients):
+        NotificationService.create_notification(
+            recipient=recipient,
+            sender=sender,
+            mode=mode,
+            notification_type=notification_type,
+            title=title,
+            description=description,
+            organization=organization,
+            extra_data=extra_data
+        )
+
+    for recipient in list(staff_recipients):
         NotificationService.create_notification(
             recipient=recipient,
             sender=sender,

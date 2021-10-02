@@ -95,12 +95,15 @@ class SocialNetworkContactAdmin(admin.ModelAdmin):
 class RoleAdmin(admin.ModelAdmin):
     list_display = ('title', 'organization', 'can_sale', 'can_check_attendance',
                     'can_see_stats', 'can_edit_organization',)
+    raw_id_fields = ('organization',)
+    search_fields = ('title', 'organization__title')
 
 
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user', 'role',)
     list_filter = ('organization', 'user', 'role',)
+    raw_id_fields = ('organization', 'user', 'role')
 
 
 @admin.register(Attendance)
@@ -218,13 +221,10 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
     raw_id_fields = ('organization', 'subscriber')
 
 
-
-
 @admin.register(Service)
 class OrganizationAdmin(admin.ModelAdmin):
-
     list_display = ('preview', 'ordering', 'name', 'name_ru', 'name_en', 'name_tr',)
-    list_filter = ('name', )
+    list_filter = ('name',)
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)
     filter_horizontal = ['subcategory']
@@ -245,6 +245,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     def preview(self, obj):
         try:
             if obj.icon.file:
-                return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
+                return mark_safe(f'<img src="{obj.icon.small.url}">')
         except  AttributeError:
             pass

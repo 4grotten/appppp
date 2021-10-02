@@ -5,9 +5,11 @@ from organizations.serializers.organization_serializers import PartnerSerializer
 
 
 class PartnershipRequestSerializer(serializers.ModelSerializer):
+    is_accepted = serializers.CharField(required=False, default=False)
+
     class Meta:
         model = Partnership
-        fields = ('requested_by', 'accepted_by',)
+        fields = ('requested_by', 'accepted_by', 'is_accepted')
 
 
 class PartnershipSerializer(serializers.ModelSerializer):

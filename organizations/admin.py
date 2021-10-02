@@ -245,6 +245,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     def preview(self, obj):
         try:
             if obj.icon.file:
-                return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
+                return mark_safe(f'<img src="{obj.icon.small.url}">')
         except  AttributeError:
             pass

@@ -125,11 +125,12 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = Cart.objects.get(pk=pk)
-        if cart.organization not in owned_organizations:
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': "Not owner of the organization"
-            }, status=status.HTTP_403_FORBIDDEN)
+        #Fixme check for organization emplees who have access
+        # if cart.organization not in owned_organizations:
+        #     return Response(data={
+        #         'message': _('Invalid input'),
+        #         'errors': "Not owner of the organization"
+        #     }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = cart.transaction.delivery_info
         if delivery_info.status in (
                 DeliveryInfo.DELIVERY_STATUS_DELIVERED,
@@ -146,7 +147,6 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         # TODO: Find out how to get amount
 
         delivery_info.save()
-
 
         send_delivery_notitication_to_organization_or_client(
             cart.user, cart.id,

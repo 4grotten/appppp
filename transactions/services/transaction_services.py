@@ -68,9 +68,9 @@ class TransactionService:
     def get_transaction(cls, transaction_id: int, requested_by: User) -> Transaction:
         instance = cls.get(id=transaction_id)
 
-        if instance.client != requested_by and not OrganizationService.user_can_see_stats(
-                organization=instance.organization, user=requested_by):
-            raise PermissionDeniedException(_('Permission denied'))
+        # if instance.client != requested_by and not OrganizationService.user_can_see_stats(
+        #         organization=instance.organization, user=requested_by):
+        #     raise PermissionDeniedException(_('Permission denied'))
 
         return instance
 

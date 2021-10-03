@@ -79,18 +79,41 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
             sender_id=delivery_info.transaction.client.id
         )
+        # Send notifications to delivery organization and members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
+
+        organization_members = list(delivery_info.delivery_organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
+                sender_id=delivery_info.transaction.client.id)
+
+        # Send notification to sending organization and its members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
             sender_id=delivery_info.transaction.delivery_info.delivery_organization.owner.id
         )
+
+        organization_members = list(delivery_info.transaction.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+                sender_id=delivery_info.transaction.delivery_info.delivery_organization.owner.id
+            )
+
         return Response({'status': 'ok'})
 
 
@@ -132,19 +155,40 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             sender_id=delivery_info.transaction.client.id
         )
 
+        # Send notifications to delivery organization and members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
+        organization_members = list(delivery_info.delivery_organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
+                sender_id=delivery_info.transaction.client.id
+            )
 
+        # Send notification to sending organization and its members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
             sender_id=delivery_info.transaction.client.id
         )
+
+        organization_members = list(delivery_info.transaction.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+                sender_id=delivery_info.transaction.client.id
+            )
 
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.delivery_organization = None
@@ -160,8 +204,9 @@ class DeliveredByDeliveryServiceView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
-                                                                        is_banned=False, is_deleted=False).first()
+        delivery_organization = request.user.owned_organizations.filter(
+            is_delivery_service=True, is_active=True,
+            is_banned=False, is_deleted=False).first()
         # if not delivery_organization:
         #     return Response(data={
         #         'message': _('This user is not delivery service'),
@@ -204,6 +249,15 @@ class DeliveredByDeliveryServiceView(APIView):
             delivery_info.transaction.cart.organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION)
+
+        organization_members = list(delivery_info.transaction.cart.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION)
+
         return Response({'status': 'ok'})
 
 

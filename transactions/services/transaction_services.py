@@ -319,6 +319,7 @@ class TransactionService:
                                                                  current_transaction.cart.id,
                                                                  NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                                                                  mode=NOTIFICATION_MODE_SYSTEM)
+
             organization_members = list(current_transaction.cart.organization.memberships.filter(
                 Q(role__can_edit_organization=True)| Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
             for member in organization_members:

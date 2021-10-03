@@ -79,18 +79,41 @@ class AcceptOrderForDeliveryByDeliveryServiceView(APIView):
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
             sender_id=delivery_info.transaction.client.id
         )
+        # Send notifications to delivery organization and members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
+
+        organization_members = list(delivery_info.delivery_organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
+                sender_id=delivery_info.transaction.client.id)
+
+        # Send notification to sending organization and its members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
             sender_id=delivery_info.transaction.delivery_info.delivery_organization.owner.id
         )
+
+        organization_members = list(delivery_info.transaction.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+                sender_id=delivery_info.transaction.delivery_info.delivery_organization.owner.id
+            )
+
         return Response({'status': 'ok'})
 
 
@@ -98,23 +121,25 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
-                                                                        is_banned=False, is_deleted=False).first()
+        delivery_organizations = list(request.user.owned_organizations.filter(
+            is_delivery_service=True, is_active=True,
+            is_banned=False, is_deleted=False))
 
         # if not delivery_organization:
         #     return Response(data={
         #         'message': _('This user is not delivery service'),
         #         'errors': _("Not delivery service")
         #     }, status=status.HTTP_403_FORBIDDEN)
-        if not delivery_organization:
-            membership = request.user.memberships.filter(organization__is_delivery_service=True,
-                                                         organization__is_active=True,
-                                                         organization__is_banned=False,
-                                                         organization__is_deleted=False).first()
-            if membership:
-                delivery_organization = membership.organization
+
+        memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
+                                                           organization__is_active=True,
+                                                           organization__is_banned=False,
+                                                           organization__is_deleted=False))
+        for membership in memberships:
+            delivery_organizations.append(membership.organization)
+
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
-        if delivery_info.delivery_organization != delivery_organization:
+        if delivery_info.delivery_organization not in delivery_organizations:
             return Response(data={
                 'message': _('This delivery service is not owner of this delivery'),
                 'errors': _("Not your delivery")
@@ -132,13 +157,24 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             sender_id=delivery_info.transaction.client.id
         )
 
+        # Send notifications to delivery organization and members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.delivery_organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
             sender_id=delivery_info.transaction.client.id
         )
+        organization_members = list(delivery_info.delivery_organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
+                sender_id=delivery_info.transaction.client.id
+            )
 
+        # Send notification to sending organization and its members
         send_delivery_notitication_to_organization_or_client(
             delivery_info.transaction.organization.owner,
             delivery_info.transaction.cart.id,
@@ -146,12 +182,24 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
             sender_id=delivery_info.transaction.client.id
         )
 
+        organization_members = list(delivery_info.transaction.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client.delay(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+                sender_id=delivery_info.transaction.client.id
+            )
+
+
+        DeliveryInfoService.add_action_history_item(delivery_info, delivery_info.delivery_organization,
+                                                    DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE)
+
         delivery_info.status = DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY
         delivery_info.delivery_organization = None
         delivery_info.delivery_rejected = timezone.now()
         delivery_info.save()
-        DeliveryInfoService.add_action_history_item(delivery_info, delivery_organization,
-                                                    DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE)
 
         return Response({'status': 'ok'})
 
@@ -160,22 +208,25 @@ class DeliveredByDeliveryServiceView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        delivery_organization = request.user.owned_organizations.filter(is_delivery_service=True, is_active=True,
-                                                                        is_banned=False, is_deleted=False).first()
+        delivery_organizations = list(request.user.owned_organizations.filter(
+            is_delivery_service=True, is_active=True,
+            is_banned=False, is_deleted=False))
+
         # if not delivery_organization:
         #     return Response(data={
         #         'message': _('This user is not delivery service'),
         #         'errors': _("Not delivery service")
         #     }, status=status.HTTP_403_FORBIDDEN)
-        if not delivery_organization:
-            membership = request.user.memberships.filter(organization__is_delivery_service=True,
-                                                         organization__is_active=True,
-                                                         organization__is_banned=False,
-                                                         organization__is_deleted=False).first()
-            if membership:
-                delivery_organization = membership.organization
+
+        memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
+                                                     organization__is_active=True,
+                                                     organization__is_banned=False,
+                                                     organization__is_deleted=False))
+        for membership in memberships:
+            delivery_organizations.append(membership.organization)
+
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
-        if delivery_info.delivery_organization != delivery_organization:
+        if delivery_info.delivery_organization not in delivery_organizations:
             return Response(data={
                 'message': _('This delivery service is not owner of this delivery'),
                 'errors': _("Not your delivery")
@@ -192,7 +243,7 @@ class DeliveredByDeliveryServiceView(APIView):
         delivery_info.save()
 
         DeliveryInfoService.add_action_history_item(
-            delivery_info, delivery_organization,
+            delivery_info, delivery_info.delivery_organization,
             DeliveryInfo.DELIVERY_STATUS_DELIVERED)
 
         send_delivery_notitication_to_organization_or_client(
@@ -204,6 +255,15 @@ class DeliveredByDeliveryServiceView(APIView):
             delivery_info.transaction.cart.organization.owner,
             delivery_info.transaction.cart.id,
             NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION)
+
+        organization_members = list(delivery_info.transaction.cart.organization.memberships.filter(
+            Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+        for member in organization_members:
+            send_delivery_notitication_to_organization_or_client(
+                member.user,
+                delivery_info.transaction.cart.id,
+                NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION)
+
         return Response({'status': 'ok'})
 
 

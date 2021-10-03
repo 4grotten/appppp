@@ -89,6 +89,21 @@ class DeliveryInfoService:
     @classmethod
     def get_history_items(cls, user: User) -> list:
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        memberships = list(user.memberships.filter(
+            Q(organization__is_delivery_service=True,
+              organization__is_active=True,
+              organization__is_banned=False,
+              organization__is_deleted=False,
+              ) &
+            Q(
+                Q(role__can_see_stats=True) |
+                Q(role__can_edit_organization=True) |
+                Q(role__can_deliver=True)
+            )
+        ).distinct())
+
+        delivery_service_organizations.extend([membership.organization for membership in memberships])
+
         countries = [o.country for o in delivery_service_organizations]
         return Cart.objects.filter(
             Q(
@@ -100,6 +115,8 @@ class DeliveryInfoService:
                 ),
 
             ) | Q(
+                transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
+                transaction__status=Transaction.ACCEPTED,
                 transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
                 transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
             )

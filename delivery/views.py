@@ -130,13 +130,13 @@ class RejectOrderForDeliveryByDeliveryServiceView(APIView):
         #         'message': _('This user is not delivery service'),
         #         'errors': _("Not delivery service")
         #     }, status=status.HTTP_403_FORBIDDEN)
-        if not len(delivery_organizations):
-            memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
-                                                               organization__is_active=True,
-                                                               organization__is_banned=False,
-                                                               organization__is_deleted=False))
-            for membership in memberships:
-                delivery_organizations.append(membership.organization)
+
+        memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
+                                                           organization__is_active=True,
+                                                           organization__is_banned=False,
+                                                           organization__is_deleted=False))
+        for membership in memberships:
+            delivery_organizations.append(membership.organization)
 
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.delivery_organization not in delivery_organizations:
@@ -217,13 +217,13 @@ class DeliveredByDeliveryServiceView(APIView):
         #         'message': _('This user is not delivery service'),
         #         'errors': _("Not delivery service")
         #     }, status=status.HTTP_403_FORBIDDEN)
-        if not len(delivery_organizations):
-            memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
-                                                         organization__is_active=True,
-                                                         organization__is_banned=False,
-                                                         organization__is_deleted=False))
-            for membership in memberships:
-                delivery_organizations.append(membership.organization)
+
+        memberships = list(request.user.memberships.filter(organization__is_delivery_service=True,
+                                                     organization__is_active=True,
+                                                     organization__is_banned=False,
+                                                     organization__is_deleted=False))
+        for membership in memberships:
+            delivery_organizations.append(membership.organization)
 
         delivery_info = DeliveryInfo.objects.get(id=kwargs['pk'])
         if delivery_info.delivery_organization not in delivery_organizations:

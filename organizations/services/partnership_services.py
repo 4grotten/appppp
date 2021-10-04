@@ -187,13 +187,8 @@ class PartnershipService:
         if can_share_items is False:
             try:
                 common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.accepted_by)
-                # print(partnership.accepted_by.id)
                 partnership.accepted_by.items_group = None
                 partnership.accepted_by.save(update_fields=('items_group',))
-                # partners = Partnership.objects.filter(requested_by=partnership.accepted_by)
-                # for partner in partners:
-                #     partner.can_share_items = False
-                #     partner.save()
                 count_org_in_common_group = common_shop_group.organizations.count()
                 if count_org_in_common_group < 1:
                     common_shop_group.delete()

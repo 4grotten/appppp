@@ -61,10 +61,15 @@ class OrganizationService:
         queryset = user.owned_organizations.filter(is_delivery_service=True, is_active=True,
                                                    is_banned=False, is_deleted=False)
         if not queryset.count():
-            queryset = user.memberships.filter(organization__is_delivery_service=True,
-                                               organization__is_active=True,
-                                               organization__is_banned=False,
-                                               organization__is_deleted=False)
+            queryset = user.memberships.filter(Q(organization__is_delivery_service=True,
+                                                 organization__is_active=True,
+                                                 organization__is_banned=False,
+                                                 organization__is_deleted=False, ) &
+                                               Q(
+                                                   Q(role__can_deliver=True) |
+                                                   Q(role__can_see_stats=True) |
+                                                   Q(role__can_edit_organization=True)
+                                               ))
         return bool(queryset.count())
 
     @classmethod

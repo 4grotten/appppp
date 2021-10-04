@@ -79,7 +79,7 @@ class DeliveryInfoService:
     @classmethod
     def get_all_items_count(cls, user: User) -> int:
         queryset = DeliveryInfoService._get_queryset(user)
-        return queryset.count()
+        return queryset.distinct().count()
 
     @classmethod
     def get_available_orders(cls, user: User) -> list:
@@ -88,7 +88,12 @@ class DeliveryInfoService:
 
     @classmethod
     def get_history_items(cls, user: User) -> list:
-        delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        delivery_service_organizations = list(user.owned_organizations.filter(
+            is_delivery_service=True,
+            is_active=True,
+            is_banned=False,
+            is_deleted=False
+        ))
         memberships = list(user.memberships.filter(
             Q(organization__is_delivery_service=True,
               organization__is_active=True,

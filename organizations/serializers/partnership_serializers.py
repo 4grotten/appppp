@@ -1,15 +1,17 @@
 from rest_framework import serializers
 
-from organizations.models import Partnership
+from organizations.models import Partnership, Organization
 from organizations.serializers.organization_serializers import PartnerSerializer
 
 
 class PartnershipRequestSerializer(serializers.ModelSerializer):
-    is_accepted = serializers.CharField(required=False, default=False)
+    partnership_id = serializers.IntegerField(required=False, default=None)
+    accepted_by = serializers.PrimaryKeyRelatedField(required=False, default=None, queryset=Organization.objects.all())
+    requested_by = serializers.PrimaryKeyRelatedField(required=False, default=None, queryset=Organization.objects.all())
 
     class Meta:
         model = Partnership
-        fields = ('requested_by', 'accepted_by', 'is_accepted')
+        fields = ('requested_by', 'accepted_by', 'partnership_id')
 
 
 class PartnershipSerializer(serializers.ModelSerializer):

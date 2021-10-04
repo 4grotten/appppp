@@ -102,7 +102,7 @@ class RoleAdmin(admin.ModelAdmin):
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user', 'role',)
-    list_filter = ('organization', 'user', 'role',)
+    search_fields = ('organization__title', 'user__phone_number', 'role__title')
     raw_id_fields = ('organization', 'user', 'role')
 
 

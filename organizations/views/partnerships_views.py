@@ -32,7 +32,8 @@ class PartnershipView(GenericAPIView):
         PartnershipService.create_request(
             user=request.user,
             requested_by=serializer.validated_data['requested_by'],
-            accepted_by=serializer.validated_data['accepted_by']
+            accepted_by=serializer.validated_data['accepted_by'],
+            partnership_id=serializer.validated_data['partnership_id']
         )
 
         return Response(data={

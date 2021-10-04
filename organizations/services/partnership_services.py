@@ -38,38 +38,91 @@ class PartnershipService:
             raise IntegrityException(_('Could not create partnership request'))
 
     @classmethod
-    def create_request(cls, user: User, requested_by: Organization, accepted_by: Organization):
+    def create_request(cls, user: User, requested_by: Organization, accepted_by: Organization,
+                       partnership_id: int):
+
+        if partnership_id:
+            accepted_partner = cls.get(id=partnership_id)
+            requested_by = requested_by or accepted_partner.accepted_by
+            accepted_by = accepted_by or accepted_partner.requested_by
+
         if not OrganizationService.user_can_edit_organization(organization=requested_by, user=user):
             raise NotAcceptableException(_('No rights to edit organization'))
+
         partnership = cls.create(requested_by=requested_by, accepted_by=accepted_by)
 
-        transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=NOTIFICATION_MODE_PERSONAL,
-            sender_id=user.id,
-            notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE,
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
-                                                   recipient_organization=accepted_by.title),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
-            organization_id=requested_by.id,
-            members_organization_id=requested_by.id,
-            with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
-                            sender_organization=requested_by.title,
-                            recipient_organization=accepted_by.title, address=requested_by.address)
-        ))
-        transaction.on_commit(lambda: send_notifications_organization_members.delay(
-            mode=NOTIFICATION_MODE_PERSONAL,
-            notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
-                                                   recipient_organization=accepted_by.title),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
-            organization_id=requested_by.id,
-            members_organization_id=accepted_by.id,
-            with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
-                            sender_organization=requested_by.title,
-                            recipient_organization=accepted_by.title, address=requested_by.address)
-        ))
+        if partnership_id:
+            partner = cls.get(id=partnership_id)
+            partner.is_accepted = True
+            partner.save()
+            partnership.is_accepted = True
+            partnership.save()
+
+            #  # TODO check logic of this block sanding notification
+            transaction.on_commit(
+                lambda: Notification.objects.filter(extra_data__partnership_id=partner.id).filter(
+                    extra_data__should_be_deleted=True).delete())
+
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                mode=NOTIFICATION_MODE_PERSONAL,
+                sender_id=user.id,
+                notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.accepted_by.title,
+                                                       recipient_organization=partnership.requested_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.accepted_by.address),
+                organization_id=partnership.accepted_by.id,
+                members_organization_id=partnership.accepted_by.id,
+                with_permissions=dict(can_edit_partner=True),
+                extra_data=dict(partnership_id=partner.id,
+                                sender_organization=partnership.accepted_by.title,
+                                recipient_organization=partnership.requested_by.title,
+                                address=partnership.accepted_by.address)
+            ))
+
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                mode=NOTIFICATION_MODE_PERSONAL,
+                sender_id=user.id,
+                notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.accepted_by.title,
+                                                       recipient_organization=partnership.requested_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.accepted_by.address),
+                organization_id=partnership.accepted_by.id,
+                members_organization_id=partnership.accepted_by.id,
+                with_permissions=dict(can_edit_partner=True),
+                extra_data=dict(partnership_id=partner.id,
+                                sender_organization=partnership.accepted_by.title,
+                                recipient_organization=partnership.requested_by.title,
+                                address=partnership.accepted_by.address)
+            ))
+
+        if not partnership_id:
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                mode=NOTIFICATION_MODE_PERSONAL,
+                sender_id=user.id,
+                notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
+                                                       recipient_organization=accepted_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
+                organization_id=requested_by.id,
+                members_organization_id=requested_by.id,
+                with_permissions=dict(can_edit_partner=True),
+                extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                                sender_organization=requested_by.title,
+                                recipient_organization=accepted_by.title, address=requested_by.address)
+            ))
+            transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=requested_by.title,
+                                                       recipient_organization=accepted_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=requested_by.address),
+                organization_id=requested_by.id,
+                members_organization_id=accepted_by.id,
+                with_permissions=dict(can_edit_partner=True),
+                extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                                sender_organization=requested_by.title,
+                                recipient_organization=accepted_by.title, address=requested_by.address)
+            ))
 
     @classmethod
     def are_partners(cls, requested_by: Organization, accepted_by: Organization) -> bool:

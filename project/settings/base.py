@@ -212,6 +212,8 @@ CORS_ALLOW_METHODS = (
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'Currency',
+    # 'device-timestamp',
+    'Device-Timestamp'
 ]
 
 SESSION_COOKIE_SAMESITE = None

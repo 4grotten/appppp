@@ -77,6 +77,12 @@ class DeliveryInfoService:
         return queryset
 
     @classmethod
+    def get_set_for_delivery_count(cls, user: User) -> int:
+        queryset = DeliveryInfoService._get_queryset(user).filter(
+            transaction__delivery_info__status=DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY)
+        return queryset.distinct().count()
+
+    @classmethod
     def get_all_items_count(cls, user: User) -> int:
         queryset = DeliveryInfoService._get_queryset(user)
         return queryset.distinct().count()

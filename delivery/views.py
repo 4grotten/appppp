@@ -25,7 +25,7 @@ class DeliveryItemsCountView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        count = DeliveryInfoService.get_all_items_count(user=self.request.user)
+        count = DeliveryInfoService.get_set_for_delivery_count(user=self.request.user)
         data = DeliveryAllItemsCountSerializer({"count": count}).data
         return Response(data, status=status.HTTP_200_OK)
 

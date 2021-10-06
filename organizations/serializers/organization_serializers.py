@@ -404,11 +404,13 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+    time_working = serializers.CharField()
+
     class Meta:
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at',
+            'opens_at', 'closes_at', 'time_working',
         )
 
 

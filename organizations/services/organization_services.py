@@ -1,9 +1,12 @@
+from datetime import datetime
 from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField
+from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField,\
+    CharField
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
@@ -476,6 +479,33 @@ class OrganizationService:
         # print(locale_time)
         # for i in queryset:
         #     print(i.id, i.time_now, i.opens_at, i.closes_at, i.time_working)
+
+        return queryset
+
+    @classmethod
+    def get_working_time_status(cls, queryset, request):
+        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP')
+        locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+
+        if not locale_time:
+            locale_time = timezone.now()
+
+        queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
+
+        queryset = queryset.annotate(working_time_status=Case(
+            When(opens_at=F('closes_at'), then=Value("around_the_clock")),
+            When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=Value("open")),
+            When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'),
+                 time_now__range=([F('opens_at'), '23:59:59']), then=Value("open")),
+            When(opens_at__gte=F('closes_at'), time_now__lte=F('closes_at'),
+                 time_now__range=(['00:00:00', F('closes_at')]), then=Value("open")),
+            default=Value("closed"),
+            output_field=CharField(),
+        ))
+
+        # print(locale_time)
+        # for i in queryset:
+        #     print(i.id, i.title, i.time_now, i.opens_at, i.closes_at, i.working_time_status)
 
         return queryset
 

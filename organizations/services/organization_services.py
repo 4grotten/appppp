@@ -492,7 +492,7 @@ class OrganizationService:
 
         queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
 
-        queryset = queryset.annotate(working_time_status=Case(
+        queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=Value("around_the_clock")),
             When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=Value("open")),
             When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'),
@@ -505,7 +505,7 @@ class OrganizationService:
 
         # print(locale_time)
         # for i in queryset:
-        #     print(i.id, i.title, i.time_now, i.opens_at, i.closes_at, i.working_time_status)
+        #     print(i.id, i.title, i.time_now, i.opens_at, i.closes_at, i.time_working)
 
         return queryset
 

@@ -101,12 +101,9 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        queryset = self.queryset.filter(id=instance.id)
-        instance = OrganizationService.get_working_time_status(queryset, request).get(id=instance.id)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def get_queryset(self):
+        queryset = OrganizationService.get_working_time_status(self.queryset, self.request)
+        return queryset
 
     @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):

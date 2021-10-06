@@ -449,8 +449,13 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_organizations_in_service(cls, service: Service, locale_time=None, country: Union[Country, None] = None,
+    def get_organizations_in_service(cls, request, service: Service, country: Union[Country, None] = None,
                                      city: Union[City, None] = None) -> QuerySet:
+
+        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP')
+        locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+        if not locale_time:
+            locale_time = timezone.now()
 
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
@@ -463,7 +468,7 @@ class OrganizationService:
                                                                     output_field=TimeField()))
         except AttributeError:
             raise NotAcceptableException(
-                _('Valid time are required in query parameters'))
+                _('Valid time are required in headers'))
 
         queryset = queryset.annotate(time_working=Case(
             When(opens_at=F('closes_at'), then=1),

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
+from notifications.models import Notification
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
@@ -300,6 +302,9 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
             raise PermissionDeniedException(_('Permission denied'))
 
         TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
+
+        transaction.on_commit(
+            lambda: Notification.objects.filter(extra_data__transaction_id=instance.id).delete())
 
 
 class OrgFollowersTransactionsListAPIView(ListAPIView):

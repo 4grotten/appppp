@@ -452,10 +452,8 @@ class OrganizationService:
     def get_organizations_in_service(cls, request, service: Service, country: Union[Country, None] = None,
                                      city: Union[City, None] = None) -> QuerySet:
 
-        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP')
+        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-        if not locale_time:
-            locale_time = timezone.now()
 
         queryset = Organization.objects.filter(is_active=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
@@ -489,11 +487,10 @@ class OrganizationService:
 
     @classmethod
     def get_working_time_status(cls, queryset, request):
-        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP')
+        timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
 
-        if not locale_time:
-            locale_time = timezone.now()
+
 
         queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
 

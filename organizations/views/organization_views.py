@@ -101,6 +101,10 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
     serializer_class = OrganizationDetailedSerializer
     queryset = Organization.objects.all()
 
+    def get_queryset(self):
+        queryset = OrganizationService.get_working_time_status(self.queryset, self.request)
+        return queryset
+
     @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):
         serializer = OrganizationUpdateSerializer(data=request.data, many=False)
@@ -329,19 +333,17 @@ class OrganizationsInServicesView(ListAPIView):
         serializer = OrganizationCoutrySerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(
-                _('Valid country, city and locale_time are required in query parameters'))
+                _('Valid country, city  are required in query parameters'))
 
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
-        locale_time = serializer.validated_data['current_timestamp_lt']
 
         try:
             service = Service.objects.get(id=self.kwargs['pk'])
         except ObjectDoesNotExist:
             raise ObjectNotFoundException
-
         queryset = OrganizationService.get_organizations_in_service(service=service,
-                                                                    country=country, city=city, locale_time=locale_time)
+                                                                    country=country, city=city, request=self.request)
         return queryset
 
     def list(self, request, *args, **kwargs):

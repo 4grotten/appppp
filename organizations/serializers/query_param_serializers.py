@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import serializers
 
 from common.models import Country, City
@@ -23,7 +22,6 @@ class OrganizationAndCategorySerializer(serializers.Serializer):
 class OrganizationCoutrySerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
-    current_timestamp_lt = serializers.DateTimeField(default=timezone.now())
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

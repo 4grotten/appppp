@@ -19,7 +19,7 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
     shop_items = serializers.SerializerMethodField()
-    time_working = serializers.SerializerMethodField()
+    time_working = serializers.SerializerMethodField(read_only=True)
 
     def get_time_working(self, organization: Organization):
         working_type = organization.time_working

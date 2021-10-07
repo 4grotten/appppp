@@ -181,6 +181,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     currency_country = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
     is_adult_content = serializers.SerializerMethodField()
+    time_working = serializers.CharField(read_only=True)
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -244,7 +245,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service', 'is_adult_content',
+            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working',
         )
 
 
@@ -403,11 +404,13 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+    time_working = serializers.CharField(read_only=True)
+
     class Meta:
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at',
+            'opens_at', 'closes_at', 'time_working',
         )
 
 

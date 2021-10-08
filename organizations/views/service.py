@@ -21,7 +21,7 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 
-        organizations = Organization.objects.filter(shop_items__price__isnull=False, is_active=True,
+        organizations = Organization.objects.filter(shop_items__price__isnull=False, has_delivery=True, is_active=True,
                                                     shop_items__isnull=False).exclude(is_banned=True).\
             exclude(is_deleted=True).distinct()
         if country is not None:

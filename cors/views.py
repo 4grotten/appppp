@@ -44,6 +44,10 @@ class CorsView(View):
 class IpLocation(View):
 
     def get(self, request):
+        print(request.META.get('X_FORWARDED_FOR'))
+        print(request.META.get('REMOTE_ADDR'))
+        x_f = request.META.get('X_FORWARDED_FOR')
+        r_a = request.META.get('REMOTE_ADDR')
         i, r = get_client_ip(request, request_header_order=['X_FORWARDED_FOR', 'REMOTE_ADDR'])
         try:
             response = requests.get('https://geolocation-db.com/jsonp/' + f'{i}')
@@ -52,6 +56,7 @@ class IpLocation(View):
             result = json.loads(result)
             print(result)
 
-            return JsonResponse({'Ip': f'{i}', 'Answer': f'{response.content.decode().split("(")[1].strip(")")}'})
+            return JsonResponse({'Ip': f'{i}', 'X_FORWARDED_FOR': f'{x_f}', 'REMOTE_ADDR': f'{r_a}',
+                                 'Answer': f'{response.content.decode().split("(")[1].strip(")")}'})
         except Exception as e:
             return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

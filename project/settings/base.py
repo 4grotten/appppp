@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.exception_handler_middleware.RequestExceptionHandlerMiddleware',
     'common.middleware.BackendVersionHeaderMiddleware',
+    'xff.middleware.XForwardedForMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -369,3 +370,4 @@ MAP_WIDGETS = {
     # ),
     "GOOGLE_MAP_API_KEY": "AIzaSyBqsPpFSiHwmvV1xz0hqkSWeNLbuChKqg0"
 }
+

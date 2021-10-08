@@ -29,7 +29,10 @@ class UserCartListView(ListAPIView):
     serializer_class = CartListSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).order_by('-id')
+        organization_qs = Organization.objects.all()
+        organization_qs = OrganizationService.get_working_time_status(organization_qs, self.request)
+        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).\
+            prefetch_related(Prefetch('organization', queryset=organization_qs)).order_by('-id')
 
 
 class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -160,6 +163,8 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         send_notifications_to_deliverers.delay(
             cart.id,
         )
+
+
         Notification.objects.filter(
             extra_data__transaction_id=delivery_info.transaction_id,
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,

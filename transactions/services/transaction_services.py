@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
@@ -327,8 +328,8 @@ class TransactionService:
                                                                      current_transaction.cart.id,
                                                                      NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                                                                      mode=NOTIFICATION_MODE_SYSTEM)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.exception(e)
         return current_transaction
 
     @classmethod

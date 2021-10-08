@@ -49,6 +49,7 @@ geopy = "*"
 timezonefinder = "*"
 googletrans = "==4.0.0rc1"
 django-ipware = "*"
+django-xff = "*"
 
 [dev-packages]
 coverage = "*"

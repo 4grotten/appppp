@@ -44,6 +44,7 @@ class CorsView(View):
 class IpLocation(View):
 
     def get(self, request):
+
         print(request.META.get('X_FORWARDED_FOR'))
         print(request.META.get('REMOTE_ADDR'))
         x_f = request.META.get('X_FORWARDED_FOR')

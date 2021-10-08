@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.exception_handler_middleware.RequestExceptionHandlerMiddleware',
     'common.middleware.BackendVersionHeaderMiddleware',
+    'xff.middleware.XForwardedForMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'

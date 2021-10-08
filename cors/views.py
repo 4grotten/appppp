@@ -1,3 +1,6 @@
+import json
+from ipware import get_client_ip
+
 import requests
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -33,6 +36,22 @@ class CorsView(View):
                 if key in hop_by_hop:
                     continue
                 answer[key] = value
-            return  answer
+            return answer
+        except Exception as e:
+            return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IpLocation(View):
+
+    def get(self, request):
+        i, r = get_client_ip(request, request_header_order=['X_FORWARDED_FOR', 'REMOTE_ADDR'])
+        try:
+            response = requests.get('https://geolocation-db.com/jsonp/' + f'{i}')
+            result = response.content.decode()
+            result = result.split("(")[1].strip(")")
+            result = json.loads(result)
+            print(result)
+
+            return HttpResponse(response.content.decode().split("(")[1].strip(")"))
         except Exception as e:
             return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

@@ -48,6 +48,7 @@ openpyxl = "==3.0.7"
 geopy = "*"
 timezonefinder = "*"
 googletrans = "==4.0.0rc1"
+django-ipware = "*"
 
 [dev-packages]
 coverage = "*"

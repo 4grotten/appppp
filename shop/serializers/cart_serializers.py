@@ -77,6 +77,10 @@ class CartListSerializer(serializers.ModelSerializer):
     items_count = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     totals = serializers.SerializerMethodField()
+    can_sell = serializers.SerializerMethodField()
+
+    def get_can_sell(self, cart: Cart) -> bool:
+        return OrganizationService.user_can_sell(organization=cart.organization, user=cart.user)
 
     def get_totals(self, cart: Cart) -> dict:
         original_price, discounted_price = CartService.get_total_prices_in_cart(cart=cart)
@@ -115,7 +119,7 @@ class CartListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ('id', 'items_count', 'totals', 'organization', 'images',)
+        fields = ('id', 'can_sell', 'items_count', 'totals', 'organization', 'images',)
 
 
 class CartItemCountChangeSerializer(serializers.Serializer):

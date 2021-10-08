@@ -223,9 +223,13 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         'who_pays': cart.transaction.delivery_info.who_pays,
         'transaction_id': cart.transaction.id,
         'delivery_amount': str(cart.transaction.delivery_info.amount),
-        'delivery_currency': str(cart.transaction.delivery_info.currency.code),
+
 
     }
+    try:
+        extra_data['delivery_currency'] =  str(cart.transaction.delivery_info.currency.code)
+    except AttributeError:
+        extra_data['delivery_currency'] =  str(cart.transaction.currency.code)
 
     NotificationService.create_notification(
         recipient=recipient,

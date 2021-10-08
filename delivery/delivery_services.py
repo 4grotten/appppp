@@ -100,6 +100,7 @@ class DeliveryInfoService:
             is_banned=False,
             is_deleted=False
         ))
+        
         memberships = list(user.memberships.filter(
             Q(organization__is_delivery_service=True,
               organization__is_active=True,

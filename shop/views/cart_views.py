@@ -160,6 +160,8 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         send_notifications_to_deliverers.delay(
             cart.id,
         )
+
+
         Notification.objects.filter(
             extra_data__transaction_id=delivery_info.transaction_id,
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,

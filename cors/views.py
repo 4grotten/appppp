@@ -2,7 +2,7 @@ import json
 from ipware import get_client_ip
 
 import requests
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from rest_framework import status
@@ -52,6 +52,6 @@ class IpLocation(View):
             result = json.loads(result)
             print(result)
 
-            return HttpResponse(response.content.decode().split("(")[1].strip(")"))
+            return JsonResponse({'Ip': f'{i}', 'Answer': f'{response.content.decode().split("(")[1].strip(")")}'})
         except Exception as e:
             return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

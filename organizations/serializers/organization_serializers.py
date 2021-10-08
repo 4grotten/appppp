@@ -397,10 +397,11 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     image = ImageSerializer()
+    time_working = serializers.CharField(read_only=True)
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'types', 'image', 'address')
+        fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working',)
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):

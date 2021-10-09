@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from common.models import File
@@ -151,12 +152,27 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             user = request.user
-            delivery_organization = user.owned_organizations.filter(
-                is_delivery_service=True, is_active=True,
-                is_banned=False, is_deleted=False).first()
-            delivery_history = DeliveryActionHistory.objects.filter(delivery_organization=delivery_organization, delivery_info_id=obj.id).order_by('-created_at').first()
-            if delivery_history:
-                return delivery_history.status
+            delivery_service_organizations = list(user.owned_organizations.filter(
+                is_delivery_service=True,
+                is_active=True,
+                is_banned=False,
+                is_deleted=False
+            ))
+            memberships = list(user.memberships.filter(
+                Q(organization__is_delivery_service=True,
+                  organization__is_active=True,
+                  organization__is_banned=False,
+                  organization__is_deleted=False,
+                  ) &
+                Q(
+                    Q(role__can_see_stats=True) |
+                    Q(role__can_edit_organization=True) |
+                    Q(role__can_deliver=True)
+                )
+            ).distinct())
+            delivery_service_organizations.extend([membership.organization for membership in memberships])
+            if obj.history.filter(delivery_organization__in=delivery_service_organizations):
+                return obj.history.order_by('-created_at').first().status
         return obj.status
 
     class Meta:

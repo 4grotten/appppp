@@ -127,7 +127,7 @@ class DeliveryInfoService:
                 ),
 
             ) | Q(
-                transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
+                # transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
                 transaction__status=Transaction.ACCEPTED,
                 transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
                 transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE

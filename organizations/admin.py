@@ -162,6 +162,8 @@ class PartnershipAdmin(admin.ModelAdmin):
         'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback', 'can_share_cumulative',
         'can_share_items',
     )
+    raw_id_fields = ('requested_by', 'accepted_by')
+    search_fields = ('requested_by__title', 'accepted_by__title')
 
 
 @admin.register(Banner)

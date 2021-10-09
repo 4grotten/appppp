@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.gis.db import models
+from django import forms
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
@@ -225,13 +226,17 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class OrganizationAdmin(admin.ModelAdmin):
+    fields = ('preview', 'ordering', 'hase_order_number', 'name', 'name_ru', 'name_en', 'name_tr',)
     list_display = ('preview', 'ordering', 'name', 'name_ru', 'name_en', 'name_tr',)
     list_filter = ('name',)
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)
     filter_horizontal = ['subcategory']
 
-    readonly_fields = ['preview']
+    readonly_fields = ['preview', 'hase_order_number']
+
+    def hase_order_number(self, obj):
+        return set((o, o) for o in Service.objects.all().values_list('ordering', flat=True))
 
     def save_model(self, request, obj, form, change):
         change_service = Service.objects.filter(ordering=obj.ordering).first()

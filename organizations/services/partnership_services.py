@@ -203,38 +203,11 @@ class PartnershipService:
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
         ))
-
-        # # TODO пересмотреть флоу
         try:
-            common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.accepted_by)
-            common_shop_group.delete()
-        except ObjectDoesNotExist:
+            Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
+        except:
             pass
-        relative_ids = [partnership.requested_by, partnership.accepted_by]
-        cls.delete_all_partnerships_in_chain(relative_ids)
-
-    @classmethod
-    def delete_all_partnerships_in_chain(cls, relative_ids: list):
-        try:
-            count_partners_before = len(relative_ids)
-            partners = Partnership.objects.filter(Q(accepted_by__in=relative_ids)
-                                                  or Q(requested_by__in=relative_ids))
-
-            for partner in partners:
-                if partner.accepted_by not in relative_ids:
-                    relative_ids.append(partner.accepted_by)
-                if partner.requested_by not in relative_ids:
-                    relative_ids.append(partner.requested_by)
-
-            count_partners_after = len(relative_ids)
-            if count_partners_before == count_partners_after:
-                partners.delete()
-                return
-            else:
-                cls.delete_all_partnerships_in_chain(relative_ids)
-        except Exception as e:
-            print(str(e))
-            pass
+        partnership.delete()
 
     @classmethod
     @transaction.atomic

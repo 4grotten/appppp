@@ -328,6 +328,8 @@ class OrganizationsInCategoryView(ListAPIView):
 class OrganizationsInServicesView(ListAPIView):
     serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
 
     def get_queryset(self):
         serializer = OrganizationCoutrySerializer(data=self.request.GET)

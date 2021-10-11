@@ -12,6 +12,8 @@ from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZ
     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT, NOTIFICATION_MODE_SYSTEM
 from notifications.models import Notification
 from notifications.tasks import send_notifications_to_deliverers, send_delivery_notitication_to_organization_or_client
+from organizations.models import Organization
+from organizations.services.organization_services import OrganizationService
 from shop.models import Cart, CartItem
 from shop.serializers.cart_serializers import (
     CartItemCountChangeSerializer, CartListSerializer, CartSerializer, DeliveryInfoSerializer,
@@ -27,7 +29,10 @@ class UserCartListView(ListAPIView):
     serializer_class = CartListSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).order_by('-id')
+        organization_qs = Organization.objects.all()
+        organization_qs = OrganizationService.get_working_time_status(organization_qs, self.request)
+        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).\
+            prefetch_related(Prefetch('organization', queryset=organization_qs)).order_by('-id')
 
 
 class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -35,9 +40,12 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = CartSerializer
 
     def get_queryset(self):
+        organization_qs = Organization.objects.all()
+        organization_qs = OrganizationService.get_working_time_status(organization_qs, self.request)
         return Cart.objects.filter(
             user=self.request.user, is_open=True, organization__is_deleted=False
-        ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at')))
+        ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at'))).\
+            prefetch_related(Prefetch('organization', queryset=organization_qs))
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = EmployeeCartSerializer
@@ -125,11 +133,12 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = Cart.objects.get(pk=pk)
-        if cart.organization not in owned_organizations:
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': "Not owner of the organization"
-            }, status=status.HTTP_403_FORBIDDEN)
+        #Fixme check for organization emplees who have access
+        # if cart.organization not in owned_organizations:
+        #     return Response(data={
+        #         'message': _('Invalid input'),
+        #         'errors': "Not owner of the organization"
+        #     }, status=status.HTTP_403_FORBIDDEN)
         delivery_info = cart.transaction.delivery_info
         if delivery_info.status in (
                 DeliveryInfo.DELIVERY_STATUS_DELIVERED,
@@ -147,7 +156,6 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
 
         delivery_info.save()
 
-
         send_delivery_notitication_to_organization_or_client(
             cart.user, cart.id,
             NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
@@ -155,6 +163,8 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
         send_notifications_to_deliverers.delay(
             cart.id,
         )
+
+
         Notification.objects.filter(
             extra_data__transaction_id=delivery_info.transaction_id,
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,

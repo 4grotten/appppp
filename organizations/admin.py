@@ -102,7 +102,7 @@ class RoleAdmin(admin.ModelAdmin):
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('organization', 'user', 'role',)
-    list_filter = ('organization', 'user', 'role',)
+    search_fields = ('organization__title', 'user__phone_number', 'role__title')
     raw_id_fields = ('organization', 'user', 'role')
 
 
@@ -161,6 +161,8 @@ class PartnershipAdmin(admin.ModelAdmin):
         'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback', 'can_share_cumulative',
         'can_share_items',
     )
+    raw_id_fields = ('requested_by', 'accepted_by')
+    search_fields = ('requested_by__title', 'accepted_by__title')
 
 
 @admin.register(Banner)
@@ -245,6 +247,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     def preview(self, obj):
         try:
             if obj.icon.file:
-                return mark_safe(f'<img src="{obj.icon.file.url}" width="160" height="110">')
-        except  AttributeError:
+                return mark_safe(f'<img src="{obj.icon.small.url}">')
+        except AttributeError:
             pass

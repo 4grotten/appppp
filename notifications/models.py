@@ -166,6 +166,7 @@ class Notification(TimestampModel):
     def get_organization_small_image(organization: Organization):
         return organization.image.medium.url if organization.image else None
 
+
 # FIXME: Add type field and get rid of 5 diffrent types of notifications.
 class NotificationSetting(TimestampModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

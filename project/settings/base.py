@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.exception_handler_middleware.RequestExceptionHandlerMiddleware',
     'common.middleware.BackendVersionHeaderMiddleware',
+    'xff.middleware.XForwardedForMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -212,6 +213,7 @@ CORS_ALLOW_METHODS = (
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'Currency',
+    'Device-Timestamp',
 ]
 
 SESSION_COOKIE_SAMESITE = None

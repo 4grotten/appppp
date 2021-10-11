@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.contrib.gis.geos import Point
 from django.db.models import Q, Count, Case, When
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
@@ -71,13 +74,18 @@ class DeliveryInfoService:
             relevancy=Count(
                 Case(When(transaction__delivery_info__status=DeliveryInfo.DELIVERY_STATUS_TAKEN_FOR_DELIVERY, then=1)))
         ).order_by('-relevancy', '-transaction__delivery_info__updated_at')
-        print(queryset.query)
         return queryset
+
+    @classmethod
+    def get_set_for_delivery_count(cls, user: User) -> int:
+        queryset = DeliveryInfoService._get_queryset(user).filter(
+            transaction__delivery_info__status=DeliveryInfo.DELIVERY_STATUS_SET_FOR_DELIVERY)
+        return queryset.distinct().count()
 
     @classmethod
     def get_all_items_count(cls, user: User) -> int:
         queryset = DeliveryInfoService._get_queryset(user)
-        return queryset.count()
+        return queryset.distinct().count()
 
     @classmethod
     def get_available_orders(cls, user: User) -> list:
@@ -86,7 +94,28 @@ class DeliveryInfoService:
 
     @classmethod
     def get_history_items(cls, user: User) -> list:
-        delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
+        delivery_service_organizations = list(user.owned_organizations.filter(
+            is_delivery_service=True,
+            is_active=True,
+            is_banned=False,
+            is_deleted=False
+        ))
+        
+        memberships = list(user.memberships.filter(
+            Q(organization__is_delivery_service=True,
+              organization__is_active=True,
+              organization__is_banned=False,
+              organization__is_deleted=False,
+              ) &
+            Q(
+                Q(role__can_see_stats=True) |
+                Q(role__can_edit_organization=True) |
+                Q(role__can_deliver=True)
+            )
+        ).distinct())
+
+        delivery_service_organizations.extend([membership.organization for membership in memberships])
+
         countries = [o.country for o in delivery_service_organizations]
         return Cart.objects.filter(
             Q(
@@ -98,6 +127,8 @@ class DeliveryInfoService:
                 ),
 
             ) | Q(
+                # transaction__delivery_info__delivery_organization__in=delivery_service_organizations,
+                transaction__status=Transaction.ACCEPTED,
                 transaction__delivery_info__history__delivery_organization__in=delivery_service_organizations,
                 transaction__delivery_info__history__status=DeliveryInfo.DELIVERY_STATUS_REJECTED_BY_DELIVERY_SERVICE
             )

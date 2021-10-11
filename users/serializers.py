@@ -158,7 +158,7 @@ class GlobalUserAttendanceSerializer(serializers.Serializer):
 
 
 class SetPasswordSerializer(serializers.Serializer):
-    password = serializers.CharField()
+    password = serializers.CharField(min_length=8)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -168,7 +168,7 @@ class LoginSerializer(serializers.Serializer):
 
 class UserChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
 
 
 class ForgotPasswordSerializer(serializers.Serializer):

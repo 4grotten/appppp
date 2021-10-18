@@ -321,7 +321,7 @@ class Message(TimestampModel):
     )
     sender = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sent_messages')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_messages')
-    content = models.CharField(blank=False, null=False, max_length=800)
+    content = models.CharField(blank=False, null=False, max_length=2000)
     message_to = models.CharField(max_length=50, choices=MESSAGE_TO, default=ORGANIZATION_FOLLOWERS)
     receivers = models.ManyToManyField(User, related_name='received_messages')
     organization_address = models.CharField(max_length=255, null=True)

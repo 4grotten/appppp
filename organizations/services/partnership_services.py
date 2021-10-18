@@ -203,6 +203,19 @@ class PartnershipService:
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
         ))
+
+        # # TODO пересмотреть флоу
+        try:
+            common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.accepted_by)
+            partnership.accepted_by.items_group = None
+            partnership.accepted_by.save(update_fields=('items_group',))
+            count_org_in_common_group = common_shop_group.organizations.count()
+            if count_org_in_common_group == 1:
+                partnership.requested_by.items_group = None
+                partnership.requested_by.save(update_fields=('items_group',))
+                common_shop_group.delete()
+        except ObjectDoesNotExist:
+            pass
         try:
             Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
         except:

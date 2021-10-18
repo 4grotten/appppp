@@ -9,6 +9,27 @@ class PartnershipRequestSerializer(serializers.ModelSerializer):
     accepted_by = serializers.PrimaryKeyRelatedField(required=False, default=None, queryset=Organization.objects.all())
     requested_by = serializers.PrimaryKeyRelatedField(required=False, default=None, queryset=Organization.objects.all())
 
+    def validate(self, data):
+
+        """ Check that if  partnership_id send, it send  without accepted_by and requested_by, but
+         when accepted_by and requested_by send, they send together and without partnership_id."""
+
+        if not data['partnership_id']:
+            if (data['accepted_by'] and not data['requested_by'])\
+                    or (data['requested_by'] and not data['accepted_by']):
+                raise serializers.ValidationError("If one of the - requested_by or accepted_by fields is sent,"
+                                                  " the second field is also required")
+
+        if data['partnership_id'] and (data['accepted_by'] or data['requested_by']):
+            raise serializers.ValidationError("The request must contain fields or"
+                                              " requested_by and accepted_by or only partnerships_id")
+
+        if not data['partnership_id'] and not (data['accepted_by'] or data['requested_by']):
+            raise serializers.ValidationError("The request must contain fields or"
+                                              " requested_by and accepted_by or only partnerships_id")
+
+        return data
+
     class Meta:
         model = Partnership
         fields = ('requested_by', 'accepted_by', 'partnership_id')

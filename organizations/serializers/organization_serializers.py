@@ -374,7 +374,7 @@ class SubscriptionsMessageSerializer(MessageSerializer):
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):
-    content = serializers.CharField(max_length=800)
+    content = serializers.CharField(max_length=2000)
 
     class Meta:
         model = Message

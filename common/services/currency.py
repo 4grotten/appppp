@@ -7,15 +7,29 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
 from ..exceptions import NotAcceptableException
+from ..models import OpenExchangeRates
 
 
 class CurrencyConverterService:
+
     @classmethod
-    def get_rate(cls, from_currency, to_currency):
-        query = f'app_id={settings.OER_APP_ID}&symbols={from_currency},{to_currency}'
+    def made_rate_request(cls, app_id, from_currency, to_currency):
+        query = f'app_id={app_id}&symbols={from_currency},{to_currency}'
         response = requests.get(f'https://openexchangerates.org/api/latest.json?{query}')
         if response.status_code != status.HTTP_200_OK:
             raise NotAcceptableException(_('Bad response from openexchangerates.org'))
+        return response
+
+    @classmethod
+    def get_rate(cls, from_currency, to_currency):
+        api_id = OpenExchangeRates.objects.last()
+
+        if api_id:
+            app_id = api_id.app_id
+            response = cls.made_rate_request(app_id, from_currency=from_currency, to_currency=to_currency)
+        else:
+            app_id = settings.OER_APP_ID
+            response = cls.made_rate_request(app_id, from_currency=from_currency, to_currency=to_currency)
 
         try:
             from_rate_to_base = response.json()['rates'][from_currency.upper()]

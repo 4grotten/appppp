@@ -129,3 +129,23 @@ class Version(TimestampModel):
     class Meta:
         verbose_name = _('Version')
         verbose_name_plural = _('Versions')
+
+
+class SingletonModel(models.Model):
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.__class__.objects.exclude(id=self.id).delete()
+        super(SingletonModel, self).save(*args, **kwargs)
+
+
+class OpenExchangeRates(TimestampModel, SingletonModel):
+    app_id = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.app_id}- {self.created_at} - {self.updated_at}'
+
+    class Meta:
+        verbose_name = _('id for exchange service')
+        verbose_name_plural = _('id for exchange services')

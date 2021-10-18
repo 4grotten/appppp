@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.gis.db import models
 from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City, Version
+from .models import File, Country, Currency, City, Version, OpenExchangeRates
 
 
 @admin.register(File)
@@ -35,3 +35,8 @@ class CurrencyAdmin(admin.ModelAdmin):
 @admin.register(Version)
 class VersionAdmin(admin.ModelAdmin):
     list_display = ('device', 'version', 'created_at', 'updated_at', 'force_update')
+
+
+@admin.register(OpenExchangeRates)
+class OpenExchangeRatesAdmin(admin.ModelAdmin):
+    list_display = ['app_id', 'created_at', 'updated_at']

@@ -220,7 +220,7 @@ class ItemFeedSerializer(ItemListSerializer):
 
 
 class StartDateTimeSerializer(serializers.Serializer):
-    start_time = serializers.DateTimeField(required=False, default=datetime.datetime.now().isoformat())
+    start_time = serializers.DateTimeField(required=False, default=None)
 
 
 class ItemInCartSerializer(serializers.ModelSerializer):

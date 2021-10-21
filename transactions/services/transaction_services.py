@@ -137,8 +137,6 @@ class TransactionService:
             current_transaction.save()
 
             if source_card is None or source_card.type != DiscountCard.CASHBACK:
-                if discount_percent == 0:
-                    discount_percent = None
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
@@ -307,7 +305,7 @@ class TransactionService:
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,
-                            discount_percent=None,
+                            discount_percent=0,
                             currency=current_transaction.currency.code)
         )
         sent_notification.delay(
@@ -318,7 +316,7 @@ class TransactionService:
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,
-                            discount_percent=None,
+                            discount_percent=0,
                             currency=current_transaction.currency.code)
         )
         try:
@@ -554,8 +552,6 @@ class TransactionService:
                         Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
 
         discount_percent = old_transaction.discount_percent
-        if discount_percent == 0:
-            discount_percent = None
 
         sent_notification.delay(
             recipient_id=user.id,

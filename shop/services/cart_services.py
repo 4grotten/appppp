@@ -81,7 +81,7 @@ class CartService:
                 organization_id=accepted_offline_transaction.organization_id,
                 extra_data=dict(transaction_id=accepted_offline_transaction.id,
                                 total_price=str(accepted_offline_transaction.final_amount),
-                                discount_percent=None,
+                                discount_percent=0,
                                 currency=accepted_offline_transaction.currency.code)
             )
         return accepted_offline_transaction

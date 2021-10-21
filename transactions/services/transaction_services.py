@@ -553,6 +553,10 @@ class TransactionService:
                 Q(extra_data__transaction_id=old_transaction.id) & (
                         Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
 
+        discount_percent = old_transaction.discount_percent
+        if discount_percent == 0:
+            discount_percent = None
+
         sent_notification.delay(
             recipient_id=user.id,
             sender_id=old_transaction.client_id,
@@ -561,6 +565,7 @@ class TransactionService:
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
                             currency=old_transaction.currency.code)
         )
         sent_notification.delay(
@@ -571,6 +576,7 @@ class TransactionService:
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
                             currency=old_transaction.currency.code)
         )
 

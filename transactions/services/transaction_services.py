@@ -137,6 +137,8 @@ class TransactionService:
             current_transaction.save()
 
             if source_card is None or source_card.type != DiscountCard.CASHBACK:
+                if discount_percent == 0:
+                    discount_percent = None
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
@@ -145,6 +147,7 @@ class TransactionService:
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,
+                                    discount_percent=discount_percent,
                                     currency=current_transaction.currency.code)
                 )
                 sent_notification.delay(
@@ -155,6 +158,7 @@ class TransactionService:
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,
+                                    discount_percent=discount_percent,
                                     currency=current_transaction.currency.code)
                 )
 
@@ -303,6 +307,7 @@ class TransactionService:
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,
+                            discount_percent=None,
                             currency=current_transaction.currency.code)
         )
         sent_notification.delay(
@@ -313,6 +318,7 @@ class TransactionService:
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,
+                            discount_percent=None,
                             currency=current_transaction.currency.code)
         )
         try:

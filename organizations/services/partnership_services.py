@@ -9,8 +9,10 @@ from common.exceptions import NotAcceptableException, IntegrityException, Object
 from common.models import Currency
 from notifications.constants import (
     NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
-    PARTNERSHIP_REQUEST_DESCRIPTION, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
-    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_MODE_PERSONAL
+    PARTNERSHIP_REQUEST_DESCRIPTION, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
+    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+    NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_MODE_PERSONAL
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
@@ -59,10 +61,12 @@ class PartnershipService:
             partnership.save()
 
             #  # TODO check logic of this block sanding notification
+            '''Delete request partnerships notification'''
             transaction.on_commit(
                 lambda: Notification.objects.filter(extra_data__partnership_id=partner.id).filter(
                     extra_data__should_be_deleted=True).delete())
 
+            '''Send accept partnership notification'''
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
                 sender_id=user.id,
@@ -95,6 +99,7 @@ class PartnershipService:
                                 address=partnership.accepted_by.address)
             ))
 
+        '''Send request partnership notification'''
         if not partnership_id:
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
@@ -150,7 +155,6 @@ class PartnershipService:
             | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
         ).order_by('is_accepted', '-id')
         return partnerships
-
 
     @classmethod
     def get_incoming_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
@@ -231,7 +235,6 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
-        is_new_request = not partnership.is_accepted
         is_sharing_cashback = can_share_cashback and not partnership.can_share_cashback
         is_sharing_cumulative = can_share_cumulative and not partnership.can_share_cumulative
         is_sharing_items = can_share_items and not partnership.can_share_items
@@ -253,7 +256,6 @@ class PartnershipService:
                 raise NotAcceptableException(_('Should have same currency to have shared discounts and items'))
 
         try:
-            partnership.is_accepted = True
             partnership.can_check_attendance = can_check_attendance
             partnership.can_see_stats = can_see_stats
             partnership.can_edit_organization = can_edit_organization
@@ -270,45 +272,6 @@ class PartnershipService:
 
             if is_sharing_items:
                 cls.check_and_create_common_items(one_way_partnership=partnership)
-
-            if is_new_request:
-                reverse_partnership = cls.create(requested_by=partnership.accepted_by,
-                                                 accepted_by=partnership.requested_by, is_accepted=True)
-
-                transaction.on_commit(
-                    lambda: Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
-                        extra_data__should_be_deleted=True).delete())
-
-                transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=NOTIFICATION_MODE_PERSONAL,
-                    sender_id=user.id,
-                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
-                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
-                                                           recipient_organization=partnership.accepted_by.title),
-                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
-                    organization_id=partnership.requested_by.id,
-                    members_organization_id=partnership.requested_by.id,
-                    with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(partnership_id=reverse_partnership.id,
-                                    sender_organization=partnership.requested_by.title,
-                                    recipient_organization=partnership.accepted_by.title,
-                                    address=partnership.requested_by.address)
-                ))
-
-                transaction.on_commit(lambda: send_notifications_organization_members.delay(
-                    mode=NOTIFICATION_MODE_PERSONAL,
-                    sender_id=user.id,
-                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
-                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
-                                                           recipient_organization=partnership.accepted_by.title),
-                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
-                    organization_id=partnership.requested_by.id,
-                    members_organization_id=partnership.accepted_by.id,
-                    with_permissions=dict(can_edit_partner=True),
-                    extra_data=dict(partnership_id=partnership.id, sender_organization=partnership.requested_by.title,
-                                    recipient_organization=partnership.accepted_by.title,
-                                    address=partnership.requested_by.address)
-                ))
 
             return partnership
         except IntegrityError:

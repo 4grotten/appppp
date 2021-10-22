@@ -235,6 +235,7 @@ class PartnershipService:
         if not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
+        is_new_request = not partnership.is_accepted
         is_sharing_cashback = can_share_cashback and not partnership.can_share_cashback
         is_sharing_cumulative = can_share_cumulative and not partnership.can_share_cumulative
         is_sharing_items = can_share_items and not partnership.can_share_items
@@ -242,6 +243,7 @@ class PartnershipService:
         # # TODO пересмотреть флоу
         if can_share_items is False:
             try:
+                partnership.is_accepted = True
                 common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.accepted_by)
                 partnership.accepted_by.items_group = None
                 partnership.accepted_by.save(update_fields=('items_group',))
@@ -272,6 +274,45 @@ class PartnershipService:
 
             if is_sharing_items:
                 cls.check_and_create_common_items(one_way_partnership=partnership)
+
+            if is_new_request:
+                reverse_partnership = cls.create(requested_by=partnership.accepted_by,
+                                                 accepted_by=partnership.requested_by, is_accepted=True)
+
+                transaction.on_commit(
+                    lambda: Notification.objects.filter(extra_data__partnership_id=partnership.id).filter(
+                        extra_data__should_be_deleted=True).delete())
+
+                transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                    mode=NOTIFICATION_MODE_PERSONAL,
+                    sender_id=user.id,
+                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
+                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
+                                                           recipient_organization=partnership.accepted_by.title),
+                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
+                    organization_id=partnership.requested_by.id,
+                    members_organization_id=partnership.requested_by.id,
+                    with_permissions=dict(can_edit_partner=True),
+                    extra_data=dict(partnership_id=reverse_partnership.id,
+                                    sender_organization=partnership.requested_by.title,
+                                    recipient_organization=partnership.accepted_by.title,
+                                    address=partnership.requested_by.address)
+                ))
+
+                transaction.on_commit(lambda: send_notifications_organization_members.delay(
+                    mode=NOTIFICATION_MODE_PERSONAL,
+                    sender_id=user.id,
+                    notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+                    title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.requested_by.title,
+                                                           recipient_organization=partnership.accepted_by.title),
+                    description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.requested_by.address),
+                    organization_id=partnership.requested_by.id,
+                    members_organization_id=partnership.accepted_by.id,
+                    with_permissions=dict(can_edit_partner=True),
+                    extra_data=dict(partnership_id=partnership.id, sender_organization=partnership.requested_by.title,
+                                    recipient_organization=partnership.accepted_by.title,
+                                    address=partnership.requested_by.address)
+                ))
 
             return partnership
         except IntegrityError:

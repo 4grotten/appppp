@@ -9,8 +9,10 @@ from common.exceptions import NotAcceptableException, IntegrityException, Object
 from common.models import Currency
 from notifications.constants import (
     NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE, PARTNERSHIP_REQUEST_TITLE,
-    PARTNERSHIP_REQUEST_DESCRIPTION, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
-    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_MODE_PERSONAL
+    PARTNERSHIP_REQUEST_DESCRIPTION, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
+    NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+    NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_MODE_PERSONAL
 )
 from notifications.models import Notification
 from notifications.tasks import (send_notifications_organization_members)
@@ -59,42 +61,45 @@ class PartnershipService:
             partnership.save()
 
             #  # TODO check logic of this block sanding notification
+            '''Delete request partnerships notification'''
             transaction.on_commit(
-                lambda: Notification.objects.filter(extra_data__partnership_id=partner.id).filter(
+                lambda: Notification.objects.filter(extra_data__partnership_id=accepted_partner.id).filter(
                     extra_data__should_be_deleted=True).delete())
 
+            '''Send accept partnership notification'''
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
                 sender_id=user.id,
                 notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
-                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.accepted_by.title,
-                                                       recipient_organization=partnership.requested_by.title),
-                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.accepted_by.address),
-                organization_id=partnership.accepted_by.id,
-                members_organization_id=partnership.accepted_by.id,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=accepted_partner.requested_by.title,
+                                                       recipient_organization=accepted_partner.accepted_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=accepted_partner.requested_by.address),
+                organization_id=accepted_partner.requested_by.id,
+                members_organization_id=accepted_partner.requested_by.id,
                 with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(partnership_id=partner.id,
-                                sender_organization=partnership.accepted_by.title,
-                                recipient_organization=partnership.requested_by.title,
-                                address=partnership.accepted_by.address)
+                extra_data=dict(partnership_id=partnership.id,
+                                sender_organization=accepted_partner.requested_by.title,
+                                recipient_organization=accepted_partner.accepted_by.title,
+                                address=accepted_partner.requested_by.address)
             ))
 
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
                 sender_id=user.id,
                 notification_type=NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
-                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=partnership.accepted_by.title,
-                                                       recipient_organization=partnership.requested_by.title),
-                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=partnership.accepted_by.address),
-                organization_id=partnership.accepted_by.id,
-                members_organization_id=partnership.accepted_by.id,
+                title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=accepted_partner.requested_by.title,
+                                                       recipient_organization=accepted_partner.accepted_by.title),
+                description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=accepted_partner.requested_by.address),
+                organization_id=accepted_partner.requested_by.id,
+                members_organization_id=accepted_partner.accepted_by.id,
                 with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(partnership_id=partner.id,
-                                sender_organization=partnership.accepted_by.title,
-                                recipient_organization=partnership.requested_by.title,
-                                address=partnership.accepted_by.address)
+                extra_data=dict(partnership_id=accepted_partner.id,
+                                sender_organization=accepted_partner.requested_by.title,
+                                recipient_organization=accepted_partner.accepted_by.title,
+                                address=accepted_partner.requested_by.address)
             ))
 
+        '''Send request partnership notification'''
         if not partnership_id:
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
@@ -150,7 +155,6 @@ class PartnershipService:
             | (Q(requested_by=organization) & Q(is_accepted=False) & Q(accepted_by__is_deleted=False))
         ).order_by('is_accepted', '-id')
         return partnerships
-
 
     @classmethod
     def get_incoming_partnerships(cls, partnership_id: int, user: User) -> Union[QuerySet, None]:
@@ -239,6 +243,7 @@ class PartnershipService:
         # # TODO пересмотреть флоу
         if can_share_items is False:
             try:
+                partnership.is_accepted = True
                 common_shop_group = CommonItemsGroup.objects.get(organizations=partnership.accepted_by)
                 partnership.accepted_by.items_group = None
                 partnership.accepted_by.save(update_fields=('items_group',))
@@ -253,7 +258,6 @@ class PartnershipService:
                 raise NotAcceptableException(_('Should have same currency to have shared discounts and items'))
 
         try:
-            partnership.is_accepted = True
             partnership.can_check_attendance = can_check_attendance
             partnership.can_see_stats = can_see_stats
             partnership.can_edit_organization = can_edit_organization

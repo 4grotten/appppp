@@ -76,12 +76,14 @@ class SubscriptionService:
 
     @classmethod
     def get_user_subscriptions(cls, user: User) -> QuerySet:
-        organizations = Organization.active_organizations.filter(
-            id__in=user.subscriptions.values('organization_id')).annotate(
-            subscription_time=Subquery(
-                Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
-        ).order_by('-subscription_time')
-        return organizations
+        if user.is_authenticated:
+            organizations = Organization.active_organizations.filter(
+                id__in=user.subscriptions.values('organization_id')).annotate(
+                subscription_time=Subquery(
+                    Subscription.objects.filter(organization=OuterRef('pk'), user=user).values('created_at')[:1])
+            ).order_by('-subscription_time')
+            return organizations
+        return Organization.objects.none()
 
     @classmethod
     def get_organization_followers(cls, organization_id: int) -> QuerySet:

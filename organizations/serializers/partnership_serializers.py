@@ -28,6 +28,9 @@ class PartnershipRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The request must contain fields or"
                                               " requested_by and accepted_by or only partnerships_id")
 
+        if data['accepted_by'] and data['requested_by'] and data['accepted_by'] == data['requested_by']:
+            raise serializers.ValidationError("You cannot create a partnership for yourself")
+
         return data
 
     class Meta:

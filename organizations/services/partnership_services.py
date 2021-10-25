@@ -111,9 +111,11 @@ class PartnershipService:
                 organization_id=requested_by.id,
                 members_organization_id=requested_by.id,
                 with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                extra_data=dict(partnership_id=partnership.id,
+                                should_be_deleted=True,
                                 sender_organization=requested_by.title,
-                                recipient_organization=accepted_by.title, address=requested_by.address)
+                                recipient_organization=accepted_by.title,
+                                address=requested_by.address)
             ))
             transaction.on_commit(lambda: send_notifications_organization_members.delay(
                 mode=NOTIFICATION_MODE_PERSONAL,
@@ -124,9 +126,11 @@ class PartnershipService:
                 organization_id=requested_by.id,
                 members_organization_id=accepted_by.id,
                 with_permissions=dict(can_edit_partner=True),
-                extra_data=dict(partnership_id=partnership.id, should_be_deleted=True,
+                extra_data=dict(partnership_id=partnership.id,
+                                should_be_deleted=True,
                                 sender_organization=requested_by.title,
-                                recipient_organization=accepted_by.title, address=requested_by.address)
+                                recipient_organization=accepted_by.title,
+                                address=requested_by.address)
             ))
 
     @classmethod
@@ -176,8 +180,10 @@ class PartnershipService:
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
-        transaction.on_commit(lambda: Notification.objects.filter(extra_data__partnership_id=partnership_id).filter(
-            extra_data__should_be_deleted=True).delete())
+        reverse_partnership = cls.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by)
+
+        transaction.on_commit(lambda: Notification.objects.filter(
+            extra_data__partnership_id__in=(partnership_id, reverse_partnership.id)).delete())
 
         transaction.on_commit(lambda: send_notifications_organization_members.delay(
             mode=NOTIFICATION_MODE_PERSONAL,
@@ -204,7 +210,7 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=partnership.id,
+            extra_data=dict(partnership_id=reverse_partnership.id,
                             sender_organization=partnership.requested_by.title,
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
@@ -222,10 +228,8 @@ class PartnershipService:
                 common_shop_group.delete()
         except ObjectDoesNotExist:
             pass
-        try:
-            Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
-        except Partnership.DoesNotExist:
-            pass
+
+        reverse_partnership.delete()
         partnership.delete()
 
     @classmethod

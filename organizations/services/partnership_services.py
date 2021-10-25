@@ -222,7 +222,7 @@ class PartnershipService:
             pass
         try:
             Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
-        except:
+        except Partnership.DoesNotExist:
             pass
         partnership.delete()
 

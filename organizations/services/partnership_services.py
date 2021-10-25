@@ -180,7 +180,12 @@ class PartnershipService:
         ) and not OrganizationService.user_can_edit_partner(organization=partnership.accepted_by, user=user):
             raise NotAcceptableException(_('No access to partner settings'))
 
-        reverse_partnership = cls.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by)
+        reverse_partnership = None
+        try:
+            reverse_partnership = Partnership.objects.get(accepted_by=partnership.requested_by,
+                                                          requested_by=partnership.accepted_by)
+        except Partnership.DoesNotExist:
+            pass
 
         transaction.on_commit(lambda: Notification.objects.filter(
             extra_data__partnership_id__in=(partnership_id, reverse_partnership.id)).delete())
@@ -210,7 +215,7 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(partnership_id=reverse_partnership.id,
+            extra_data=dict(partnership_id=reverse_partnership.id or partnership.id,
                             sender_organization=partnership.requested_by.title,
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
@@ -229,7 +234,8 @@ class PartnershipService:
         except ObjectDoesNotExist:
             pass
 
-        reverse_partnership.delete()
+        if reverse_partnership:
+            reverse_partnership.delete()
         partnership.delete()
 
     @classmethod

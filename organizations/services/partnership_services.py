@@ -189,7 +189,8 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.requested_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(sender_organization=partnership.requested_by.title,
+            extra_data=dict(partnership_id=partnership.id,
+                            sender_organization=partnership.requested_by.title,
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
         ))
@@ -203,7 +204,8 @@ class PartnershipService:
             organization_id=partnership.requested_by.id,
             members_organization_id=partnership.accepted_by.id,
             with_permissions=dict(can_edit_partner=True),
-            extra_data=dict(sender_organization=partnership.requested_by.title,
+            extra_data=dict(partnership_id=partnership.id,
+                            sender_organization=partnership.requested_by.title,
                             recipient_organization=partnership.accepted_by.title,
                             address=partnership.requested_by.address),
         ))
@@ -222,7 +224,7 @@ class PartnershipService:
             pass
         try:
             Partnership.objects.get(accepted_by=partnership.requested_by, requested_by=partnership.accepted_by).delete()
-        except:
+        except Partnership.DoesNotExist:
             pass
         partnership.delete()
 

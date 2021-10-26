@@ -501,12 +501,13 @@ class Service(models.Model):
                                         null=True,
                                         blank=True,
                                         help_text='Не заполнять при создании!')
+    is_discounts = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        if not  self.id:
+        if not self.id:
             has_obj = Service.objects.order_by('ordering').last()
             if has_obj:
                 self.ordering = has_obj.ordering + 1
@@ -518,5 +519,3 @@ class Service(models.Model):
         verbose_name = _('Service')
         verbose_name_plural = _('Services')
         ordering = ('ordering', )
-
-

@@ -1,5 +1,7 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from common.exceptions import NotAcceptableException
 from organizations.models import Partnership, Organization
 from organizations.serializers.organization_serializers import PartnerSerializer
 
@@ -17,19 +19,19 @@ class PartnershipRequestSerializer(serializers.ModelSerializer):
         if not data['partnership_id']:
             if (data['accepted_by'] and not data['requested_by'])\
                     or (data['requested_by'] and not data['accepted_by']):
-                raise serializers.ValidationError("If one of the - requested_by or accepted_by fields is sent,"
-                                                  " the second field is also required")
+                raise NotAcceptableException(_("If one of the - requested_by or accepted_by fields is sent,"
+                                               " the second field is also required"))
 
         if data['partnership_id'] and (data['accepted_by'] or data['requested_by']):
-            raise serializers.ValidationError("The request must contain fields or"
-                                              " requested_by and accepted_by or only partnerships_id")
+            raise NotAcceptableException(_("The request must contain fields or"
+                                           " requested_by and accepted_by or only partnerships_id"))
 
         if not data['partnership_id'] and not (data['accepted_by'] or data['requested_by']):
-            raise serializers.ValidationError("The request must contain fields or"
-                                              " requested_by and accepted_by or only partnerships_id")
+            raise NotAcceptableException(_("The request must contain fields or"
+                                           " requested_by and accepted_by or only partnerships_id"))
 
         if data['accepted_by'] and data['requested_by'] and data['accepted_by'] == data['requested_by']:
-            raise serializers.ValidationError("You cannot create a partnership for yourself")
+            raise NotAcceptableException(_("You cannot create a partnership for yourself"))
 
         return data
 

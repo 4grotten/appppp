@@ -7,7 +7,6 @@ from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, 
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import File, Country
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \

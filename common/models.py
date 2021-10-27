@@ -149,3 +149,18 @@ class OpenExchangeRates(TimestampModel, SingletonModel):
     class Meta:
         verbose_name = _('id for exchange service')
         verbose_name_plural = _('id for exchange services')
+
+
+class Languages(models.Model):
+    code = models.CharField(max_length=10, primary_key=True)
+    language_en = models.CharField(max_length=255)
+    language_ru = models.CharField(max_length=255)
+    national_language = models.CharField(max_length=255)
+    flag = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='language')
+
+    def __str__(self):
+        return f'{self.flag} - {self.code} - {self.language_ru} - {self.national_language}'
+
+    class Meta:
+        verbose_name = _('Language')
+        verbose_name_plural = _('Languages')

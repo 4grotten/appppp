@@ -131,7 +131,10 @@ class TranslateItemTextView(GenericAPIView):
 
     def post(self, request):
         data = request.data
+        query_lang = self.request.query_params.get('lang')
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
+        if query_lang:
+            lang = query_lang
         try:
             translate_name = GoogleTranslator().translate(data['title'], lang)
             translate_description = GoogleTranslator().translate(data['description'], lang)

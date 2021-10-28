@@ -164,3 +164,4 @@ class Languages(models.Model):
     class Meta:
         verbose_name = _('Language')
         verbose_name_plural = _('Languages')
+        ordering = ('code',)

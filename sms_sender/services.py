@@ -92,3 +92,18 @@ class MessageServiceSendPulse:
         login_response = requests.post(login_url, data=payload)
         token = json.loads(login_response.text)["access_token"]
         return token
+
+
+class MessageServiceSMSRU:
+    @classmethod
+    def send_sms(cls, numbers, message):
+        login = settings.SMSCRU_LOGIN
+        password = settings.SMSCRU_PASSWORD
+        sms_url = f'https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={numbers}' \
+                  f'&mes={message}:Ваш код регистрации Apofiz'
+        response = requests.post(url=sms_url)
+        # print(numbers)
+        # print(response.content, response.status_code)
+        if response.status_code == 200:
+            return response.content
+        return Exception(_('Error while sending SMS'))

@@ -3,7 +3,7 @@ import six
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import File, Currency, Country, City, Version
+from .models import File, Currency, Country, City, Version, Languages
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -111,3 +111,11 @@ class VersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Version
         fields = ('device', 'version', 'force_update')
+
+
+class LanguagesListSerializer(serializers.ModelSerializer):
+    flag = ImageFromUrlSerializer()
+
+    class Meta:
+        model = Languages
+        fields = ('code', 'national_language', 'flag')

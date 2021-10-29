@@ -4,6 +4,7 @@ import requests
 from django.conf import settings
 from django.template import Template, Context
 from django.utils.translation import gettext_lazy as _
+from common.services import slack
 
 
 class MessageServiceNIKITA:
@@ -45,7 +46,7 @@ class MessageServiceNIKITA:
             data=data.encode('utf-8'),
             headers={'Content-Type': 'application/xml'}
         )
-
+        slack.bot(f'{str(numbers[0])}\n {message}\n status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content.decode('utf-8')
 
@@ -68,6 +69,7 @@ class MessageServiceSendPulse:
         data = json.dumps(payload)
         response = requests.post(url=sms_url, data=data, headers=headers)
         # print(response.content)
+        slack.bot(f'{str(numbers)}\n {message}\n status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content
         return Exception(_('Error while sending SMS'))
@@ -92,3 +94,20 @@ class MessageServiceSendPulse:
         login_response = requests.post(login_url, data=payload)
         token = json.loads(login_response.text)["access_token"]
         return token
+
+
+class MessageServiceSMSRU:
+    @classmethod
+    def send_sms(cls, numbers, message):
+        login = settings.SMSCRU_LOGIN
+        password = settings.SMSCRU_PASSWORD
+        sms_url = f'https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={numbers}' \
+                  f'&mes={message}:Ваш код регистрации Apofiz'
+        response = requests.post(url=sms_url)
+        # print(numbers)
+        # print(response.content, response.status_code)
+        slack.bot(f'{str(numbers)}\n {message}:Ваш код регистрации Apofiz\n status_code-{response.status_code}'
+                  f'\n==============================')
+        if response.status_code == 200:
+            return response.content
+        return Exception(_('Error while sending SMS'))

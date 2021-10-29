@@ -7,11 +7,10 @@ from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, 
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from .models import File, Country
+from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
-    VersionSerializer
+    VersionSerializer, LanguagesListSerializer
 from .services.country_city import CountryCityService
 from .services.version import VersionService
 
@@ -97,3 +96,9 @@ class GetLatestAppVersion(RetrieveAPIView):
 
     def get_object(self):
         return VersionService.get(device=self.kwargs['device'])
+
+
+class LanguagesList(ListAPIView):
+    pagination_class = None
+    serializer_class = LanguagesListSerializer
+    queryset = Languages.objects.select_related('flag').all()

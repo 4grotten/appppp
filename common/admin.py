@@ -1,8 +1,24 @@
 from django.contrib import admin
 from django.contrib.gis.db import models
 from mapwidgets import GooglePointFieldWidget
+from django.utils.safestring import mark_safe
 
-from .models import File, Country, Currency, City, Version, OpenExchangeRates
+from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages
+
+
+@admin.register(Languages)
+class LanguagesAdmin(admin.ModelAdmin):
+    list_display = ('preview', 'code', 'national_language', 'language_en', 'language_ru', 'flag',)
+    search_fields = ('code', 'language_ru',)
+    raw_id_fields = ['flag']
+    readonly_fields = ['preview']
+
+    def preview(self, obj):
+        try:
+            if obj.flag:
+                return mark_safe(f'<img src="{obj.flag.small.url}">')
+        except AttributeError:
+            pass
 
 
 @admin.register(File)

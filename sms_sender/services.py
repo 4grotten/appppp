@@ -26,7 +26,7 @@ class MessageServiceNIKITA:
             <test>{{ test }}</test>
         </message>
         '''
-        message = message + ':Reg code'
+        message = message + ' is your verification code'
 
         context = {
             'login': settings.NIKITA_USERNAME,
@@ -65,7 +65,7 @@ class MessageServiceSendPulse:
         payload = {
             "sender":f"{settings.SEND_PULSE_SENDER}",
             "phones":[f"{numbers}"],
-            "body": f"{message}:Reg code"
+            "body": f"{message}: is your verification code"
         }
         data = json.dumps(payload)
         response = requests.post(url=sms_url, data=data, headers=headers)
@@ -104,7 +104,7 @@ class MessageServiceSMSRU:
         login = settings.SMSCRU_LOGIN
         password = settings.SMSCRU_PASSWORD
         sms_url = f'https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={numbers}' \
-                  f'&mes={message}:Reg code'
+                  f'&mes={message}: is your verification code'
         response = requests.post(url=sms_url)
         # print(numbers)
         # print(response.content, response.status_code)

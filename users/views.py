@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
+from common.models import UmaiWallet
+from common.services.umai import Umai
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
@@ -148,6 +150,11 @@ class ProfileInitialAPIView(APIView):
             full_name=serializer.validated_data.get('full_name'),
             email=serializer.validated_data.get('email', None),
         )
+
+        registration = UmaiWallet.objects.last()
+        # print(registration.is_accepted)
+        if registration.is_accepted and str(user.phone_number).startswith("+996"):
+            Umai(str(user.phone_number)).commit_payment()
 
         return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 

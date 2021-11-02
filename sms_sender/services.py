@@ -26,7 +26,7 @@ class MessageServiceNIKITA:
             <test>{{ test }}</test>
         </message>
         '''
-        message = message + ':Ваш код регистрации Apofiz'
+        message = message + ' is your verification code'
 
         context = {
             'login': settings.NIKITA_USERNAME,
@@ -46,7 +46,8 @@ class MessageServiceNIKITA:
             data=data.encode('utf-8'),
             headers={'Content-Type': 'application/xml'}
         )
-        slack.bot(f'{str(numbers[0])}\n {message}\n status_code-{response.status_code}\n==============================')
+        slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
+                  f' status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content.decode('utf-8')
 
@@ -64,12 +65,13 @@ class MessageServiceSendPulse:
         payload = {
             "sender":f"{settings.SEND_PULSE_SENDER}",
             "phones":[f"{numbers}"],
-            "body": f"{message}:Ваш код регистрации Apofiz"
+            "body": f"{message}: is your verification code"
         }
         data = json.dumps(payload)
         response = requests.post(url=sms_url, data=data, headers=headers)
         # print(response.content)
-        slack.bot(f'{str(numbers)}\n {message}\n status_code-{response.status_code}\n==============================')
+        slack.bot(f'SAND_PULSE\n{str(numbers)}\n {message}\n '
+                  f'status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content
         return Exception(_('Error while sending SMS'))
@@ -102,11 +104,11 @@ class MessageServiceSMSRU:
         login = settings.SMSCRU_LOGIN
         password = settings.SMSCRU_PASSWORD
         sms_url = f'https://smsc.ru/sys/send.php?login={login}&psw={password}&phones={numbers}' \
-                  f'&mes={message}:Ваш код регистрации Apofiz'
+                  f'&mes={message}: is your verification code'
         response = requests.post(url=sms_url)
         # print(numbers)
         # print(response.content, response.status_code)
-        slack.bot(f'{str(numbers)}\n {message}:Ваш код регистрации Apofiz\n status_code-{response.status_code}'
+        slack.bot(f'SMSC_RU\n{str(numbers)}\n {message}:Reg code\n status_code-{response.status_code}'
                   f'\n==============================')
         if response.status_code == 200:
             return response.content

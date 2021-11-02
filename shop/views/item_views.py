@@ -135,13 +135,19 @@ class TranslateItemTextView(GenericAPIView):
         lang = request.META.get('HTTP_ACCEPT_LANGUAGE', None)
         if query_lang:
             lang = query_lang
+        body = {}
         try:
-            translate_name = GoogleTranslator().translate(data['title'], lang)
-            translate_description = GoogleTranslator().translate(data['description'], lang)
-            return Response(data={
-                'title': translate_name.text,
-                'description': translate_description.text,
-            }, status=status.HTTP_200_OK)
+            if data['title']:
+                translate_name = GoogleTranslator().translate(data['title'], lang)
+                body['title'] = translate_name.text
+            else:
+                body['title'] = None
+            if data['description']:
+                translate_description = GoogleTranslator().translate(data['description'], lang)
+                body['description'] = translate_description.text
+            else:
+                body['description'] = None
+            return Response(data=body, status=status.HTTP_200_OK)
         except KeyError as e:
             error = str(e)
             return Response(data={

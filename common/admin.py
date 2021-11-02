@@ -1,9 +1,14 @@
 from django.contrib import admin
 from django.contrib.gis.db import models
-from mapwidgets import GooglePointFieldWidget
 from django.utils.safestring import mark_safe
+from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages
+from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet
+
+
+@admin.register(UmaiWallet)
+class UmaiWalletAdmin(admin.ModelAdmin):
+    list_display = ['amount', 'activate', 'start_time', 'end_time']
 
 
 @admin.register(Languages)

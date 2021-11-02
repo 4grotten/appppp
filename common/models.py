@@ -3,7 +3,9 @@ from urllib import request
 
 from django.contrib.gis.db.models import PointField
 from django.core.files import File as Files
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from imagekit import register
 from imagekit.models import ImageSpecField
@@ -165,3 +167,23 @@ class Languages(models.Model):
         verbose_name = _('Language')
         verbose_name_plural = _('Languages')
         ordering = ('code',)
+
+
+class UmaiWallet(TimestampModel, SingletonModel):
+    amount = models.SmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(1000)], default=50)
+    activate = models.BooleanField(default=True)
+    start_time = models.DateTimeField(blank=True, null=True)
+    end_time = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.id}-{self.amount}'
+
+    @property
+    def is_accepted(self):
+        if self.activate and self.start_time <= timezone.now() <= self.end_time:
+            return True
+        return False
+
+    class Meta:
+        verbose_name = _('Registration payment')
+        verbose_name_plural = _('Registration payments')

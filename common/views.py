@@ -7,12 +7,30 @@ from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, 
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
+from organizations.services.organization_services import OrganizationService
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
     VersionSerializer, LanguagesListSerializer
 from .services.country_city import CountryCityService
 from .services.version import VersionService
+
+
+class SendEmailToApofiz(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk, *args, **kwargs):
+        data = request.data
+        organization = OrganizationService.get(pk=pk)
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        return Response(data={
+            'message': _('Successfully updated'),
+            'data': data
+        }, status=status.HTTP_200_OK)
 
 
 class ImageCreateView(CreateAPIView):

@@ -2,7 +2,7 @@ from django.urls import path
 
 from common.views import (
     ImageCreateView, CountriesListView, CountryCitySearchView, WatermarkImageCreateView, ImageCreateFromUrlView,
-    YoutubeEmbedView, GetLatestAppVersion, LanguagesList
+    YoutubeEmbedView, GetLatestAppVersion, LanguagesList, SendEmailToApofiz
 )
 
 urlpatterns = [
@@ -13,5 +13,6 @@ urlpatterns = [
     path('countries_and_cities/', CountryCitySearchView.as_view(), name='countries_cities_search'),
     path('youtube_embed/', YoutubeEmbedView.as_view(), name='youtube_embed'),
     path('app_version/<slug:device>/', GetLatestAppVersion.as_view(), name='latest_app_version'),
-    path('languages/', LanguagesList.as_view(), name='languages_list')
+    path('languages/', LanguagesList.as_view(), name='languages_list'),
+    path('email_request_to_remove_from_the_shadow_ban/', SendEmailToApofiz.as_view(), name='email_to_apofiz')
 ]

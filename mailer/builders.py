@@ -82,7 +82,7 @@ class ShadowBanEmailBuilder(BaseEmailBuilder):
         body = cls._get_rendered_template(context)
 
         message = EmailMessage(
-            subject='Shadow ban',
+            subject='Теневой бан.',
             body=body,
             to=[email],
             from_email=cls.FROM_EMAIL

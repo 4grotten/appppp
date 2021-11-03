@@ -33,6 +33,9 @@ class SendEmailToApofiz(APIView):
         apofiz_email = settings.EMAIL_HOST_USER
         MailerService.send_shadow_ban_email(email=apofiz_email, org_id=pk, send_time=timezone.now())
 
+        organization.is_under_review = True
+        organization.save(update_fields=('is_under_review',))
+
         return Response(data={
             'message': _('Successfully send email.')
         }, status=status.HTTP_200_OK)

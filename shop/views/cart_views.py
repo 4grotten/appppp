@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
@@ -164,11 +164,16 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
             cart.id,
         )
 
+        pk = cart.organization.pk
+        organization = OrganizationService.get(id=pk)
+        staff = list(organization.memberships.values_list('user__id', flat=True))
+        owner = organization.owner_id
+        staff.append(owner)
 
         Notification.objects.filter(
             extra_data__transaction_id=delivery_info.transaction_id,
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            recipient=request.user
+            recipient__in=staff
             ).delete()
 
         return Response(

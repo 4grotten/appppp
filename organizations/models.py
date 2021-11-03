@@ -105,6 +105,11 @@ class Organization(TimestampModel):
     def __str__(self):
         return f'{self.title}'
 
+    def save(self, *args, **kwargs):
+        if not self.is_banned:
+            self.is_under_review = False
+        super().save(*args, **kwargs)
+
     @property
     def full_location(self):
         full_location = dict(

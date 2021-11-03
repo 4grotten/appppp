@@ -14,5 +14,5 @@ urlpatterns = [
     path('youtube_embed/', YoutubeEmbedView.as_view(), name='youtube_embed'),
     path('app_version/<slug:device>/', GetLatestAppVersion.as_view(), name='latest_app_version'),
     path('languages/', LanguagesList.as_view(), name='languages_list'),
-    path('email_request_to_remove_from_the_shadow_ban/', SendEmailToApofiz.as_view(), name='email_to_apofiz')
+    path('request_from_shadow_ban/<int:pk>/', SendEmailToApofiz.as_view(), name='email_to_apofiz')
 ]

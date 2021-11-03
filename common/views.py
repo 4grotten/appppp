@@ -1,4 +1,5 @@
 import requests
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
@@ -8,8 +9,10 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 
 from common.exceptions import NotAcceptableException
+from mailer.services import MailerService
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
@@ -22,14 +25,16 @@ class SendEmailToApofiz(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk, *args, **kwargs):
-        data = request.data
+
         organization = OrganizationService.get(pk=pk)
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise NotAcceptableException(_('No rights to edit organization'))
 
+        apofiz_email = settings.EMAIL_HOST_USER
+        MailerService.send_shadow_ban_email(email=apofiz_email, org_id=pk, send_time=timezone.now())
+
         return Response(data={
-            'message': _('Successfully updated'),
-            'data': data
+            'message': _('Successfully send email.')
         }, status=status.HTTP_200_OK)
 
 

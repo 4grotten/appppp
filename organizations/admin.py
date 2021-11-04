@@ -51,6 +51,11 @@ class DiscountInline(admin.TabularInline):
     extra = 0
 
 
+class MembershipInLine(admin.TabularInline):
+    model = Membership
+    raw_id_fields = ('user', 'role', 'added_by',)
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -65,7 +70,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
-    inlines = (PhoneInline, SocialInline, DiscountInline,)
+    inlines = (PhoneInline, SocialInline, DiscountInline, MembershipInLine,)
 
 
 @admin.register(OrganizationType)

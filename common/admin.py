@@ -3,7 +3,13 @@ from django.contrib.gis.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet
+from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText
+
+
+@admin.register(MessageText)
+class MessageTextAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
+    list_display_links = ['id', 'name']
 
 
 @admin.register(UmaiWallet)

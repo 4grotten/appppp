@@ -154,7 +154,7 @@ class ProfileInitialAPIView(APIView):
         registration = UmaiWallet.objects.last()
         if registration and registration.is_accepted and str(user.phone_number).startswith("+996"):
             # print(registration.is_accepted)
-            Umai(str(user.phone_number)).commit_payment()
+            Umai(str(user.phone_number), wallet=registration).commit_payment()
 
         return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 

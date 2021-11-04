@@ -190,8 +190,13 @@ class UmaiWallet(TimestampModel, SingletonModel):
 
 
 class MessageText(TimestampModel):
+    MESSAGE_TYPE = (
+        ('shadow_ban', 'shadow_ban'),
+    )
+
     name = models.CharField(max_length=255, unique=True, verbose_name=_('Message name, unique'), help_text=_('*unique'))
     body = models.TextField(max_length=2000, verbose_name=_('Message text'))
+    message_type = models.CharField(max_length=255, choices=MESSAGE_TYPE, verbose_name=_('message type'))
 
     def __str__(self):
         return f'{self.id}- {self.name}'

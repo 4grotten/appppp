@@ -8,7 +8,7 @@ from .models import Country, City, Currency, MessageText
 class MessageTextOptions(TranslationOptions):
     fields = (
         'name',
-        'body'
+        'body',
     )
 
 

@@ -3,7 +3,15 @@ import six
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import File, Currency, Country, City, Version, Languages
+from .models import File, Currency, Country, City, Version, Languages, MessageText
+
+
+class ShadowBanSerializer(serializers.ModelSerializer):
+    is_under_review = serializers.CharField()
+
+    class Meta:
+        model = MessageText
+        fields = ['id', 'name', 'body', 'is_under_review']
 
 
 class ImageSerializer(serializers.ModelSerializer):

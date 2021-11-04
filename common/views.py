@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
@@ -9,16 +10,27 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.conf import settings
 
 from common.exceptions import NotAcceptableException
 from mailer.services import MailerService
 from organizations.services.organization_services import OrganizationService
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
-    VersionSerializer, LanguagesListSerializer
+    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer
 from .services.country_city import CountryCityService
+from .services.shadow import ShadowService
 from .services.version import VersionService
+
+
+class ShadowBanStatus(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShadowBanSerializer
+    message_type = 'shadow_ban'
+
+    def get_object(self):
+        org_status = ShadowService.get_status(pk=self.kwargs['pk'])
+        message = ShadowService.get_message(self.message_type, org_status)
+        return message
 
 
 class SendEmailToApofiz(APIView):

@@ -140,7 +140,7 @@ class Umai:
 
         answer = requests.post(url=commit_transactions_url, data=payload, headers=request_headers)
         if answer.status_code == 202:
-            slack.bot(f'{self.phone_number}\n {AMMOUNT} -  сом.\n status_code-{answer.status_code}'
+            slack.bot(f'{self.phone_number}\n {self.amount} -  сом.\n status_code-{answer.status_code}'
                       f'\n==============================')
         # print(answer.status_code)
         # print(answer)

@@ -187,3 +187,15 @@ class UmaiWallet(TimestampModel, SingletonModel):
     class Meta:
         verbose_name = _('Registration payment')
         verbose_name_plural = _('Registration payments')
+
+
+class MessageText(TimestampModel):
+    name = models.CharField(max_length=255, unique=True, verbose_name=_('Message name, unique'), help_text=_('*unique'))
+    body = models.TextField(max_length=2000, verbose_name=_('Message text'))
+
+    def __str__(self):
+        return f'{self.id}- {self.name}'
+
+    class Meta:
+        verbose_name = _('Message text')
+        verbose_name_plural = _('Messages Text')

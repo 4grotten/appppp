@@ -5,8 +5,6 @@ from django.conf import settings
 
 from common.services import slack
 
-AMMOUNT = 2
-
 
 class Umai:
     megacom = ['0550', '0551', '0552', '0553', '0554', '0555', '0556', '0557', '0558', '0559',
@@ -44,7 +42,8 @@ class Umai:
                       " Chrome/95.0.4638.54 Safari/537.36"
     }
 
-    def __init__(self, phone_number):
+    def __init__(self, phone_number, wallet=None):
+        self.amount = wallet.amount
         self.phone_number = phone_number.replace('+996', '0')
         self.token = self.get_token()
         self.phone_type = self.get_numbers_type()
@@ -109,7 +108,7 @@ class Umai:
 
         filling_out_payment_url = f'https://umai.kg/api/v2/payments/{self.payment_id}'
 
-        all_payment_data['amount'] = AMMOUNT
+        all_payment_data['amount'] = self.amount
         payload = json.dumps(all_payment_data)
 
         content_length = len(payload)

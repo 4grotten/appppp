@@ -1,4 +1,6 @@
 import requests
+from django.conf import settings
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
 from drf_multiple_model.views import ObjectMultipleModelAPIView
@@ -7,12 +9,48 @@ from rest_framework.generics import CreateAPIView, ListAPIView, GenericAPIView, 
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
+from mailer.services import MailerService
+from organizations.services.organization_services import OrganizationService
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
-    VersionSerializer, LanguagesListSerializer
+    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer
 from .services.country_city import CountryCityService
+from .services.shadow import ShadowService
 from .services.version import VersionService
+
+
+class ShadowBanStatus(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShadowBanSerializer
+    message_type = 'shadow_ban'
+
+    def get_object(self):
+        org_status = ShadowService.get_status(pk=self.kwargs['pk'])
+        message = ShadowService.get_message(self.message_type, org_status)
+        return message
+
+
+class SendEmailToApofiz(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk, *args, **kwargs):
+
+        organization = OrganizationService.get(pk=pk)
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        apofiz_email = settings.EMAIL_HOST_USER
+        MailerService.send_shadow_ban_email(email=apofiz_email, org_id=pk, send_time=timezone.now())
+
+        organization.is_under_review = True
+        organization.save(update_fields=('is_under_review',))
+
+        return Response(data={
+            'message': _('Successfully send email.')
+        }, status=status.HTTP_200_OK)
 
 
 class ImageCreateView(CreateAPIView):

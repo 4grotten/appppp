@@ -90,6 +90,7 @@ class Organization(TimestampModel):
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
+    is_under_review = models.BooleanField(default=False)
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)
@@ -103,6 +104,11 @@ class Organization(TimestampModel):
 
     def __str__(self):
         return f'{self.title}'
+
+    def save(self, *args, **kwargs):
+        if not self.is_banned:
+            self.is_under_review = False
+        super().save(*args, **kwargs)
 
     @property
     def full_location(self):

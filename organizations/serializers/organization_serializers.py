@@ -245,7 +245,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working',
+            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned',
         )
 
 

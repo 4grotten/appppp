@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from imagekit import register
 from imagekit.models import ImageSpecField
 
-from common.constants import DEVICE_TYPES
+from common.constants import DEVICE_TYPES, MESSAGE_TYPE
 from common.processors import ResizeWatermarkedSpec
 from common.utils import upload_file_with_unique_name
 
@@ -190,9 +190,6 @@ class UmaiWallet(TimestampModel, SingletonModel):
 
 
 class MessageText(TimestampModel):
-    MESSAGE_TYPE = (
-        ('shadow_ban', 'shadow_ban'),
-    )
 
     name = models.CharField(max_length=255, unique=True, verbose_name=_('Message name, unique'), help_text=_('*unique'))
     body = models.TextField(max_length=2000, verbose_name=_('Message text'))

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'notifications',
     'shop.apps.ShopConfig',
     'instagram_parsers.apps.InstagramParsersConfig',
+    'search_indexes.apps.SearchIndexesConfig',
 
     'rest_framework',
     'django_elasticsearch_dsl',

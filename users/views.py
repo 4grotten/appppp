@@ -135,6 +135,8 @@ class ProfileInitialAPIView(APIView):
     def post(self, request):
         serializer = ProfileUpdateSerializer(data=request.data, many=False, context={'request': request})
 
+        is_new_in_begin = request.user.is_new_user
+
         if not serializer.is_valid():
             return Response(data={
                 'message': gettext_lazy('Invalid input'),
@@ -152,8 +154,8 @@ class ProfileInitialAPIView(APIView):
         )
 
         registration = UmaiWallet.objects.last()
-        if registration and registration.is_accepted and str(user.phone_number).startswith("+996"):
-            # print(registration.is_accepted)
+
+        if registration and registration.is_accepted and str(user.phone_number).startswith("+996") and is_new_in_begin:
             Umai(str(user.phone_number), wallet=registration).commit_payment()
 
         return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)

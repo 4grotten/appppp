@@ -7,7 +7,7 @@ from .models import File, Currency, Country, City, Version, Languages, MessageTe
 
 
 class ShadowBanSerializer(serializers.ModelSerializer):
-    is_under_review = serializers.CharField()
+    is_under_review = serializers.BooleanField()
 
     class Meta:
         model = MessageText

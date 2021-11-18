@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from mailer.services import MailerService
 from organizations.services.organization_services import OrganizationService
+from .constants import SHADOW_BAN
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
     VersionSerializer, LanguagesListSerializer, ShadowBanSerializer
@@ -25,7 +26,7 @@ from .services.version import VersionService
 class ShadowBanStatus(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ShadowBanSerializer
-    message_type = 'shadow_ban'
+    message_type = SHADOW_BAN
 
     def get_object(self):
         org_status = ShadowService.get_status(pk=self.kwargs['pk'])

@@ -50,100 +50,115 @@ class Umai:
         self.payment_id = None
 
     def get_token(self):
-        login_payload = {
-            "password": f"{self.password}",
-            "phone": f"{self.wallet}",
-            "frontend": {
-                "device": "",
-                "version": f"{self.version}",
+        try:
+            login_payload = {
+                "password": f"{self.password}",
+                "phone": f"{self.wallet}",
+                "frontend": {
+                    "device": "",
+                    "version": f"{self.version}",
+                }
             }
-        }
-        payload = json.dumps(login_payload)
+            payload = json.dumps(login_payload)
 
-        request_headers = self.add_headers(content_length=len(payload))
+            request_headers = self.add_headers(content_length=len(payload))
 
-        answer = requests.post(url=self.login_url, data=payload, headers=request_headers)
-        # print('============ Login status ===============')
-        # print(answer.status_code)
-        answer = json.loads(answer.content)
-        token = answer['token']
-        self.request_headers['Authorization'] = f"Bearer {token}"
-        return token
+            answer = requests.post(url=self.login_url, data=payload, headers=request_headers)
+            # print('============ Login status ===============')
+            # print(answer.status_code)
+            answer = json.loads(answer.content)
+            token = answer['token']
+            self.request_headers['Authorization'] = f"Bearer {token}"
+            return token
+        except Exception:
+            pass
 
     def get_numbers_type(self):
-        # print('====== get type =====')
-        # print(self.phone_number)
-        for key, value in self.types.items():
-            if self.phone_number[:4] in value:
-                # print('====== TYPE =======', key)
-                return key
-            if self.phone_number[:6] == '031258':  # Прямой Билайн
-                return "Beeline2"
+        try:
+            # print('====== get type =====')
+            # print(self.phone_number)
+            for key, value in self.types.items():
+                if self.phone_number[:4] in value:
+                    # print('====== TYPE =======', key)
+                    return key
+                if self.phone_number[:6] == '031258':  # Прямой Билайн
+                    return "Beeline2"
+        except Exception:
+            pass
 
     def create_payment(self):
-        create_payment_url = 'https://umai.kg/api/v2/payments'
-        create_payment_data = {
-            "destination": {
-                "type": f"{self.phone_type}",
-                "id": f"{self.phone_number}"
+        try:
+            create_payment_url = 'https://umai.kg/api/v2/payments'
+            create_payment_data = {
+                "destination": {
+                    "type": f"{self.phone_type}",
+                    "id": f"{self.phone_number}"
+                }
             }
-        }
 
-        payload = json.dumps(create_payment_data)
+            payload = json.dumps(create_payment_data)
 
-        request_headers = self.add_headers(content_length=len(payload))
-        request_headers['Referer'] = f"https://umai.kg/payment-flow/{self.phone_type}"
+            request_headers = self.add_headers(content_length=len(payload))
+            request_headers['Referer'] = f"https://umai.kg/payment-flow/{self.phone_type}"
 
-        answer = requests.post(url=create_payment_url, data=payload, headers=request_headers)
+            answer = requests.post(url=create_payment_url, data=payload, headers=request_headers)
 
-        answer = json.loads(answer.content)
-        # print(answer)
-        self.payment_id = answer['_id']
-        # print('============ Create payment ==============')
-        # print(self.payment_id)
-        return answer
+            answer = json.loads(answer.content)
+            # print(answer)
+            self.payment_id = answer['_id']
+            # print('============ Create payment ==============')
+            # print(self.payment_id)
+            return answer
+        except Exception:
+            pass
 
     def filling_out_payment(self):
-        all_payment_data = self.create_payment()
+        try:
+            all_payment_data = self.create_payment()
 
-        filling_out_payment_url = f'https://umai.kg/api/v2/payments/{self.payment_id}'
+            filling_out_payment_url = f'https://umai.kg/api/v2/payments/{self.payment_id}'
 
-        all_payment_data['amount'] = self.amount
-        payload = json.dumps(all_payment_data)
+            all_payment_data['amount'] = self.amount
+            payload = json.dumps(all_payment_data)
 
-        content_length = len(payload)
+            content_length = len(payload)
 
-        request_headers = self.add_headers(content_length=content_length)
-        request_headers['Referer'] = filling_out_payment_url
+            request_headers = self.add_headers(content_length=content_length)
+            request_headers['Referer'] = filling_out_payment_url
 
-        answer = requests.put(url=filling_out_payment_url, data=payload, headers=request_headers)
+            answer = requests.put(url=filling_out_payment_url, data=payload, headers=request_headers)
 
-        answer = json.loads(answer.content)
-        # print('=============== Filling out payment ==============')
-        # print(answer)
-        return answer
+            answer = json.loads(answer.content)
+            # print('=============== Filling out payment ==============')
+            # print(answer)
+            return answer
+        except Exception:
+            pass
 
     def commit_payment(self):
-        commit_data = self.filling_out_payment()
+        try:
+            commit_data = self.filling_out_payment()
 
-        commit_transactions_url = f'https://umai.kg/api/v2/payments/{self.payment_id}/commit'
+            commit_transactions_url = f'https://umai.kg/api/v2/payments/{self.payment_id}/commit'
 
-        commit_data['fee'] = 0
-        commit_data['monthlyLimit'] = 60000
-        payload = json.dumps(commit_data)
-        # print('============ Commit payment ===============')
-        # print(payload)
-        content_length = len(payload)
+            commit_data['fee'] = 0
+            commit_data['monthlyLimit'] = 60000
+            payload = json.dumps(commit_data)
+            # print('============ Commit payment ===============')
+            # print(payload)
+            content_length = len(payload)
 
-        request_headers = self.add_headers(content_length=content_length)
-        request_headers['Referer'] = f"https://umai.kg/payment-flow/{self.phone_type}/{self.payment_id}/confirm"
+            request_headers = self.add_headers(content_length=content_length)
+            request_headers['Referer'] = f"https://umai.kg/payment-flow/{self.phone_type}/{self.payment_id}/confirm"
 
-        answer = requests.post(url=commit_transactions_url, data=payload, headers=request_headers)
-        if answer.status_code == 202:
-            slack.bot(f'{self.phone_number}\n {self.amount} -  сом.\n status_code-{answer.status_code}'
-                      f'\n==============================')
-        # print(answer.status_code)
-        # print(answer)
+            answer = requests.post(url=commit_transactions_url, data=payload, headers=request_headers)
+            if answer.status_code == 202:
+                slack.bot(f'{self.phone_number}\n {self.amount} -  сом.\n status_code-{answer.status_code}'
+                          f'\n==============================')
+            # print(answer.status_code)
+            # print(answer)
+        except Exception:
+            pass
 
     def add_headers(self, content_length):
         request_headers = self.request_headers

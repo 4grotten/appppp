@@ -61,6 +61,14 @@ class ShopItem(models.Model):
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)
 
+    @property
+    def liked_users_list(self):
+        return [like.user.id for like in self.liked_users.all()]
+
+    @property
+    def bookmarked_users_list(self):
+        return [bookmarked.user.id for bookmarked in self.bookmarked_users.all()]
+
     def __str__(self):
         return f'{self.name}'
 

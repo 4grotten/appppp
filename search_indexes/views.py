@@ -2,7 +2,7 @@ import re
 
 from django_elasticsearch_dsl_drf.constants import SUGGESTER_COMPLETION, SUGGESTER_TERM, SUGGESTER_PHRASE
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, SuggesterFilterBackend
+    CompoundSearchFilterBackend, SuggesterFilterBackend, SearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 # Example app models
@@ -16,45 +16,46 @@ class ShopItemDocumentView(DocumentViewSet):
     document = ShopItemDocument
     serializer_class = ShopItemsDocumentSerializer
 
-    filter_backends = [CompoundSearchFilterBackend, SuggesterFilterBackend]
+    filter_backends = [SearchFilterBackend]
 
-    search_fields = {
-        'name': {'fuzziness': 'AUTO'},
-        'article': {'fuzziness': 'AUTO'},
-        'description': {'fuzziness': 'AUTO'}
-    }
+    search_fields = (
+        'name',
+        'article',
+        'description'
+    )
 
-    suggester_fields = {
-        'name_suggest': {
-            'field': 'name.suggest',
-            'suggesters': [
-                SUGGESTER_TERM,
-                SUGGESTER_COMPLETION,
-                SUGGESTER_PHRASE,
-            ],
-            'default_suggester': SUGGESTER_COMPLETION,
-            'options': {
-                'size': 10,  # Number of suggestions to retrieve.
-                'skip_duplicates': True,  # Whether duplicate suggestions should be filtered out.
-            },
-        },
-        'subcategory_suggest': {
-            'field': 'subcategory.name.suggest',
-            'suggesters': [
-                SUGGESTER_TERM,
-                SUGGESTER_COMPLETION,
-                SUGGESTER_PHRASE,
-            ],
-        },
-        'description_suggest': {
-            'field': 'description.suggest',
-            'suggesters': [
-                SUGGESTER_TERM,
-                SUGGESTER_COMPLETION,
-                SUGGESTER_PHRASE,
-            ],
-        },
-    }
+
+    # suggester_fields = {
+    #     'name_suggest': {
+    #         'field': 'name.suggest',
+    #         'suggesters': [
+    #             SUGGESTER_TERM,
+    #             SUGGESTER_COMPLETION,
+    #             SUGGESTER_PHRASE,
+    #         ],
+    #         'default_suggester': SUGGESTER_COMPLETION,
+    #         'options': {
+    #             'size': 10,  # Number of suggestions to retrieve.
+    #             'skip_duplicates': True,  # Whether duplicate suggestions should be filtered out.
+    #         },
+    #     },
+    #     'subcategory_suggest': {
+    #         'field': 'subcategory.name.suggest',
+    #         'suggesters': [
+    #             SUGGESTER_TERM,
+    #             SUGGESTER_COMPLETION,
+    #             SUGGESTER_PHRASE,
+    #         ],
+    #     },
+    #     'description_suggest': {
+    #         'field': 'description.suggest',
+    #         'suggesters': [
+    #             SUGGESTER_TERM,
+    #             SUGGESTER_COMPLETION,
+    #             SUGGESTER_PHRASE,
+    #         ],
+    #     },
+    # }
 
     def list(self, request, *args, **kwargs):
         qs = super(ShopItemDocumentView, self).list(request)

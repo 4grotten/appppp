@@ -12,23 +12,7 @@ INDEX.settings(
     number_of_replicas=1
 )
 
-# my_phonetic_cyrillic = token_filter(
-#     'my_phonetic_cyrillic',
-#     type="phonetic",
-#     encoder="beider_morse",
-#     rule_type="approx",
-#     name_type="generic",
-#     languageset=["cyrillic"]
-# )
-# my_phonetic_english = token_filter(
-#     'my_phonetic_english',
-#     type="phonetic",
-#     encoder="beider_morse",
-#     rule_type="approx",
-#     name_type="generic",
-#     languageset=["english"]
-# )
-#
+
 edge_ngram_completion_filter = token_filter(
     'edge_ngram_completion_filter',
     type="edge_ngram",
@@ -54,7 +38,7 @@ html_strip = analyzer(
 class ShopItemDocument(Document):
     id = fields.IntegerField(attr='id')
     article = fields.TextField(
-        analyzer=edge_ngram_completion,
+        analyzer=html_strip,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
         }
@@ -97,7 +81,23 @@ class ShopItemDocument(Document):
     subcategory = fields.ObjectField(
         properties={
             'id': fields.IntegerField(),
-            'name': fields.TextField()
+            'name_ru': fields.TextField(),
+            'name_en': fields.TextField(),
+            'name_tr': fields.TextField(),
+            'category': fields.ObjectField(
+                properties={
+                    'icon': fields.ObjectField(
+                        properties={
+                            'id': fields.IntegerField(),
+                            'file': fields.FileField(),
+                            'small': fields.TextField(attr='small_property'),
+                            'medium': fields.TextField(attr='medium_property'),
+                            'large': fields.TextField(attr='large_property'),
+                            'name': fields.TextField(attr='name')
+                        }
+                    )
+                }
+            )
         }
     )
     images = fields.ObjectField(
@@ -107,6 +107,7 @@ class ShopItemDocument(Document):
             'small': fields.TextField(attr='small_property'),
             'medium': fields.TextField(attr='medium_property'),
             'large': fields.TextField(attr='large_property'),
+            'name': fields.TextField(attr='name')
         }
     )
     is_published = fields.BooleanField()
@@ -139,8 +140,15 @@ class ShopItemDocument(Document):
                     'id': fields.IntegerField(),
                     'phone_number': fields.TextField()
                 }
+            ),
+            'types': fields.ObjectField(
+                properties={
+                    'id': fields.IntegerField(),
+                    'title_ru': fields.TextField(),
+                    'title_en': fields.TextField(),
+                    'title_tr': fields.TextField(),
+                }
             )
-
         }
     )
 

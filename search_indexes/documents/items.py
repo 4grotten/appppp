@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_elasticsearch_dsl import Document, Index, fields
 from elasticsearch_dsl import analyzer
 from elasticsearch_dsl.analysis import token_filter
@@ -23,7 +24,8 @@ edge_ngram_completion_filter = token_filter(
 edge_ngram_completion = analyzer(
     "edge_ngram_completion",
     tokenizer="standard",
-    filter=["lowercase", edge_ngram_completion_filter]
+    filter=["lowercase", edge_ngram_completion_filter],
+    char_filter=["html_strip"]
 )
 
 html_strip = analyzer(
@@ -38,13 +40,12 @@ html_strip = analyzer(
 class ShopItemDocument(Document):
     id = fields.IntegerField(attr='id')
     article = fields.TextField(
-        analyzer=html_strip,
+        analyzer=edge_ngram_completion,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
+            'suggest': fields.CompletionField(),
         }
     )
-    created_at = fields.DateField()
-    updated_at = fields.DateField()
     name = fields.TextField(
         analyzer=html_strip,
         fields={
@@ -52,7 +53,6 @@ class ShopItemDocument(Document):
             'suggest': fields.CompletionField(),
         }
     )
-    name_lang = fields.TextField()
     description = fields.TextField(
         analyzer=html_strip,
         fields={
@@ -60,6 +60,9 @@ class ShopItemDocument(Document):
             'suggest': fields.CompletionField(),
         }
     )
+    name_lang = fields.TextField()
+    created_at = fields.DateField()
+    updated_at = fields.DateField()
     description_lang = fields.TextField()
     discount = fields.IntegerField()
     instagram_data = fields.ObjectField(
@@ -151,6 +154,17 @@ class ShopItemDocument(Document):
             )
         }
     )
+
+    def update(self, thing, refresh=None, action='index', **kwargs):
+        if isinstance(thing, ShopItem) and not thing.is_published and action == "index":
+            action = "delete"
+            kwargs = {**kwargs, 'raise_on_error': False}
+        return super(ShopItemDocument, self).update(thing, refresh, action, **kwargs)
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(is_published=False)
+        )
 
     class Django(object):
         """Inner nested class Django."""

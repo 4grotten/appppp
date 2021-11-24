@@ -76,5 +76,13 @@ class ShopItemDocumentView(DocumentViewSet):
 
         qs_r = super(ShopItemDocumentView, self).list(request)
 
-        qs = qs if qs.data['count'] > qs_r.data['count'] else qs_r
+        qs = qs if qs.data['total_count'] > qs_r.data['total_count'] else qs_r
+        serializer = StartDateTimeSerializer(data=request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Validation Error'))
+        start_time = serializer.validated_data['start_time']
+        if start_time:
+            qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+        else:
+            qs.data['has_new'] = False
         return qs

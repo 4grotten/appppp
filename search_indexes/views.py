@@ -1,13 +1,17 @@
-import re
-
-from django_elasticsearch_dsl_drf.constants import SUGGESTER_COMPLETION, SUGGESTER_TERM, SUGGESTER_PHRASE
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, SuggesterFilterBackend, SearchFilterBackend
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
-# Example app models
+from common.exceptions import NotAcceptableException
+from common.pagination import GeneralPagination
 from search_indexes.documents.items import ShopItemDocument
 from search_indexes.serializers.item import ShopItemsDocumentSerializer
+from search_indexes.services.index_services import IndexServices
+from shop.models import ShopItem
+from shop.serializers.item_serializers import StartDateTimeSerializer
+from shop.services.item_services import ShopItemService
 
 
 class ShopItemDocumentView(DocumentViewSet):
@@ -15,15 +19,18 @@ class ShopItemDocumentView(DocumentViewSet):
 
     document = ShopItemDocument
     serializer_class = ShopItemsDocumentSerializer
+    pagination_class = GeneralPagination
 
-    filter_backends = [SearchFilterBackend]
+    filter_backends = [DefaultOrderingFilterBackend,
+                       CompoundSearchFilterBackend]
 
-    search_fields = (
-        'name',
-        'article',
-        'description'
-    )
+    search_fields = {
+        'name': {'fuzziness': 'AUTO'},
+        'article': {'fuzziness': 'AUTO'},
+        'description': {'fuzziness': 'AUTO'}
+    }
 
+    ordering = ('_score',)
 
     # suggester_fields = {
     #     'name_suggest': {
@@ -61,51 +68,13 @@ class ShopItemDocumentView(DocumentViewSet):
         qs = super(ShopItemDocumentView, self).list(request)
 
         symbols = request.query_params['search']
-        reversed_symbols = self.change_layout(self.remove_bad_char(symbols))
+        reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
         mutable = request.query_params._mutable
         request.query_params._mutable = True
         request.query_params['search'] = reversed_symbols
         request.query_params._mutable = mutable
+
         qs_r = super(ShopItemDocumentView, self).list(request)
 
         qs = qs if qs.data['count'] > qs_r.data['count'] else qs_r
         return qs
-
-    @staticmethod
-    def remove_bad_char(symbols: str):
-        symbols = symbols.replace('ё', 'е')
-        symbols = symbols.replace('Ё', 'Е')
-        return symbols
-
-    @staticmethod
-    def change_layout(string: str):
-        char_map = (
-            ("a", "ф"), ("c", "с"), ("d", "в"), ("e", "у"), ("b", "и"), ("f", "а"), ("g", "п"), ("h", "р"), ("i", "ш"),
-            ("j", "о"), ("k", "л"), ("l", "д"),
-            ("m", "ь"), ("n", "т"), ("o", "щ"), ("p", "з"), ("r", "к"), ("s", "ы"), ("t", "е"), ("u", "г"), ("v", "м"),
-            ("w", "ц"), ("x", "ч"), ("y", "н"),
-            ("z", "я"), ("A", "Ф"), ("B", "И"), ("C", "С"), ("D", "В"), ("E", "У"), ("F", "А"), ("G", "П"), ("H", "Р"),
-            ("I", "Ш"), ("J", "О"), ("K", "Л"),
-            ("L", "Д"), ("M", "Ь"), ("N", "Т"), ("O", "Щ"), ("P", "З"), ("R", "К"), ("S", "Ы"), ("T", "Е"), ("U", "Г"),
-            ("V", "М"), ("W", "Ц"), ("X", "Ч"),
-            ("Y", "Н"), ("Z", "Я"), ("[", "х"), ("]", "ъ"), (";", "ж"), ("<", "б"), (">", "ю"), ("й", "q"), ("Й", "Q")
-        )
-        re_forbidden_chars = re.compile(r"[\]\[<>]")
-        invert_str, invert_str_list = '', []
-        for char in string:
-            char_ready = False
-            for match in char_map:
-                if char == match[0]:
-                    invert_str_list.append(match[1])
-                    char_ready = True
-                elif char == match[1]:
-                    if re_forbidden_chars.match(match[0]):
-                        # ignore some chars
-                        invert_str_list.append(char)
-                    else:
-                        invert_str_list.append(match[0])
-                        char_ready = True
-            if not char_ready:
-                invert_str_list.append(char)
-        return "".join(invert_str_list)
-

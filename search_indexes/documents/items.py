@@ -159,6 +159,12 @@ class ShopItemDocument(Document):
         if isinstance(thing, ShopItem) and not thing.is_published and action == "index":
             action = "delete"
             kwargs = {**kwargs, 'raise_on_error': False}
+        if isinstance(thing, ShopItem) and thing.organization.is_banned and action == "index":
+            action = "delete"
+            kwargs = {**kwargs, 'raise_on_error': False}
+        if isinstance(thing, ShopItem) and thing.organization.is_deleted and action == "index":
+            action = "delete"
+            kwargs = {**kwargs, 'raise_on_error': False}
         return super(ShopItemDocument, self).update(thing, refresh, action, **kwargs)
 
     def get_queryset(self):

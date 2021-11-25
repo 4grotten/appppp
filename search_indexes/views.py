@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.filter_backends import \
     CompoundSearchFilterBackend, DefaultOrderingFilterBackend
@@ -9,7 +8,6 @@ from common.pagination import GeneralPagination
 from search_indexes.documents.items import ShopItemDocument
 from search_indexes.serializers.item import ShopItemsDocumentSerializer
 from search_indexes.services.index_services import IndexServices
-from shop.models import ShopItem
 from shop.serializers.item_serializers import StartDateTimeSerializer
 from shop.services.item_services import ShopItemService
 
@@ -31,38 +29,6 @@ class ShopItemDocumentView(DocumentViewSet):
     }
 
     ordering = ('_score',)
-
-    # suggester_fields = {
-    #     'name_suggest': {
-    #         'field': 'name.suggest',
-    #         'suggesters': [
-    #             SUGGESTER_TERM,
-    #             SUGGESTER_COMPLETION,
-    #             SUGGESTER_PHRASE,
-    #         ],
-    #         'default_suggester': SUGGESTER_COMPLETION,
-    #         'options': {
-    #             'size': 10,  # Number of suggestions to retrieve.
-    #             'skip_duplicates': True,  # Whether duplicate suggestions should be filtered out.
-    #         },
-    #     },
-    #     'subcategory_suggest': {
-    #         'field': 'subcategory.name.suggest',
-    #         'suggesters': [
-    #             SUGGESTER_TERM,
-    #             SUGGESTER_COMPLETION,
-    #             SUGGESTER_PHRASE,
-    #         ],
-    #     },
-    #     'description_suggest': {
-    #         'field': 'description.suggest',
-    #         'suggesters': [
-    #             SUGGESTER_TERM,
-    #             SUGGESTER_COMPLETION,
-    #             SUGGESTER_PHRASE,
-    #         ],
-    #     },
-    # }
 
     def list(self, request, *args, **kwargs):
         qs = super(ShopItemDocumentView, self).list(request)

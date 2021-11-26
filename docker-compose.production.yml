@@ -65,6 +65,14 @@ services:
     command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
     env_file: ./env/production.env
 
+  elasticsearch:
+    image: elasticsearch:7.4.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+
   postgres:
     image: mdillon/postgis:10
     #    ports:

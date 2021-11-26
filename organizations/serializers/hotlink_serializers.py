@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 from common.serializers import ImageSerializer
 from organizations.constants import (
-    HOTLINK_COLLECTION, HOTLINK_URL, HOTLINK_URL_ITEM, HOTLINK_URL_ORGANIZATION, HOTLINK_URL_EXTERNAL, HOTLINK_PARTNERS
+    HOTLINK_COLLECTION, HOTLINK_PARTNERS
 )
-from organizations.models import Hotlink, HotlinkCollectionLink
+from organizations.models import Hotlink, HotlinkCollectionLink, HotlinkCollectionSubcategory
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.hotlink_services import HotlinkService
 from organizations.services.partnership_services import PartnershipService
@@ -52,7 +52,14 @@ class HotlinkWithCountsSerializer(HotlinkSerializer):
     subcategories_count = serializers.SerializerMethodField()
     collection_items = serializers.SlugRelatedField(many=True, read_only=True, slug_field='item_id')
     collection_links = serializers.SlugRelatedField(many=True, read_only=True, slug_field='content')
-    collection_subcategories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='subcategory_id')
+    collection_subcategories = serializers.SerializerMethodField()
+
+    def get_collection_subcategories(self, hotlink: Hotlink):
+        from shop.services.category_services import ItemSubcategoryService
+        subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=hotlink.organization.id)
+        collection_subcategories = HotlinkCollectionSubcategory.objects.filter(
+            subcategory__in=subcategories).distinct().values_list('subcategory_id', flat=True)
+        return collection_subcategories
 
     def get_items_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:

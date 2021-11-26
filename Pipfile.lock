@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7049d38fedb278708db3133e426b94d93a7a58b3879d1c0024c0f9bd443e8950"
+            "sha256": "1c88d2d2c34617f2dc4a40b9ea08171c5121a0a868cae5936c7ba3b118367597"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -114,6 +114,21 @@
             "index": "pypi",
             "version": "==3.4.0"
         },
+        "django-elasticsearch-dsl": {
+            "hashes": [
+                "sha256:265812e22538899333ebb8622c2b9d053eb4e1e44b24c09730da67c90103a6b3",
+                "sha256:6a0f96681c033fa04c0a103fab600561f2dd44e7d3b0075723cd05ffc21b716d"
+            ],
+            "version": "==7.2.1"
+        },
+        "django-elasticsearch-dsl-drf": {
+            "hashes": [
+                "sha256:27e610d64deb9f8e984305b797b8eac16b989eeb821009edc9cd68ccda3e8c43",
+                "sha256:9e31e6dff3f992f28759f8bd32f0ccc45bb9faccafa681049853ad332e2d6183"
+            ],
+            "index": "pypi",
+            "version": "==0.22.2"
+        },
         "django-extensions": {
             "hashes": [
                 "sha256:28e1e1bf49f0e00307ba574d645b0af3564c981a6dfc87209d48cb98f77d0b1a",
@@ -160,6 +175,13 @@
             ],
             "index": "pypi",
             "version": "==0.15.2"
+        },
+        "django-nine": {
+            "hashes": [
+                "sha256:17337c28e1a45255f5552a2267e2e943e26c944f6f89ed281e6963b901700647",
+                "sha256:84322aff8201ceb7647d846ca58863d34e27eb1438aa109819ad091a773a7c96"
+            ],
+            "version": "==0.2.5"
         },
         "django-phonenumber-field": {
             "hashes": [
@@ -222,6 +244,20 @@
             ],
             "index": "pypi",
             "version": "==3.12.2"
+        },
+        "elasticsearch": {
+            "hashes": [
+                "sha256:1e9a6302945d98046899a7c9b3d345c881ac7b05ba176d3a49c9d2702b1e8bc8",
+                "sha256:b728a3cdde3a4d3a93b9e92f0e7f0fe636226d236219913db32311ccaf8a9d16"
+            ],
+            "version": "==7.15.1"
+        },
+        "elasticsearch-dsl": {
+            "hashes": [
+                "sha256:046ea10820b94c075081b528b4526c5bc776bda4226d702f269a5f203232064b",
+                "sha256:c4a7b93882918a413b63bed54018a1685d7410ffd8facbc860ee7fd57f214a6d"
+            ],
+            "version": "==7.4.0"
         },
         "et-xmlfile": {
             "hashes": [

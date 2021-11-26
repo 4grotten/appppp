@@ -108,7 +108,7 @@ class MessageServiceSMSRU:
         response = requests.post(url=sms_url)
         # print(numbers)
         # print(response.content, response.status_code)
-        slack.bot(f'SMSC_RU\n{str(numbers)}\n {message}:Reg code\n status_code-{response.status_code}'
+        slack.bot(f'SMSC_RU\n{str(numbers)}\n {message}: is your verification code\n status_code-{response.status_code}'
                   f'\n==============================')
         if response.status_code == 200:
             return response.content

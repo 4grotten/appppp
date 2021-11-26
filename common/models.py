@@ -59,6 +59,22 @@ class File(TimestampModel):
     medium = ImageSpecField(source='file', id='common:file:medium')
     small = ImageSpecField(source='file', id='common:file:small')
 
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    @property
+    def small_property(self):
+        return self.small.url
+
+    @property
+    def medium_property(self):
+        return self.medium.url
+
+    @property
+    def large_property(self):
+        return self.large.url
+
     def __str__(self):  # pragma: no cover
         return self.file.name
 

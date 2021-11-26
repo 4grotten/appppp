@@ -34,6 +34,14 @@ services:
     command: /celery_worker.sh
     env_file: ./env/test.env
 
+  elasticsearch:
+    image: elasticsearch:7.4.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+
   postgres:
     image: mdillon/postgis:10
     volumes:

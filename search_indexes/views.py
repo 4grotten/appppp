@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -19,8 +19,11 @@ class ShopItemDocumentView(DocumentViewSet):
     serializer_class = ShopItemsDocumentSerializer
     pagination_class = GeneralPagination
 
-    filter_backends = [DefaultOrderingFilterBackend,
-                       CompoundSearchFilterBackend]
+    filter_backends = [
+        FilteringFilterBackend,
+        DefaultOrderingFilterBackend,
+        CompoundSearchFilterBackend,
+    ]
 
     search_fields = {
         'name': {'fuzziness': 'AUTO'},
@@ -28,21 +31,35 @@ class ShopItemDocumentView(DocumentViewSet):
         'description': {'fuzziness': 'AUTO'}
     }
 
-    ordering = ('_score',)
+    filter_fields = {
+        'price': 'price.raw'
+    }
 
     def list(self, request, *args, **kwargs):
+        search = request.GET.get('search', None)
+
+        if search and search[0] == '#':  # Search among posts if hashtag is used
+            pass
+        else:
+            mutable = request.query_params._mutable
+            request.query_params._mutable = True
+            request.query_params['price__isnull'] = "false"
+            request.query_params._mutable = mutable
+
         qs = super(ShopItemDocumentView, self).list(request)
 
-        symbols = request.query_params['search']
-        reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
-        mutable = request.query_params._mutable
-        request.query_params._mutable = True
-        request.query_params['search'] = reversed_symbols
-        request.query_params._mutable = mutable
+        if search:
+            symbols = request.query_params['search']
+            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
+            mutable = request.query_params._mutable
+            request.query_params._mutable = True
+            request.query_params['search'] = reversed_symbols
+            request.query_params._mutable = mutable
 
-        qs_r = super(ShopItemDocumentView, self).list(request)
+            qs_r = super(ShopItemDocumentView, self).list(request)
 
-        qs = qs if qs.data['total_count'] > qs_r.data['total_count'] else qs_r
+            qs = qs if qs.data['total_count'] >= qs_r.data['total_count'] else qs_r
+
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))

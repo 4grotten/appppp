@@ -60,27 +60,40 @@ class ShopItemDocument(Document):
             'suggest': fields.CompletionField(),
         }
     )
+    price = fields.FloatField(
+        fields={
+            'raw': fields.TextField(analyzer='keyword'),
+        }
+    )
+    is_published = fields.BooleanField()
+    is_updated = fields.BooleanField()
+    removed_at = fields.DateField()
+    youtube_links = fields.TextField()
     name_lang = fields.TextField()
     created_at = fields.DateField()
     updated_at = fields.DateField()
     description_lang = fields.TextField()
     discount = fields.IntegerField()
+    instagram_link = fields.TextField()
+    is_hidden = fields.BooleanField()
+
     instagram_data = fields.ObjectField(
         properties={
             'thumbnail_url': fields.TextField(),
             'video_url': fields.TextField()
         }
     )
-    instagram_link = fields.TextField()
+
     bookmarked_users = fields.TextField(
         attr='bookmarked_users_list',
         multi=True
     )
+
     liked_users = fields.TextField(
         attr='liked_users_list',
         multi=True
     )
-    is_hidden = fields.BooleanField()
+
     subcategory = fields.ObjectField(
         properties={
             'id': fields.IntegerField(),
@@ -103,6 +116,7 @@ class ShopItemDocument(Document):
             )
         }
     )
+
     images = fields.ObjectField(
         properties={
             'id': fields.IntegerField(),
@@ -113,11 +127,6 @@ class ShopItemDocument(Document):
             'name': fields.TextField(attr='name')
         }
     )
-    is_published = fields.BooleanField()
-    is_updated = fields.BooleanField()
-    price = fields.FloatField()
-    removed_at = fields.DateField()
-    youtube_links = fields.TextField()
 
     organization = fields.ObjectField(
         properties={

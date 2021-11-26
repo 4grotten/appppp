@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, PermissionDeniedException
-from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
+    NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
 from notifications.models import Notification
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
@@ -305,8 +306,12 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
         TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
 
         transaction.on_commit(
-            lambda: Notification.objects.filter(extra_data__transaction_id=instance.id,
-                                                type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION).delete())
+            lambda: Notification.objects.filter(
+                extra_data__transaction_id=instance.id,
+                type__in=[NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                          NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+                          NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT]
+            ).delete())
 
 
 class OrgFollowersTransactionsListAPIView(ListAPIView):

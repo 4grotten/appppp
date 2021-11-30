@@ -17,10 +17,33 @@ from organizations.services.organization_services import OrganizationService
 from .constants import SHADOW_BAN
 from .models import File, Country, Languages
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
-    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer
+    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer, CurrencyConversionSerializer
 from .services.country_city import CountryCityService
+from .services.currency import CurrencyConverterService
 from .services.shadow import ShadowService
 from .services.version import VersionService
+
+
+class CurrencyConversion(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = CurrencyConversionSerializer(data=self.request.query_params)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        from_currency = serializer.validated_data['from_currency']
+        to_currency = serializer.validated_data['to_currency']
+        amount = serializer.validated_data['amount']
+
+        amount = CurrencyConverterService.convert(from_currency=from_currency, to_currency=to_currency, amount=amount)
+        answer = dict(from_currency=from_currency, to_currency=to_currency, amount=amount)
+        data = CurrencyConversionSerializer(answer).data
+        return Response(data=data)
 
 
 class ShadowBanStatus(RetrieveAPIView):

@@ -6,6 +6,12 @@ from rest_framework import serializers
 from .models import File, Currency, Country, City, Version, Languages, MessageText
 
 
+class CurrencyConversionSerializer(serializers.Serializer):
+    from_currency = serializers.CharField()
+    to_currency = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+
+
 class ShadowBanSerializer(serializers.ModelSerializer):
     is_under_review = serializers.BooleanField()
 

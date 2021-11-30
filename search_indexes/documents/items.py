@@ -10,9 +10,8 @@ INDEX = Index('items')
 # See Elasticsearch Indices API reference for available settings
 INDEX.settings(
     number_of_shards=1,
-    number_of_replicas=1
+    number_of_replicas=1,
 )
-
 
 edge_ngram_completion_filter = token_filter(
     'edge_ngram_completion_filter',
@@ -31,8 +30,8 @@ edge_ngram_completion = analyzer(
 html_strip = analyzer(
     'html_strip',
     tokenizer="whitespace",
-    filter=["lowercase", "stop", "snowball"],
-    char_filter=["html_strip"]
+    filter=["lowercase"],
+    char_filter=["html_strip"],
 )
 
 
@@ -40,7 +39,7 @@ html_strip = analyzer(
 class ShopItemDocument(Document):
     id = fields.IntegerField(attr='id')
     article = fields.TextField(
-        analyzer=edge_ngram_completion,
+        analyzer=html_strip,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
@@ -56,7 +55,7 @@ class ShopItemDocument(Document):
     description = fields.TextField(
         analyzer=html_strip,
         fields={
-            'raw': fields.TextField(analyzer='keyword'),
+            'raw': fields.KeywordField(ignore_above=10000),
             'suggest': fields.CompletionField(),
         }
     )

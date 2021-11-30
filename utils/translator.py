@@ -13,6 +13,8 @@ class GoogleTranslator:
         self.translator = Translator(proxies=self.proxies)
 
     def translate(self, text, lang):
+        if len(text) > 100:
+            text = text[0:100]
         try:
             text = text.replace('.', " ")
             translated_text = self.translator.translate(text, dest=lang)
@@ -21,6 +23,8 @@ class GoogleTranslator:
             raise IntegrityException('Could not Translate - {world}: {e}'.format(e=str(e), world=text))
 
     def get_lang(self, text):
+        if len(text) > 100:
+            text = text[0:100]
         try:
             text = text.replace('.', " ")
             detection = self.translator.detect(text)

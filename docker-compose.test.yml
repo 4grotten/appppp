@@ -16,10 +16,12 @@ services:
       - postgres:postgres
       - rabbitmq:rabbimq
       - memcached:memcached
+      - elasticsearch:elasticsearch
     depends_on:
       - rabbitmq
       - postgres
       - memcached
+      - elasticsearch
     env_file: ./env/test.env
     volumes:
       - .:/app

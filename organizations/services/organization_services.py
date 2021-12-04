@@ -299,14 +299,14 @@ class OrganizationService:
             else:
                 point = None
 
-            title_lang = GoogleTranslator().get_lang(title)
-            if description:
-                description_lang = GoogleTranslator().get_lang(description)
-            else:
-                description_lang = None
+            # title_lang = GoogleTranslator().get_lang(title)
+            # if description:
+            #     description_lang = GoogleTranslator().get_lang(description)
+            # else:
+            #     description_lang = None
 
-            organization.title_lang = title_lang
-            organization.description_lang = description_lang
+            organization.title_lang = "en"
+            organization.description_lang = "en"
             organization.image_id = image_id
             organization.location = point
             organization.title = title
@@ -320,7 +320,6 @@ class OrganizationService:
 
                 from organizations.services.card_services import DiscountCardService
                 DiscountCardService.update_discount_currency(organization=organization, new_currency=currency.code)
-
             organization.currency = currency
             organization.show_contacts = show_contacts
             organization.country = country

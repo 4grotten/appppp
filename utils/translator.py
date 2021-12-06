@@ -25,7 +25,7 @@ class GoogleTranslator:
 
     def translate(self, text, lang):
         if len(text) > 100:
-            text = text[0:100]
+            text = text[0:5000]
         try:
             text = text.replace('.', " ")
             translated_text = self.translator.translate(text, dest=lang)

@@ -45,9 +45,9 @@ class ShopItem(models.Model):
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.SET_NULL, related_name='items_in_category',
                                     null=True, blank=True)
     name = models.CharField(max_length=64)
-    name_lang = models.CharField(max_length=4, null=True, blank=True)
+    name_lang = models.CharField(max_length=5, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    description_lang = models.CharField(max_length=4, null=True, blank=True)
+    description_lang = models.CharField(max_length=5, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, editable=False)
@@ -73,9 +73,9 @@ class ShopItem(models.Model):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        self.name_lang = "en"  # GoogleTranslator().get_lang(self.name)
+        self.name_lang = GoogleTranslator().get_lang(self.name)
         if self.description:
-            self.description_lang = "en"  # GoogleTranslator().get_lang(self.description)
+            self.description_lang = GoogleTranslator().get_lang(self.description)
         if self.price is not None:
             self.discounted_price = self.price * (100 - self.discount) / 100
         if self.subcategory is not None and self.subcategory.category.is_adult:

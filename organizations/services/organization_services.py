@@ -299,14 +299,14 @@ class OrganizationService:
             else:
                 point = None
 
-            # title_lang = GoogleTranslator().get_lang(title)
-            # if description:
-            #     description_lang = GoogleTranslator().get_lang(description)
-            # else:
-            #     description_lang = None
+            title_lang = GoogleTranslator().get_lang(title)
+            if description:
+                description_lang = GoogleTranslator().get_lang(description)
+            else:
+                description_lang = None
 
-            organization.title_lang = "en"
-            organization.description_lang = "en"
+            organization.title_lang = title_lang
+            organization.description_lang = description_lang
             organization.image_id = image_id
             organization.location = point
             organization.title = title

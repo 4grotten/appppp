@@ -14,6 +14,7 @@ media
 /d-static
 .DS_Store
 frontend/dist
+get_login_data.py
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.

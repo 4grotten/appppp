@@ -54,7 +54,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
-                  'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address')
+                  'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address', 'verification_status')
 
 
 class OrganizationWithImageSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image')
+        fields = ('id', 'title', 'image', 'verification_status')
 
 
 class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
@@ -71,7 +71,7 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types')
+        fields = ('id', 'title', 'image', 'types', 'verification_status')
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
@@ -92,13 +92,14 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
+            'verification_status'
         )
 
 
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title',)
+        fields = ('id', 'title', 'verification_status')
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -116,7 +117,7 @@ class PartnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
 
 
 class PartnerWithLatestTransactionSerializer(PartnerSerializer):
@@ -128,7 +129,7 @@ class PartnerWithLatestTransactionSerializer(PartnerSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners', 'verification_status')
 
 
 class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
@@ -147,7 +148,7 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         model = Organization
         fields = (
             'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
-            'partners')
+            'partners', 'verification_status')
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):
@@ -161,7 +162,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'image', 'types', 'partners', 'verification_status')
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
@@ -245,7 +246,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned',
+            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'verification_status'
         )
 
 
@@ -259,7 +260,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'is_deleted', 'image', 'role', 'is_delivery_service')
+        fields = ('id', 'title', 'is_deleted', 'image', 'role', 'is_delivery_service', 'verification_status')
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):
@@ -277,7 +278,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
         fields = (
             'title', 'description', 'image_id', 'currency', 'country', 'city',
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
-            'types', 'numbers', 'accounts', 'cards'
+            'types', 'numbers', 'accounts', 'cards', 'verification_status'
         )
 
     def validate(self, attrs):
@@ -293,7 +294,8 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
-                  'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',)
+                  'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
+                  'verification_status')
 
 
 class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
@@ -391,7 +393,7 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'max_discount', 'types', 'image',)
+        fields = ('id', 'title', 'max_discount', 'types', 'image', 'verification_status')
 
 
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
@@ -402,7 +404,7 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up',
+                  'has_self_pick_up', 'verification_status'
                   )
 
 
@@ -413,7 +415,7 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working',
+            'opens_at', 'closes_at', 'time_working', 'verification_status'
         )
 
 
@@ -422,13 +424,13 @@ class OrganizationTitleImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image')
+        fields = ('id', 'title', 'image', 'verification_status')
 
 
 class OrganizationTitleImageCurrencySerializer(OrganizationTitleImageSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'image')
+        fields = ('id', 'title', 'currency', 'image', 'verification_status')
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):
@@ -436,7 +438,7 @@ class OrganizationNotificationInfo(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'address')
+        fields = ('id', 'title', 'image', 'address', 'verification_status')
 
 
 class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
@@ -445,7 +447,7 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'image', 'types', 'partners')
+        fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
 
     def get_partners(self, organization: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organization)
@@ -459,7 +461,7 @@ class OrganizationTitleSerializer(OrganizationUserTransactionSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'description',
-                  'currency', 'address', 'image', 'types', 'partners', 'is_delivery_service')
+                  'currency', 'address', 'image', 'types', 'partners', 'is_delivery_service', 'verification_status')
 
 
 class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):

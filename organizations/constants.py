@@ -25,3 +25,13 @@ HOTLINK_TYPES = (
 )
 
 HOTLINK_INTERNAL_LINK_DOMAINS = ('apofiz.com', 'www.apofiz.com', 'test.apofiz.com', 'www.test.apofiz.com', 'test2.apofiz.com')
+
+
+VERIFIED = "verified"
+NOT_VERIFIED = "not_verified"
+UNDER_REVIEW = "under_review"
+VERIFICATIONS_STATUS = (
+    (VERIFIED, VERIFIED),
+    (NOT_VERIFIED, NOT_VERIFIED),
+    (UNDER_REVIEW, UNDER_REVIEW)
+)

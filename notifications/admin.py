@@ -7,12 +7,10 @@ from .models import (
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = (
-        'title', 'title_en', 'title_ru', 'title_tr', 'description', 'description_ru', 'description_tr', 'organization',
-        'recipient',
-        'sender', 'is_read', 'model', 'type',)
+    list_display = ('id', 'title', 'title_en', 'title_ru', 'title_tr', 'description', 'description_ru',
+                    'description_tr', 'organization', 'recipient', 'sender', 'is_read', 'model', 'type',)
     list_filter = ('is_read', 'mode', 'type', 'organization',)
-    search_fields = ('id', 'title', 'type')
+    search_fields = ('=id',)
 
 
 @admin.register(NotificationSetting)

@@ -9,32 +9,41 @@ from instagram_parsers.services.proxy_services import ProxyService
 
 class GoogleTranslator:
 
-    def __init__(self):
-        self.random_proxy = ProxyService.get_random_formed_proxy()  #.replace("https://", '')
+
+    @classmethod
+    def get_translator(cls):
+        random_proxy = ProxyService.get_random_formed_proxy()  #.replace("https://", '')
         try:
-            self.proxies = {'https': URLLib3Transport(proxy=Proxy(self.random_proxy))}
-            self.translator = Translator(proxies=self.proxies)
+            proxies = {'https': URLLib3Transport(proxy=Proxy(random_proxy))}
+            translator = Translator(proxies=proxies)
+            return translator
         except Exception as e:
             message = f"Что то не так с переводчиком......\n" \
                       f"{e} \n" \
                       f"{datetime.datetime.now()}\n" \
-                      f"прокси = {self.random_proxy}"
+                      f"прокси = {random_proxy}"
             bot(message)
             try:
-                self.translator = Translator()
+                translator = Translator()
+                return translator
             except Exception as e:
                 message = f"Что то не так с переводчиком......\n" \
                           f"{e} \n" \
                           f"{datetime.datetime.now()}\n" \
-                          f"прокси = {self.random_proxy}"
+                          f"прокси = {random_proxy}"
                 bot(message)
+                return None
 
-    def translate(self, text, lang):
+    @classmethod
+    def translate(cls, text, lang):
         if len(text) > 100:
             text = text[0:5000]
         try:
             text = text.replace('.', " ")
-            translated_text = self.translator.translate(text, dest=lang)
+            translator = cls.get_translator()
+            if translator is None:
+                return text
+            translated_text = translator.translate(text, dest=lang)
             return translated_text
         except Exception as e:
             message = f"Что то не так с переводчиком. Функция определения языка.\n" \
@@ -43,12 +52,16 @@ class GoogleTranslator:
             bot(message)
             return text
 
-    def get_lang(self, text):
+    @classmethod
+    def get_lang(cls, text):
         if len(text) > 100:
             text = text[0:100]
         try:
             text = text.replace('.', " ")
-            detection = self.translator.detect(text)
+            translator = cls.get_translator()
+            if translator is None:
+                return 'en'
+            detection = translator.detect(text)
             if isinstance(detection.lang, str):
                 return detection.lang
             if isinstance(detection.lang, list):
@@ -59,4 +72,4 @@ class GoogleTranslator:
                       f"{e} \n" \
                       f"{datetime.datetime.now()}\n"
             bot(message)
-            return text
+            return 'en'

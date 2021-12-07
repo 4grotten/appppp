@@ -12,6 +12,7 @@ class NotificationAdmin(admin.ModelAdmin):
         'recipient',
         'sender', 'is_read', 'model', 'type',)
     list_filter = ('is_read', 'mode', 'type', 'organization',)
+    search_fields = ('id', 'title', 'type')
 
 
 @admin.register(NotificationSetting)

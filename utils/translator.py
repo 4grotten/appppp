@@ -3,7 +3,6 @@ import datetime
 from googletrans import Translator
 from httpx import URLLib3Transport, Proxy
 
-from common.exceptions import IntegrityException
 from common.services.slack import bot
 from instagram_parsers.services.proxy_services import ProxyService
 
@@ -15,13 +14,20 @@ class GoogleTranslator:
         try:
             self.proxies = {'https': URLLib3Transport(proxy=Proxy(self.random_proxy))}
             self.translator = Translator(proxies=self.proxies)
-        except AttributeError as e:
+        except Exception as e:
             message = f"Что то не так с переводчиком......\n" \
                       f"{e} \n" \
                       f"{datetime.datetime.now()}\n" \
                       f"прокси = {self.random_proxy}"
             bot(message)
-            self.translator = Translator()
+            try:
+                self.translator = Translator()
+            except Exception as e:
+                message = f"Что то не так с переводчиком......\n" \
+                          f"{e} \n" \
+                          f"{datetime.datetime.now()}\n" \
+                          f"прокси = {self.random_proxy}"
+                bot(message)
 
     def translate(self, text, lang):
         if len(text) > 100:
@@ -31,7 +37,11 @@ class GoogleTranslator:
             translated_text = self.translator.translate(text, dest=lang)
             return translated_text
         except Exception as e:
-            raise IntegrityException('Could not Translate - {world}: {e}'.format(e=str(e), world=text))
+            message = f"Что то не так с переводчиком. Функция определения языка.\n" \
+                      f"{e} \n" \
+                      f"{datetime.datetime.now()}\n"
+            bot(message)
+            return text
 
     def get_lang(self, text):
         if len(text) > 100:
@@ -45,4 +55,8 @@ class GoogleTranslator:
                 index = detection.confidence.index(max(detection.confidence))
                 return detection.lang[index]
         except Exception as e:
-            raise IntegrityException('Could not define languish: {e}'.format(e=str(e)))
+            message = f"Что то не так с переводчиком. Функция перевода текста.\n" \
+                      f"{e} \n" \
+                      f"{datetime.datetime.now()}\n"
+            bot(message)
+            return text

@@ -86,13 +86,6 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
     verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
-    verification_users_data = models.ForeignKey(
-        'organizations.OrganizationVerificationUsers',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='organizations'
-    )
 
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
@@ -130,6 +123,13 @@ class Organization(TimestampModel):
 
 
 class OrganizationVerificationUsers(TimestampModel):
+    organization = models.OneToOneField(
+        'organizations.Organization',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='verification_users_data'
+    )
     username = models.CharField(max_length=255, verbose_name=_('User name'))
     phone_number = PhoneNumberField(unique=True, max_length=255, verbose_name=_('Phone number'))
     email = models.EmailField(verbose_name='Email', blank=True, null=True)

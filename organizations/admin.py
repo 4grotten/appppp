@@ -8,7 +8,7 @@ from .models import (
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
-    HotlinkCollectionSubcategory, HotlinkCollectionLink, Service
+    HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers
 )
 
 
@@ -56,6 +56,10 @@ class MembershipInLine(admin.TabularInline):
     raw_id_fields = ('user', 'role', 'added_by',)
 
 
+class OrganizationVerificationUsersInLine(admin.TabularInline):
+    model = OrganizationVerificationUsers
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -70,7 +74,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
-    inlines = (PhoneInline, SocialInline, DiscountInline, MembershipInLine,)
+    inlines = (PhoneInline, SocialInline, DiscountInline, OrganizationVerificationUsersInLine, MembershipInLine)
 
 
 @admin.register(OrganizationType)

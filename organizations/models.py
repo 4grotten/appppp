@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.modelfields import PhoneNumberField
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
@@ -85,6 +86,13 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
     verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
+    verification_users_data = models.ForeignKey(
+        'organizations.OrganizationVerificationUsers',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='organizations'
+    )
 
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
@@ -119,6 +127,19 @@ class Organization(TimestampModel):
             longitude=None if not self.location or not self.location.x else self.location.x
         )
         return full_location
+
+
+class OrganizationVerificationUsers(TimestampModel):
+    username = models.CharField(max_length=255, verbose_name=_('User name'))
+    phone_number = PhoneNumberField(unique=True, max_length=255, verbose_name=_('Phone number'))
+    email = models.EmailField(verbose_name='Email', blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.id} - {self.username} - {self.phone_number}'
+
+    class Meta:
+        verbose_name = _('Users data for verification organization')
+        verbose_name_plural = _('Users data for verification organization')
 
 
 class PhoneNumber(TimestampModel):

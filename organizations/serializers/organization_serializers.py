@@ -8,7 +8,8 @@ from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
-    PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration
+    PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
+    OrganizationVerificationUsers,
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -488,3 +489,9 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
 
     def get_user_profile(self, obj: InstagramIntegration):
         return InstagramIntegrationUserProfile(obj, context=self.context).data
+
+
+class OrgVerificationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationVerificationUsers
+        fields = ('username', 'phone_number', 'email')

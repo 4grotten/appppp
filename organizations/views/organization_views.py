@@ -1,13 +1,15 @@
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Case, When, IntegerField
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView
+    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,6 +17,8 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.utils import method_permission_classes
+from mailer.services import MailerService
+from organizations.constants import UNDER_REVIEW
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -27,7 +31,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer
+    OrganizationTitleSerializer, OrgVerificationsSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -39,10 +43,38 @@ from organizations.services.organization_services import (
     OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
+from organizations.services.verifications_service import VerificationService
 from organizations.tasks import (
     parse_instagram_to_shop_items
 )
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+
+
+class OrgVerifications(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrgVerificationsSerializer
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        serializer = OrgVerificationsSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        VerificationService.create(organization, **serializer.validated_data)
+
+        apofiz_email = settings.EMAIL_HOST_USER
+        MailerService.send_verifications_email(email=apofiz_email, org_id=organization.pk, send_time=timezone.now())
+
+        organization.verification_status = UNDER_REVIEW
+        organization.save(update_fields=('verification_status',))
+
+        return Response({"message": "verifications data successfully created"}, status=status.HTTP_201_CREATED)
 
 
 class OrganizationCreationLimitView(APIView):

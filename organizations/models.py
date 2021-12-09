@@ -111,6 +111,8 @@ class Organization(TimestampModel):
     def save(self, *args, **kwargs):
         if not self.is_banned:
             self.is_under_review = False
+        if self.verification_status == NOT_VERIFIED:
+            self.verification_users_data.delete()
         super().save(*args, **kwargs)
 
     @property
@@ -126,13 +128,11 @@ class OrganizationVerificationUsers(TimestampModel):
     organization = models.OneToOneField(
         'organizations.Organization',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='verification_users_data'
     )
     username = models.CharField(max_length=255, verbose_name=_('User name'))
-    phone_number = PhoneNumberField(unique=True, max_length=255, verbose_name=_('Phone number'))
-    email = models.EmailField(verbose_name='Email', blank=True, null=True)
+    phone_number = PhoneNumberField(max_length=255, verbose_name=_('Phone number'))
+    email = models.EmailField(verbose_name='Email')
 
     def __str__(self):
         return f'{self.id} - {self.username} - {self.phone_number}'

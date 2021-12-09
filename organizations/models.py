@@ -111,8 +111,9 @@ class Organization(TimestampModel):
     def save(self, *args, **kwargs):
         if not self.is_banned:
             self.is_under_review = False
-        if self.verification_status == NOT_VERIFIED:
-            self.verification_users_data.delete()
+        if self.verification_status == NOT_VERIFIED and self.verification_users_data.exists():
+            for verifications_data in self.verification_users_data.all():
+                verifications_data.delete()
         super().save(*args, **kwargs)
 
     @property
@@ -125,7 +126,7 @@ class Organization(TimestampModel):
 
 
 class OrganizationVerificationUsers(TimestampModel):
-    organization = models.OneToOneField(
+    organization = models.ForeignKey(
         'organizations.Organization',
         on_delete=models.CASCADE,
         related_name='verification_users_data'

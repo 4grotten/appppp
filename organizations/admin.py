@@ -58,6 +58,7 @@ class MembershipInLine(admin.TabularInline):
 
 class OrganizationVerificationUsersInLine(admin.TabularInline):
     model = OrganizationVerificationUsers
+    extra = 1
 
 
 @admin.register(Organization)

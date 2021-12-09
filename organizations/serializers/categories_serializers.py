@@ -67,4 +67,4 @@ class OrganizationWithDiscountsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'promo_cashback', 'discounts', 'types', 'image', 'verification_status' )
+        fields = ('id', 'title', 'promo_cashback', 'discounts', 'types', 'image', 'verification_status')

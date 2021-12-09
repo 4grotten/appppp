@@ -56,6 +56,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
                   'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationWithImageSerializer(serializers.ModelSerializer):
@@ -64,6 +65,7 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
@@ -73,6 +75,7 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'types', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
@@ -95,12 +98,14 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
             'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
             'verification_status'
         )
+        read_only_fields = ['verification_status']
 
 
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -119,6 +124,7 @@ class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class PartnerWithLatestTransactionSerializer(PartnerSerializer):
@@ -130,7 +136,9 @@ class PartnerWithLatestTransactionSerializer(PartnerSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners', 'verification_status')
+        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners',
+                  'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
@@ -150,6 +158,7 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         fields = (
             'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
             'partners', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):
@@ -164,6 +173,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'types', 'partners', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
@@ -249,6 +259,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'verification_status'
         )
+        read_only_fields = ['verification_status']
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):
@@ -262,6 +273,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'is_deleted', 'image', 'role', 'is_delivery_service', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):
@@ -281,6 +293,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
             'types', 'numbers', 'accounts', 'cards', 'verification_status'
         )
+        read_only_fields = ['verification_status']
 
     def validate(self, attrs):
         attrs['owner'] = self.context['request'].user
@@ -297,6 +310,7 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
                   'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
@@ -395,6 +409,7 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'max_discount', 'types', 'image', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
@@ -407,6 +422,7 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
                   'has_self_pick_up', 'verification_status'
                   )
+        read_only_fields = ['verification_status']
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
@@ -418,6 +434,7 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
             'opens_at', 'closes_at', 'time_working', 'verification_status'
         )
+        read_only_fields = ['verification_status']
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):
@@ -426,12 +443,14 @@ class OrganizationTitleImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationTitleImageCurrencySerializer(OrganizationTitleImageSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'image', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):
@@ -440,6 +459,7 @@ class OrganizationNotificationInfo(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'address', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
@@ -449,6 +469,7 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
+        read_only_fields = ['verification_status']
 
     def get_partners(self, organization: Organization):
         count, partners = OrganizationService.get_partners_dict(organization=organization)
@@ -463,6 +484,7 @@ class OrganizationTitleSerializer(OrganizationUserTransactionSerializer):
         model = Organization
         fields = ('id', 'title', 'description',
                   'currency', 'address', 'image', 'types', 'partners', 'is_delivery_service', 'verification_status')
+        read_only_fields = ['verification_status']
 
 
 class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):

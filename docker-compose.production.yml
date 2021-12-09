@@ -16,12 +16,10 @@ services:
       - postgres:postgres
       - rabbitmq:rabbimq
       - memcached:memcached
-      - elasticsearch:elasticsearch
     depends_on:
       - rabbitmq
       - postgres
       - memcached
-      - elasticsearch
     env_file: ./env/production.env
     volumes:
       - .:/app
@@ -66,14 +64,6 @@ services:
     ports: [ ]
     command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
     env_file: ./env/production.env
-
-  elasticsearch:
-    image: elasticsearch:7.4.0
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      - discovery.type=single-node
 
   postgres:
     image: mdillon/postgis:10

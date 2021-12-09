@@ -65,10 +65,9 @@ class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
-    list_display = (
-        'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned',
-        'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service'
-    )
+    list_display_links = ('id', 'title')
+    list_display = ('id', 'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned', 'cashback_group',
+                    'cumulative_group', 'items_group', 'is_delivery_service')
     list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group',
                    'is_delivery_service')
     search_fields = ('title',)

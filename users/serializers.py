@@ -35,7 +35,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer(many=False)
     has_empty_fields = serializers.SerializerMethodField()
 
-    def get_has_empty_fields(self, user:User):
+    def get_has_empty_fields(self, user: User):
         empty = {None, ''}
         fields = set(list(User.objects.filter(id=user.id).values_list('email', 'date_of_birth', 'username'))[0])
         if empty & fields:
@@ -51,11 +51,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
     avatar_id = serializers.IntegerField(required=False, allow_null=True)
+    device_type = serializers.CharField(required=False, default=None, allow_null=True, allow_blank=True)
 
     class Meta:
         model = User
         fields = ('avatar_id', 'full_name', 'username',
-                  'date_of_birth', 'email', 'gender')
+                  'date_of_birth', 'email', 'gender', 'device_type')
 
 
 class ProfileBriefSerializer(serializers.ModelSerializer):

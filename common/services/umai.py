@@ -153,7 +153,10 @@ class Umai:
 
             answer = requests.post(url=commit_transactions_url, data=payload, headers=request_headers)
             if answer.status_code == 202:
-                slack.bot(f'{self.phone_number}\n {self.amount} -  сом.\n status_code-{answer.status_code}'
+                slack.bot(f'{self.phone_number}'
+                          f'\n {self.amount} сом.'
+                          f'\n status_code-{answer.status_code}')
+                slack.bot(f'\nНа вашем балансе осталось - {self.get_balance()} сом'
                           f'\n==============================')
             # print(answer.status_code)
             # print(answer)
@@ -164,3 +167,9 @@ class Umai:
         request_headers = self.request_headers
         request_headers['Content-Length'] = f"{content_length}"
         return request_headers
+
+    def get_balance(self):
+        users_me_url = 'https://umai.kg/api/v2/users/me'
+        resp = requests.get(url=users_me_url, headers={'Authorization': f'Bearer {self.token}'})
+        balance = json.loads(resp.content)
+        return balance["balance"]

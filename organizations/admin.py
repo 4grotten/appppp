@@ -166,7 +166,7 @@ class CardBackgroundAdmin(admin.ModelAdmin):
 @admin.register(Partnership)
 class PartnershipAdmin(admin.ModelAdmin):
     list_display = (
-        'requested_by', 'accepted_by', 'is_accepted',
+        'id', 'requested_by', 'accepted_by', 'is_accepted',
         'can_check_attendance', 'can_see_stats', 'can_edit_organization', 'can_share_cashback', 'can_share_cumulative',
         'can_share_items',
     )

@@ -105,7 +105,7 @@ class RoleAdmin(admin.ModelAdmin):
     list_display = ('title', 'organization', 'can_sale', 'can_check_attendance',
                     'can_see_stats', 'can_edit_organization',)
     raw_id_fields = ('organization',)
-    search_fields = ('title', 'organization__title')
+    search_fields = ('id', 'title', 'organization__title')
 
 
 @admin.register(Membership)

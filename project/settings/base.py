@@ -254,10 +254,6 @@ SMSCRU_PASSWORD = config('SMSCRU_PASSWORD')
 
 SLACK_TOKEN = config('SLACK_TOKEN')
 
-UMAI_PHONE = config('UMAI_PHONE')
-UMAI_PASSWORD = config('UMAI_PASSWORD')
-UMAI_VERSION = config('UMAI_VERSION')
-
 OER_APP_ID = config('OER_APP_ID')
 OER_CACHE_TIMEOUT = 60 * 60 * 24
 OER_BASE_CURRENCY = 'USD'
@@ -369,7 +365,6 @@ if MONITORING:
         MIDDLEWARE + \
         ['django_prometheus.middleware.PrometheusAfterMiddleware']
     DATABASES['default']['ENGINE'] = 'django_prometheus.db.backends.postgis'
-
 
 MAP_WIDGETS = {
     # "GooglePointFieldWidget": (

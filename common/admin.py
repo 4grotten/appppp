@@ -3,7 +3,8 @@ from django.contrib.gis.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText
+from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
+    UmaiAccount
 
 
 @admin.register(MessageText)
@@ -15,6 +16,11 @@ class MessageTextAdmin(admin.ModelAdmin):
 @admin.register(UmaiWallet)
 class UmaiWalletAdmin(admin.ModelAdmin):
     list_display = ['amount', 'activate', 'start_time', 'end_time']
+
+
+@admin.register(UmaiAccount)
+class UmaiAccount(admin.ModelAdmin):
+    list_display = ['phone', 'password', 'created_at']
 
 
 @admin.register(Languages)

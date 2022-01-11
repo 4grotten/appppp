@@ -186,8 +186,11 @@ class Languages(models.Model):
 
 
 class UmaiWallet(TimestampModel, SingletonModel):
+    wallet = models.CharField(max_length=255, blank=True, null=True)
+    password = models.CharField(max_length=255, blank=True, null=True)
     amount = models.SmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(1000)], default=50)
     activate = models.BooleanField(default=True)
+    version = models.CharField(max_length=255, blank=True, null=True, default='2.14.8')
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
 

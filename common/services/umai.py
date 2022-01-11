@@ -3,6 +3,7 @@ import json
 import requests
 from django.conf import settings
 
+from common.models import UmaiWallet
 from common.services import slack
 
 
@@ -25,9 +26,10 @@ class Umai:
 
     login_url = 'https://umai.kg/api/auth/local'
 
-    password = settings.UMAI_PASSWORD
-    wallet = settings.UMAI_PHONE
-    version = settings.UMAI_VERSION
+    umai_wallet = UmaiWallet.objects.last()
+    password = umai_wallet.password
+    wallet = umai_wallet.wallet
+    version = umai_wallet.version
 
     request_headers = {
         "Host": "umai.kg",

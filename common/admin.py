@@ -14,7 +14,7 @@ class MessageTextAdmin(admin.ModelAdmin):
 
 @admin.register(UmaiWallet)
 class UmaiWalletAdmin(admin.ModelAdmin):
-    list_display = ['amount', 'activate', 'start_time', 'end_time']
+    list_display = ['wallet', 'password', 'amount', 'activate', 'version', 'start_time', 'end_time']
 
 
 @admin.register(Languages)

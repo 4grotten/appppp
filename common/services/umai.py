@@ -3,7 +3,6 @@ import json
 import requests
 from django.conf import settings
 
-from common.models import UmaiAccount
 from common.services import slack
 
 
@@ -26,7 +25,9 @@ class Umai:
 
     login_url = 'https://umai.kg/api/auth/local'
 
-    umai_account = UmaiAccount.objects.last()
+    password = settings.UMAI_PASSWORD
+    wallet = settings.UMAI_PHONE
+    version = settings.UMAI_VERSION
 
     request_headers = {
         "Host": "umai.kg",
@@ -51,11 +52,11 @@ class Umai:
     def get_token(self):
         try:
             login_payload = {
-                "password": f"{self.umai_account.password}",
-                "phone": f"{self.umai_account.phone}",
+                "password": f"{self.password}",
+                "phone": f"{self.wallet}",
                 "frontend": {
                     "device": "",
-                    "version": f"{self.umai_account.version}",
+                    "version": f"{self.version}",
                 }
             }
             payload = json.dumps(login_payload)

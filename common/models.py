@@ -185,19 +185,6 @@ class Languages(models.Model):
         ordering = ('code',)
 
 
-class UmaiAccount(TimestampModel, SingletonModel):
-    phone = models.CharField(max_length=20)
-    password = models.CharField(max_length=30)
-    version = models.CharField(max_length=10, default='2.14.8')
-
-    def __str__(self):
-        return f'{self.id}-{self.phone}'
-
-    class Meta:
-        verbose_name = _('Umai account')
-        verbose_name_plural = _('Umai accounts')
-
-
 class UmaiWallet(TimestampModel, SingletonModel):
     amount = models.SmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(1000)], default=50)
     activate = models.BooleanField(default=True)

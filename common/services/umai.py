@@ -26,10 +26,10 @@ class Umai:
 
     login_url = 'https://umai.kg/api/auth/local'
 
-    umai_wallet = UmaiWallet.objects.last()
-    password = umai_wallet.password
-    wallet = umai_wallet.wallet
-    version = umai_wallet.version
+    # umai_wallet = UmaiWallet.objects.last()
+    password = '123'
+    wallet = '123'
+    version = '123'
 
     request_headers = {
         "Host": "umai.kg",

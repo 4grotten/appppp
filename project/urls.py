@@ -3,17 +3,19 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
 
+from search_indexes import urls as search_index_urls
 from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
 
 v1 = ([
-        path('', include('users.urls')),
-        path('', include('organizations.urls')),
-        path('', include('common.urls')),
-        path('', include('transactions.urls')),
-        path('', include('shop.urls')),
-        path('', include('delivery.urls')),
-        path('', include('cors.urls')),
-        path('notifications/', include('notifications.urls'))
+          path('', include('users.urls')),
+          path('', include('organizations.urls')),
+          path('', include('common.urls')),
+          path('', include('transactions.urls')),
+          path('', include('shop.urls')),
+          path('', include('delivery.urls')),
+          path('', include('cors.urls')),
+          re_path(r'^search/', include(search_index_urls)),
+          path('notifications/', include('notifications.urls'))
       ], 'v1')
 
 urlpatterns = [

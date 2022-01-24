@@ -2,7 +2,7 @@ from django.db.models import Q
 from django_elasticsearch_dsl import Document, Index, fields
 from elasticsearch_dsl import analyzer
 from elasticsearch_dsl.analysis import token_filter
-
+from django_elasticsearch_dsl_drf.compat import KeywordField
 from shop.models import ShopItem
 
 # Name of the Elasticsearch index
@@ -146,6 +146,19 @@ class ShopItemDocument(Document):
                 }
             ),
             'title': fields.TextField(),
+
+            'country': fields.ObjectField(
+                properties={
+                    'code': fields.TextField(
+                        analyzer=html_strip,
+                        fields={
+                            'raw': KeywordField(),
+                            'suggest': fields.CompletionField(),
+                        }
+                    ),
+                    'name': fields.TextField()
+                }
+            ),
             'phone_numbers': fields.ObjectField(
                 properties={
                     'id': fields.IntegerField(),

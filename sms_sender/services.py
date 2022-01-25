@@ -63,8 +63,8 @@ class MessageServiceSendPulse:
         sms_url = settings.SEND_PULSE_SMS_URL
         headers = cls.get_headers()
         payload = {
-            "sender":f"{settings.SEND_PULSE_SENDER}",
-            "phones":[f"{numbers}"],
+            "sender": f"{settings.SEND_PULSE_SENDER}",
+            "phones": [f"{numbers}"],
             "body": f"{message}: is your verification code"
         }
         data = json.dumps(payload)
@@ -89,9 +89,9 @@ class MessageServiceSendPulse:
     def login_send_pulse(cls):
         login_url = settings.SEND_PULSE_LOGIN_URL
         payload = {
-           "grant_type":f"{settings.SEND_PULSE_GRAND_TYPE}",
-           "client_id":f"{settings.SEND_PULSE_CLIENT_ID}",
-           "client_secret":f"{settings.SEND_PULSE_CLIENT_SECRET}"
+            "grant_type": f"{settings.SEND_PULSE_GRAND_TYPE}",
+            "client_id": f"{settings.SEND_PULSE_CLIENT_ID}",
+            "client_secret": f"{settings.SEND_PULSE_CLIENT_SECRET}"
         }
         login_response = requests.post(login_url, data=payload)
         token = json.loads(login_response.text)["access_token"]
@@ -113,3 +113,21 @@ class MessageServiceSMSRU:
         if response.status_code == 200:
             return response.content
         return Exception(_('Error while sending SMS'))
+
+
+from twilio.rest import Client
+
+
+class MessageServiceTwilio:
+    @classmethod
+    def send_sms(cls, number, code):
+        account_sid = settings.TWILIO_ACCOUNT_SID
+        auth_token = settings.TWILIO_AUTH_TOKEN
+
+        client = Client(account_sid, auth_token)
+        sms = f'{code}: is your verification code'
+
+        message = client.messages.create(
+            to=number,
+            from_=settings.TWILIO_PHONE,
+            body=sms)

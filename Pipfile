@@ -49,6 +49,7 @@ timezonefinder = "*"
 googletrans = "==4.0.0rc1"
 django-ipware = "*"
 django-xff = "*"
+twilio = "==7.5.0"
 
 [dev-packages]
 coverage = "*"

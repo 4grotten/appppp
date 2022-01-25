@@ -9,14 +9,14 @@ from shop.models import ShopItem
 INDEX = Index('items')
 # See Elasticsearch Indices API reference for available settings
 INDEX.settings(
-    number_of_shards=1,
-    number_of_replicas=1,
+    number_of_shards=5,
+    number_of_replicas=2,
 )
 
 edge_ngram_completion_filter = token_filter(
     'edge_ngram_completion_filter',
     type="edge_ngram",
-    min_gram=1,
+    min_gram=2,
     max_gram=20
 )
 
@@ -43,6 +43,10 @@ class ShopItemDocument(Document):
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
+            'edge_ngram_completion': fields.TextField(
+                analyzer=edge_ngram_completion
+            ),
+
         }
     )
     name = fields.TextField(
@@ -50,6 +54,9 @@ class ShopItemDocument(Document):
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
+            'edge_ngram_completion': fields.TextField(
+                analyzer=edge_ngram_completion
+            ),
         }
     )
     description = fields.TextField(
@@ -57,6 +64,9 @@ class ShopItemDocument(Document):
         fields={
             'raw': fields.KeywordField(ignore_above=10000),
             'suggest': fields.CompletionField(),
+            'edge_ngram_completion': fields.TextField(
+                analyzer=edge_ngram_completion
+            ),
         }
     )
     price = fields.FloatField(

@@ -1,7 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, NestedFilteringFilterBackend, \
-    SearchFilterBackend, OrderingFilterBackend
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, \
+    SearchFilterBackend
+from django_elasticsearch_dsl_drf.pagination import QueryFriendlyPageNumberPagination
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -19,11 +20,11 @@ class ShopItemDocumentView(DocumentViewSet):
 
     document = ShopItemDocument
     serializer_class = ShopItemsDocumentSerializer
-    pagination_class = GeneralPagination
+    pagination_class = QueryFriendlyPageNumberPagination
 
     filter_backends = [
         FilteringFilterBackend,
-        SearchFilterBackend,
+        # SearchFilterBackend,
         DefaultOrderingFilterBackend,
         CompoundSearchFilterBackend,
     ]
@@ -33,6 +34,12 @@ class ShopItemDocumentView(DocumentViewSet):
         'article': {'fuzziness': 'AUTO'},
         'description': {'fuzziness': 'AUTO'}
     }
+
+    # search_fields = (
+    #     'name',
+    #     'article',
+    #     'description'
+    # )
 
     filter_fields = {
         'price': 'price.raw',
@@ -78,10 +85,8 @@ class ShopItemDocumentView(DocumentViewSet):
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
         start_time = serializer.validated_data['start_time']
-        start_time(start_time, 'start_time')
         if start_time:
             qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
-            print('start_time')
         else:
             qs.data['has_new'] = False
         return qs

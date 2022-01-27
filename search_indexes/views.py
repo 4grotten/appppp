@@ -1,8 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, \
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SuggesterFilterBackend, \
     SearchFilterBackend
-from django_elasticsearch_dsl_drf.pagination import QueryFriendlyPageNumberPagination
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -20,15 +19,15 @@ class ShopItemDocumentView(DocumentViewSet):
 
     document = ShopItemDocument
     serializer_class = ShopItemsDocumentSerializer
-    pagination_class = QueryFriendlyPageNumberPagination
 
     filter_backends = [
         FilteringFilterBackend,
-        # SearchFilterBackend,
+        SearchFilterBackend,
         DefaultOrderingFilterBackend,
         CompoundSearchFilterBackend,
+        SuggesterFilterBackend,
     ]
-
+    pagination_class = GeneralPagination
     search_fields = {
         'name': {'fuzziness': 'AUTO'},
         'article': {'fuzziness': 'AUTO'},
@@ -43,7 +42,13 @@ class ShopItemDocumentView(DocumentViewSet):
 
     filter_fields = {
         'price': 'price.raw',
-        'country': 'organization.country.code.raw'
+        'country_code': 'organization.country.code.raw',
+        'subcategories': {
+            'field': 'subcategory.id',
+        },
+        'city': {
+            'field': 'organization.city.id'
+        },
     }
 
     def set_request_param(self, request, param, symbols):

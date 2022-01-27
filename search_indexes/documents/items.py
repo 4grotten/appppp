@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django.db.models import Q
 from django_elasticsearch_dsl import Document, Index, fields
 from elasticsearch_dsl import analyzer
@@ -136,7 +138,6 @@ class ShopItemDocument(Document):
             'name': fields.TextField(attr='name')
         }
     )
-
     organization = fields.ObjectField(
         properties={
             'id': fields.IntegerField(),
@@ -156,17 +157,16 @@ class ShopItemDocument(Document):
                 }
             ),
             'title': fields.TextField(),
-
             'country': fields.ObjectField(
                 properties={
-                    'code': fields.TextField(
-                        analyzer=html_strip,
-                        fields={
-                            'raw': KeywordField(),
-                            'suggest': fields.CompletionField(),
-                        }
-                    ),
-                    'name': fields.TextField()
+                    'code': fields.TextField(),
+                    'name': fields.TextField(),
+                }
+            ),
+            'city': fields.ObjectField(
+                properties={
+                    'id': fields.IntegerField(),
+                    'name': fields.TextField(),
                 }
             ),
             'phone_numbers': fields.ObjectField(
@@ -180,9 +180,9 @@ class ShopItemDocument(Document):
                     'id': fields.IntegerField(),
                     'title_ru': fields.TextField(),
                     'title_en': fields.TextField(),
-                    'title_tr': fields.TextField(),
+                    'title_tr': fields.TextField()
                 }
-            )
+            ),
         }
     )
 
@@ -206,4 +206,3 @@ class ShopItemDocument(Document):
     class Django(object):
         """Inner nested class Django."""
         model = ShopItem  # The model associate with this Document
-

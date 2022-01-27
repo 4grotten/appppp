@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import ShopItemDocumentView
 
 router = DefaultRouter()
-router.register('items', ShopItemDocumentView, basename='shopdocument')
+router.register('shop/feed', ShopItemDocumentView, basename='shopdocument')
 
 urlpatterns = [
     url(r'^', include(router.urls))

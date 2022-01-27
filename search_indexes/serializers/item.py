@@ -24,16 +24,6 @@ class PhoneIndexSerializer(serializers.Serializer):
     phone_number = serializers.CharField(read_only=True)
 
 
-class CountrySerializer(serializers.Serializer):
-    code = serializers.CharField(read_only=True)
-    name = serializers.CharField(read_only=True)
-
-
-class CitySerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(read_only=True)
-
-
 class TypesIndexOrganizationSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     title = serializers.SerializerMethodField()
@@ -53,8 +43,6 @@ class ItemsOrganizationIndexSerializer(serializers.Serializer):
     currency = serializers.SerializerMethodField()
     image = ImageIndexSerializer()
     title = serializers.CharField()
-    country = CountrySerializer()
-    city = CitySerializer()
     phone_numbers = PhoneIndexSerializer(many=True)
     promo_cashback = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
@@ -76,11 +64,12 @@ class ItemsOrganizationIndexSerializer(serializers.Serializer):
     def get_currency(self, org):
         return org.currency.code
 
-class ItemCategorySerializer(serializers.Serializer):
 
+class ItemCategorySerializer(serializers.Serializer):
     class Meta:
         model = ItemCategory
         fields = ('id', 'name', 'icon')
+
 
 class SubcategoryIndexSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)

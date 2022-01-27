@@ -113,6 +113,7 @@ class ShopItemDocument(Document):
             'name_tr': fields.TextField(),
             'category': fields.ObjectField(
                 properties={
+                    'id': fields.IntegerField(),
                     'icon': fields.ObjectField(
                         properties={
                             'id': fields.IntegerField(),
@@ -159,7 +160,13 @@ class ShopItemDocument(Document):
             'title': fields.TextField(),
             'country': fields.ObjectField(
                 properties={
-                    'code': fields.TextField(),
+                    'code': fields.TextField(
+                        analyzer=html_strip,
+                        fields={
+                            'raw': KeywordField(),
+                            'suggest': fields.CompletionField(),
+                        }
+                    ),
                     'name': fields.TextField(),
                 }
             ),

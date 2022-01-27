@@ -14,7 +14,7 @@ v1 = ([
           path('', include('shop.urls')),
           path('', include('delivery.urls')),
           path('', include('cors.urls')),
-          re_path(r'^search/', include(search_index_urls)),
+          path('', include(search_index_urls)),
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 

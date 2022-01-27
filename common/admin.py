@@ -49,7 +49,7 @@ class CityAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
 
-    list_display = ('name', 'country', 'name_ru', 'name_tr', 'postal',)
+    list_display = ('id', 'name', 'country', 'name_ru', 'name_tr', 'postal',)
     search_fields = ('name', 'country__code', 'country__name', 'name_ru', 'name_tr',)
     list_filter = ('country',)
 

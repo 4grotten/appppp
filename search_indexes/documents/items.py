@@ -6,7 +6,7 @@ from django_elasticsearch_dsl_drf.compat import KeywordField
 from shop.models import ShopItem
 
 # Name of the Elasticsearch index
-INDEX = Index('items')
+INDEX = Index(settings.ELASTICSEARCH_INDEX_NAMES[__name__])
 # See Elasticsearch Indices API reference for available settings
 INDEX.settings(
     number_of_shards=5,

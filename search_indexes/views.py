@@ -49,7 +49,7 @@ class ShopItemDocumentView(DocumentViewSet):
         'category': {
             'field': 'subcategory.category.id',
         },
-        'current_timestamp_lt': {
+        'current_timestamp': {
             'field': 'updated_at',
             'lookups': [
                 LOOKUP_QUERY_LT,
@@ -106,4 +106,5 @@ class ShopItemDocumentView(DocumentViewSet):
             qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
         else:
             qs.data['has_new'] = False
+        print(qs.data)
         return qs

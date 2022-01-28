@@ -51,6 +51,10 @@ django-ipware = "*"
 django-xff = "*"
 django-elasticsearch-dsl-drf = "*"
 transliterate = "*"
+twilio = "==7.5.0"
+django-elasticsearch-dsl-drf = "*"
+transliterate = "*"
+twilio = "==7.5.0"
 
 [dev-packages]
 coverage = "*"

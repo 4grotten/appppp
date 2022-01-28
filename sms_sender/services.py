@@ -113,3 +113,24 @@ class MessageServiceSMSRU:
         if response.status_code == 200:
             return response.content
         return Exception(_('Error while sending SMS'))
+
+
+from twilio.rest import Client
+
+
+class MessageServiceTwilio:
+    @classmethod
+    def send_sms(cls, number, code):
+        account_sid = settings.TWILIO_ACCOUNT_SID
+        auth_token = settings.TWILIO_AUTH_TOKEN
+
+        client = Client(account_sid, auth_token)
+        sms = f'{code}: is your verification code'
+
+        message = client.messages.create(
+            to=number,
+            from_=settings.TWILIO_PHONE,
+            body=sms)
+
+
+

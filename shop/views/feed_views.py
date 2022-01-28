@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 
 from common.exceptions import NotAcceptableException
 from organizations.constants import HOTLINK_COLLECTION
@@ -87,7 +87,7 @@ class SubscriptionItemListView(FeedView):
 
 
 class HotlinkCollectionItemListView(ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = SubscriptionItemSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('subcategory',)

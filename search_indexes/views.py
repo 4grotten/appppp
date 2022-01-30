@@ -70,33 +70,58 @@ class ShopItemDocumentView(DocumentViewSet):
         return super(ShopItemDocumentView, self).list(request)
 
     def list(self, request, *args, **kwargs):
+
+        time = request.GET['current_timestamp_lt']
+        mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        del request.GET['current_timestamp_lt']
+        request.GET['current_timestamp__lt'] = time
+        request.query_params._mutable = mutable
+
         search = request.GET.get('search', None)
-        # current_timestamp_lt = request.query_params['current_timestamp_lt']
 
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopItemDocumentView, self).list(request)
         else:
             qs = self.set_request_param(request, 'price__isnull', 'false')
-
         if search:
             symbols = request.query_params['search']
-
-            # set reversed symbols (ggg --> ппп)
-            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
-            qs_r = self.set_request_param(request, 'search', reversed_symbols)
 
             # set reversed translate symbols (ggg --> ггг)
             translate_symbols = Transliteration.get_translit(symbols)
             qt_r = self.set_request_param(request, 'search', translate_symbols)
 
-            if qs.data['total_count'] >= qs_r.data['total_count'] and qs.data['total_count'] >= \
-                    qt_r.data['total_count']:
-                qs = qs
-            elif qs_r.data['total_count'] > qs.data['total_count'] and qs_r.data['total_count'] > \
-                    qt_r.data['total_count']:
-                qs = qs_r
-            else:
-                qs = qt_r
+            # set reversed symbols (ggg --> ппп)
+            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
+            qs_r = self.set_request_param(request, 'search', reversed_symbols)
+
+            array_id = []
+            for i in qs.data['list']:
+                array_id.append(i.get('id'))
+            for i in qt_r.data['list']:
+                if i.get('id') not in array_id:
+                    array_id.append(i.get('id'))
+                    qs.data['list'].append(i)
+                    qs.data['total_count'] += 1
+            for i in qs_r.data['list']:
+                if i.get('id') not in array_id:
+                    array_id.append(i.get('id'))
+                    qs.data['list'].append(i)
+                    qs.data['total_count'] += 1
+
+            print(search, qs.data['total_count'], 'обычный')
+            print(reversed_symbols, qs_r.data['total_count'], 'reverse')
+            print(translate_symbols, qt_r.data['total_count'], 'translate')
+
+
+            # if qs.data['total_count'] >= qs_r.data['total_count'] and qs.data['total_count'] >= \
+            #         qt_r.data['total_count']:
+            #     qs = qs
+            # elif qs_r.data['total_count'] >= qs.data['total_count'] and qs_r.data['total_count'] >= \
+            #         qt_r.data['total_count']:
+            #     qs = qs_r
+            # else:
+            #     qs = qt_r
 
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
@@ -106,5 +131,4 @@ class ShopItemDocumentView(DocumentViewSet):
             qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
         else:
             qs.data['has_new'] = False
-        print(qs.data)
         return qs

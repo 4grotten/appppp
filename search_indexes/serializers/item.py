@@ -7,7 +7,8 @@ from organizations.models import Organization
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from search_indexes.documents.items import ShopItemDocument
-from shop.models import ItemCategory
+from shop.models import ItemCategory, ItemInstagramData
+from shop.serializers.item_serializers import ItemInstagramVideoSerializer, ItemInstagramImageSerializer
 
 
 class ImageIndexSerializer(serializers.Serializer):
@@ -96,6 +97,7 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
     is_liked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     subcategory = SubcategoryIndexSerializer()
+    instagram_data = serializers.SerializerMethodField()
 
     def get_like_count(self, item):
         if item.liked_users:
@@ -113,6 +115,12 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
         if user.id and item.bookmarked_users:
             return user.id in item.bookmarked_users
         return False
+
+    def get_instagram_data(self, item):
+        videos = ItemInstagramData.objects.filter(item_id=item.id).exclude(video_url=None).order_by('created_at')
+        images = ItemInstagramData.objects.filter(item_id=item.id, video_url=None).order_by('created_at')
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)
 
     class Meta:
         document = ShopItemDocument

@@ -109,19 +109,9 @@ class ShopItemDocumentView(DocumentViewSet):
                     qs.data['list'].append(i)
                     qs.data['total_count'] += 1
 
-            print(search, qs.data['total_count'], 'обычный')
-            print(reversed_symbols, qs_r.data['total_count'], 'reverse')
-            print(translate_symbols, qt_r.data['total_count'], 'translate')
-
-
-            # if qs.data['total_count'] >= qs_r.data['total_count'] and qs.data['total_count'] >= \
-            #         qt_r.data['total_count']:
-            #     qs = qs
-            # elif qs_r.data['total_count'] >= qs.data['total_count'] and qs_r.data['total_count'] >= \
-            #         qt_r.data['total_count']:
-            #     qs = qs_r
-            # else:
-            #     qs = qt_r
+            # print(search, qs.data['total_count'], 'обычный')
+            # print(reversed_symbols, qs_r.data['total_count'], 'reverse')
+            # print(translate_symbols, qt_r.data['total_count'], 'translate')
 
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():

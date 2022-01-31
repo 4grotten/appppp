@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT
 from django_elasticsearch_dsl_drf.filter_backends import \
     CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SuggesterFilterBackend, \
-    SearchFilterBackend, OrderingFilterBackend
+    SearchFilterBackend, OrderingFilterBackend, MultiMatchSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -24,12 +24,13 @@ class ShopItemDocumentView(DocumentViewSet):
     filter_backends = [
         FilteringFilterBackend,
         SearchFilterBackend,
-        DefaultOrderingFilterBackend,
         CompoundSearchFilterBackend,
-        SuggesterFilterBackend,
+        DefaultOrderingFilterBackend,
         OrderingFilterBackend
     ]
+
     pagination_class = GeneralPagination
+
     search_fields = {
         'name': {'fuzziness': 'AUTO'},
         'article': {'fuzziness': 'AUTO'},
@@ -37,6 +38,7 @@ class ShopItemDocumentView(DocumentViewSet):
     }
 
     filter_fields = {
+        'price': 'price.raw',
         'country': {
             'field': 'organization.country.code.raw'
         },
@@ -70,13 +72,13 @@ class ShopItemDocumentView(DocumentViewSet):
         return super(ShopItemDocumentView, self).list(request)
 
     def list(self, request, *args, **kwargs):
-
-        time = request.GET['current_timestamp_lt']
-        mutable = request.query_params._mutable
-        request.query_params._mutable = True
-        del request.GET['current_timestamp_lt']
-        request.GET['current_timestamp__lt'] = time
-        request.query_params._mutable = mutable
+        time = request.GET.get('current_timestamp_lt', None)
+        if time:
+            mutable = request.query_params._mutable
+            request.query_params._mutable = True
+            del request.GET['current_timestamp_lt']
+            request.GET['current_timestamp__lt'] = time
+            request.query_params._mutable = mutable
 
         search = request.GET.get('search', None)
 
@@ -85,33 +87,18 @@ class ShopItemDocumentView(DocumentViewSet):
         else:
             qs = self.set_request_param(request, 'price__isnull', 'false')
         if search:
-            symbols = request.query_params['search']
-
             # set reversed translate symbols (ggg --> ггг)
-            translate_symbols = Transliteration.get_translit(symbols)
-            qt_r = self.set_request_param(request, 'search', translate_symbols)
+            translate_symbols = Transliteration.get_translit(search)
 
             # set reversed symbols (ggg --> ппп)
-            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(symbols))
-            qs_r = self.set_request_param(request, 'search', reversed_symbols)
+            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
 
-            array_id = []
-            for i in qs.data['list']:
-                array_id.append(i.get('id'))
-            for i in qt_r.data['list']:
-                if i.get('id') not in array_id:
-                    array_id.append(i.get('id'))
-                    qs.data['list'].append(i)
-                    qs.data['total_count'] += 1
-            for i in qs_r.data['list']:
-                if i.get('id') not in array_id:
-                    array_id.append(i.get('id'))
-                    qs.data['list'].append(i)
-                    qs.data['total_count'] += 1
-
-            # print(search, qs.data['total_count'], 'обычный')
-            # print(reversed_symbols, qs_r.data['total_count'], 'reverse')
-            # print(translate_symbols, qt_r.data['total_count'], 'translate')
+            mutable = request.query_params._mutable
+            request.query_params._mutable = True
+            request.GET.appendlist('search', translate_symbols)
+            request.GET.appendlist('search', reversed_symbols)
+            request.query_params._mutable = mutable
+            qs = super(ShopItemDocumentView, self).list(request)
 
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():

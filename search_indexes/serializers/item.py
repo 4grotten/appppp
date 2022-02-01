@@ -48,6 +48,7 @@ class ItemsOrganizationIndexSerializer(serializers.Serializer):
     promo_cashback = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     types = TypesIndexOrganizationSerializer(many=True)
+    verification_status = serializers.CharField()
 
     def get_permissions(self, organization):
         if self.context['request'].user.is_anonymous:

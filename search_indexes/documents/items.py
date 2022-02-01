@@ -190,6 +190,7 @@ class ShopItemDocument(Document):
                     'title_tr': fields.TextField()
                 }
             ),
+            'verification_status': fields.TextField(),
         }
     )
 

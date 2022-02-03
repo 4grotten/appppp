@@ -247,9 +247,9 @@ ELASTICSEARCH_DSL = {
 }
 
 ELASTICSEARCH_INDEX_NAMES = {
+    'search_indexes.documents.organizations': 'organizations',
     'search_indexes.documents.items': 'items',
 }
-
 
 NIKITA_URL = 'https://smspro.nikita.kg/api/message'
 NIKITA_USERNAME = config('NIKITA_USERNAME')

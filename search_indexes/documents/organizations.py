@@ -19,7 +19,7 @@ edge_ngram_completion_filter = token_filter(
     'edge_ngram_completion_filter',
     type="edge_ngram",
     min_gram=2,
-    max_gram=10,
+    max_gram=15,
 )
 edge_ngram_completion = analyzer(
     "edge_ngram_completion",

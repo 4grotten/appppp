@@ -19,13 +19,13 @@ edge_ngram_completion_filter = token_filter(
     'edge_ngram_completion_filter',
     type="edge_ngram",
     min_gram=2,
-    max_gram=20
+    max_gram=15,
 )
-
 edge_ngram_completion = analyzer(
     "edge_ngram_completion",
-    tokenizer="standard",
-    filter=["lowercase", edge_ngram_completion_filter],
+    type="custom",
+    tokenizer="whitespace",
+    filter=["lowercase", edge_ngram_completion_filter, "snowball"],
     char_filter=["html_strip"]
 )
 
@@ -45,20 +45,14 @@ class ShopItemDocument(Document):
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
-            'edge_ngram_completion': fields.TextField(
-                analyzer=edge_ngram_completion
-            ),
 
         }
     )
     name = fields.TextField(
-        analyzer=html_strip,
+        analyzer=edge_ngram_completion,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
-            'edge_ngram_completion': fields.TextField(
-                analyzer=edge_ngram_completion
-            ),
         }
     )
     description = fields.TextField(
@@ -66,9 +60,6 @@ class ShopItemDocument(Document):
         fields={
             'raw': fields.KeywordField(ignore_above=10000),
             'suggest': fields.CompletionField(),
-            'edge_ngram_completion': fields.TextField(
-                analyzer=edge_ngram_completion
-            ),
         }
     )
     price = fields.FloatField(

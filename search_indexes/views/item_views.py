@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
-from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT, SUGGESTER_COMPLETION
+from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SuggesterFilterBackend, \
-    SearchFilterBackend, OrderingFilterBackend
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SearchFilterBackend, \
+    OrderingFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -65,7 +65,6 @@ class ShopItemDocumentView(DocumentViewSet):
     }
 
     ordering = ('-updated_at',)
-
 
     def set_request_param(self, request, param, symbols):
         mutable = request.query_params._mutable

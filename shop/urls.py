@@ -34,7 +34,7 @@ urlpatterns = [
     path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
 
     # path('shop/feed/', FeedView.as_view(), name='shop_feed'),
-    path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
+    # path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
     path('shop/subscription_items/', SubscriptionItemListView.as_view(), name='subscribed_organization_items'),
     path('shop/hotlink_items/<int:pk>/', HotlinkCollectionItemListView.as_view(), name='hotlink_collection_items'),
 

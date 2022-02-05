@@ -132,7 +132,11 @@ class ShopItemDocument(Document):
     )
     organization = fields.ObjectField(
         properties={
-            'id': fields.IntegerField(),
+            'id': fields.IntegerField(
+                fields={
+                    'raw': KeywordField(),
+                }
+            ),
             'currency': fields.ObjectField(
                 properties={
                     'code': fields.TextField()

@@ -70,6 +70,7 @@ class OrganizationDocument(Document):
         }
     )
     verification_status = fields.TextField()
+    avg_check = fields.FloatField()
     country = fields.ObjectField(
         properties={
             'code': fields.TextField(

@@ -36,6 +36,7 @@ class OrganizationIndexSerializer(serializers.Serializer):
     types = TypesIndexOrganizationSerializer(many=True)
     image = ImageIndexSerializer()
     verification_status = serializers.CharField(read_only=True)
+    avg_check = serializers.DecimalField(decimal_places=2, max_digits=16)
 
     def get_promo_cashback(self, organization):
         return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization.id)
@@ -47,7 +48,7 @@ class OrganizationIndexSerializer(serializers.Serializer):
         document = OrganizationDocument
         fields = (
             'id', 'title', 'promo_cashback', 'discounts', 'types', 'image', 'types', 'verification_status', 'country',
-            'city'
+            'city', 'avg_check'
         )
 
 

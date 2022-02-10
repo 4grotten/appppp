@@ -244,7 +244,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def create_organization(cls, owner: User, title: str, image_id: File, longitude, latitude, numbers, accounts, cards,
-                            types=None, description=None, opens_at=None, closes_at=None,
+                            avg_check, types=None, description=None, opens_at=None, closes_at=None,
                             address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
 
@@ -268,7 +268,8 @@ class OrganizationService:
         organization = Organization.objects.create(owner=owner, title=title, title_lang=title_lang, opens_at=opens_at,
                                                    closes_at=closes_at, description_lang=description_lang,
                                                    description=description, image=image_id, address=address,
-                                                   location=point, currency=currency, country=country, city=city)
+                                                   location=point, currency=currency, country=country, city=city,
+                                                   avg_check=avg_check)
         if types is not None:
             organization.types.set(types)
         for number in numbers:

@@ -292,7 +292,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at, address, currency,
-               show_contacts, country, description=None, city=None):
+               show_contacts, country, avg_check, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -313,6 +313,7 @@ class OrganizationService:
             organization.opens_at = opens_at
             organization.closes_at = closes_at
             organization.address = address
+            organization.avg_check = avg_check
             if not organization.currency == currency:
                 from organizations.services.partnership_services import PartnershipService
                 if not PartnershipService.can_change_currency(organization=organization, currency=currency):

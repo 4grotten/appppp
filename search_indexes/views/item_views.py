@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT
+from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT, LOOKUP_QUERY_IN
 from django_elasticsearch_dsl_drf.filter_backends import \
     CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SearchFilterBackend, \
     OrderingFilterBackend
@@ -77,6 +77,15 @@ class ShopItemDocumentView(DocumentViewSet):
 
     def list(self, request, *args, **kwargs):
         time = request.GET.get('current_timestamp_lt', None)
+        subcategories = request.GET.get('subcategories', None)
+        if subcategories:
+            array = subcategories.split(',')
+            mutable = request.query_params._mutable
+            request.query_params._mutable = True
+            del request.GET['subcategories']
+            request.GET.setlist('subcategories', array)
+            request.query_params._mutable = mutable
+
         if time:
             mutable = request.query_params._mutable
             request.query_params._mutable = True

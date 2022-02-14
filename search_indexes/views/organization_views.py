@@ -18,7 +18,7 @@ class OrganizationDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        CompoundSearchFilterBackend,
+        # CompoundSearchFilterBackend,
         # SearchFilterBackend,
         DefaultOrderingFilterBackend,
         # MultiMatchSearchFilterBackend,

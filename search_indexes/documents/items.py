@@ -49,7 +49,7 @@ class ShopItemDocument(Document):
         }
     )
     name = fields.TextField(
-        analyzer=edge_ngram_completion,
+        analyzer=html_strip,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),

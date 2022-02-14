@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
-from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT, LOOKUP_QUERY_IN
+from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, SearchFilterBackend, \
-    OrderingFilterBackend
+    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, \
+    OrderingFilterBackend, MultiMatchSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.exceptions import NotAcceptableException
@@ -25,18 +25,27 @@ class ShopItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        SearchFilterBackend,
-        CompoundSearchFilterBackend,
+        # SearchFilterBackend,
+        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
-        OrderingFilterBackend
+        OrderingFilterBackend,
+        MultiMatchSearchFilterBackend
     ]
 
     pagination_class = GeneralPagination
 
-    search_fields = {
-        'name': {'fuzziness': 'AUTO'},
-        'article': {'fuzziness': 'AUTO'},
-        'description': {'fuzziness': 'AUTO'}
+    # search_fields = {
+    #     'name': {'fuzziness': 'AUTO'},
+    #     'article': {'fuzziness': 'AUTO'},
+    #     'description': {'fuzziness': 'AUTO'}
+    # }
+
+    multi_match_search_fields = (
+        'name', 'article', 'description'
+    )
+
+    multi_match_options = {
+        'type': 'phrase_prefix'
     }
 
     filter_fields = {
@@ -101,18 +110,19 @@ class ShopItemDocumentView(DocumentViewSet):
             qs = self.set_request_param(request, 'price__isnull', 'false')
         if search:
             # set reversed translate symbols (ggg --> ггг)
-            translate_symbols = Transliteration.get_translit(search)
+            # translate_symbols = Transliteration.get_translit(search)
 
             # set reversed symbols (ggg --> ппп)
-            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
+            # reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
 
             mutable = request.query_params._mutable
             request.query_params._mutable = True
-            request.GET.appendlist('search', translate_symbols)
-            request.GET.appendlist('search', reversed_symbols)
+            request.GET['search_multi_match'] = search
+            # request.GET.appendlist('search_multi_match', translate_symbols)
+            # request.GET.appendlist('search_multi_match', reversed_symbols)
+            del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(ShopItemDocumentView, self).list(request)
-
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
@@ -140,9 +150,9 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
     pagination_class = GeneralPagination
 
     search_fields = {
-        'name': {'fuzziness': 'AUTO'},
-        'article': {'fuzziness': 'AUTO'},
-        'description': {'fuzziness': 'AUTO'}
+        'name',
+        'article',
+        'description'
     }
 
     filter_fields = {
@@ -201,8 +211,8 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
             mutable = request.query_params._mutable
             request.query_params._mutable = True
-            request.GET.appendlist('search', translate_symbols)
-            request.GET.appendlist('search', reversed_symbols)
+            # request.GET.appendlist('search', translate_symbols)
+            # request.GET.appendlist('search', reversed_symbols)
             request.query_params._mutable = mutable
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)
         return qs

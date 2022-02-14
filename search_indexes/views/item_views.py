@@ -142,17 +142,20 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        CompoundSearchFilterBackend,
+        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
-        OrderingFilterBackend
+        OrderingFilterBackend,
+        MultiMatchSearchFilterBackend
     ]
 
     pagination_class = GeneralPagination
 
-    search_fields = {
-        'name',
-        'article',
-        'description'
+    multi_match_search_fields = (
+        'name', 'article', 'description'
+    )
+
+    multi_match_options = {
+        'type': 'phrase_prefix'
     }
 
     filter_fields = {
@@ -204,15 +207,17 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
             qs = self.set_request_param(request, 'price__isnull', 'false')
         if search:
             # set reversed translate symbols (ggg --> ггг)
-            translate_symbols = Transliteration.get_translit(search)
+            # translate_symbols = Transliteration.get_translit(search)
 
             # set reversed symbols (ggg --> ппп)
-            reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
+            # reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
 
             mutable = request.query_params._mutable
             request.query_params._mutable = True
-            # request.GET.appendlist('search', translate_symbols)
-            # request.GET.appendlist('search', reversed_symbols)
+            request.GET['search_multi_match'] = search
+            # request.GET.appendlist('search_multi_match', translate_symbols)
+            # request.GET.appendlist('search_multi_match', reversed_symbols)
+            del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)
         return qs

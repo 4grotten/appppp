@@ -1,13 +1,13 @@
-from django_elasticsearch_dsl_drf.constants import LOOKUP_FILTER_PREFIX, \
-    LOOKUP_FILTER_RANGE, LOOKUP_QUERY_IN, LOOKUP_FILTER_TERMS, LOOKUP_FILTER_WILDCARD, \
-    LOOKUP_QUERY_EXCLUDE
+from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_CONTAINS
 from django_elasticsearch_dsl_drf.filter_backends import \
-    DefaultOrderingFilterBackend, FilteringFilterBackend, MultiMatchSearchFilterBackend
+    DefaultOrderingFilterBackend, FilteringFilterBackend, CompoundSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from common.pagination import GeneralPagination
 from search_indexes.documents.organizations import OrganizationDocument
 from search_indexes.serializers.organization import OrganizationIndexSerializer
+from search_indexes.services.index_services import IndexServices
+from search_indexes.services.transliteration import Transliteration
 
 
 class OrganizationDocumentView(DocumentViewSet):
@@ -18,10 +18,10 @@ class OrganizationDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        # CompoundSearchFilterBackend,
+        CompoundSearchFilterBackend,
         # SearchFilterBackend,
         DefaultOrderingFilterBackend,
-        MultiMatchSearchFilterBackend,
+        # MultiMatchSearchFilterBackend,
         # MultiMatchQueryBackend
     ]
     pagination_class = GeneralPagination
@@ -30,9 +30,9 @@ class OrganizationDocumentView(DocumentViewSet):
     #     'title': {'fuzziness': 'AUTO'},
     # }
 
-    multi_match_search_fields = (
-        'title'
-    )
+    # multi_match_search_fields = (
+    #     'title'
+    # )
 
     # multi_match_options = {'operator': 'and'}
 
@@ -41,7 +41,13 @@ class OrganizationDocumentView(DocumentViewSet):
             'field': 'country.code.raw'
         },
         'city': {
-            'field': 'city.id'
+            'field': 'city.id',
+        },
+        'name': {
+            'field': 'title',
+            'lookups': [
+                LOOKUP_QUERY_CONTAINS,
+            ],
         }
     }
 
@@ -56,12 +62,14 @@ class OrganizationDocumentView(DocumentViewSet):
             # reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
             mutable = request.query_params._mutable
             request.query_params._mutable = True
-            request.GET['search_multi_match'] = search
-            # request.GET.appendlist('search_multi_match', reversed_symbols)
-            # request.GET.appendlist('search_multi_match', translate_symbols)
+            search = search.lower()
+            request.GET['name__contains'] = search
+            # request.GET.appendlist('name__contains', reversed_symbols)
+            # request.GET.appendlist('name__contains', translate_symbols)
             del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(OrganizationDocumentView, self).list(request)
+            print(request.query_params)
         else:
             qs = super(OrganizationDocumentView, self).list(request)
         return qs

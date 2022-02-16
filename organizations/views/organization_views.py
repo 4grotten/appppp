@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -136,6 +138,18 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
     def get_queryset(self):
         queryset = OrganizationService.get_working_time_status(self.queryset, self.request)
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        add_item_date = instance.add_item_date.replace(tzinfo=None)
+        date_now = datetime.datetime.now()
+        if (date_now - add_item_date).seconds > 60 and instance.owner == request.user:
+            instance.add_item_date = date_now
+            instance.save()
+            serializer = self.serializer_class(instance, context={'need_add_item': True})
+            return Response(serializer.data)
+        serializer = self.serializer_class(instance)
+        return Response(serializer.data)
 
     @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):

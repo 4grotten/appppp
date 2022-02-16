@@ -244,7 +244,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def create_organization(cls, owner: User, title: str, image_id: File, longitude, latitude, numbers, accounts, cards,
-                            avg_check, types=None, description=None, opens_at=None, closes_at=None,
+                            avg_check=None, types=None, description=None, opens_at=None, closes_at=None,
                             address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
 

@@ -194,6 +194,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     address = serializers.SerializerMethodField()
     is_adult_content = serializers.SerializerMethodField()
     time_working = serializers.CharField(read_only=True)
+    need_add_item = serializers.SerializerMethodField()
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -250,6 +251,12 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'list': OrganizationWithImageSerializer(partners, many=True).data
         }
 
+    def get_need_add_item(self, obj):
+        need_add_item = self.context.get("need_add_item")
+        if need_add_item:
+            return True
+        return False
+
     class Meta:
         model = Organization
         fields = (
@@ -258,7 +265,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'verification_status',
-            'avg_check'
+            'avg_check', 'need_add_item'
         )
         read_only_fields = ['verification_status']
 

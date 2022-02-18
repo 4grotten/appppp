@@ -11,7 +11,6 @@ def fill_add_item_date(apps, schema_editor):
         if row.shop_items.exists():
             row.add_item_date = row.shop_items.last().created_at
             row.save()
-            print(row.add_item_date)
         else:
             row.add_item_date = row.created_at
             row.save()

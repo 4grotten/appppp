@@ -252,8 +252,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         }
 
     def get_need_add_item(self, obj):
-        need_add_item = self.context.get("need_add_item")
-        if need_add_item:
+        if self.context.get("need_add_item"):
             return True
         return False
 
@@ -267,7 +266,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'verification_status',
             'avg_check', 'need_add_item'
         )
-        read_only_fields = ['verification_status']
+        read_only_fields = ['verification_status', 'need_add_item']
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):

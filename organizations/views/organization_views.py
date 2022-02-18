@@ -13,7 +13,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
     ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -143,12 +143,12 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
         instance = self.get_object()
         add_item_date = instance.add_item_date.replace(tzinfo=None)
         date_now = datetime.datetime.now()
-        if (date_now - add_item_date).seconds > 60 and instance.owner == request.user:
+        if (date_now - add_item_date).seconds > 30 and instance.owner == request.user:
             instance.add_item_date = date_now
             instance.save()
-            serializer = self.serializer_class(instance, context={'need_add_item': True})
+            serializer = self.serializer_class(instance, context={'need_add_item': True, 'request': request})
             return Response(serializer.data)
-        serializer = self.serializer_class(instance)
+        serializer = self.serializer_class(instance, context={'request': request})
         return Response(serializer.data)
 
     @method_permission_classes((IsAuthenticated,))
@@ -164,9 +164,7 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
-
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
 

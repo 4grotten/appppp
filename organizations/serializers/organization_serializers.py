@@ -194,7 +194,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     address = serializers.SerializerMethodField()
     is_adult_content = serializers.SerializerMethodField()
     time_working = serializers.CharField(read_only=True)
-    need_add_item = serializers.SerializerMethodField()
+    need_add_item = serializers.SerializerMethodField(read_only=True)
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())

@@ -293,7 +293,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at, address, currency,
-               show_contacts, country, avg_check, description=None, city=None):
+               show_contacts, country, avg_check=None, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)

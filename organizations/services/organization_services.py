@@ -244,7 +244,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def create_organization(cls, owner: User, title: str, image_id: File, longitude, latitude, numbers, accounts, cards,
-                            types=None, description=None, opens_at=None, closes_at=None,
+                            avg_check=None, types=None, description=None, opens_at=None, closes_at=None,
                             address=None, country=None, currency=None, city=None):
         from organizations.services.card_services import DiscountCardService
 
@@ -268,7 +268,8 @@ class OrganizationService:
         organization = Organization.objects.create(owner=owner, title=title, title_lang=title_lang, opens_at=opens_at,
                                                    closes_at=closes_at, description_lang=description_lang,
                                                    description=description, image=image_id, address=address,
-                                                   location=point, currency=currency, country=country, city=city)
+                                                   location=point, currency=currency, country=country, city=city,
+                                                   avg_check=avg_check)
         if types is not None:
             organization.types.set(types)
         for number in numbers:
@@ -292,7 +293,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at, address, currency,
-               show_contacts, country, description=None, city=None):
+               show_contacts, country, avg_check=None, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -313,6 +314,7 @@ class OrganizationService:
             organization.opens_at = opens_at
             organization.closes_at = closes_at
             organization.address = address
+            organization.avg_check = avg_check
             if not organization.currency == currency:
                 from organizations.services.partnership_services import PartnershipService
                 if not PartnershipService.can_change_currency(organization=organization, currency=currency):

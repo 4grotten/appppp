@@ -16,10 +16,12 @@ services:
       - postgres:postgres
       - rabbitmq:rabbimq
       - memcached:memcached
+      - elasticsearch:elasticsearch
     depends_on:
       - rabbitmq
       - postgres
       - memcached
+      - elasticsearch
     env_file: ./env/development.env
     volumes:
       - .:/app
@@ -32,6 +34,13 @@ services:
     command: /celery_worker.sh
     env_file: ./env/development.env
 
+  elasticsearch:
+    image: elasticsearch:7.4.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
   postgres:
     image: mdillon/postgis:10
     ports:

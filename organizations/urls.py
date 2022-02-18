@@ -124,7 +124,7 @@ homepage_urls = [
     path('homepage/ordered_partners/', HomepagePartnersListView.as_view(), name='homepage_partners_list'),
     path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
-    path('homepage/search/', HomepageSearchView.as_view(), name='homepage_search'),
+    path('homepage/search/partners', HomepageSearchView.as_view(), name='homepage_search'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]

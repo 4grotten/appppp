@@ -48,7 +48,10 @@ INSTALLED_APPS = [
     'notifications',
     'shop.apps.ShopConfig',
     'instagram_parsers.apps.InstagramParsersConfig',
+    'search_indexes.apps.SearchIndexesConfig',
 
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
@@ -234,6 +237,18 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'common.schemas.DefaultSchema',
     'COERCE_DECIMAL_TO_STRING': False,
+}
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'elasticsearch:9200'
+    },
+}
+
+ELASTICSEARCH_INDEX_NAMES = {
+    'search_indexes.documents.organizations': 'organizations',
+    'search_indexes.documents.items': 'items',
 }
 
 NIKITA_URL = 'https://smspro.nikita.kg/api/message'

@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
-from organizations.models import HotlinkCollectionItem
+from organizations.models import HotlinkCollectionItem, Organization
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData
@@ -100,6 +100,11 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         if instance.article == '' or instance.article is None:
             instance.article = f"ART{instance.id}"
             instance.save(update_fields=('article',))
+
+        organization_data = self.validated_data.get('organization')
+        organization = Organization.objects.get(id=organization_data.id)
+        organization.add_item_date = datetime.datetime.now()
+        organization.save()
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

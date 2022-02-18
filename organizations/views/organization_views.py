@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -11,7 +13,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
     ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -137,6 +139,17 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
         queryset = OrganizationService.get_working_time_status(self.queryset, self.request)
         return queryset
 
+    # def get(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     date_now = datetime.datetime.now()
+    #     if (date_now - instance.add_item_date.replace(tzinfo=None)).seconds > 30 and instance.owner == request.user:
+    #         instance.add_item_date = date_now
+    #         instance.save()
+    #         serializer = self.serializer_class(instance, context={'need_add_item': True, 'request': request})
+    #         return Response(serializer.data)
+    #     serializer = self.serializer_class(instance, context={'request': request})
+    #     return Response(serializer.data)
+
     @method_permission_classes((IsAuthenticated,))
     def put(self, request, *args, **kwargs):
         serializer = OrganizationUpdateSerializer(data=request.data, many=False)
@@ -150,9 +163,7 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
         organization = OrganizationService.get(id=kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
-
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
 
 

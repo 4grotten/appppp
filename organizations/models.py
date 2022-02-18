@@ -86,7 +86,7 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
     verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
-
+    avg_check = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
 
@@ -97,6 +97,8 @@ class Organization(TimestampModel):
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)
+
+    add_item_date = models.DateTimeField(auto_now_add=True)
 
     # Managers
     objects = OrganizationManager()
@@ -387,7 +389,8 @@ class Hotlink(TimestampModel):
         parsed_link = urlparse(self.content)
         is_internal = False
 
-        if (self.link_type == HOTLINK_URL or self.link_type == HOTLINK_PARTNERS) and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
+        if (
+                self.link_type == HOTLINK_URL or self.link_type == HOTLINK_PARTNERS) and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
             if parsed_link.path.startswith('/p/'):
                 item_id = parsed_link.path.replace('/p/', '').replace('/', '')
                 from shop.models import ShopItem
@@ -548,4 +551,4 @@ class Service(models.Model):
     class Meta:
         verbose_name = _('Service')
         verbose_name_plural = _('Services')
-        ordering = ('ordering', )
+        ordering = ('ordering',)

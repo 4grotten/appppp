@@ -13,7 +13,7 @@ def add_data_in_subscriptions(apps, schema_editor):
     Organization = apps.get_model('organizations', 'Organization')
     apofiz_org = Organization.objects.get(title='Apofiz.com')
     for user in User.objects.all():
-        Subscription.objects.create(user=user, organization=apofiz_org)
+        subscription, created = Subscription.objects.get_or_create(user=user, organization=apofiz_org)
 
 
 
@@ -23,5 +23,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_data_in_subscriptions),
+        # migrations.RunPython(add_data_in_subscriptions),
     ]

@@ -30,15 +30,17 @@ class SubscriptionsView(ListAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = SubscriptionSerializer(data=request.data)
-
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={
+                    'message': _('Invalid input'),
+                    'errors': serializer.errors
+                }, status=status.HTTP_406_NOT_ACCEPTABLE
+            )
 
         is_subscribed = SubscriptionService.toggle_subscription_status(
-            organization=serializer.validated_data['organization'], user=request.user)
+            organization=serializer.validated_data['organization'], user=request.user
+        )
 
         return Response(data={
             'message': _('Successfully updated subscription status'),
@@ -86,7 +88,6 @@ class OrgDownloadFollowersAPIView(APIView):
         organization = OrganizationService.get(pk=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=token.user):
             return Response({"message": _("Permission denied")}, status=status.HTTP_403_FORBIDDEN)
-
 
         queryset = list(self.get_queryset(*args, **kwargs))
         full_names = []

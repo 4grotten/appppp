@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import UmaiWallet
 from common.services.umai import Umai
+from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
@@ -155,10 +156,11 @@ class ProfileInitialAPIView(APIView):
 
         registration = UmaiWallet.objects.last()
         device_type = serializer.validated_data.get('device_type')
-        if device_type in DEVICE_TYPES and registration and registration.is_accepted and\
+        if device_type in DEVICE_TYPES and registration and registration.is_accepted and \
                 str(user.phone_number).startswith("+996") and is_new_in_begin:
             Umai(str(user.phone_number), wallet=registration).commit_payment()
-
+        apofiz_org = Organization.objects.get(title='Apofiz.com')
+        subscription, created = Subscription.objects.get_or_create(user=user, organization=apofiz_org)
         return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 

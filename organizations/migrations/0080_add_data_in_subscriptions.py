@@ -23,5 +23,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.RunPython(add_data_in_subscriptions),
+        migrations.RunPython(add_data_in_subscriptions),
     ]

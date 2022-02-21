@@ -204,7 +204,7 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)
         else:
-            qs = self.set_request_param(request, 'price__isnull', 'false')
+            return super(ShopOrgnizationItemDocumentView, self).list(request)
         if search:
             # set reversed translate symbols (ggg --> ггг)
             # translate_symbols = Transliteration.get_translit(search)

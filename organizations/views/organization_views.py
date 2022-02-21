@@ -142,7 +142,7 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
         date_now = datetime.datetime.now()
-        if (date_now - instance.add_item_date.replace(tzinfo=None)).seconds > 30 and instance.owner == request.user:
+        if (date_now - instance.add_item_date.replace(tzinfo=None)).days > 6 and instance.owner == request.user:
             Organization.objects.filter(id=instance.id).update(add_item_date=date_now)
             serializer = self.serializer_class(instance, context={'need_add_item': True, 'request': request})
             return Response(serializer.data)

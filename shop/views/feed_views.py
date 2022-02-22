@@ -41,7 +41,7 @@ class FeedView(ListAPIView):
         response = super().list(request, args, kwargs)
         start_time = serializer.validated_data['start_time']
         if start_time:
-            response.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+            response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)
         else:
             response.data['has_new'] = False
         return response
@@ -80,7 +80,8 @@ class SubscriptionItemListView(FeedView):
         response = super().list(request, args, kwargs)
         start_time = serializer.validated_data['start_time']
         if start_time:
-            response.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+            response.data['has_new'] = ShopItemService.subscription_has_new_items(timestamp=start_time,
+                                                                                  user=request.user)
         else:
             response.data['has_new'] = False
         return response

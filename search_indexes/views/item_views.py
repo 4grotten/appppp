@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django_elasticsearch_dsl_drf.constants import LOOKUP_QUERY_LT
 from django_elasticsearch_dsl_drf.filter_backends import \
-    CompoundSearchFilterBackend, DefaultOrderingFilterBackend, FilteringFilterBackend, \
+    DefaultOrderingFilterBackend, FilteringFilterBackend, \
     OrderingFilterBackend, MultiMatchSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
@@ -10,9 +10,6 @@ from common.pagination import GeneralPagination
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from search_indexes.documents.items import ShopItemDocument
 from search_indexes.serializers.item import ShopItemsDocumentSerializer
-from search_indexes.services.index_services import IndexServices
-from search_indexes.services.transliteration import Transliteration
-from shop.models import ShopItem
 from shop.serializers.item_serializers import StartDateTimeSerializer
 from shop.services.item_services import ShopItemService
 
@@ -127,10 +124,8 @@ class ShopItemDocumentView(DocumentViewSet):
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
         start_time = serializer.validated_data['start_time']
-        print(start_time, 'start_timeee')
         if start_time:
-            print(request.user, 'request.useeeeeeeer')
-            qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+            qs.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)
         else:
             qs.data['has_new'] = False
         return qs
@@ -227,7 +222,7 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
             raise NotAcceptableException(_('Validation Error'))
         start_time = serializer.validated_data['start_time']
         if start_time:
-            qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+            qs.data['has_new'] = ShopItemService.subscription_has_new_items(timestamp=start_time, user=request.user)
         else:
             qs.data['has_new'] = False
         return qs

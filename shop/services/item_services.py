@@ -29,12 +29,10 @@ class ShopItemService:
         item.save(update_fields=('is_published',))
 
     @classmethod
-    def has_new(cls, timestamp: str, user: User) -> bool:
+    def subscription_has_new_items(cls, timestamp: str, user: User) -> bool:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
-        print(organizations, 'organizationsssss')
         queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True,
                                            updated_at__gt=timestamp).distinct()
-        print(queryset, 'querysettttttttttt')
         return queryset.exists()
 
     @classmethod

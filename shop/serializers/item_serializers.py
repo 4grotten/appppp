@@ -102,9 +102,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             instance.save(update_fields=('article',))
 
         organization_data = self.validated_data.get('organization')
-        organization = Organization.objects.get(id=organization_data.id)
-        organization.add_item_date = datetime.datetime.now()
-        organization.save()
+        Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

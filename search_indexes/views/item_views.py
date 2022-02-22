@@ -127,6 +127,7 @@ class ShopItemDocumentView(DocumentViewSet):
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
         start_time = serializer.validated_data['start_time']
+        print(start_time, 'start_timeee')
         if start_time:
             qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
         else:

@@ -33,6 +33,7 @@ class ShopItemService:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
         queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True,
                                            updated_at__gt=timestamp).distinct()
+        print(queryset, 'querysettttttttttt')
         return queryset.exists()
 
     @classmethod

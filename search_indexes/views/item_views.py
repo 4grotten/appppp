@@ -129,6 +129,7 @@ class ShopItemDocumentView(DocumentViewSet):
         start_time = serializer.validated_data['start_time']
         print(start_time, 'start_timeee')
         if start_time:
+            print(request.user, 'request.useeeeeeeer')
             qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
         else:
             qs.data['has_new'] = False

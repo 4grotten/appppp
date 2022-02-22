@@ -31,6 +31,7 @@ class ShopItemService:
     @classmethod
     def has_new(cls, timestamp: str, user: User) -> bool:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
+        print(organizations, 'organizationsssss')
         queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True,
                                            updated_at__gt=timestamp).distinct()
         print(queryset, 'querysettttttttttt')

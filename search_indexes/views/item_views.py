@@ -222,4 +222,12 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
             del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)
+        serializer = StartDateTimeSerializer(data=request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Validation Error'))
+        start_time = serializer.validated_data['start_time']
+        if start_time:
+            qs.data['has_new'] = ShopItemService.has_new(timestamp=start_time, user=request.user)
+        else:
+            qs.data['has_new'] = False
         return qs

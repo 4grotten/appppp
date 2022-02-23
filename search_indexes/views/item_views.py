@@ -197,11 +197,10 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
             raise NotAcceptableException(_('This organization is deleted'))
 
         search = request.GET.get('search', None)
-
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)
         else:
-            return super(ShopOrgnizationItemDocumentView, self).list(request)
+            qs = super(ShopOrgnizationItemDocumentView, self).list(request)
         if search:
             # set reversed translate symbols (ggg --> ггг)
             # translate_symbols = Transliteration.get_translit(search)

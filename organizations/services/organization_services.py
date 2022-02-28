@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
-from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField,\
+from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField, \
     CharField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -478,7 +478,7 @@ class OrganizationService:
                  time_now__range=(['00:00:00', F('closes_at')]), then=2),
             default=Value(3),
             output_field=IntegerField(),
-        )).order_by('time_working')
+        )).order_by('-verification_status', 'time_working')
 
         # print(locale_time)
         # for i in queryset:
@@ -490,8 +490,6 @@ class OrganizationService:
     def get_working_time_status(cls, queryset, request):
         timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-
-
 
         queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()), output_field=TimeField()))
 

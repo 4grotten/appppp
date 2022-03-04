@@ -420,7 +420,7 @@ class SubscriptionsMessageListAPIView(ListAPIView):
     filterset_fields = ('organization',)
 
     def get_queryset(self):
-        messages = OrgMessageService.get_received_messages(user=self.request.user)
+        messages = OrgMessageService.get_messages_of_organization(organization_id=self.request.GET['organization'])
         return messages
 
 

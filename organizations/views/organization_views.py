@@ -381,13 +381,14 @@ class OrganizationsInServicesView(ListAPIView):
 
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
-
+        subcategory = serializer.validated_data['subcategory']
         try:
             service = Service.objects.get(id=self.kwargs['pk'])
         except ObjectDoesNotExist:
             raise ObjectNotFoundException
         queryset = OrganizationService.get_organizations_in_service(service=service,
-                                                                    country=country, city=city, request=self.request)
+                                                                    country=country, city=city,
+                                                                    subcategory=subcategory, request=self.request)
         return queryset
 
     def list(self, request, *args, **kwargs):

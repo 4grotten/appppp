@@ -34,6 +34,7 @@ from organizations.models import (
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
+from shop.models import ItemSubcategory
 from transactions.models import Transaction
 from users.models import User
 from utils.translator import GoogleTranslator
@@ -451,16 +452,19 @@ class OrganizationService:
 
     @classmethod
     def get_organizations_in_service(cls, request, service: Service, country: Union[Country, None] = None,
-                                     city: Union[City, None] = None) -> QuerySet:
+                                     city: Union[City, None] = None,
+                                     subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
 
         timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-
         queryset = Organization.objects.filter(is_active=True, has_delivery=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
 
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
+        if subcategory is not None:
+            queryset = queryset.filter(shop_items__subcategory=subcategory)
 
         try:
             queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),

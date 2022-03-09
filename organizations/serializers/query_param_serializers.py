@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from common.models import Country, City
 from organizations.models import Organization, OrganizationCategory
+from shop.models import ItemSubcategory
 from users.models import User
 
 
@@ -22,6 +23,7 @@ class OrganizationAndCategorySerializer(serializers.Serializer):
 class OrganizationCoutrySerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
+    subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

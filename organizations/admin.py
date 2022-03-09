@@ -238,7 +238,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     search_fields = ('name', 'icon', 'subcategory',)
     raw_id_fields = ('icon',)
-    filter_horizontal = ['subcategory']
+    filter_horizontal = ['subcategory', 'category_of_item']
 
     readonly_fields = ['preview']
 

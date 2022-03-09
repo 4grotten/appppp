@@ -3,6 +3,7 @@ import six
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from organizations.models import Service
 from .models import File, Currency, Country, City, Version, Languages, MessageText
 
 
@@ -79,6 +80,10 @@ class CitySerializer(serializers.ModelSerializer):
 class CountryCityQueryParamSerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
+
+
+class ServiceCountryCityQueryParamSerializer(CountryCityQueryParamSerializer):
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all(), default=None)
 
 
 class TimezoneField(serializers.Field):

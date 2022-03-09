@@ -23,7 +23,7 @@ from .views.organization_views import (
     OrganizationsListCreateView, OrganizationTypesListView, OrganizationRetrieveUpdateView,
     OrgMessageAPIView, OrgPhonesListAPIView, OrgNetworksListAPIView, SetOrganizationLocationAPIView,
     OrganizationTitleRetrieveAPIView, OrganizationFollowersCountAPIView, SubscriptionsMessageListAPIView,
-    OrganizationsInCategoryView, HomepageOrganizationsView, HomepageSearchView, OrganizationPartnersCountAPIView,
+    OrganizationsInCategoryView, HomepageOrganizationsView, OrganizationPartnersCountAPIView,
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreateRetrieveAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
@@ -34,7 +34,7 @@ from .views.partnerships_views import (
     HomepageRandomPartnersView, HomepagePartnersListView, HomepageBannersView, OrgPartnershipsInShortView,
 )
 from .views.seo_views import org_detail
-from .views.service import ServiceReadOnlySet
+from .views.service import ServiceReadOnlySet, NonEmptyServiceCategoryItemListView
 from .views.subscription_views import (
     SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
     MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView
@@ -43,8 +43,10 @@ from .views.subscription_views import (
 router = DefaultRouter()
 router.register('services', ServiceReadOnlySet)
 
-
 organization_urls = [
+    path('services/<int:pk>/item_categories/', NonEmptyServiceCategoryItemListView.as_view(),
+         name='service_item_category'),
+
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
     path('organization_all_types/', OrganizationAllTypesListView.as_view(), name='organization_types'),
 
@@ -124,7 +126,7 @@ homepage_urls = [
     path('homepage/ordered_partners/', HomepagePartnersListView.as_view(), name='homepage_partners_list'),
     path('homepage/banner_info/', HomepageBannersView.as_view(), name='homepage_banners'),
     path('homepage/organizations/', HomepageOrganizationsView.as_view(), name='homepage_organizations'),
-    path('homepage/search/partners', HomepageSearchView.as_view(), name='homepage_search'),
+    # path('homepage/search/partners', HomepageSearchView.as_view(), name='homepage_search'),
 
     path('categorized_organizations/', OrganizationsInCategoryView.as_view(), name='categorized_organizations'),
 ]
@@ -161,8 +163,6 @@ organization_promo_urls = [
 services_urls = [
     path('service/<int:pk>/organizations/', OrganizationsInServicesView.as_view(), name='organizations_in_services')
 ]
-
-
 
 urlpatterns = [
     path('', include(organization_urls)),

@@ -12,10 +12,19 @@ RUN apt-get install --no-install-recommends --yes \
 
 WORKDIR /app
 
-COPY ./Pipfile /app/
-COPY ./Pipfile.lock /app/
-RUN pip install pipenv
-RUN pipenv install --system --deploy
+RUN pip3 install poetry
+
+COPY ./pyproject.toml /app
+COPY ./poetry.lock /app
+
+#COPY ./Pipfile /app/
+#COPY ./Pipfile.lock /app/
+#RUN pip install pipenv
+#RUN pipenv install --system --deploy
+
+RUN pip install --upgrade pip
+RUN poetry config virtualenvs.create false && \
+    poetry install
 
 COPY . /app/
 COPY ./bin/gunicorn.sh ./bin/entrypoint.sh ./bin/celery_worker.sh ./bin/runserver.sh /

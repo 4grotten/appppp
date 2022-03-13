@@ -13,6 +13,7 @@ v1 = ([
           path('', include('transactions.urls')),
           path('', include('shop.urls')),
           path('', include('delivery.urls')),
+          path('', include('sms_sender.urls')),
           path('', include('cors.urls')),
           path('', include(search_index_urls)),
           path('notifications/', include('notifications.urls'))

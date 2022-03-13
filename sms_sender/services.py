@@ -5,6 +5,7 @@ from django.conf import settings
 from django.template import Template, Context
 from django.utils.translation import gettext_lazy as _
 from common.services import slack
+from sms_sender.models import SmsModel
 
 
 class MessageServiceNIKITA:
@@ -63,8 +64,8 @@ class MessageServiceSendPulse:
         sms_url = settings.SEND_PULSE_SMS_URL
         headers = cls.get_headers()
         payload = {
-            "sender":f"{settings.SEND_PULSE_SENDER}",
-            "phones":[f"{numbers}"],
+            "sender": f"{settings.SEND_PULSE_SENDER}",
+            "phones": [f"{numbers}"],
             "body": f"{message}: is your verification code"
         }
         data = json.dumps(payload)
@@ -89,9 +90,9 @@ class MessageServiceSendPulse:
     def login_send_pulse(cls):
         login_url = settings.SEND_PULSE_LOGIN_URL
         payload = {
-           "grant_type":f"{settings.SEND_PULSE_GRAND_TYPE}",
-           "client_id":f"{settings.SEND_PULSE_CLIENT_ID}",
-           "client_secret":f"{settings.SEND_PULSE_CLIENT_SECRET}"
+            "grant_type": f"{settings.SEND_PULSE_GRAND_TYPE}",
+            "client_id": f"{settings.SEND_PULSE_CLIENT_ID}",
+            "client_secret": f"{settings.SEND_PULSE_CLIENT_SECRET}"
         }
         login_response = requests.post(login_url, data=payload)
         token = json.loads(login_response.text)["access_token"]
@@ -133,4 +134,8 @@ class MessageServiceTwilio:
             body=sms)
 
 
+class AzamatMessageService:
+    @classmethod
+    def save_in_model(cls, message, phone_number):
+        sms, created = SmsModel.objects.get_or_create(phone_number=phone_number, text=message)
 

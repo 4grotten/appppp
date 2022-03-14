@@ -8,7 +8,7 @@ from sms_sender.serializers import SmsSerializer, SmsPostSerializer
 from rest_framework.response import Response
 
 
-class SmsListCreateView(ListCreateAPIView):
+class SmsGetPostView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SmsSerializer
 

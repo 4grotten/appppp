@@ -84,6 +84,11 @@ class UserService:
 
 class TemporaryCodeService:
     model = TemporaryCode
+    nurtelecom = (
+        '+996500', '+996501', '+996502', '+996503', '+996504', '+996505', '+996506', '+996507', '+996508',
+        '+996509', '+996700', '+996701', '+996702', '+996703', '+996704', '+996705', '+996706', '+996707',
+        '+996708', '+996709'
+    )
 
     @classmethod
     def get(cls, **filters):
@@ -114,7 +119,7 @@ class TemporaryCodeService:
         sms_id = f'{user.id}{code.code}'
         phone_number = str(user.phone_number)
 
-        if phone_number.startswith("+996703"):
+        if phone_number.startswith(cls.nurtelecom):
             AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)

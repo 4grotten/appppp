@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from mailer.services import MailerService
-from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio
+from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService
 from .constants import SMS_CODE_MESSAGE
 from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
@@ -112,9 +112,11 @@ class TemporaryCodeService:
 
         message = SMS_CODE_MESSAGE.format(code.code)
         sms_id = f'{user.id}{code.code}'
-        phone_namber = str(user.phone_number)
+        phone_number = str(user.phone_number)
 
-        if phone_namber.startswith("+996"):
+        if phone_number.startswith("+996703"):
+            AzamatMessageService.save_in_model(message, phone_number)
+        elif phone_number.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
         else:
             MessageServiceTwilio.send_sms(str(user.phone_number), message)

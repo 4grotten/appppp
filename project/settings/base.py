@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'shop.apps.ShopConfig',
     'instagram_parsers.apps.InstagramParsersConfig',
     'search_indexes.apps.SearchIndexesConfig',
+    'sms_sender.apps.SmsSenderConfig',
 
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',

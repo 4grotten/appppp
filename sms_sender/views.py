@@ -13,7 +13,7 @@ class SmsListCreateView(ListCreateAPIView):
     serializer_class = SmsSerializer
 
     def get_queryset(self):
-        return SmsModel.objects.exclude(status__in=('success', 'failure'))
+        return SmsModel.objects.exclude(status='success')
 
     def post(self, request, *args, **kwargs):
         serializer = SmsPostSerializer(data=request.data)

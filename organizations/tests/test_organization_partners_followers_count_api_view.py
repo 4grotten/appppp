@@ -54,11 +54,11 @@ class OrganizationPartnersFollowersCountAPIViewTestCase(APITestCase):
                     "username": self.org_accepted_by.owner.username,
                     "avatar": {
                         "id": self.org_accepted_by.owner.avatar.id,
-                        "file": f"http://testserver{self.org_accepted_by.owner.avatar.file.url}",
+                        "file": f"{self.org_accepted_by.owner.avatar.file.url}",
                         "name": os.path.basename(self.org_accepted_by.owner.avatar.file.name),
-                        "large": f"http://testserver{self.org_accepted_by.owner.avatar.large.url}",
-                        "medium": f"http://testserver{self.org_accepted_by.owner.avatar.medium.url}",
-                        "small": f"http://testserver{self.org_accepted_by.owner.avatar.small.url}",
+                        "large": f"{self.org_accepted_by.owner.avatar.large.url}",
+                        "medium": f"{self.org_accepted_by.owner.avatar.medium.url}",
+                        "small": f"{self.org_accepted_by.owner.avatar.small.url}",
                     },
                 }
             ],

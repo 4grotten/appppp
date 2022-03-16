@@ -58,14 +58,15 @@ class NotificationListAPIViewTestCase(APITestCase):
                         "title": self.organization.title,
                         "image": {
                             "id": self.organization.image.id,
-                            "file": f"http://testserver{self.organization.image.file.url}",
+                            "file": f"{self.organization.image.file.url}",
                             "name": os.path.basename(
                                 str(self.organization.image.file)),
-                            "large": f"http://testserver{self.organization.image.large.url}",
-                            "medium": f"http://testserver{self.organization.image.medium.url}",
-                            "small": f"http://testserver{self.organization.image.small.url}",
+                            "large": f"{self.organization.image.large.url}",
+                            "medium": f"{self.organization.image.medium.url}",
+                            "small": f"{self.organization.image.small.url}",
                         },
                         "address": self.organization.address,
+                        "verification_status": self.organization.verification_status,
                     },
                     "type": self.notification_two.type,
                 },
@@ -88,14 +89,15 @@ class NotificationListAPIViewTestCase(APITestCase):
                         "title": self.organization.title,
                         "image": {
                             "id": self.organization.image.id,
-                            "file": f"http://testserver{self.organization.image.file.url}",
+                            "file": f"{self.organization.image.file.url}",
                             "name": os.path.basename(
                                 str(self.organization.image.file)),
-                            "large": f"http://testserver{self.organization.image.large.url}",
-                            "medium": f"http://testserver{self.organization.image.medium.url}",
-                            "small": f"http://testserver{self.organization.image.small.url}",
+                            "large": f"{self.organization.image.large.url}",
+                            "medium": f"{self.organization.image.medium.url}",
+                            "small": f"{self.organization.image.small.url}",
                         },
                         "address": self.organization.address,
+                        "verification_status": self.organization.verification_status,
                     },
                     "type": self.notification_one.type,
                 }
@@ -108,4 +110,4 @@ class NotificationListAPIViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertJSONEqual(response.content, expected_data)
+        self.assertJSONEqual(str(response.content, encoding='utf8'), expected_data)

@@ -45,14 +45,15 @@ class OrganizationPartnersCountAPIViewTestCase(APITestCase):
                 "id": self.partner.accepted_by.id,
                 "image": {
                     "id": self.partner.accepted_by.image.id,
-                    "file": f"http://testserver{self.partner.accepted_by.image.file.url}",
+                    "file": f"{self.partner.accepted_by.image.file.url}",
                     "name": os.path.basename(
                         str(self.partner.accepted_by.image.file)),
-                    "large": f"http://testserver{self.partner.accepted_by.image.large.url}",
-                    "medium": f"http://testserver{self.partner.accepted_by.image.medium.url}",
-                    "small": f"http://testserver{self.partner.accepted_by.image.small.url}",
+                    "large": f"{self.partner.accepted_by.image.large.url}",
+                    "medium": f"{self.partner.accepted_by.image.medium.url}",
+                    "small": f"{self.partner.accepted_by.image.small.url}",
                 },
                 "title": self.partner.accepted_by.title,
+                "verification_status": self.partner.accepted_by.verification_status,
             }],
             "count": 1
         }
@@ -64,6 +65,5 @@ class OrganizationPartnersCountAPIViewTestCase(APITestCase):
             ),
             content_type='application/json'
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)

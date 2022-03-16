@@ -86,12 +86,12 @@ class OrgMessageAPIViewTestCase(APITestCase):
                         "full_name": self.user.full_name,
                         "avatar": {
                             "id": self.user.avatar.id,
-                            "file": f"http://testserver{self.user.avatar.file.url}",
+                            "file": f"{self.user.avatar.file.url}",
                             "name": os.path.basename(
                                 self.user.avatar.file.name),
-                            "large": f"http://testserver{self.user.avatar.large.url}",
-                            "medium": f"http://testserver{self.user.avatar.medium.url}",
-                            "small": f"http://testserver{self.user.avatar.small.url}",
+                            "large": f"{self.user.avatar.large.url}",
+                            "medium": f"{self.user.avatar.medium.url}",
+                            "small": f"{self.user.avatar.small.url}",
                         },
                         "username": self.user.username,
                     },
@@ -107,12 +107,12 @@ class OrgMessageAPIViewTestCase(APITestCase):
                             "full_name": user_receiver_two.full_name,
                             "avatar": {
                                 "id": user_receiver_two.avatar.id,
-                                "file": f"http://testserver{user_receiver_two.avatar.file.url}",
+                                "file": f"{user_receiver_two.avatar.file.url}",
                                 "name": os.path.basename(
                                     user_receiver_two.avatar.file.name),
-                                "large": f"http://testserver{user_receiver_two.avatar.large.url}",
-                                "medium": f"http://testserver{user_receiver_two.avatar.medium.url}",
-                                "small": f"http://testserver{user_receiver_two.avatar.small.url}",
+                                "large": f"{user_receiver_two.avatar.large.url}",
+                                "medium": f"{user_receiver_two.avatar.medium.url}",
+                                "small": f"{user_receiver_two.avatar.small.url}",
                             },
                             "username": None
                         },
@@ -121,12 +121,12 @@ class OrgMessageAPIViewTestCase(APITestCase):
                             "full_name": user_receiver_one.full_name,
                             "avatar": {
                                 "id": user_receiver_one.avatar.id,
-                                "file": f"http://testserver{user_receiver_one.avatar.file.url}",
+                                "file": f"{user_receiver_one.avatar.file.url}",
                                 "name": os.path.basename(
                                     user_receiver_one.avatar.file.name),
-                                "large": f"http://testserver{user_receiver_one.avatar.large.url}",
-                                "medium": f"http://testserver{user_receiver_one.avatar.medium.url}",
-                                "small": f"http://testserver{user_receiver_one.avatar.small.url}",
+                                "large": f"{user_receiver_one.avatar.large.url}",
+                                "medium": f"{user_receiver_one.avatar.medium.url}",
+                                "small": f"{user_receiver_one.avatar.small.url}",
                             },
                             "username": None
                         },
@@ -139,25 +139,27 @@ class OrgMessageAPIViewTestCase(APITestCase):
                             "title": organization_two.title,
                             "image": {
                                 "id": organization_two.image.id,
-                                "file": f"http://testserver{organization_two.image.file.url}",
+                                "file": f"{organization_two.image.file.url}",
                                 "name": os.path.basename(organization_two.image.file.name),
-                                "large": f"http://testserver{organization_two.image.large.url}",
-                                "medium": f"http://testserver{organization_two.image.medium.url}",
-                                "small": f"http://testserver{organization_two.image.small.url}",
-                            }
+                                "large": f"{organization_two.image.large.url}",
+                                "medium": f"{organization_two.image.medium.url}",
+                                "small": f"{organization_two.image.small.url}",
+                            },
+                            "verification_status": organization_two.verification_status
                         },
                         {
                             "id": organization_three.id,
                             "title": organization_three.title,
                             "image": {
                                 "id": organization_three.image.id,
-                                "file": f"http://testserver{organization_three.image.file.url}",
+                                "file": f"{organization_three.image.file.url}",
                                 "name": os.path.basename(
                                     organization_three.image.file.name),
-                                "large": f"http://testserver{organization_three.image.large.url}",
-                                "medium": f"http://testserver{organization_three.image.medium.url}",
-                                "small": f"http://testserver{organization_three.image.small.url}",
-                            }
+                                "large": f"{organization_three.image.large.url}",
+                                "medium": f"{organization_three.image.medium.url}",
+                                "small": f"{organization_three.image.small.url}",
+                            },
+                            "verification_status": organization_three.verification_status
                         }
                     ],
                 }
@@ -170,7 +172,6 @@ class OrgMessageAPIViewTestCase(APITestCase):
             }),
             content_type='application/json'
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)
 
@@ -198,7 +199,7 @@ class OrgMessageAPIViewTestCase(APITestCase):
 
     @patch("organizations.services.organization_services.OrgMessageService.send_message")
     def test_send_organization_message(
-            self, send_message_mock: Mock,):
+            self, send_message_mock: Mock, ):
         self.client.force_authenticate(user=self.user)
         data = {
             "content": "Тут какое-то сообщение от Ахмеда",

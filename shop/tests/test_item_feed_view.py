@@ -22,10 +22,10 @@ class FeedViewTestCase(APITestCase):
         self.banned_organization = OrganizationFactory(owner=self.user, image=None, is_banned=True)
         self.banned_org_item = ShopItemFactory(organization=self.banned_organization, price=300)
 
-        self.url = reverse("v1:shop_feed")
+        self.url = reverse("v1:shop_feed-list")
 
     def test_banned_organization_items_are_not_returned(self):
         response = self.client.get(self.url, content_type='application/json')
-
+        # print(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['total_count'], 2)

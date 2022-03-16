@@ -67,7 +67,9 @@ class BookmarkListCreateViewTestCase(APITestCase):
                 {
                     "id": shop_item.id,
                     "name": shop_item.name,
+                    "name_lang": shop_item.name_lang,
                     "description": shop_item.description,
+                    "description_lang": shop_item.description_lang,
                     "article": shop_item.article,
                     "price": shop_item.price,
                     "discount": shop_item.discount,
@@ -82,6 +84,7 @@ class BookmarkListCreateViewTestCase(APITestCase):
                     "updated_at": shop_item.updated_at.strftime(
                         "%Y-%m-%dT%H:%M:%S.%fZ"
                     ),
+                    "removed_at": shop_item.removed_at,
                     "youtube_links": shop_item.youtube_links,
                     "subcategory": shop_item.subcategory,
                     "images": [],
@@ -90,14 +93,15 @@ class BookmarkListCreateViewTestCase(APITestCase):
                         "title": organization.title,
                         "image": {
                             "id": organization.image.id,
-                            "file": f"http://testserver{organization.image.file.url}",
+                            "file": f"{organization.image.file.url}",
                             "name": os.path.basename(
                                 organization.image.file.name),
-                            "large": f"http://testserver{organization.image.large.url}",
-                            "medium": f"http://testserver{organization.image.medium.url}",
-                            "small": f"http://testserver{organization.image.small.url}",
+                            "large": f"{organization.image.large.url}",
+                            "medium": f"{organization.image.medium.url}",
+                            "small": f"{organization.image.small.url}",
                         },
                         "currency": "USD",
+                        "promo_cashback": None,
                         "types": [],
                         "phone_numbers": [],
                         "permissions": {
@@ -107,15 +111,16 @@ class BookmarkListCreateViewTestCase(APITestCase):
                             "can_see_stats": True,
                             "can_edit_organization": True,
                             "can_send_message": True,
-                            "can_edit_partner": True
-                        }
+                            "can_edit_partner": True,
+                            "can_deliver": False
+                        },
+                        "verification_status": organization.verification_status
                     },
-                    "instagram_data":
-                        {
+                    "instagram_data": {
                             "videos": [],
                             "images": []
-                        },
-                    "is_updated": False
+                    },
+                    "is_updated": False,
                 }
             ]
         }
@@ -124,7 +129,6 @@ class BookmarkListCreateViewTestCase(APITestCase):
             self.url,
             content_type='application/json'
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertJSONEqual(response.content, expected_data)
 

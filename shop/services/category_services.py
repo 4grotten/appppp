@@ -34,8 +34,7 @@ class ItemCategoryService:
             item_filters = item_filters & Q(items_in_category__organization__country=country)
         return ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
             items_count=Count('items_in_category', item_filters)) \
-            .filter(items_count__gt=0).values_list('id', flat=True).exclude(
-            items_in_category__organization__is_banned=True).exclude(items_in_category__organization__is_deleted=True)
+            .filter(items_count__gt=0).values_list('id', flat=True)
 
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:

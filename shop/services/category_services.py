@@ -26,7 +26,8 @@ class ItemCategoryService:
     @classmethod
     def get_general_nonempty_service_subcategory_ids(cls, service: Union[Service, None], country: Union[Country, None],
                                                      city: Union[City, None]) -> list:
-        item_filters = Q(items_in_category__is_published=True) & Q(items_in_category__price__isnull=False)
+        item_filters = Q(items_in_category__is_published=True) & Q(items_in_category__price__isnull=False) & Q(
+            items_in_category__organization__is_banned=False) & Q(items_in_category__organization__is_deleted=False)
 
         if city is not None:
             item_filters = item_filters & Q(items_in_category__organization__city=city)

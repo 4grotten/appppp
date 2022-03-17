@@ -457,7 +457,8 @@ class OrganizationService:
 
         timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-        queryset = Organization.objects.filter(is_active=True, has_delivery=True, types__in=service.subcategory.all(),
+        queryset = Organization.objects.filter(is_active=True, has_delivery=True,
+                                               shop_items__subcategory__category__services=service,
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
 

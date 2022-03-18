@@ -16,9 +16,11 @@ from shop.models import ShopItem, ItemInstagramData
 def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTAGRAM_POSTS_TO_PARSE):
 
     video_expired_time = now() + timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
+    print(video_expired_time, 'sssssssss')
     mix_content_expired_time = now() + timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
 
     organization = Organization.objects.get(id=organization_id)
+    print(organization, 'ppppppppppppp')
     instagram_integration = InstagramIntegration.objects.get(organization=organization)
     instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count)
     for instagram in instagram_posts:

@@ -67,7 +67,9 @@ class LikeListCreateViewTestCase(APITestCase):
                 {
                     "id": shop_item.id,
                     "name": shop_item.name,
+                    'name_lang': shop_item.name_lang,
                     "description": shop_item.description,
+                    "description_lang": shop_item.description_lang,
                     "article": shop_item.article,
                     "price": shop_item.price,
                     "discount": shop_item.discount,
@@ -83,6 +85,7 @@ class LikeListCreateViewTestCase(APITestCase):
                         "%Y-%m-%dT%H:%M:%S.%fZ"
                     ),
                     "youtube_links": shop_item.youtube_links,
+                    'removed_at': shop_item.removed_at,
                     "subcategory": shop_item.subcategory,
                     "images": [],
                     "organization": {
@@ -90,16 +93,17 @@ class LikeListCreateViewTestCase(APITestCase):
                         "title": organization.title,
                         "image": {
                             "id": organization.image.id,
-                            "file": f"http://testserver{organization.image.file.url}",
+                            "file": f"{organization.image.file.url}",
                             "name": os.path.basename(
                                 organization.image.file.name),
-                            "large": f"http://testserver{organization.image.large.url}",
-                            "medium": f"http://testserver{organization.image.medium.url}",
-                            "small": f"http://testserver{organization.image.small.url}",
+                            "large": f"{organization.image.large.url}",
+                            "medium": f"{organization.image.medium.url}",
+                            "small": f"{organization.image.small.url}",
                         },
                         "currency": "USD",
                         "types": [],
                         "phone_numbers": [],
+                        'promo_cashback': None,
                         "permissions": {
                             "is_owner": True,
                             "can_sale": True,
@@ -107,8 +111,11 @@ class LikeListCreateViewTestCase(APITestCase):
                             "can_see_stats": True,
                             "can_edit_organization": True,
                             "can_send_message": True,
-                            "can_edit_partner": True
-                        }
+                            "can_edit_partner": True,
+                            'can_deliver': False,
+
+                        },
+                        'verification_status': organization.verification_status,
                     },
                     "instagram_data":
                         {

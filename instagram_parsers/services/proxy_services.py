@@ -22,7 +22,7 @@ class ProxyService:
         proxies = Proxy.objects.filter(for_getting_username=for_getting_username, expires_at__gt=now())
         if proxies:
             random_proxy = random.choice(proxies)
-            return f'https://{random_proxy.login}:{random_proxy.password}@{random_proxy.http_s}'
+            return f'http://{random_proxy.login}:{random_proxy.password}@{random_proxy.http_s}'
         return None
 
     @classmethod

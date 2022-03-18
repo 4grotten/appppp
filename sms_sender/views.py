@@ -13,7 +13,11 @@ class SmsGetPostView(ListCreateAPIView):
     serializer_class = SmsSerializer
 
     def get_queryset(self):
-        return SmsModel.objects.exclude(status='success')
+        prefix = self.request.GET.get('prefix', None)
+        queryset = SmsModel.objects.exclude(status='success')
+        if prefix:
+            queryset = queryset.objects.filter(phone_number__startswith=prefix)
+        return queryset
 
     def post(self, request, *args, **kwargs):
         serializer = SmsPostSerializer(data=request.data)

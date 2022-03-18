@@ -16,7 +16,7 @@ class SmsGetPostView(ListCreateAPIView):
         prefix = self.request.GET.get('prefix', None)
         queryset = SmsModel.objects.exclude(status='success')
         if prefix:
-            queryset = queryset.objects.filter(phone_number__startswith=prefix)
+            return queryset.filter(phone_number__startswith=prefix)
         return queryset
 
     def post(self, request, *args, **kwargs):

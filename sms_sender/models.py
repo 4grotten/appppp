@@ -13,7 +13,7 @@ class SmsModel(TimestampModel):
         (FAILURE, FAILURE),
     )
 
-    phone_number = models.CharField(max_length=255, unique=True)
+    phone_number = models.CharField(max_length=255)
     text = models.TextField(null=True, blank=True, max_length=500)
     status = models.CharField(max_length=20, choices=STATUS, null=True, blank=True)
 

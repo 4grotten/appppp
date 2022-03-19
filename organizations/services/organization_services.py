@@ -457,16 +457,13 @@ class OrganizationService:
 
         timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-        queryset = Organization.objects.filter(is_active=True, has_delivery=True,
-                                               shop_items__subcategory__category__services=service,
+        queryset = Organization.objects.filter(is_active=True, has_delivery=True, types__in=service.subcategory.all(),
                                                shop_items__isnull=False, shop_items__price__isnull=False
                                                ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
 
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
-
         if subcategory is not None:
             queryset = queryset.filter(shop_items__subcategory=subcategory)
-
         try:
             queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),
                                                                     output_field=TimeField()))

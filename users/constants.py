@@ -6,7 +6,7 @@ GENDER_CHOICES = (
     (FEMALE, FEMALE.capitalize())
 )
 
-SMS_CODE_MESSAGE = '{}  is your verification code'
+SMS_CODE_MESSAGE = '{} is your verification code'
 
 PHONE_NUMBER_TYPE = 'phone_number'
 EMAIL_TYPE = 'email'

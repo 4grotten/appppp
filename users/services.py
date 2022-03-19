@@ -122,9 +122,10 @@ class TemporaryCodeService:
         # if phone_number.startswith(cls.nurtelecom):
         if phone_number.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
-        else:
+        elif phone_number.startswith("+971"):
             AzamatMessageService.save_in_model(message, phone_number)
-            # MessageServiceTwilio.send_sms(str(user.phone_number), message)
+        else:
+            MessageServiceTwilio.send_sms(str(user.phone_number), message)
 
         MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code

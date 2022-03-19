@@ -124,6 +124,8 @@ class TemporaryCodeService:
             AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number == "+996555214242":
             AzamatMessageService.save_in_model(message, phone_number)
+        elif phone_number == "+971585333939":
+            AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
         elif phone_number.startswith("+971"):

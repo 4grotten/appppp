@@ -3,7 +3,7 @@ from typing import Union
 from django.db.models import QuerySet, Count, Q
 
 from common.models import City, Country
-from organizations.models import Service
+from organizations.models import Service, Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemSubcategory, ItemCategory
@@ -33,9 +33,29 @@ class ItemCategoryService:
             item_filters = item_filters & Q(items_in_category__organization__city=city)
         elif country is not None:
             item_filters = item_filters & Q(items_in_category__organization__country=country)
-        return ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
+
+        org = Organization.objects.filter(types__services=service).values_list('id', flat=True)
+        # for i in org:
+        #     print(i)
+        # print(org, 'orggg')
+        org_cat = ItemSubcategory.objects.filter(items_in_category__organization__id__in=org,
+                                                 organization__isnull=True).values_list(
+            'id', flat=True).distinct()
+        #
+        # print(org_cat, 'org_cat')
+
+        item_cat = ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
             items_count=Count('items_in_category', item_filters)) \
             .filter(items_count__gt=0).values_list('id', flat=True)
+
+        # print(item_cat, 'item_cat')
+        # # org_cat = ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
+        # #     items_count=Count('items_in_category', item_filters)) \
+        # #     .filter(items_count__gt=0).values_list('id', flat=True)
+        #
+        # # Service shop_item categories
+        # print(list(set(org_cat) & set(item_cat)))
+        return list(set(org_cat) & set(item_cat))
 
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:

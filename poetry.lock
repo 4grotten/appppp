@@ -285,15 +285,15 @@ python-versions = "*"
 
 [[package]]
 name = "django-modeltranslation"
-version = "0.17.5"
+version = "0.15.2"
 description = "Translates Django models using a registration approach."
 category = "main"
 optional = false
-python-versions = ">=3.6.2"
+python-versions = "*"
 
 [package.dependencies]
-django = ">=2.2"
-six = ">=1.15.0,<2.0.0"
+Django = ">=2.2"
+six = "*"
 
 [[package]]
 name = "django-nine"
@@ -536,11 +536,11 @@ test = ["requests", "objgraph", "cffi (>=1.12.2)", "dnspython (>=1.16.0,<2.0)", 
 
 [[package]]
 name = "googletrans"
-version = "3.0.0"
+version = "4.0.0rc1"
 description = "Free Google Translate API for Python. Translates totally free of charge."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 
 [package.dependencies]
 httpx = "0.13.3"
@@ -1206,7 +1206,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "787b266f901c39b30e5d45d622063d3dc0e0112408130b6e82d857b237b4695e"
+content-hash = "13854ca6aae82b7afb94d2c44531d7c291bb251b2c844ec0d6dae75d7b647146"
 
 [metadata.files]
 amqp = [
@@ -1342,7 +1342,7 @@ django-map-widgets = [
     {file = "django_map_widgets-0.3.3-py3-none-any.whl", hash = "sha256:2f514f4faff4b0fac8da085e0a8724f60d8ac06757e7b51194d5606c1392b838"},
 ]
 django-modeltranslation = [
-    {file = "django-modeltranslation-0.17.5.tar.gz", hash = "sha256:d9b3278dc3a799261861e090c27a3e1c46b3471e979e07b01cdd4ea2696a9f41"},
+    {file = "django-modeltranslation-0.15.2.tar.gz", hash = "sha256:48e6c88fe8d1e4029bd38012055593e6d87f245f7a1840796e662d8a94ab8d67"},
 ]
 django-nine = [
     {file = "django-nine-0.2.5.tar.gz", hash = "sha256:84322aff8201ceb7647d846ca58863d34e27eb1438aa109819ad091a773a7c96"},
@@ -1443,7 +1443,7 @@ gevent = [
     {file = "gevent-21.12.0.tar.gz", hash = "sha256:f48b64578c367b91fa793bf8eaaaf4995cb93c8bc45860e473bf868070ad094e"},
 ]
 googletrans = [
-    {file = "googletrans-3.0.0.tar.gz", hash = "sha256:44caeea42d91ff6ead5c2d49db2b88de66c45c2fe874c8ec03eb9b4ceb3a533d"},
+    {file = "googletrans-4.0.0rc1.tar.gz", hash = "sha256:74df47b092e2d566522019d149e3f1d75732570ad76eaf8e14aebeffc126c372"},
 ]
 greenlet = [
     {file = "greenlet-1.1.2-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:58df5c2a0e293bf665a51f8a100d3e9956febfbf1d9aaf8c0677cf70218910c6"},

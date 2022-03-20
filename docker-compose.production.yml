@@ -17,6 +17,7 @@ services:
       - rabbitmq:rabbimq
       - memcached:memcached
     depends_on:
+      - elasticsearch
       - rabbitmq
       - postgres
       - memcached

@@ -13,6 +13,7 @@ services:
     ports:
       - "8000:8000"
     links:
+      - elasticsearch:elasticsearch
       - postgres:postgres
       - rabbitmq:rabbimq
       - memcached:memcached

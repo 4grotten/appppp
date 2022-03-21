@@ -1,9 +1,9 @@
 from django.utils.translation import gettext_lazy as _
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, CreateAPIView, ListAPIView, DestroyAPIView
 )
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
@@ -58,7 +58,14 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = HotlinkWithCountsSerializer
 
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            self.permission_classes = (AllowAny,)
+        return super().get_permissions()
+
     def get_object(self):
+        if self.permission_classes == (AllowAny,):
+            return HotlinkService.get(id=self.kwargs['pk'])
         return HotlinkService.get_editable_hotlink_for_user(hotlink_id=self.kwargs['pk'], user=self.request.user)
 
     def put(self, request, *args, **kwargs):

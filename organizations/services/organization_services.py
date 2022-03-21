@@ -367,8 +367,7 @@ class OrganizationService:
 
     @classmethod
     def increment_running_purchase_id(cls, organization: Organization):
-        organization.running_purchase_id = F('running_purchase_id') + 1
-        organization.save()
+        Organization.objects.filter(id=organization.id).update(running_purchase_id=F('running_purchase_id') + 1)
         organization.refresh_from_db()
 
     @classmethod

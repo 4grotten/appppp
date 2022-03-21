@@ -69,7 +69,6 @@ class OrganizationDocumentView(DocumentViewSet):
             del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(OrganizationDocumentView, self).list(request)
-            print(request.query_params)
         else:
             qs = super(OrganizationDocumentView, self).list(request)
         return qs

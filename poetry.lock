@@ -1115,7 +1115,7 @@ six = ">=1.1.0"
 
 [[package]]
 name = "twilio"
-version = "7.7.1"
+version = "7.5.0"
 description = "Twilio API client and TwiML generator"
 category = "main"
 optional = false
@@ -1206,7 +1206,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "47ec66f19db4310921db10a6083c0e8e7d19d151b2c6f70839cdc310dd131e99"
+content-hash = "e4450d98d4e3c70d9343cedbf977fe7fe207ebe82f7c37545af77c03b63e6002"
 
 [metadata.files]
 amqp = [
@@ -1885,8 +1885,8 @@ transliterate = [
     {file = "transliterate-1.10.2.tar.gz", hash = "sha256:bc608e0d48e687db9c2b1d7ea7c381afe0d1849cad216087d8e03d8d06a57c85"},
 ]
 twilio = [
-    {file = "twilio-7.7.1-py2.py3-none-any.whl", hash = "sha256:dedc37864ee9682631ce942a0dfbb04286fe4938ed90b1f22a583596ffbf459e"},
-    {file = "twilio-7.7.1.tar.gz", hash = "sha256:d8e021c1c82f5552446d25d2b91b7373d76d712c90324470c886220853496be1"},
+    {file = "twilio-7.5.0-py2.py3-none-any.whl", hash = "sha256:ef2b38de9c06ae55570313af30cfc5c215c272cb54a8614da209be1a7d7b5ca2"},
+    {file = "twilio-7.5.0.tar.gz", hash = "sha256:91922bd2e347dd279868d2102404a7da056169da10a8b10be3fd9eb9c6bab391"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.1.1-py3-none-any.whl", hash = "sha256:21c85e0fe4b9a155d0799430b0ad741cdce7e359660ccbd8b530613e8df88ce2"},

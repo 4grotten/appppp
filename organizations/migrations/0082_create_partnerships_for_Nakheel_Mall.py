@@ -10,7 +10,7 @@ def create_partnership(apps, schema_editor):
     orgs = Organization.objects.filter(address='Nakheel Mall 10/2, Palm Jumeirah Road, The Palm Jumeirah, Dubai')
     nakhell_mall = Organization.objects.get(title='Nakheel Mall')
     for org in orgs:
-        if orgs != nakhell_mall:
+        if org != nakhell_mall:
             Partnership.objects.create(requested_by=nakhell_mall, accepted_by=org, is_accepted=True)
             Partnership.objects.create(requested_by=org, accepted_by=nakhell_mall, is_accepted=True)
 

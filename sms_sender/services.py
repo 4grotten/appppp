@@ -124,13 +124,12 @@ class MessageServiceTwilio:
     def send_sms(cls, number, code):
         account_sid = settings.TWILIO_ACCOUNT_SID
         auth_token = settings.TWILIO_AUTH_TOKEN
-
         client = Client(account_sid, auth_token)
-        sms = f'{code}: is your verification code'
+        sms = f'{code}'
 
         message = client.messages.create(
             to=number,
-            from_=settings.TWILIO_PHONE,
+            from_=settings.TWILIO_SERVICE_SID,
             body=sms)
 
 

@@ -263,8 +263,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'verification_status',
-            'avg_check', 'need_add_item'
+            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
+            'verification_status', 'avg_check', 'need_add_item'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -317,7 +317,7 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
-                  'verification_status', 'avg_check')
+                  'verification_status', 'avg_check', 'is_private')
         read_only_fields = ['verification_status']
 
 

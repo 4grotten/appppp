@@ -94,6 +94,7 @@ class Organization(TimestampModel):
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
     is_under_review = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)

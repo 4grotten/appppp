@@ -4,10 +4,14 @@ from django_elasticsearch_dsl_drf.filter_backends import \
     DefaultOrderingFilterBackend, FilteringFilterBackend, \
     OrderingFilterBackend, MultiMatchSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from rest_framework import status
+from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
 from common.pagination import GeneralPagination
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
+from organizations.services.organization_services import OrganizationService
+from organizations.services.subscription_services import SubscriptionService
 from search_indexes.documents.items import ShopItemDocument
 from search_indexes.serializers.item import ShopItemsDocumentSerializer
 from shop.serializers.item_serializers import StartDateTimeSerializer
@@ -189,6 +193,14 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
         return super(ShopOrgnizationItemDocumentView, self).list(request)
 
     def list(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=request.GET['organization'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) and \
+                organization.is_private is True and not SubscriptionService.is_subscribed(user=request.user,
+                                                                                          organization=organization):
+            return Response(data={
+                'message': _('This organization is private for you, need to subscribe'),
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Valid organization is required in query parameters'))

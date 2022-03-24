@@ -18,8 +18,12 @@ from users.models import User
 
 class SubscriptionService:
     @classmethod
-    def is_subscribed(cls, organization: Organization, user: User) -> bool:
-        return Subscription.objects.filter(organization=organization, user=user).exists()
+    def is_subscribed(cls, organization: Organization, user: User) -> str:
+        try:
+            subscription = Subscription.objects.get(organization=organization, user=user)
+            return subscription.status
+        except Subscription.DoesNotExist:
+            return 'not_subscribed'
 
     @classmethod
     def get_number_of_subscriptions(cls, organization: Organization) -> int:

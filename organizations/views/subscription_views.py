@@ -60,7 +60,7 @@ class OrgFollowersListAPIView(ListAPIView):
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self, *args, **kwargs):
-        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
+        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'], user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -71,7 +71,6 @@ class OrgFollowersListAPIView(ListAPIView):
         else:
             context['can_edit'] = True
             context['organization'] = organization
-
         return context
 
 

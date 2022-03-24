@@ -7,6 +7,7 @@ from organizations.models import Organization
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
+from organizations.services.subscription_services import SubscriptionService
 from .constants import RESEND_CODE_CHOICES
 from .models import PhoneNumber, SocialNetworkContact
 
@@ -214,15 +215,21 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 
 class FollowerListSerializer(UserShortInfoSerializer):
     has_promo_cashback = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar')
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed')
 
     def get_has_promo_cashback(self, user: User) -> bool:
         if not self.context['can_edit']:
             return False
         return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
+
+    def get_is_subscribed(self, user: User) -> str:
+        if not self.context['can_edit']:
+            return 'subscribed'
+        return SubscriptionService.is_subscribed(organization=self.context['organization'], user=user)
 
 
 class FollowerOrClientSerializer(FollowerListSerializer):

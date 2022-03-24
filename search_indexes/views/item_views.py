@@ -194,9 +194,9 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
     def list(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=request.GET['organization'])
-        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) and \
-                organization.is_private is True and not SubscriptionService.is_subscribed(user=request.user,
-                                                                                          organization=organization):
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) \
+                and organization.is_private is True \
+                and SubscriptionService.is_subscribed(user=request.user, organization=organization) != 'subscribed':
             return Response(data={
                 'message': _('This organization is private for you, need to subscribe'),
             }, status=status.HTTP_406_NOT_ACCEPTABLE)

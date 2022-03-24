@@ -104,8 +104,13 @@ class SubscriptionService:
         return Organization.objects.none()
 
     @classmethod
-    def get_organization_followers(cls, organization_id: int) -> QuerySet:
-        return User.objects.filter(subscriptions__organization_id=organization_id)
+    def get_organization_followers(cls, organization_id: int, user: User = None) -> QuerySet:
+        if user:
+            organization = Organization.objects.get(id=organization_id)
+            if OrganizationService.user_can_edit_organization(organization=organization, user=user):
+                return User.objects.filter(subscriptions__organization_id=organization_id)
+        return User.objects.filter(subscriptions__organization_id=organization_id).exclude(
+            subscriptions__status='pending')
 
     @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:

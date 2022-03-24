@@ -301,8 +301,18 @@ class OrganizationClientFinancialStatus(TimestampModel):
 
 
 class Subscription(TimestampModel):
+    SUBSCRIBE = 'subscribed'
+    UNSUBSCRIBE = 'not_subscribed'
+    PENDING = 'pending'
+    STATUSES = (
+        (SUBSCRIBE, SUBSCRIBE),
+        (UNSUBSCRIBE, UNSUBSCRIBE),
+        (PENDING, PENDING),
+    )
+
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='subscriptions')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    status = models.CharField(max_length=20, choices=STATUSES, default=SUBSCRIBE)
 
     class Meta:
         unique_together = ('organization', 'user')

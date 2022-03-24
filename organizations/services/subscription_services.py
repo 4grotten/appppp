@@ -17,6 +17,9 @@ from users.models import User
 
 
 class SubscriptionService:
+    # @classmethod
+    # def is_subscribed(cls, organization: Organization, user: User) -> bool:
+    #     return Subscription.objects.filter(organization=organization, user=user).exists()
     @classmethod
     def is_subscribed(cls, organization: Organization, user: User) -> str:
         try:
@@ -30,31 +33,42 @@ class SubscriptionService:
         return Subscription.objects.filter(organization=organization, status='subscribed').count()
 
     @classmethod
-    def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:
-        subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
-        if created:
-            PromoSubscriberService.use_promo_for_new_subscriber(organization=organization, follower=user)
+    def toggle_subscription_status(cls, organization: Organization, user: User) -> str:
+        if organization.is_private is True and not OrganizationService.user_can_edit_organization(
+                organization=organization, user=user) and cls.is_subscribed(organization, user) == 'not_subscribed':
+            Subscription.objects.create(organization=organization, user=user, status='pending')
+            return 'pending'
+        elif organization.is_private is True and not OrganizationService.user_can_edit_organization(
+                organization=organization, user=user) and cls.is_subscribed(organization, user) == 'pending':
+            Subscription.objects.get(organization=organization, user=user, status='pending').delete()
+            return 'not_subscribed'
+        else:
+            subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
+            if created:
+                PromoSubscriberService.use_promo_for_new_subscriber(organization=organization, follower=user)
 
-            sent_notification.delay(
-                recipient_id=organization.owner_id,
-                sender_id=user.id,
-                mode=NOTIFICATION_MODE_PERSONAL,
-                notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
-                title=FOLLOWED_TO_ORGANIZATION_TITLE,
-                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
-                organization_id=organization.id,
-                extra_data=dict(address=organization.address)
-            )
-            sent_notification.delay(
-                recipient_id=user.id,
-                mode=NOTIFICATION_MODE_PERSONAL,
-                notification_type=ORGANIZATION_FOLLOWED_TYPE,
-                title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
-                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
-                organization_id=organization.id,
-                extra_data=dict(org_title=organization.title, address=organization.address)
-            )
-            return True
+                sent_notification.delay(
+                    recipient_id=organization.owner_id,
+                    sender_id=user.id,
+                    mode=NOTIFICATION_MODE_PERSONAL,
+                    notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+                    title=FOLLOWED_TO_ORGANIZATION_TITLE,
+                    description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                    organization_id=organization.id,
+                    extra_data=dict(address=organization.address)
+                )
+                sent_notification.delay(
+                    recipient_id=user.id,
+                    mode=NOTIFICATION_MODE_PERSONAL,
+                    notification_type=ORGANIZATION_FOLLOWED_TYPE,
+                    title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
+                    description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                    organization_id=organization.id,
+                    extra_data=dict(org_title=organization.title, address=organization.address)
+                )
+                subscription.status = 'subscribed'
+                subscription.save()
+                return 'subscribed'
 
         subscription.delete()
         return False

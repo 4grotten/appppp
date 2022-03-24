@@ -27,7 +27,7 @@ class SubscriptionService:
 
     @classmethod
     def get_number_of_subscriptions(cls, organization: Organization) -> int:
-        return Subscription.objects.filter(organization=organization).count()
+        return Subscription.objects.filter(organization=organization, status='subscribed').count()
 
     @classmethod
     def toggle_subscription_status(cls, organization: Organization, user: User) -> bool:

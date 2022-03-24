@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
-from organizations.serializers.misc_serializers import SubscriptionSerializer
+from organizations.serializers.misc_serializers import SubscriptionSerializer, AcceptFollowerSerializer
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
@@ -153,3 +153,43 @@ class MassPartnershipSubscriptionView(APIView):
                 'status': 'ok'
             }
         }, status=status.HTTP_200_OK)
+
+
+class AcceptFollowerView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serialzier_class = AcceptFollowerSerializer
+
+    def put(self, request, *args, **kwargs):
+        serializer = self.serialzier_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        SubscriptionService.accept_follower(organization=serializer.validated_data['organization'],
+                                            user=serializer.validated_data['user'])
+
+        return Response(data={
+            'message': _('Successfully accept follower'),
+            'data': {
+                'status': 'ok'
+            }
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        serializer = self.serialzier_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        SubscriptionService.refuse_follower(organization=serializer.validated_data['organization'],
+                                            user=serializer.validated_data['user'])
+
+        return Response(data={
+            'message': _('Refuse follower'),
+            'data': {
+                'status': 'delete'
+            }
+        }, status=status.HTTP_204_NO_CONTENT)

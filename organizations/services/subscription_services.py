@@ -71,7 +71,7 @@ class SubscriptionService:
                 return 'subscribed'
 
         subscription.delete()
-        return False
+        return 'not_subscribed'
 
     @classmethod
     def subscribe_to_organization(cls, organization: Organization, user: User) -> bool:
@@ -128,3 +128,12 @@ class SubscriptionService:
         organization = OrganizationService.get(id=organization_id)
         partners = OrganizationService.get_organization_partners(organization=organization).distinct().values('id', )
         return User.objects.filter(subscriptions__organization_id__in=partners).distinct()
+
+    @classmethod
+    def accept_follower(cls, organization: int, user: int):
+        Subscription.objects.filter(organization=organization, user=user, status='pending').update(
+            status='subscribe')
+
+    @classmethod
+    def refuse_follower(cls, organization: int, user: int):
+        Subscription.objects.filter(organization=organization, user=user, status='pending').delete()

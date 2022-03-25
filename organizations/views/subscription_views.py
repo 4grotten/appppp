@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer, AcceptFollowerSerializer
 from organizations.services.organization_services import OrganizationService
@@ -161,6 +162,7 @@ class AcceptFollowerView(APIView):
 
     def put(self, request, *args, **kwargs):
         serializer = self.serialzier_class(data=request.data)
+
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
@@ -168,6 +170,10 @@ class AcceptFollowerView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         SubscriptionService.accept_follower(organization=serializer.validated_data['organization'],
                                             user=serializer.validated_data['user'])
+
+        if not OrganizationService.user_can_edit_organization(organization=serializer.validated_data['organization'],
+                                                              user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow follower'))
 
         return Response(data={
             'message': _('Successfully accept follower'),
@@ -178,11 +184,16 @@ class AcceptFollowerView(APIView):
 
     def delete(self, request, *args, **kwargs):
         serializer = self.serialzier_class(data=request.data)
+
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_edit_organization(organization=serializer.validated_data['organization'],
+                                                              user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow follower'))
 
         SubscriptionService.refuse_follower(organization=serializer.validated_data['organization'],
                                             user=serializer.validated_data['user'])

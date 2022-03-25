@@ -136,7 +136,7 @@ class SubscriptionService:
 
     @classmethod
     def refuse_follower(cls, organization: int, user: int):
-        Subscription.objects.filter(organization=organization, user=user, status='pending').delete()
+        Subscription.objects.filter(organization=organization, user=user).delete()
 
     @classmethod
     def accept_all_followers(cls, organization_id: int):

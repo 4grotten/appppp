@@ -204,3 +204,20 @@ class AcceptFollowerView(APIView):
                 'status': 'delete'
             }
         }, status=status.HTTP_204_NO_CONTENT)
+
+
+class AcceptAllFollowersView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow followers'))
+        SubscriptionService.accept_all_followers(organization_id=self.kwargs['pk'])
+
+        return Response(data={
+            'message': _('Successfully accept all followers'),
+            'data': {
+                'status': 'ok'
+            }
+        }, status=status.HTTP_200_OK)

@@ -37,7 +37,7 @@ from .views.seo_views import org_detail
 from .views.service import ServiceReadOnlySet, NonEmptyServiceCategoryItemListView
 from .views.subscription_views import (
     SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
-    MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView, AcceptFollowerView
+    MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView, AcceptFollowerView, AcceptAllFollowersView
 )
 
 router = DefaultRouter()
@@ -88,6 +88,7 @@ organization_urls = [
         name="org_partners_followers_count"
     ),
     path('accept_follower/', AcceptFollowerView.as_view(), name='accept_follower'),
+    path('organizations/<int:pk>/accept_all_followers/', AcceptAllFollowersView.as_view(), name='accept_all_followers'),
 ]
 
 membership_urls = [

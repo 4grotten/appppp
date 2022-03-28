@@ -132,7 +132,7 @@ class SubscriptionService:
     @classmethod
     def accept_follower(cls, organization: int, user: int):
         Subscription.objects.filter(organization=organization, user=user, status='pending').update(
-            status='subscribe')
+            status='subscribed')
 
     @classmethod
     def refuse_follower(cls, organization: int, user: int):
@@ -141,5 +141,5 @@ class SubscriptionService:
     @classmethod
     def accept_all_followers(cls, organization_id: int):
         Subscription.objects.filter(organization__id=organization_id, status='pending').update(
-            status='subscribe')
+            status='subscribed')
 

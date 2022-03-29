@@ -326,7 +326,7 @@ class TransactionService:
                                                                  mode=NOTIFICATION_MODE_SYSTEM)
 
             organization_members = list(current_transaction.cart.organization.memberships.filter(
-                Q(role__can_edit_organization=True)| Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
             for member in organization_members:
                 send_delivery_notitication_to_organization_or_client(member.user,
                                                                      current_transaction.cart.id,
@@ -607,3 +607,9 @@ class TransactionService:
                     Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         )
         return transactions
+
+    @classmethod
+    def get_users_of_transactions_in_organization(cls, organization: Organization, processed_by: User) -> QuerySet:
+        transactions = cls.get_organization_transactions(organization=organization,
+                                                         processed_by=processed_by).values_list('client', flat=True)
+        return User.objects.filter(id__in=set(transactions))

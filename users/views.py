@@ -159,8 +159,9 @@ class ProfileInitialAPIView(APIView):
         if device_type in DEVICE_TYPES and registration and registration.is_accepted and \
                 str(user.phone_number).startswith("+996") and is_new_in_begin:
             Umai(str(user.phone_number), wallet=registration).commit_payment()
-        apofiz_org = Organization.objects.get(title='Apofiz.com')
-        subscription, created = Subscription.objects.get_or_create(user=user, organization=apofiz_org)
+        if user.full_name != None:
+            apofiz_org = Organization.objects.get(title='Apofiz.com')
+            subscription, created = Subscription.objects.get_or_create(user=user, organization=apofiz_org)
         return Response(ProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 

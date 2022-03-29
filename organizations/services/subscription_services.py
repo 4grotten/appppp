@@ -130,7 +130,7 @@ class SubscriptionService:
         return User.objects.filter(subscriptions__organization_id__in=partners).distinct()
 
     @classmethod
-    def accept_follower(cls, organization: int, user: int):
+    def accept_follower(cls, organization: Organization, user: User):
         Subscription.objects.filter(organization=organization, user=user, status='pending').update(
             status='subscribed')
 
@@ -139,7 +139,32 @@ class SubscriptionService:
         Subscription.objects.filter(organization=organization, user=user).delete()
 
     @classmethod
-    def accept_all_followers(cls, organization_id: int):
-        Subscription.objects.filter(organization__id=organization_id, status='pending').update(
-            status='subscribed')
+    def accept_all_followers(cls, organization: Organization):
+        subscriptions = Subscription.objects.filter(organization=organization, status='pending')
 
+        for i in subscriptions:
+            PromoSubscriberService.use_promo_for_new_subscriber(
+                organization=organization,
+                follower=i.user)
+
+            sent_notification.delay(
+                recipient_id=organization.owner_id,
+                sender_id=i.user.id,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+                title=FOLLOWED_TO_ORGANIZATION_TITLE,
+                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                organization_id=organization.id,
+                extra_data=dict(address=organization.address)
+            )
+            sent_notification.delay(
+                recipient_id=i.user.id,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=ORGANIZATION_FOLLOWED_TYPE,
+                title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=organization.title),
+                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(address=organization.address),
+                organization_id=organization.id,
+                extra_data=dict(org_title=organization.title, address=organization.address)
+            )
+
+            cls.accept_follower(organization=organization, user=i.user)

@@ -15,10 +15,17 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
 from organizations.serializers.misc_serializers import SubscriptionSerializer, AcceptFollowerSerializer
+from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
+from notifications.tasks import sent_notification
+from notifications.constants import (
+    FOLLOWED_TO_ORGANIZATION_TYPE,
+    FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
+    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, NOTIFICATION_MODE_PERSONAL
+)
 
 User = get_user_model()
 
@@ -175,6 +182,32 @@ class AcceptFollowerView(APIView):
                                                               user=self.request.user):
             raise NotAcceptableException(_('No rights to allow follower'))
 
+        PromoSubscriberService.use_promo_for_new_subscriber(organization=serializer.validated_data['organization'],
+                                                            follower=serializer.validated_data['user'])
+
+        sent_notification.delay(
+            recipient_id=serializer.validated_data['organization'].owner_id,
+            sender_id=serializer.validated_data['user'].id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+            title=FOLLOWED_TO_ORGANIZATION_TITLE,
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=serializer.validated_data['organization'].address),
+            organization_id=serializer.validated_data['organization'].id,
+            extra_data=dict(address=serializer.validated_data['organization'].address)
+        )
+        sent_notification.delay(
+            recipient_id=serializer.validated_data['user'].id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=ORGANIZATION_FOLLOWED_TYPE,
+            title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=serializer.validated_data['organization'].title),
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=serializer.validated_data['organization'].address),
+            organization_id=serializer.validated_data['organization'].id,
+            extra_data=dict(org_title=serializer.validated_data['organization'].title,
+                            address=serializer.validated_data['organization'].address)
+        )
+
         return Response(data={
             'message': _('Successfully accept follower'),
             'data': {
@@ -213,7 +246,7 @@ class AcceptAllFollowersView(APIView):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
             raise NotAcceptableException(_('No rights to allow followers'))
-        SubscriptionService.accept_all_followers(organization_id=self.kwargs['pk'])
+        SubscriptionService.accept_all_followers(organization=organization)
 
         return Response(data={
             'message': _('Successfully accept all followers'),

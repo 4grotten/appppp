@@ -108,9 +108,10 @@ class SubscriptionService:
         if user:
             organization = Organization.objects.get(id=organization_id)
             if OrganizationService.user_can_edit_organization(organization=organization, user=user):
-                return User.objects.filter(subscriptions__organization_id=organization_id)
+                return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
+                    '-subscriptions__id')
         return User.objects.filter(subscriptions__organization_id=organization_id).exclude(
-            subscriptions__status='pending')
+            subscriptions__status='pending').order_by('-subscriptions__id')
 
     @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:

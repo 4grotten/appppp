@@ -61,6 +61,9 @@ class ShopItemDocumentView(DocumentViewSet):
                 LOOKUP_QUERY_LT,
             ]
         },
+        'is_private': {
+            'field': 'organization.is_private',
+        },
     }
 
     ordering_fields = {
@@ -100,22 +103,17 @@ class ShopItemDocumentView(DocumentViewSet):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopItemDocumentView, self).list(request)
         else:
-            qs = self.set_request_param(request, 'price__isnull', 'false')
+            self.set_request_param(request, 'price__isnull', 'false')
+            qs = self.set_request_param(request, 'is_private', 'false')
+
         if search:
-            # set reversed translate symbols (ggg --> ггг)
-            # translate_symbols = Transliteration.get_translit(search)
-
-            # set reversed symbols (ggg --> ппп)
-            # reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
-
             mutable = request.query_params._mutable
             request.query_params._mutable = True
             request.GET['search_multi_match'] = search
-            # request.GET.appendlist('search_multi_match', translate_symbols)
-            # request.GET.appendlist('search_multi_match', reversed_symbols)
             del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(ShopItemDocumentView, self).list(request)
+
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
@@ -135,7 +133,6 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
         OrderingFilterBackend,
         MultiMatchSearchFilterBackend

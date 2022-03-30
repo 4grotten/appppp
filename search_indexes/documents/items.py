@@ -186,6 +186,7 @@ class ShopItemDocument(Document):
                 }
             ),
             'verification_status': fields.TextField(),
+            'is_private': fields.BooleanField(),
         }
     )
 

@@ -554,6 +554,11 @@ class OrganizationService:
 
         raise ObjectNotFoundException(_('Client not found'))
 
+    @classmethod
+    def update_add_item_date(cls, user: User, instance: Organization):
+        Organization.objects.filter(id=instance.id).update(add_item_date=datetime.now())
+
+
 
 class OrgPhoneNumberService:
     model = PhoneNumber

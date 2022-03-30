@@ -26,20 +26,12 @@ class ShopItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        # SearchFilterBackend,
-        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
         OrderingFilterBackend,
         MultiMatchSearchFilterBackend
     ]
 
     pagination_class = GeneralPagination
-
-    # search_fields = {
-    #     'name': {'fuzziness': 'AUTO'},
-    #     'article': {'fuzziness': 'AUTO'},
-    #     'description': {'fuzziness': 'AUTO'}
-    # }
 
     multi_match_search_fields = (
         'name', 'article', 'description'

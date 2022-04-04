@@ -183,7 +183,13 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
     def list(self, request, *args, **kwargs):
         organization = OrganizationService.get(id=request.GET['organization'])
-        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) \
+
+        if request.user.is_authenticated is False and organization.is_private is True:
+            return Response(data={
+                'message': _('This organization is private'),
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if request.user.is_authenticated and not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) \
                 and organization.is_private is True \
                 and SubscriptionService.is_subscribed(user=request.user, organization=organization) != 'subscribed':
             return Response(data={
@@ -196,7 +202,6 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
         organization = serializer.validated_data['organization']
         if organization.is_deleted:
             raise NotAcceptableException(_('This organization is deleted'))
-
         search = request.GET.get('search', None)
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopOrgnizationItemDocumentView, self).list(request)

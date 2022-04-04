@@ -4,10 +4,14 @@ from django_elasticsearch_dsl_drf.filter_backends import \
     DefaultOrderingFilterBackend, FilteringFilterBackend, \
     OrderingFilterBackend, MultiMatchSearchFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from rest_framework import status
+from rest_framework.response import Response
 
 from common.exceptions import NotAcceptableException
 from common.pagination import GeneralPagination
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
+from organizations.services.organization_services import OrganizationService
+from organizations.services.subscription_services import SubscriptionService
 from search_indexes.documents.items import ShopItemDocument
 from search_indexes.serializers.item import ShopItemsDocumentSerializer
 from shop.serializers.item_serializers import StartDateTimeSerializer
@@ -22,20 +26,12 @@ class ShopItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        # SearchFilterBackend,
-        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
         OrderingFilterBackend,
         MultiMatchSearchFilterBackend
     ]
 
     pagination_class = GeneralPagination
-
-    # search_fields = {
-    #     'name': {'fuzziness': 'AUTO'},
-    #     'article': {'fuzziness': 'AUTO'},
-    #     'description': {'fuzziness': 'AUTO'}
-    # }
 
     multi_match_search_fields = (
         'name', 'article', 'description'
@@ -64,6 +60,9 @@ class ShopItemDocumentView(DocumentViewSet):
             'lookups': [
                 LOOKUP_QUERY_LT,
             ]
+        },
+        'is_private': {
+            'field': 'organization.is_private',
         },
     }
 
@@ -104,22 +103,17 @@ class ShopItemDocumentView(DocumentViewSet):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = super(ShopItemDocumentView, self).list(request)
         else:
-            qs = self.set_request_param(request, 'price__isnull', 'false')
+            self.set_request_param(request, 'price__isnull', 'false')
+            qs = self.set_request_param(request, 'is_private', 'false')
+
         if search:
-            # set reversed translate symbols (ggg --> ггг)
-            # translate_symbols = Transliteration.get_translit(search)
-
-            # set reversed symbols (ggg --> ппп)
-            # reversed_symbols = IndexServices.change_layout(IndexServices.remove_bad_char(search))
-
             mutable = request.query_params._mutable
             request.query_params._mutable = True
             request.GET['search_multi_match'] = search
-            # request.GET.appendlist('search_multi_match', translate_symbols)
-            # request.GET.appendlist('search_multi_match', reversed_symbols)
             del request.GET['search']
             request.query_params._mutable = mutable
             qs = super(ShopItemDocumentView, self).list(request)
+
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
@@ -139,7 +133,6 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
 
     filter_backends = [
         FilteringFilterBackend,
-        # CompoundSearchFilterBackend,
         DefaultOrderingFilterBackend,
         OrderingFilterBackend,
         MultiMatchSearchFilterBackend
@@ -189,6 +182,14 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
         return super(ShopOrgnizationItemDocumentView, self).list(request)
 
     def list(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=request.GET['organization'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization) \
+                and organization.is_private is True \
+                and SubscriptionService.is_subscribed(user=request.user, organization=organization) != 'subscribed':
+            return Response(data={
+                'message': _('This organization is private for you, need to subscribe'),
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Valid organization is required in query parameters'))

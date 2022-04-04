@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -30,7 +30,7 @@ from transactions.serializers.transaction_serializers import (
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
-from users.serializers import ProfileBriefWithPhotoSerializer
+from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
 
 
 class TransactionPreprocessView(GenericAPIView):
@@ -253,7 +253,7 @@ class UserTransactionDetailView(APIView):
 
     def get(self, request, pk):
         instance = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(TransactionDetailSerializer(instance, context={'request':request, "user": request.user}).data)
+        return Response(TransactionDetailSerializer(instance, context={'request': request, "user": request.user}).data)
 
 
 class OrganizationTransactionListView(ListAPIView):
@@ -334,3 +334,18 @@ class UserUnprocessedTransactionCountView(APIView):
         count = TransactionService.get_unprocessed_transactions_count(user=request.user)
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
+
+
+class OrganizationUsersTransactionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserShortInfoSerializer
+    search_fields = ['full_name', 'username']
+    filter_backends = [filters.SearchFilter]
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_see_stats(organization=organization,
+                                                      user=self.request.user):
+            raise NotAcceptableException(_('No rights to see stats of organization'))
+        return TransactionService.get_users_of_transactions_in_organization(organization=organization,
+                                                                            processed_by=self.request.user)

@@ -12,12 +12,20 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.exceptions import NotAcceptableException
 from organizations.serializers.categories_serializers import OrganizationWithDiscountsSerializer
-from organizations.serializers.misc_serializers import SubscriptionSerializer
+from organizations.serializers.misc_serializers import SubscriptionSerializer, AcceptFollowerSerializer
+from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
+from notifications.tasks import sent_notification
+from notifications.constants import (
+    FOLLOWED_TO_ORGANIZATION_TYPE,
+    FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
+    ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, NOTIFICATION_MODE_PERSONAL
+)
 
 User = get_user_model()
 
@@ -60,7 +68,7 @@ class OrgFollowersListAPIView(ListAPIView):
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self, *args, **kwargs):
-        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
+        return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'], user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -71,7 +79,6 @@ class OrgFollowersListAPIView(ListAPIView):
         else:
             context['can_edit'] = True
             context['organization'] = organization
-
         return context
 
 
@@ -150,6 +157,99 @@ class MassPartnershipSubscriptionView(APIView):
             SubscriptionService.subscribe_to_organization(partner.requested_by, request.user)
         return Response(data={
             'message': _('Successfully updated subscription status'),
+            'data': {
+                'status': 'ok'
+            }
+        }, status=status.HTTP_200_OK)
+
+
+class AcceptFollowerView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serialzier_class = AcceptFollowerSerializer
+
+    def put(self, request, *args, **kwargs):
+        serializer = self.serialzier_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        SubscriptionService.accept_follower(organization=serializer.validated_data['organization'],
+                                            user=serializer.validated_data['user'])
+
+        if not OrganizationService.user_can_edit_organization(organization=serializer.validated_data['organization'],
+                                                              user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow follower'))
+
+        PromoSubscriberService.use_promo_for_new_subscriber(organization=serializer.validated_data['organization'],
+                                                            follower=serializer.validated_data['user'])
+
+        sent_notification.delay(
+            recipient_id=serializer.validated_data['organization'].owner_id,
+            sender_id=serializer.validated_data['user'].id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=FOLLOWED_TO_ORGANIZATION_TYPE,
+            title=FOLLOWED_TO_ORGANIZATION_TITLE,
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=serializer.validated_data['organization'].address),
+            organization_id=serializer.validated_data['organization'].id,
+            extra_data=dict(address=serializer.validated_data['organization'].address)
+        )
+        sent_notification.delay(
+            recipient_id=serializer.validated_data['user'].id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=ORGANIZATION_FOLLOWED_TYPE,
+            title=ORGANIZATION_FOLLOWED_TITLE.format(org_title=serializer.validated_data['organization'].title),
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=serializer.validated_data['organization'].address),
+            organization_id=serializer.validated_data['organization'].id,
+            extra_data=dict(org_title=serializer.validated_data['organization'].title,
+                            address=serializer.validated_data['organization'].address)
+        )
+
+        return Response(data={
+            'message': _('Successfully accept follower'),
+            'data': {
+                'status': 'ok'
+            }
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        serializer = self.serialzier_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_edit_organization(organization=serializer.validated_data['organization'],
+                                                              user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow follower'))
+
+        SubscriptionService.refuse_follower(organization=serializer.validated_data['organization'],
+                                            user=serializer.validated_data['user'])
+
+        return Response(data={
+            'message': _('Refuse follower'),
+            'data': {
+                'status': 'delete'
+            }
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+class AcceptAllFollowersView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            raise NotAcceptableException(_('No rights to allow followers'))
+        SubscriptionService.accept_all_followers(organization=organization)
+
+        return Response(data={
+            'message': _('Successfully accept all followers'),
             'data': {
                 'status': 'ok'
             }

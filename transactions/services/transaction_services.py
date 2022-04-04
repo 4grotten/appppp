@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -326,7 +326,7 @@ class TransactionService:
                                                                  mode=NOTIFICATION_MODE_SYSTEM)
 
             organization_members = list(current_transaction.cart.organization.memberships.filter(
-                Q(role__can_edit_organization=True)| Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
             for member in organization_members:
                 send_delivery_notitication_to_organization_or_client(member.user,
                                                                      current_transaction.cart.id,
@@ -607,3 +607,12 @@ class TransactionService:
                     Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         )
         return transactions
+
+    @classmethod
+    def get_users_of_transactions_in_organization(cls, organization: Organization, processed_by: User) -> QuerySet:
+        transactions = cls.get_organization_transactions(organization=organization,
+                                                         processed_by=processed_by)
+
+        return User.objects.filter(
+            bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(
+            '-max_date')

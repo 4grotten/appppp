@@ -294,7 +294,7 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at, address, currency,
-               show_contacts, country, avg_check=None, description=None, city=None):
+               show_contacts, country, is_private, avg_check=None, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -316,6 +316,7 @@ class OrganizationService:
             organization.closes_at = closes_at
             organization.address = address
             organization.avg_check = avg_check
+            organization.is_private = is_private
             if not organization.currency == currency:
                 from organizations.services.partnership_services import PartnershipService
                 if not PartnershipService.can_change_currency(organization=organization, currency=currency):
@@ -552,6 +553,11 @@ class OrganizationService:
             return user
 
         raise ObjectNotFoundException(_('Client not found'))
+
+    @classmethod
+    def update_add_item_date(cls, user: User, instance: Organization):
+        Organization.objects.filter(id=instance.id).update(add_item_date=datetime.now())
+
 
 
 class OrgPhoneNumberService:

@@ -94,6 +94,7 @@ class Organization(TimestampModel):
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
     is_under_review = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)
@@ -300,8 +301,18 @@ class OrganizationClientFinancialStatus(TimestampModel):
 
 
 class Subscription(TimestampModel):
+    SUBSCRIBE = 'subscribed'
+    UNSUBSCRIBE = 'not_subscribed'
+    PENDING = 'pending'
+    STATUSES = (
+        (SUBSCRIBE, SUBSCRIBE),
+        (UNSUBSCRIBE, UNSUBSCRIBE),
+        (PENDING, PENDING),
+    )
+
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='subscriptions')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    status = models.CharField(max_length=20, choices=STATUSES, default=SUBSCRIBE)
 
     class Meta:
         unique_together = ('organization', 'user')
@@ -529,7 +540,7 @@ class Service(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название сервиса')
     icon = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
     subcategory = models.ManyToManyField(OrganizationType, related_name='services')
-    category_of_item = models.ManyToManyField('shop.ItemCategory', related_name='services', null=True, blank=True)
+    category_of_item = models.ManyToManyField('shop.ItemCategory', related_name='services', blank=True)
     ordering = models.SmallIntegerField(verbose_name='Service ordering',
                                         validators=[MinValueValidator(1)],
                                         null=True,

@@ -34,7 +34,7 @@ class LanguagesAdmin(admin.ModelAdmin):
 
 @admin.register(File)
 class FileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'file', 'is_watermarked',)
+    list_display = ('id', 'file', 'is_watermarked', 'image_url', 'created_at', 'updated_at')
 
 
 @admin.register(Country)

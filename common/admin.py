@@ -3,7 +3,8 @@ from django.contrib.gis.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
-from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText
+from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
+    FileVideo
 
 
 @admin.register(MessageText)
@@ -35,6 +36,11 @@ class LanguagesAdmin(admin.ModelAdmin):
 @admin.register(File)
 class FileAdmin(admin.ModelAdmin):
     list_display = ('id', 'file', 'is_watermarked', 'image_url', 'created_at', 'updated_at')
+
+
+@admin.register(FileVideo)
+class FileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'file', 'video_url')
 
 
 @admin.register(Country)

@@ -92,6 +92,38 @@ class File(TimestampModel):
         ordering = ('order',)
 
 
+class FileVideo(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+
+    file = models.FileField(
+        upload_to=upload_file_with_unique_name,
+        help_text=_('Image that you want to store'),
+        max_length=1000
+    )
+
+    video_url = models.URLField(null=True, blank=True, max_length=1000)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def __str__(self):  # pragma: no cover
+        return self.file.name
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if self.video_url and not self.file:
+            result = request.urlretrieve(self.video_url)
+            self.file.save(
+                os.path.basename(self.video_url),
+                Files(open(result[0], 'rb'))
+            )
+        super(FileVideo, self).save()
+
+    class Meta:
+        ordering = ('order',)
+
+
 class Currency(models.Model):
     code = models.CharField(max_length=3, primary_key=True)
     name = models.CharField(max_length=50, null=True, blank=True)

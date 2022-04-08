@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F, Q
 from django.db.models import Subquery, OuterRef
 from django.utils.translation import gettext_lazy as _
 
@@ -105,13 +105,17 @@ class SubscriptionService:
 
     @classmethod
     def get_organization_followers(cls, organization_id: int, user: User = None) -> QuerySet:
+        organization = Organization.objects.get(id=organization_id)
         if user:
-            organization = Organization.objects.get(id=organization_id)
             if OrganizationService.user_can_edit_organization(organization=organization, user=user):
                 return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
                     '-subscriptions__id')
-        return User.objects.filter(subscriptions__organization_id=organization_id).exclude(
-            subscriptions__status='pending').order_by('-subscriptions__id')
+            return User.objects.filter(
+                Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
+                '-subscriptions__id')
+        return User.objects.filter(
+            Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
+            '-subscriptions__id')
 
     @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:

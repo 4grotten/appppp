@@ -95,7 +95,8 @@ class File(TimestampModel):
 class FileVideo(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
-    file = models.FileField(
+    thumbnail = models.ForeignKey(File, on_delete=models.CASCADE, related_name='filevideos', blank=True, null=True)
+    video = models.FileField(
         upload_to=upload_file_with_unique_name,
         help_text=_('Image that you want to store'),
         max_length=1000
@@ -105,16 +106,16 @@ class FileVideo(TimestampModel):
 
     @property
     def name(self):
-        return self.file.name.split("/")[-1]
+        return self.video.name.split("/")[-1]
 
     def __str__(self):  # pragma: no cover
-        return self.file.name
+        return self.video.name
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        if self.video_url and not self.file:
+        if self.video_url and not self.video:
             result = request.urlretrieve(self.video_url)
-            self.file.save(
+            self.video.save(
                 os.path.basename(self.video_url),
                 Files(open(result[0], 'rb'))
             )

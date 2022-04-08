@@ -39,8 +39,8 @@ class FileAdmin(admin.ModelAdmin):
 
 
 @admin.register(FileVideo)
-class FileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'file', 'video_url')
+class FileVideo(admin.ModelAdmin):
+    list_display = ('id', 'thumbnail', 'video', 'video_url')
 
 
 @admin.register(Country)

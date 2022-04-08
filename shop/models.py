@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from common.models import TimestampModel, File
+from common.models import TimestampModel, File, FileVideo
 from organizations.models import Organization
 from transactions.models import Transaction
 from users.models import User

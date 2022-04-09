@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from common.serializers import ImageSerializer
+from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
@@ -18,6 +18,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
     instagram_data = serializers.SerializerMethodField()
 
     is_liked = serializers.SerializerMethodField()
@@ -52,7 +53,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'price', 'discount',
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'
         )
 

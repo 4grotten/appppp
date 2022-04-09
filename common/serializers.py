@@ -37,6 +37,19 @@ class ImageSerializer(serializers.ModelSerializer):
         return obj.file.name.split("/")[-1]
 
 
+class VideoSerializer(serializers.ModelSerializer):
+    thumbnail = ImageSerializer()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FileVideo
+        fields = ('id', 'video', 'name', 'thumbnail')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.video.name.split("/")[-1]
+
+
 class ImageFromUrlSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     large = serializers.ImageField(read_only=True)

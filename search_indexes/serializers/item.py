@@ -128,6 +128,7 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
         document = ShopItemDocument
         fields = (
             'article', 'created_at', 'description', 'description_lang', 'discount', 'id', 'images', 'instagram_data',
+            'videos',
             'instagram_link', 'is_bookmarked', 'is_hidden', 'is_liked', 'is_published', 'is_updated', 'like_count',
             'name', 'name_lang', 'organization', 'price', 'removed_at', 'subcategory', 'updated_at', 'youtube_links',
         )

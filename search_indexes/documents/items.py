@@ -130,6 +130,26 @@ class ShopItemDocument(Document):
             'name': fields.TextField(attr='name')
         }
     )
+
+    videos = fields.ObjectField(
+        properties={
+            'id': fields.IntegerField(),
+            'video': fields.FileField(),
+            'video_url': fields.TextField(),
+            'thumbnail': fields.ObjectField(
+                properties={
+                    'id': fields.IntegerField(),
+                    'file': fields.FileField(),
+                    'small': fields.TextField(attr='small_property'),
+                    'medium': fields.TextField(attr='medium_property'),
+                    'large': fields.TextField(attr='large_property'),
+                    'name': fields.TextField(attr='name')
+                }
+            ),
+            'name': fields.TextField(attr='name')
+        }
+    )
+
     organization = fields.ObjectField(
         properties={
             'id': fields.IntegerField(

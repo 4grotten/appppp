@@ -95,7 +95,7 @@ class File(TimestampModel):
 class FileVideo(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
-    thumbnail = models.ForeignKey(File, on_delete=models.CASCADE, related_name='filevideos', blank=True, null=True)
+    thumbnail = models.ForeignKey(File, on_delete=models.CASCADE, related_name='file_videos', blank=True, null=True)
     video = models.FileField(
         upload_to=upload_file_with_unique_name,
         help_text=_('Image that you want to store'),

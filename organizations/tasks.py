@@ -31,19 +31,19 @@ def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTA
                                                 updated_at=created_at, description=description, instagram_link=post_url,
                                                 )
             for data in instagram.get('data'):
-                if data.get('video_url'):
-                    thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
-                    video = FileVideo.objects.create(video_url=data.get('video_url'),
-                                                     thumbnail=thumbnail)
-                    ItemInstagramData.objects.create(item=shop_item,
-                                                     thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                                                         thumbnail),
-                                                     video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                                                         video))
-                else:
-                    ItemInstagramData.objects.create(item=shop_item,
-                                                     thumbnail_url=data.get('thumbnail_url'),
-                                                     video_url=data.get('video_url'))
+                # if data.get('video_url'):
+                #     thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
+                #     video = FileVideo.objects.create(video_url=data.get('video_url'),
+                #                                      thumbnail=thumbnail)
+                #     ItemInstagramData.objects.create(item=shop_item,
+                #                                      thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                #                                          thumbnail),
+                #                                      video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                #                                          video))
+                # else:
+                ItemInstagramData.objects.create(item=shop_item,
+                                                 thumbnail_url=data.get('thumbnail_url'),
+                                                 video_url=data.get('video_url'))
 
             if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
                 shop_item.removed_at = mix_content_expired_time

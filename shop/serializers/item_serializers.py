@@ -64,7 +64,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'id', 'organization', 'subcategory',
             'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
-            'instagram_link', 'images', 'youtube_links',
+            'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at'
         )
         read_only_fields = ['name_lang', 'description_lang']
@@ -95,6 +95,11 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         for index, image in enumerate(images):
             image.order = index
             image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
 
         instance = super().save(**kwargs)
         if instance.article == '' or instance.article is None:
@@ -155,7 +160,7 @@ class ItemsSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang',
-            'price','is_published', 'updated_at', 'images'
+            'price', 'is_published', 'updated_at', 'images'
         )
 
 

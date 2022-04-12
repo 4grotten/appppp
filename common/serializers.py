@@ -38,16 +38,14 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class VideoSerializer(serializers.ModelSerializer):
-    thumbnail = ImageSerializer()
-    name = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
+
+    def get_thumbnail(self, obj):
+        return 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(obj.thumbnail.file)
 
     class Meta:
         model = FileVideo
-        fields = ('id', 'video', 'name', 'thumbnail')
-        read_only_fields = ('name',)
-
-    def get_name(self, obj):
-        return obj.video.name.split("/")[-1]
+        fields = ('id', 'video', 'thumbnail')
 
 
 class ImageFromUrlSerializer(serializers.ModelSerializer):

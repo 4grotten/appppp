@@ -238,9 +238,11 @@ class ItemInCartSerializer(serializers.ModelSerializer):
 
     def get_image(self, item: ShopItem) -> dict:
         image = item.images.filter(order=0).first()
+        video = item.videos.filter(order=0).first()
         if image:
             return ImageSerializer(image, context=self.context).data
-
+        if video:
+            return ImageSerializer(video.thumbnail, context=self.context).data
         image_data = None
         insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
         if insta_data is not None:

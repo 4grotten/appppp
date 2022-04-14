@@ -198,6 +198,7 @@ class ItemListSerializer(serializers.ModelSerializer):
 
 class SubscriptionItemSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
+    videos = VideoSerializer(many=True)
 
     class Meta:
         model = ShopItem
@@ -206,7 +207,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'price', 'discount', 'instagram_link', 'is_published',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'
         )
         read_only_fields = ['name_lang', 'description_lang']

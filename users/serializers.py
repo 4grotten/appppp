@@ -234,10 +234,12 @@ class FollowerListSerializer(UserShortInfoSerializer):
 
 class FollowerOrClientSerializer(FollowerListSerializer):
     role = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role',)
+        fields = (
+            'id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role', 'is_subscribed')
 
     def get_has_promo_cashback(self, user: User) -> bool:
         organization = OrganizationService.get(id=self.context['organization_id'])
@@ -246,6 +248,10 @@ class FollowerOrClientSerializer(FollowerListSerializer):
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(
             organization_id=self.context['organization_id'], user=user)
+
+    def get_is_subscribed(self, user: User) -> str:
+        organization = OrganizationService.get(id=self.context['organization_id'])
+        return SubscriptionService.is_subscribed(organization=organization, user=user)
 
 
 class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):

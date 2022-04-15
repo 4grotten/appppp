@@ -12,7 +12,7 @@ from imagekit.models import ImageSpecField
 
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
 from common.processors import ResizeWatermarkedSpec
-from common.utils import upload_file_with_unique_name
+from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -97,7 +97,7 @@ class FileVideo(TimestampModel):
 
     thumbnail = models.ForeignKey(File, on_delete=models.CASCADE, related_name='file_videos', blank=True, null=True)
     video = models.FileField(
-        upload_to=upload_file_with_unique_name,
+        upload_to=upload_file_video_with_unique_name,
         help_text=_('Image that you want to store'),
         max_length=1000
     )

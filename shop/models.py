@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from common.models import TimestampModel, File
+from common.models import TimestampModel, File, FileVideo
 from organizations.models import Organization
 from transactions.models import Transaction
 from users.models import User
@@ -54,6 +54,7 @@ class ShopItem(models.Model):
     article = models.CharField(max_length=64, null=True, blank=True)
     instagram_link = models.URLField(null=True, blank=True)
     images = models.ManyToManyField(File, blank=True, related_name='shop_items')
+    videos = models.ManyToManyField(FileVideo, blank=True, related_name='shop_items')
     youtube_links = models.JSONField(null=True, blank=True)
     is_updated = models.BooleanField(default=False)
     removed_at = models.DateTimeField(default=None, blank=True, null=True)

@@ -30,12 +30,12 @@ class ShopItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'organization', 'subcategory', 'price', 'discount', 'is_published', 'is_hidden',)
     list_filter = ('is_published', 'is_hidden', 'subcategory', 'organization',)
     search_fields = ('name',)
-    raw_id_fields = ('organization', 'subcategory',)
+    raw_id_fields = ('organization', 'subcategory', 'images', 'videos')
     inlines = (InstagramDataInline,)
 
 
 class ItemInstagramDataAdmin(admin.ModelAdmin):
-    list_display = ('item', 'thumbnail_url', 'video_url', 'updated_at', 'created_at',)
+    list_display = ('id', 'item', 'thumbnail_url', 'video_url', 'updated_at', 'created_at',)
     raw_id_fields = ('item',)
 
 

@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from organizations.models import Service
-from .models import File, Currency, Country, City, Version, Languages, MessageText
+from .models import File, Currency, Country, City, Version, Languages, MessageText, FileVideo
 
 
 class CurrencyConversionSerializer(serializers.Serializer):
@@ -37,6 +37,17 @@ class ImageSerializer(serializers.ModelSerializer):
         return obj.file.name.split("/")[-1]
 
 
+class VideoSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+
+    def get_thumbnail(self, obj):
+        return 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(obj.thumbnail.file)
+
+    class Meta:
+        model = FileVideo
+        fields = ('id', 'video', 'thumbnail')
+
+
 class ImageFromUrlSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     large = serializers.ImageField(read_only=True)
@@ -53,6 +64,25 @@ class ImageFromUrlSerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
+
+
+class VideoFromUrlSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
+    thumbnail_url = serializers.URLField(write_only=True)
+    video_url = serializers.URLField()
+    video = serializers.FileField(required=False)
+
+    class Meta:
+        model = FileVideo
+        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'video_url', 'video')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.video.name.split("/")[-1]
+
+    def get_thumbnail(self, obj):
+        return 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(obj.thumbnail.file)
 
 
 class CurrencySerializer(serializers.ModelSerializer):

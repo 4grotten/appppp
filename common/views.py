@@ -15,9 +15,10 @@ from common.exceptions import NotAcceptableException
 from mailer.services import MailerService
 from organizations.services.organization_services import OrganizationService
 from .constants import SHADOW_BAN
-from .models import File, Country, Languages
+from .models import File, Country, Languages, FileVideo
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
-    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer, CurrencyConversionSerializer
+    VersionSerializer, LanguagesListSerializer, ShadowBanSerializer, CurrencyConversionSerializer, \
+    VideoFromUrlSerializer
 from .services.country_city import CountryCityService
 from .services.currency import CurrencyConverterService
 from .services.shadow import ShadowService
@@ -61,7 +62,6 @@ class SendEmailToApofiz(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk, *args, **kwargs):
-
         organization = OrganizationService.get(pk=pk)
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise NotAcceptableException(_('No rights to edit organization'))
@@ -88,6 +88,28 @@ class ImageCreateFromUrlView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ImageFromUrlSerializer
     queryset = File.objects.all()
+
+
+class VideoCreateFromUrlView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = VideoFromUrlSerializer
+    queryset = FileVideo.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        thumbnail = File.objects.create(image_url=serializer.validated_data['thumbnail_url'])
+        file_video = FileVideo.objects.create(video_url=serializer.validated_data['video_url'],
+                                              thumbnail=thumbnail)
+
+        # data = self.serializer_class(file_video).data
+        return Response(self.serializer_class(file_video).data, status=status.HTTP_201_CREATED)
+        # return Response(data={'message': _('Successfully created')}, status=status.HTTP_201_CREATED)
 
 
 class WatermarkImageCreateView(ImageCreateView):

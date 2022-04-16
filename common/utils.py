@@ -49,6 +49,16 @@ def upload_file_with_unique_name(instance, filename):
     )
 
 
+def upload_file_video_with_unique_name(instance, filename):
+    return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(
+        hashlib.sha256(
+            datetime.date.today().strftime('%Y%m').encode()
+        ).hexdigest()[32:-16]
+    ) / Path(str(uuid.uuid4())).with_suffix(
+        Path(filename + '.mp4').suffix
+    )
+
+
 def imagekit_filename_generator(generator):
     # 'media/45428685bacab859/a2d7a138-6861-4609-b56e-3dbf97f0db4f.jpg'
     source_filename = getattr(generator.source, 'name', None)

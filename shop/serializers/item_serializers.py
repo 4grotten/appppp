@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from common.serializers import ImageSerializer
+from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
@@ -18,6 +18,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
     images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
     instagram_data = serializers.SerializerMethodField()
 
     is_liked = serializers.SerializerMethodField()
@@ -52,7 +53,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'price', 'discount',
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'
         )
 
@@ -64,7 +65,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'id', 'organization', 'subcategory',
             'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
-            'instagram_link', 'images', 'youtube_links',
+            'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at'
         )
         read_only_fields = ['name_lang', 'description_lang']
@@ -95,6 +96,11 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         for index, image in enumerate(images):
             image.order = index
             image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
 
         instance = super().save(**kwargs)
         if instance.article == '' or instance.article is None:
@@ -155,7 +161,7 @@ class ItemsSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang',
-            'price','is_published', 'updated_at', 'images'
+            'price', 'is_published', 'updated_at', 'images'
         )
 
 
@@ -192,6 +198,7 @@ class ItemListSerializer(serializers.ModelSerializer):
 
 class SubscriptionItemSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
+    videos = VideoSerializer(many=True)
 
     class Meta:
         model = ShopItem
@@ -200,7 +207,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'price', 'discount', 'instagram_link', 'is_published',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'
         )
         read_only_fields = ['name_lang', 'description_lang']
@@ -231,9 +238,11 @@ class ItemInCartSerializer(serializers.ModelSerializer):
 
     def get_image(self, item: ShopItem) -> dict:
         image = item.images.filter(order=0).first()
+        video = item.videos.filter(order=0).first()
         if image:
             return ImageSerializer(image, context=self.context).data
-
+        if video:
+            return ImageSerializer(video.thumbnail, context=self.context).data
         image_data = None
         insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
         if insta_data is not None:

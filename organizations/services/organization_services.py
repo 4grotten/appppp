@@ -566,7 +566,7 @@ class OrganizationService:
         if not MembershipService.is_organization_member_or_owner(user=requested_by, organization=organization):
             raise PermissionDeniedException(_('Permission denied'))
 
-        if Transaction.objects.filter(client=user, organization=organization, type=Transaction.ONLINE).exists():
+        if Transaction.objects.filter(client=user, organization=organization).exists():
             return user
 
         raise ObjectNotFoundException(_('Client not found'))

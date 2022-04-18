@@ -96,6 +96,11 @@ class ShopItemDocument(Document):
         multi=True
     )
 
+    comments = fields.TextField(
+        attr='comment_count_list',
+        multi=True
+    )
+
     subcategory = fields.ObjectField(
         properties={
             'id': fields.IntegerField(),

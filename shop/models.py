@@ -67,6 +67,10 @@ class ShopItem(models.Model):
         return [like.user.id for like in self.liked_users.all()]
 
     @property
+    def comment_count_list(self):
+        return [comment.id for comment in self.comments.all()]
+
+    @property
     def bookmarked_users_list(self):
         return [bookmarked.user.id for bookmarked in self.bookmarked_users.all()]
 

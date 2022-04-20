@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from organizations.models import Membership
-from organizations.serializers.organization_serializers import OrganizationWithImageSerializer
+from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentLike
 from shop.services.like_bookmark_services import LikeService
@@ -15,7 +15,7 @@ class ParentCommentSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
             if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
-                return OrganizationWithImageSerializer(obj.item.organization).data
+                return OrganizationWithTypeImageSerializer(obj.item.organization).data
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data
 
@@ -48,7 +48,7 @@ class CommentSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
             if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
-                return OrganizationWithImageSerializer(obj.item.organization).data
+                return OrganizationWithTypeImageSerializer(obj.item.organization).data
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data
 

@@ -31,7 +31,8 @@ class CommentItemListCreateView(ListCreateAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        comment = CommentService.create_comment(**serializer.validated_data)
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        comment = CommentService.create_comment(**serializer.validated_data, item=item)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

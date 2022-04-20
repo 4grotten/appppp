@@ -86,7 +86,7 @@ class CommentLikeSerializer(serializers.ModelSerializer):
 class CommentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('item', 'parent', 'text')
+        fields = ('parent', 'text')
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user

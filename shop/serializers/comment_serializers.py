@@ -72,7 +72,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id', 'user', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'comment_like_count', 'can_delete',
-            'permissions')
+            'permissions', 'created_at')
 
 
 class CommentLikeSerializer(serializers.ModelSerializer):

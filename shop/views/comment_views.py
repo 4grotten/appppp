@@ -22,7 +22,7 @@ class CommentItemListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         item = ShopItemService.get(id=self.kwargs['pk'])
-        return Comment.objects.filter(item=item).order_by('created_at')
+        return Comment.objects.filter(item=item).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
         serializer = CommentCreateSerializer(data=request.data, context={'request': request})

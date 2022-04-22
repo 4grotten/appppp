@@ -91,12 +91,12 @@ class ShopItemDocument(Document):
         multi=True
     )
 
-    liked_users = fields.TextField(
+    liked_users = fields.IntegerField(
         attr='liked_users_list',
         multi=True
     )
 
-    comments = fields.TextField(
+    comments = fields.IntegerField(
         attr='comment_count_list',
         multi=True
     )

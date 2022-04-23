@@ -10,7 +10,7 @@ from sms_sender.models import SmsModel
 
 class MessageServiceNIKITA:
     @classmethod
-    def send_sms(cls, numbers: list, message: str, sms_id: str):
+    def send_sms(cls, numbers: list, message: str, sms_id: str, code_id: int = None):
         if len(numbers) < 0:
             return
 
@@ -47,6 +47,7 @@ class MessageServiceNIKITA:
             headers={'Content-Type': 'application/xml'}
         )
         slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
+                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content.decode('utf-8')
@@ -120,7 +121,7 @@ from twilio.rest import Client
 
 class MessageServiceTwilio:
     @classmethod
-    def send_sms(cls, number, code):
+    def send_sms(cls, number, code, code_id):
         account_sid = settings.TWILIO_ACCOUNT_SID
         auth_token = settings.TWILIO_AUTH_TOKEN
         client = Client(account_sid, auth_token)
@@ -132,6 +133,7 @@ class MessageServiceTwilio:
             body=sms)
 
         slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{message.status}\n============================')
 
 

@@ -133,11 +133,11 @@ class TemporaryCodeService:
         # elif phone_number == "+971585939381":
         #     AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number.startswith("+996"):
-            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id)
+            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id)
         # elif phone_number.startswith("+971"):
         #     AzamatMessageService.save_in_model(message, phone_number)
         else:
-            MessageServiceTwilio.send_sms(str(user.phone_number), message)
+            MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id)
 
         MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code
@@ -148,7 +148,9 @@ class TemporaryCodeService:
             temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number, is_used=False)
 
             if temporary_code.expiration_datetime < timezone.now():
-                slack.bot_2(f'Code time expired for {phone_number}\n============================')
+                slack.bot_2(f'Code time expired for {phone_number}\n'
+                            f'link code: https://apofiz.com/admin/users/temporarycode/{temporary_code.id}/change/\n'
+                            f'============================')
                 raise ValidationException(_('Code time expired'))
 
             cls.model.objects.filter(user__phone_number=phone_number).update(is_used=True)
@@ -219,7 +221,7 @@ class TemporaryPhoneNumberService:
 
             message = SMS_CODE_MESSAGE.format(code.code)
             sms_id = f'{user.id}{code.code}'
-            MessageServiceNIKITA.send_sms(numbers=[phone_number], message=message, sms_id=sms_id)
+            MessageServiceNIKITA.send_sms(numbers=[phone_number], message=message, sms_id=sms_id, code_id=code.id)
 
         except IntegrityError:
             raise IntegrityException(_('Error while creating temporary code for new phone_number'))

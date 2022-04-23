@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import UmaiWallet
+from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES
@@ -88,6 +89,9 @@ class VerifyTemporaryCodeAPIView(APIView):
         user = UserService.get(phone_number=phone_number)
 
         token, created = Token.objects.get_or_create(user=user)
+
+        slack.bot(f'User {user} successfully validated\n'
+                  f'============================')
 
         return Response(data={
             'message': gettext_lazy('Successfully validated'),

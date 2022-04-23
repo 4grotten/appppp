@@ -27,7 +27,6 @@ class MessageServiceNIKITA:
             <test>{{ test }}</test>
         </message>
         '''
-        message = message + ' is your verification code'
 
         context = {
             'login': settings.NIKITA_USERNAME,
@@ -132,9 +131,11 @@ class MessageServiceTwilio:
             from_=settings.TWILIO_SERVICE_SID,
             body=sms)
 
+        slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                  f' status_code-{message.status}\n============================')
+
 
 class AzamatMessageService:
     @classmethod
     def save_in_model(cls, message, phone_number):
         sms, created = SmsModel.objects.get_or_create(phone_number=phone_number, text=message)
-

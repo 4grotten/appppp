@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
+from common.services import slack
 from mailer.services import MailerService
 from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService
 from .constants import SMS_CODE_MESSAGE
@@ -109,6 +110,7 @@ class TemporaryCodeService:
 
             if cls.model.objects.filter(user=user,
                                         created_at__range=(max_datetime, current_datetime)).count() >= 3:
+                slack.bot_2(f'Limit exceeded for user {user}\n============================')
                 raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
@@ -146,11 +148,13 @@ class TemporaryCodeService:
             temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number, is_used=False)
 
             if temporary_code.expiration_datetime < timezone.now():
-                raise ValidationException(_('Code expired'))
+                slack.bot_2(f'Code time expired for {phone_number}\n============================')
+                raise ValidationException(_('Code time expired'))
 
             cls.model.objects.filter(user__phone_number=phone_number).update(is_used=True)
 
         except cls.model.DoesNotExist:
+            slack.bot_2(f'Entered incorrect code for {phone_number}\n============================')
             raise ValidationException(_('Code not found'))
 
 

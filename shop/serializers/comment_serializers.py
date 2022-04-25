@@ -4,6 +4,7 @@ from organizations.models import Membership
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentLike
+from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
 from users.serializers import UserShortInfoSerializer
 
@@ -26,7 +27,6 @@ class ParentCommentSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     is_comment_liked = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     user_role = serializers.SerializerMethodField()
     comment_like_count = serializers.SerializerMethodField()
@@ -40,10 +40,6 @@ class CommentSerializer(serializers.ModelSerializer):
             return True
         return False
 
-    def get_permissions(self, obj):
-        return OrganizationService.get_user_permissions_dict(organization=obj.item.organization,
-                                                             user=obj.user)
-
     def get_user(self, obj):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
@@ -53,11 +49,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return UserShortInfoSerializer(obj.user).data
 
     def get_user_role(self, obj):
-        try:
-            membership = Membership.objects.get(organization=obj.item.organization, user=obj.user)
-            return membership.role.title
-        except Membership.DoesNotExist:
-            return None
+        return CommentService.get_my_role(item=obj.item, user=obj.user)
 
     def get_is_comment_liked(self, comment: Comment) -> bool:
         user = self.context['request'].user
@@ -71,8 +63,8 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'comment_like_count', 'can_delete',
-            'permissions', 'created_at')
+            'id', 'user', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'comment_like_count', 'can_delete'
+            , 'created_at')
 
 
 class CommentLikeSerializer(serializers.ModelSerializer):

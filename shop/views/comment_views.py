@@ -24,6 +24,12 @@ class CommentItemListCreateView(ListCreateAPIView):
         item = ShopItemService.get(id=self.kwargs['pk'])
         return Comment.objects.filter(item=item).order_by('-created_at')
 
+    def list(self, request, *args, **kwargs):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        response = super().list(request, args, kwargs)
+        response.data['my_role'] = CommentService.get_my_role(user=self.request.user, item=item)
+        return response
+
     def create(self, request, *args, **kwargs):
         serializer = CommentCreateSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():

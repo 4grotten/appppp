@@ -41,3 +41,15 @@ class ResizeWatermarkedSpec(ImageSpec):
         if model.is_watermarked:
             processors.append(Watermark('watermark/watermark_logo.png'))
         return processors
+
+
+class MobileWallpaper(ImageSpec):
+    format = 'JPEG'
+    options = {'quality': 100}
+    height = 941
+    width = 375
+
+    @property
+    def processors(self):
+        processors = [ResizeToFit(self.width, self.height, upscale=False)]
+        return processors

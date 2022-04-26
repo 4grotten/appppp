@@ -28,6 +28,7 @@ class CommentItemListCreateView(ListCreateAPIView):
         item = ShopItemService.get(id=self.kwargs['pk'])
         response = super().list(request, args, kwargs)
         response.data['my_role'] = CommentService.get_my_role(user=self.request.user, item=item)
+        response.data['wallpapers'] = CommentService.get_wallpapers()
         return response
 
     def create(self, request, *args, **kwargs):

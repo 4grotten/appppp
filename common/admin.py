@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
 from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
-    FileVideo
+    FileVideo, CommentsWallpaper, SetWallpaper
 
 
 @admin.register(MessageText)
@@ -16,6 +16,12 @@ class MessageTextAdmin(admin.ModelAdmin):
 @admin.register(UmaiWallet)
 class UmaiWalletAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'password', 'amount', 'activate', 'version', 'start_time', 'end_time']
+
+
+@admin.register(SetWallpaper)
+class SetWallpaperAdmin(admin.ModelAdmin):
+    list_display = ['id', 'wallpaper', ]
+    raw_id_fields = ('wallpaper',)
 
 
 @admin.register(Languages)
@@ -35,7 +41,20 @@ class LanguagesAdmin(admin.ModelAdmin):
 
 @admin.register(File)
 class FileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'file', 'is_watermarked', 'image_url', 'created_at', 'updated_at')
+    list_display = ('id', 'file', 'is_watermarked', 'image_url', 'created_at', 'updated_at', 'large', 'medium', 'small')
+
+
+@admin.register(CommentsWallpaper)
+class CommentsWallpaperAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'web_image', 'mobile_image', 'web_wallpaper', 'mobile_wallpaper', 'created_at', 'updated_at',)
+    readonly_fields = ('web_wallpaper', 'mobile_wallpaper',)
+
+    def web_wallpaper(self, obj):
+        return mark_safe(f'<img src={obj.web_image.url} width="100" height="60">')
+
+    def mobile_wallpaper(self, obj):
+        return mark_safe(f'<img src={obj.mobile_image.url} width="60" height="100">')
 
 
 @admin.register(FileVideo)

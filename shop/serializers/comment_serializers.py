@@ -11,18 +11,26 @@ from users.serializers import UserShortInfoSerializer
 
 class ParentCommentSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
+
+    def get_organization(self, obj):
+        user = self.context['request'].user
+        if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
+                return OrganizationWithTypeImageSerializer(obj.item.organization).data
+        return None
 
     def get_user(self, obj):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
             if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
-                return OrganizationWithTypeImageSerializer(obj.item.organization).data
+                return None
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data
 
     class Meta:
         model = Comment
-        fields = ('id', 'user', 'text')
+        fields = ('id', 'user', 'organization', 'text')
 
 
 class CommentSerializer(serializers.ModelSerializer):

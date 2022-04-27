@@ -51,7 +51,7 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
-            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, users=obj.user):
+            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
                 return None
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data

@@ -28,6 +28,7 @@ class ParentCommentSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     is_comment_liked = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
     user_role = serializers.SerializerMethodField()
     comment_like_count = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
@@ -40,11 +41,18 @@ class CommentSerializer(serializers.ModelSerializer):
             return True
         return False
 
-    def get_user(self, obj):
+    def get_organization(self, obj):
         user = self.context['request'].user
         if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
             if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
                 return OrganizationWithTypeImageSerializer(obj.item.organization).data
+        return None
+
+    def get_user(self, obj):
+        user = self.context['request'].user
+        if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, users=obj.user):
+                return None
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data
 
@@ -63,7 +71,8 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'comment_like_count', 'can_delete'
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked',
+            'comment_like_count', 'can_delete'
             , 'created_at')
 
 

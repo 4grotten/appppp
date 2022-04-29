@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
 from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
-    FileVideo, CommentsWallpaper, SetWallpaper
+    FileVideo, CommentsWallpaper
 
 
 @admin.register(MessageText)
@@ -17,11 +17,6 @@ class MessageTextAdmin(admin.ModelAdmin):
 class UmaiWalletAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'password', 'amount', 'activate', 'version', 'start_time', 'end_time']
 
-
-@admin.register(SetWallpaper)
-class SetWallpaperAdmin(admin.ModelAdmin):
-    list_display = ['id', 'wallpaper', ]
-    raw_id_fields = ('wallpaper',)
 
 
 @admin.register(Languages)
@@ -47,7 +42,7 @@ class FileAdmin(admin.ModelAdmin):
 @admin.register(CommentsWallpaper)
 class CommentsWallpaperAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'web_image', 'mobile_image', 'web_wallpaper', 'mobile_wallpaper', 'created_at', 'updated_at',)
+        'id', 'is_active', 'web_image', 'mobile_image', 'web_wallpaper', 'mobile_wallpaper', 'created_at', 'updated_at',)
     readonly_fields = ('web_wallpaper', 'mobile_wallpaper',)
 
     def web_wallpaper(self, obj):
@@ -55,6 +50,11 @@ class CommentsWallpaperAdmin(admin.ModelAdmin):
 
     def mobile_wallpaper(self, obj):
         return mark_safe(f'<img src={obj.mobile_image.url} width="60" height="100">')
+
+    def save_model(self, request, obj, form, change):
+        if obj.is_active:
+            CommentsWallpaper.objects.exclude(id=obj.id).update(is_active=False)
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(FileVideo)

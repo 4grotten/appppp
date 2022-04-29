@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
-from common.models import SetWallpaper
+from common.models import CommentsWallpaper
 from organizations.models import Membership
 from shop.models import Comment, ShopItem
 from users.models import User
@@ -42,9 +42,9 @@ class CommentService:
 
     @classmethod
     def get_wallpapers(cls):
-        wallpaper = SetWallpaper.objects.first()
+        wallpaper = CommentsWallpaper.objects.filter(is_active=True).first()
         if wallpaper:
-            return {'web': 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(wallpaper.wallpaper.web_image),
-                    'mobile': 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(wallpaper.wallpaper.mobile)}
+            return {'web': 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(wallpaper.web_image),
+                    'mobile': 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(wallpaper.mobile)}
         else:
             return None

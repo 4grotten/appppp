@@ -139,7 +139,7 @@ class CommentsWallpaper(TimestampModel):
         help_text=_('Mobile wallpaper that you want to store'),
         max_length=1000
     )
-
+    is_active = models.BooleanField(default=True)
     mobile = ImageSpecField(source='mobile_image', id='common:commentswallpaper:mobile')
 
     @property
@@ -245,18 +245,6 @@ class Languages(models.Model):
         verbose_name = _('Language')
         verbose_name_plural = _('Languages')
         ordering = ('code',)
-
-
-class SetWallpaper(TimestampModel, SingletonModel):
-    wallpaper = models.ForeignKey(CommentsWallpaper, on_delete=models.CASCADE, related_name='set_wallpapers',
-                                  blank=True, null=True)
-
-    def __str__(self):
-        return f'{self.wallpaper}'
-
-    class Meta:
-        verbose_name = _('Set wallpaper')
-        verbose_name_plural = _('Set wallpapers')
 
 
 class UmaiWallet(TimestampModel, SingletonModel):

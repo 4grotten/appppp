@@ -3,7 +3,7 @@ import os
 from PIL import Image
 from imagekit import ImageSpec
 from imagekit.utils import get_field_info
-from pilkit.processors import ResizeToFit
+from pilkit.processors import ResizeToFit, Crop
 
 
 class Watermark(object):
@@ -51,5 +51,5 @@ class MobileWallpaper(ImageSpec):
 
     @property
     def processors(self):
-        processors = [ResizeToFit(self.width, self.height, upscale=False)]
+        processors = [Crop(self.width, self.height)]
         return processors

@@ -5,11 +5,13 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from common.tests.factories import CurrencyFactory
 from organizations.tests.factories import (
     OrganizationFactory
 )
 from shop.tests.factories import ShopItemFactory, CartFactory
 from transactions.models import Transaction
+from transactions.tests.factories import TransactionFactory
 from users.tests.factories import UserFactory
 
 
@@ -28,10 +30,17 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             name="Sony WH-1000 XM-4",
             organization=self.organization
         )
+
+        self.currency = CurrencyFactory(code='XXX')
+
+        self.transaction = TransactionFactory(
+            client=self.client_user, organization=self.organization, currency=self.currency,
+            original_amount=52.0, is_processed=False, status='in_progress', type='online')
+
         self.cart = CartFactory(
             user=self.user,
             organization=self.organization,
-            transaction=None
+            transaction=self.transaction
         )
 
     def test_flow_to_shop_and_change_item_with_order_delivery(self):
@@ -69,6 +78,7 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "list": [
                 {
                     "id": self.cart.id,
+                    "can_sell": True,
                     "items_count": 1,
                     "totals": {
                         "original_price": 0.0,
@@ -81,14 +91,20 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                         "types": [],
                         "image": {
                             "id": self.organization.image.id,
-                            "file": f"http://testserver{self.organization.image.file.url}",
+                            "file": f"{self.organization.image.file.url}",
                             "name": os.path.basename(
                                 str(self.organization.image.file)),
-                            "large": f"http://testserver{self.organization.image.large.url}",
-                            "medium": f"http://testserver{self.organization.image.medium.url}",
-                            "small": f"http://testserver{self.organization.image.small.url}",
+                            "large": f"{self.organization.image.large.url}",
+                            "medium": f"{self.organization.image.medium.url}",
+                            "small": f"{self.organization.image.small.url}",
                         },
-                        "address": self.organization.address
+                        "address": self.organization.address,
+                        'time_working': 'closed',
+                        'avg_check': None,
+                        "verification_status": "not_verified",
+                        "has_self_pick_up": True,
+                        "has_delivery": True,
+
                     },
                     "images": []
                 }
@@ -230,12 +246,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                         "types": [],
                         "image": {
                             "id": self.organization.image.id,
-                            "file": f"http://testserver{self.organization.image.file.url}",
+                            "file": f"{self.organization.image.file.url}",
                             "name": os.path.basename(
                                 str(self.organization.image.file)),
-                            "large": f"http://testserver{self.organization.image.large.url}",
-                            "medium": f"http://testserver{self.organization.image.medium.url}",
-                            "small": f"http://testserver{self.organization.image.small.url}",
+                            "large": f"{self.organization.image.large.url}",
+                            "medium": f"{self.organization.image.medium.url}",
+                            "small": f"{self.organization.image.small.url}",
                         },
                         "address": self.organization.address
                     },
@@ -302,13 +318,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
-                "file": f"http://testserver{self.user.avatar.file.url}",
+                "file": f"{self.user.avatar.file.url}",
                 "name": os.path.basename(
                     str(self.user.avatar.file)
                 ),
-                "large": f"http://testserver{self.user.avatar.large.url}",
-                "medium": f"http://testserver{self.user.avatar.medium.url}",
-                "small": f"http://testserver{self.user.avatar.small.url}",
+                "large": f"{self.user.avatar.large.url}",
+                "medium": f"{self.user.avatar.medium.url}",
+                "small": f"{self.user.avatar.small.url}",
             },
             "employee_role": "Owner",
             "updated_at": transaction.updated_at.strftime(
@@ -323,13 +339,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "full_name": transaction.client.full_name,
                 "avatar": {
                     "id": transaction.client.avatar.id,
-                    "file": f"http://testserver{transaction.client.avatar.file.url}",
+                    "file": f"{transaction.client.avatar.file.url}",
                     "name": os.path.basename(
                         str(transaction.client.avatar.file)
                     ),
-                    "large": f"http://testserver{transaction.client.avatar.large.url}",
-                    "medium": f"http://testserver{transaction.client.avatar.medium.url}",
-                    "small": f"http://testserver{transaction.client.avatar.small.url}",
+                    "large": f"{transaction.client.avatar.large.url}",
+                    "medium": f"{transaction.client.avatar.medium.url}",
+                    "small": f"{transaction.client.avatar.small.url}",
                 },
             },
             "delivery_type": Transaction.CASH_COURIER,
@@ -343,12 +359,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                     "types": [],
                     "image": {
                         "id": self.organization.image.id,
-                        "file": f"http://testserver{self.organization.image.file.url}",
+                        "file": f"{self.organization.image.file.url}",
                         "name": os.path.basename(
                             str(self.organization.image.file)),
-                        "large": f"http://testserver{self.organization.image.large.url}",
-                        "medium": f"http://testserver{self.organization.image.medium.url}",
-                        "small": f"http://testserver{self.organization.image.small.url}",
+                        "large": f"{self.organization.image.large.url}",
+                        "medium": f"{self.organization.image.medium.url}",
+                        "small": f"{self.organization.image.small.url}",
                     },
                     "address": self.organization.address
                 },
@@ -385,12 +401,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "types": [],
                 "image": {
                     "id": self.organization.image.id,
-                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "file": f"{self.organization.image.file.url}",
                     "name": os.path.basename(
                         str(self.organization.image.file)),
-                    "large": f"http://testserver{self.organization.image.large.url}",
-                    "medium": f"http://testserver{self.organization.image.medium.url}",
-                    "small": f"http://testserver{self.organization.image.small.url}",
+                    "large": f"{self.organization.image.large.url}",
+                    "medium": f"{self.organization.image.medium.url}",
+                    "small": f"{self.organization.image.small.url}",
                 },
                 "address": self.organization.address
             },
@@ -458,13 +474,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
-                "file": f"http://testserver{self.user.avatar.file.url}",
+                "file": f"{self.user.avatar.file.url}",
                 "name": os.path.basename(
                     str(self.user.avatar.file)
                 ),
-                "large": f"http://testserver{self.user.avatar.large.url}",
-                "medium": f"http://testserver{self.user.avatar.medium.url}",
-                "small": f"http://testserver{self.user.avatar.small.url}",
+                "large": f"{self.user.avatar.large.url}",
+                "medium": f"{self.user.avatar.medium.url}",
+                "small": f"{self.user.avatar.small.url}",
             },
             "employee_role": "Owner",
             "updated_at": transaction.updated_at.strftime(
@@ -479,13 +495,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "full_name": transaction.client.full_name,
                 "avatar": {
                     "id": transaction.client.avatar.id,
-                    "file": f"http://testserver{transaction.client.avatar.file.url}",
+                    "file": f"{transaction.client.avatar.file.url}",
                     "name": os.path.basename(
                         str(transaction.client.avatar.file)
                     ),
-                    "large": f"http://testserver{transaction.client.avatar.large.url}",
-                    "medium": f"http://testserver{transaction.client.avatar.medium.url}",
-                    "small": f"http://testserver{transaction.client.avatar.small.url}",
+                    "large": f"{transaction.client.avatar.large.url}",
+                    "medium": f"{transaction.client.avatar.medium.url}",
+                    "small": f"{transaction.client.avatar.small.url}",
                 },
             },
             "delivery_type": Transaction.CASH_COURIER,
@@ -499,12 +515,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                     "types": [],
                     "image": {
                         "id": self.organization.image.id,
-                        "file": f"http://testserver{self.organization.image.file.url}",
+                        "file": f"{self.organization.image.file.url}",
                         "name": os.path.basename(
                             str(self.organization.image.file)),
-                        "large": f"http://testserver{self.organization.image.large.url}",
-                        "medium": f"http://testserver{self.organization.image.medium.url}",
-                        "small": f"http://testserver{self.organization.image.small.url}",
+                        "large": f"{self.organization.image.large.url}",
+                        "medium": f"{self.organization.image.medium.url}",
+                        "small": f"{self.organization.image.small.url}",
                     },
                     "address": self.organization.address
                 },
@@ -541,12 +557,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "types": [],
                 "image": {
                     "id": self.organization.image.id,
-                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "file": f"{self.organization.image.file.url}",
                     "name": os.path.basename(
                         str(self.organization.image.file)),
-                    "large": f"http://testserver{self.organization.image.large.url}",
-                    "medium": f"http://testserver{self.organization.image.medium.url}",
-                    "small": f"http://testserver{self.organization.image.small.url}",
+                    "large": f"{self.organization.image.large.url}",
+                    "medium": f"{self.organization.image.medium.url}",
+                    "small": f"{self.organization.image.small.url}",
                 },
                 "address": self.organization.address
             },
@@ -612,13 +628,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
             "employee_name": self.user.full_name,
             "employee_avatar": {
                 "id": self.user.avatar.id,
-                "file": f"http://testserver{self.user.avatar.file.url}",
+                "file": f"{self.user.avatar.file.url}",
                 "name": os.path.basename(
                     str(self.user.avatar.file)
                 ),
-                "large": f"http://testserver{self.user.avatar.large.url}",
-                "medium": f"http://testserver{self.user.avatar.medium.url}",
-                "small": f"http://testserver{self.user.avatar.small.url}",
+                "large": f"{self.user.avatar.large.url}",
+                "medium": f"{self.user.avatar.medium.url}",
+                "small": f"{self.user.avatar.small.url}",
             },
             "employee_role": "Owner",
             "updated_at": transaction.updated_at.strftime(
@@ -633,13 +649,13 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "full_name": transaction.client.full_name,
                 "avatar": {
                     "id": transaction.client.avatar.id,
-                    "file": f"http://testserver{transaction.client.avatar.file.url}",
+                    "file": f"{transaction.client.avatar.file.url}",
                     "name": os.path.basename(
                         str(transaction.client.avatar.file)
                     ),
-                    "large": f"http://testserver{transaction.client.avatar.large.url}",
-                    "medium": f"http://testserver{transaction.client.avatar.medium.url}",
-                    "small": f"http://testserver{transaction.client.avatar.small.url}",
+                    "large": f"{transaction.client.avatar.large.url}",
+                    "medium": f"{transaction.client.avatar.medium.url}",
+                    "small": f"{transaction.client.avatar.small.url}",
                 },
             },
             "delivery_type": Transaction.CASH_COURIER,
@@ -653,12 +669,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                     "types": [],
                     "image": {
                         "id": self.organization.image.id,
-                        "file": f"http://testserver{self.organization.image.file.url}",
+                        "file": f"{self.organization.image.file.url}",
                         "name": os.path.basename(
                             str(self.organization.image.file)),
-                        "large": f"http://testserver{self.organization.image.large.url}",
-                        "medium": f"http://testserver{self.organization.image.medium.url}",
-                        "small": f"http://testserver{self.organization.image.small.url}",
+                        "large": f"{self.organization.image.large.url}",
+                        "medium": f"{self.organization.image.medium.url}",
+                        "small": f"{self.organization.image.small.url}",
                     },
                     "address": self.organization.address
                 },
@@ -695,12 +711,12 @@ class FlowToShopAndChangeItemTestCase(APITestCase):
                 "types": [],
                 "image": {
                     "id": self.organization.image.id,
-                    "file": f"http://testserver{self.organization.image.file.url}",
+                    "file": f"{self.organization.image.file.url}",
                     "name": os.path.basename(
                         str(self.organization.image.file)),
-                    "large": f"http://testserver{self.organization.image.large.url}",
-                    "medium": f"http://testserver{self.organization.image.medium.url}",
-                    "small": f"http://testserver{self.organization.image.small.url}",
+                    "large": f"{self.organization.image.large.url}",
+                    "medium": f"{self.organization.image.medium.url}",
+                    "small": f"{self.organization.image.small.url}",
                 },
                 "address": self.organization.address
             },

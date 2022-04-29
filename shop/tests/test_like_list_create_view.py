@@ -71,6 +71,7 @@ class LikeListCreateViewTestCase(APITestCase):
                     "description": shop_item.description,
                     "description_lang": shop_item.description_lang,
                     "article": shop_item.article,
+                    "comment_count": 0,
                     "price": shop_item.price,
                     "discount": shop_item.discount,
                     "instagram_link": shop_item.instagram_link,
@@ -87,6 +88,7 @@ class LikeListCreateViewTestCase(APITestCase):
                     "youtube_links": shop_item.youtube_links,
                     'removed_at': shop_item.removed_at,
                     "subcategory": shop_item.subcategory,
+                    'videos': [],
                     "images": [],
                     "organization": {
                         "id": organization.id,

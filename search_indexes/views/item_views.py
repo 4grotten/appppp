@@ -182,7 +182,7 @@ class ShopOrgnizationItemDocumentView(DocumentViewSet):
         return super(ShopOrgnizationItemDocumentView, self).list(request)
 
     def list(self, request, *args, **kwargs):
-        organization = OrganizationService.get(id=request.GET['organization'])
+        organization = OrganizationService.get(id=request.GET.get('organization', None))
 
         if request.user.is_authenticated is False and organization.is_private is True:
             return Response(data={

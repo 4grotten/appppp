@@ -3,7 +3,7 @@ import os
 from PIL import Image
 from imagekit import ImageSpec
 from imagekit.utils import get_field_info
-from pilkit.processors import ResizeToFit
+from pilkit.processors import ResizeToFit, Crop
 
 
 class Watermark(object):
@@ -40,4 +40,16 @@ class ResizeWatermarkedSpec(ImageSpec):
         model, field_name = get_field_info(self.source)
         if model.is_watermarked:
             processors.append(Watermark('watermark/watermark_logo.png'))
+        return processors
+
+
+class MobileWallpaper(ImageSpec):
+    format = 'JPEG'
+    options = {'quality': 100}
+    height = 941
+    width = 375
+
+    @property
+    def processors(self):
+        processors = [Crop(self.width, self.height)]
         return processors

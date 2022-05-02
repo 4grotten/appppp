@@ -9,6 +9,8 @@ from shop.views.category_views import (
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
     ItemCategoryAllSubcategoriesView
 )
+from shop.views.comment_views import CommentItemListCreateView, \
+    CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike
 from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
 )
@@ -51,4 +53,10 @@ urlpatterns = [
     path('carts/<int:pk>/updateDelivery/', UpdateDeliveryToSendByCourierView.as_view(), name='order_delivery'),
     path('carts/<int:pk>/selfPickup/', OrderSelfPickupView.as_view(), name='order_self_pickup'),
     path('carts/<int:pk>/offline_checkout/', CartAnonymousCheckoutView.as_view(), name='cart_anonymous_checkout'),
+
+    path('comments/item/<int:pk>/', CommentItemListCreateView.as_view(), name='comment_item_list'),
+    path('comments/<int:pk>/', CommentDestroyUpdateRetrievtView.as_view(), name='comment_retrieve'),
+    path('commented/items/', CommentedItemsListView.as_view(), name='commented_items'),
+    path('comments/like/', CommentLike.as_view(), name='comment_like'),
+
 ]

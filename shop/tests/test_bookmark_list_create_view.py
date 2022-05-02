@@ -71,6 +71,7 @@ class BookmarkListCreateViewTestCase(APITestCase):
                     "description": shop_item.description,
                     "description_lang": shop_item.description_lang,
                     "article": shop_item.article,
+                    "comment_count": 0,
                     "price": shop_item.price,
                     "discount": shop_item.discount,
                     "instagram_link": shop_item.instagram_link,
@@ -88,6 +89,7 @@ class BookmarkListCreateViewTestCase(APITestCase):
                     "youtube_links": shop_item.youtube_links,
                     "subcategory": shop_item.subcategory,
                     "images": [],
+                    "videos": [],
                     "organization": {
                         "id": organization.id,
                         "title": organization.title,

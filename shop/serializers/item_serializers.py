@@ -24,6 +24,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()
     is_bookmarked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
@@ -46,12 +47,15 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()
 
+    def get_comment_count(self, item: ShopItem) -> int:
+        return item.comments.count()
+
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount',
-            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
+            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'
@@ -169,6 +173,7 @@ class ItemListSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField()
     is_bookmarked = serializers.BooleanField()
     like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
     instagram_data = serializers.SerializerMethodField()
 
     subcategory = ItemSubcategoryBriefSerializer()
@@ -183,12 +188,15 @@ class ItemListSerializer(serializers.ModelSerializer):
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()
 
+    def get_comment_count(self, item: ShopItem) -> int:
+        return item.comments.count()
+
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount', 'instagram_link', 'is_published',
-            'is_liked', 'is_bookmarked', 'like_count',
+            'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images',
             'instagram_data', 'is_updated'
@@ -205,7 +213,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount', 'instagram_link', 'is_published',
-            'is_liked', 'is_bookmarked', 'like_count',
+            'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated'

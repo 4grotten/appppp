@@ -1,4 +1,4 @@
-from shop.models import ShopItem, ItemLike, ItemBookmark
+from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike
 from users.models import User
 
 
@@ -13,6 +13,17 @@ class LikeService:
     @classmethod
     def is_item_liked_by_user(cls, item: ShopItem, user: User) -> bool:
         return ItemLike.objects.filter(user=user, item=item).exists()
+
+    @classmethod
+    def like_unlike_comment(cls, user: User, comment: Comment, is_liked: bool):
+        if is_liked:
+            CommentLike.objects.update_or_create(user=user, comment=comment)
+        else:
+            CommentLike.objects.filter(user=user, comment=comment).delete()
+
+    @classmethod
+    def is_comment_liked_by_user(cls, comment: Comment, user: User) -> bool:
+        return CommentLike.objects.filter(user=user, comment=comment).exists()
 
 
 class BookmarkService:

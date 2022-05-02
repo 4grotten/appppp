@@ -11,7 +11,7 @@ from imagekit import register
 from imagekit.models import ImageSpecField
 
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
-from common.processors import ResizeWatermarkedSpec
+from common.processors import ResizeWatermarkedSpec, MobileWallpaper
 from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
 
 
@@ -33,6 +33,8 @@ class SmallWatermarkedSpec(ResizeWatermarkedSpec):
 register.generator('common:file:large', LargeWatermarkedSpec)
 register.generator('common:file:medium', MediumWatermarkedSpec)
 register.generator('common:file:small', SmallWatermarkedSpec)
+
+register.generator('common:commentswallpaper:mobile', MobileWallpaper)
 
 
 class TimestampModel(models.Model):
@@ -123,6 +125,33 @@ class FileVideo(TimestampModel):
 
     class Meta:
         ordering = ('order',)
+
+
+class CommentsWallpaper(TimestampModel):
+    web_image = models.ImageField(
+        upload_to=upload_file_with_unique_name,
+        help_text=_('Web wallpaper that you want to store'),
+        max_length=1000
+    )
+
+    mobile_image = models.ImageField(
+        upload_to=upload_file_with_unique_name,
+        help_text=_('Mobile wallpaper that you want to store'),
+        max_length=1000
+    )
+    is_active = models.BooleanField(default=True)
+    mobile = ImageSpecField(source='mobile_image', id='common:commentswallpaper:mobile')
+
+    @property
+    def name(self):
+        return self.web_image.name.split("/")[-1]
+
+    @property
+    def mobile_property(self):
+        return self.mobile.url
+
+    def __str__(self):  # pragma: no cover
+        return self.web_image.name
 
 
 class Currency(models.Model):

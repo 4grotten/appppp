@@ -114,6 +114,7 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
     is_bookmarked = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
     subcategory = SubcategoryIndexSerializer()
     instagram_data = serializers.SerializerMethodField()
     videos = FileVideoSerializer(read_only=True, many=True)
@@ -121,6 +122,11 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
     def get_like_count(self, item):
         if item.liked_users:
             return len(item.liked_users)
+        return 0
+
+    def get_comment_count(self, item):
+        if item.comments:
+            return len(item.comments)
         return 0
 
     def get_is_liked(self, item):
@@ -146,7 +152,7 @@ class ShopItemsDocumentSerializer(DocumentSerializer):
         fields = (
             'article', 'created_at', 'description', 'description_lang', 'discount', 'id', 'images', 'instagram_data',
             'videos',
-            'instagram_link', 'is_bookmarked', 'is_hidden', 'is_liked', 'is_published', 'is_updated', 'like_count',
+            'instagram_link', 'is_bookmarked', 'is_hidden', 'is_liked', 'is_published', 'is_updated', 'like_count', 'comment_count',
             'name', 'name_lang', 'organization', 'price', 'removed_at', 'subcategory', 'updated_at', 'youtube_links',
         )
 

@@ -110,7 +110,6 @@ class TemporaryCodeService:
 
             if cls.model.objects.filter(user=user,
                                         created_at__range=(max_datetime, current_datetime)).count() >= 3:
-                slack.bot_2(f'Limit exceeded for user {user}\n============================')
                 raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
@@ -156,7 +155,8 @@ class TemporaryCodeService:
             cls.model.objects.filter(user__phone_number=phone_number).update(is_used=True)
 
         except cls.model.DoesNotExist:
-            slack.bot_2(f'Entered incorrect code for {phone_number}\n============================')
+            slack.bot_2(f'Entered incorrect code for {phone_number}\n'
+                        f'============================')
             raise ValidationException(_('Code not found'))
 
 

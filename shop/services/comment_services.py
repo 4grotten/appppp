@@ -1,3 +1,4 @@
+from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
@@ -28,7 +29,8 @@ class CommentService:
     @classmethod
     def get_commented_items(cls, user: User):
         return ShopItem.objects.filter(is_published=True, comments__user=user,
-                                       organization__is_deleted=False).order_by('-comments').distinct()
+                                       organization__is_deleted=False).distinct().annotate(
+            comment_date=Max('comments__created_at')).order_by('-comment_date')
 
     @classmethod
     def get_my_role(cls, user: User, item: ShopItem):

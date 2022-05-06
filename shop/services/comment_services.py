@@ -1,11 +1,15 @@
+from django.db import transaction
 from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
 from common.models import CommentsWallpaper
+from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
+from notifications.models import Notification
 from organizations.models import Membership
 from shop.models import Comment, ShopItem
 from users.models import User
+from notifications.tasks import sent_notification
 
 
 class CommentService:
@@ -20,7 +24,20 @@ class CommentService:
 
     @classmethod
     def create_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None, ):
-        return cls.model.objects.create(item=item, user=user, parent=parent, text=text)
+        comment = cls.model.objects.create(item=item, user=user, parent=parent, text=text)
+
+        sent_notification.delay(
+            recipient_id=item.organization.owner.id,
+            sender_id=user.id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=NEW_COMMENT_TYPE,
+            item_id=item.id,
+            extra_data=dict(
+                comment_id=comment.id,
+                comment_text=text)
+        )
+
+        return comment
 
     @classmethod
     def delete_comment(cls, comment: Comment):

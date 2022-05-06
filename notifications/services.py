@@ -28,7 +28,7 @@ class NotificationService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_notification(cls, recipient, mode, title, description, notification_type, organization=None,
+    def create_notification(cls, recipient, mode, title, description, notification_type, organization=None, item=None,
                             sender=None, extra_data=None):
         try:
             notification, created = cls.model.objects.get_or_create(
@@ -38,6 +38,7 @@ class NotificationService:
                 title=title,
                 description=description,
                 organization=organization,
+                item=item,
                 type=notification_type,
                 extra_data=extra_data
             )
@@ -61,7 +62,7 @@ class NotificationService:
             is_read=False, recipient=user
         ).exclude(
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            created_at__lt=timezone.now()-timedelta(hours=2)
+            created_at__lt=timezone.now() - timedelta(hours=2)
         ).count()
 
     @classmethod

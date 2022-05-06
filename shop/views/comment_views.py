@@ -61,7 +61,7 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
             CommentService.delete_comment(comment=comment)
             return Response(data={
                 'message': _('Successfully deleted comment'),
-            }, status=status.HTTP_204_NO_CONTENT)
+            }, status=status.HTTP_200_OK)
         raise NotAcceptableException(_('No rights to delete comment'))
 
 

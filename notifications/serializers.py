@@ -7,17 +7,19 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import IntegrityException
 from notifications.models import Notification, NotificationSetting
 from organizations.serializers.organization_serializers import OrganizationNotificationInfo
+from shop.serializers.item_serializers import ItemInHotlinkSerializer
 from users.serializers import ProfileSerializer
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     sender = ProfileSerializer(many=False, allow_null=True)
     organization = OrganizationNotificationInfo(allow_null=True)
+    item = ItemInHotlinkSerializer(many=False, allow_null=True)
 
     class Meta:
         model = Notification
         fields = ('id', 'created_at', 'updated_at', 'sender', 'extra_data',
-                  'mode', 'title', 'description', 'is_read', 'organization', 'type')
+                  'mode', 'title', 'description', 'is_read', 'organization', 'item', 'type')
 
 
 class CustomFCMDeviceSerializer(FCMDeviceSerializer):

@@ -41,6 +41,11 @@ class CommentService:
 
     @classmethod
     def delete_comment(cls, comment: Comment):
+        transaction.on_commit(
+            lambda: Notification.objects.filter(
+                extra_data__comment_id=comment.id,
+                type__in=[NEW_COMMENT_TYPE, ]
+            ).delete())
         comment.delete()
 
     @classmethod

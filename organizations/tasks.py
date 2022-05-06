@@ -2,11 +2,14 @@ from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
+from django.db import transaction
 from django.utils.timezone import now
 
 from common.models import FileVideo, File
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
+from notifications.constants import NEW_COMMENT_TYPE
+from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
@@ -62,8 +65,14 @@ def delete_not_updated_posts_from_instagram(organization_id: int):
 @shared_task
 def delete_old_instagram_posts():
     delete_until = now() - timedelta(days=settings.INSTAGRAM_DAYS_TO_KEEP)
-    ShopItem.objects.filter(name='Instagram', instagram_data__isnull=False,
-                            instagram_data__updated_at__lte=delete_until).delete()
+    qs = ShopItem.objects.filter(name='Instagram', instagram_data__isnull=False,
+                                 instagram_data__updated_at__lte=delete_until)
+    transaction.on_commit(
+        lambda: Notification.objects.filter(
+            item__in=qs,
+            type__in=[NEW_COMMENT_TYPE, ]
+        ).delete())
+    qs.delete()
 
 
 @shared_task

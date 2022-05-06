@@ -67,6 +67,8 @@ ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
 DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
 
+NEW_COMMENT_TYPE = 'new_comment'
+
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION = 'for_delivery_for_organization'
 NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = 'accepted_by_delivery'
@@ -134,10 +136,13 @@ NOTIFICATION_TYPES = (
     (NOTIFICATION_TYPE_DELIVERED, NOTIFICATION_TYPE_DELIVERED),
     (NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT),
     (NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION, NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION),
-    (NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION)
+    (NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION),
+    (NEW_COMMENT_TYPE, NEW_COMMENT_TYPE),
 )
 
 # ______________________RUSSIAN___________________________#
+NEW_COMMENT_TITLE_RU = 'У вас новый комментарий'
+NEW_COMMENT_DESCRIPTION = '{comment_text}'
 
 ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
 DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
@@ -240,6 +245,7 @@ NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU = ''
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_RU = 'Ваш заказ доставлен'
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_RU = ''
 # _______________________ ENGLISH _______________________#
+NEW_COMMENT_TITLE_EN = 'You have a new comment'
 
 ACCEPT_ORDER_TITLE_EN = 'You accepted order #{transaction_id}'
 DECLINE_ORDER_TITLE_EN = 'You canceled order #{transaction_id}'
@@ -661,6 +667,13 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=DECLINE_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
+
+    elif notification_type == NEW_COMMENT_TYPE:
+        notification_str = dict(
+            title=NEW_COMMENT_TITLE_EN,
+            description=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
+            title_ru=NEW_COMMENT_TITLE_RU,
+            description_ru=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')))
 
     elif notification_type == REQUEST_ORDER_TYPE:
         notification_str = dict(

@@ -49,12 +49,9 @@ class NotificationService:
 
     @classmethod
     def get_own_notifications(cls, user: User):
-        return cls.filter(
-            recipient=user, organization__isnull=False
-        ).exclude(
-            type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            created_at__lt=timezone.now()-timedelta(hours=2)
-        )
+        return cls.filter(recipient=user).exclude(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                  created_at__lt=timezone.now() - timedelta(hours=2)
+                                                  )
 
     @classmethod
     def get_user_notifications_count(cls, user: User):

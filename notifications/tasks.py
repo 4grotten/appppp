@@ -7,7 +7,7 @@ from common.exceptions import ObjectNotFoundException
 from notifications import constants
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription, Membership
-from shop.models import Cart
+from shop.models import Cart, ShopItem
 from users.models import User
 
 
@@ -197,6 +197,7 @@ def send_notifications_to_deliverers(cart_id, sender_id: Union[int, None] = None
             extra_data=extra_data
         )
 
+
 @shared_task
 def send_delivery_notitication_to_organization_or_client(recipient, cart_id, notification_type,
                                                          sender_id: Union[int, None] = None,
@@ -224,12 +225,11 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         'transaction_id': cart.transaction.id,
         'delivery_amount': str(cart.transaction.delivery_info.amount),
 
-
     }
     try:
-        extra_data['delivery_currency'] =  str(cart.transaction.delivery_info.currency.code)
+        extra_data['delivery_currency'] = str(cart.transaction.delivery_info.currency.code)
     except AttributeError:
-        extra_data['delivery_currency'] =  str(cart.transaction.currency.code)
+        extra_data['delivery_currency'] = str(cart.transaction.currency.code)
 
     NotificationService.create_notification(
         recipient=recipient,
@@ -245,7 +245,8 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
 
 @shared_task
 def sent_notification(recipient_id: int, sender_id=None, mode='system', notification_type='system', extra_data=None,
-                      title='Title was not sent', description='Description was not sent', organization_id=None):
+                      title='Title was not sent', description='Description was not sent', organization_id=None,
+                      item_id=None):
     recipient = User.objects.get(id=recipient_id)
     if sender_id is not None:
         sender = User.objects.get(id=sender_id)
@@ -255,6 +256,10 @@ def sent_notification(recipient_id: int, sender_id=None, mode='system', notifica
         organization = Organization.objects.get(id=organization_id)
     else:
         organization = None
+    if item_id is not None:
+        item = ShopItem.objects.get(id=item_id)
+    else:
+        item = None
 
     NotificationService.create_notification(
         recipient=recipient,
@@ -264,6 +269,7 @@ def sent_notification(recipient_id: int, sender_id=None, mode='system', notifica
         title=title,
         description=description,
         organization=organization,
+        item=item,
         extra_data=extra_data
     )
 

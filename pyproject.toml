@@ -50,6 +50,7 @@ unittest-xml-reporting = "^3.2.0"
 django-appconf = "^1.0.5"
 phonenumbers = "^8.12.45"
 celery = "4.4.7"
+XlsxWriter = "3.0.1"
 
 [tool.poetry.dev-dependencies]
 

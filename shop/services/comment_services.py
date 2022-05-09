@@ -32,6 +32,7 @@ class CommentService:
             mode=NOTIFICATION_MODE_PERSONAL,
             notification_type=NEW_COMMENT_TYPE,
             item_id=item.id,
+            organization_id=item.organization.id,
             extra_data=dict(
                 comment_id=comment.id,
                 comment_text=text)

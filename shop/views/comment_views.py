@@ -4,7 +4,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException
 from common.pagination import GeneralPagination
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment
@@ -71,8 +71,15 @@ class CommentedItemsListView(ListAPIView):
     serializer_class = SubscriptionItemSerializer
 
     def get_queryset(self):
-        qs = CommentService.get_commented_items(user=self.request.user)
-        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+        type = self.request.GET.get('type', None)
+        if type == 'income':
+            qs = CommentService.get_income_commented_items(user=self.request.user)
+            return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+        elif type == 'outcome':
+            qs = CommentService.get_outcome_commented_items(user=self.request.user)
+            return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+        else:
+            raise BadRequestException('You need add valid parameters')
 
 
 class CommentLike(CreateAPIView):

@@ -32,6 +32,7 @@ class CommentService:
             mode=NOTIFICATION_MODE_PERSONAL,
             notification_type=NEW_COMMENT_TYPE,
             item_id=item.id,
+            organization_id=item.organization.id,
             extra_data=dict(
                 comment_id=comment.id,
                 comment_text=text)
@@ -49,8 +50,15 @@ class CommentService:
         comment.delete()
 
     @classmethod
-    def get_commented_items(cls, user: User):
-        return ShopItem.objects.filter(is_published=True, comments__user=user,
+    def get_income_commented_items(cls, user: User):
+        return ShopItem.objects.filter(is_published=True, comments__item__organization__owner=user,
+                                       organization__is_deleted=False).distinct().annotate(
+            comment_date=Max('comments__created_at')).order_by('-comment_date')
+
+    @classmethod
+    def get_outcome_commented_items(cls, user: User):
+        comments = Comment.objects.filter(user=user)
+        return ShopItem.objects.filter(is_published=True, comments__in=comments,
                                        organization__is_deleted=False).distinct().annotate(
             comment_date=Max('comments__created_at')).order_by('-comment_date')
 

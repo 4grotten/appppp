@@ -7,8 +7,8 @@ from search_indexes.views.organization_views import OrganizationDocumentView
 
 router = DefaultRouter()
 router.register('homepage/search', OrganizationDocumentView, basename='homepage_search')
-router.register('shop/organization_items', ShopOrgnizationItemDocumentView, basename='organization_items')
-router.register('shop/feed', ShopItemDocumentView, basename='shop_feed')
+# router.register('shop/organization_items', ShopOrgnizationItemDocumentView, basename='organization_items')
+# router.register('shop/feed', ShopItemDocumentView, basename='shop_feed')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

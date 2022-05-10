@@ -97,7 +97,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                } if item and type == 'new_comment' else None,
+                } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -121,7 +121,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                } if item and type == 'new_comment' else None,
+                } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -141,7 +141,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                } if item and type == 'new_comment' else None,
+                } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -166,7 +166,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                } if item and type == 'new_comment' else None,
+                } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type

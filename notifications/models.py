@@ -5,6 +5,8 @@ from fcm_django.models import FCMDevice
 from common.models import TimestampModel
 from organizations.models import Organization
 from django.conf import settings
+
+from shop.models import ShopItem
 from .constants import (get_titles_descriptions_from_type,
                         NOTIFICATION_MODE_DISCOUNT,
                         NOTIFICATION_MODES,
@@ -68,7 +70,7 @@ class Notification(TimestampModel):
 
     @classmethod
     def send_notification(cls, user: User, title: str, title_ru: str, description: str, description_ru: str,
-                          notification_id: int, mode: str, type: str, organization=None, extra_data=None):
+                          notification_id: int, mode: str, type: str, organization=None, extra_data=None, item=None):
 
         if not NotificationSetting.objects.filter(user=user).exists():
             return
@@ -81,7 +83,6 @@ class Notification(TimestampModel):
                 (mode == NOTIFICATION_MODE_PARTNER and notification_setting.organization_notifications) or
                 (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications)):
             return
-
         notification_payload = {
             'title': title,
             'body': description,
@@ -93,6 +94,10 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item and type == 'new_comment' else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -113,6 +118,10 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item and type == 'new_comment' else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -129,6 +138,10 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item and type == 'new_comment' else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type
@@ -150,6 +163,10 @@ class Notification(TimestampModel):
                     'id': organization.id,
                     'title': organization.title
                 } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item and type == 'new_comment' else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
                 'type': type

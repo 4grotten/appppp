@@ -96,7 +96,7 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
-            'verification_status'
+            'verification_status', 'is_private'
         )
         read_only_fields = ['verification_status']
 

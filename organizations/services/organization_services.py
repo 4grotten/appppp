@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Tuple, Union
 
 from django.contrib.gis.geos import Point
@@ -308,16 +309,17 @@ class OrganizationService:
             else:
                 description_lang = None
 
-            # organization.title_lang = title_lang
-            # organization.description_lang = description_lang
-            # organization.image_id = image_id
-            # organization.location = point
-            # organization.title = title
-            # organization.opens_at = opens_at
-            # organization.closes_at = closes_at
-            # organization.address = address
-            # organization.avg_check = avg_check
-            # organization.is_private = is_private
+            organization.title_lang = title_lang
+            organization.description_lang = description_lang
+            organization.image_id = image_id
+            organization.location = point
+            organization.title = title
+            organization.opens_at = opens_at
+            organization.closes_at = closes_at
+            organization.address = address
+            organization.avg_check = avg_check
+            organization.is_private = is_private
+
             if not organization.currency == currency:
                 from organizations.services.partnership_services import PartnershipService
                 if not PartnershipService.can_change_currency(organization=organization, currency=currency):
@@ -325,30 +327,21 @@ class OrganizationService:
 
                 from organizations.services.card_services import DiscountCardService
                 DiscountCardService.update_discount_currency(organization=organization, new_currency=currency.code)
-            # organization.currency = currency
-            # organization.show_contacts = show_contacts
-            # organization.country = country
-            # organization.city = city
-            # organization.description = description
-            # organization.types.set(types)
-            # organization.save()
 
-            Organization.objects.filter(id=organization.id).update(title_lang=title_lang,
-                                                                                  description_lang=description_lang,
-                                                                                  image_id=image_id,
-                                                                                  location=point,
-                                                                                  title=title,
-                                                                                  opens_at=opens_at,
-                                                                                  closes_at=closes_at,
-                                                                                  address=address,
-                                                                                  avg_check=avg_check,
-                                                                                  is_private=is_private,
-                                                                                  currency=currency,
-                                                                                  show_contacts=show_contacts,
-                                                                                  country=country,
-                                                                                  city=city,
-                                                                                  description=description)
+            organization.currency = currency
+            organization.show_contacts = show_contacts
+            organization.country = country
+            organization.city = city
+            organization.description = description
+            # organization.avg_check = avg_check,
+            # print(Decimal(avg_check))
+            # organization.is_private = is_private,
             organization.types.set(types)
+            organization.save()
+
+            # Organization.objects.filter(id=organization.id).update(title_lang=title_lang,
+
+            # organization.types.set(types)
             return organization
 
         except Exception as e:

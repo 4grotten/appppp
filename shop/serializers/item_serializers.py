@@ -223,6 +223,11 @@ class SubscriptionItemSerializer(ItemListSerializer):
 
 class ItemFeedSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
+    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    videos = VideoSerializer(many=True)
+    subcategory = ItemSubcategoryBriefSerializer()
+
 
     class Meta:
         model = ShopItem
@@ -231,8 +236,8 @@ class ItemFeedSerializer(ItemListSerializer):
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'organization',
-            'instagram_data', 'is_updated'
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
+            'instagram_data', 'is_updated', 'comment_count',
         )
         read_only_fields = ['name_lang', 'description_lang']
 

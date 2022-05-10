@@ -65,6 +65,7 @@ class Notification(TimestampModel):
             mode=self.mode,
             notification_id=self.id,
             organization=self.organization,
+            item=self.item,
             extra_data=self.extra_data
         )
 

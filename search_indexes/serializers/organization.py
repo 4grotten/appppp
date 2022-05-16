@@ -51,7 +51,6 @@ class OrganizationIndexSerializer(serializers.Serializer):
             'city', 'avg_check'
         )
 
-
 # from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
 #
 # from search_indexes.documents.organizations import OrganizationDocument

@@ -160,7 +160,6 @@ class ProfileInitialAPIView(APIView):
 
         registration = UmaiWallet.objects.last()
         device_type = serializer.validated_data.get('device_type')
-        print(device_type, 'device type!!!!!!!!!!!!')
         if device_type in DEVICE_TYPES and registration and registration.is_accepted and \
                 str(user.phone_number).startswith("+996") and is_new_in_begin:
             Umai(str(user.phone_number), wallet=registration).commit_payment()

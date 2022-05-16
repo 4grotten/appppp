@@ -190,7 +190,7 @@ class Notification(TimestampModel):
 
     @staticmethod
     def get_item_small_image(item: ShopItem):
-        return [item_image.medium.url for item_image in item.images.all()]
+        return item.images.first().medium.url if item else None
 
 
 # FIXME: Add type field and get rid of 5 diffrent types of notifications.

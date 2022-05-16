@@ -69,7 +69,7 @@ class PartnershipDetailedSerializer(PartnershipSerializer):
             'id',
             'can_check_attendance', 'can_see_stats', 'can_edit_organization',
             'can_share_cashback', 'can_share_cumulative', 'can_share_items',
-            'requested_by',
+            'requested_by', 'is_accepted'
         )
 
 

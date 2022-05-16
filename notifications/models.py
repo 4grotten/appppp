@@ -98,6 +98,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
+                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
@@ -122,6 +123,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
+                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
@@ -142,6 +144,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
+                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
@@ -167,6 +170,7 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
+                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
                 'image': cls.get_organization_small_image(organization=organization) if organization else None,
                 'extra_data': extra_data,
@@ -186,6 +190,10 @@ class Notification(TimestampModel):
     @staticmethod
     def get_organization_small_image(organization: Organization):
         return organization.image.medium.url if organization.image else None
+
+    @staticmethod
+    def get_item_small_image(item: ShopItem):
+        return item.images.medium.url if item.images else None
 
 
 # FIXME: Add type field and get rid of 5 diffrent types of notifications.

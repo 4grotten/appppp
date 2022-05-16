@@ -72,7 +72,8 @@ class Notification(TimestampModel):
     @classmethod
     def send_notification(cls, user: User, title: str, title_ru: str, description: str, description_ru: str,
                           notification_id: int, mode: str, type: str, organization=None, extra_data=None, item=None):
-
+        organization_image = cls.get_organization_small_image(organization=organization) if organization else None,
+        image = cls.get_item_small_image(item=item) if type == 'new_comment' else organization_image
         if not NotificationSetting.objects.filter(user=user).exists():
             return
 
@@ -98,9 +99,8 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
-                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'image': image,
                 'extra_data': extra_data,
                 'type': type
             },
@@ -123,9 +123,8 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
-                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'image': image,
                 'extra_data': extra_data,
                 'type': type
             }
@@ -144,9 +143,8 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
-                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'image': image,
                 'extra_data': extra_data,
                 'type': type
             },
@@ -170,9 +168,8 @@ class Notification(TimestampModel):
                 'item': {
                     'id': item.id,
                     'name': item.name,
-                    'item_images': cls.get_item_small_image(item=item) if item else None,
                 } if item else None,
-                'image': cls.get_organization_small_image(organization=organization) if organization else None,
+                'image': image,
                 'extra_data': extra_data,
                 'type': type
             }

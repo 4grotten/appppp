@@ -159,7 +159,7 @@ class Umai:
                 slack.bot(f'{self.phone_number}'
                           f'\n {self.amount} сом.'
                           f'\n status_code-{answer.status_code}'
-                          f'\nНа вашем балансе осталось - {self.get_balance()-self.amount} сом'
+                          f'\nНа вашем балансе осталось - {self.get_balance() - self.amount} сом'
                           f'\n==============================')
         except Exception:
             pass

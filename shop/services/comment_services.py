@@ -39,7 +39,7 @@ class CommentService:
                     comment_text=text)
             )
 
-            return comment
+        return comment
 
     @classmethod
     def delete_comment(cls, comment: Comment):

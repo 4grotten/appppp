@@ -77,6 +77,11 @@ class OrganizationAdmin(admin.ModelAdmin):
 
     inlines = (PhoneInline, SocialInline, DiscountInline, OrganizationVerificationUsersInLine, MembershipInLine)
 
+    def save_model(self, request, obj, form, change):
+        if not obj.avg_check == 0:
+            obj.avg_check = None
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(OrganizationType)
 class OrganizationTypeAdmin(admin.ModelAdmin):

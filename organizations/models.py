@@ -117,6 +117,8 @@ class Organization(TimestampModel):
         if self.verification_status == NOT_VERIFIED and self.verification_users_data.exists():
             for verifications_data in self.verification_users_data.all():
                 verifications_data.delete()
+        if self.avg_check == 0:
+            self.avg_check = None
         super().save(*args, **kwargs)
 
     @property

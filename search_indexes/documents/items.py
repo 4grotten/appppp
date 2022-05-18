@@ -239,12 +239,16 @@ html_strip = analyzer(
 
 @INDEX.doc_type
 class SuggestDocument(Document):
-
     name = fields.TextField(
         analyzer=html_strip,
         fields={
             'raw': fields.TextField(analyzer='keyword'),
             'suggest': fields.CompletionField(),
+        }
+    )
+    images = fields.ObjectField(
+        properties={
+            'small': fields.TextField(attr='small_property'),
         }
     )
 

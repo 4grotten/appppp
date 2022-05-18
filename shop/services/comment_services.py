@@ -23,20 +23,21 @@ class CommentService:
             raise ObjectNotFoundException(_('Comment not found'))
 
     @classmethod
-    def create_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None, ):
+    def create_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None):
         comment = cls.model.objects.create(item=item, user=user, parent=parent, text=text)
 
-        sent_notification.delay(
-            recipient_id=item.organization.owner.id,
-            sender_id=user.id,
-            mode=NOTIFICATION_MODE_PERSONAL,
-            notification_type=NEW_COMMENT_TYPE,
-            item_id=item.id,
-            organization_id=item.organization.id,
-            extra_data=dict(
-                comment_id=comment.id,
-                comment_text=text)
-        )
+        if item.organization.owner != user:
+            sent_notification.delay(
+                recipient_id=item.organization.owner.id,
+                sender_id=user.id,
+                mode=NOTIFICATION_MODE_PERSONAL,
+                notification_type=NEW_COMMENT_TYPE,
+                item_id=item.id,
+                organization_id=item.organization.id,
+                extra_data=dict(
+                    comment_id=comment.id,
+                    comment_text=text)
+            )
 
         return comment
 

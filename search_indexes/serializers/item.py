@@ -1,6 +1,8 @@
 # from django.core.exceptions import ObjectDoesNotExist
 from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
-# from rest_framework import serializers
+
+from rest_framework import serializers
+
 #
 # from common.exceptions import ObjectNotFoundException
 # from organizations.models import Organization
@@ -194,3 +196,14 @@ from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
 #             'images',
 #             'organization',
 #         )
+from search_indexes.documents.items import SuggestDocument
+
+
+class SuggestDocumentSerializer(DocumentSerializer):
+    """Serializer for the Book document."""
+
+    class Meta:
+        document = SuggestDocument
+        fields = (
+            'name', 'images',
+        )

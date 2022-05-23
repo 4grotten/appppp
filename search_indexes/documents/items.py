@@ -242,13 +242,35 @@ class SuggestDocument(Document):
     name = fields.TextField(
         analyzer=html_strip,
         fields={
-            'raw': fields.TextField(analyzer='keyword'),
+            'raw': KeywordField(),
             'suggest': fields.CompletionField(),
         }
     )
     images = fields.ObjectField(
         properties={
             'small': fields.TextField(attr='small_property'),
+        }
+    )
+
+    # name_lang = fields.TextField()
+    organization = fields.ObjectField(
+        properties={
+            'country': fields.ObjectField(
+                properties={
+                    'code': fields.TextField(
+                        fields={
+                            'raw': KeywordField(),
+                            'suggest': fields.CompletionField(),
+                        }
+                    )
+                },
+            ),
+            'is_private': fields.BooleanField(),
+        }
+    )
+    price = fields.FloatField(
+        fields={
+            'raw': fields.TextField(analyzer='keyword'),
         }
     )
 

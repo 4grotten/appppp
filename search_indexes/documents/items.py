@@ -239,6 +239,7 @@ html_strip = analyzer(
 
 @INDEX.doc_type
 class SuggestDocument(Document):
+    id = fields.IntegerField(attr='id')
     name = fields.TextField(
         analyzer=html_strip,
         fields={

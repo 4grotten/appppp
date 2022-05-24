@@ -205,5 +205,5 @@ class SuggestDocumentSerializer(DocumentSerializer):
     class Meta:
         document = SuggestDocument
         fields = (
-            'name', 'images',
+            'id', 'name', 'images',
         )

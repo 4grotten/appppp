@@ -1,18 +1,22 @@
 from django.db import IntegrityError
+from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from common.exceptions import IntegrityException
+from shop.filters import SuggestItemFilter
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
-from shop.serializers.other_serializers import ComplaintSerializer
+from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -154,3 +158,34 @@ class TranslateItemTextView(GenericAPIView):
                 "message": _("Invalid input"),
                 'This field is required': error
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+class SuggestSearchItem(ListAPIView):
+    serializer_class = SuggestItemSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter,)
+    filterset_fields = ('organization__country',)
+    search_fields = ('^name',)
+    filter_class = SuggestItemFilter
+
+    def get_queryset(self):
+        qs = ShopItem.objects.filter(
+            Q(is_published=True) &
+            Q(organization__is_private=False) &
+            Q(price__isnull=False) &
+            Q(organization__is_banned=False) &
+            Q(organization__is_deleted=False)
+        )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+
+        search = self.request.GET['suggest_items']
+        mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        request.GET['search'] = search
+        del request.GET['suggest_items']
+        request.query_params._mutable = mutable
+
+        response = super().list(request, args, kwargs)
+        response = ShopItemService.get_suggest_items(response)
+
+        return response

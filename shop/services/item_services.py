@@ -137,3 +137,24 @@ class ShopItemService:
         item.is_updated = True
         item.updated_at = now()
         item.save()
+
+    @classmethod
+    def get_suggest_items(cls, response):
+
+        array_items = []
+        pop_index = []
+        limit_of_items = 19
+        for i in range(len(response.data.get('list'))):
+            if response.data.get('list')[i].get('name') not in array_items and i <= limit_of_items:
+                array_items.append(response.data.get('list')[i].get('name'))
+            else:
+                pop_index.append(i)
+        for i in range(len(response.data.get('list')) - 1, -1, -1):
+            if i in pop_index:
+                response.data.get('list').pop(i)
+        response.data['count'] = len(array_items)
+        response.data['results'] = response.data.pop('list')
+        del response.data['total_count']
+        del response.data['total_pages']
+
+        return response

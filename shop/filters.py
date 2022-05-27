@@ -36,3 +36,11 @@ class FeedItemOrderingFilter(OrderingFilter):
             return queryset.order_by(*ordering)
 
         return queryset
+
+
+class SuggestItemFilter(filters.FilterSet):
+    country = filters.CharFilter(field_name='organization__country')
+
+    class Meta:
+        model = ShopItem
+        fields = ['country', ]

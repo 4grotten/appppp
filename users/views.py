@@ -64,7 +64,8 @@ class RegisterAuthAPIView(APIView):
         return Response(data={
             'message': gettext_lazy('User found'),
             'is_new_user': user.is_new_user,
-            'token': token.key if token else None
+            'token': token.key if token else None,
+            'email': True if user.email else False,
         })
 
 

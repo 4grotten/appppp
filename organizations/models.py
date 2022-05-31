@@ -10,7 +10,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
 from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS, \
-    VERIFICATIONS_STATUS, NOT_VERIFIED
+    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.models import User
 
@@ -100,6 +100,8 @@ class Organization(TimestampModel):
     is_bank = models.BooleanField(default=False)
 
     add_item_date = models.DateTimeField(auto_now_add=True)
+
+    switcher = models.CharField(max_length=20, choices=SWITCHER_TYPE, default=WEB)
 
     # Managers
     objects = OrganizationManager()

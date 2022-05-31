@@ -136,6 +136,22 @@ class MessageServiceTwilio:
                   f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{message.status}\n============================')
 
+    @classmethod
+    def send_whatsapp_sms(cls, number, code, code_id):
+        account_sid = settings.TWILIO_ACCOUNT_SID
+        auth_token = settings.TWILIO_AUTH_TOKEN
+        client = Client(account_sid, auth_token)
+        sms = f'{code}'
+
+        message = client.messages.create(
+            to=f'whatsapp:{number}',
+            from_=f'whatsapp:+14155238886',
+            body=sms)
+
+        slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                  f' status_code-{message.status}\n============================')
+
 
 class AzamatMessageService:
     @classmethod

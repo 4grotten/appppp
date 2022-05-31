@@ -11,7 +11,7 @@ from common.models import UmaiWallet
 from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
-from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES
+from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
@@ -128,6 +128,10 @@ class ResendTemporaryCodeAPIView(APIView):
         elif resend_type == REGISTER_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
             TemporaryCodeService.create_and_send(user=user)
+
+        elif resend_type == WHATSAPP_AUTH_TYPE:
+            user = UserService.get(phone_number=phone_number)
+            TemporaryCodeService.create_and_send(user=user, whatsapp=True)
 
         return Response(data={
             'message': gettext_lazy('Code has successfully sent')

@@ -18,6 +18,10 @@ class RegisterAuthSerializer(serializers.Serializer):
     phone_number = PhoneNumberField()
 
 
+class PhoneNumberSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(allow_null=True)
+
+
 class TemporaryCodeSerializer(serializers.Serializer):
     code = serializers.IntegerField()
     phone_number = serializers.CharField()

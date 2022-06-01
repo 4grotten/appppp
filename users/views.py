@@ -421,3 +421,20 @@ class SendCodeToNewNumberAPIView(APIView):
         return Response(data={
             'message': gettext_lazy('Code sent to new phone number')
         })
+
+
+class GetEmailUserAPIView(APIView):
+
+    def get(self, request):
+        serializer = PhoneNumberSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                data={
+                    'message': gettext_lazy('Invalid input'),
+                    'errors': serializer.errors
+                },
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        phone_number = serializer.validated_data['phone_number']
+        email = UserService.get_user_email_by_phone_number(phone_number=phone_number)
+        return Response({'email': email})

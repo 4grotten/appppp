@@ -82,6 +82,16 @@ class UserService:
     def get_common_user(cls) -> User:
         return cls.get(is_common_client=True)
 
+    @classmethod
+    def get_user_email_by_phone_number(cls, phone_number: str):
+        try:
+            user = cls.model.objects.get(phone_number=phone_number)
+            print(user.email)
+            return user.email
+        except User.DoesNotExist:
+            return None
+
+
 
 class TemporaryCodeService:
     model = TemporaryCode

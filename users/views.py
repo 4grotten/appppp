@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -425,7 +426,7 @@ class SendCodeToNewNumberAPIView(APIView):
 
 class GetEmailUserAPIView(APIView):
 
-    def get(self, request):
+    def post(self, request):
         serializer = PhoneNumberSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(

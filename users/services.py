@@ -92,7 +92,6 @@ class UserService:
             return None
 
 
-
 class TemporaryCodeService:
     model = TemporaryCode
     nurtelecom = (
@@ -113,7 +112,7 @@ class TemporaryCodeService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_and_send(cls, user: User, whatsapp: bool = None) -> TemporaryCode:
+    def create_and_send(cls, user: User, whatsapp: bool = None, email: bool = None) -> TemporaryCode:
         try:
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
@@ -132,6 +131,8 @@ class TemporaryCodeService:
         # if phone_number.startswith(cls.nurtelecom):
         if whatsapp == True:
             MessageServiceTwilio.send_whatsapp_sms(str(user.phone_number), message, code_id=code.id)
+        elif email == True:
+            MailerService.send_verification_code_email(email=user.email, code=code.code)
         elif phone_number == "+996770413928":
             AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number == "+996555214242":
@@ -144,13 +145,8 @@ class TemporaryCodeService:
         #     AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number.startswith("+996"):
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id)
-
-        # elif phone_number.startswith("+971"):
-        #     AzamatMessageService.save_in_model(message, phone_number)
         else:
             MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id)
-
-        MailerService.send_verification_code_email(email=user.email, code=code.code)
         return code
 
     @classmethod

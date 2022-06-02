@@ -137,8 +137,8 @@ class ResendTemporaryCodeAPIView(APIView):
             TemporaryCodeService.create_and_send(user=user, whatsapp=True)
 
         elif resend_type == EMAIL_AUTH_TYPE:
-            # ToDo email auth type
-            pass
+            user = UserService.get(phone_number=phone_number)
+            TemporaryCodeService.create_and_send(user=user, email=True)
 
         elif resend_type == VOICE_AUTH_TYPE:
             # ToDo voice auth type

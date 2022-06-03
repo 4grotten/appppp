@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from search_indexes import urls as search_index_urls
 from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
 
 v1 = ([
@@ -15,7 +14,6 @@ v1 = ([
           path('', include('delivery.urls')),
           path('', include('sms_sender.urls')),
           path('', include('cors.urls')),
-          path('', include(search_index_urls)),
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 

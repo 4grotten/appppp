@@ -13,12 +13,10 @@ services:
     ports:
       - "8000:8000"
     links:
-      - elasticsearch:elasticsearch
       - postgres:postgres
       - rabbitmq:rabbimq
       - memcached:memcached
     depends_on:
-      - elasticsearch
       - rabbitmq
       - postgres
       - memcached
@@ -86,11 +84,3 @@ services:
     image: memcached:1.6-alpine
     env_file: ./env/development.env
     restart: always
-
-  elasticsearch:
-    image: elasticsearch:7.4.0
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      - discovery.type=single-node

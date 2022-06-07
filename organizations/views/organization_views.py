@@ -49,6 +49,7 @@ from organizations.services.verifications_service import VerificationService
 from organizations.tasks import (
     parse_instagram_to_shop_items
 )
+from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 
 
@@ -432,6 +433,11 @@ class OrgMessageAPIView(ListAPIView):
     def get_queryset(self):
         messages = OrgMessageService.get_messages_of_organization(organization_id=self.kwargs['pk'])
         return messages
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, args, kwargs)
+        response.data['wallpapers'] = CommentService.get_wallpapers()
+        return response
 
     def post(self, request, *args, **kwargs):
         serializer = OrgMessageCreateSerializer(data=request.data, many=False)

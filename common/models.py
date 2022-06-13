@@ -231,6 +231,13 @@ class OpenExchangeRates(TimestampModel, SingletonModel):
         verbose_name_plural = _('id for exchange services')
 
 
+class LinkApp(SingletonModel):
+    name_link = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.name_link}'
+
+
 class Languages(models.Model):
     code = models.CharField(max_length=10, primary_key=True)
     language_en = models.CharField(max_length=255)

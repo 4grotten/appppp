@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
 from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
-    FileVideo, CommentsWallpaper
+    FileVideo, CommentsWallpaper, LinkApp
 
 
 @admin.register(MessageText)
@@ -16,7 +16,6 @@ class MessageTextAdmin(admin.ModelAdmin):
 @admin.register(UmaiWallet)
 class UmaiWalletAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'password', 'amount', 'activate', 'version', 'start_time', 'end_time']
-
 
 
 @admin.register(Languages)
@@ -39,10 +38,16 @@ class FileAdmin(admin.ModelAdmin):
     list_display = ('id', 'file', 'is_watermarked', 'image_url', 'created_at', 'updated_at', 'large', 'medium', 'small')
 
 
+@admin.register(LinkApp)
+class LinkAppAdmin(admin.ModelAdmin):
+    list_display = ('name_link',)
+
+
 @admin.register(CommentsWallpaper)
 class CommentsWallpaperAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'is_active', 'web_image', 'mobile_image', 'web_wallpaper', 'mobile_wallpaper', 'created_at', 'updated_at',)
+        'id', 'is_active', 'web_image', 'mobile_image', 'web_wallpaper', 'mobile_wallpaper', 'created_at',
+        'updated_at',)
     readonly_fields = ('web_wallpaper', 'mobile_wallpaper',)
 
     def web_wallpaper(self, obj):

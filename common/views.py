@@ -18,9 +18,10 @@ from .constants import SHADOW_BAN
 from .models import File, Country, Languages, FileVideo
 from .serializers import ImageSerializer, CountrySerializer, CitySerializer, ImageFromUrlSerializer, \
     VersionSerializer, LanguagesListSerializer, ShadowBanSerializer, CurrencyConversionSerializer, \
-    VideoFromUrlSerializer
+    VideoFromUrlSerializer, LinkAppSerializer
 from .services.country_city import CountryCityService
 from .services.currency import CurrencyConverterService
+from .services.others import LinkAppService
 from .services.shadow import ShadowService
 from .services.version import VersionService
 
@@ -186,3 +187,19 @@ class LanguagesList(ListAPIView):
     pagination_class = None
     serializer_class = LanguagesListSerializer
     queryset = Languages.objects.select_related('flag').all()
+
+
+class LinkAppAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        link = LinkAppService.get_link_app()
+        if link:
+            data = LinkAppSerializer(link).data
+            return Response(data=data)
+        else:
+            return Response(
+                {
+                    'name_link': link
+                }
+            )

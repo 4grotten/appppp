@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from organizations.models import Service
-from .models import File, Currency, Country, City, Version, Languages, MessageText, FileVideo
+from .models import File, Currency, Country, City, Version, Languages, MessageText, FileVideo, LinkApp
 
 
 class CurrencyConversionSerializer(serializers.Serializer):
@@ -176,3 +176,9 @@ class LanguagesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Languages
         fields = ('code', 'national_language', 'flag')
+
+
+class LinkAppSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LinkApp
+        fields = ('name_link',)

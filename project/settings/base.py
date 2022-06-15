@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'shop.apps.ShopConfig',
     'instagram_parsers.apps.InstagramParsersConfig',
     'sms_sender.apps.SmsSenderConfig',
+    'stock.apps.StockConfig',
 
     'rest_framework',
     'rest_framework.authtoken',

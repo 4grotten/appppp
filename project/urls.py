@@ -14,6 +14,7 @@ v1 = ([
           path('', include('delivery.urls')),
           path('', include('sms_sender.urls')),
           path('', include('cors.urls')),
+          path('', include('stock.urls')),
           path('notifications/', include('notifications.urls'))
       ], 'v1')
 

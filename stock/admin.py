@@ -11,4 +11,4 @@ class FormatSizeAdmin(admin.ModelAdmin):
 
 @admin.register(ShopItemSize)
 class ShopItemSizeAdmin(admin.ModelAdmin):
-    list_display = ('format_size', 'size',)
+    list_display = ('size', 'format_size', 'order')

@@ -1,0 +1,18 @@
+from django.db import models
+
+
+# Create your models here.
+class FormatSize(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
+# Create your models here.
+class ShopItemSize(models.Model):
+    format_size = models.ForeignKey(FormatSize, on_delete=models.CASCADE, related_name='shop_item_sizes')
+    size = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'Format - {self.format_size.name} size - {self.size}'

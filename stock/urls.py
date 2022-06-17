@@ -1,8 +1,8 @@
 from django.urls import path
 
-from stock.views import FormatSizeListView, ShopItemSizeByFormatView
+from stock.views import FormatCriteriaListView, SizeByFormatView
 
 urlpatterns = [
-    path('format_sizes/', FormatSizeListView.as_view(), name='format_sizes'),
-    path('shop_item_sizes/<int:pk>/', ShopItemSizeByFormatView.as_view(), name='shop_item_sizes'),
+    path('format_criteria/', FormatCriteriaListView.as_view(), name='format_criteria'),
+    path('size_by_format/<int:pk>/', SizeByFormatView.as_view(), name='size_by_format'),
 ]

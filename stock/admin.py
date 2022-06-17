@@ -1,19 +1,31 @@
 from django.contrib import admin
-from stock.models import FormatSize, ShopItemSize
+from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory
 
 
 class ShopItemSizeInLine(admin.TabularInline):
-    model = ShopItemSize
+    model = SizeFormat
     extra = 0
 
 
-@admin.register(FormatSize)
-class FormatSizeAdmin(admin.ModelAdmin):
+class FormatCriteriaLine(admin.TabularInline):
+    model = FormatCriteria
+    extra = 0
+
+
+@admin.register(CriteriaSubcategory)
+class CriteriaSubcategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'name_ru', 'name_en', 'name_tr',)
+    search_fields = ('name',)
+    filter_horizontal = ['format_criteria', ]
+
+
+@admin.register(FormatCriteria)
+class FormatCriteriaAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru', 'name_en', 'name_tr',)
     search_fields = ('name',)
     inlines = (ShopItemSizeInLine,)
 
 
-@admin.register(ShopItemSize)
-class ShopItemSizeAdmin(admin.ModelAdmin):
-    list_display = ('size', 'format_size', 'order')
+@admin.register(SizeFormat)
+class SizeFormatAdmin(admin.ModelAdmin):
+    list_display = ('size', 'format_criteria', 'order')

@@ -23,6 +23,7 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
     list_filter = ('category', 'organization',)
     search_fields = ('name',)
     raw_id_fields = ('category', 'organization',)
+    filter_horizontal = ['criteria_subcategory', ]
     form = ItemSubcategoryAdminForm
 
 

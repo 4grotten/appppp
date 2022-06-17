@@ -19,7 +19,8 @@ class ItemSubcategoryAdminForm(forms.ModelForm):
             "name_en",
             "name_tr",
             "organization",
-            "csv_field"
+            "csv_field",
+            "criteria_subcategory",
         )
 
     def save(self, commit=True):

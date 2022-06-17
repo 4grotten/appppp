@@ -8,6 +8,7 @@ from organizations.models import HotlinkCollectionSubcategory
 from organizations.services.organization_services import OrganizationService
 from shop.models import ItemCategory, ItemSubcategory
 from shop.services.category_services import ItemSubcategoryService
+from stock.serializers import CriteriaSubcategorySerializer
 
 
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
@@ -37,10 +38,11 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    criteria_subcategory = CriteriaSubcategorySerializer(many=True)
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon')
+        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory',)
 
 
 class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):

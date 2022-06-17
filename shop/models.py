@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, File, FileVideo
 from organizations.models import Organization
+from stock.models import CriteriaSubcategory
 from transactions.models import Transaction
 from users.models import User
 from utils.translator import GoogleTranslator
@@ -29,6 +30,7 @@ class ItemSubcategory(models.Model):
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
                                      related_name='item_categories')
+    criteria_subcategory = models.ManyToManyField(CriteriaSubcategory, blank=True, related_name='item_subcategories')
 
     def __str__(self):
         return f'{self.name}: {self.category.name}'

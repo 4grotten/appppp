@@ -26,7 +26,8 @@ class FeedView(ListAPIView):
 
     def get_queryset(self):
         search = self.request.GET.get('search', None)
-        qs = ShopItem.objects.exclude(Q(organization__is_banned=True) | Q(organization__is_deleted=True))
+        qs = ShopItem.objects.exclude(
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         else:

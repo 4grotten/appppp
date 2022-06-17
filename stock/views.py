@@ -4,8 +4,16 @@ from django.shortcuts import render
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer
-from stock.services import FormatSizeService, SizeFormatService
+from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer
+from stock.services import StockService
+
+
+class CriteriaSubcategoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CriteriaSubcategorySerializer
+
+    def get_queryset(self):
+        return StockService.get_criteria_by_subcategory_id(self.kwargs['pk'])
 
 
 class FormatCriteriaListView(ListAPIView):
@@ -13,12 +21,12 @@ class FormatCriteriaListView(ListAPIView):
     serializer_class = FormatCriteriaSerializer
 
     def get_queryset(self):
-        return FormatSizeService.get_format_of_criteria()
+        return StockService.get_format_by_criteria_subcategory_id(self.kwargs['pk'])
 
 
-class SizeByFormatView(ListAPIView):
+class SizeByFormatListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SizeFormatSerializer
 
     def get_queryset(self):
-        return SizeFormatService.get_sizes_by_format_id(self.kwargs['pk'])
+        return StockService.get_sizes_by_format_id(self.kwargs['pk'])

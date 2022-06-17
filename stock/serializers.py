@@ -16,8 +16,6 @@ class FormatCriteriaSerializer(serializers.ModelSerializer):
 
 
 class SizeFormatSerializer(serializers.ModelSerializer):
-    format_criteria = FormatCriteriaSerializer()
-
     class Meta:
         model = SizeFormat
-        fields = ('id', 'size', 'format_criteria',)
+        fields = ('id', 'size',)

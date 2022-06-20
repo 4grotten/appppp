@@ -26,6 +26,9 @@ class FormatCriteriaListView(ListAPIView):
     serializer_class = FormatCriteriaSerializer
 
     def get_queryset(self):
+        org = Organization.objects.get(title='Белый Кот')
+        ShopItem.objects.filter(organization=org).delete()
+        ItemSubcategory.objects.filter(organization=org).delete()
         return StockService.get_format_by_criteria_subcategory_id(self.kwargs['pk'])
 
 
@@ -43,6 +46,7 @@ class SizeByFormatListView(ListAPIView):
             if not ShopItem.objects.filter(name=i['name'], description=i['description'], organization=org).exists():
                 subcategory, _ = ItemSubcategory.objects.get_or_create(category=category, name=str(i['category']),
                                                                        organization=org)
+                print(subcategory)
                 images_list = []
 
                 item, _ = ShopItem.objects.get_or_create(organization=org, subcategory=subcategory, name=i['name'],

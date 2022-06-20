@@ -40,16 +40,17 @@ class SizeByFormatListView(ListAPIView):
         with open('./shop/migrations/myfile.json', 'r') as f:
             data = json.load(f)
         for i in data:
-            subcategory, _ = ItemSubcategory.objects.get_or_create(category=category, name=str(i['category']),
-                                                                   organization=org)
-            images_list = []
+            if not ShopItem.objects.filter(name=i['name'], description=i['description'], organization=org).exists():
+                subcategory, _ = ItemSubcategory.objects.get_or_create(category=category, name=str(i['category']),
+                                                                       organization=org)
+                images_list = []
 
-            for j in range(len(i['images'])):
-                file = File.objects.create(image_url=str(i['images'][j]), is_watermarked=True)
-                images_list.append(file)
-            item, _ = ShopItem.objects.get_or_create(organization=org, subcategory=subcategory, name=i['name'],
-                                                     description=i['description'], price=i['price'],
-                                                     youtube_links=i['video'])
-            item.images.add(*images_list)
+                item, _ = ShopItem.objects.get_or_create(organization=org, subcategory=subcategory, name=i['name'],
+                                                         description=i['description'], price=i['price'],
+                                                         youtube_links=i['video'])
+                for j in range(len(i['images'])):
+                    file = File.objects.create(image_url=str(i['images'][j]), is_watermarked=True)
+                    images_list.append(file)
+                item.images.add(*images_list)
 
         return StockService.get_sizes_by_format_id(self.kwargs['pk'])

@@ -46,7 +46,7 @@ class ShopItem(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.SET_NULL, related_name='items_in_category',
                                     null=True, blank=True)
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=255)
     name_lang = models.CharField(max_length=5, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     description_lang = models.CharField(max_length=5, null=True, blank=True)

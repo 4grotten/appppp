@@ -31,3 +31,23 @@ class SizeFormat(models.Model):
 
     def __str__(self):
         return f'Format - {self.format_criteria.name} size - {self.size}'
+
+
+class StockCart(models.Model):
+    shop_item = models.ForeignKey("shop.ShopItem", related_name='stock_carts', on_delete=models.CASCADE,
+                                  blank=True)
+    available_size = models.ManyToManyField(SizeFormat, related_name='stock_carts')
+
+
+class ShopItemSizeCount(models.Model):
+    size_format = models.ForeignKey(SizeFormat, related_name='shop_item_size_counts', on_delete=models.CASCADE,
+                                    blank=True)
+    stock_cart = models.ForeignKey(StockCart, related_name='shop_item_size_counts', on_delete=models.CASCADE,
+                                   blank=True)
+    quantity = models.IntegerField(default=0)
+
+
+class ShopItemCollections(models.Model):
+    main_item = models.ForeignKey("shop.ShopItem", related_name='shop_collections', on_delete=models.CASCADE,
+                                  blank=True)
+    related_items = models.ManyToManyField("shop.ShopItem", related_name='shop_item_collections', blank=True)

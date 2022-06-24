@@ -8,7 +8,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIVie
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from stock.models import ShopItemSizeCount
+from stock.models import ShopItemSizeCount, SizeFormat
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer
 from stock.services import StockService
@@ -74,3 +74,11 @@ class SizeQuantityListCreateView(ListCreateAPIView):
                                                          size_format=size_format,
                                                          quantity=size_quantity)
         return Response(self.get_serializer(item_size_count).data)
+
+
+class AvailableSizeListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SizeFormatSerializer
+
+    def get_queryset(self):
+        return SizeFormat.objects.filter(stock_carts=self.kwargs['pk'])

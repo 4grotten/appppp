@@ -37,9 +37,9 @@ class StockService:
         return stock_cart
 
     @classmethod
-    def add_size_quantity(cls, stock_cart: int, size_format: SizeFormat, quantity: int):
+    def add_size_quantity(cls, stock_cart_id: int, size_format: SizeFormat, quantity: int):
         size_format = SizeFormat.objects.get(id=size_format.id)
-        stock_cart = StockCart.objects.get(id=stock_cart)
+        stock_cart = StockCart.objects.get(id=stock_cart_id)
         item_size_quantity, created = ShopItemSizeCount.objects.get_or_create(size_format=size_format,
                                                                               stock_cart=stock_cart)
         item_size_quantity.quantity = quantity

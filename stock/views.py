@@ -4,10 +4,11 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from stock.models import ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer
 from stock.services import StockService
@@ -53,9 +54,12 @@ class CreateStokeCartView(CreateAPIView):
         return Response(self.get_serializer(stock).data)
 
 
-class AddSizeQuantityView(CreateAPIView):
+class SizeQuantityListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = AddSizeQuantitySerializer
+
+    def get_queryset(self):
+        return ShopItemSizeCount.objects.filter(stock_cart_id=self.kwargs['pk'])
 
     def post(self, request, *args, **kwargs):
         serializer = AddSizeQuantitySerializer(data=request.data)
@@ -66,6 +70,7 @@ class AddSizeQuantityView(CreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         size_format = serializer.validated_data['size_format']
         size_quantity = serializer.validated_data['quantity']
-        item_size_count = StockService.add_size_quantity(stock_cart=self.kwargs['pk'],  size_format=size_format,
+        item_size_count = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
+                                                         size_format=size_format,
                                                          quantity=size_quantity)
         return Response(self.get_serializer(item_size_count).data)

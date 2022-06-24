@@ -1,16 +1,13 @@
-import json
-
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework import status
-from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from stock.models import ShopItemSizeCount, SizeFormat
+from stock.models import ShopItemCollections, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
-    CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer
+    CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
+    CreateCollectionsSerializer
 from stock.services import StockService
 
 
@@ -54,12 +51,32 @@ class CreateStokeCartView(CreateAPIView):
         return Response(self.get_serializer(stock).data)
 
 
+class CreateShopItemCollections(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CollectionsSerializer
+
+    def get(self, request, *args, **kwargs):
+        collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+        return Response(self.get_serializer(collection).data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = CreateCollectionsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        related_items = serializer.validated_data['related_items']
+        stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'], related_items=related_items)
+        return Response(self.get_serializer(stock).data)
+
+
 class SizeQuantityListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = AddSizeQuantitySerializer
 
     def get_queryset(self):
-        return ShopItemSizeCount.objects.filter(stock_cart_id=self.kwargs['pk'])
+        return ShopItemSizeCount.objects.filter(stock_cart=self.kwargs['pk'])
 
     def post(self, request, *args, **kwargs):
         serializer = AddSizeQuantitySerializer(data=request.data)

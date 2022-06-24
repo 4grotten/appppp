@@ -1,6 +1,8 @@
 from common.exceptions import ObjectNotFoundException
+from shop.models import ShopItem
 from shop.services.item_services import ShopItemService
-from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, StockCart, ShopItemSizeCount
+from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, StockCart, ShopItemSizeCount, \
+    ShopItemCollections
 
 
 class StockService:
@@ -35,6 +37,23 @@ class StockService:
             stock_cart.available_size.add(*avaliable_sizes_list)
 
         return stock_cart
+
+    @classmethod
+    def create_shop_item_collection(cls, main_item: int, related_items: list):
+        main_item = ShopItem.objects.get(id=main_item)
+
+        related_items_list = []
+        for i in related_items:
+            related_items_list.append(ShopItemService.get(id=i))
+        shop_item_collection, created = ShopItemCollections.objects.get_or_create(main_item=main_item)
+
+        if created:
+            shop_item_collection.related_items.add(*related_items_list)
+        else:
+            shop_item_collection.related_items.clear()
+            shop_item_collection.related_items.add(*related_items_list)
+
+        return shop_item_collection
 
     @classmethod
     def add_size_quantity(cls, stock_cart_id: int, size_format: SizeFormat, quantity: int):

@@ -3,7 +3,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIVie
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from stock.models import ShopItemSizeCount, SizeFormat
+from stock.models import SizeFormat
 from stock.models import ShopItemCollections, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
@@ -87,10 +87,10 @@ class SizeQuantityListCreateView(ListCreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         size_format = serializer.validated_data['size_format']
         size_quantity = serializer.validated_data['quantity']
-        item_size_count = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
+        item_size_quantity = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
                                                          size_format=size_format,
                                                          quantity=size_quantity)
-        return Response(self.get_serializer(item_size_count).data)
+        return Response(self.get_serializer(item_size_quantity).data)
 
 
 class AvailableSizeListView(ListAPIView):
@@ -99,3 +99,23 @@ class AvailableSizeListView(ListAPIView):
 
     def get_queryset(self):
         return SizeFormat.objects.filter(stock_carts=self.kwargs['pk'])
+
+
+class RemoveShopItemStock(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, *args, **kwargs):
+        StockService.remove_shop_item_stock_cart(stock_id=self.kwargs['pk'])
+        return Response(data={
+            'message': 'successful remove'
+        }, status=status.HTTP_200_OK)
+
+
+class RemoveShopItemSizeQuantity(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, *args, **kwargs):
+        StockService.remove_shop_item_size_quantity(item_size_quantity_id=self.kwargs['pk'])
+        return Response(data={
+            'message': 'successful remove',
+        }, status=status.HTTP_200_OK)

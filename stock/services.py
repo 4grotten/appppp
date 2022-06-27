@@ -1,3 +1,5 @@
+from transliterate.utils import _
+
 from common.exceptions import ObjectNotFoundException
 from shop.models import ShopItem
 from shop.services.item_services import ShopItemService
@@ -12,7 +14,7 @@ class StockService:
         try:
             return StockCart.objects.get(**filters)
         except StockCart.DoesNotExist:
-            raise ObjectNotFoundException(_('ShopItem not found'))
+            raise ObjectNotFoundException(_('Stock cart not found'))
 
     @classmethod
     def get_size_format(cls, **filters):
@@ -62,6 +64,7 @@ class StockService:
         item_size_quantity, created = ShopItemSizeCount.objects.get_or_create(size_format=size_format,
                                                                               stock_cart=stock_cart)
         item_size_quantity.quantity = quantity
+        item_size_quantity.save()
         return item_size_quantity
 
     @classmethod
@@ -78,3 +81,18 @@ class StockService:
     def get_sizes_by_format_id(cls, format_criteria_id):
         return SizeFormat.objects.select_related('format_criteria').filter(
             format_criteria__id=format_criteria_id).order_by('order')
+
+    @classmethod
+    def remove_shop_item_stock_cart(cls, stock_id):
+        shop_item_stock_cart = cls.get(id=stock_id)
+        return shop_item_stock_cart.delete()
+
+
+    @classmethod
+    def remove_shop_item_size_quantity(cls, item_size_quantity_id):
+        try:
+            item_size_quantity = ShopItemSizeCount.objects.get(id=item_size_quantity_id)
+            return item_size_quantity.delete()
+        except ShopItemSizeCount.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item size quantity not found'))
+

@@ -48,7 +48,17 @@ class SocialInline(admin.TabularInline):
 
 class DiscountInline(admin.TabularInline):
     model = DiscountCard
+    fields = ('type', 'limit', 'organization', 'percent', 'currency', 'image', 'next_cumulative', 'is_published')
+    readonly_fields = (
+    'type', 'limit', 'organization', 'percent', 'currency', 'image', 'next_cumulative', 'is_published')
     extra = 0
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
 
 
 class MembershipInLine(admin.TabularInline):
@@ -63,6 +73,7 @@ class OrganizationVerificationUsersInLine(admin.TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
+    list_select_related = True
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
@@ -75,7 +86,13 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     raw_id_fields = ('owner', 'country', 'city', 'image', 'cashback_group', 'cumulative_group', 'items_group',)
 
-    inlines = (PhoneInline, SocialInline, DiscountInline, OrganizationVerificationUsersInLine, MembershipInLine)
+    inlines = (
+        PhoneInline,
+        SocialInline,
+        DiscountInline,
+        OrganizationVerificationUsersInLine,  # 2:18
+        MembershipInLine,
+    )
 
     def save_model(self, request, obj, form, change):
         if not obj.avg_check == 0:
@@ -135,9 +152,9 @@ class AttendanceAdmin(admin.ModelAdmin):
 class DiscountCardAdmin(admin.ModelAdmin):
     list_display = ('organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative',)
     list_filter = ('type', 'is_published', 'organization',)
-    readonly_fields = (
-        'organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative', 'image'
-    )
+    # readonly_fields = (
+    #     'organization', 'type', 'limit', 'percent', 'currency', 'is_published', 'next_cumulative', 'image'
+    # )
 
 
 @admin.register(OrganizationClientFinancialStatus)

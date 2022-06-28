@@ -1,8 +1,10 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView, GenericAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView, GenericAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from transliterate.utils import _
 
+from common.exceptions import ObjectNotFoundException
 from stock.models import SizeFormat
 from stock.models import ShopItemCollections, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
@@ -56,7 +58,11 @@ class CreateShopItemCollections(GenericAPIView):
     serializer_class = CollectionsSerializer
 
     def get(self, request, *args, **kwargs):
-        collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+        try:
+            collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+        except ShopItemCollections.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
+
         return Response(self.get_serializer(collection).data)
 
     def post(self, request, *args, **kwargs):
@@ -88,8 +94,8 @@ class SizeQuantityListCreateView(ListCreateAPIView):
         size_format = serializer.validated_data['size_format']
         size_quantity = serializer.validated_data['quantity']
         item_size_quantity = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
-                                                         size_format=size_format,
-                                                         quantity=size_quantity)
+                                                            size_format=size_format,
+                                                            quantity=size_quantity)
         return Response(self.get_serializer(item_size_quantity).data)
 
 
@@ -101,7 +107,7 @@ class AvailableSizeListView(ListAPIView):
         return SizeFormat.objects.filter(stock_carts=self.kwargs['pk'])
 
 
-class RemoveShopItemStock(GenericAPIView):
+class RemoveShopItemStock(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
     def delete(self, request, *args, **kwargs):
@@ -111,7 +117,7 @@ class RemoveShopItemStock(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class RemoveShopItemSizeQuantity(GenericAPIView):
+class RemoveShopItemSizeQuantity(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
     def delete(self, request, *args, **kwargs):

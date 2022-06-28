@@ -319,21 +319,27 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
-        try:
-            send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
-                                                                 current_transaction.cart.id,
-                                                                 NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                                 mode=NOTIFICATION_MODE_SYSTEM)
-
-            organization_members = list(current_transaction.cart.organization.memberships.filter(
-                Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
-            for member in organization_members:
-                send_delivery_notitication_to_organization_or_client(member.user,
+        rg = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+            is_delivery_service=True, country=organization.country)
+        print(rg)
+        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+            is_delivery_service=True, country=organization.country).exists()
+        if org:
+            try:
+                send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
                                                                      current_transaction.cart.id,
                                                                      NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                                                                      mode=NOTIFICATION_MODE_SYSTEM)
-        except Exception as e:
-            logging.exception(e)
+
+                organization_members = list(current_transaction.cart.organization.memberships.filter(
+                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                for member in organization_members:
+                    send_delivery_notitication_to_organization_or_client(member.user,
+                                                                         current_transaction.cart.id,
+                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                         mode=NOTIFICATION_MODE_SYSTEM)
+            except Exception as e:
+                logging.exception(e)
         return current_transaction
 
     @classmethod

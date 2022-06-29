@@ -9,7 +9,8 @@ from stock.models import SizeFormat
 from stock.models import ShopItemCollections, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
-    CreateCollectionsSerializer
+    CreateCollectionsSerializer, CreateLinkCollectionsSerializer, ShopItemLinkForCollectionSerializer, \
+    LinkCollectionsSerializer
 from stock.services import StockService
 
 
@@ -74,6 +75,31 @@ class CreateShopItemCollections(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         related_items = serializer.validated_data['related_items']
         stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'], related_items=related_items)
+        return Response(self.get_serializer(stock).data)
+
+
+class CreateShopItemLinkCollections(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = LinkCollectionsSerializer
+
+    def get(self, request, *args, **kwargs):
+        try:
+            collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+        except ShopItemCollections.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
+
+        return Response(self.get_serializer(collection).data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = CreateLinkCollectionsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        related_item_links = serializer.validated_data['related_item_links']
+        stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'],
+                                                         related_item_links=related_item_links)
         return Response(self.get_serializer(stock).data)
 
 

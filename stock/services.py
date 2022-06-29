@@ -4,7 +4,7 @@ from common.exceptions import ObjectNotFoundException
 from shop.models import ShopItem
 from shop.services.item_services import ShopItemService
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, StockCart, ShopItemSizeCount, \
-    ShopItemCollections
+    ShopItemCollections, ShopItemLinkForCollection
 
 
 class StockService:
@@ -41,21 +41,40 @@ class StockService:
         return stock_cart
 
     @classmethod
-    def create_shop_item_collection(cls, main_item: int, related_items: list):
-        main_item = ShopItem.objects.get(id=main_item)
+    def create_shop_item_collection(cls, main_item: int, related_items=None, related_item_links=None):
+        try:
+            main_item = ShopItem.objects.get(id=main_item)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
 
-        related_items_list = []
-        for i in related_items:
-            related_items_list.append(ShopItemService.get(id=i))
+
         shop_item_collection, created = ShopItemCollections.objects.get_or_create(main_item=main_item)
 
-        if created:
-            shop_item_collection.related_items.add(*related_items_list)
-        else:
-            shop_item_collection.related_items.clear()
-            shop_item_collection.related_items.add(*related_items_list)
+        related_items_list = []
+
+        if related_item_links:
+            for i in related_item_links:
+                shop_item_link = ShopItemLinkForCollection.objects.create(link=i)
+                related_items_list.append(shop_item_link)
+
+            if created:
+                shop_item_collection.related_item_links.add(*related_items_list)
+            else:
+                shop_item_collection.related_item_links.clear()
+                shop_item_collection.related_item_links.add(*related_items_list)
+
+        if related_items:
+            for i in related_items:
+                related_items_list.append(ShopItemService.get(id=i))
+
+            if created:
+                shop_item_collection.related_items.add(*related_items_list)
+            else:
+                shop_item_collection.related_items.clear()
+                shop_item_collection.related_items.add(*related_items_list)
 
         return shop_item_collection
+
 
     @classmethod
     def add_size_quantity(cls, stock_cart_id: int, size_format: SizeFormat, quantity: int):

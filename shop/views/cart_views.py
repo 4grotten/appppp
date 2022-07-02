@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
@@ -31,7 +31,7 @@ class UserCartListView(ListAPIView):
     def get_queryset(self):
         organization_qs = Organization.objects.all()
         organization_qs = OrganizationService.get_working_time_status(organization_qs, self.request)
-        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False).\
+        return Cart.objects.filter(user=self.request.user, is_open=True, organization__is_deleted=False). \
             prefetch_related(Prefetch('organization', queryset=organization_qs)).order_by('-id')
 
 
@@ -44,7 +44,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         organization_qs = OrganizationService.get_working_time_status(organization_qs, self.request)
         return Cart.objects.filter(
             user=self.request.user, is_open=True, organization__is_deleted=False
-        ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at'))).\
+        ).prefetch_related(Prefetch('items', queryset=CartItem.objects.order_by('-created_at'))). \
             prefetch_related(Prefetch('organization', queryset=organization_qs))
 
     def retrieve(self, request, *args, **kwargs):
@@ -111,11 +111,18 @@ class OrderDeliveryView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
-        DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
-
+        if Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+                is_delivery_service=True, country=cart.transaction.organization.country).exists():
+            DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
+            return Response(
+                {
+                    "message": _("Success"),
+                    "transaction_id": cart.transaction_id
+                }
+            )
         return Response(
             {
-                "message": _("Success"),
+                "message": _("Not courier organization in this country"),
                 "transaction_id": cart.transaction_id
             }
         )
@@ -133,7 +140,7 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = Cart.objects.get(pk=pk)
-        #Fixme check for organization emplees who have access
+        # Fixme check for organization emplees who have access
         # if cart.organization not in owned_organizations:
         #     return Response(data={
         #         'message': _('Invalid input'),
@@ -174,7 +181,7 @@ class UpdateDeliveryToSendByCourierView(GenericAPIView):
             extra_data__transaction_id=delivery_info.transaction_id,
             type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
             recipient__in=staff
-            ).delete()
+        ).delete()
 
         return Response(
             {

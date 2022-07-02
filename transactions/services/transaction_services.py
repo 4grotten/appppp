@@ -320,9 +320,6 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
-        rg = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
-            is_delivery_service=True, country=organization.country)
-        print(rg)
         org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
             is_delivery_service=True, country=organization.country).exists()
         if org:

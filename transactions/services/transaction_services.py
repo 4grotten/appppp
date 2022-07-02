@@ -6,6 +6,7 @@ from typing import Union
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max
 from django.db.models.functions import Coalesce
+from django.db.models.lookups import IsNull
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -407,7 +408,8 @@ class TransactionService:
                         Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)))).order_by(
                     '-updated_at').values('updated_at')[:1]
             )
-        ).order_by('-latest_transaction_time')
+        )
+        organizations = organizations.order_by(F('latest_transaction_time').desc(nulls_last=True))
         return organizations
 
     @classmethod

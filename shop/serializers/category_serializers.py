@@ -38,7 +38,7 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
 
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
-    criteria_subcategory = CriteriaSubcategorySerializer(many=True)
+    criteria_subcategory = CriteriaSubcategorySerializer(many=True, required=False)
 
     class Meta:
         model = ItemSubcategory

@@ -404,7 +404,7 @@ class OrganizationService:
 
         queryset = queryset.annotate(
             partners_count=Coalesce(Count('requested_partnerships'), 0)
-        ).exclude(partners_count__lt=min_count)[:HOMEPAGE_PARTNERS_COUNT]
+        ).order_by('-verification_status', '-partners_count').exclude(partners_count__lt=min_count)[:HOMEPAGE_PARTNERS_COUNT]
 
         # This is fucking shit, but i comment it
         # q_list = list(queryset)

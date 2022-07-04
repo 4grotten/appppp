@@ -1,14 +1,11 @@
-import json
+from io import BytesIO
 
-from django.shortcuts import render
-
-# Create your views here.
+import pandas as pd
+from django.http import HttpResponse
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
-from common.models import File
-from organizations.models import Organization
-from shop.models import ItemCategory, ItemSubcategory, ShopItem
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer
 from stock.services import StockService
 
@@ -26,9 +23,6 @@ class FormatCriteriaListView(ListAPIView):
     serializer_class = FormatCriteriaSerializer
 
     def get_queryset(self):
-        # org = Organization.objects.get(title='Белый Кот')
-        # ShopItem.objects.filter(organization=org).delete()
-        # ItemSubcategory.objects.filter(organization=org).delete()
         return StockService.get_format_by_criteria_subcategory_id(self.kwargs['pk'])
 
 
@@ -37,24 +31,36 @@ class SizeByFormatListView(ListAPIView):
     serializer_class = SizeFormatSerializer
 
     def get_queryset(self):
-
-        # org = Organization.objects.get(title='Белый Кот')
-        # category = ItemCategory.objects.get(name='House')
-        # with open('./shop/migrations/myfile.json', 'r') as f:
-        #     data = json.load(f)
-        # for i in data:
-        #     if not ShopItem.objects.filter(name=i['name'], description=i['description'], organization=org).exists():
-        #         subcategory, _ = ItemSubcategory.objects.get_or_create(category=category, name=str(i['category']),
-        #                                                                organization=org)
-        #         print(subcategory)
-        #         images_list = []
-        #
-        #         item, _ = ShopItem.objects.get_or_create(organization=org, subcategory=subcategory, name=i['name'],
-        #                                                  description=i['description'], price=i['price'],
-        #                                                  youtube_links=i['video'])
-        #         for j in range(len(i['images'])):
-        #             file = File.objects.create(image_url=str(i['images'][j]), is_watermarked=True)
-        #             images_list.append(file)
-        #         item.images.add(*images_list)
-
         return StockService.get_sizes_by_format_id(self.kwargs['pk'])
+
+
+
+class DownloadOrgDeliveryInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_deals(queryset)
+        dict_items_data = StockService.get_dict_data_for_shop_item(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_items = pd.DataFrame(dict_items_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_items.to_excel(writer, sheet_name='Товары', index=False)
+            writer.save()
+            filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
+                                                             end_time=self.request.query_params.get('end_time'))
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response

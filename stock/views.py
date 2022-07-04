@@ -1,8 +1,14 @@
 from rest_framework import status
 from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView, GenericAPIView, DestroyAPIView
+from io import BytesIO
+
+import pandas as pd
+from django.http import HttpResponse
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from transliterate.utils import _
+from rest_framework.views import APIView
 
 from common.exceptions import ObjectNotFoundException
 from stock.models import SizeFormat
@@ -11,6 +17,7 @@ from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, Cr
     CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
     CreateCollectionsSerializer, CreateLinkCollectionsSerializer, ShopItemLinkForCollectionSerializer, \
     LinkCollectionsSerializer
+from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer
 from stock.services import StockService
 
 
@@ -151,3 +158,35 @@ class RemoveShopItemSizeQuantity(DestroyAPIView):
         return Response(data={
             'message': 'successful remove',
         }, status=status.HTTP_200_OK)
+
+
+
+class DownloadOrgDeliveryInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_deals(queryset)
+        dict_items_data = StockService.get_dict_data_for_shop_item(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_items = pd.DataFrame(dict_items_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_items.to_excel(writer, sheet_name='Товары', index=False)
+            writer.save()
+            filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
+                                                             end_time=self.request.query_params.get('end_time'))
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response

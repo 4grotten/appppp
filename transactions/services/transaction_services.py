@@ -501,7 +501,8 @@ class TransactionService:
         ).order_by('in_progress_first', '-updated_at')
 
         if processed_by is not None:
-            transactions = transactions.filter(Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS))
+            transactions = transactions.filter(
+                Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
         if client is not None:
             transactions = transactions.filter(client=client)
         if start_date is not None and end_date is not None:

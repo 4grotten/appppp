@@ -610,7 +610,7 @@ class TransactionService:
         # Q(organization__in=organization) & (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
         transactions = Transaction.objects.filter(
             Q(organization__in=organization) & (
-                    Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS))
+                    Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
         )
         return transactions
 

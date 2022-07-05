@@ -55,7 +55,6 @@ class StockService:
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('Shop item not found'))
 
-
         shop_item_collection, created = ShopItemCollections.objects.get_or_create(main_item=main_item)
 
         related_items_list = []
@@ -82,7 +81,6 @@ class StockService:
                 shop_item_collection.related_items.add(*related_items_list)
 
         return shop_item_collection
-
 
     @classmethod
     def add_size_quantity(cls, stock_cart_id: int, size_format: SizeFormat, quantity: int):
@@ -142,17 +140,40 @@ class StockService:
         for i in queryset:
             employee_names.append(i.employee_name)
             employee_roles.append(i.employee_role)
-            statuses.append(i.status)
+            if i.status == 'accepted':
+                statuses.append('Принят')
+            elif i.status == 'rejected':
+                statuses.append('Отклонен')
+            elif i.status == 'in_progress':
+                statuses.append('В ожидании')
+            else:
+                statuses.append(None)
             types.append(i.type)
-            delivery_types.append(i.delivery_type)
+            if i.delivery_type == 'self_pickup':
+                delivery_types.append('Самовывоз')
+            elif i.delivery_type == 'cash_courier':
+                delivery_types.append('Наличными с курьером')
+            else:
+                delivery_types.append(i.delivery_type)
+
             try:
                 org = Organization.objects.get(id=i.delivery_info.delivery_organization_id).title
                 delivery_orgs.append(org)
             except Exception:
                 delivery_orgs.append(None)
-
             try:
-                delivery_statuses.append(i.delivery_info.status)
+                if i.delivery_info.status == 'delivery_status_taken_for_delivery':
+                    delivery_statuses.append('Взято на доставку курьерской службой')
+                elif i.delivery_info.status == 'delivery_status_set_for_delivery':
+                    delivery_statuses.append('Организация поставила заказа на доставку')
+                elif i.delivery_info.status == 'delivery_status_rejected_by_delivery_service':
+                    delivery_statuses.append('Доставка отменена курьерской службой')
+                elif i.delivery_info.status == 'delivery_status_accepted_by_delivery_service':
+                    delivery_statuses.append('Доставка подтверждена курьерской службой')
+                elif i.delivery_info.status == 'delivery_status_delivered':
+                    delivery_statuses.append('Доставлено')
+                else:
+                    delivery_statuses.append(None)
             except Exception:
                 delivery_statuses.append(None)
 
@@ -221,7 +242,10 @@ class StockService:
                     try:
                         shop_item = ShopItem.objects.get(id=shop_id)
                         names.append(shop_item.name)
-                        subcategory.append(shop_item.subcategory)
+                        try:
+                            subcategory.append(shop_item.subcategory.name)
+                        except Exception:
+                            subcategory.append(None)
                         price.append(j['item']['price'])
                         currency.append(i.currency_id)
                         article.append(shop_item.article)

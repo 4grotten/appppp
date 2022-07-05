@@ -4,9 +4,8 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, Count
 from django.db.models.functions import Coalesce
-from django.db.models.lookups import IsNull
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -404,9 +403,14 @@ class TransactionService:
                             (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
                         Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)))).order_by(
                     '-updated_at').values('updated_at')[:1]
-            )
+            ),
+            unprocessed_transaction_count=Count(
+                Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.ONLINE,
+                                           status=Transaction.IN_PROGRESS).values('id')[:1])
         )
-        organizations = organizations.order_by(F('latest_transaction_time').desc(nulls_last=True))
+
+        organizations = organizations.order_by('-unprocessed_transaction_count',
+                                               F('latest_transaction_time').desc(nulls_last=True))
         return organizations
 
     @classmethod

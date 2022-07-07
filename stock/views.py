@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, CreateAPIView, ListCreateAPIView, GenericAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, GenericAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
 
 import pandas as pd
@@ -7,17 +7,22 @@ from django.http import HttpResponse
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from transliterate.utils import _
+# from transliterate.utils import _
 from rest_framework.views import APIView
+from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from stock.models import SizeFormat
-from stock.models import ShopItemCollections, ShopItemSizeCount
+from shop.models import ShopItem
+from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock
+# from stock.models import ShopItemCollections, ShopItemSizeCount
+# from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
+# CreateStokeCartSerializer, \
+# StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
+# CreateCollectionsSerializer, CreateLinkCollectionsSerializer, ShopItemLinkForCollectionSerializer, \
+# LinkCollectionsSerializer
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
-    CreateStokeCartSerializer, StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
-    CreateCollectionsSerializer, CreateLinkCollectionsSerializer, ShopItemLinkForCollectionSerializer, \
-    LinkCollectionsSerializer
-from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer
+    CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
+    LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer
 from stock.services import StockService
 
 
@@ -45,120 +50,200 @@ class SizeByFormatListView(ListAPIView):
         return StockService.get_sizes_by_format_id(self.kwargs['pk'])
 
 
-class CreateStokeCartView(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = StockCartSerializer
+# class CreateStokeCartView(CreateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = StockCartSerializer
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = CreateStokeCartSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': 'Invalid input',
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#         available_size = serializer.validated_data['available_size']
+#         stock = StockService.create_stock_cart(shop_item_id=self.kwargs['pk'], avaliable_sizes=available_size)
+#         return Response(self.get_serializer(stock).data)
 
-    def post(self, request, *args, **kwargs):
-        serializer = CreateStokeCartSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(data={
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        available_size = serializer.validated_data['available_size']
-        stock = StockService.create_stock_cart(shop_item_id=self.kwargs['pk'], avaliable_sizes=available_size)
-        return Response(self.get_serializer(stock).data)
+#
+# class CreateShopItemCollections(GenericAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = CollectionsSerializer
+#
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+#         except ShopItemCollections.DoesNotExist:
+#             raise ObjectNotFoundException(_('Shop item not found'))
+#
+#         return Response(self.get_serializer(collection).data)
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = CreateCollectionsSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': 'Invalid input',
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#         related_items = serializer.validated_data['related_items']
+#         stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'], related_items=related_items)
+#         return Response(self.get_serializer(stock).data)
+#
+#
+# class CreateShopItemLinkCollections(GenericAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = LinkCollectionsSerializer
+#
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
+#         except ShopItemCollections.DoesNotExist:
+#             raise ObjectNotFoundException(_('Shop item not found'))
+#
+#         return Response(self.get_serializer(collection).data)
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = CreateLinkCollectionsSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': 'Invalid input',
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#         related_item_links = serializer.validated_data['related_item_links']
+#         stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'],
+#                                                          related_item_links=related_item_links)
+#         return Response(self.get_serializer(stock).data)
+#
+#
+# class SizeQuantityListCreateView(ListCreateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = AddSizeQuantitySerializer
+#
+#     def get_queryset(self):
+#         return ShopItemSizeCount.objects.filter(stock_cart=self.kwargs['pk'])
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = AddSizeQuantitySerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': 'Invalid input',
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#         size_format = serializer.validated_data['size_format']
+#         size_quantity = serializer.validated_data['quantity']
+#         item_size_quantity = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
+#                                                             size_format=size_format,
+#                                                             quantity=size_quantity)
+#         return Response(self.get_serializer(item_size_quantity).data)
+#
+#
+# class AvailableSizeListView(ListAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = SizeFormatSerializer
+#
+#     def get_queryset(self):
+#         return SizeFormat.objects.filter(stock_carts=self.kwargs['pk'])
+#
+#
 
-
-class CreateShopItemCollections(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = CollectionsSerializer
-
-    def get(self, request, *args, **kwargs):
-        try:
-            collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
-        except ShopItemCollections.DoesNotExist:
-            raise ObjectNotFoundException(_('Shop item not found'))
-
-        return Response(self.get_serializer(collection).data)
-
-    def post(self, request, *args, **kwargs):
-        serializer = CreateCollectionsSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(data={
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        related_items = serializer.validated_data['related_items']
-        stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'], related_items=related_items)
-        return Response(self.get_serializer(stock).data)
-
-
-class CreateShopItemLinkCollections(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = LinkCollectionsSerializer
-
-    def get(self, request, *args, **kwargs):
-        try:
-            collection = ShopItemCollections.objects.get(main_item=self.kwargs['pk'])
-        except ShopItemCollections.DoesNotExist:
-            raise ObjectNotFoundException(_('Shop item not found'))
-
-        return Response(self.get_serializer(collection).data)
-
-    def post(self, request, *args, **kwargs):
-        serializer = CreateLinkCollectionsSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(data={
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        related_item_links = serializer.validated_data['related_item_links']
-        stock = StockService.create_shop_item_collection(main_item=self.kwargs['pk'],
-                                                         related_item_links=related_item_links)
-        return Response(self.get_serializer(stock).data)
-
-
-class SizeQuantityListCreateView(ListCreateAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = AddSizeQuantitySerializer
-
-    def get_queryset(self):
-        return ShopItemSizeCount.objects.filter(stock_cart=self.kwargs['pk'])
-
-    def post(self, request, *args, **kwargs):
-        serializer = AddSizeQuantitySerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(data={
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        size_format = serializer.validated_data['size_format']
-        size_quantity = serializer.validated_data['quantity']
-        item_size_quantity = StockService.add_size_quantity(stock_cart_id=self.kwargs['pk'],
-                                                            size_format=size_format,
-                                                            quantity=size_quantity)
-        return Response(self.get_serializer(item_size_quantity).data)
-
-
-class AvailableSizeListView(ListAPIView):
+class AvailableSizeListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SizeFormatSerializer
 
     def get_queryset(self):
-        return SizeFormat.objects.filter(stock_carts=self.kwargs['pk'])
+        return SizeFormat.objects.filter(shop_items=self.kwargs['pk'])
+
+    def create(self, request, *args, **kwargs):
+        serializer = CreateAvailableSizesSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        available_sizes = serializer.validated_data['available_sizes']
+        shop_item = StockService.add_available_sizes(shop_item_id=self.kwargs['pk'], available_sizes=available_sizes)
+        available_sizes_serializer = ShopItemsAvailableSizesSerializer(shop_item).data
+        return Response(available_sizes_serializer)
 
 
-class RemoveShopItemStock(DestroyAPIView):
+class ShopItemsSetCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemsSetSerializer
 
-    def delete(self, request, *args, **kwargs):
-        StockService.remove_shop_item_stock_cart(stock_id=self.kwargs['pk'])
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        shop_items_set = serializer.validated_data['shop_items_set']
+        shop_items_link_set = serializer.validated_data['shop_items_link_set']
+        StockService.add_shop_items_sets(main_item=self.kwargs['pk'], shop_items=shop_items_set,
+                                         shop_item_links=shop_items_link_set)
         return Response(data={
-            'message': 'successful remove'
+            'message': _('Successfully add set.')
         }, status=status.HTTP_200_OK)
 
 
-class RemoveShopItemSizeQuantity(DestroyAPIView):
+class GetShopItemByLink(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemShortSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = LinkStockSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        shop_item = StockService.get_shop_item_by_link(link=serializer.validated_data['link'])
+        return Response(self.serializer_class(shop_item).data)
+
+
+class ShopItemSetListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemSetSerializer
+
+    def get_queryset(self):
+        shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
+        return shop_item_stock.shop_item.all()
+
+
+class ShopItemLinkSetListView(ListAPIView):
+    serializer_class = ShopItemLinkSetSerializer
     permission_classes = (IsAuthenticated,)
 
-    def delete(self, request, *args, **kwargs):
-        StockService.remove_shop_item_size_quantity(item_size_quantity_id=self.kwargs['pk'])
-        return Response(data={
-            'message': 'successful remove',
-        }, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        return ShopItemLinksSetStock.objects.filter(main_shop_item__id=self.kwargs['pk'])
 
+
+class AddShopItemSizeCount(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemSizeCountSetSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        size = serializer.validated_data['size']
+        count = serializer.validated_data['count']
+        size_count = StockService.add_shop_items_size_count(main_item=self.kwargs['pk'], size=size,
+                                                            count=count)
+        return Response(self.serializer_class(size_count).data)
+
+
+# class RemoveShopItemSizeQuantity(DestroyAPIView):
+#     permission_classes = (IsAuthenticated,)
+#
+#     def delete(self, request, *args, **kwargs):
+#         StockService.remove_shop_item_size_quantity(item_size_quantity_id=self.kwargs['pk'])
+#         return Response(data={
+#             'message': 'successful remove',
+#         }, status=status.HTTP_200_OK)
 
 
 class DownloadOrgDeliveryInfoAPIView(APIView):
@@ -183,10 +268,39 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             df_items.to_excel(writer, sheet_name='Товары', index=False)
             writer.save()
             filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
-                                                             end_time=self.request.query_params.get('end_time'))
+                                                               end_time=self.request.query_params.get('end_time'))
             response = HttpResponse(
                 b.getvalue(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
+
+#
+# class GetOrCreateStockCollection(GenericAPIView):
+#     permission_classes = (IsAuthenticated,)
+#
+#     def get(self, request, *args, **kwargs):
+#         StockService.get_or_create_stock_collection(shop_item_id=self.kwargs['pk'])
+#         return Response(data={
+#             'message': _('Success')
+#         }, status=status.HTTP_200_OK)
+
+#
+# class FillStockCollectionBySiza(CreateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = GetOrCreateStockCollectionSerializer
+#
+#     def create(self, request, *args, **kwargs):
+#         serializer = FillStockCollectionBySizaSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': _('Invalid input'),
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#
+#         stock_collection = StockService.fill_stock_collection_by_sizes(shop_item_id=self.kwargs['shop_item_id'],
+#                                                                        criteria_id=self.kwargs['criteria_id'],
+#                                                                        sizes=serializer.validated_data[
+#                                                                            'available_sizes'])
+#         return Response(self.serializer_class(stock_collection).data, status=status.HTTP_201_CREATED)

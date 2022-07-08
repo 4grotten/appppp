@@ -55,11 +55,12 @@ class HotlinkWithCountsSerializer(HotlinkSerializer):
     collection_subcategories = serializers.SerializerMethodField()
 
     def get_collection_subcategories(self, hotlink: Hotlink):
-        from shop.services.category_services import ItemSubcategoryService
-        subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=hotlink.organization.id)
-        collection_subcategories = HotlinkCollectionSubcategory.objects.filter(
-            subcategory__in=subcategories).distinct().values_list('subcategory_id', flat=True)
-        return collection_subcategories
+        # from shop.services.category_services import ItemSubcategoryService
+        # subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=hotlink.organization.id)
+        # collection_subcategories = HotlinkCollectionSubcategory.objects.filter(
+        #     subcategory__in=subcategories).distinct().values_list('subcategory_id', flat=True)
+        current_subcategories = hotlink.collection_subcategories.all().values_list('subcategory_id', flat=True)
+        return current_subcategories
 
     def get_items_count(self, hotlink: Hotlink) -> int:
         if hotlink.link_type == HOTLINK_COLLECTION:

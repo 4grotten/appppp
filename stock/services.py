@@ -112,8 +112,12 @@ class StockService:
 
     @classmethod
     def get_organization_delivery_info(cls, organization_id, start_time, end_time):
-        return Transaction.objects.filter(
-            Q(organization__id=organization_id) & Q(created_at__gte=start_time) & Q(created_at__lte=end_time))
+        if start_time and end_time:
+            return Transaction.objects.filter(
+                Q(organization__id=organization_id) & Q(created_at__range=[start_time, end_time]))
+        else:
+            return Transaction.objects.filter(
+                Q(organization__id=organization_id))
 
     @classmethod
     def get_dict_data_for_deals(cls, queryset):

@@ -160,7 +160,6 @@ class RemoveShopItemSizeQuantity(DestroyAPIView):
         }, status=status.HTTP_200_OK)
 
 
-
 class DownloadOrgDeliveryInfoAPIView(APIView):
     # permission_classes = (IsAuthenticated,)
 
@@ -171,6 +170,8 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         queryset = list(self.get_queryset(*args, **kwargs))
+        start_time = self.request.query_params.get('start_time')
+        end_time = self.request.query_params.get('end_time')
 
         dict_deals_data = StockService.get_dict_data_for_deals(queryset)
         dict_items_data = StockService.get_dict_data_for_shop_item(queryset)
@@ -182,8 +183,11 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             df_deals.to_excel(writer, sheet_name='Сделки', index=False)
             df_items.to_excel(writer, sheet_name='Товары', index=False)
             writer.save()
-            filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
-                                                             end_time=self.request.query_params.get('end_time'))
+            if start_time and end_time:
+                filename = '{start_time} - {end_time}.xlsx'.format(start_time=start_time,
+                                                               end_time=end_time)
+            else:
+                filename = 'all time.xlsx'
             response = HttpResponse(
                 b.getvalue(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

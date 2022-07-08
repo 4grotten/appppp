@@ -255,6 +255,7 @@ class DeleteStockView(DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         shop_item = ShopItemService.get(id=kwargs['pk'])
         ShopItemSizeCount.objects.filter(main_shop_item=shop_item).delete()
+        shop_item.available_sizes.clear()
 
         return Response(data={
             'message': _('Successfully deleted'),

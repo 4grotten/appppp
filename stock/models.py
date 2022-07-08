@@ -58,7 +58,10 @@ class ShopItemSizeCount(models.Model):
                                        related_name='shop_item_size_counts')
     size = models.ForeignKey(SizeFormat, on_delete=models.CASCADE, related_name='shop_item_size_counts', null=True,
                              blank=True)
-    count = models.IntegerField(null=True, blank=True, max_length=1000)
+    count = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('main_shop_item', 'size')
 
     def __str__(self):
         return f'size count of shop item - {self.main_shop_item}'

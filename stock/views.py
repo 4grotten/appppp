@@ -23,7 +23,8 @@ from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, Sh
 # LinkCollectionsSerializer
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
-    LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer
+    LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
+    AddShopItemSizeCountSetSerializer
 from stock.services import StockService
 
 
@@ -227,12 +228,15 @@ class GetNotChoosenSizeListView(ListAPIView):
         return StockService.get_not_choosen_size(main_item=self.kwargs['pk'])
 
 
-class AddShopItemSizeCount(CreateAPIView):
+class ShopItemSizeCountView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ShopItemSizeCountSetSerializer
 
+    def get_queryset(self):
+        return ShopItemSizeCount.objects.filter(main_shop_item=self.kwargs['pk'])
+
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = AddShopItemSizeCountSetSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
                 'message': 'Invalid input',
@@ -243,6 +247,29 @@ class AddShopItemSizeCount(CreateAPIView):
         size_count = StockService.add_shop_items_size_count(main_item=self.kwargs['pk'], size=size,
                                                             count=count)
         return Response(self.serializer_class(size_count).data)
+
+
+class DeleteStockView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def destroy(self, request, *args, **kwargs):
+        shop_item = ShopItemService.get(id=kwargs['pk'])
+        ShopItemSizeCount.objects.filter(main_shop_item=shop_item).delete()
+
+        return Response(data={
+            'message': _('Successfully deleted'),
+        }, status=status.HTTP_200_OK)
+
+
+class DeleteShopItemSizeCountView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def destroy(self, request, *args, **kwargs):
+        ShopItemSizeCount.objects.get(id=self.kwargs['pk']).delete()
+
+        return Response(data={
+            'message': _('Successfully deleted'),
+        }, status=status.HTTP_200_OK)
 
 
 # class RemoveShopItemSizeQuantity(DestroyAPIView):

@@ -88,7 +88,10 @@ class StockService:
     @classmethod
     def add_shop_items_size_count(cls, main_item, size=None, count=None):
         shop_item = ShopItemService.get(id=main_item)
-        return ShopItemSizeCount.objects.create(main_shop_item=shop_item, size=size, count=count)
+        shop_item_size_count, _ = ShopItemSizeCount.objects.get_or_create(main_shop_item=shop_item, size=size)
+        shop_item_size_count.count = count
+        shop_item_size_count.save()
+        return shop_item_size_count
 
     @classmethod
     def get_not_choosen_size(cls, main_item):

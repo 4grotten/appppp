@@ -67,6 +67,14 @@ class LinkStockSerializer(serializers.Serializer):
 
 
 class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
+    size = SizeFormatSerializer()
+
+    class Meta:
+        model = ShopItemSizeCount
+        fields = ('id', 'size', 'count')
+
+class AddShopItemSizeCountSetSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = ShopItemSizeCount
         fields = ('size', 'count')

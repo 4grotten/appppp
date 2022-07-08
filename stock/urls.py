@@ -4,7 +4,7 @@ from django.urls import path
     # GetOrCreateStockCollection, FillStockCollectionBySiza
 from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSubcategoryListView, \
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
-    ShopItemSetListView, ShopItemLinkSetListView, AddShopItemSizeCount
+    ShopItemSetListView, ShopItemLinkSetListView, AddShopItemSizeCount, GetNotChoosenSizeListView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -17,6 +17,7 @@ urlpatterns = [
     path('get_shop_item_set/<int:pk>/', ShopItemSetListView.as_view(), name='get_shop_item_by_link'),
     path('get_shop_item_link_stock/<int:pk>/', ShopItemLinkSetListView.as_view(), name='get_shop_item_by_link'),
     path('get_shop_item_size_count/<int:pk>/', AddShopItemSizeCount.as_view(), name='get_shop_item_size_count'),
+    path('get_not_choosen_sizes/<int:pk>/', GetNotChoosenSizeListView.as_view(), name='get_not_choosen_sizes'),
 
     # path('stock/collection/shop_item/<int:pk>/', GetOrCreateStockCollection.as_view(), name='stock_collection'),
     # path('stock/shop_item/<int:shop_item_id>/criteria/<int:criteria_id>/', FillStockCollectionBySiza.as_view(),

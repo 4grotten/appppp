@@ -13,7 +13,8 @@ from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
 from shop.models import ShopItem
-from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock
+from shop.services.item_services import ShopItemService
+from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
 # from stock.models import ShopItemCollections, ShopItemSizeCount
 # from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
 # CreateStokeCartSerializer, \
@@ -216,6 +217,14 @@ class ShopItemLinkSetListView(ListAPIView):
 
     def get_queryset(self):
         return ShopItemLinksSetStock.objects.filter(main_shop_item__id=self.kwargs['pk'])
+
+
+class GetNotChoosenSizeListView(ListAPIView):
+    serializer_class = SizeFormatSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return StockService.get_not_choosen_size(main_item=self.kwargs['pk'])
 
 
 class AddShopItemSizeCount(CreateAPIView):

@@ -89,30 +89,19 @@ class StockService:
     def add_shop_items_size_count(cls, main_item, size=None, count=None):
         shop_item = ShopItemService.get(id=main_item)
         return ShopItemSizeCount.objects.create(main_shop_item=shop_item, size=size, count=count)
-        # related_items_list = []
 
-        # if related_item_links:
-        #     for i in related_item_links:
-        #         shop_item_link = ShopItemLinkForCollection.objects.create(link=i)
-        #         related_items_list.append(shop_item_link)
-        #
-        #     if created:
-        #         shop_item_collection.related_item_links.add(*related_items_list)
-        #     else:
-        #         shop_item_collection.related_item_links.clear()
-        #         shop_item_collection.related_item_links.add(*related_items_list)
-        #
-        # if related_items:
-        #     for i in related_items:
-        #         related_items_list.append(ShopItemService.get(id=i))
-        #
-        #     if created:
-        #         shop_item_collection.related_items.add(*related_items_list)
-        #     else:
-        #         shop_item_collection.related_items.clear()
-        #         shop_item_collection.related_items.add(*related_items_list)
-        #
-        # return shop_item_collection
+    @classmethod
+    def get_not_choosen_size(cls, main_item):
+        main_shop_item = ShopItemService.get(id=main_item)
+        size_count = ShopItemSizeCount.objects.filter(main_shop_item=main_shop_item)
+        array = []
+        for i in size_count:
+            array.append(i.size)
+        array_result = []
+        for i in main_shop_item.available_sizes.all():
+            if i not in array:
+                array_result.append(i)
+        return array_result
 
     @classmethod
     def add_available_sizes(cls, shop_item_id: int, available_sizes=None):

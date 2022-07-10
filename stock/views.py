@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, GenericAPIView, DestroyAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView
 from io import BytesIO
 
 import pandas as pd
@@ -7,20 +7,12 @@ from django.http import HttpResponse
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-# from transliterate.utils import _
 from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from shop.models import ShopItem
 from shop.services.item_services import ShopItemService
 from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
-# from stock.models import ShopItemCollections, ShopItemSizeCount
-# from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
-# CreateStokeCartSerializer, \
-# StockCartSerializer, AddSizeQuantitySerializer, CollectionsSerializer, \
-# CreateCollectionsSerializer, CreateLinkCollectionsSerializer, ShopItemLinkForCollectionSerializer, \
-# LinkCollectionsSerializer
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
     LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
@@ -213,7 +205,6 @@ class ShopItemSetListView(ListAPIView):
             return shop_item_stock.shop_item.all()
         except ShopItemSetStock.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItemSetStock not found'))
-
 
 
 class ShopItemLinkSetListView(ListAPIView):

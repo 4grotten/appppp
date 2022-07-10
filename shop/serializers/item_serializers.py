@@ -12,6 +12,8 @@ from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
+from stock.models import ShopItemSizeCount
+from stock.serializers import SizeFormatSerializer
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):
@@ -25,6 +27,16 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     is_bookmarked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    sizes = serializers.SerializerMethodField()
+
+    def get_sizes(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item, count__gte=1).exists():
+            sizes = ShopItemSizeCount.objects.filter(main_shop_item=item)
+            result = [i.size for i in sizes]
+            return SizeFormatSerializer(result, many=True).data
+        else:
+            sizes = item.available_sizes.all()
+            return SizeFormatSerializer(sizes, many=True).data
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
@@ -58,7 +70,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated'
+            'instagram_data', 'is_updated', 'sizes'
         )
 
 
@@ -227,7 +239,6 @@ class ItemFeedSerializer(ItemListSerializer):
     updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
-
 
     class Meta:
         model = ShopItem

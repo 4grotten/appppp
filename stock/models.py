@@ -33,54 +33,35 @@ class SizeFormat(models.Model):
         return f'Format - {self.format_criteria.name} size - {self.size}'
 
 
-class StockCart(models.Model):
-    shop_item = models.ForeignKey("shop.ShopItem", related_name='stock_carts', on_delete=models.CASCADE,
-                                  blank=True)
-    available_size = models.ManyToManyField(SizeFormat, related_name='stock_carts')
-
-    class Meta:
-        verbose_name = 'Shop item stock cart'
-        verbose_name_plural = 'Shop item stock carts'
+class ShopItemSetStock(models.Model):
+    main_shop_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE,
+                                       related_name='main_shop_items_set_stocks')
+    shop_item = models.ManyToManyField('shop.ShopItem', related_name='shop_items_set_stocks', blank=True)
 
     def __str__(self):
-        return f'Shop item: {self.shop_item} - {self.available_size}'
+        return f'Set stock of {self.main_shop_item}'
+
+
+class ShopItemLinksSetStock(models.Model):
+    main_shop_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE,
+                                       related_name='main_item_link_set_stocks')
+    shop_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE,
+                                  related_name='shop_items_link_set_stocks', null=True, blank=True)
+    link = models.URLField(null=True, blank=True, max_length=1000)
+
+    def __str__(self):
+        return f'Link{self.link}'
 
 
 class ShopItemSizeCount(models.Model):
-    size_format = models.ForeignKey(SizeFormat, related_name='shop_item_size_counts', on_delete=models.CASCADE,
-                                    blank=True)
-    stock_cart = models.ForeignKey(StockCart, related_name='shop_item_size_counts', on_delete=models.CASCADE,
-                                   blank=True)
-    quantity = models.IntegerField(default=0)
+    main_shop_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE,
+                                       related_name='shop_item_size_counts')
+    size = models.ForeignKey(SizeFormat, on_delete=models.CASCADE, related_name='shop_item_size_counts', null=True,
+                             blank=True)
+    count = models.IntegerField(null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Shop item size quantity'
-        verbose_name_plural = 'Shop item sizes quantity'
+        unique_together = ('main_shop_item', 'size')
 
     def __str__(self):
-        return f'{self.size_format} - {self.quantity}'
-
-
-class ShopItemLinkForCollection(models.Model):
-    link = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = 'Shop item link for collection'
-        verbose_name_plural = 'Shop item links for collection'
-
-    def __str__(self):
-        return f'{self.id}'
-
-
-class ShopItemCollections(models.Model):
-    main_item = models.ForeignKey("shop.ShopItem", related_name='shop_collections', on_delete=models.CASCADE,
-                                  blank=True)
-    related_items = models.ManyToManyField("shop.ShopItem", related_name='shop_item_collections', blank=True)
-    related_item_links = models.ManyToManyField(ShopItemLinkForCollection, related_name='shop_item_link_collections', blank=True)
-
-    class Meta:
-        verbose_name = 'Shop item collection'
-        verbose_name_plural = 'Shop item collections'
-
-    def __str__(self):
-        return f'{self.id} - {self.main_item}'
+        return f'size count of shop item - {self.main_shop_item}'

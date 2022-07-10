@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampModel, File, FileVideo
 from organizations.models import Organization
-from stock.models import CriteriaSubcategory
+from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
 from users.models import User
 from utils.translator import GoogleTranslator
@@ -63,6 +63,8 @@ class ShopItem(models.Model):
 
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)
+
+    available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
 
     @property
     def liked_users_list(self):

@@ -208,8 +208,12 @@ class ShopItemSetListView(ListAPIView):
     serializer_class = ShopItemSetSerializer
 
     def get_queryset(self):
-        shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
-        return shop_item_stock.shop_item.all()
+        try:
+            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
+            return shop_item_stock.shop_item.all()
+        except ShopItemSetStock.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemSetStock not found'))
+
 
 
 class ShopItemLinkSetListView(ListAPIView):

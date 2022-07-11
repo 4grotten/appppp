@@ -127,7 +127,7 @@ class StockService:
     @classmethod
     def get_shop_item_by_link(cls, link):
         shop_item_id = [int(s) for s in re.findall(r'\b\d+\b', link)]
-        return ShopItemService.get(id=shop_item_id[0])
+        return ShopItemService.get(id=shop_item_id[1])
 
 
 # @classmethod
@@ -187,7 +187,8 @@ class StockService:
     @classmethod
     def get_organization_delivery_info(cls, organization_id, start_time, end_time):
         return Transaction.objects.filter(
-            Q(organization__id=organization_id) & Q(created_at__gte=start_time) & Q(created_at__lte=end_time))
+            Q(organization__id=organization_id) & Q(created_at__gte=start_time) & Q(created_at__lte=end_time))\
+            .order_by('-id')
 
 
     @classmethod

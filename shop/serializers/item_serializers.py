@@ -123,6 +123,10 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             instance.article = f"ART{instance.id}"
             instance.save(update_fields=('article',))
 
+        if self.validated_data.get('price') == 0.00:
+            instance.price = None
+            instance.save()
+
         organization_data = self.validated_data.get('organization')
         Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
 

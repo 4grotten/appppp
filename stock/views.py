@@ -302,8 +302,14 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             df_deals.to_excel(writer, sheet_name='Сделки', index=False)
             df_items.to_excel(writer, sheet_name='Товары', index=False)
             writer.save()
-            filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
-                                                               end_time=self.request.query_params.get('end_time'))
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
+                                                                   end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
             response = HttpResponse(
                 b.getvalue(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

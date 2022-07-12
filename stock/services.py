@@ -1,6 +1,6 @@
 import re
 
-from django.db.models import Q
+from django.db.models import Q, Min, Max
 from transliterate.utils import _
 
 from imports.admin import User
@@ -186,10 +186,19 @@ class StockService:
 
     @classmethod
     def get_organization_delivery_info(cls, organization_id, start_time, end_time):
-        return Transaction.objects.filter(
-            Q(organization__id=organization_id) & Q(created_at__gte=start_time) & Q(created_at__lte=end_time))\
-            .order_by('-id')
+        if start_time and end_time:
+            return Transaction.objects.filter(
+                Q(organization__id=organization_id) & Q(created_at__gte=start_time) & Q(created_at__lte=end_time))\
+                .order_by('-id')
+        else:
+            return Transaction.objects.filter(organization__id=organization_id).order_by('-id')
 
+    @classmethod
+    def get_organization_delivery_min_and_max_date_info(cls, organization_id):
+        date_dictionary = Transaction.objects.filter(organization__id=organization_id).aggregate(Min('created_at'), Max('created_at'))
+        start_date = date_dictionary['created_at__min'].strftime("%Y-%m-%d")
+        end_date = date_dictionary['created_at__max'].strftime("%Y-%m-%d")
+        return start_date, end_date
 
     @classmethod
     def get_dict_data_for_deals(cls, queryset):

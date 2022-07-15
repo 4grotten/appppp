@@ -83,11 +83,17 @@ class File(TimestampModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if self.image_url and not self.file:
-            result = request.urlretrieve(self.image_url)
-            self.file.save(
-                os.path.basename(self.image_url),
-                Files(open(result[0], 'rb'))
-            )
+            counter = 0
+            while counter <= 10:
+                try:
+                    result = request.urlretrieve(self.image_url)
+                    self.file.save(
+                        os.path.basename(self.image_url),
+                        Files(open(result[0], 'rb'))
+                    )
+                    break
+                except:
+                    continue
         super(File, self).save()
 
     class Meta:

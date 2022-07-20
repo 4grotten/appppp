@@ -1,5 +1,7 @@
 from django.contrib import admin
-from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory
+from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemSetStock, ShopItemLinksSetStock, \
+    ShopItemSizeCount
+
 
 class ShopItemSizeInLine(admin.TabularInline):
     model = SizeFormat
@@ -28,4 +30,19 @@ class FormatCriteriaAdmin(admin.ModelAdmin):
 @admin.register(SizeFormat)
 class SizeFormatAdmin(admin.ModelAdmin):
     list_display = ('size', 'format_criteria', 'order')
+
+
+@admin.register(ShopItemSetStock)
+class ShopItemSetStockAdmin(admin.ModelAdmin):
+    list_display = ('main_shop_item',)
+
+
+@admin.register(ShopItemLinksSetStock)
+class ShopItemLinksSetStockAdmin(admin.ModelAdmin):
+    list_display = ('main_shop_item',)
+
+
+@admin.register(ShopItemSizeCount)
+class ShopItemSizeCountAdmin(admin.ModelAdmin):
+    list_display = ('main_shop_item', 'size', 'count')
 

@@ -88,7 +88,17 @@ class StockSerializer(serializers.ModelSerializer):
     available_sizes = SizeFormatSerializer(many=True)
 
     def get_criteria_subcategory(self, item: ShopItem):
-        return CriteriaSubcategory.objects.get(item_subcategories=item.subcategory).name
+        criteria_subcategory = CriteriaSubcategory.objects.filter(item_subcategories=item.subcategory).exists()
+        if criteria_subcategory:
+            criteria_subcategory = CriteriaSubcategory.objects.get(item_subcategories=item.subcategory)
+            icon = ImageSerializer(
+                criteria_subcategory.icon, context=self.context).data if criteria_subcategory.icon else None
+            return {
+                'id': criteria_subcategory.id,
+                'name': criteria_subcategory.name,
+                'icon': icon,
+            }
+        return None
 
     def get_item_quantity(self, item: ShopItem):
         count = ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total']
@@ -104,6 +114,7 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = ('criteria_subcategory', 'available_sizes', 'collection_items_quantity', 'item_quantity')
+
 
 # class FillStockCollectionBySizaSerializer(serializers.Serializer):
 #     available_sizes = serializers.ListSerializer(child=serializers.IntegerField(), required=False, default=[])

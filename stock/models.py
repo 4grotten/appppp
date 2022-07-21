@@ -1,5 +1,7 @@
 from django.db import models
 
+from common.models import File
+
 
 class FormatCriteria(models.Model):
     name = models.CharField(max_length=255)
@@ -12,6 +14,7 @@ class CriteriaSubcategory(models.Model):
     name = models.CharField(max_length=255)
     format_criteria = models.ManyToManyField(FormatCriteria, related_name='criteria_subcategories',
                                              blank=True)
+    icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Criterion of subcategory'

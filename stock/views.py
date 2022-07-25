@@ -17,13 +17,21 @@ from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, Sh
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
     LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
-    AddShopItemSizeCountSetSerializer, StockSerializer
+    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer
 from stock.services import StockService
 
 
 class StockView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = StockSerializer
+
+    def get_object(self):
+        return ShopItem.objects.get(id=self.kwargs['pk'])
+
+
+class StockSetsView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = StockSetsSerializer
 
     def get_object(self):
         return ShopItem.objects.get(id=self.kwargs['pk'])
@@ -184,16 +192,6 @@ class DeleteShopItemSizeCountView(DestroyAPIView):
         }, status=status.HTTP_200_OK)
 
 
-# class RemoveShopItemSizeQuantity(DestroyAPIView):
-#     permission_classes = (IsAuthenticated,)
-#
-#     def delete(self, request, *args, **kwargs):
-#         StockService.remove_shop_item_size_quantity(item_size_quantity_id=self.kwargs['pk'])
-#         return Response(data={
-#             'message': 'successful remove',
-#         }, status=status.HTTP_200_OK)
-
-
 class DownloadOrgDeliveryInfoAPIView(APIView):
     # permission_classes = (IsAuthenticated,)
 
@@ -229,32 +227,3 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             )
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
-
-#
-# class GetOrCreateStockCollection(GenericAPIView):
-#     permission_classes = (IsAuthenticated,)
-#
-#     def get(self, request, *args, **kwargs):
-#         StockService.get_or_create_stock_collection(shop_item_id=self.kwargs['pk'])
-#         return Response(data={
-#             'message': _('Success')
-#         }, status=status.HTTP_200_OK)
-
-#
-# class FillStockCollectionBySiza(CreateAPIView):
-#     permission_classes = (IsAuthenticated,)
-#     serializer_class = GetOrCreateStockCollectionSerializer
-#
-#     def create(self, request, *args, **kwargs):
-#         serializer = FillStockCollectionBySizaSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return Response(data={
-#                 'message': _('Invalid input'),
-#                 'errors': serializer.errors
-#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-#
-#         stock_collection = StockService.fill_stock_collection_by_sizes(shop_item_id=self.kwargs['shop_item_id'],
-#                                                                        criteria_id=self.kwargs['criteria_id'],
-#                                                                        sizes=serializer.validated_data[
-#                                                                            'available_sizes'])
-#         return Response(self.serializer_class(stock_collection).data, status=status.HTTP_201_CREATED)

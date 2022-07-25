@@ -1,13 +1,10 @@
 import re
 
 from django.db.models import Q, Min, Max
-from transliterate.utils import _
 
 from imports.admin import User
 from organizations.models import Organization
-from shop.models import ShopItem
-from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemSetStock, ShopItemLinksSetStock, \
-    ShopItemSizeCount
+from stock.models import ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
 from transactions.models import Transaction
 from transliterate.utils import _
 
@@ -17,18 +14,7 @@ from shop.services.item_services import ShopItemService
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory
 
 
-# , StockCart, ShopItemSizeCount, \
-# ShopItemCollections, ShopItemLinkForCollection
-
-
 class StockService:
-
-    # @classmethod
-    # def get(cls, **filters):
-    #     try:
-    #         return StockCart.objects.get(**filters)
-    #     except StockCart.DoesNotExist:
-    #         raise ObjectNotFoundException(_('Stock cart not found'))
 
     @classmethod
     def get_size_format(cls, **filters):
@@ -37,23 +23,6 @@ class StockService:
         except SizeFormat.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
-    # @classmethod
-    # def create_stock_cart(cls, shop_item_id: int, avaliable_sizes: list):
-    #     shop_item = ShopItemService.get(id=shop_item_id)
-    #
-    #     avaliable_sizes_list = []
-    #     for i in avaliable_sizes:
-    #         avaliable_sizes_list.append(cls.get_size_format(id=i))
-    #     stock_cart, created = StockCart.objects.get_or_create(shop_item=shop_item)
-    #
-    #     if created:
-    #         stock_cart.available_size.add(*avaliable_sizes_list)
-    #     else:
-    #         stock_cart.available_size.clear()
-    #         stock_cart.available_size.add(*avaliable_sizes_list)
-
-    # return stock_cart
-    # shop_item_id = [int(s) for s in re.findall(r'\b\d+\b', item_link)]
     @classmethod
     def add_shop_items_sets_in_stock(cls, main_item: int, shop_items=None):
         shop_item_stock, _ = ShopItemSetStock.objects.get_or_create(main_shop_item=main_item)
@@ -129,60 +98,20 @@ class StockService:
         shop_item_id = [int(s) for s in re.findall(r'\b\d+\b', link)]
         return ShopItemService.get(id=shop_item_id[1])
 
-
-# @classmethod
-# def add_size_quantity(cls, stock_cart_id: int, size_format: SizeFormat, quantity: int):
-#     try:
-#         size_format = SizeFormat.objects.get(id=size_format.id)
-#         stock_cart = StockCart.objects.get(id=stock_cart_id)
-#     except StockCart.DoesNotExist:
-#         raise ObjectNotFoundException(_('StockCart or SizeFormat not found'))
-#     item_size_quantity, created = ShopItemSizeCount.objects.get_or_create(size_format=size_format,
-#                                                                           stock_cart=stock_cart)
-#     item_size_quantity.quantity = quantity
-#     item_size_quantity.save()
-#     return item_size_quantity
-#
-# @classmethod
-# def get_or_create_stock_collection(cls, shop_item_id):
-#     shop_item = ShopItemService.get(id=shop_item_id)
-#     if not StockCollection.objects.filter(shop_item=shop_item).exists():
-#         StockCollection.objects.create(shop_item=shop_item)
-#
-# @classmethod
-# def fill_stock_collection_by_sizes(cls, shop_item_id, criteria_id, sizes):
-#     shop_item = ShopItemService.get(id=shop_item_id)
-#     criteria = CriteriaSubcategory.objects.get(id=criteria_id)
-#     if StockCollection.objects.filter(shop_item=shop_item, criteria=None).exists():
-#         stock_collection = StockCollection.objects.get(shop_item=shop_item, criteria=None)
-#         stock_collection.criteria = criteria
-#         stock_collection.save()
-#     else:
-#         stock_collection, _ = StockCollection.objects.get_or_create(shop_item=shop_item, criteria=criteria)
-#     sizes_to_fill = []
-#     for i in sizes:
-#         sizes_to_fill.append(SizeFormat.objects.get(id=i))
-#     stock_collection.available_sizes.clear()
-#     stock_collection.available_sizes.add(*sizes_to_fill)
-#     return stock_collection
-
     @classmethod
     def get_criteria_by_subcategory_id(cls, subcategory_id):
         return CriteriaSubcategory.objects.filter(
             item_subcategories__id=subcategory_id)
-
 
     @classmethod
     def get_format_by_criteria_subcategory_id(cls, criteria_subcategory_id):
         return FormatCriteria.objects.filter(
             criteria_subcategories__id=criteria_subcategory_id)
 
-
     @classmethod
     def get_sizes_by_format_id(cls, format_criteria_id):
         return SizeFormat.objects.select_related('format_criteria').filter(
             format_criteria__id=format_criteria_id).order_by('order')
-
 
     @classmethod
     def get_organization_delivery_info(cls, organization_id, start_time, end_time):

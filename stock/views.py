@@ -1,3 +1,4 @@
+from django.db.models import OuterRef, Subquery
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
@@ -133,7 +134,8 @@ class ShopItemLinkSetListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return ShopItemLinksSetStock.objects.filter(main_shop_item__id=self.kwargs['pk'])
+        item = ShopItem.objects.get(id=self.kwargs['pk'])
+        return ShopItem.objects.filter(shop_items_link_set_stocks__main_shop_item=item)
 
 
 class GetNotChoosenSizeListView(ListAPIView):

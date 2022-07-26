@@ -57,8 +57,10 @@ class StockService:
     @classmethod
     def add_shop_items_size_count(cls, main_item, size=None, count=None):
         shop_item = ShopItemService.get(id=main_item)
-        shop_item_size_count, _ = ShopItemSizeCount.objects.get_or_create(main_shop_item=shop_item, size=size)
+        shop_item_size_count, _ = ShopItemSizeCount.objects.get_or_create(main_shop_item=shop_item)
         shop_item_size_count.count = count
+        if size is not None:
+            shop_item_size_count.size = size
         shop_item_size_count.save()
         return shop_item_size_count
 

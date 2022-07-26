@@ -53,7 +53,7 @@ class ShopItemLinksSetStock(models.Model):
     link = models.URLField(null=True, blank=True, max_length=1000)
 
     def __str__(self):
-        return f'Link{self.link}'
+        return f'Link {self.link}'
 
 
 class ShopItemSizeCount(models.Model):

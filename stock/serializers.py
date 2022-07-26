@@ -56,11 +56,16 @@ class ShopItemSetSerializer(serializers.ModelSerializer):
 
 
 class ShopItemLinkSetSerializer(serializers.ModelSerializer):
-    shop_item = ShopItemShortSerializer()
+    images = ImageSerializer(many=True)
+    subcategory = SubcategorySerializer()
+    link = serializers.SerializerMethodField()
+
+    def get_link(self, item: ShopItem):
+        return ShopItemLinksSetStock.objects.get(shop_item=item).link
 
     class Meta:
-        model = ShopItemLinksSetStock
-        fields = ('id', 'shop_item', 'link')
+        model = ShopItem
+        fields = ('id', 'name', 'images', 'subcategory', 'link')
 
 
 class LinkStockSerializer(serializers.Serializer):

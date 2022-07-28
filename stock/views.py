@@ -1,4 +1,3 @@
-from django.db.models import OuterRef, Subquery
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
@@ -41,6 +40,7 @@ class StockSetsView(RetrieveAPIView):
 class CriteriaSubcategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CriteriaSubcategorySerializer
+    pagination_class = None
 
     def get_queryset(self):
         return StockService.get_criteria_by_subcategory_id(self.kwargs['pk'])
@@ -49,6 +49,7 @@ class CriteriaSubcategoryListView(ListAPIView):
 class FormatCriteriaListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = FormatCriteriaSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return StockService.get_format_by_criteria_subcategory_id(self.kwargs['pk'])
@@ -57,6 +58,7 @@ class FormatCriteriaListView(ListAPIView):
 class SizeByFormatListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SizeFormatSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return StockService.get_sizes_by_format_id(self.kwargs['pk'])
@@ -65,6 +67,7 @@ class SizeByFormatListView(ListAPIView):
 class AvailableSizeListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SizeFormatSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return SizeFormat.objects.filter(shop_items=self.kwargs['pk'])
@@ -105,6 +108,7 @@ class ShopItemsSetCreateView(CreateAPIView):
 class GetShopItemByLink(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ShopItemShortSerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         serializer = LinkStockSerializer(data=request.data)
@@ -132,6 +136,7 @@ class ShopItemSetListView(ListAPIView):
 class ShopItemLinkSetListView(ListAPIView):
     serializer_class = ShopItemLinkSetSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = None
 
     def get_queryset(self):
         item = ShopItem.objects.get(id=self.kwargs['pk'])
@@ -141,6 +146,7 @@ class ShopItemLinkSetListView(ListAPIView):
 class GetNotChoosenSizeListView(ListAPIView):
     serializer_class = SizeFormatSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = None
 
     def get_queryset(self):
         return StockService.get_not_choosen_size(main_item=self.kwargs['pk'])
@@ -149,6 +155,7 @@ class GetNotChoosenSizeListView(ListAPIView):
 class ShopItemSizeCountView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ShopItemSizeCountSetSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return ShopItemSizeCount.objects.filter(main_shop_item=self.kwargs['pk'])

@@ -3,7 +3,7 @@ from django.urls import path
 from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSubcategoryListView, \
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
-    DeleteShopItemSizeCountView, StockView, StockSetsView
+    DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -23,6 +23,7 @@ urlpatterns = [
 
     path('get_stock/<int:pk>/', StockView.as_view(), name='get_stock'),
     path('get_stock_sets/<int:pk>/', StockSetsView.as_view(), name='get_stock_sets'),
+    path('get_stock_set_items/<int:pk>/', StockSetItemsView.as_view(), name='get_stock_set_items'),
 
     path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryInfoAPIView.as_view(),
          name='download_organization_delivery_info'),

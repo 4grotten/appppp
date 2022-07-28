@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
@@ -35,6 +36,21 @@ class StockSetsView(RetrieveAPIView):
 
     def get_object(self):
         return ShopItem.objects.get(id=self.kwargs['pk'])
+
+
+class StockSetItemsView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemSetSerializer
+
+    def get_queryset(self):
+        try:
+            main_shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
+            return ShopItem.objects.filter(
+                Q(shop_items_set_stocks__main_shop_item=main_shop_item) |
+                Q(shop_items_link_set_stocks__main_shop_item=main_shop_item)
+            )
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItem not found'))
 
 
 class CriteriaSubcategoryListView(ListAPIView):

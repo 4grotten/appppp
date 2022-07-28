@@ -98,7 +98,7 @@ class StockService:
     @classmethod
     def get_shop_item_by_link(cls, link):
         shop_item_id = [int(s) for s in re.findall(r'\b\d+\b', link)]
-        return ShopItemService.get(id=shop_item_id[1])
+        return ShopItemService.get(id=shop_item_id[0])
 
     @classmethod
     def get_criteria_by_subcategory_id(cls, subcategory_id):

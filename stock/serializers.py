@@ -143,4 +143,7 @@ class CreateAvailableSizesSerializer(serializers.Serializer):
 
 class ShopItemsSetSerializer(serializers.Serializer):
     shop_items_set = serializers.ListSerializer(child=serializers.IntegerField(), required=False, default=[])
+
+
+class ShopLinkItemsSetSerializer(serializers.Serializer):
     shop_items_link_set = serializers.ListSerializer(child=serializers.CharField(), required=False, default=[])

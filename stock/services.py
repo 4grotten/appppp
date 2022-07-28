@@ -24,35 +24,35 @@ class StockService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
-    def add_shop_items_sets_in_stock(cls, main_item: int, shop_items=None):
-        shop_item_stock, _ = ShopItemSetStock.objects.get_or_create(main_shop_item=main_item)
-        shop_items_list = []
-        if shop_items:
-            for i in shop_items:
-                shop_item = ShopItemService.get(id=i)
-                shop_items_list.append(shop_item)
-        shop_item_stock.shop_item.clear()
-        shop_item_stock.shop_item.add(*shop_items_list)
-
-    @classmethod
-    def add_shop_items_links_sets_in_stock(cls, main_item, shop_item_links=None):
-        # shop_item_stock, _ = ShopItemLinksSetStock.objects.get_or_create(shop_item=main_item)
-        if shop_item_links:
-            for link in shop_item_links:
-                shop_item_by_link = [int(s) for s in re.findall(r'\b\d+\b', link)]
-                shop_item = ShopItemService.get(id=shop_item_by_link[0])
-                ShopItemLinksSetStock.objects.get_or_create(main_shop_item=main_item, shop_item=shop_item, link=link)
-
-    @classmethod
-    def add_shop_items_sets(cls, main_item: int, shop_items=None, shop_item_links=None):
+    def add_shop_items_sets(cls, main_item: int, shop_items=None):
         try:
             main_item = ShopItem.objects.get(id=main_item)
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('Shop item not found'))
-        if shop_items:
-            cls.add_shop_items_sets_in_stock(main_item=main_item, shop_items=shop_items)
-        if shop_item_links:
-            cls.add_shop_items_links_sets_in_stock(main_item=main_item, shop_item_links=shop_item_links)
+
+        shop_item_stock, created = ShopItemSetStock.objects.get_or_create(main_shop_item=main_item)
+        shop_items_list = []
+        for i in shop_items:
+            shop_item = ShopItemService.get(id=i)
+            shop_items_list.append(shop_item)
+        shop_item_stock.shop_item.clear()
+        shop_item_stock.shop_item.add(*shop_items_list)
+
+    @classmethod
+    def add_shop_link_items_sets(cls, main_item: int, shop_item_links=None):
+        try:
+            main_item = ShopItem.objects.get(id=main_item)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
+
+        ShopItemLinksSetStock.objects.filter(main_shop_item=main_item).delete()
+
+        shop_link_items_list = []
+        for link in shop_item_links:
+            shop_item_by_link = [int(s) for s in re.findall(r'\b\d+\b', link)]
+            shop_item = ShopItemService.get(id=shop_item_by_link[0])
+            shop_link_items_list.append(shop_item)
+            ShopItemLinksSetStock.objects.get_or_create(main_shop_item=main_item, shop_item=shop_item, link=link)
 
     @classmethod
     def add_shop_items_size_count(cls, main_item, size=None, count=None):

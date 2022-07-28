@@ -18,7 +18,7 @@ from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, Sh
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
     LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
-    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer
+    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, ShopLinkItemsSetSerializer
 from stock.services import StockService
 
 
@@ -113,9 +113,25 @@ class ShopItemsSetCreateView(CreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         shop_items_set = serializer.validated_data['shop_items_set']
+        StockService.add_shop_items_sets(main_item=self.kwargs['pk'], shop_items=shop_items_set)
+        return Response(data={
+            'message': _('Successfully add set.')
+        }, status=status.HTTP_200_OK)
+
+
+class ShopLinkItemsSetCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopLinkItemsSetSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': 'Invalid input',
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
         shop_items_link_set = serializer.validated_data['shop_items_link_set']
-        StockService.add_shop_items_sets(main_item=self.kwargs['pk'], shop_items=shop_items_set,
-                                         shop_item_links=shop_items_link_set)
+        StockService.add_shop_link_items_sets(main_item=self.kwargs['pk'], shop_item_links=shop_items_link_set)
         return Response(data={
             'message': _('Successfully add set.')
         }, status=status.HTTP_200_OK)

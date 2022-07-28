@@ -3,7 +3,7 @@ from django.urls import path
 from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSubcategoryListView, \
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
-    DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView
+    DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -11,7 +11,10 @@ urlpatterns = [
     path('size_by_format/<int:pk>/', SizeByFormatListView.as_view(), name='size_by_format'),
 
     path('available_sizes/shop_items/<int:pk>/', AvailableSizeListCreateView.as_view(), name='available_sizes'),
+
     path('add_shop_items_set/<int:pk>/', ShopItemsSetCreateView.as_view(), name='shop_items_set'),
+    path('add_shop_link_items_set/<int:pk>/', ShopLinkItemsSetCreateView.as_view(), name='shop_link_items_set'),
+
     path('get_shop_item_by_link/', GetShopItemByLink.as_view(), name='get_shop_item_by_link'),
     path('get_shop_item_set/<int:pk>/', ShopItemSetListView.as_view(), name='get_shop_item_by_link'),
     path('get_shop_item_link_set/<int:pk>/', ShopItemLinkSetListView.as_view(), name='get_shop_item_by_link'),

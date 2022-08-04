@@ -21,7 +21,7 @@ class FormatCriteriaSerializer(serializers.ModelSerializer):
 class SizeFormatSerializer(serializers.ModelSerializer):
     class Meta:
         model = SizeFormat
-        fields = ('id', 'size',)
+        fields = ('id', 'size', 'format_criteria')
 
 
 class ShopItemsAvailableSizesSerializer(serializers.ModelSerializer):
@@ -52,19 +52,23 @@ class ShopItemSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'name', 'images', 'subcategory')
+        fields = ('id', 'organization', 'name', 'images', 'subcategory', 'price', 'discounted_price')
 
 
 class ShopItemLinkSetSerializer(serializers.ModelSerializer):
-    images = ImageSerializer(many=True)
-    link = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
-    def get_link(self, item: ShopItem):
-        return ShopItemLinksSetStock.objects.get(shop_item=item).link
+    def get_name(self, stock: ShopItemLinksSetStock):
+        return stock.shop_item.name
+
+    def get_images(self, stock: ShopItemLinksSetStock):
+        images = stock.shop_item.images.all()
+        return ImageSerializer(images, many=True, context=self.context).data
 
     class Meta:
-        model = ShopItem
-        fields = ('id', 'images', 'link')
+        model = ShopItemLinksSetStock
+        fields = ('id', 'name', 'images', 'link')
 
 
 class LinkStockSerializer(serializers.Serializer):

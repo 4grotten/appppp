@@ -171,8 +171,10 @@ class ShopItemLinkSetListView(ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        item = ShopItem.objects.get(id=self.kwargs['pk'])
-        return ShopItem.objects.filter(shop_items_link_set_stocks__main_shop_item=item)
+        try:
+            return ShopItemLinksSetStock.objects.filter(main_shop_item_id=self.kwargs['pk'])
+        except ShopItemLinksSetStock.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemLinksSetStock not found'))
 
 
 class GetNotChoosenSizeListView(ListAPIView):
@@ -199,7 +201,10 @@ class ShopItemSizeCountView(ListCreateAPIView):
                 'message': 'Invalid input',
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        size = serializer.validated_data['size']
+        try:
+            size = serializer.validated_data['size']
+        except:
+            size = None
         count = serializer.validated_data['count']
         size_count = StockService.add_shop_items_size_count(main_item=self.kwargs['pk'], size=size,
                                                             count=count)
@@ -255,12 +260,14 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             df_items.to_excel(writer, sheet_name='Товары', index=False)
             writer.save()
             if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
-                filename = '{start_time} - {end_time}.xlsx'.format(start_time=self.request.query_params.get('start_time'),
-                                                                   end_time=self.request.query_params.get('end_time'))
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
                 if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
                     filename = f'{self.request.query_params.get("start_time")}.xlsx'
             else:
-                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(organization_id=self.kwargs['pk'])
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
                 filename = f'{start_date} - {end_date} (all time report).xlsx'
             response = HttpResponse(
                 b.getvalue(),

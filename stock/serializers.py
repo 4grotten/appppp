@@ -19,6 +19,7 @@ class FormatCriteriaSerializer(serializers.ModelSerializer):
 
 
 class SizeFormatSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = SizeFormat
         fields = ('id', 'size', 'format_criteria')
@@ -53,6 +54,23 @@ class ShopItemSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = ('id', 'organization', 'name', 'images', 'subcategory', 'price', 'discounted_price')
+
+
+class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    subcategory = SubcategorySerializer()
+    in_set = serializers.SerializerMethodField()
+
+    def get_in_set(self, item: ShopItem):
+        main_shop_item = ShopItem.objects.get(id=self.context['main_shop_item_id'])
+        stock_items = ShopItem.objects.filter(shop_items_set_stocks__main_shop_item=main_shop_item)
+        if item in stock_items:
+            return True
+        return False
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'organization', 'name', 'images', 'subcategory', 'price', 'discounted_price', 'in_set')
 
 
 class ShopItemLinkSetSerializer(serializers.ModelSerializer):
@@ -151,3 +169,15 @@ class ShopItemsSetSerializer(serializers.Serializer):
 
 class ShopLinkItemsSetSerializer(serializers.Serializer):
     shop_items_link_set = serializers.ListSerializer(child=serializers.CharField(), required=False, default=[])
+
+
+class OrganizationSubcategorySerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, subcategory: ItemSubcategory):
+        return ImageSerializer(
+            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
+
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name', 'icon')

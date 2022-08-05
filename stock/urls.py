@@ -3,7 +3,8 @@ from django.urls import path
 from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSubcategoryListView, \
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
-    DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView
+    DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
+    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -12,14 +13,22 @@ urlpatterns = [
 
     path('available_sizes/shop_items/<int:pk>/', AvailableSizeListCreateView.as_view(), name='available_sizes'),
 
-    path('add_shop_items_set/<int:pk>/', ShopItemsSetCreateView.as_view(), name='shop_items_set'),
-    path('add_shop_link_items_set/<int:pk>/', ShopLinkItemsSetCreateView.as_view(), name='shop_link_items_set'),
+    path('add_shop_items_set/<int:pk>/', ShopItemsSetCreateView.as_view(), name='add_shop_items_set'),
+    path('add_shop_link_items_set/<int:pk>/', ShopLinkItemsSetCreateView.as_view(), name='add_shop_link_items_set'),
 
     path('get_shop_item_by_link/', GetShopItemByLink.as_view(), name='get_shop_item_by_link'),
-    path('get_shop_item_set/<int:pk>/', ShopItemSetListView.as_view(), name='get_shop_item_by_link'),
-    path('get_shop_item_link_set/<int:pk>/', ShopItemLinkSetListView.as_view(), name='get_shop_item_by_link'),
+
+    path('get_organization_shop_items_in_set/<int:pk>/', OrganizationShopItemsInSetListView.as_view(),
+         name='get_organization_shop_items_in_set'),
+    path('get_organization_category_list/<int:pk>/', OrganizationSubcategoryListView.as_view(),
+         name='get_organization_category_list'),
+
+    path('get_shop_item_set/<int:pk>/', ShopItemSetListView.as_view(), name='get_shop_item_set'),
+    path('get_shop_item_link_set/<int:pk>/', ShopItemLinkSetListView.as_view(), name='get_shop_item_link_set'),
+
     path('shop_item_size_count/<int:pk>/', ShopItemSizeCountView.as_view(), name='get_shop_item_size_count'),
     path('get_not_choosen_sizes/<int:pk>/', GetNotChoosenSizeListView.as_view(), name='get_not_choosen_sizes'),
+
     path('delete_stock/<int:pk>/', DeleteStockView.as_view(), name='delete_stock'),
     path('delete_shop_item_size/<int:pk>/', DeleteShopItemSizeCountView.as_view(), name='delete_shop_item_size'),
 

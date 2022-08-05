@@ -12,13 +12,14 @@ from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from shop.models import ShopItem
+from shop.models import ShopItem, ItemSubcategory
 from shop.services.item_services import ShopItemService
 from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
     LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
-    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, ShopLinkItemsSetSerializer
+    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, ShopLinkItemsSetSerializer, \
+    OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer
 from stock.services import StockService
 
 
@@ -165,6 +166,42 @@ class ShopItemSetListView(ListAPIView):
             raise ObjectNotFoundException(_('ShopItemSetStock not found'))
 
 
+class OrganizationSubcategoryListView(ListAPIView):
+    serializer_class = OrganizationSubcategorySerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        main_item = ShopItemService.get(id=self.kwargs['pk'])
+        return ItemSubcategory.objects.filter(organization=main_item.organization)
+
+
+class OrganizationShopItemsInSetListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationShopItemsInSetSerializer
+
+    def get_serializer_context(self):
+        context = super(OrganizationShopItemsInSetListView, self).get_serializer_context()
+        context['main_shop_item_id'] = self.kwargs['pk']
+        return context
+
+    def get(self, request, *args, **kwargs):
+        try:
+            shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
+            if self.request.query_params:
+                subcategory = self.request.query_params['subcategory']
+                queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)
+            else:
+                queryset = ShopItem.objects.filter(organization=shop_item.organization)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItem not found'))
+        serializer = OrganizationShopItemsInSetSerializer(queryset, many=True,
+                                                          context={'main_shop_item_id': self.kwargs['pk']})
+        serializer_data = sorted(
+            serializer.data, key=lambda k: k['in_set'], reverse=True)
+        self.paginate_queryset(queryset)
+        return self.paginator.get_paginated_response(serializer_data)
+
+
 class ShopItemLinkSetListView(ListAPIView):
     serializer_class = ShopItemLinkSetSerializer
     permission_classes = (IsAuthenticated,)
@@ -231,11 +268,13 @@ class DeleteShopItemSizeCountView(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
     def destroy(self, request, *args, **kwargs):
-        ShopItemSizeCount.objects.get(id=self.kwargs['pk']).delete()
-
-        return Response(data={
-            'message': _('Successfully deleted'),
-        }, status=status.HTTP_200_OK)
+        try:
+            ShopItemSizeCount.objects.get(id=self.kwargs['pk']).delete()
+            return Response(data={
+                'message': _('Successfully deleted'),
+            }, status=status.HTTP_200_OK)
+        except ShopItemSizeCount.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemSizeCount not found'))
 
 
 class DownloadOrgDeliveryInfoAPIView(APIView):

@@ -85,11 +85,24 @@ class StockService:
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('Shop item not found'))
 
+        format_criteria_list = []
+
+        for format in shop_item.available_sizes.all():
+            format_criteria_list.append(format.format_criteria)
+
         available_sizes_list = []
 
         for i in available_sizes:
             size = SizeFormat.objects.get(id=i)
             available_sizes_list.append(size)
+            if size.format_criteria not in format_criteria_list:
+                shop_item.available_sizes.clear()
+                ShopItemSizeCount.objects.filter(main_shop_item=shop_item).delete()
+
+        current_available_sizes = ShopItemSizeCount.objects.filter(main_shop_item=shop_item)
+        for size in current_available_sizes:
+            if size.size not in available_sizes_list:
+                size.delete()
 
         shop_item.available_sizes.clear()
         shop_item.available_sizes.add(*available_sizes_list)

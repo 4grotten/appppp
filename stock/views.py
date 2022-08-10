@@ -187,10 +187,10 @@ class OrganizationShopItemsInSetListView(ListAPIView):
     def get(self, request, *args, **kwargs):
         try:
             shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
-            if self.request.query_params:
+            try:
                 subcategory = self.request.query_params['subcategory']
                 queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)
-            else:
+            except:
                 queryset = ShopItem.objects.filter(organization=shop_item.organization)
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))

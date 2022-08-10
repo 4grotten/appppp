@@ -1,9 +1,11 @@
 import datetime
 
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
+from common.models import File
 from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
@@ -12,7 +14,7 @@ from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
-from stock.serializers import SizeFormatSerializer
+from stock.serializers import SizeFormatByItemSerializer
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):
@@ -27,10 +29,20 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     available_sizes = serializers.SerializerMethodField()
+    set_images = serializers.SerializerMethodField()
+
+    def get_set_images(self, item: ShopItem):
+        images = ShopItem.objects.filter(
+                Q(shop_items_set_stocks__main_shop_item=item) |
+                Q(shop_items_link_set_stocks__main_shop_item=item)
+            ).values('images')[:2]
+        image_ids = [i['images'] for i in images]
+        images = File.objects.filter(id__in=image_ids)
+        return ImageSerializer(images, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
         sizes = item.available_sizes.all()
-        return SizeFormatSerializer(sizes, many=True).data
+        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
@@ -64,7 +76,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_images'
         )
 
 
@@ -237,6 +249,11 @@ class ItemFeedSerializer(ItemListSerializer):
     updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
+    available_sizes = serializers.SerializerMethodField()
+
+    def get_available_sizes(self, item: ShopItem):
+        sizes = item.available_sizes.all()
+        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
 
     class Meta:
         model = ShopItem
@@ -246,7 +263,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count',
+            'instagram_data', 'is_updated', 'comment_count', 'available_sizes'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

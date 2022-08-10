@@ -19,10 +19,39 @@ class FormatCriteriaSerializer(serializers.ModelSerializer):
 
 
 class SizeFormatSerializer(serializers.ModelSerializer):
+    format_criteria = serializers.SerializerMethodField()
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, size_format: SizeFormat):
+        icon = CriteriaSubcategory.objects.get(format_criteria=size_format.format_criteria)
+        return ImageSerializer(icon.icon, context=self.context).data if icon else None
+
+    def get_format_criteria(self, size_format: SizeFormat):
+        return size_format.format_criteria.name
 
     class Meta:
         model = SizeFormat
-        fields = ('id', 'size', 'format_criteria')
+        fields = ('id', 'size', 'format_criteria', 'icon')
+
+
+class SizeFormatByItemSerializer(serializers.ModelSerializer):
+    count = serializers.SerializerMethodField()
+    format_criteria = serializers.SerializerMethodField()
+
+    def get_format_criteria(self, size_format: SizeFormat):
+        return size_format.format_criteria.name
+
+    def get_count(self, size_format: SizeFormat):
+        item = self.context['shop_item']
+        try:
+            size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count
+        except:
+            size_count = None
+        return size_count
+
+    class Meta:
+        model = SizeFormat
+        fields = ('id', 'size', 'count', 'format_criteria')
 
 
 class ShopItemsAvailableSizesSerializer(serializers.ModelSerializer):

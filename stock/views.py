@@ -13,6 +13,7 @@ from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
 from shop.models import ShopItem, ItemSubcategory
+from shop.services.category_services import ItemSubcategoryService
 from shop.services.item_services import ShopItemService
 from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
@@ -169,10 +170,15 @@ class ShopItemSetListView(ListAPIView):
 class OrganizationSubcategoryListView(ListAPIView):
     serializer_class = OrganizationSubcategorySerializer
     pagination_class = None
-
+    #
+    # def get_queryset(self):
+    #     main_item = ShopItemService.get(id=self.kwargs['pk'])
+    #     print(main_item.organization)
+    #     print(ItemSubcategory.objects.filter(organization_id=main_item.organization_id))
+    #     return ItemSubcategory.objects.filter(organization=main_item.organization)
     def get_queryset(self):
         main_item = ShopItemService.get(id=self.kwargs['pk'])
-        return ItemSubcategory.objects.filter(organization=main_item.organization)
+        return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)
 
 
 class OrganizationShopItemsInSetListView(ListAPIView):

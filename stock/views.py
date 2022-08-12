@@ -184,7 +184,7 @@ class OrganizationShopItemsInSetListView(ListAPIView):
         context['main_shop_item_id'] = self.kwargs['pk']
         return context
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         try:
             shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
             try:
@@ -194,11 +194,14 @@ class OrganizationShopItemsInSetListView(ListAPIView):
                 queryset = ShopItem.objects.filter(organization=shop_item.organization)
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
+        return self.paginate_queryset(queryset)
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
         serializer = OrganizationShopItemsInSetSerializer(queryset, many=True,
                                                           context={'main_shop_item_id': self.kwargs['pk']})
-        serializer_data = sorted(
-            serializer.data, key=lambda k: k['in_set'], reverse=True)
-        self.paginate_queryset(queryset)
+
+        serializer_data = sorted(serializer.data, key=lambda k: k['in_set'], reverse=True)
         return self.paginator.get_paginated_response(serializer_data)
 
 

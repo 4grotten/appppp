@@ -89,6 +89,10 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     subcategory = SubcategorySerializer()
     in_set = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
+
+    def get_currency(self, item: ShopItem):
+        return str(item.organization.currency)
 
     def get_in_set(self, item: ShopItem):
         main_shop_item = ShopItem.objects.get(id=self.context['main_shop_item_id'])
@@ -99,7 +103,7 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'organization', 'name', 'images', 'subcategory', 'price', 'discounted_price', 'in_set')
+        fields = ('id', 'organization', 'currency', 'name', 'images', 'subcategory', 'price', 'discounted_price', 'in_set')
 
 
 class ShopItemLinkSetSerializer(serializers.ModelSerializer):

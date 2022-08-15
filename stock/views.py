@@ -13,6 +13,7 @@ from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
 from shop.models import ShopItem, ItemSubcategory
+from shop.serializers.item_serializers import ItemRetrieveSerializer
 from shop.services.category_services import ItemSubcategoryService
 from shop.services.item_services import ShopItemService
 from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
@@ -42,7 +43,7 @@ class StockSetsView(RetrieveAPIView):
 
 class StockSetItemsView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ShopItemSetSerializer
+    serializer_class = ItemRetrieveSerializer
 
     def get_queryset(self):
         try:

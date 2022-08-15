@@ -266,6 +266,17 @@ class TransactionService:
             original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
             discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
         )
+        print('---------------------------------')
+        print('complete_online_transaction Service')
+        print(current_transaction)
+        print(current_transaction.cart)
+        print(current_transaction.cart.items.values_list('size'))
+        for cart_item in current_transaction.cart.items.all():
+            print(cart_item.item, 'ITEM')
+            print(cart_item.count, 'COUNT')
+            print(cart_item.size, 'SIZE')
+            print(cart_item.cart, 'CART')
+        print('---------------------------------')
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)

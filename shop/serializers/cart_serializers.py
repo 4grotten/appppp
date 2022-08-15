@@ -12,6 +12,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Cart, CartItem
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
+from stock.models import SizeFormat
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -19,7 +20,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ('item', 'count',)
+        fields = ('item', 'count', 'size')
 
 
 class CartItemUpdateSerializer(serializers.ModelSerializer):
@@ -129,6 +130,7 @@ class CartItemCountChangeSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(
         queryset=Organization.active_organizations.all(), required=False, allow_null=True
     )
+    size = serializers.PrimaryKeyRelatedField(queryset=SizeFormat.objects.all(), required=False, allow_null=True)
 
 
 class BulkCartItemCountChangeSerializer(serializers.Serializer):

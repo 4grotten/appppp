@@ -160,6 +160,15 @@ class CartService:
 
     @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
+        print('=======================================================================================================')
+        print('=======================================================================================================')
+        print('bulk update service')
+        print(cart.items.all())
+        for i in cart.items.all():
+            print(i.size)
+        print(items)
+        print('=======================================================================================================')
+        print('=======================================================================================================')
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException(_('No rights to change this cart'))
@@ -215,7 +224,8 @@ class CartItemService:
     @classmethod
     @transaction.atomic
     def change_cart_item_count(
-            cls, user: User, shop_item: ShopItem, change: int, organization: Optional[Organization]) -> int:
+            cls, user: User, shop_item: ShopItem, change: int, size: int, organization: Optional[Organization]
+    ) -> int:
         cart_organization = shop_item.organization
         if organization is not None:
             if not organization == shop_item.organization:
@@ -228,11 +238,10 @@ class CartItemService:
         if created:
             if change <= 0:
                 return 0
-            CartItem.objects.create(cart=cart, item=shop_item, count=change)
+            CartItem.objects.create(cart=cart, item=shop_item, count=change, size_id=size)
             return change
 
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, item=shop_item)
-
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, item=shop_item, size_id=size)
         if cart_item.count + change <= 0:
             cart_item.delete()
             if cart.items.count() == 0:
@@ -240,6 +249,7 @@ class CartItemService:
             return 0
         else:
             cart_item.count = F('count') + change
+            cart_item.size_id = size
             cart_item.save()
             cart_item.refresh_from_db()
             return cart_item.count

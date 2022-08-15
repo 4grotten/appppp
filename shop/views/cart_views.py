@@ -59,7 +59,12 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.get_related(id=kwargs['pk'])
-
+        print('=======================================================================================================')
+        print('=======================================================================================================')
+        print('bulk update put method')
+        print(serializer.validated_data)
+        print('=======================================================================================================')
+        print('=======================================================================================================')
         cart = CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
         data = TransactionWithClientSerializer(cart.transaction, context={'request': request}).data
         return Response(data)
@@ -75,18 +80,20 @@ class CartItemCountChangeView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        size = serializer.validated_data.get('size', None).id \
+            if serializer.validated_data.get('size', None) is not None else None
         new_count = CartItemService.change_cart_item_count(
             user=request.user, shop_item=serializer.validated_data['item'],
             change=serializer.validated_data['change'],
             organization=serializer.validated_data.get('organization', None),
+            size=size
         )
 
         data = {
             'item': serializer.validated_data['item'].id,
-            'count': new_count
+            'count': new_count,
+            'size': size
         }
-
         return Response(data)
 
 

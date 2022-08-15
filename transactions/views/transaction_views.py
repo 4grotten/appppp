@@ -117,13 +117,16 @@ class OnlineTransactionCompleteView(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        print('---------------------------------')
+        print('OnlineTransactionCompleteView')
+        print(serializer.data)
+        print('---------------------------------')
         TransactionService.complete_online_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),

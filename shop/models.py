@@ -149,6 +149,8 @@ class CartItem(TimestampModel):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_carts')
     count = models.PositiveSmallIntegerField(default=0)
+    size = models.ForeignKey('stock.SizeFormat', null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name='cart_item')
 
     def __str__(self):
         return f'Item #{self.item.id} in cart of {self.cart.user}'

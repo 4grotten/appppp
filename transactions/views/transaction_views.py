@@ -123,10 +123,6 @@ class OnlineTransactionCompleteView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        print('---------------------------------')
-        print('OnlineTransactionCompleteView')
-        print(serializer.data)
-        print('---------------------------------')
         TransactionService.complete_online_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),

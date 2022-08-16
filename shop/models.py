@@ -157,7 +157,7 @@ class CartItem(TimestampModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('cart', 'item'), name='unique_item_in_user_cart')
+            models.UniqueConstraint(fields=('cart', 'item', 'size'), name='unique_item_in_user_cart')
         ]
         ordering = ['-created_at']
 

@@ -52,6 +52,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         return super().retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
+        print(request.data)
         serializer = CartUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
@@ -62,7 +63,7 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         print('=======================================================================================================')
         print('=======================================================================================================')
         print('bulk update put method')
-        print(serializer.validated_data)
+        print(serializer.validated_data['items'])
         print('=======================================================================================================')
         print('=======================================================================================================')
         cart = CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)

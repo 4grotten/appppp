@@ -4,7 +4,7 @@ from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSu
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
     DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
-    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView
+    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -25,6 +25,7 @@ urlpatterns = [
 
     path('get_shop_item_set/<int:pk>/', ShopItemSetListView.as_view(), name='get_shop_item_set'),
     path('get_shop_item_link_set/<int:pk>/', ShopItemLinkSetListView.as_view(), name='get_shop_item_link_set'),
+    path('get_shop_item_set_ids/<int:pk>/', ShopItemSetIdsListView.as_view(), name='get_shop_item_set_ids'),
 
     path('shop_item_size_count/<int:pk>/', ShopItemSizeCountView.as_view(), name='get_shop_item_size_count'),
     path('get_not_choosen_sizes/<int:pk>/', GetNotChoosenSizeListView.as_view(), name='get_not_choosen_sizes'),

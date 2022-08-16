@@ -126,6 +126,12 @@ class LinkStockSerializer(serializers.Serializer):
     link = serializers.CharField()
 
 
+class ShopItemSetIdsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopItem
+        fields = ('id',)
+
+
 class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
     size = SizeFormatSerializer()
 

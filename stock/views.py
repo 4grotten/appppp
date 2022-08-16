@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView, GenericAPIView
 from io import BytesIO
 
 import pandas as pd
@@ -21,7 +21,7 @@ from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, Cr
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
     LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
     AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, ShopLinkItemsSetSerializer, \
-    OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer
+    OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer, ShopItemSetIdsSerializer
 from stock.services import StockService
 
 
@@ -168,15 +168,23 @@ class ShopItemSetListView(ListAPIView):
             raise ObjectNotFoundException(_('ShopItemSetStock not found'))
 
 
+class ShopItemSetIdsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemSetIdsSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        try:
+            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
+            return shop_item_stock.shop_item.all()
+        except ShopItemSetStock.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemSetStock not found'))
+
+
 class OrganizationSubcategoryListView(ListAPIView):
     serializer_class = OrganizationSubcategorySerializer
     pagination_class = None
-    #
-    # def get_queryset(self):
-    #     main_item = ShopItemService.get(id=self.kwargs['pk'])
-    #     print(main_item.organization)
-    #     print(ItemSubcategory.objects.filter(organization_id=main_item.organization_id))
-    #     return ItemSubcategory.objects.filter(organization=main_item.organization)
+
     def get_queryset(self):
         main_item = ShopItemService.get(id=self.kwargs['pk'])
         return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)

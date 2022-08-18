@@ -61,13 +61,15 @@ def add_employees(apps, _):
         organization = Organization.objects.get(id=org['org_id'])
         role = Role.objects.get(id=org['role_id'])
         for empl in kover_employees_ids:
-            employee, created = Membership.objects.get_or_create(user_id=empl,
-                                                                 organization=organization,
-                                                                 added_by_id=26,
-                                                                 role=role
-                                                                 )
-            employee.save()
-
+            try:
+                employee, created = Membership.objects.get_or_create(user_id=empl,
+                                                                     organization=organization,
+                                                                     added_by_id=67,
+                                                                     role=role
+                                                                     )
+                employee.save()
+            except Exception as e:
+                print(e, 'FAIL')
 
 def reverse_func(apps, schema_editor):
     Organization = apps.get_model('organizations', 'Organization')

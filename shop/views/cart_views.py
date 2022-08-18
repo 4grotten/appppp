@@ -60,12 +60,6 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.get_related(id=kwargs['pk'])
-        print('=======================================================================================================')
-        print('=======================================================================================================')
-        print('bulk update put method')
-        print(serializer.validated_data['items'])
-        print('=======================================================================================================')
-        print('=======================================================================================================')
         cart = CartService.bulk_update(cart=cart, items=serializer.validated_data['items'], user=self.request.user)
         data = TransactionWithClientSerializer(cart.transaction, context={'request': request}).data
         return Response(data)

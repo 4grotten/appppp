@@ -29,6 +29,7 @@ from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
 from shop.services.cart_services import CartService
+from stock.models import ShopItemSizeCount
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
 from users.models import User
@@ -268,15 +269,41 @@ class TransactionService:
         )
         print('---------------------------------')
         print('complete_online_transaction Service')
-        print(current_transaction)
-        print(current_transaction.cart)
-        print(current_transaction.cart.items.values_list('size'))
+        # print(current_transaction)
+        # print(current_transaction.cart)
+        # print(current_transaction.cart.items.values_list('size'))
+
+        # НЕТ склада
+        # НЕТ размеров но ЕСТЬ количество
+        # ЕСТЬ размеры но НЕТ количества
+        # ЕСТЬ размеры и ЕСТЬ количество
+
         for cart_item in current_transaction.cart.items.all():
-            print(cart_item.item, 'ITEM')
-            print(cart_item.count, 'COUNT')
-            print(cart_item.size, 'SIZE')
-            print(cart_item.cart, 'CART')
-        print('---------------------------------')
+            print(cart_item.item)
+            if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                # Есть размер
+                print('Есть размер')
+                if ShopItemSizeCount.objects.filter(size=cart_item.size, main_shop_item=cart_item.item).exists():
+                    # Есть количество
+                    print('Есть количество')
+                else:
+                    # Нет количества
+                    print('Нет количества')
+            else:
+                # Нет размеров
+                print('Нет размеров')
+                if ShopItemSizeCount.objects.filter(size=cart_item.size, main_shop_item=cart_item.item).exists():
+                    # Есть количество
+                    print('Есть количество')
+                else:
+                    # Нет количества
+                    print('Нет количества')
+            # print(cart_item.item, 'ITEM')
+            # print(cart_item.count, 'COUNT')
+            # print(cart_item.size, 'SIZE')
+            # print(cart_item.cart, 'CART')
+            print('---------------------------------==============================')
+
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)

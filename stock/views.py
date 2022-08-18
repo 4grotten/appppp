@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
 
 import pandas as pd
@@ -12,16 +12,17 @@ from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from shop.models import ShopItem, ItemSubcategory
+from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemRetrieveSerializer
 from shop.services.category_services import ItemSubcategoryService
 from shop.services.item_services import ShopItemService
 from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
-    CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, ShopItemShortSerializer, \
-    LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, ShopItemSizeCountSetSerializer, \
-    AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, ShopLinkItemsSetSerializer, \
-    OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer, ShopItemSetIdsSerializer
+    CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, \
+    ShopItemShortSerializer, LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, \
+    ShopItemSizeCountSetSerializer, AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, \
+    ShopLinkItemsSetSerializer, OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer, \
+    ShopItemSetIdsSerializer
 from stock.services import StockService
 
 
@@ -175,7 +176,8 @@ class ShopItemSetIdsListView(ListAPIView):
 
     def get_queryset(self):
         try:
-            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
+            item = ShopItemService.get(id=self.kwargs['pk'])
+            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=item)
             return shop_item_stock.shop_item.all()
         except ShopItemSetStock.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItemSetStock not found'))

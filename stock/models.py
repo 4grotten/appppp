@@ -1,3 +1,4 @@
+from django.core import validators
 from django.db import models
 
 from common.models import File
@@ -61,7 +62,7 @@ class ShopItemSizeCount(models.Model):
                                        related_name='shop_item_size_counts')
     size = models.ForeignKey(SizeFormat, on_delete=models.CASCADE, related_name='shop_item_size_counts', null=True,
                              blank=True)
-    count = models.IntegerField(null=True, blank=True)
+    count = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         unique_together = ('main_shop_item', 'size')

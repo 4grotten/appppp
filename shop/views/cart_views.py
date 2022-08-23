@@ -52,7 +52,6 @@ class UserCartRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         return super().retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        print(request.data)
         serializer = CartUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={

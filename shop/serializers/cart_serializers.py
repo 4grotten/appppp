@@ -13,10 +13,12 @@ from shop.models import ShopItem, Cart, CartItem
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
 from stock.models import SizeFormat
+from stock.serializers import OnlySizeFormatSerializer
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     item = ItemInCartSerializer()
+    size = OnlySizeFormatSerializer()
 
     class Meta:
         model = CartItem

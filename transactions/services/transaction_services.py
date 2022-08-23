@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
+    StockException,
 )
 from notifications.constants import (
     NOTIFICATION_MODE_DISCOUNT, DISCOUNT_COMPLETE_DESCRIPTION, WITHDRAW_CASHBACK_CLIENT_TITLE,
@@ -254,6 +255,18 @@ class TransactionService:
         return current_transaction
 
     @classmethod
+    def change_count_service(cls, cart_item, size):
+        try:
+            item_size_count = ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item)[0]
+            try:
+                item_size_count.count -= cart_item.count
+                item_size_count.save()
+            except IntegrityError:
+                raise IntegrityException(_('Insufficient quantity in stock'))
+        except IntegrityError:
+            raise IntegrityException(_('The product has no quantity'))
+
+    @classmethod
     @transaction.atomic
     def complete_online_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
                                     processed_by: User) -> Transaction:
@@ -269,39 +282,13 @@ class TransactionService:
         )
         print('---------------------------------')
         print('complete_online_transaction Service')
-        # print(current_transaction)
-        # print(current_transaction.cart)
-        # print(current_transaction.cart.items.values_list('size'))
-
-        # НЕТ склада
-        # НЕТ размеров но ЕСТЬ количество
-        # ЕСТЬ размеры но НЕТ количества
-        # ЕСТЬ размеры и ЕСТЬ количество
 
         for cart_item in current_transaction.cart.items.all():
-            print(cart_item.item)
+            print('---------------------------------==============================')
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
-                # Есть размер
-                print('Есть размер')
-                if ShopItemSizeCount.objects.filter(size=cart_item.size, main_shop_item=cart_item.item).exists():
-                    # Есть количество
-                    print('Есть количество')
-                else:
-                    # Нет количества
-                    print('Нет количества')
+                cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
-                # Нет размеров
-                print('Нет размеров')
-                if ShopItemSizeCount.objects.filter(size=cart_item.size, main_shop_item=cart_item.item).exists():
-                    # Есть количество
-                    print('Есть количество')
-                else:
-                    # Нет количества
-                    print('Нет количества')
-            # print(cart_item.item, 'ITEM')
-            # print(cart_item.count, 'COUNT')
-            # print(cart_item.size, 'SIZE')
-            # print(cart_item.cart, 'CART')
+                cls.change_count_service(size=None, cart_item=cart_item)
             print('---------------------------------==============================')
 
         original_price = totals['original_price']

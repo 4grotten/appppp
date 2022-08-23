@@ -16,6 +16,7 @@ from organizations.models import Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.organization_services import OrganizationService
 from shop.models import CartItem, Cart, ShopItem
+from stock.models import ShopItemSizeCount
 from transactions.models import Transaction
 from users.models import User
 
@@ -160,15 +161,6 @@ class CartService:
 
     @classmethod
     def bulk_update(cls, cart: Cart, items, user: User):
-        print('=======================================================================================================')
-        print('=======================================================================================================')
-        print('bulk update service')
-        print(cart.items.all())
-        for i in cart.items.all():
-            print(i.size)
-        print(items)
-        print('=======================================================================================================')
-        print('=======================================================================================================')
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException(_('No rights to change this cart'))
@@ -177,8 +169,12 @@ class CartService:
         for data in items:
             try:
                 size = data['size']
+                if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
+                    raise IntegrityException(_('Insufficient quantity in stock'))
             except:
                 size = None
+                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
+                    raise IntegrityException(_('Insufficient quantity in stock'))
             if data['count'] and (
                     data['item'].organization == cart.organization or
                     CommonItemsGroupService.have_common_items(first=data['item'].organization, second=cart.organization)
@@ -229,6 +225,8 @@ class CartItemService:
     def change_cart_item_count(
             cls, user: User, shop_item: ShopItem, change: int, size: int, organization: Optional[Organization]
     ) -> int:
+        if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
+            raise IntegrityException(_('Insufficient quantity in stock'))
         cart_organization = shop_item.organization
         if organization is not None:
             if not organization == shop_item.organization:
@@ -251,6 +249,8 @@ class CartItemService:
                 cart.delete()
             return 0
         else:
+            if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count <= cart_item.count:
+                raise IntegrityException(_('Insufficient quantity in stock'))
             cart_item.count = F('count') + change
             cart_item.size_id = size
             cart_item.save()

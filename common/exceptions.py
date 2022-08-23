@@ -34,3 +34,7 @@ class IntegrityException(GeneralException):
 
 class PermissionDeniedException(GeneralException):
     default_message = _('You do not have permission')
+
+
+class StockException(GeneralException):
+    default_message = _('Stock error')

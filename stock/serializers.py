@@ -18,6 +18,12 @@ class FormatCriteriaSerializer(serializers.ModelSerializer):
         fields = ('id', 'name',)
 
 
+class OnlySizeFormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SizeFormat
+        fields = ('id', 'size',)
+
+
 class SizeFormatSerializer(serializers.ModelSerializer):
     format_criteria = serializers.SerializerMethodField()
     icon = serializers.SerializerMethodField()

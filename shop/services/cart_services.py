@@ -225,8 +225,9 @@ class CartItemService:
     def change_cart_item_count(
             cls, user: User, shop_item: ShopItem, change: int, size: int, organization: Optional[Organization]
     ) -> int:
-        if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
-            raise IntegrityException(_('Insufficient quantity in stock'))
+        if ShopItemSizeCount.objects.filter(main_shop_item=shop_item, size=size).exists():
+            if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
+                raise IntegrityException(_('Insufficient quantity in stock'))
         cart_organization = shop_item.organization
         if organization is not None:
             if not organization == shop_item.organization:
@@ -249,8 +250,9 @@ class CartItemService:
                 cart.delete()
             return 0
         else:
-            if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count <= cart_item.count:
-                raise IntegrityException(_('Insufficient quantity in stock'))
+            if ShopItemSizeCount.objects.filter(main_shop_item=shop_item, size=size).exists():
+                if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count <= cart_item.count:
+                    raise IntegrityException(_('Insufficient quantity in stock'))
             cart_item.count = F('count') + change
             cart_item.size_id = size
             cart_item.save()

@@ -173,7 +173,7 @@ class StockSerializer(serializers.ModelSerializer):
     item_quantity = serializers.SerializerMethodField()
     criteria_subcategory = serializers.SerializerMethodField()
     collection_items_quantity = serializers.SerializerMethodField()
-    available_sizes = SizeFormatSerializer(many=True)
+    available_sizes = serializers.SerializerMethodField()
 
     def get_criteria_subcategory(self, item: ShopItem):
         criteria_subcategory = CriteriaSubcategory.objects.filter(item_subcategories=item.subcategory).exists()
@@ -187,6 +187,11 @@ class StockSerializer(serializers.ModelSerializer):
                 'icon': icon,
             }
         return None
+
+    def get_available_sizes(self, item: ShopItem):
+        queryset = item.available_sizes.all().order_by('order')
+        return SizeFormatSerializer(queryset, many=True).data
+
 
     def get_item_quantity(self, item: ShopItem):
         count = ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total']

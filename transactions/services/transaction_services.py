@@ -257,12 +257,13 @@ class TransactionService:
     @classmethod
     def change_count_service(cls, cart_item, size):
         try:
-            item_size_count = ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item)[0]
-            try:
-                item_size_count.count -= cart_item.count
-                item_size_count.save()
-            except IntegrityError:
-                raise IntegrityException(_('Insufficient quantity in stock'))
+            if ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item).exists():
+                item_size_count = ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item)[0]
+                try:
+                    item_size_count.count -= cart_item.count
+                    item_size_count.save()
+                except IntegrityError:
+                    raise IntegrityException(_('Insufficient quantity in stock'))
         except IntegrityError:
             raise IntegrityException(_('The product has no quantity'))
 
@@ -280,16 +281,11 @@ class TransactionService:
             original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
             discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
         )
-        print('---------------------------------')
-        print('complete_online_transaction Service')
-
         for cart_item in current_transaction.cart.items.all():
-            print('---------------------------------==============================')
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
                 cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
                 cls.change_count_service(size=None, cart_item=cart_item)
-            print('---------------------------------==============================')
 
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
@@ -373,6 +369,7 @@ class TransactionService:
         original_price, discounted_price = CartService.get_total_prices_in_cart(cart)
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         from shop.serializers.cart_serializers import CartSerializer
+
         fixed_cart = CartSerializer(cart, context={'request': request}).data
         offline_transaction = Transaction.objects.create(
             cart=cart,
@@ -393,6 +390,12 @@ class TransactionService:
             purchase_id=organization.running_purchase_id,
             display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
+
+        for cart_item in offline_transaction.cart.items.all():
+            if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+            else:
+                cls.change_count_service(size=None, cart_item=cart_item)
 
         OrganizationService.increment_running_purchase_id(organization=organization)
 

@@ -22,7 +22,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ('item', 'count', 'size')
+        fields = ('id', 'item', 'count', 'size')
 
 
 class CartItemUpdateSerializer(serializers.ModelSerializer):

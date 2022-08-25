@@ -164,7 +164,7 @@ class CartService:
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException(_('No rights to change this cart'))
-        CartItem.objects.filter(cart=cart).delete()
+        # CartItem.objects.filter(cart=cart).delete()
         items.reverse()
         for data in items:
             try:
@@ -179,7 +179,9 @@ class CartService:
                     data['item'].organization == cart.organization or
                     CommonItemsGroupService.have_common_items(first=data['item'].organization, second=cart.organization)
             ):
-                CartItem.objects.create(cart=cart, item=data['item'], count=data['count'], size=size)
+                new_cart_item, created = CartItem.objects.get_or_create(cart=cart, item=data['item'], size=size)
+                new_cart_item.count = data['count']
+                new_cart_item.save()
 
         if cart.transaction and not cart.is_open:
             totals = cart.items.aggregate(

@@ -250,9 +250,19 @@ class ItemFeedSerializer(ItemListSerializer):
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
     available_sizes = serializers.SerializerMethodField()
+    set_images = serializers.SerializerMethodField()
+
+    def get_set_images(self, item: ShopItem):
+        images = ShopItem.objects.filter(
+                Q(shop_items_set_stocks__main_shop_item=item) |
+                Q(shop_items_link_set_stocks__main_shop_item=item)
+            ).values('images')[:2]
+        image_ids = [i['images'] for i in images]
+        images = File.objects.filter(id__in=image_ids)
+        return ImageSerializer(images, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all()
+        sizes = item.available_sizes.all().order_by('order')
         return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
 
     class Meta:
@@ -263,7 +273,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count', 'available_sizes'
+            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_images'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

@@ -34,7 +34,8 @@ class StockService:
         shop_items_list = []
         for i in shop_items:
             shop_item = ShopItemService.get(id=i)
-            shop_items_list.append(shop_item)
+            if not ShopItemLinksSetStock.objects.filter(main_shop_item=main_item, shop_item=shop_item):
+                shop_items_list.append(shop_item)
         shop_item_stock.shop_item.clear()
         shop_item_stock.shop_item.add(*shop_items_list)
 
@@ -47,12 +48,11 @@ class StockService:
 
         ShopItemLinksSetStock.objects.filter(main_shop_item=main_item).delete()
 
-        shop_link_items_list = []
         for link in shop_item_links:
             shop_item_by_link = [int(s) for s in re.findall(r'\b\d+\b', link)]
             shop_item = ShopItemService.get(id=shop_item_by_link[0])
-            shop_link_items_list.append(shop_item)
-            ShopItemLinksSetStock.objects.get_or_create(main_shop_item=main_item, shop_item=shop_item, link=link)
+            if not ShopItemSetStock.objects.filter(main_shop_item=main_item, shop_item=shop_item):
+                ShopItemLinksSetStock.objects.get_or_create(main_shop_item=main_item, shop_item=shop_item, link=link)
 
     @classmethod
     def add_shop_items_size_count(cls, main_item, size=None, count=None):

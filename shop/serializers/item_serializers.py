@@ -17,6 +17,19 @@ from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.serializers import SizeFormatByItemSerializer
 
 
+class ItemSetRetrieveSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, item: ShopItem):
+        image = item.images.first()
+        image = File.objects.get(id=image.id)
+        return ImageSerializer(image, context=self.context).data
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'price', 'discount', 'image')
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -29,16 +42,14 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     available_sizes = serializers.SerializerMethodField()
-    set_images = serializers.SerializerMethodField()
+    set_items = serializers.SerializerMethodField()
 
-    def get_set_images(self, item: ShopItem):
-        images = ShopItem.objects.filter(
-                Q(shop_items_set_stocks__main_shop_item=item) |
-                Q(shop_items_link_set_stocks__main_shop_item=item)
-            ).values('images')[:2]
-        image_ids = [i['images'] for i in images]
-        images = File.objects.filter(id__in=image_ids)
-        return ImageSerializer(images, many=True, context=self.context).data
+    def get_set_items(self, item: ShopItem):
+        items = ShopItem.objects.filter(
+            Q(shop_items_set_stocks__main_shop_item=item) |
+            Q(shop_items_link_set_stocks__main_shop_item=item)
+        )[:2]
+        return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
         sizes = item.available_sizes.all()
@@ -76,7 +87,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_images'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items'
         )
 
 
@@ -250,16 +261,14 @@ class ItemFeedSerializer(ItemListSerializer):
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
     available_sizes = serializers.SerializerMethodField()
-    set_images = serializers.SerializerMethodField()
+    set_items = serializers.SerializerMethodField()
 
-    def get_set_images(self, item: ShopItem):
-        images = ShopItem.objects.filter(
-                Q(shop_items_set_stocks__main_shop_item=item) |
-                Q(shop_items_link_set_stocks__main_shop_item=item)
-            ).values('images')[:2]
-        image_ids = [i['images'] for i in images]
-        images = File.objects.filter(id__in=image_ids)
-        return ImageSerializer(images, many=True, context=self.context).data
+    def get_set_items(self, item: ShopItem):
+        items = ShopItem.objects.filter(
+            Q(shop_items_set_stocks__main_shop_item=item) |
+            Q(shop_items_link_set_stocks__main_shop_item=item)
+        )[:2]
+        return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
         sizes = item.available_sizes.all().order_by('order')
@@ -273,7 +282,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_images'
+            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_items'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

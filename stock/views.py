@@ -206,9 +206,10 @@ class OrganizationShopItemsInSetListView(ListAPIView):
             shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
             try:
                 subcategory = self.request.query_params['subcategory']
-                queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)
+                queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)\
+                    .exclude(id=shop_item.id)
             except:
-                queryset = ShopItem.objects.filter(organization=shop_item.organization)
+                queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id)
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
         return self.paginate_queryset(queryset)

@@ -21,6 +21,13 @@ from stock.serializers import SizeFormatByItemSerializer
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     currency = serializers.CharField(source='organization.currency')
+    has_in_stock = serializers.SerializerMethodField()
+
+    def get_has_in_stock(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
 
     def get_image(self, item: ShopItem):
         image = item.images.first()
@@ -29,7 +36,7 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'price', 'discount', 'currency', 'image')
+        fields = ('id', 'price', 'discount', 'currency', 'image', 'has_in_stock')
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):

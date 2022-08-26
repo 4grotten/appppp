@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -14,11 +14,13 @@ from shop.models import ShopItem, ItemInstagramData
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
+from stock.models import ShopItemSizeCount
 from stock.serializers import SizeFormatByItemSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
+    currency = serializers.CharField(source='organization.currency')
 
     def get_image(self, item: ShopItem):
         image = item.images.first()
@@ -27,7 +29,7 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'price', 'discount', 'image')
+        fields = ('id', 'price', 'discount', 'currency', 'image')
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):
@@ -43,6 +45,13 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     comment_count = serializers.SerializerMethodField()
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
+    has_in_stock = serializers.SerializerMethodField()
+
+    def get_has_in_stock(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
@@ -87,7 +96,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock'
         )
 
 
@@ -262,6 +271,13 @@ class ItemFeedSerializer(ItemListSerializer):
     subcategory = ItemSubcategoryBriefSerializer()
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
+    has_in_stock = serializers.SerializerMethodField()
+
+    def get_has_in_stock(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
@@ -282,7 +298,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_items'
+            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_items', 'has_in_stock'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

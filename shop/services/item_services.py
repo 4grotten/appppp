@@ -8,6 +8,7 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, ItemInstagramData
 from shop.services.cart_services import CartItemService
+from stock.models import ShopItemSizeCount, ShopItemSetStock, ShopItemLinksSetStock
 from users.models import User
 
 
@@ -137,6 +138,15 @@ class ShopItemService:
         item.is_updated = True
         item.updated_at = now()
         item.save()
+
+    @classmethod
+    def remove_stock_if_change_subcategory(cls, item_id, subcategory_id):
+        item = ShopItem.objects.get(id=int(item_id))
+        if item.subcategory.id != subcategory_id:
+            ShopItemSizeCount.objects.filter(main_shop_item=item).delete()
+            ShopItemSetStock.objects.filter(main_shop_item=item).delete()
+            ShopItemLinksSetStock.objects.filter(main_shop_item=item).delete()
+            item.available_sizes.clear()
 
     @classmethod
     def get_suggest_items(cls, response):

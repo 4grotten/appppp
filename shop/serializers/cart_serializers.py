@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Sum
 from rest_framework import serializers
 
 from common.models import File
@@ -12,17 +12,24 @@ from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, Cart, CartItem
 from shop.serializers.item_serializers import ItemInCartSerializer
 from shop.services.cart_services import CartService
-from stock.models import SizeFormat
+from stock.models import SizeFormat, ShopItemSizeCount
 from stock.serializers import OnlySizeFormatSerializer
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     item = ItemInCartSerializer()
     size = OnlySizeFormatSerializer()
+    has_in_stock = serializers.SerializerMethodField()
+
+    def get_has_in_stock(self, item: CartItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item.item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item.item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
 
     class Meta:
         model = CartItem
-        fields = ('item', 'count', 'size')
+        fields = ('id', 'item', 'count', 'size', 'has_in_stock')
 
 
 class CartItemUpdateSerializer(serializers.ModelSerializer):
@@ -52,12 +59,14 @@ class CartSerializer(serializers.ModelSerializer):
 class EmployeeCartSerializer(CartSerializer):
     can_sell = serializers.SerializerMethodField()
 
+    def get_can_sell(self, cart: Cart) -> bool:
+        return OrganizationService.user_can_sell(organization=cart.organization, user=cart.user)
+
     class Meta:
         model = Cart
         fields = ('id', 'can_sell', 'organization', 'totals', 'items',)
 
-    def get_can_sell(self, cart: Cart) -> bool:
-        return OrganizationService.user_can_sell(organization=cart.organization, user=cart.user)
+
 
 
 class CartWithItemsSerializer(serializers.ModelSerializer):

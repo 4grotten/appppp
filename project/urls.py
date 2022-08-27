@@ -19,7 +19,7 @@ v1 = ([
       ], 'v1')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('92830382311admin/', admin.site.urls),
     path('api/v1/', include(v1)),
     path('api-auth/', include('rest_framework.urls')),
     path('rest-auth/', include('rest_auth.urls')),

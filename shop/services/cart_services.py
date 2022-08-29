@@ -169,12 +169,14 @@ class CartService:
         for data in items:
             try:
                 size = data['size']
+                print(size)
                 if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
                     raise IntegrityException(_('Insufficient quantity in stock'))
             except:
                 size = None
-                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
-                    raise IntegrityException(_('Insufficient quantity in stock'))
+                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item']).exists():
+                    if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
+                        raise IntegrityException(_('Insufficient quantity in stock'))
             if data['count'] and (
                     data['item'].organization == cart.organization or
                     CommonItemsGroupService.have_common_items(first=data['item'].organization, second=cart.organization)

@@ -256,6 +256,26 @@ class ItemListSerializer(serializers.ModelSerializer):
 class SubscriptionItemSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
     videos = VideoSerializer(many=True)
+    available_sizes = serializers.SerializerMethodField()
+    set_items = serializers.SerializerMethodField()
+    has_in_stock = serializers.SerializerMethodField()
+
+    def get_has_in_stock(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
+
+    def get_set_items(self, item: ShopItem):
+        items = ShopItem.objects.filter(
+            Q(shop_items_set_stocks__main_shop_item=item) |
+            Q(shop_items_link_set_stocks__main_shop_item=item)
+        )[:2]
+        return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
+
+    def get_available_sizes(self, item: ShopItem):
+        sizes = item.available_sizes.all().order_by('order')
+        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
 
     class Meta:
         model = ShopItem
@@ -265,7 +285,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

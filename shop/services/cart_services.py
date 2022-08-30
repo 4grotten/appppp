@@ -164,23 +164,49 @@ class CartService:
         if (not ((cls.can_user_change_cart(user=user, cart=cart) and cart.is_open) or cls.can_user_change_closed_cart(
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException(_('No rights to change this cart'))
-        CartItem.objects.filter(cart=cart).delete()
+
+        new_items = [(j['item'], j['size']) for j in items]
+        for old_item in CartItem.objects.filter(cart=cart):
+            if (old_item.item_id, old_item.size_id) not in new_items:
+                old_item.delete()
+
+        exception_list = []
         items.reverse()
         for data in items:
             try:
                 size = data['size']
                 if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
-                    raise IntegrityException(_('Insufficient quantity in stock'))
+                    exception_list.append({
+                        'size': size.id,
+                        'item_id': data['item'].id,
+                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
+                        'response_quantity': data['count']
+                    })
             except:
                 size = None
-                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item']).exists():
-                    if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
-                        raise IntegrityException(_('Insufficient quantity in stock'))
+                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
+                        and ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
+                    exception_list.append({
+                        'size': size,
+                        'item_id': data['item'].id,
+                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
+                        'response_quantity': data['count']
+                    })
+
             if data['count'] and (
                     data['item'].organization == cart.organization or
                     CommonItemsGroupService.have_common_items(first=data['item'].organization, second=cart.organization)
             ):
-                CartItem.objects.create(cart=cart, item=data['item'], size=size, count=data['count'])
+                if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
+                        and ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
+                    item_count = ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count
+                    CartItem.objects.create(cart=cart, item=data['item'], size=size, count=item_count)
+                else:
+                    CartItem.objects.create(cart=cart, item=data['item'], size=size, count=data['count'])
+
+        if exception_list:
+            raise IntegrityException(_('Insufficient quantity in stock.'))
+
 
         if cart.transaction and not cart.is_open:
             totals = cart.items.aggregate(

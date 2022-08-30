@@ -19,6 +19,7 @@ from stock.serializers import OnlySizeFormatSerializer
 class CartItemSerializer(serializers.ModelSerializer):
     item = ItemInCartSerializer()
     size = OnlySizeFormatSerializer()
+    quantity_in_stock = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: CartItem):
@@ -27,9 +28,15 @@ class CartItemSerializer(serializers.ModelSerializer):
         else:
             return True
 
+    def get_quantity_in_stock(self, item: CartItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item.item, size=item.size).exists():
+            return ShopItemSizeCount.objects.get(main_shop_item=item.item, size=item.size).count
+        else:
+            return None
+
     class Meta:
         model = CartItem
-        fields = ('id', 'item', 'count', 'size', 'has_in_stock')
+        fields = ('id', 'item', 'count', 'size', 'has_in_stock', 'quantity_in_stock')
 
 
 class CartItemUpdateSerializer(serializers.ModelSerializer):

@@ -47,7 +47,7 @@ class MessageServiceNIKITA:
             headers={'Content-Type': 'application/xml'}
         )
         slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                  f'link code: https://apofiz.com/971585333939admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{response.status_code}\n==============================')
         if response.status_code == 200:
             return response.content.decode('utf-8')
@@ -133,7 +133,7 @@ class MessageServiceTwilio:
             body=sms)
 
         slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                  f'link code: https://apofiz.com/971585333939admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{message.status}\n============================')
 
     @classmethod
@@ -149,7 +149,7 @@ class MessageServiceTwilio:
             body=sms)
 
         slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                  f'link code: https://apofiz.com/971585333939admin/users/temporarycode/{code_id}/change/\n'
                   f' status_code-{message.status}\n============================')
 
 

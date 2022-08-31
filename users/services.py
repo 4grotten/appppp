@@ -156,7 +156,7 @@ class TemporaryCodeService:
 
             if temporary_code.expiration_datetime < timezone.now():
                 slack.bot_2(f'Code time expired for {phone_number}\n'
-                            f'link code: https://apofiz.com/971585333939admin/users/temporarycode/{temporary_code.id}/change/\n'
+                            f'link code: https://apofiz.com/admin/users/temporarycode/{temporary_code.id}/change/\n'
                             f'============================')
                 raise ValidationException(_('Code time expired'))
 

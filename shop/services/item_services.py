@@ -142,7 +142,9 @@ class ShopItemService:
     @classmethod
     def remove_stock_if_change_subcategory(cls, item_id, subcategory_id):
         item = ShopItem.objects.get(id=int(item_id))
-        if item.subcategory.id != subcategory_id:
+        if item.subcategory and item.subcategory.id == subcategory_id:
+            return
+        else:
             ShopItemSizeCount.objects.filter(main_shop_item=item).delete()
             ShopItemSetStock.objects.filter(main_shop_item=item).delete()
             ShopItemLinksSetStock.objects.filter(main_shop_item=item).delete()

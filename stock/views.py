@@ -207,9 +207,9 @@ class OrganizationShopItemsInSetListView(ListAPIView):
             try:
                 subcategory = self.request.query_params['subcategory']
                 queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)\
-                    .exclude(id=shop_item.id)
+                    .exclude(id=shop_item.id).order_by('-updated_at')
             except:
-                queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id)
+                queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id).order_by('-updated_at')
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
         return self.paginate_queryset(queryset)
@@ -250,7 +250,7 @@ class ShopItemSizeCountView(ListCreateAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return ShopItemSizeCount.objects.filter(main_shop_item=self.kwargs['pk'])
+        return ShopItemSizeCount.objects.filter(main_shop_item=self.kwargs['pk']).order_by('size__order')
 
     def create(self, request, *args, **kwargs):
         serializer = AddShopItemSizeCountSetSerializer(data=request.data)

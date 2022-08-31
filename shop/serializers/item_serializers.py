@@ -31,7 +31,8 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
     def get_image(self, item: ShopItem):
         image = item.images.first()
-        image = File.objects.get(id=image.id)
+        if image:
+            image = File.objects.get(id=image.id)
         return ImageSerializer(image, context=self.context).data
 
     class Meta:

@@ -76,6 +76,7 @@ class StockService:
         for i in main_shop_item.available_sizes.all():
             if i not in array:
                 array_result.append(i)
+        array_result = sorted(array_result, key=lambda k: k.order)
         return array_result
 
     @classmethod

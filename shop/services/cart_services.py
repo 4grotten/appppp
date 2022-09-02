@@ -165,13 +165,20 @@ class CartService:
                 user=user, cart=cart)) or (cart.transaction and cart.transaction.status != Transaction.IN_PROGRESS)):
             raise PermissionDeniedException(_('No rights to change this cart'))
 
-        new_items = [(j['item'], j['size']) for j in items]
+        new_items = []
+        for j in items:
+            try:
+                new_items.append((j['item'], j['size']))
+            except:
+                new_items.append((j['item'], None))
+
         for old_item in CartItem.objects.filter(cart=cart):
             if (old_item.item_id, old_item.size_id) not in new_items:
                 old_item.delete()
 
         exception_list = []
         items.reverse()
+
         for data in items:
             try:
                 size = data['size']
@@ -252,9 +259,11 @@ class CartItemService:
     def change_cart_item_count(
             cls, user: User, shop_item: ShopItem, change: int, size: int, organization: Optional[Organization]
     ) -> int:
-        if ShopItemSizeCount.objects.filter(main_shop_item=shop_item, size=size).exists():
+
+        if ShopItemSizeCount.objects.filter(main_shop_item=shop_item).exists():
             if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
                 raise IntegrityException(_('Insufficient quantity in stock'))
+
         cart_organization = shop_item.organization
         if organization is not None:
             if not organization == shop_item.organization:

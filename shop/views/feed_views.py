@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, When, Case, Value, IntegerField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
@@ -20,7 +20,6 @@ class FeedView(ListAPIView):
     filter_backends = (DjangoFilterBackend, FeedItemOrderingFilter, SearchFilter,)
     filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)
     ordering_fields = ['updated_at', 'price']
-    ordering = ['-updated_at']
     search_fields = ('article', 'id', 'name', 'description',)
     filter_class = FeedItemFilter
 
@@ -30,8 +29,16 @@ class FeedView(ListAPIView):
             Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
+        elif search:
+            qs = qs.annotate(name_order=Case(
+                When(name__icontains=search, then=1),
+                When(description__icontains=search, then=2),
+                When(article__icontains=search, then=3),
+                default=Value(4),
+                output_field=IntegerField(),
+            )).order_by('name_order', )
         else:
-            qs = qs.filter(is_published=True, price__isnull=False)
+            qs = qs.filter(is_published=True, price__isnull=False).order_by('-updated_at')
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

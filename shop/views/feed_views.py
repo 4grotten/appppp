@@ -30,6 +30,7 @@ class FeedView(ListAPIView):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         elif search:
+            qs = qs.filter(is_published=True, price__isnull=False)
             qs = qs.annotate(name_order=Case(
                 When(name__icontains=search, then=1),
                 When(description__icontains=search, then=2),

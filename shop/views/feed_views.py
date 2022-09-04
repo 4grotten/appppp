@@ -37,7 +37,7 @@ class FeedView(ListAPIView):
                 When(article__icontains=search, then=3),
                 default=Value(4),
                 output_field=IntegerField(),
-            )).order_by('name_order', )
+            )).order_by('name_order', '-updated_at',)
         else:
             qs = qs.filter(is_published=True, price__isnull=False).order_by('-updated_at')
 
@@ -60,6 +60,7 @@ class FeedView(ListAPIView):
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
+    ordering = ['-updated_at', ]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
@@ -78,6 +79,7 @@ class OrganizationItemListView(FeedView):
 class SubscriptionItemListView(FeedView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscriptionItemSerializer
+    ordering = ['-updated_at', ]
 
     def get_queryset(self):
         qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user)

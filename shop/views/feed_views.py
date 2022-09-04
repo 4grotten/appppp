@@ -60,7 +60,7 @@ class FeedView(ListAPIView):
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
-    ordering = ['-updated_at', ]
+    # ordering = ['-updated_at', ]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
@@ -72,17 +72,39 @@ class OrganizationItemListView(FeedView):
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user
-        )
+        ).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = qs.annotate(name_order=Case(
+                When(name__iexact=search, then=0),
+                When(name__in=search.split(), then=1),
+                When(name__icontains=search, then=2),
+                When(description__icontains=search, then=3),
+                When(article__icontains=search, then=4),
+                default=Value(5),
+                output_field=IntegerField(),
+            )).order_by('name_order', '-updated_at', )
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
 
 class SubscriptionItemListView(FeedView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscriptionItemSerializer
-    ordering = ['-updated_at', ]
+    # ordering = ['-updated_at', ]
 
     def get_queryset(self):
-        qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user)
+        qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = qs.annotate(name_order=Case(
+                When(name__iexact=search, then=0),
+                When(name__in=search.split(), then=1),
+                When(name__icontains=search, then=2),
+                When(description__icontains=search, then=3),
+                When(article__icontains=search, then=4),
+                default=Value(5),
+                output_field=IntegerField(),
+            )).order_by('name_order', '-updated_at', )
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):

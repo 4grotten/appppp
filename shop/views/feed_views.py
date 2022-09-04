@@ -32,10 +32,12 @@ class FeedView(ListAPIView):
         elif search:
             qs = qs.filter(is_published=True, price__isnull=False)
             qs = qs.annotate(name_order=Case(
-                When(name__icontains=search, then=1),
-                When(description__icontains=search, then=2),
-                When(article__icontains=search, then=3),
-                default=Value(4),
+                When(name__iexact=search, then=0),
+                When(name__in=search.split(), then=1),
+                When(name__icontains=search, then=2),
+                When(description__icontains=search, then=3),
+                When(article__icontains=search, then=4),
+                default=Value(5),
                 output_field=IntegerField(),
             )).order_by('name_order', '-updated_at',)
         else:

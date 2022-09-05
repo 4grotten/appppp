@@ -174,7 +174,6 @@ class ShopItemService:
             default=Value(6),
             output_field=IntegerField(),
         )).order_by('name_order', '-updated_at', )
-        print(queryset)
-        for i in queryset:
+        for i in queryset[:100]:
             print(i.id, '|', i.name, '|', i.name_order)
         return queryset

@@ -176,9 +176,9 @@ class ShopItemService:
         queryset = queryset.annotate(name_order=Case(
             When(name__iexact=search_word, then=0),
             When(name__in=search_word.split(), then=1),
-            # When(name__icontains=search_word, then=2),
-            When(description__icontains=search_word, then=2),
-            When(article__icontains=search_word, then=3),
+            When(name__icontains=search_word, then=2),
+            When(description__icontains=search_word, then=3),
+            When(article__icontains=search_word, then=4),
             default=Value(5),
             output_field=IntegerField(),
         )).order_by('name_order', '-updated_at', )

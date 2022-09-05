@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, IntegerField
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -158,3 +158,17 @@ class ShopItemService:
         del response.data['total_pages']
 
         return response
+
+    @classmethod
+    def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
+        queryset = queryset.annotate(name_order=Case(
+            When(name__iexact=search_word, then=0),
+            When(name__in=search_word.split(), then=1),
+            When(name__icontains=search_word, then=2),
+            When(description__icontains=search_word, then=3),
+            When(article__icontains=search_word, then=4),
+            default=Value(5),
+            output_field=IntegerField(),
+        )).order_by('name_order', '-updated_at', )
+
+        return queryset

@@ -8,7 +8,6 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, ItemInstagramData
 from shop.services.cart_services import CartItemService
-from stock.models import ShopItemSizeCount, ShopItemSetStock, ShopItemLinksSetStock
 from users.models import User
 
 
@@ -140,17 +139,6 @@ class ShopItemService:
         item.save()
 
     @classmethod
-    def remove_stock_if_change_subcategory(cls, item_id, subcategory_id):
-        item = ShopItem.objects.get(id=int(item_id))
-        if item.subcategory and item.subcategory.id == subcategory_id:
-            return
-        else:
-            ShopItemSizeCount.objects.filter(main_shop_item=item).delete()
-            ShopItemSetStock.objects.filter(main_shop_item=item).delete()
-            ShopItemLinksSetStock.objects.filter(main_shop_item=item).delete()
-            item.available_sizes.clear()
-
-    @classmethod
     def get_suggest_items(cls, response):
 
         array_items = []
@@ -174,12 +162,12 @@ class ShopItemService:
     @classmethod
     def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
         queryset = queryset.annotate(name_order=Case(
-            When(name__iexact=search_word, then=0),
-            When(name__in=search_word.split(), then=1),
-            When(description__icontains=search_word, then=2),
+            When(name__iexact=search_word, then=1),
+            When(name__in=search_word.split(), then=2),
             When(name__icontains=search_word, then=3),
-            When(article__icontains=search_word, then=4),
-            default=Value(5),
+            When(description__icontains=search_word, then=4),
+            When(article__icontains=search_word, then=5),
+            default=Value(6),
             output_field=IntegerField(),
         )).order_by('name_order', '-updated_at', )
 

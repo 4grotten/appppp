@@ -178,27 +178,15 @@ class CartService:
 
         exception_list = []
         items.reverse()
-
         for data in items:
+            size = data.get('size', None)
             try:
-                size = data['size']
                 if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
-                    exception_list.append({
-                        'size': size.id,
-                        'item_id': data['item'].id,
-                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
-                        'response_quantity': data['count']
-                    })
+                    exception_list.append(data['item'].id)
             except:
-                size = None
                 if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
                         and ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
-                    exception_list.append({
-                        'size': size,
-                        'item_id': data['item'].id,
-                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
-                        'response_quantity': data['count']
-                    })
+                    exception_list.append(data['item'].id)
 
             if data['count'] and (
                     data['item'].organization == cart.organization or
@@ -206,8 +194,10 @@ class CartService:
             ):
                 if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
                         and ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
+
                     item_count = ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count
                     CartItem.objects.create(cart=cart, item=data['item'], size=size, count=item_count)
+
                 else:
                     CartItem.objects.create(cart=cart, item=data['item'], size=size, count=data['count'])
 
@@ -261,8 +251,11 @@ class CartItemService:
     ) -> int:
 
         if ShopItemSizeCount.objects.filter(main_shop_item=shop_item).exists():
-            if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
-                raise IntegrityException(_('Insufficient quantity in stock'))
+            try:
+                if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
+                    raise IntegrityException(_('Insufficient quantity in stock'))
+            except:
+                raise IntegrityException(_('У товара не указано количество'))
 
         cart_organization = shop_item.organization
         if organization is not None:

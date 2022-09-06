@@ -52,6 +52,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         self.serializer_class = ItemRetrieveSerializer
+        self.serializer_class(context={'request': self.request})
         return super().retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):

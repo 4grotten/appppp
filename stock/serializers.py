@@ -149,6 +149,14 @@ class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
         fields = ('id', 'size', 'count')
 
 
+class ShopItemSizeCountSerializer(serializers.ModelSerializer):
+    size = SizeFormatSerializer(required=False, default=None)
+
+    class Meta:
+        model = ShopItemSizeCount
+        fields = ('size', 'count')
+
+
 class AddShopItemSizeCountSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItemSizeCount

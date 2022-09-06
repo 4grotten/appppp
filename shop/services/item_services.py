@@ -167,7 +167,7 @@ class ShopItemService:
             arr_name=RawSQL("string_to_array(lower(name), ' ')", output_field=ArrayField(base_field=TextField()), params=()),
             name_order=Case(
             When(name__iexact=search_word, then=1),
-            When(arr_name__contains=[search_word], then=2),
+            When(arr_name__contains=[search_word.lower()], then=2),
             When(name__icontains=search_word, then=3),
             When(description__icontains=search_word, then=4),
             When(article__icontains=search_word, then=5),

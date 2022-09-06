@@ -151,6 +151,18 @@ class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
 
 class ShopItemSizeCountSerializer(serializers.ModelSerializer):
     size = SizeFormatSerializer(required=False, default=None)
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, size_count: ShopItemSizeCount):
+        user = self.context['request'].user
+        item = self.context['shop_item']
+        cart_item = CartItem.objects.filter(item=item, cart__user=user, cart__is_open=True, size=None).first()
+        current_count_in_cart = cart_item.count if cart_item else 0
+        try:
+            size_count = size_count.count - current_count_in_cart
+        except:
+            size_count = None
+        return size_count
 
     class Meta:
         model = ShopItemSizeCount

@@ -1,4 +1,6 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, IntegerField
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, IntegerField, TextField
+from django.db.models.expressions import RawSQL
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -161,9 +163,11 @@ class ShopItemService:
 
     @classmethod
     def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
-        queryset = queryset.annotate(name_order=Case(
+        queryset = queryset.annotate(
+            arr_name=RawSQL("string_to_array(name, ' ')", output_field=ArrayField(base_field=TextField()), params=()),
+            name_order=Case(
             When(name__iexact=search_word, then=1),
-            When(name__in=search_word.split(), then=2),
+            When(arr_name__contains=[search_word], then=2),
             When(name__icontains=search_word, then=3),
             When(description__icontains=search_word, then=4),
             When(article__icontains=search_word, then=5),

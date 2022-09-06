@@ -42,6 +42,7 @@ class FeedView(ListAPIView):
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
+        self.serializer_class(context={'request': self.request})
         response = super().list(request, args, kwargs)
         start_time = serializer.validated_data['start_time']
         if start_time:

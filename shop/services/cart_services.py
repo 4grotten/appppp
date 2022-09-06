@@ -179,7 +179,7 @@ class CartService:
         exception_list = []
         items.reverse()
         for data in items:
-            size = data['size']
+            size = data.get('size', None)
             try:
                 if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
                     exception_list.append(data['item'].id)

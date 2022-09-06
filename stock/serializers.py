@@ -2,7 +2,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from shop.models import ShopItem, ItemSubcategory
+from shop.models import ShopItem, ItemSubcategory, CartItem
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemLinksSetStock, ShopItemSizeCount
 
 
@@ -48,9 +48,12 @@ class SizeFormatByItemSerializer(serializers.ModelSerializer):
         return size_format.format_criteria.name
 
     def get_count(self, size_format: SizeFormat):
+        user = self.context['request'].user
         item = self.context['shop_item']
+        cart_item = CartItem.objects.filter(item=item, cart__user=user, cart__is_open=True, size=size_format).first()
+        current_count_in_cart = cart_item.count if cart_item else 0
         try:
-            size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count
+            size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count - current_count_in_cart
         except:
             size_count = None
         return size_count

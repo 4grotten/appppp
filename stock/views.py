@@ -31,8 +31,7 @@ class StockView(RetrieveAPIView):
     serializer_class = StockSerializer
 
     def get_object(self):
-        return ShopItem.objects.get(id=self.kwargs['pk'])
-
+        return ShopItemService.get(id=self.kwargs['pk'])
 
 class StockSetsView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)

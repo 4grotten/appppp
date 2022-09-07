@@ -263,9 +263,9 @@ class TransactionService:
                     item_size_count.count -= cart_item.count
                     item_size_count.save()
                 except IntegrityError:
-                    raise IntegrityException(_('Insufficient quantity in stock'))
+                    raise StockException(_('Insufficient quantity in stock'))
         except IntegrityError:
-            raise IntegrityException(_('The product has no quantity'))
+            raise StockException(_('The product has no quantity'))
 
     @classmethod
     @transaction.atomic

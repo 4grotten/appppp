@@ -1,11 +1,11 @@
 from .exceptions import (
     ObjectNotFoundException, ValidationException, AuthenticationException,
     BadRequestException, NotAcceptableException, IntegrityException,
-    PermissionDeniedException)
+    PermissionDeniedException, StockException)
 from .responses import (
     NotFoundResponse, ValidationExceptionResponse, AuthenticationExceptionResponse,
     BadRequestResponse, NotAcceptableExceptionResponse, IntegrityExceptionResponse,
-    PermissionExceptionResponse)
+    PermissionExceptionResponse, StockExceptionResponse)
 
 EXCEPTION_MAPPER = {
     ObjectNotFoundException.__name__: NotFoundResponse,
@@ -15,6 +15,7 @@ EXCEPTION_MAPPER = {
     IntegrityException.__name__: IntegrityExceptionResponse,
     NotAcceptableException.__name__: NotAcceptableExceptionResponse,
     PermissionDeniedException.__name__: PermissionExceptionResponse,
+    StockException.__name__: StockExceptionResponse,
 }
 
 
@@ -30,4 +31,5 @@ class RequestExceptionHandlerMiddleware(object):
         error_class = EXCEPTION_MAPPER.get(exception.__class__.__name__, None)
 
         if error_class:
+            print(request.headers)
             return error_class({'message': exception.message}, safe=False)

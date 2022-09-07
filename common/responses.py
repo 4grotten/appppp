@@ -35,3 +35,7 @@ class NotAcceptableExceptionResponse(JsonResponse):
 
 class IntegrityExceptionResponse(JsonResponse):
     status_code = 400
+
+
+class StockExceptionResponse(JsonResponse):
+    status_code = 400

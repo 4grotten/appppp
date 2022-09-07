@@ -301,7 +301,7 @@ class SmsServices(SingletonModel):
     nikita_service = models.BooleanField(verbose_name=_('Nikita Service'), default=True)
 
     def __str__(self):
-        return f'{self.twilio_service}- {self.nikita_service}'
+        return f'Twilio: {self.twilio_service}| Nikita: {self.nikita_service}'
 
     class Meta:
         verbose_name = _('Sms service')

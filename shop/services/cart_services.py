@@ -255,7 +255,7 @@ class CartItemService:
                 if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
                     raise IntegrityException(_('Insufficient quantity in stock'))
             except:
-                raise IntegrityException(_('У товара не указано количество'))
+                raise IntegrityException(_('The product has no quantity'))
 
         cart_organization = shop_item.organization
         if organization is not None:

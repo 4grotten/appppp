@@ -52,6 +52,7 @@ class MessageServiceNIKITA:
             )
             slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
                       f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                      f'ip: {ip_addr}\n'
                       f' status_code-{response.status_code}\n==============================')
             if response.status_code == 200:
                 return response.content.decode('utf-8')

@@ -4,6 +4,9 @@ import requests
 from django.conf import settings
 from django.template import Template, Context
 from django.utils.translation import gettext_lazy as _
+from twilio.base.exceptions import TwilioRestException
+
+from common.models import SmsServices
 from common.services import slack
 from sms_sender.models import SmsModel
 
@@ -11,48 +14,53 @@ from sms_sender.models import SmsModel
 class MessageServiceNIKITA:
     @classmethod
     def send_sms(cls, numbers: list, message: str, sms_id: str, code_id: int = None):
-        if len(numbers) < 0:
-            return
+        if SmsServices.objects.last().nikita_service:
+            if len(numbers) < 0:
+                return
 
-        template = '''<?xml version="1.0" encoding="UTF-8"?>
-        <message>
-            <login>{{ login }}</login>
-            <pwd>{{ password }}</pwd>
-            <id>{{ id }}</id>
-            <sender>{{ sender }}</sender>
-            <text>{{ text }}</text>
-            <phones>
-            {% for phone in phones %}    <phone>{{ phone }}</phone>{% endfor %}
-            </phones>
-            <test>{{ test }}</test>
-        </message>
-        '''
+            template = '''<?xml version="1.0" encoding="UTF-8"?>
+            <message>
+                <login>{{ login }}</login>
+                <pwd>{{ password }}</pwd>
+                <id>{{ id }}</id>
+                <sender>{{ sender }}</sender>
+                <text>{{ text }}</text>
+                <phones>
+                {% for phone in phones %}    <phone>{{ phone }}</phone>{% endfor %}
+                </phones>
+                <test>{{ test }}</test>
+            </message>
+            '''
 
-        context = {
-            'login': settings.NIKITA_USERNAME,
-            'password': settings.NIKITA_PASSWORD,
-            'id': sms_id,
-            'sender': settings.NIKITA_SENDER,
-            'text': message,
-            'phones': numbers,
-            'test': settings.NIKITA_TEST_MODE
-        }
+            context = {
+                'login': settings.NIKITA_USERNAME,
+                'password': settings.NIKITA_PASSWORD,
+                'id': sms_id,
+                'sender': settings.NIKITA_SENDER,
+                'text': message,
+                'phones': numbers,
+                'test': settings.NIKITA_TEST_MODE
+            }
 
-        template = Template(template)
-        data = template.render(Context(context))
+            template = Template(template)
+            data = template.render(Context(context))
 
-        response = requests.post(
-            settings.NIKITA_URL,
-            data=data.encode('utf-8'),
-            headers={'Content-Type': 'application/xml'}
-        )
-        slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
-                  f' status_code-{response.status_code}\n==============================')
-        if response.status_code == 200:
-            return response.content.decode('utf-8')
+            response = requests.post(
+                settings.NIKITA_URL,
+                data=data.encode('utf-8'),
+                headers={'Content-Type': 'application/xml'}
+            )
+            slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
+                      f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                      f' status_code-{response.status_code}\n==============================')
+            if response.status_code == 200:
+                return response.content.decode('utf-8')
 
-        return Exception(_('Error while sending SMS'))
+            return Exception(_('Error while sending SMS'))
+        else:
+            slack.bot(f'NIKITA SERVICE IS OFF '
+                      f'\n{str(numbers[0])}\n message - {message}\n'
+                      f'\n==============================')
 
 
 class MessageServiceSendPulse:
@@ -122,36 +130,56 @@ from twilio.rest import Client
 class MessageServiceTwilio:
     @classmethod
     def send_sms(cls, number, code, code_id):
-        account_sid = settings.TWILIO_ACCOUNT_SID
-        auth_token = settings.TWILIO_AUTH_TOKEN
-        client = Client(account_sid, auth_token)
-        sms = f'{code}'
+        if SmsServices.objects.last().twilio_service:
+            try:
+                account_sid = settings.TWILIO_ACCOUNT_SID
+                auth_token = settings.TWILIO_AUTH_TOKEN
+                client = Client(account_sid, auth_token)
+                sms = f'{code}'
 
-        message = client.messages.create(
-            to=number,
-            from_=settings.TWILIO_SERVICE_SID,
-            body=sms)
+                message = client.messages.create(
+                    to=number,
+                    from_=settings.TWILIO_SERVICE_SID,
+                    body=sms)
 
-        slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
-                  f' status_code-{message.status}\n============================')
+                slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                          f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                          f' status_code-{message.status}\n============================')
+            except TwilioRestException as e:
+                slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                          f'( {e} )'
+                          f'\n============================')
+        else:
+            slack.bot(f'TWILIO SERVICE IS OFF '
+                      f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                      f'\n==============================')
+
 
     @classmethod
     def send_whatsapp_sms(cls, number, code, code_id):
-        account_sid = settings.TWILIO_ACCOUNT_SID
-        auth_token = settings.TWILIO_AUTH_TOKEN
-        client = Client(account_sid, auth_token)
-        sms = f'{code}'
+        if SmsServices.objects.last().twilio_service:
+            try:
+                account_sid = settings.TWILIO_ACCOUNT_SID
+                auth_token = settings.TWILIO_AUTH_TOKEN
+                client = Client(account_sid, auth_token)
+                sms = f'{code}'
 
-        message = client.messages.create(
-            to=f'whatsapp:{number}',
-            from_=f'whatsapp:+14155238886',
-            body=sms)
+                message = client.messages.create(
+                    to=f'whatsapp:{number}',
+                    from_=f'whatsapp:+14155238886',
+                    body=sms)
 
-        slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
-                  f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
-                  f' status_code-{message.status}\n============================')
-
+                slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                          f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                          f' status_code-{message.status}\n============================')
+            except TwilioRestException as e:
+                slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                          f'( {e} )'
+                          f'\n============================')
+        else:
+            slack.bot(f'TWILIO SERVICE IS OFF '
+                      f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                      f'\n==============================')
 
 class AzamatMessageService:
     @classmethod

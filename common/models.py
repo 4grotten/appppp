@@ -297,8 +297,8 @@ class MessageText(TimestampModel):
 
 
 class SmsServices(SingletonModel):
-    twilio_service = models.BooleanField(verbose_name=_('Message name, unique'), default=True)
-    nikita_service = models.BooleanField(verbose_name=_('Message text'), default=True)
+    twilio_service = models.BooleanField(verbose_name=_('Twilio service'), default=True)
+    nikita_service = models.BooleanField(verbose_name=_('Nikita Service'), default=True)
 
     def __str__(self):
         return f'{self.twilio_service}- {self.nikita_service}'

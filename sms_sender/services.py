@@ -57,7 +57,9 @@ class MessageServiceNIKITA:
 
             return Exception(_('Error while sending SMS'))
         else:
-            slack.bot(f'NIKITA SERVICE IS OFF')
+            slack.bot(f'NIKITA SERVICE IS OFF'
+                      f'NIKITA\n{str(numbers[0])}\n message - {message}\n'
+                      f'\n==============================')
 
 
 class MessageServiceSendPulse:
@@ -142,7 +144,10 @@ class MessageServiceTwilio:
                       f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
                       f' status_code-{message.status}\n============================')
         else:
-            slack.bot(f'TWILIO SERVICE IS OFF')
+            slack.bot(f'TWILIO SERVICE IS OFF'
+                      f'NIKITA\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                      f'\n==============================')
+
 
     @classmethod
     def send_whatsapp_sms(cls, number, code, code_id):
@@ -161,7 +166,9 @@ class MessageServiceTwilio:
                       f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
                       f' status_code-{message.status}\n============================')
         else:
-            slack.bot(f'TWILIO SERVICE IS OFF')
+            slack.bot(f'TWILIO SERVICE IS OFF'
+                      f'NIKITA\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                      f'\n==============================')
 
 class AzamatMessageService:
     @classmethod

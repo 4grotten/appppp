@@ -112,7 +112,8 @@ class TemporaryCodeService:
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_and_send(cls, user: User, whatsapp: bool = None, email: bool = None) -> TemporaryCode:
+    def create_and_send(cls, user: User, whatsapp: bool = None, email: bool = None,
+                        ip_addr: str = None) -> TemporaryCode:
         try:
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
@@ -144,9 +145,10 @@ class TemporaryCodeService:
         # elif phone_number == "+971585939381":
         #     AzamatMessageService.save_in_model(message, phone_number)
         elif phone_number.startswith("+996"):
-            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id)
+            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id,
+                                          ip_addr=ip_addr)
         else:
-            MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id)
+            MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id, ip_addr=ip_addr)
         return code
 
     @classmethod

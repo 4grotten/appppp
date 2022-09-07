@@ -46,8 +46,9 @@ class RegisterAuthAPIView(APIView):
         phone_number = serializer.validated_data.get('phone_number')
 
         if not UserService.filter(phone_number=phone_number).exists():
+            ip = request.META.get('REMOTE_ADDR', '')
             user = UserService.create(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user)
+            TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
 
             return Response(data={
                 'message': gettext_lazy('User has successfully created'),
@@ -61,7 +62,8 @@ class RegisterAuthAPIView(APIView):
             if TemporaryCodeService.filter(user=user, is_used=True).exists():
                 token, _ = Token.objects.get_or_create(user=user)
             else:
-                TemporaryCodeService.create_and_send(user=user)
+                ip = request.META.get('REMOTE_ADDR', '')
+                TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
 
         return Response(data={
             'message': gettext_lazy('User found'),
@@ -118,7 +120,7 @@ class ResendTemporaryCodeAPIView(APIView):
 
         resend_type = serializer.validated_data.get('type')
         phone_number = serializer.validated_data.get('phone_number')
-
+        ip = request.META.get('REMOTE_ADDR', '')
         if resend_type == CHANGE_AUTH_NUMBER_TYPE:
             temporary_codes = TemporaryPhoneNumberService.filter(phone_number=phone_number)
             if not temporary_codes:
@@ -130,15 +132,15 @@ class ResendTemporaryCodeAPIView(APIView):
 
         elif resend_type == REGISTER_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user)
+            TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
 
         elif resend_type == WHATSAPP_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user, whatsapp=True)
+            TemporaryCodeService.create_and_send(user=user, whatsapp=True, ip_addr=ip)
 
         elif resend_type == EMAIL_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user, email=True)
+            TemporaryCodeService.create_and_send(user=user, email=True, ip_addr=ip)
 
         elif resend_type == VOICE_AUTH_TYPE:
             # ToDo voice auth type
@@ -280,9 +282,9 @@ class ForgotPasswordAPIView(APIView):
                 'message': gettext_lazy('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        ip = request.META.get('REMOTE_ADDR', '')
         user = UserService.get(phone_number=serializer.validated_data.get('phone_number'))
-        TemporaryCodeService.create_and_send(user=user)
+        TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
 
         #        input_type = serializer.validated_data.get('type')
 
@@ -372,7 +374,8 @@ class ValidateOldNumberAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        TemporaryCodeService.create_and_send(user=request.user)
+        ip = request.META.get('REMOTE_ADDR', '')
+        TemporaryCodeService.create_and_send(user=request.user, ip_addr=ip)
 
         return Response(data={
             'message': gettext_lazy('Code sent to old number and email')

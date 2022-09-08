@@ -13,7 +13,7 @@ from sms_sender.models import SmsModel
 
 class MessageServiceNIKITA:
     @classmethod
-    def send_sms(cls, numbers: list, message: str, sms_id: str, code_id: int = None):
+    def send_sms(cls, numbers: list, message: str, sms_id: str, code_id: int = None, ip_addr: str = None):
         if SmsServices.objects.last().nikita_service:
             if len(numbers) < 0:
                 return
@@ -52,6 +52,7 @@ class MessageServiceNIKITA:
             )
             slack.bot(f'NIKITA\n{str(numbers[0])}\n {message}\n'
                       f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                      f'ip: {ip_addr}\n'
                       f' status_code-{response.status_code}\n==============================')
             if response.status_code == 200:
                 return response.content.decode('utf-8')
@@ -60,6 +61,7 @@ class MessageServiceNIKITA:
         else:
             slack.bot(f'NIKITA SERVICE IS OFF '
                       f'\n{str(numbers[0])}\n message - {message}\n'
+                      f'\nip: {ip_addr}'
                       f'\n==============================')
 
 
@@ -129,7 +131,7 @@ from twilio.rest import Client
 
 class MessageServiceTwilio:
     @classmethod
-    def send_sms(cls, number, code, code_id):
+    def send_sms(cls, number, code, code_id, ip_addr: str = None):
         if SmsServices.objects.last().twilio_service:
             try:
                 account_sid = settings.TWILIO_ACCOUNT_SID
@@ -144,16 +146,18 @@ class MessageServiceTwilio:
 
                 slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
                           f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                          f'ip: {ip_addr}\n'
                           f' status_code-{message.status}\n============================')
             except TwilioRestException as e:
                 slack.bot(f'TWILIO\n{str(number)}\n {code}\n'
+                          f'ip: {ip_addr}\n'
                           f'( {e} )'
                           f'\n============================')
         else:
             slack.bot(f'TWILIO SERVICE IS OFF '
                       f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
-                      f'\n==============================')
-
+                      f'ip: {ip_addr}\n'
+                      f'==============================')
 
     @classmethod
     def send_whatsapp_sms(cls, number, code, code_id):
@@ -180,6 +184,7 @@ class MessageServiceTwilio:
             slack.bot(f'TWILIO SERVICE IS OFF '
                       f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
                       f'\n==============================')
+
 
 class AzamatMessageService:
     @classmethod

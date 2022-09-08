@@ -306,3 +306,14 @@ class SmsServices(SingletonModel):
     class Meta:
         verbose_name = _('Sms service')
         verbose_name_plural = _('Sms services')
+
+
+class BlockedIps(TimestampModel):
+    ip_address = models.CharField(max_length=255, verbose_name=_('Blocked ip'))
+
+    def __str__(self):
+        return f'{self.id} - IP:{self.ip_address}'
+
+    class Meta:
+        verbose_name = _('IP address')
+        verbose_name_plural = _('IP addresses')

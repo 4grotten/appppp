@@ -48,9 +48,12 @@ class SizeFormatByItemSerializer(serializers.ModelSerializer):
         return size_format.format_criteria.name
 
     def get_count(self, size_format: SizeFormat):
-        user = self.context['request'].user
+        request = self.context.get('request')
         item = self.context['shop_item']
-        cart_item = CartItem.objects.filter(item=item, cart__user=user, cart__is_open=True, size=size_format).first()
+        try:
+            cart_item = CartItem.objects.filter(item=item, cart__user=request.user, cart__is_open=True, size=size_format).first()
+        except:
+            cart_item = CartItem.objects.filter(item=item, cart__is_open=True, size=size_format).first()
         current_count_in_cart = cart_item.count if cart_item else 0
         try:
             size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count - current_count_in_cart
@@ -154,9 +157,12 @@ class ShopItemSizeCountSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField()
 
     def get_count(self, size_count: ShopItemSizeCount):
-        user = self.context['request'].user
+        request = self.context.get('request')
         item = self.context['shop_item']
-        cart_item = CartItem.objects.filter(item=item, cart__user=user, cart__is_open=True, size=None).first()
+        try:
+            cart_item = CartItem.objects.filter(item=item, cart__user=request.user, cart__is_open=True, size=None).first()
+        except:
+            cart_item = CartItem.objects.filter(item=item, cart__is_open=True, size=None).first()
         current_count_in_cart = cart_item.count if cart_item else 0
         try:
             size_count = size_count.count - current_count_in_cart

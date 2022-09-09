@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
 
 from .models import File, Country, Currency, City, Version, OpenExchangeRates, Languages, UmaiWallet, MessageText, \
-    FileVideo, CommentsWallpaper, LinkApp, SmsServices
+    FileVideo, CommentsWallpaper, LinkApp, SmsServices, BlockedIps
 
 
 @admin.register(MessageText)
@@ -101,4 +101,9 @@ class OpenExchangeRatesAdmin(admin.ModelAdmin):
 
 @admin.register(SmsServices)
 class SmsServicesAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(BlockedIps)
+class BlockedIpsAdmin(admin.ModelAdmin):
     pass

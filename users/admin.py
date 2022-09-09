@@ -147,7 +147,7 @@ class ApofizUserAdmin(UserAdmin):
 @admin.register(TemporaryCode)
 class TemporaryCodeAdmin(admin.ModelAdmin):
     list_display = ('user', 'code', 'is_used', 'expiration_datetime',)
-
+    search_fields = ('user__phone_number',)
 
 @admin.register(PhoneNumber)
 class PhoneNumberAdmin(admin.ModelAdmin):

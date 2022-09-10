@@ -37,7 +37,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         ShopItemService.delete_instagram_images(item_id=kwargs['pk'])
         ShopItemService.delete_instagram_video(item_id=kwargs['pk'])
         ShopItemService.change_updated_at_and_is_updated_and_removed_at_field(item_id=kwargs['pk'])
-        ShopItemService.remove_stock_if_change_subcategory(item_id=kwargs['pk'], subcategory_id=request.data['subcategory'])
+        # ShopItemService.remove_stock_if_change_subcategory(item_id=kwargs['pk'], subcategory_id=request.data['subcategory'])
         return super().put(request, *args, **kwargs)
 
     def get_permissions(self):
@@ -52,6 +52,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         self.serializer_class = ItemRetrieveSerializer
+        self.serializer_class(context={'request': self.request})
         return super().retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):

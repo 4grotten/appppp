@@ -31,8 +31,7 @@ class StockView(RetrieveAPIView):
     serializer_class = StockSerializer
 
     def get_object(self):
-        return ShopItem.objects.get(id=self.kwargs['pk'])
-
+        return ShopItemService.get(id=self.kwargs['pk'])
 
 class StockSetsView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
@@ -175,12 +174,11 @@ class ShopItemSetIdsListView(ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        try:
-            item = ShopItemService.get(id=self.kwargs['pk'])
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        if ShopItemSetStock.objects.filter(main_shop_item=item).exists():
             shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=item)
             return shop_item_stock.shop_item.all()
-        except ShopItemSetStock.DoesNotExist:
-            raise ObjectNotFoundException(_('ShopItemSetStock not found'))
+        return None
 
 
 class OrganizationSubcategoryListView(ListAPIView):

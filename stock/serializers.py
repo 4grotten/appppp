@@ -2,7 +2,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from shop.models import ShopItem, ItemSubcategory
+from shop.models import ShopItem, ItemSubcategory, CartItem
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemLinksSetStock, ShopItemSizeCount
 
 
@@ -48,9 +48,15 @@ class SizeFormatByItemSerializer(serializers.ModelSerializer):
         return size_format.format_criteria.name
 
     def get_count(self, size_format: SizeFormat):
+        request = self.context.get('request')
         item = self.context['shop_item']
         try:
-            size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count
+            cart_item = CartItem.objects.filter(item=item, cart__user=request.user, cart__is_open=True, size=size_format).first()
+        except:
+            cart_item = CartItem.objects.filter(item=item, cart__is_open=True, size=size_format).first()
+        current_count_in_cart = cart_item.count if cart_item else 0
+        try:
+            size_count = ShopItemSizeCount.objects.get(size=size_format, main_shop_item=item).count - current_count_in_cart
         except:
             size_count = None
         return size_count
@@ -144,6 +150,29 @@ class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItemSizeCount
         fields = ('id', 'size', 'count')
+
+
+class ShopItemSizeCountSerializer(serializers.ModelSerializer):
+    size = SizeFormatSerializer(required=False, default=None)
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, size_count: ShopItemSizeCount):
+        request = self.context.get('request')
+        item = self.context['shop_item']
+        try:
+            cart_item = CartItem.objects.filter(item=item, cart__user=request.user, cart__is_open=True, size=None).first()
+        except:
+            cart_item = CartItem.objects.filter(item=item, cart__is_open=True, size=None).first()
+        current_count_in_cart = cart_item.count if cart_item else 0
+        try:
+            size_count = size_count.count - current_count_in_cart
+        except:
+            size_count = None
+        return size_count
+
+    class Meta:
+        model = ShopItemSizeCount
+        fields = ('size', 'count')
 
 
 class AddShopItemSizeCountSetSerializer(serializers.ModelSerializer):

@@ -8,7 +8,8 @@ from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import (
-    ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException
+    ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException,
+    StockException
 )
 from notifications.constants import NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
@@ -178,27 +179,15 @@ class CartService:
 
         exception_list = []
         items.reverse()
-
         for data in items:
+            size = data.get('size', None)
             try:
-                size = data['size']
                 if ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
-                    exception_list.append({
-                        'size': size.id,
-                        'item_id': data['item'].id,
-                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
-                        'response_quantity': data['count']
-                    })
+                    exception_list.append(data['item'].id)
             except:
-                size = None
                 if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
                         and ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'])[0].count < data['count']:
-                    exception_list.append({
-                        'size': size,
-                        'item_id': data['item'].id,
-                        'current_quantity': ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count,
-                        'response_quantity': data['count']
-                    })
+                    exception_list.append(data['item'].id)
 
             if data['count'] and (
                     data['item'].organization == cart.organization or
@@ -206,13 +195,15 @@ class CartService:
             ):
                 if ShopItemSizeCount.objects.filter(main_shop_item_id=data['item'], size=size).exists()\
                         and ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count < data['count']:
+
                     item_count = ShopItemSizeCount.objects.get(main_shop_item_id=data['item'], size=size).count
                     CartItem.objects.create(cart=cart, item=data['item'], size=size, count=item_count)
+
                 else:
                     CartItem.objects.create(cart=cart, item=data['item'], size=size, count=data['count'])
 
         if exception_list:
-            raise IntegrityException(_('Insufficient quantity in stock.'))
+            raise StockException(_('Insufficient quantity in stock.'))
 
 
         if cart.transaction and not cart.is_open:
@@ -261,8 +252,11 @@ class CartItemService:
     ) -> int:
 
         if ShopItemSizeCount.objects.filter(main_shop_item=shop_item).exists():
-            if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
-                raise IntegrityException(_('Insufficient quantity in stock'))
+            try:
+                if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count < change:
+                    raise StockException(_('Insufficient quantity in stock'))
+            except:
+                raise StockException(_('The product has no quantity'))
 
         cart_organization = shop_item.organization
         if organization is not None:
@@ -286,9 +280,9 @@ class CartItemService:
                 cart.delete()
             return 0
         else:
-            if ShopItemSizeCount.objects.filter(main_shop_item=shop_item, size=size).exists():
+            if ShopItemSizeCount.objects.filter(main_shop_item=shop_item, size=size).exists() and change > 0:
                 if ShopItemSizeCount.objects.get(main_shop_item=shop_item, size=size).count <= cart_item.count:
-                    raise IntegrityException(_('Insufficient quantity in stock'))
+                    raise StockException(_('Insufficient quantity in stock'))
             cart_item.count = F('count') + change
             cart_item.size_id = size
             cart_item.save()

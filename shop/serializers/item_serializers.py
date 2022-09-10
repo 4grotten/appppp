@@ -15,7 +15,7 @@ from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
-from stock.serializers import SizeFormatByItemSerializer
+from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -69,8 +69,15 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all()
-        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
+        sizes = item.available_sizes.all().order_by('order')
+        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts)
+        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+            sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
+            return ShopItemSizeCountSerializer(sizes, many=True, context={'shop_item': item, 'request': self.context['request']}).data
+        return SizeFormatByItemSerializer(sizes, many=True,
+                                          context={'shop_item': item, 'request': self.context['request']}).data
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
@@ -276,7 +283,15 @@ class SubscriptionItemSerializer(ItemListSerializer):
 
     def get_available_sizes(self, item: ShopItem):
         sizes = item.available_sizes.all().order_by('order')
-        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
+        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts)
+        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+            sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
+            return ShopItemSizeCountSerializer(sizes, many=True,
+                                               context={'shop_item': item, 'request': self.context['request']}).data
+        return SizeFormatByItemSerializer(sizes, many=True,
+                                          context={'shop_item': item, 'request': self.context['request']}).data
 
     class Meta:
         model = ShopItem
@@ -316,7 +331,15 @@ class ItemFeedSerializer(ItemListSerializer):
 
     def get_available_sizes(self, item: ShopItem):
         sizes = item.available_sizes.all().order_by('order')
-        return SizeFormatByItemSerializer(sizes, many=True, context={'shop_item': item}).data
+        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts)
+        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+            sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
+            return ShopItemSizeCountSerializer(sizes, many=True,
+                                               context={'shop_item': item, 'request': self.context['request']}).data
+        return SizeFormatByItemSerializer(sizes, many=True,
+                                          context={'shop_item': item, 'request': self.context['request']}).data
 
     class Meta:
         model = ShopItem

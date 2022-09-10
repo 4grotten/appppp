@@ -294,3 +294,26 @@ class MessageText(TimestampModel):
     class Meta:
         verbose_name = _('Message text')
         verbose_name_plural = _('Messages Text')
+
+
+class SmsServices(SingletonModel):
+    twilio_service = models.BooleanField(verbose_name=_('Twilio service'), default=True)
+    nikita_service = models.BooleanField(verbose_name=_('Nikita Service'), default=True)
+
+    def __str__(self):
+        return f'Twilio: {self.twilio_service}| Nikita: {self.nikita_service}'
+
+    class Meta:
+        verbose_name = _('Sms service')
+        verbose_name_plural = _('Sms services')
+
+
+class BlockedIps(TimestampModel):
+    ip_address = models.CharField(max_length=255, verbose_name=_('Blocked ip'))
+
+    def __str__(self):
+        return f'{self.id} - IP:{self.ip_address}'
+
+    class Meta:
+        verbose_name = _('IP address')
+        verbose_name_plural = _('IP addresses')

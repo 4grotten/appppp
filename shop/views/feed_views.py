@@ -1,4 +1,4 @@
-from django.db.models import Q, When, Case, Value, IntegerField
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
@@ -30,15 +30,11 @@ class FeedView(ListAPIView):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         elif search:
-            qs = qs.annotate(name_order=Case(
-                When(name__icontains=search, then=1),
-                When(description__icontains=search, then=2),
-                When(article__icontains=search, then=3),
-                default=Value(4),
-                output_field=IntegerField(),
-            )).order_by('name_order', )
+            qs = qs.filter(is_published=True, price__isnull=False)
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         else:
             qs = qs.filter(is_published=True, price__isnull=False).order_by('-updated_at')
+
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
@@ -46,6 +42,7 @@ class FeedView(ListAPIView):
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
+        self.serializer_class(context={'request': self.request})
         response = super().list(request, args, kwargs)
         start_time = serializer.validated_data['start_time']
         if start_time:
@@ -58,6 +55,7 @@ class FeedView(ListAPIView):
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
+    # ordering = ['-updated_at', ]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
@@ -69,16 +67,23 @@ class OrganizationItemListView(FeedView):
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user
-        )
+        ).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
 
 class SubscriptionItemListView(FeedView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscriptionItemSerializer
+    # ordering = ['-updated_at', ]
 
     def get_queryset(self):
-        qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user)
+        qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):

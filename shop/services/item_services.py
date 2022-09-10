@@ -1,4 +1,6 @@
-from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, IntegerField, TextField
+from django.db.models.expressions import RawSQL
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -8,7 +10,6 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, ItemInstagramData
 from shop.services.cart_services import CartItemService
-from stock.models import ShopItemSizeCount, ShopItemSetStock, ShopItemLinksSetStock
 from users.models import User
 
 
@@ -140,17 +141,6 @@ class ShopItemService:
         item.save()
 
     @classmethod
-    def remove_stock_if_change_subcategory(cls, item_id, subcategory_id):
-        item = ShopItem.objects.get(id=int(item_id))
-        if item.subcategory and item.subcategory.id == subcategory_id:
-            return
-        else:
-            ShopItemSizeCount.objects.filter(main_shop_item=item).delete()
-            ShopItemSetStock.objects.filter(main_shop_item=item).delete()
-            ShopItemLinksSetStock.objects.filter(main_shop_item=item).delete()
-            item.available_sizes.clear()
-
-    @classmethod
     def get_suggest_items(cls, response):
 
         array_items = []
@@ -170,3 +160,19 @@ class ShopItemService:
         del response.data['total_pages']
 
         return response
+
+    @classmethod
+    def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
+        queryset = queryset.annotate(
+            arr_name=RawSQL("string_to_array(lower(name), ' ')", output_field=ArrayField(base_field=TextField()), params=()),
+            name_order=Case(
+            When(name__iexact=search_word, then=1),
+            When(arr_name__contains=[search_word.lower()], then=2),
+            When(name__icontains=search_word, then=3),
+            When(description__icontains=search_word, then=4),
+            When(article__icontains=search_word, then=5),
+            default=Value(6),
+            output_field=IntegerField(),
+        )).order_by('name_order', '-updated_at', )
+
+        return queryset

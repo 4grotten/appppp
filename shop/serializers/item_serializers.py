@@ -72,7 +72,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         sizes = item.available_sizes.all().order_by('order')
         if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
             item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
         elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
             return ShopItemSizeCountSerializer(sizes, many=True, context={'shop_item': item, 'request': self.context['request']}).data
@@ -285,7 +285,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
         sizes = item.available_sizes.all().order_by('order')
         if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
             item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
         elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
             return ShopItemSizeCountSerializer(sizes, many=True,
@@ -333,7 +333,7 @@ class ItemFeedSerializer(ItemListSerializer):
         sizes = item.available_sizes.all().order_by('order')
         if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
             item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
         elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
             return ShopItemSizeCountSerializer(sizes, many=True,

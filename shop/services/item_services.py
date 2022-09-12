@@ -87,7 +87,7 @@ class ShopItemService:
     @classmethod
     def get_items_of_subscribed_organizations(cls, user: User) -> QuerySet:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
-        queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True).distinct()
+        queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True, organization__is_banned=False).distinct()
         return queryset
 
     @classmethod

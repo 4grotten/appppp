@@ -3,7 +3,6 @@ from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import Throttled
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,19 +24,11 @@ from .serializers import (
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
 )
-from .throttle.throttle import UserLoginRateThrottle
 
 
 class RegisterAuthAPIView(APIView):
     permission_classes = ()
     authentication_classes = ()
-    throttle_classes = (UserLoginRateThrottle,)
-
-    def throttled(self, request, wait):
-        print(request.data)
-        raise Throttled(detail={
-            "message": "recaptcha_required",
-        })
 
     def post(self, request):
         serializer = RegisterAuthSerializer(data=request.data)

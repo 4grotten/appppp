@@ -8,7 +8,7 @@ class UserLoginRateThrottle(SimpleRateThrottle):
     scope = 'loginAttempts'
 
     def get_cache_key(self, request, view):
-        user = User.objects.filter(email=request.data.get('email'))
+        user = User.objects.filter(phone_number=request.data.get('phone_number'))
         ident = user[0].pk if user else self.get_ident(request)
 
         return self.cache_format % {
@@ -17,7 +17,6 @@ class UserLoginRateThrottle(SimpleRateThrottle):
         }
 
     def check_recaptcha(self, request, view):
-        print(request.data)
         g_value = request.data.get('recaptcha')
         if g_value:
             is_verified = verify_recaptcha(g_value)

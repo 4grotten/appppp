@@ -31,5 +31,4 @@ class RequestExceptionHandlerMiddleware(object):
         error_class = EXCEPTION_MAPPER.get(exception.__class__.__name__, None)
 
         if error_class:
-            print(request.headers)
             return error_class({'message': exception.message}, safe=False)

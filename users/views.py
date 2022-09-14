@@ -34,7 +34,6 @@ class RegisterAuthAPIView(APIView):
     throttle_classes = (UserLoginRateThrottle,)
 
     def throttled(self, request, wait):
-        print(request.data)
         raise Throttled(detail={
             "message": "recaptcha_required",
         })

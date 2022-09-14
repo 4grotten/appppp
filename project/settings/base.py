@@ -177,6 +177,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 MEDIA_UPLOAD_PREFIX = config('DJANGO_MEDIA_UPLOAD_PREFIX', default='/media/')
 
+# Google recaptcha settings
+
+# RE_CAPTCHA_SECRET_KEY = config('RE_CAPTCHA_SECRET_KEY', default=' ')
+# RE_CAPTCHA_SITE_KEY = config('RE_CAPTCHA_SITE_KEY', default=' ')
+RE_CAPTCHA_SECRET_KEY='6LewEvEhAAAAALoR8JV6LYFav6YcRH7qwCcHhGHK'
+RE_CAPTCHA_SITE_KEY='6LewEvEhAAAAAEyy9XYRekbrNlYQBQjG6N-ZhY1P'
+
 # AWS settings
 
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-central-1')
@@ -236,8 +243,18 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'common.schemas.DefaultSchema',
     'COERCE_DECIMAL_TO_STRING': False,
-}
 
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '500/minute',
+        'user': '1000/minute',
+        'loginAttempts': '2/hr',
+
+    }
+}
 
 NIKITA_URL = 'https://smspro.nikita.kg/api/message'
 NIKITA_USERNAME = config('NIKITA_USERNAME')

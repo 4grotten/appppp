@@ -1,5 +1,7 @@
+import binascii
 import datetime
-import uuid
+import os
+from decouple import config
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -100,3 +102,41 @@ class SocialNetworkContact(TimestampModel):
 
     def __str__(self):
         return self.url
+
+
+class MyOwnToken(TimestampModel):
+    """
+    The default authorization token model.
+    """
+    key = models.CharField(_("Key"), max_length=40)
+
+    user = models.ForeignKey(
+        User, related_name='auth_tokens',
+        on_delete=models.CASCADE, verbose_name="User"
+    )
+    ip = models.CharField(
+        max_length=256, null=True, blank=True
+    )
+    location = models.CharField(
+        max_length=256, null=True, blank=True
+    )
+    device = models.CharField(
+        max_length=256, null=True, blank=True
+    )
+    expired_time = models.DateTimeField(_("expired_date"), blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Token")
+        verbose_name_plural = _("Tokens")
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+            self.expired_time = datetime.datetime.now() + datetime.timedelta(minutes=int(config('TOKEN_EXPIRED_TIME')))
+        return super(MyOwnToken, self).save(*args, **kwargs)
+
+    def generate_key(self):
+        return binascii.hexlify(os.urandom(20)).decode()
+
+    def __str__(self):
+        return self.key

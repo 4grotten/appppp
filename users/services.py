@@ -87,7 +87,6 @@ class UserService:
     def get_user_email_by_phone_number(cls, phone_number: str):
         try:
             user = cls.model.objects.get(phone_number=phone_number)
-            print(user.email)
             return user.email
         except User.DoesNotExist:
             return None

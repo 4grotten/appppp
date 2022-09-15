@@ -281,7 +281,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'is_deleted', 'is_private', 'image', 'role', 'is_delivery_service', 'verification_status', 'avg_check')
+            'id', 'title', 'is_deleted', 'is_private', 'is_banned', 'verification_status', 'image', 'role', 'is_delivery_service', 'verification_status', 'avg_check')
         read_only_fields = ['verification_status']
 
 

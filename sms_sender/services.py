@@ -136,6 +136,60 @@ class MessageServiceSMSRU:
 from twilio.rest import Client
 
 
+class MessageServiceMessageBird:
+    @classmethod
+    def send_sms(cls, number, code, code_id, ip_addr: str = None, voice: bool = False, voice_code=None):
+        if not BlockedIps.objects.filter(ip_address=ip_addr).exists():
+            if SmsServices.objects.last().bird_message:
+                try:
+                    phone = settings.MESSAGE_BIRD_SERVICE_PHONE
+                    auth_token = settings.MESSAGE_BIRD_SERVICE_TOKEN
+                    sms = f'{code}'
+                    if voice:
+                        voice_message = 'Your verification code '
+                        for i in str(voice_code):
+                            voice_message += i + '  '
+                        response = requests.post(
+                            url=settings.MESSAGE_BIRD_SERVICE_URL_FOR_VOICE_SMS,
+                            data={
+                                'recipients': number,
+                                'originator': phone,
+                                'body': voice_message,
+                                'repeat': 4
+                            },
+                            headers={'Authorization': 'AccessKey ' + auth_token}
+                        )
+                    else:
+                        response = requests.post(
+                            url=settings.MESSAGE_BIRD_SERVICE_URL_FOR_SMS,
+                            data={
+                                'recipients': number,
+                                'originator': phone,
+                                'body': sms
+                              },
+                            headers={'Authorization': 'AccessKey ' + auth_token}
+                        )
+                    slack.bot(f'MessageBird\n{str(number)}\n {code}\n'
+                              f'link code: https://apofiz.com/admin/users/temporarycode/{code_id}/change/\n'
+                              f'ip: {ip_addr}\n'
+                              f' status_code-{response.status_code}\n============================')
+                except TwilioRestException as e:
+                    slack.bot(f'MessageBird\n{str(number)}\n {code}\n'
+                              f'ip: {ip_addr}\n'
+                              f'( {e} )'
+                              f'\n============================')
+            else:
+                slack.bot(f'MessageBird SERVICE IS OFF '
+                          f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                          f'ip: {ip_addr}\n'
+                          f'==============================')
+        else:
+            slack.bot(f'MessageBird SERVICE'
+                      f'\n{str(number)}\n code -{code} code_id - {code_id}\n'
+                      f'ip: {ip_addr}\n'
+                      f'THIS IP IN BLACK LIST!!! \n'
+                      f'==============================')
+
 class MessageServiceTwilio:
     @classmethod
     def send_sms(cls, number, code, code_id, ip_addr: str = None):

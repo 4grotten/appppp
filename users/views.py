@@ -3,9 +3,11 @@ from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from transliterate.utils import _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import UmaiWallet
@@ -14,12 +16,13 @@ from common.services.umai import Umai
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
+from .models import MyOwnToken
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
     SetPasswordSerializer, UserChangePasswordSerializer, ForgotPasswordSerializer,
     SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
-    PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer,
+    PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
 )
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
@@ -60,7 +63,14 @@ class RegisterAuthAPIView(APIView):
 
         if user.is_new_user:
             if TemporaryCodeService.filter(user=user, is_used=True).exists():
-                token, _ = Token.objects.get_or_create(user=user)
+                location = serializer.validated_data.get('location')
+                device = serializer.validated_data.get('device')
+                try:
+                    token = MyOwnToken.objects.get(user=user, device=device)
+                except MyOwnToken.DoesNotExist:
+                    token = MyOwnToken.objects.create(user=user, location=location, device=device,
+                                                      ip=request.META.get('REMOTE_ADDR'), )
+                    token.save()
             else:
                 ip = request.META.get('REMOTE_ADDR', '')
                 TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
@@ -92,9 +102,14 @@ class VerifyTemporaryCodeAPIView(APIView):
         TemporaryCodeService.validate(code=code, phone_number=phone_number)
 
         user = UserService.get(phone_number=phone_number)
-
-        token, created = Token.objects.get_or_create(user=user)
-
+        device = serializer.validated_data.get('device')
+        location = serializer.validated_data.get('location')
+        try:
+            token = MyOwnToken.objects.get(user=user, device=device)
+        except MyOwnToken.DoesNotExist:
+            token = MyOwnToken.objects.create(user=user, location=location, device=device,
+                                              ip=request.META.get('REMOTE_ADDR'), )
+            token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
 
@@ -222,7 +237,14 @@ class LoginAPIView(APIView):
         user = authenticate(**serializer.validated_data)
 
         if user is not None:
-            token, _ = Token.objects.get_or_create(user=user)
+            device = serializer.validated_data.get('device')
+            location = serializer.validated_data.get('location')
+            try:
+                token = MyOwnToken.objects.get(user=user, device=device)
+            except MyOwnToken.DoesNotExist:
+                token = MyOwnToken.objects.create(user=user, location=location, device=device,
+                                                  ip=request.META.get('REMOTE_ADDR'), )
+                token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
                 'message': gettext_lazy('Successfully logged in'),
@@ -241,8 +263,8 @@ class LogoutAPIView(APIView):
 
     def post(self, request):
         # ToDo: MULTI-TOKEN AUTH
-        # token_key = request.headers['Authorization'].split()[1]
-        # Token.objects.filter(key=token_key).delete()
+        token_key = request.headers['Authorization'].split()[1]
+        MyOwnToken.objects.filter(key=token_key).delete()
 
         return Response(data={
             'message': gettext_lazy('Successfully logged out'),
@@ -451,3 +473,28 @@ class GetEmailUserAPIView(APIView):
         phone_number = serializer.validated_data['phone_number']
         email = UserService.get_user_email_by_phone_number(phone_number=phone_number)
         return Response({'email': email})
+
+
+class MyOwnTokenListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MyOwnTokenSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        user = self.request.user
+        return MyOwnToken.objects.filter(user=user)
+
+
+class MyOwnTokenRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MyOwnTokenSerializer
+
+    def get_object(self):
+        try:
+            return MyOwnToken.objects.get(id=self.kwargs['pk'])
+        except MyOwnToken.DoesNotExist:
+            return Response(
+                data={
+                    "Error": _("Invalid id"),
+                }, status=status.HTTP_400_BAD_REQUEST
+            )

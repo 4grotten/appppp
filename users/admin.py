@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
 
-from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
+from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken
 
 User = get_user_model()
 
@@ -173,3 +173,8 @@ class ApofizTokenAdmin(TokenAdmin):
 
 
 admin.site.register(TokenProxy, ApofizTokenAdmin)
+
+
+@admin.register(MyOwnToken)
+class MyOwnTokenAdmin(admin.ModelAdmin):
+    list_display = ('user', 'location', 'device', 'expired_time',)

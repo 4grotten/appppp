@@ -6,7 +6,8 @@ from users.views import (
     ProfileInitialAPIView, SetPasswordAPIView, UserChangePasswordAPIView,
     ForgotPasswordAPIView, CurrentUserAPIView, UserPhonesListAPIView,
     UserPhoneNumbersUpdateAPIView, UserSocialNetworksListAPIView, UserSocialNetworksUpdateAPIView,
-    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView
+    ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView,
+    MyOwnTokenListView, MyOwnTokenRetrieveView
 )
 
 urlpatterns = [
@@ -28,4 +29,6 @@ urlpatterns = [
     path('users/doSendCode/', SendCodeToNewNumberAPIView.as_view(), name='send_code_to_new_number'),
     path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='change_and_verify_new_number'),
     path('users/get_email/', GetEmailUserAPIView.as_view(), name='get_email_by_phone_number'),
+    path('users/get_active_devices/', MyOwnTokenListView.as_view(), name='get_active_devices'),
+    path('users/get_token_detail/<int:pk>/', MyOwnTokenRetrieveView.as_view(), name='get_token_detail'),
 ]

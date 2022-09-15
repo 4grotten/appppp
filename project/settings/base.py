@@ -179,10 +179,8 @@ MEDIA_UPLOAD_PREFIX = config('DJANGO_MEDIA_UPLOAD_PREFIX', default='/media/')
 
 # Google recaptcha settings
 
-# RE_CAPTCHA_SECRET_KEY = config('RE_CAPTCHA_SECRET_KEY', default=' ')
-# RE_CAPTCHA_SITE_KEY = config('RE_CAPTCHA_SITE_KEY', default=' ')
-RE_CAPTCHA_SECRET_KEY='6LewEvEhAAAAALoR8JV6LYFav6YcRH7qwCcHhGHK'
-RE_CAPTCHA_SITE_KEY='6LewEvEhAAAAAEyy9XYRekbrNlYQBQjG6N-ZhY1P'
+RE_CAPTCHA_SECRET_KEY='6LcbLf4hAAAAANvv0dX8Uh30C0BhLKrM5JnTEW6r'
+RE_CAPTCHA_SITE_KEY='6LcbLf4hAAAAAEpzASl8j-N7e4BSQXHegYqBp6r8'
 
 # AWS settings
 
@@ -251,8 +249,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '500/minute',
         'user': '1000/minute',
-        'loginAttempts': '2/hr',
-
+        'loginAttempts': '5/min',
     }
 }
 
@@ -276,6 +273,12 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE = config('TWILIO_PHONE')
 TWILIO_SERVICE_SID = config('TWILIO_SERVICE_SID')
+
+MESSAGE_BIRD_SERVICE_TOKEN = 'kjLu1AKrFyJ3iilTdbNILb24G'
+MESSAGE_BIRD_SERVICE_TEST_TOKEN = 'xuUkOtRxvGwnL2SBfGHOJBags'
+MESSAGE_BIRD_SERVICE_PHONE = '+12068753212'
+MESSAGE_BIRD_SERVICE_URL_FOR_SMS ='https://rest.messagebird.com/messages'
+MESSAGE_BIRD_SERVICE_URL_FOR_VOICE_SMS ='https://rest.messagebird.com/voicemessages'
 
 SLACK_TOKEN = config('SLACK_TOKEN')
 

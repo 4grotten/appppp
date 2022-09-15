@@ -9,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
 from common.services import slack
 from mailer.services import MailerService
-from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService
+from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService, \
+    MessageServiceMessageBird
 from .constants import SMS_CODE_MESSAGE
 from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
 
@@ -144,9 +145,12 @@ class TemporaryCodeService:
             AzamatMessageService.save_in_model(message, phone_number)
         # elif phone_number == "+971585939381":
         #     AzamatMessageService.save_in_model(message, phone_number)
-        # elif phone_number.startswith("+996"):
-        #     MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id,
-        #                                   ip_addr=ip_addr)
+        elif phone_number.startswith("+996"):
+            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id,
+                                          ip_addr=ip_addr)
+        elif phone_number.startswith("+971"):
+            MessageServiceMessageBird.send_sms(number=str(user.phone_number), code=message, code_id=code.id,
+                                               ip_addr=ip_addr, voice=True, voice_code=code.code)
         else:
             # MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id, ip_addr=ip_addr)
             MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id,

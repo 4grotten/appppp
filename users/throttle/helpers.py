@@ -1,4 +1,5 @@
 import requests
+
 from project.settings.base import RE_CAPTCHA_SECRET_KEY
 
 

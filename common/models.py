@@ -299,6 +299,7 @@ class MessageText(TimestampModel):
 class SmsServices(SingletonModel):
     twilio_service = models.BooleanField(verbose_name=_('Twilio service'), default=True)
     nikita_service = models.BooleanField(verbose_name=_('Nikita Service'), default=True)
+    bird_message = models.BooleanField(verbose_name=_('Bird message Service'), default=True)
 
     def __str__(self):
         return f'Twilio: {self.twilio_service}| Nikita: {self.nikita_service}'

@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import UmaiWallet
+from common.models import UmaiWallet, BlockedIps
 from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
@@ -39,6 +39,10 @@ class RegisterAuthAPIView(APIView):
         })
 
     def post(self, request):
+        ip = request.META.get('REMOTE_ADDR', '')
+        if BlockedIps.objects.filter(ip_address=ip).first():
+            return Response(status=403, data={'message': "Forbidden"})
+
         serializer = RegisterAuthSerializer(data=request.data)
 
         if not serializer.is_valid():

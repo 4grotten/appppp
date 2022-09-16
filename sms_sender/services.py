@@ -148,14 +148,18 @@ class MessageServiceMessageBird:
                     if voice:
                         voice_message = 'Your verification code '
                         for i in str(voice_code):
-                            voice_message += i + '  '
+                            voice_message += i + '  ' + '  ' + ' '
                         response = requests.post(
                             url=settings.MESSAGE_BIRD_SERVICE_URL_FOR_VOICE_SMS,
                             data={
                                 'recipients': number,
                                 'originator': phone,
                                 'body': voice_message,
-                                'repeat': 4
+                                'repeat': 4,
+                                'ifMachine': 'continue',
+                                'machineTimeout': 400,
+                                'language': 'en-us',
+                                'voice': 'male'
                             },
                             headers={'Authorization': 'AccessKey ' + auth_token}
                         )

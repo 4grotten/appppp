@@ -179,7 +179,7 @@ MEDIA_UPLOAD_PREFIX = config('DJANGO_MEDIA_UPLOAD_PREFIX', default='/media/')
 
 # Google recaptcha settings
 
-RE_CAPTCHA_SECRET_KEY='6LcbLf4hAAAAANvv0dX8Uh30C0BhLKrM5JnTEW6r'
+RE_CAPTCHA_SECRET_KEY='6LcNJwIiAAAAAC_-XBCAMc3JGRi9hOcUyIWl6OkE'
 RE_CAPTCHA_SITE_KEY='6LcbLf4hAAAAAEpzASl8j-N7e4BSQXHegYqBp6r8'
 
 # AWS settings
@@ -249,7 +249,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '500/minute',
         'user': '1000/minute',
-        'loginAttempts': '5/min',
+        'loginAttempts': '2/min',
     }
 }
 

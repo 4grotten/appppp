@@ -156,6 +156,7 @@ class MessageServiceMessageBird:
                                 'originator': phone,
                                 'body': voice_message,
                                 'repeat': 4,
+                                'ifMachine': 'continue',
                                 'machineTimeout': 400,
                                 'language': 'en-us',
                                 'voice': 'male'

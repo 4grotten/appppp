@@ -109,21 +109,14 @@ class MyOwnToken(TimestampModel):
     The default authorization token model.
     """
     key = models.CharField(_("Key"), max_length=40)
-
-    user = models.ForeignKey(
-        User, related_name='auth_tokens',
-        on_delete=models.CASCADE, verbose_name="User"
-    )
-    ip = models.CharField(
-        max_length=256, null=True, blank=True
-    )
-    location = models.CharField(
-        max_length=256, null=True, blank=True
-    )
-    device = models.CharField(
-        max_length=256, null=True, blank=True
-    )
-    expired_time = models.DateTimeField(_("expired_date"), blank=True, null=True)
+    user = models.ForeignKey(User, related_name='auth_tokens', on_delete=models.CASCADE, verbose_name="User")
+    ip = models.CharField(max_length=256, null=True, blank=True)
+    location = models.CharField(max_length=256, null=True, blank=True)
+    device = models.CharField(max_length=256, null=True, blank=True)
+    expired_time = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    log_time = models.DateTimeField(auto_now_add=True)
+    version_app = models.CharField(max_length=500, null=True, blank=True)
 
     class Meta:
         verbose_name = _("Token")

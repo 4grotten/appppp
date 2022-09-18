@@ -1,10 +1,8 @@
 from django.contrib.auth import authenticate
-from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy
 from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.exceptions import Throttled
+from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,11 +75,12 @@ class RegisterAuthAPIView(APIView):
             if TemporaryCodeService.filter(user=user, is_used=True).exists():
                 location = serializer.validated_data.get('location')
                 device = serializer.validated_data.get('device')
+                version_app = serializer.validated_data.get('version_app')
                 try:
-                    token = MyOwnToken.objects.get(user=user, device=device)
+                    token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
                 except MyOwnToken.DoesNotExist:
                     token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                                      ip=request.META.get('REMOTE_ADDR'), )
+                                                      ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
                     token.save()
             else:
                 ip = request.META.get('REMOTE_ADDR', '')
@@ -116,11 +115,12 @@ class VerifyTemporaryCodeAPIView(APIView):
         user = UserService.get(phone_number=phone_number)
         device = serializer.validated_data.get('device')
         location = serializer.validated_data.get('location')
+        version_app = serializer.validated_data.get('version_app')
         try:
-            token = MyOwnToken.objects.get(user=user, device=device)
+            token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                              ip=request.META.get('REMOTE_ADDR'), )
+                                              ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
             token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
@@ -251,11 +251,12 @@ class LoginAPIView(APIView):
         if user is not None:
             device = serializer.validated_data.get('device')
             location = serializer.validated_data.get('location')
+            version_app = serializer.validated_data.get('version_app')
             try:
-                token = MyOwnToken.objects.get(user=user, device=device)
+                token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
             except MyOwnToken.DoesNotExist:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                                  ip=request.META.get('REMOTE_ADDR'), )
+                                                  ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
                 token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
@@ -276,7 +277,7 @@ class LogoutAPIView(APIView):
     def post(self, request):
         # ToDo: MULTI-TOKEN AUTH
         token_key = request.headers['Authorization'].split()[1]
-        MyOwnToken.objects.filter(key=token_key).delete()
+        MyOwnToken.objects.filter(key=token_key).update(is_active=False)
 
         return Response(data={
             'message': gettext_lazy('Successfully logged out'),
@@ -494,10 +495,10 @@ class MyOwnTokenListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MyOwnToken.objects.filter(user=user)
+        return MyOwnToken.objects.filter(user=user, is_active=True)
 
 
-class MyOwnTokenRetrieveView(RetrieveAPIView):
+class MyOwnTokenRetrieveDestroyView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MyOwnTokenSerializer
 
@@ -510,3 +511,26 @@ class MyOwnTokenRetrieveView(RetrieveAPIView):
                     "Error": _("Invalid id"),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
+
+    def destroy(self, request, *args, **kwargs):
+        MyOwnToken.objects.filter(id=self.kwargs['pk']).update(is_active=False)
+        return Response({'message': 'Token deactivated'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class DestroyAllTokens(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MyOwnTokenSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        MyOwnToken.objects.filter(user=self.request.user).update(is_active=False)
+        return Response({'message': 'All tokens of user deactivated'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class AuthorisationHistoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MyOwnTokenSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        user = self.request.user
+        return MyOwnToken.objects.filter(user=user)

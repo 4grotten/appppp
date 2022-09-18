@@ -177,4 +177,4 @@ admin.site.register(TokenProxy, ApofizTokenAdmin)
 
 @admin.register(MyOwnToken)
 class MyOwnTokenAdmin(admin.ModelAdmin):
-    list_display = ('user', 'location', 'device', 'expired_time',)
+    list_display = ('user', 'is_active', 'location', 'device', 'expired_time', 'log_time')

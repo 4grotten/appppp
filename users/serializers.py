@@ -18,6 +18,7 @@ class RegisterAuthSerializer(serializers.Serializer):
     phone_number = PhoneNumberField()
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
 
 
 class PhoneNumberSerializer(serializers.Serializer):
@@ -29,6 +30,7 @@ class TemporaryCodeSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
 
 
 class ResendTemporaryCodeSerializer(serializers.Serializer):
@@ -176,7 +178,7 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
-
+    version_app = serializers.CharField(allow_null=True, required=False)
 
 
 class UserChangePasswordSerializer(serializers.Serializer):
@@ -281,4 +283,4 @@ class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):
 class MyOwnTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
-        fields = ('id', 'key', 'user', 'location', 'device', 'ip')
+        fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active')

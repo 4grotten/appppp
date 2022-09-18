@@ -152,8 +152,8 @@ class TemporaryCodeService:
                                                ip_addr=ip_addr, voice=True, voice_code=code.code)
         else:
             # MessageServiceTwilio.send_sms(str(user.phone_number), message, code_id=code.id, ip_addr=ip_addr)
-            MessageServiceNIKITA.send_sms(numbers=[user.phone_number], message=message, sms_id=sms_id, code_id=code.id,
-                                          ip_addr=ip_addr)
+            MessageServiceMessageBird.send_sms(number=str(user.phone_number), code=message, code_id=code.id,
+                                               ip_addr=ip_addr, voice=False)
         return code
 
     @classmethod

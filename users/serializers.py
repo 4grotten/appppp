@@ -179,6 +179,7 @@ class LoginSerializer(serializers.Serializer):
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
     version_app = serializers.CharField(allow_null=True, required=False)
+    operating_system = serializers.CharField(allow_null=True, required=False)
 
 
 class UserChangePasswordSerializer(serializers.Serializer):

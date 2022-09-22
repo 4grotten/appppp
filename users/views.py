@@ -252,10 +252,12 @@ class LoginAPIView(APIView):
             device = serializer.validated_data.get('device')
             location = serializer.validated_data.get('location')
             version_app = serializer.validated_data.get('version_app')
+            operating_system = serializer.validated_data.get('operating_system')
             try:
-                token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
+                token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
+                                               version_app=version_app, is_active=True)
             except MyOwnToken.DoesNotExist:
-                token = MyOwnToken.objects.create(user=user, location=location, device=device,
+                token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
                                                   ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
                 token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data

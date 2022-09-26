@@ -525,7 +525,7 @@ class DestroyAllTokens(DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         MyOwnToken.objects.filter(user=self.request.user).update(is_active=False)
-        return Response({'message': 'All tokens of user deactivated'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'All tokens of user deactivated'}, status=status.HTTP_200_OK)
 
 
 class AuthorisationHistoryListView(ListAPIView):
@@ -535,4 +535,4 @@ class AuthorisationHistoryListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MyOwnToken.objects.filter(user=user)
+        return MyOwnToken.objects.filter(user=user).order_by('-log_time')

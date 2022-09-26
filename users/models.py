@@ -118,6 +118,7 @@ class MyOwnToken(TimestampModel):
     log_time = models.DateTimeField(auto_now_add=True)
     version_app = models.CharField(max_length=500, null=True, blank=True)
     operating_system = models.CharField(max_length=500, null=True, blank=True)
+    user_agent = models.CharField(max_length=500, null=True, blank=True)
 
     class Meta:
         verbose_name = _("Token")

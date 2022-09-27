@@ -73,15 +73,30 @@ class RegisterAuthAPIView(APIView):
 
         if user.is_new_user:
             if TemporaryCodeService.filter(user=user, is_used=True).exists():
-                location = serializer.validated_data.get('location')
                 device = serializer.validated_data.get('device')
+                location = serializer.validated_data.get('location')
                 version_app = serializer.validated_data.get('version_app')
+
+                headers = request.headers['User-Agent']
+                user_agent = parse(headers)
+                if device is None:
+                    device = f'{user_agent.os.family} {user_agent.os.version_string}'
+                if version_app is None:
+                    version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
+                operating_system = serializer.validated_data.get('operating_system')
+
+                if operating_system == 'android':
+                    us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
+                elif operating_system == 'ios':
+                    us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
+                else:
+                    us_agent = request.headers.get('User-Agent')
                 try:
                     token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
                 except MyOwnToken.DoesNotExist:
                     token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                                       ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                                      user_agent=request.headers['User-Agent'])
+                                                      user_agent=us_agent)
                     token.save()
             else:
                 ip = request.META.get('REMOTE_ADDR', '')

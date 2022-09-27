@@ -27,7 +27,7 @@ from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
 )
 from .throttle.throttle import UserLoginRateThrottle
-
+from user_agents import parse
 
 class RegisterAuthAPIView(APIView):
     permission_classes = ()
@@ -516,7 +516,7 @@ class MyOwnTokenRetrieveDestroyView(RetrieveDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         MyOwnToken.objects.filter(id=self.kwargs['pk']).update(is_active=False)
-        return Response({'message': 'Token deactivated'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Token deactivated'}, status=status.HTTP_200_OK)
 
 
 class DestroyAllTokens(DestroyAPIView):

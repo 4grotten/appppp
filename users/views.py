@@ -127,9 +127,9 @@ class VerifyTemporaryCodeAPIView(APIView):
         operating_system = serializer.validated_data.get('operating_system')
 
         if operating_system == 'android':
-            us_agent = f'{device} / 17.7013 / {headers}'
+            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
         elif operating_system == 'ios':
-            us_agent = f'{device} / 21.0895 / {headers}'
+            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
         else:
             us_agent = request.headers.get('User-Agent')
 
@@ -278,9 +278,9 @@ class LoginAPIView(APIView):
             operating_system = serializer.validated_data.get('operating_system')
 
             if operating_system == 'android':
-                us_agent = f'{device} / 17.7013 / {headers}'
+                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             elif operating_system == 'ios':
-                us_agent = f'{device} / 21.0895 / {headers}'
+                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             else:
                 us_agent = request.headers.get('User-Agent')
 

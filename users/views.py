@@ -117,12 +117,28 @@ class VerifyTemporaryCodeAPIView(APIView):
         device = serializer.validated_data.get('device')
         location = serializer.validated_data.get('location')
         version_app = serializer.validated_data.get('version_app')
+
+        headers = request.headers['User-Agent']
+        user_agent = parse(headers)
+        if device is None:
+            device = user_agent.os
+        if version_app is None:
+            version_app = 'Apofiz Web / ' + user_agent.browser
+        operating_system = serializer.validated_data.get('operating_system')
+
+        if operating_system == 'android':
+            us_agent = f'{device} / 17.7013 / {headers}'
+        elif operating_system == 'ios':
+            us_agent = f'{device} / 21.0895 / {headers}'
+        else:
+            us_agent = request.headers.get('User-Agent')
+
         try:
             token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                               ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                              user_agent=request.headers['User-Agent'])
+                                              user_agent=us_agent)
             token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
@@ -249,19 +265,32 @@ class LoginAPIView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user = authenticate(**serializer.validated_data)
-
+        headers = request.headers['User-Agent']
+        user_agent = parse(headers)
         if user is not None:
             device = serializer.validated_data.get('device')
+            if device is None:
+                device = user_agent.os
             location = serializer.validated_data.get('location')
             version_app = serializer.validated_data.get('version_app')
+            if version_app is None:
+                version_app = 'Apofiz Web / ' + user_agent.browser
             operating_system = serializer.validated_data.get('operating_system')
+
+            if operating_system == 'android':
+                us_agent = f'{device} / 17.7013 / {headers}'
+            elif operating_system == 'ios':
+                us_agent = f'{device} / 21.0895 / {headers}'
+            else:
+                us_agent = request.headers.get('User-Agent')
+
             try:
                 token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
                                                version_app=version_app, is_active=True)
             except MyOwnToken.DoesNotExist:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
                                                   ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                                  user_agent=request.headers['User-Agent'])
+                                                  user_agent=us_agent)
                 token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={

@@ -268,14 +268,15 @@ class LoginAPIView(APIView):
         headers = request.headers['User-Agent']
         user_agent = parse(headers)
         if user is not None:
-            device = serializer.validated_data.get('device')
-            if device is None:
-                device = f'{user_agent.os.family} {user_agent.os.version_string}'
             location = serializer.validated_data.get('location')
             version_app = serializer.validated_data.get('version_app')
-            if version_app is None:
-                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
             operating_system = serializer.validated_data.get('operating_system')
+            device = serializer.validated_data.get('device')
+
+            if operating_system == 'web':
+                device = f'{user_agent.os.family} {user_agent.os.version_string}'
+                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
+
 
             if operating_system == 'android':
                 us_agent = f'{device} {operating_system}/ {version_app} / {headers}'

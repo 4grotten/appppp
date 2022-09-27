@@ -14,7 +14,7 @@ class MyOwnTokenAuthentication(TokenAuthentication):
         now = timezone.now()
         try:
             token = MyOwnToken.objects.get(key=key, is_active=True)
-            token.log_time = now
+            token.last_active = now
             token.save()
         except MyOwnToken.DoesNotExist:
             raise AuthenticationFailed("Invalid Token")

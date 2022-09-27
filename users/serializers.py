@@ -285,4 +285,4 @@ class MyOwnTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
         fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active',
-                  'operating_system', 'user_agent')
+                  'operating_system', 'user_agent', 'last_active')

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.utils import timezone
 from common.models import TimestampModel
 from common.utils import generate_random_code
 from .constants import GENDER_CHOICES
@@ -116,6 +116,7 @@ class MyOwnToken(TimestampModel):
     expired_time = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     log_time = models.DateTimeField(auto_now_add=True)
+    last_active = models.DateTimeField(default=timezone.now)
     version_app = models.CharField(max_length=500, null=True, blank=True)
     operating_system = models.CharField(max_length=500, null=True, blank=True)
     user_agent = models.CharField(max_length=500, null=True, blank=True)

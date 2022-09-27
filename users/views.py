@@ -80,7 +80,8 @@ class RegisterAuthAPIView(APIView):
                     token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
                 except MyOwnToken.DoesNotExist:
                     token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                                      ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
+                                                      ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
+                                                      user_agent=request.headers['User-Agent'])
                     token.save()
             else:
                 ip = request.META.get('REMOTE_ADDR', '')
@@ -120,7 +121,8 @@ class VerifyTemporaryCodeAPIView(APIView):
             token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                              ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
+                                              ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
+                                              user_agent=request.headers['User-Agent'])
             token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
@@ -258,7 +260,8 @@ class LoginAPIView(APIView):
                                                version_app=version_app, is_active=True)
             except MyOwnToken.DoesNotExist:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
-                                                  ip=request.META.get('REMOTE_ADDR'), version_app=version_app)
+                                                  ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
+                                                  user_agent=request.headers['User-Agent'])
                 token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={

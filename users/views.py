@@ -121,9 +121,9 @@ class VerifyTemporaryCodeAPIView(APIView):
         headers = request.headers['User-Agent']
         user_agent = parse(headers)
         if device is None:
-            device = user_agent.os
+            device = f'{user_agent.os.family} {user_agent.os.version_string}'
         if version_app is None:
-            version_app = 'Apofiz Web / ' + user_agent.browser
+            version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
         operating_system = serializer.validated_data.get('operating_system')
 
         if operating_system == 'android':
@@ -270,11 +270,11 @@ class LoginAPIView(APIView):
         if user is not None:
             device = serializer.validated_data.get('device')
             if device is None:
-                device = user_agent.os
+                device = f'{user_agent.os.family} {user_agent.os.version_string}'
             location = serializer.validated_data.get('location')
             version_app = serializer.validated_data.get('version_app')
             if version_app is None:
-                version_app = 'Apofiz Web / ' + user_agent.browser
+                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
             operating_system = serializer.validated_data.get('operating_system')
 
             if operating_system == 'android':

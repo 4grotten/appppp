@@ -497,7 +497,7 @@ class MyOwnTokenListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MyOwnToken.objects.filter(user=user, is_active=True)
+        return MyOwnToken.objects.filter(user=user, is_active=True).order_by('-log_time')
 
 
 class MyOwnTokenRetrieveDestroyView(RetrieveDestroyAPIView):
@@ -535,4 +535,4 @@ class AuthorisationHistoryListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MyOwnToken.objects.filter(user=user).order_by('-log_time')
+        return MyOwnToken.objects.filter(user=user, is_active=False).order_by('-log_time')

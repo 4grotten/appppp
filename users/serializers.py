@@ -284,4 +284,5 @@ class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):
 class MyOwnTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
-        fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active', 'operating_system')
+        fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active',
+                  'operating_system', 'user_agent')

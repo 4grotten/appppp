@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy
+from requests import get
 from rest_framework import status
 from rest_framework.exceptions import Throttled
 from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, DestroyAPIView
@@ -76,21 +77,30 @@ class RegisterAuthAPIView(APIView):
                 device = serializer.validated_data.get('device')
                 location = serializer.validated_data.get('location')
                 version_app = serializer.validated_data.get('version_app')
+                operating_system = serializer.validated_data.get('operating_system')
 
                 headers = request.headers['User-Agent']
                 user_agent = parse(headers)
-                if device is None:
-                    device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                if version_app is None:
-                    version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-                operating_system = serializer.validated_data.get('operating_system')
+
+                if location is None or location == 'Not found, Not found':
+                    try:
+                        response_ip = get('https://api64.ipify.org?format=json').json()
+                        loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
+                        locs = loc.json()
+                        locs = dict(locs)
+                        location = f"{locs['country_name']} {locs['city']}"
+                    except:
+                        location = 'Not found'
 
                 if operating_system == 'android':
                     us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
                 elif operating_system == 'ios':
                     us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
                 else:
+                    device = f'{user_agent.os.family} {user_agent.os.version_string}'
                     us_agent = request.headers.get('User-Agent')
+                    version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
+
                 try:
                     token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
                 except MyOwnToken.DoesNotExist:
@@ -132,21 +142,29 @@ class VerifyTemporaryCodeAPIView(APIView):
         device = serializer.validated_data.get('device')
         location = serializer.validated_data.get('location')
         version_app = serializer.validated_data.get('version_app')
+        operating_system = serializer.validated_data.get('operating_system')
 
         headers = request.headers['User-Agent']
         user_agent = parse(headers)
-        if device is None:
-            device = f'{user_agent.os.family} {user_agent.os.version_string}'
-        if version_app is None:
-            version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-        operating_system = serializer.validated_data.get('operating_system')
+
+        if location is None or location == 'Not found, Not found':
+            try:
+                response_ip = get('https://api64.ipify.org?format=json').json()
+                loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
+                locs = loc.json()
+                locs = dict(locs)
+                location = f"{locs['country_name']} {locs['city']}"
+            except:
+                location = 'Not found'
 
         if operating_system == 'android':
             us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
         elif operating_system == 'ios':
             us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
         else:
+            device = f'{user_agent.os.family} {user_agent.os.version_string}'
             us_agent = request.headers.get('User-Agent')
+            version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
         try:
             token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
@@ -287,6 +305,16 @@ class LoginAPIView(APIView):
             version_app = serializer.validated_data.get('version_app')
             operating_system = serializer.validated_data.get('operating_system')
             device = serializer.validated_data.get('device')
+
+            if location is None or location == 'Not found, Not found':
+                try:
+                    response_ip = get('https://api64.ipify.org?format=json').json()
+                    loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
+                    locs = loc.json()
+                    locs = dict(locs)
+                    location = f"{locs['country_name']} {locs['city']}"
+                except:
+                    location = 'Not found'
 
             if operating_system == 'web':
                 device = f'{user_agent.os.family} {user_agent.os.version_string}'

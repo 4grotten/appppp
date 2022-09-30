@@ -285,4 +285,9 @@ class MyOwnTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
         fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active',
-                  'operating_system', 'user_agent', 'last_active')
+                  'operating_system', 'user_agent', 'last_active', 'expired_time_choice', 'expired_time')
+
+class MyOwnTokenExpiredTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyOwnToken
+        fields = ('expired_time_choice', )

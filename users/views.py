@@ -23,6 +23,7 @@ from .serializers import (
     SetPasswordSerializer, UserChangePasswordSerializer, ForgotPasswordSerializer,
     SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
+    MyOwnTokenExpiredTimeSerializer,
 )
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
@@ -564,6 +565,24 @@ class GetEmailUserAPIView(APIView):
         phone_number = serializer.validated_data['phone_number']
         email = UserService.get_user_email_by_phone_number(phone_number=phone_number)
         return Response({'email': email})
+
+
+class MyOwnTokenChangeExpiredTimeView(APIView):
+    def post(self, request, **kwargs):
+        serializer = MyOwnTokenExpiredTimeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                data={
+                    'message': gettext_lazy('Invalid input'),
+                    'errors': serializer.errors
+                },
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        expired_time = serializer.validated_data['expired_time_choice']
+        token = MyOwnToken.objects.get(id=self.kwargs['pk'])
+        token.expired_time_choice = expired_time
+        token.save()
+        return Response({'success': True})
 
 
 class MyOwnTokenListView(ListAPIView):

@@ -120,6 +120,7 @@ class MyOwnToken(TimestampModel):
     version_app = models.CharField(max_length=500, null=True, blank=True)
     operating_system = models.CharField(max_length=500, null=True, blank=True)
     user_agent = models.CharField(max_length=500, null=True, blank=True)
+    expired_time_choice = models.PositiveIntegerField(default=30)
 
     class Meta:
         verbose_name = _("Token")
@@ -128,7 +129,7 @@ class MyOwnToken(TimestampModel):
     def save(self, *args, **kwargs):
         if not self.key:
             self.key = self.generate_key()
-            self.expired_time = datetime.datetime.now() + datetime.timedelta(minutes=int(config('TOKEN_EXPIRED_TIME')))
+        self.expired_time = datetime.datetime.now() + datetime.timedelta(days=int(self.expired_time_choice), minutes=0)
         return super(MyOwnToken, self).save(*args, **kwargs)
 
     def generate_key(self):

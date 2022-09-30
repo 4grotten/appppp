@@ -9,13 +9,16 @@ from organizations.services.organization_promo_services import PromoSubscriberSe
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from .constants import RESEND_CODE_CHOICES
-from .models import PhoneNumber, SocialNetworkContact
+from .models import PhoneNumber, SocialNetworkContact, MyOwnToken
 
 User = get_user_model()
 
 
 class RegisterAuthSerializer(serializers.Serializer):
     phone_number = PhoneNumberField()
+    location = serializers.CharField(allow_null=True, required=False)
+    device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
 
 
 class PhoneNumberSerializer(serializers.Serializer):
@@ -25,6 +28,9 @@ class PhoneNumberSerializer(serializers.Serializer):
 class TemporaryCodeSerializer(serializers.Serializer):
     code = serializers.IntegerField()
     phone_number = serializers.CharField()
+    location = serializers.CharField(allow_null=True, required=False)
+    device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
 
 
 class ResendTemporaryCodeSerializer(serializers.Serializer):
@@ -170,6 +176,10 @@ class SetPasswordSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     password = serializers.CharField()
+    location = serializers.CharField(allow_null=True, required=False)
+    device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
+    operating_system = serializers.CharField(allow_null=True, required=False)
 
 
 class UserChangePasswordSerializer(serializers.Serializer):
@@ -269,3 +279,15 @@ class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'avatar', 'role')
+
+
+class MyOwnTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyOwnToken
+        fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active',
+                  'operating_system', 'user_agent', 'last_active', 'expired_time_choice', 'expired_time')
+
+class MyOwnTokenExpiredTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyOwnToken
+        fields = ('expired_time_choice', )

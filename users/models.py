@@ -1,12 +1,14 @@
+import binascii
 import datetime
-import uuid
+import os
+from decouple import config
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.utils import timezone
 from common.models import TimestampModel
 from common.utils import generate_random_code
 from .constants import GENDER_CHOICES
@@ -100,3 +102,38 @@ class SocialNetworkContact(TimestampModel):
 
     def __str__(self):
         return self.url
+
+
+class MyOwnToken(TimestampModel):
+    """
+    The default authorization token model.
+    """
+    key = models.CharField(_("Key"), max_length=40)
+    user = models.ForeignKey(User, related_name='auth_tokens', on_delete=models.CASCADE, verbose_name="User")
+    ip = models.CharField(max_length=256, null=True, blank=True)
+    location = models.CharField(max_length=256, null=True, blank=True)
+    device = models.CharField(max_length=256, null=True, blank=True)
+    expired_time = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    log_time = models.DateTimeField(auto_now_add=True)
+    last_active = models.DateTimeField(default=timezone.now)
+    version_app = models.CharField(max_length=500, null=True, blank=True)
+    operating_system = models.CharField(max_length=500, null=True, blank=True)
+    user_agent = models.CharField(max_length=500, null=True, blank=True)
+    expired_time_choice = models.PositiveIntegerField(default=30)
+
+    class Meta:
+        verbose_name = _("Token")
+        verbose_name_plural = _("Tokens")
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        self.expired_time = datetime.datetime.now() + datetime.timedelta(days=int(self.expired_time_choice), minutes=0)
+        return super(MyOwnToken, self).save(*args, **kwargs)
+
+    def generate_key(self):
+        return binascii.hexlify(os.urandom(20)).decode()
+
+    def __str__(self):
+        return self.key

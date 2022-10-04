@@ -267,6 +267,7 @@ class StockService:
         article = []
         number_transaction = []
         count = []
+        size = []
         for i in queryset:
             if i.fixed_cart:
                 for j in i.fixed_cart.get('items'):
@@ -283,6 +284,9 @@ class StockService:
                         article.append(shop_item.article)
                         number_transaction.append(i.id)
                         count.append(j['count'])
+                        item_size = j.get('size', None)
+                        item_size = item_size['size'] if item_size else None
+                        size.append(item_size)
                     except ShopItem.DoesNotExist:
                         names.append(None)
                         subcategory.append(None)
@@ -291,6 +295,7 @@ class StockService:
                         article.append(None)
                         number_transaction.append(None)
                         count.append(None)
+                        size.append(None)
         dict_data = {_('Наименование товара'): names,
                      _('Категория товара'): subcategory,
                      _('Стоимость'): price,
@@ -298,5 +303,6 @@ class StockService:
                      _('Артикл'): article,
                      _('Номер заказа'): number_transaction,
                      _('Количество товара'): count,
+                     _('Размер товара'): size,
                      }
         return dict_data

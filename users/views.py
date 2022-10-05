@@ -16,7 +16,7 @@ from common.services.umai import Umai
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
-from .models import MyOwnToken
+from .models import MyOwnToken, User
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
@@ -631,3 +631,23 @@ class AuthorisationHistoryListView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return MyOwnToken.objects.filter(user=user, is_active=False).order_by('-log_time')
+
+class DeactivateUserProfile(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = UserService.get(id=self.kwargs['pk'])
+            user.is_active = False
+            user.save()
+            return Response(
+                data={
+                    "Success": True,
+                }, status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                data={
+                    "Error": _("User does not exists"),
+                }, status=status.HTTP_400_BAD_REQUEST
+            )

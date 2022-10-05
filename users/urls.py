@@ -8,7 +8,7 @@ from users.views import (
     UserPhoneNumbersUpdateAPIView, UserSocialNetworksListAPIView, UserSocialNetworksUpdateAPIView,
     ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView,
     MyOwnTokenListView, MyOwnTokenRetrieveDestroyView, DestroyAllTokens, AuthorisationHistoryListView,
-    MyOwnTokenChangeExpiredTimeView
+    MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile
 )
 
 urlpatterns = [
@@ -35,4 +35,6 @@ urlpatterns = [
     path('users/deactivate_all_tokens/', DestroyAllTokens.as_view(), name='deactivate_all_tokens'),
     path('users/authorisation_history/', AuthorisationHistoryListView.as_view(), name='deactivate_all_tokens'),
     path('users/change_token_expired_time/<int:pk>/', MyOwnTokenChangeExpiredTimeView.as_view(), name='change_token_expired_time'),
+
+    path('users/deactivate/<int:pk>/', DeactivateUserProfile.as_view(), name='deactivate_user_profile'),
 ]

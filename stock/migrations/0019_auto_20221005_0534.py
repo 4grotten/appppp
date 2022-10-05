@@ -6,6 +6,7 @@ from django.db import migrations
 def add_criteria(apps, _):
     ItemSubcategory = apps.get_model('shop', 'ItemSubcategory')
     FormatCriteria = apps.get_model('stock', 'FormatCriteria')
+    CriteriaSubcategory = apps.get_model('stock', 'CriteriaSubcategory')
 
     categories = {
         'adult_clothes' : [1, 2],
@@ -25,7 +26,7 @@ def add_criteria(apps, _):
         for category_name, ids in categories.items():
             subcategories = ItemSubcategory.objects.filter(category_id__in=ids)
             for subcategory in subcategories:
-                criteria_subcategory = FormatCriteria.objects.get(id=criteria_subcategories[category_name])
+                criteria_subcategory = CriteriaSubcategory.objects.get(id=criteria_subcategories[category_name])
                 subcategory.criteria_subcategory.add(criteria_subcategory)
     except Exception as e:
         print(e, 'FAIL!!!')

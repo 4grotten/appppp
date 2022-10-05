@@ -637,7 +637,7 @@ class DeactivateUserProfile(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            user = UserService.get(id=self.kwargs['pk'])
+            user = self.request.user
             user.is_active = False
             user.save()
             return Response(

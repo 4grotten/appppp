@@ -73,6 +73,14 @@ class RegisterAuthAPIView(APIView):
 
         user = UserService.get(phone_number=phone_number)
 
+        if not user.is_active:
+            return Response(
+                data={
+                    'message': _('User deleted')
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         if user.is_new_user:
             if TemporaryCodeService.filter(user=user, is_used=True).exists():
                 device = serializer.validated_data.get('device')

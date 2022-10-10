@@ -325,17 +325,14 @@ class LoginAPIView(APIView):
                 except:
                     location = 'Not found'
 
-            if operating_system == 'web':
-                device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-
-
             if operating_system == 'android':
                 us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             elif operating_system == 'ios':
                 us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             else:
+                device = f'{user_agent.os.family} {user_agent.os.version_string}'
                 us_agent = request.headers.get('User-Agent')
+                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
             try:
                 token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,

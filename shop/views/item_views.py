@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.db.models import Count
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,12 +9,14 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView,
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from common.exceptions import IntegrityException
-from shop.filters import SuggestItemFilter
+from common.exceptions import IntegrityException, NotAcceptableException
+from organizations.models import Organization
+from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
+    ItemFeedSerializer, StartDateTimeSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
@@ -131,6 +134,49 @@ class ComplaintCreateView(CreateAPIView):
             super().perform_create(serializer)
         except IntegrityError:
             raise IntegrityException(_('You have already complained about this item'))
+
+
+class PartnerShopItemsListView(ListAPIView):
+    serializer_class = ItemFeedSerializer
+    filter_backends = (DjangoFilterBackend, FeedItemOrderingFilter, SearchFilter,)
+    filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)
+    ordering_fields = ['updated_at', 'price']
+    search_fields = ('article', 'id', 'name', 'description',)
+    filter_class = FeedItemFilter
+
+    def get_queryset(self):
+        search = self.request.GET.get('search', None)
+        partner = Organization.objects.get(id=self.kwargs['pk'])
+        org_partners = Organization.objects.filter(
+            types__organizations__in=partner.requested_partnerships.filter(is_accepted=True).values_list(
+                'accepted_by', flat=True)).annotate(
+            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
+
+        qs = ShopItem.objects.exclude(
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
+        if search and search[0] == '#':
+            qs = qs.filter(is_published=True)
+        elif search:
+            qs = qs.filter(is_published=True, price__isnull=False)
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+        else:
+            qs = qs.filter(organization__in=org_partners, is_published=True, price__isnull=False).order_by('-updated_at')
+
+
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        serializer = StartDateTimeSerializer(data=request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Validation Error'))
+        self.serializer_class(context={'request': self.request})
+        response = super().list(request, args, kwargs)
+        start_time = serializer.validated_data['start_time']
+        if start_time:
+            response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)
+        else:
+            response.data['has_new'] = False
+        return response
 
 
 class TranslateItemTextView(GenericAPIView):

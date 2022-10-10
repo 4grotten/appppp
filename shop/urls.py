@@ -16,7 +16,7 @@ from shop.views.feed_views import (
 )
 from shop.views.item_views import (
     ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem
+    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView
 )
 
 urlpatterns = [
@@ -60,4 +60,5 @@ urlpatterns = [
     path('commented/items/', CommentedItemsListView.as_view(), name='commented_items'),
     path('comments/like/', CommentLike.as_view(), name='comment_like'),
 
+    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items'),
 ]

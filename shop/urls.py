@@ -7,7 +7,7 @@ from shop.views.cart_views import (
 from shop.views.category_views import (
     ItemCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
-    ItemCategoryAllSubcategoriesView
+    ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView
 )
 from shop.views.comment_views import CommentItemListCreateView, \
     CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike
@@ -26,8 +26,12 @@ urlpatterns = [
          name='all_category_subcategories'),
 
     path('shop/non_empty_categories/', NonEmptyCategoryListView.as_view(), name='non_empty_categories'),
+    path('shop/non_empty_partner_categories/<int:pk>/', NonEmptyPartnerCategoryListView.as_view(), name='non_empty_partner_categories'),
+
     path('shop/subcategories/', ItemSubcategoryCreateView.as_view(), name='item_category_create'),
     path('shop/subcategories/<int:pk>/', SubcategoryRetrieveUpdateDestroyView.as_view(), name='subcategory_details'),
+    path('shop/partner_subcategories/<int:pk>/', NonEmptyPartnerSubcategoryListView.as_view(), name='partner_subcategories'),
+
     path('shop/<int:pk>/subcategories/', OrganizationSubcategoryListView.as_view(), name='organization_subcategories'),
 
     path('shop/items/', ItemCreateView.as_view(), name='item_create'),

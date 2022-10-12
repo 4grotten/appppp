@@ -1,15 +1,18 @@
+from django.db.models import Count, Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from organizations.models import Organization
 
 from common.exceptions import NotAcceptableException
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
-from shop.models import ItemCategory, ItemSubcategory
+from shop.models import ItemCategory, ItemSubcategory, ShopItem
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
     ItemSubcategorySerializer, ItemSubcategoryCreateSerializer, ItemSubcategoryBriefSerializer, ItemCategorySerializer,
-    ItemCategoryWithNonEmptySubcategoriesSerializer, ItemCategoryWithSubcategoriesSerializer
+    ItemCategoryWithNonEmptySubcategoriesSerializer, ItemCategoryWithSubcategoriesSerializer,
+    NonEmptyItemSubcategorySerializer
 )
 from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
 
@@ -68,6 +71,36 @@ class NonEmptyCategoryListView(ListAPIView):
 
         return ItemCategoryService.get_nonempty_general_categories(country=qp_serializer.validated_data['country'],
                                                                    city=qp_serializer.validated_data['city'])
+
+
+class NonEmptyPartnerCategoryListView(ListAPIView):
+    permission_classes = ()
+    pagination_class = None
+    serializer_class = ItemCategorySerializer
+
+    def get_queryset(self):
+        main_organization = Organization.objects.get(id=self.kwargs['pk'])
+        org_partners = Organization.objects.filter(
+            types__organizations__in=main_organization.requested_partnerships.filter(is_accepted=True).values_list(
+                'accepted_by', flat=True)).annotate(
+            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
+
+        return ItemCategory.objects.filter(subcategories__organization_id__in=org_partners).distinct().order_by('name')
+
+
+class NonEmptyPartnerSubcategoryListView(ListAPIView):
+    permission_classes = ()
+    pagination_class = None
+    serializer_class = NonEmptyItemSubcategorySerializer
+
+    def get_queryset(self):
+        main_organization = Organization.objects.get(id=self.kwargs['pk'])
+        org_partners = Organization.objects.filter(
+            types__organizations__in=main_organization.requested_partnerships.filter(is_accepted=True).values_list(
+                'accepted_by', flat=True)).annotate(
+            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
+        category_id = self.request.query_params.get('category')
+        return ItemSubcategory.objects.filter(category_id=category_id, organization_id__in=org_partners).distinct().order_by('name')
 
 
 class SubcategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from common.exceptions import IntegrityException, NotAcceptableException
 from organizations.models import Organization
+from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
@@ -146,21 +147,19 @@ class PartnerShopItemsListView(ListAPIView):
 
     def get_queryset(self):
         search = self.request.GET.get('search', None)
-        partner = Organization.objects.get(id=self.kwargs['pk'])
-        org_partners = Organization.objects.filter(
-            types__organizations__in=partner.requested_partnerships.filter(is_accepted=True).values_list(
-                'accepted_by', flat=True)).annotate(
-            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
+        partner = OrganizationService.get(id=self.kwargs['pk'])
+        partners = partner.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True).distinct()
+        partner_organizations = Organization.objects.filter(id__in=partners)
 
         qs = ShopItem.objects.exclude(
             Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':
-            qs = qs.filter(is_published=True)
+            qs = qs.filter(organization__in=partner_organizations, is_published=True)
         elif search:
-            qs = qs.filter(is_published=True, price__isnull=False)
+            qs = qs.filter(organization__in=partner_organizations, is_published=True, price__isnull=False)
             qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         else:
-            qs = qs.filter(organization__in=org_partners, is_published=True, price__isnull=False).order_by('-updated_at')
+            qs = qs.filter(organization__in=partner_organizations, is_published=True).order_by('-updated_at')
 
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)

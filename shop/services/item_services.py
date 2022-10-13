@@ -164,7 +164,7 @@ class ShopItemService:
     @classmethod
     def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
         queryset = queryset.annotate(
-            arr_name=RawSQL("string_to_array(lower(name), ' ')", output_field=ArrayField(base_field=TextField()), params=()),
+            arr_name=RawSQL("string_to_array(lower('name'), ' ')", output_field=ArrayField(base_field=TextField()), params=()),
             name_order=Case(
             When(name__iexact=search_word, then=1),
             When(arr_name__contains=[search_word.lower()], then=2),

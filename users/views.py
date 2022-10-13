@@ -298,6 +298,8 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        if request.data['location'] == '':
+            request.data['location'] = 'Not found, Not found'
         serializer = self.serializer_class(data=request.data)
 
         if not serializer.is_valid():
@@ -310,7 +312,7 @@ class LoginAPIView(APIView):
         headers = request.headers['User-Agent']
         user_agent = parse(headers)
         if user is not None:
-            location = serializer.validated_data.get('location')
+            location = serializer.validated_data.get('location', None)
             version_app = serializer.validated_data.get('version_app')
             operating_system = serializer.validated_data.get('operating_system')
             device = serializer.validated_data.get('device')

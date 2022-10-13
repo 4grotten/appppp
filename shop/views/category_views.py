@@ -1,12 +1,16 @@
 from django.db.models import Count, Q
 from django.utils.translation import gettext_lazy as _
+from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from organizations.models import Organization
 
 from common.exceptions import NotAcceptableException
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
+from shop.forms import ItemSubcategoryAdminForm
 from shop.models import ItemCategory, ItemSubcategory, ShopItem
 from shop.permissions import CanEditItemSubcategory
 from shop.serializers.category_serializers import (
@@ -15,6 +19,7 @@ from shop.serializers.category_serializers import (
     NonEmptyItemSubcategorySerializer
 )
 from shop.services.category_services import ItemSubcategoryService, ItemCategoryService
+from utils.translator import GoogleTranslator
 
 
 # ToDo: write tests for this view
@@ -110,6 +115,25 @@ class ItemSubcategoryCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemSubcategoryCreateSerializer
     queryset = ItemSubcategory.objects.all()
+
+    
+    def create(self, request, *args, **kwargs):
+        serializer = ItemSubcategoryCreateSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        name_ru = GoogleTranslator().translate(serializer.validated_data['name'], 'RU').text
+        name_en = GoogleTranslator().translate(serializer.validated_data['name'], 'EN').text
+        name_tr = GoogleTranslator().translate(serializer.validated_data['name'], 'TR').text
+        ItemSubcategory.objects.create(organization=serializer.validated_data['organization'],
+                                       name=serializer.validated_data['name'],
+                                       category=serializer.validated_data['category'],
+                                       name_ru=name_ru,
+                                       name_en=name_en,
+                                       name_tr=name_tr)
+        return Response(data={'message': _('Successfully created')}, status=status.HTTP_201_CREATED)
 
 
 class OrganizationSubcategoryListView(ListAPIView):

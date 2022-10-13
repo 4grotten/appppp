@@ -149,8 +149,7 @@ class PartnerShopItemsListView(ListAPIView):
         search = self.request.GET.get('search', None)
         partner = OrganizationService.get(id=self.kwargs['pk'])
         partners = partner.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True).distinct()
-        partner_organizations = Organization.objects.filter(id__in=partners)
-
+        partner_organizations = Organization.objects.filter(Q(id__in=partners) | Q(id=self.kwargs['pk']))
         qs = ShopItem.objects.exclude(
             Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':
@@ -160,8 +159,6 @@ class PartnerShopItemsListView(ListAPIView):
             qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         else:
             qs = qs.filter(organization__in=partner_organizations, is_published=True).order_by('-updated_at')
-
-
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):
@@ -169,7 +166,7 @@ class PartnerShopItemsListView(ListAPIView):
         if not serializer.is_valid():
             raise NotAcceptableException(_('Validation Error'))
         self.serializer_class(context={'request': self.request})
-        response = super().list(request, args, kwargs)
+        response = super().list(self, request, *args, **kwargs)
         start_time = serializer.validated_data['start_time']
         if start_time:
             response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)

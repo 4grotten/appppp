@@ -80,12 +80,10 @@ class NonEmptyPartnerCategoryListView(ListAPIView):
 
     def get_queryset(self):
         main_organization = Organization.objects.get(id=self.kwargs['pk'])
-        org_partners = Organization.objects.filter(
-            types__organizations__in=main_organization.requested_partnerships.filter(is_accepted=True).values_list(
-                'accepted_by', flat=True)).annotate(
-            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
-
-        return ItemCategory.objects.filter(subcategories__organization_id__in=org_partners).distinct().order_by('name')
+        partners = main_organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True).distinct()
+        partner_organizations = Organization.objects.filter(Q(id__in=partners) | Q(id=self.kwargs['pk']))
+        item_categories = ShopItem.objects.filter(organization__in=partner_organizations).values_list('subcategory_id', flat=True).distinct()
+        return ItemCategory.objects.filter(subcategories__in=item_categories).distinct().order_by('name')
 
 
 class NonEmptyPartnerSubcategoryListView(ListAPIView):
@@ -95,12 +93,11 @@ class NonEmptyPartnerSubcategoryListView(ListAPIView):
 
     def get_queryset(self):
         main_organization = Organization.objects.get(id=self.kwargs['pk'])
-        org_partners = Organization.objects.filter(
-            types__organizations__in=main_organization.requested_partnerships.filter(is_accepted=True).values_list(
-                'accepted_by', flat=True)).annotate(
-            orgs_count=Count('types__organizations', distinct=True)).distinct().order_by('-orgs_count')
+        partners = main_organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True).distinct()
+        partner_organizations = Organization.objects.filter(Q(id__in=partners) | Q(id=self.kwargs['pk']))
         category_id = self.request.query_params.get('category')
-        return ItemSubcategory.objects.filter(category_id=category_id, organization_id__in=org_partners).distinct().order_by('name')
+        shop_items = ShopItem.objects.filter(organization__in=partner_organizations).values_list('id', flat=True).distinct()
+        return ItemSubcategory.objects.filter(category_id=category_id, id__in=shop_items).distinct().order_by('name')
 
 
 class SubcategoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

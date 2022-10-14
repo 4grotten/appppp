@@ -111,7 +111,9 @@ class RegisterAuthAPIView(APIView):
                     version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
                 try:
-                    token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
+                    token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
+                                                   version_app=version_app, is_active=True, user_agent=us_agent,
+                                                   ip=request.META.get('REMOTE_ADDR'))
                 except MyOwnToken.DoesNotExist:
                     token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                                       ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
@@ -176,7 +178,9 @@ class VerifyTemporaryCodeAPIView(APIView):
             version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
         try:
-            token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
+            token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
+                                           version_app=version_app, is_active=True, user_agent=us_agent,
+                                           ip=request.META.get('REMOTE_ADDR'))
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                               ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
@@ -298,6 +302,8 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        if request.data['location'] == '':
+            request.data['location'] = 'Not found, Not found'
         serializer = self.serializer_class(data=request.data)
 
         if not serializer.is_valid():
@@ -310,7 +316,7 @@ class LoginAPIView(APIView):
         headers = request.headers['User-Agent']
         user_agent = parse(headers)
         if user is not None:
-            location = serializer.validated_data.get('location')
+            location = serializer.validated_data.get('location', None)
             version_app = serializer.validated_data.get('version_app')
             operating_system = serializer.validated_data.get('operating_system')
             device = serializer.validated_data.get('device')
@@ -325,21 +331,19 @@ class LoginAPIView(APIView):
                 except:
                     location = 'Not found'
 
-            if operating_system == 'web':
-                device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-
-
             if operating_system == 'android':
                 us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             elif operating_system == 'ios':
                 us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
             else:
+                device = f'{user_agent.os.family} {user_agent.os.version_string}'
                 us_agent = request.headers.get('User-Agent')
+                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
             try:
                 token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                               version_app=version_app, is_active=True)
+                                               version_app=version_app, is_active=True, user_agent=us_agent,
+                                               ip=request.META.get('REMOTE_ADDR'))
             except MyOwnToken.DoesNotExist:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
                                                   ip=request.META.get('REMOTE_ADDR'), version_app=version_app,

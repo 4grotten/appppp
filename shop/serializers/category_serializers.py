@@ -44,6 +44,11 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
         model = ItemSubcategory
         fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory',)
 
+class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name',)
+
 
 class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
     category_name = serializers.CharField(source='category.name')

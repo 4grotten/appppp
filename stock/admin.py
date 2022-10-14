@@ -23,6 +23,7 @@ class CriteriaSubcategoryAdmin(admin.ModelAdmin):
 @admin.register(FormatCriteria)
 class FormatCriteriaAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_ru', 'name_en', 'name_tr',)
+    list_filter = ('criteria_subcategories',)
     search_fields = ('name',)
     inlines = (ShopItemSizeInLine,)
 

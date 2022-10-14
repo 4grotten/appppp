@@ -111,7 +111,9 @@ class RegisterAuthAPIView(APIView):
                     version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
                 try:
-                    token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
+                    token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
+                                                   version_app=version_app, is_active=True, user_agent=us_agent,
+                                                   ip=request.META.get('REMOTE_ADDR'))
                 except MyOwnToken.DoesNotExist:
                     token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                                       ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
@@ -176,7 +178,9 @@ class VerifyTemporaryCodeAPIView(APIView):
             version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
         try:
-            token = MyOwnToken.objects.get(user=user, device=device, version_app=version_app, is_active=True)
+            token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
+                                           version_app=version_app, is_active=True, user_agent=us_agent,
+                                           ip=request.META.get('REMOTE_ADDR'))
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, location=location, device=device,
                                               ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
@@ -338,7 +342,8 @@ class LoginAPIView(APIView):
 
             try:
                 token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                               version_app=version_app, is_active=True)
+                                               version_app=version_app, is_active=True, user_agent=us_agent,
+                                               ip=request.META.get('REMOTE_ADDR'))
             except MyOwnToken.DoesNotExist:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
                                                   ip=request.META.get('REMOTE_ADDR'), version_app=version_app,

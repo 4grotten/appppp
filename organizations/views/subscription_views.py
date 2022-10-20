@@ -19,6 +19,7 @@ from organizations.services.organization_promo_services import PromoSubscriberSe
 from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
+from users.models import MyOwnToken
 from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
 from notifications.tasks import sent_notification
 from notifications.constants import (
@@ -89,9 +90,11 @@ class OrgDownloadFollowersAPIView(APIView):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'])
 
     def get(self, request, *args, **kwargs):
-        token_key = request.query_params.get('token', request.auth)
-
-        token = TokenProxy.objects.get(key=token_key)
+        try:
+            token_key = request.headers['Authorization'].split()[1]
+        except:
+            token_key = request.query_params.get('token', request.auth)
+        token = MyOwnToken.objects.get(key=token_key)
         organization = OrganizationService.get(pk=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=token.user):
             return Response({"message": _("Permission denied")}, status=status.HTTP_403_FORBIDDEN)

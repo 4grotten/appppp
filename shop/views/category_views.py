@@ -87,7 +87,8 @@ class NonEmptyPartnerCategoryListView(ListAPIView):
         main_organization = Organization.objects.get(id=self.kwargs['pk'])
         partners = main_organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True).distinct()
         partner_organizations = Organization.objects.filter(Q(id__in=partners) | Q(id=self.kwargs['pk']) & Q(is_active=True, is_private=False, is_banned=False))
-        item_categories = ShopItem.objects.filter(organization__in=partner_organizations, is_published=True, is_hidden=False).values_list('subcategory_id', flat=True).distinct()
+        item_categories = ShopItem.objects.exclude(Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
+        item_categories = item_categories.filter(organization__in=partner_organizations, is_published=True).values_list('subcategory_id', flat=True).distinct()
         return ItemCategory.objects.filter(subcategories__in=item_categories).distinct().order_by('name')
 
 

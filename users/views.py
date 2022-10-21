@@ -101,10 +101,9 @@ class RegisterAuthAPIView(APIView):
                     except:
                         location = 'Not found'
 
-                if operating_system == 'android':
+                if operating_system == 'android' or operating_system == 'ios':
                     us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-                elif operating_system == 'ios':
-                    us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
+                    self.throttle_classes = None
                 else:
                     device = f'{user_agent.os.family} {user_agent.os.version_string}'
                     us_agent = request.headers.get('User-Agent')

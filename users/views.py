@@ -42,11 +42,13 @@ class RegisterAuthAPIView(APIView):
         })
 
     def post(self, request):
+        if request.data['location'] == '':
+            request.data['location'] = 'Not found, Not found'
+        serializer = RegisterAuthSerializer(data=request.data)
+
         ip = request.META.get('REMOTE_ADDR', '')
         if BlockedIps.objects.filter(ip_address=ip).first():
             return Response(status=403, data={'message': "Forbidden"})
-
-        serializer = RegisterAuthSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(
@@ -135,6 +137,8 @@ class VerifyTemporaryCodeAPIView(APIView):
     permission_classes = ()
 
     def post(self, request):
+        if request.data['location'] == '':
+            request.data['location'] = 'Not found, Not found'
         serializer = TemporaryCodeSerializer(data=request.data, many=False)
 
         if not serializer.is_valid():

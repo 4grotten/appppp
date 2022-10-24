@@ -24,6 +24,13 @@ class StockService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
+    def get_list_size_formats(cls, **filters):
+        try:
+            return SizeFormat.objects.filter(**filters)
+        except SizeFormat.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItem not found'))
+
+    @classmethod
     def add_shop_items_sets(cls, main_item: int, shop_items=None):
         try:
             main_item = ShopItem.objects.get(id=main_item)
@@ -145,6 +152,38 @@ class StockService:
         start_date = date_dictionary['created_at__min'].strftime("%Y-%m-%d")
         end_date = date_dictionary['created_at__max'].strftime("%Y-%m-%d")
         return start_date, end_date
+
+    @classmethod
+    def get_stock_set_items(cls, main_shop_item):
+        try:
+            return ShopItem.objects.filter(
+                Q(shop_items_set_stocks__main_shop_item=main_shop_item) |
+                Q(shop_items_link_set_stocks__main_shop_item=main_shop_item)
+            )
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItem not found'))
+
+    @classmethod
+    def get_list_of_set_stock_by_shop_item(cls, **filters):
+        try:
+            shop_item_stock = ShopItemSetStock.objects.get(**filters)
+        except ShopItemSetStock.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemSetStock not found'))
+        return shop_item_stock.shop_item.all()
+
+    @classmethod
+    def get_link_set_stock_by_shop_item(cls, **filters):
+        try:
+            return ShopItemLinksSetStock.objects.filter(**filters)
+        except ShopItemLinksSetStock.DoesNotExist:
+            raise ObjectNotFoundException(_('ShopItemLinksSetStock not found'))
+
+    @classmethod
+    def delete_stock_by_shop_item_id(cls, shop_item):
+        ShopItemSizeCount.objects.filter(main_shop_item=shop_item).delete()
+        ShopItemSetStock.objects.filter(main_shop_item=shop_item).delete()
+        ShopItemLinksSetStock.objects.filter(main_shop_item=shop_item).delete()
+        shop_item.available_sizes.clear()
 
     @classmethod
     def get_dict_data_for_deals(cls, queryset):

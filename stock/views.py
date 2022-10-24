@@ -38,7 +38,8 @@ class StockSetsView(RetrieveAPIView):
     serializer_class = StockSetsSerializer
 
     def get_object(self):
-        return ShopItem.objects.get(id=self.kwargs['pk'])
+        # return ShopItem.objects.get(id=self.kwargs['pk'])
+        return ShopItemService.get(id=self.kwargs['pk'])
 
 
 class StockSetItemsView(ListAPIView):
@@ -46,14 +47,8 @@ class StockSetItemsView(ListAPIView):
     serializer_class = ItemRetrieveSerializer
 
     def get_queryset(self):
-        try:
-            main_shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
-            return ShopItem.objects.filter(
-                Q(shop_items_set_stocks__main_shop_item=main_shop_item) |
-                Q(shop_items_link_set_stocks__main_shop_item=main_shop_item)
-            )
-        except ShopItem.DoesNotExist:
-            raise ObjectNotFoundException(_('ShopItem not found'))
+        main_shop_item = ShopItemService.get(id=self.kwargs['pk'])
+        return StockService.get_stock_set_items(main_shop_item)
 
 
 class CriteriaSubcategoryListView(ListAPIView):
@@ -89,7 +84,7 @@ class AvailableSizeListCreateView(ListCreateAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return SizeFormat.objects.filter(shop_items=self.kwargs['pk'])
+        return StockService.get_list_size_formats(shop_items=self.kwargs['pk'])
 
     def create(self, request, *args, **kwargs):
         serializer = CreateAvailableSizesSerializer(data=request.data)
@@ -161,11 +156,7 @@ class ShopItemSetListView(ListAPIView):
     serializer_class = ShopItemSetSerializer
 
     def get_queryset(self):
-        try:
-            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=self.kwargs['pk'])
-            return shop_item_stock.shop_item.all()
-        except ShopItemSetStock.DoesNotExist:
-            raise ObjectNotFoundException(_('ShopItemSetStock not found'))
+        return StockService.get_list_of_set_stock_by_shop_item(main_shop_item=self.kwargs['pk'])
 
 
 class ShopItemSetIdsListView(ListAPIView):
@@ -174,11 +165,8 @@ class ShopItemSetIdsListView(ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        item = ShopItemService.get(id=self.kwargs['pk'])
-        if ShopItemSetStock.objects.filter(main_shop_item=item).exists():
-            shop_item_stock = ShopItemSetStock.objects.get(main_shop_item=item)
-            return shop_item_stock.shop_item.all()
-        return None
+        set_ids = StockService.get_list_of_set_stock_by_shop_item(main_shop_item=self.kwargs['pk'])
+        return set_ids if set_ids.exists() else None
 
 
 class OrganizationSubcategoryListView(ListAPIView):
@@ -201,12 +189,12 @@ class OrganizationShopItemsInSetListView(ListAPIView):
 
     def get_queryset(self):
         try:
-            shop_item = ShopItem.objects.get(id=self.kwargs['pk'])
-            try:
-                subcategory = self.request.query_params['subcategory']
+            shop_item = ShopItemService.get(id=self.kwargs['pk'])
+            subcategory = self.request.query_params.get('subcategory', None)
+            if subcategory:
                 queryset = ShopItem.objects.filter(organization=shop_item.organization, subcategory_id=subcategory)\
                     .exclude(id=shop_item.id).order_by('-updated_at')
-            except:
+            else:
                 queryset = ShopItem.objects.filter(organization=shop_item.organization).exclude(id=shop_item.id).order_by('-updated_at')
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('ShopItem not found'))
@@ -227,10 +215,7 @@ class ShopItemLinkSetListView(ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        try:
-            return ShopItemLinksSetStock.objects.filter(main_shop_item_id=self.kwargs['pk'])
-        except ShopItemLinksSetStock.DoesNotExist:
-            raise ObjectNotFoundException(_('ShopItemLinksSetStock not found'))
+        return StockService.get_link_set_stock_by_shop_item(main_shop_item_id=self.kwargs['pk'])
 
 
 class GetNotChoosenSizeListView(ListAPIView):
@@ -272,11 +257,7 @@ class DeleteStockView(DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         shop_item = ShopItemService.get(id=kwargs['pk'])
-        ShopItemSizeCount.objects.filter(main_shop_item=shop_item).delete()
-        ShopItemSetStock.objects.filter(main_shop_item=shop_item).delete()
-        ShopItemLinksSetStock.objects.filter(main_shop_item=shop_item).delete()
-
-        shop_item.available_sizes.clear()
+        StockService.delete_stock_by_shop_item_id(shop_item)
 
         return Response(data={
             'message': _('Successfully deleted'),

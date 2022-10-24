@@ -42,11 +42,16 @@ class RegisterAuthAPIView(APIView):
         })
 
     def post(self, request):
+        try:
+            if request.data['location'] == '':
+                request.data['location'] = 'Not found, Not found'
+            serializer = RegisterAuthSerializer(data=request.data)
+        except:
+            serializer = RegisterAuthSerializer(data=request.data)
+
         ip = request.META.get('REMOTE_ADDR', '')
         if BlockedIps.objects.filter(ip_address=ip).first():
             return Response(status=403, data={'message': "Forbidden"})
-
-        serializer = RegisterAuthSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(
@@ -101,10 +106,9 @@ class RegisterAuthAPIView(APIView):
                     except:
                         location = 'Not found'
 
-                if operating_system == 'android':
+                if operating_system == 'android' or operating_system == 'ios':
                     us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-                elif operating_system == 'ios':
-                    us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
+                    self.throttle_classes = None
                 else:
                     device = f'{user_agent.os.family} {user_agent.os.version_string}'
                     us_agent = request.headers.get('User-Agent')
@@ -136,7 +140,12 @@ class VerifyTemporaryCodeAPIView(APIView):
     permission_classes = ()
 
     def post(self, request):
-        serializer = TemporaryCodeSerializer(data=request.data, many=False)
+        try:
+            if request.data['location'] == '':
+                request.data['location'] = 'Not found, Not found'
+            serializer = TemporaryCodeSerializer(data=request.data)
+        except:
+            serializer = TemporaryCodeSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={
@@ -302,9 +311,12 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
-        if request.data['location'] == '':
-            request.data['location'] = 'Not found, Not found'
-        serializer = self.serializer_class(data=request.data)
+        try:
+            if request.data['location'] == '':
+                request.data['location'] = 'Not found, Not found'
+            serializer = LoginSerializer(data=request.data)
+        except:
+            serializer = LoginSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={

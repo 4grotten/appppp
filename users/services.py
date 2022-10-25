@@ -91,6 +91,14 @@ class UserService:
         except User.DoesNotExist:
             return None
 
+    @classmethod
+    def get_data_with_valid_location(cls, request):
+        location = request.data.get('location', None)
+        if location == '':
+            request.data['location'] = None
+        return request.data
+
+
 
 class TemporaryCodeService:
     model = TemporaryCode
@@ -253,3 +261,4 @@ class TemporaryPhoneNumberService:
 
         except cls.model.DoesNotExist:
             raise ValidationException(_('Code not found'))
+

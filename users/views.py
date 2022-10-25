@@ -42,11 +42,11 @@ class RegisterAuthAPIView(APIView):
         })
 
     def post(self, request):
+        serializer = RegisterAuthSerializer(data=UserService.get_data_with_valid_location(request))
+
         ip = request.META.get('REMOTE_ADDR', '')
         if BlockedIps.objects.filter(ip_address=ip).first():
             return Response(status=403, data={'message': "Forbidden"})
-
-        serializer = RegisterAuthSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(
@@ -136,7 +136,7 @@ class VerifyTemporaryCodeAPIView(APIView):
     permission_classes = ()
 
     def post(self, request):
-        serializer = TemporaryCodeSerializer(data=request.data, many=False)
+        serializer = TemporaryCodeSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={
@@ -150,41 +150,11 @@ class VerifyTemporaryCodeAPIView(APIView):
         TemporaryCodeService.validate(code=code, phone_number=phone_number)
 
         user = UserService.get(phone_number=phone_number)
-        device = serializer.validated_data.get('device')
-        location = serializer.validated_data.get('location')
-        version_app = serializer.validated_data.get('version_app')
-        operating_system = serializer.validated_data.get('operating_system')
-
-        headers = request.headers['User-Agent']
-        user_agent = parse(headers)
-
-        if location is None or location == 'Not found, Not found':
-            try:
-                response_ip = get('https://api64.ipify.org?format=json').json()
-                loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
-                locs = loc.json()
-                locs = dict(locs)
-                location = f"{locs['country_name']} {locs['city']}"
-            except:
-                location = 'Not found'
-
-        if operating_system == 'android':
-            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-        elif operating_system == 'ios':
-            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-        else:
-            device = f'{user_agent.os.family} {user_agent.os.version_string}'
-            us_agent = request.headers.get('User-Agent')
-            version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
         try:
-            token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                           version_app=version_app, is_active=True, user_agent=us_agent,
-                                           ip=request.META.get('REMOTE_ADDR'))
+            token = MyOwnToken.objects.get(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR'))
         except MyOwnToken.DoesNotExist:
-            token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                              ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                              user_agent=us_agent)
+            token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
             token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
@@ -302,9 +272,7 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
-        if request.data['location'] == '':
-            request.data['location'] = 'Not found, Not found'
-        serializer = self.serializer_class(data=request.data)
+        serializer = LoginSerializer(data=UserService.get_data_with_valid_location(request))
 
         if not serializer.is_valid():
             return Response(data={
@@ -321,7 +289,7 @@ class LoginAPIView(APIView):
             operating_system = serializer.validated_data.get('operating_system')
             device = serializer.validated_data.get('device')
 
-            if location is None or location == 'Not found, Not found':
+            if location is None:
                 try:
                     response_ip = get('https://api64.ipify.org?format=json').json()
                     loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
@@ -663,3 +631,4 @@ class DeactivateUserProfile(APIView):
                     "Error": _("User does not exists"),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
+

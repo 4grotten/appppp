@@ -153,12 +153,12 @@ class PartnerShopItemsListView(ListAPIView):
         qs = ShopItem.objects.exclude(
             Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':
-            qs = qs.filter(organization__in=partner_organizations, is_published=True)
+            qs = qs.filter(organization__in=partner_organizations, is_published=True, price__isnull=False)
         elif search:
             qs = qs.filter(organization__in=partner_organizations, is_published=True, price__isnull=False)
             qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         else:
-            qs = qs.filter(organization__in=partner_organizations, is_published=True).order_by('-updated_at')
+            qs = qs.filter(organization__in=partner_organizations, is_published=True, price__isnull=False).order_by('-updated_at')
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):

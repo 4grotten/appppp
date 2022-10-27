@@ -27,7 +27,7 @@ from .views.organization_views import (
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreateRetrieveAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
-    OrganizationsInServicesView, OrgVerifications, HomepageSearchView
+    OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -89,6 +89,7 @@ organization_urls = [
     ),
     path('accept_follower/', AcceptFollowerView.as_view(), name='accept_follower'),
     path('organizations/<int:pk>/accept_all_followers/', AcceptAllFollowersView.as_view(), name='accept_all_followers'),
+    path('organizations/complaints/', OrganizationComplaintCreateView.as_view(), name='organization_complaint_create')
 ]
 
 membership_urls = [

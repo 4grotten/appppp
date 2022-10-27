@@ -2,7 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q, Case, When, IntegerField
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -17,11 +17,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
 from common.utils import method_permission_classes
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
-from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service
+from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, OrganizationComplaint
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
     OrganizationTypeSerializer
@@ -33,7 +33,7 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer, OrgVerificationsSerializer
+    OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -591,3 +591,15 @@ class OrganizationClientDetailsAPIView(APIView):
             context={'request': request, 'organization_id': kwargs['organization_id']}
         ).data
         return Response(data, status=status.HTTP_200_OK)
+
+
+class OrganizationComplaintCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = OrganizationComplaint.objects.all()
+    serializer_class = OrganizationComplaintSerializer
+
+    def perform_create(self, serializer):
+        try:
+            super().perform_create(serializer)
+        except IntegrityError:
+            raise IntegrityException(_('You have already complained about this item'))

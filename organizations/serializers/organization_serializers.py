@@ -9,7 +9,7 @@ from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers,
+    OrganizationVerificationUsers, OrganizationComplaint
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -57,6 +57,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
                   'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address', 'verification_status')
         read_only_fields = ['verification_status']
+
+
+class OrganizationComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationComplaint
+        fields = ('organization', 'reason',)
+
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        return attrs
 
 
 class OrganizationWithImageSerializer(serializers.ModelSerializer):

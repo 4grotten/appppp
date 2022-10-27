@@ -631,4 +631,3 @@ class DeactivateUserProfile(APIView):
                     "Error": _("User does not exists"),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
-

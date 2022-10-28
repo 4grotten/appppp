@@ -73,7 +73,7 @@ class RegisterAuthAPIView(APIView):
             return Response(data={
                 'message': gettext_lazy('User has successfully created'),
                 'is_new_user': user.is_new_user,
-                'token': token,
+                'token': token.key if token else None,
                 'temporary_code_enabled': temporary_code_enabled
             })
 
@@ -190,15 +190,17 @@ class ProfileInitialAPIView(APIView):
     def post(self, request):
         serializer = ProfileUpdateSerializer(data=UserService.get_data_with_valid_location(request), many=False, context={'request': request})
 
-        is_new_in_begin = request.user.is_new_user
-        if is_new_in_begin:
-            MyOwnTokenService.save_device_info(request=request, serializer=serializer)
-
         if not serializer.is_valid():
             return Response(data={
                 'message': gettext_lazy('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        is_new_in_begin = request.user.is_new_user
+        if is_new_in_begin:
+            MyOwnTokenService.save_device_info(request=request, serializer=serializer)
+
+
 
         user = UserService.init_profile(
             user=request.user,

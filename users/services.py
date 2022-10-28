@@ -120,17 +120,25 @@ class MyOwnTokenService:
     @classmethod
     def get_or_create_token(cls, user, request, location=None, device_info=None):
         try:
-            token = MyOwnToken.objects.get(user=user, device=device_info['device'],
-                                           operating_system=device_info['operating_system'],
-                                           version_app=device_info['version_app'], is_active=True,
-                                           user_agent=device_info['us_agent'],
-                                           ip=request.META.get('REMOTE_ADDR'))
+            if location and device_info:
+                token = MyOwnToken.objects.get(user=user, device=device_info['device'],
+                                               operating_system=device_info['operating_system'],
+                                               version_app=device_info['version_app'], is_active=True,
+                                               user_agent=device_info['us_agent'],
+                                               ip=request.META.get('REMOTE_ADDR'))
+            else:
+                token = MyOwnToken.objects.get(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR'))
         except MyOwnToken.DoesNotExist:
-            token = MyOwnToken.objects.create(user=user, location=location, device=device_info['device'],
+            if location and device_info:
+                token = MyOwnToken.objects.create(user=user, location=location, device=device_info['device'],
                                               ip=request.META.get('REMOTE_ADDR'),
                                               version_app=device_info['version_app'],
                                               user_agent=device_info['us_agent'])
+            else:
+                token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
             token.save()
+
+        return token
 
     @classmethod
     def get_device_info(cls, serializer, request):
@@ -162,7 +170,7 @@ class MyOwnTokenService:
         token.device = device_info['device']
         token.version_app = device_info['version_app']
         token.operating_system = device_info['operating_system']
-        token.user_agent = device_info['user_agent']
+        token.user_agent = device_info['us_agent']
         token.save()
 
 

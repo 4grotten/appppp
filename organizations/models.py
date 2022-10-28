@@ -132,6 +132,20 @@ class Organization(TimestampModel):
         return full_location
 
 
+class OrganizationComplaint(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_complaints')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_complaints')
+    reason = models.TextField(max_length=800)
+
+    def __str__(self):
+        return f'Complaint of {self.user} about {self.organization.title}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('user', 'organization'), name='unique_organization_complaint_from_user')
+        ]
+
+
 class OrganizationVerificationUsers(TimestampModel):
     organization = models.ForeignKey(
         'organizations.Organization',

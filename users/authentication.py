@@ -11,7 +11,7 @@ class MyOwnTokenAuthentication(TokenAuthentication):
     model = MyOwnToken
 
     def authenticate_credentials(self, key):
-        now = timezone.now().replace(tzinfo=None)
+        now = timezone.now()
         try:
             token = MyOwnToken.objects.get(key=key, is_active=True)
             token.last_active = now

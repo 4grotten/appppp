@@ -12,7 +12,8 @@ from mailer.services import MailerService
 from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService, \
     MessageServiceMessageBird
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken
+from user_agents import parse
 
 User = get_user_model()
 
@@ -90,6 +91,91 @@ class UserService:
             return user.email
         except User.DoesNotExist:
             return None
+
+    @classmethod
+    def get_data_with_valid_location(cls, request):
+        location = request.data.get('location', None)
+        if location == '':
+            request.data['location'] = None
+        return request.data
+
+    @classmethod
+    def get_location_info(cls, serializer):
+        location = serializer.validated_data.get('location')
+        if location is None:
+            try:
+                response_ip = get('https://api64.ipify.org?format=json').json()
+                loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
+                locs = loc.json()
+                locs = dict(locs)
+                location = f"{locs['country_name']} {locs['city']}"
+            except:
+                location = 'Not found'
+        return location
+
+
+class MyOwnTokenService:
+    model = MyOwnToken
+
+    @classmethod
+    def get_or_create_token(cls, user, request, location=None, device_info=None):
+        try:
+            if location and device_info:
+                token = MyOwnToken.objects.get(user=user, device=device_info['device'],
+                                               operating_system=device_info['operating_system'],
+                                               version_app=device_info['version_app'], is_active=True,
+                                               user_agent=device_info['us_agent'],
+                                               ip=request.META.get('REMOTE_ADDR'))
+            else:
+                token = MyOwnToken.objects.get(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR'))
+        except MyOwnToken.DoesNotExist:
+            if location and device_info:
+                token = MyOwnToken.objects.create(user=user, location=location, device=device_info['device'],
+                                              ip=request.META.get('REMOTE_ADDR'),
+                                              version_app=device_info['version_app'],
+                                              user_agent=device_info['us_agent'])
+            else:
+                token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
+            token.save()
+
+        return token
+
+    @classmethod
+    def get_device_info(cls, serializer, request):
+        data = dict()
+        headers = request.headers['User-Agent']
+        user_agent = parse(headers)
+        data['device'] = serializer.validated_data.get('device')
+        data['version_app'] = serializer.validated_data.get('version_app')
+        data['operating_system'] = serializer.validated_data.get('operating_system')
+
+        if data['operating_system'] == 'android':
+            data['us_agent'] = f"{data['device']} {data['operating_system']}/ {data['version_app']} / {headers}"
+        elif data['operating_system'] == 'ios':
+            data['us_agent'] = f"{data['device']} {data['operating_system']}/ {data['version_app']} / {headers}"
+        else:
+            data['device'] = f'{user_agent.os.family} {user_agent.os.version_string}'
+            data['us_agent'] = request.headers.get('User-Agent')
+            data['version_app'] = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
+
+        return data
+
+    @classmethod
+    def save_device_info(cls, request, serializer):
+        token_key = request.headers['Authorization'].split()[1]
+        token = MyOwnToken.objects.get(key=token_key)
+        location = UserService.get_location_info(serializer=serializer)
+        device_info = cls.get_device_info(serializer=serializer, request=request)
+        token.location = location
+        token.device = device_info['device']
+        token.version_app = device_info['version_app']
+        token.operating_system = device_info['operating_system']
+        token.user_agent = device_info['us_agent']
+        token.save()
+
+
+
+
 
 
 class TemporaryCodeService:
@@ -253,3 +339,4 @@ class TemporaryPhoneNumberService:
 
         except cls.model.DoesNotExist:
             raise ValidationException(_('Code not found'))
+

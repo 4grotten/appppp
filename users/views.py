@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import UmaiWallet, BlockedIps
+from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher
 from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
@@ -26,7 +26,7 @@ from .serializers import (
     MyOwnTokenExpiredTimeSerializer,
 )
 from .services import (
-    UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService
+    UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService, MyOwnTokenService
 )
 from .throttle.throttle import UserLoginRateThrottle
 from user_agents import parse
@@ -42,12 +42,7 @@ class RegisterAuthAPIView(APIView):
         })
 
     def post(self, request):
-        try:
-            if request.data['location'] == '':
-                request.data['location'] = 'Not found, Not found'
-            serializer = RegisterAuthSerializer(data=request.data)
-        except:
-            serializer = RegisterAuthSerializer(data=request.data)
+        serializer = RegisterAuthSerializer(data=request.data)
 
         ip = request.META.get('REMOTE_ADDR', '')
         if BlockedIps.objects.filter(ip_address=ip).first():
@@ -64,17 +59,24 @@ class RegisterAuthAPIView(APIView):
 
         token = None
         phone_number = serializer.validated_data.get('phone_number')
+        temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
 
         if not UserService.filter(phone_number=phone_number).exists():
             ip = request.META.get('REMOTE_ADDR', '')
             user = UserService.create(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
+
+            if temporary_code_enabled:
+                TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
+            else:
+                token = MyOwnTokenService.get_or_create_token(user=user, request=request)
 
             return Response(data={
                 'message': gettext_lazy('User has successfully created'),
                 'is_new_user': user.is_new_user,
-                'token': None
+                'token': token.key if token else None,
+                'temporary_code_enabled': temporary_code_enabled
             })
+
 
         user = UserService.get(phone_number=phone_number)
 
@@ -87,42 +89,8 @@ class RegisterAuthAPIView(APIView):
             )
 
         if user.is_new_user:
-            if TemporaryCodeService.filter(user=user, is_used=True).exists():
-                device = serializer.validated_data.get('device')
-                location = serializer.validated_data.get('location')
-                version_app = serializer.validated_data.get('version_app')
-                operating_system = serializer.validated_data.get('operating_system')
-
-                headers = request.headers['User-Agent']
-                user_agent = parse(headers)
-
-                if location is None or location == 'Not found, Not found':
-                    try:
-                        response_ip = get('https://api64.ipify.org?format=json').json()
-                        loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
-                        locs = loc.json()
-                        locs = dict(locs)
-                        location = f"{locs['country_name']} {locs['city']}"
-                    except:
-                        location = 'Not found'
-
-                if operating_system == 'android' or operating_system == 'ios':
-                    us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-                    self.throttle_classes = None
-                else:
-                    device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                    us_agent = request.headers.get('User-Agent')
-                    version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-
-                try:
-                    token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                                   version_app=version_app, is_active=True, user_agent=us_agent,
-                                                   ip=request.META.get('REMOTE_ADDR'))
-                except MyOwnToken.DoesNotExist:
-                    token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                                      ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                                      user_agent=us_agent)
-                    token.save()
+            if TemporaryCodeService.filter(user=user, is_used=True).exists() or not temporary_code_enabled:
+                token = MyOwnTokenService.get_or_create_token(user=user, request=request)
             else:
                 ip = request.META.get('REMOTE_ADDR', '')
                 TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
@@ -140,12 +108,7 @@ class VerifyTemporaryCodeAPIView(APIView):
     permission_classes = ()
 
     def post(self, request):
-        try:
-            if request.data['location'] == '':
-                request.data['location'] = 'Not found, Not found'
-            serializer = TemporaryCodeSerializer(data=request.data)
-        except:
-            serializer = TemporaryCodeSerializer(data=request.data)
+        serializer = TemporaryCodeSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(data={
@@ -159,41 +122,11 @@ class VerifyTemporaryCodeAPIView(APIView):
         TemporaryCodeService.validate(code=code, phone_number=phone_number)
 
         user = UserService.get(phone_number=phone_number)
-        device = serializer.validated_data.get('device')
-        location = serializer.validated_data.get('location')
-        version_app = serializer.validated_data.get('version_app')
-        operating_system = serializer.validated_data.get('operating_system')
-
-        headers = request.headers['User-Agent']
-        user_agent = parse(headers)
-
-        if location is None or location == 'Not found, Not found':
-            try:
-                response_ip = get('https://api64.ipify.org?format=json').json()
-                loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
-                locs = loc.json()
-                locs = dict(locs)
-                location = f"{locs['country_name']} {locs['city']}"
-            except:
-                location = 'Not found'
-
-        if operating_system == 'android':
-            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-        elif operating_system == 'ios':
-            us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-        else:
-            device = f'{user_agent.os.family} {user_agent.os.version_string}'
-            us_agent = request.headers.get('User-Agent')
-            version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
 
         try:
-            token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                           version_app=version_app, is_active=True, user_agent=us_agent,
-                                           ip=request.META.get('REMOTE_ADDR'))
+            token = MyOwnToken.objects.get(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR'))
         except MyOwnToken.DoesNotExist:
-            token = MyOwnToken.objects.create(user=user, location=location, device=device,
-                                              ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                              user_agent=us_agent)
+            token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
             token.save()
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
@@ -255,15 +188,19 @@ class ProfileInitialAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = ProfileUpdateSerializer(data=request.data, many=False, context={'request': request})
-
-        is_new_in_begin = request.user.is_new_user
+        serializer = ProfileUpdateSerializer(data=UserService.get_data_with_valid_location(request), many=False, context={'request': request})
 
         if not serializer.is_valid():
             return Response(data={
                 'message': gettext_lazy('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        is_new_in_begin = request.user.is_new_user
+        if is_new_in_begin:
+            MyOwnTokenService.save_device_info(request=request, serializer=serializer)
+
+
 
         user = UserService.init_profile(
             user=request.user,
@@ -311,12 +248,7 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
-        try:
-            if request.data['location'] == '':
-                request.data['location'] = 'Not found, Not found'
-            serializer = LoginSerializer(data=request.data)
-        except:
-            serializer = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=UserService.get_data_with_valid_location(request))
 
         if not serializer.is_valid():
             return Response(data={
@@ -325,42 +257,13 @@ class LoginAPIView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user = authenticate(**serializer.validated_data)
-        headers = request.headers['User-Agent']
-        user_agent = parse(headers)
+
         if user is not None:
-            location = serializer.validated_data.get('location', None)
-            version_app = serializer.validated_data.get('version_app')
-            operating_system = serializer.validated_data.get('operating_system')
-            device = serializer.validated_data.get('device')
+            device_info = MyOwnTokenService.get_device_info(serializer=serializer, request=request)
+            location = UserService.get_location_info(serializer=serializer)
 
-            if location is None or location == 'Not found, Not found':
-                try:
-                    response_ip = get('https://api64.ipify.org?format=json').json()
-                    loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
-                    locs = loc.json()
-                    locs = dict(locs)
-                    location = f"{locs['country_name']} {locs['city']}"
-                except:
-                    location = 'Not found'
+            token = MyOwnTokenService.get_or_create_token(user=user, request=request, location=location, device_info=device_info)
 
-            if operating_system == 'android':
-                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-            elif operating_system == 'ios':
-                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-            else:
-                device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                us_agent = request.headers.get('User-Agent')
-                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-
-            try:
-                token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                               version_app=version_app, is_active=True, user_agent=us_agent,
-                                               ip=request.META.get('REMOTE_ADDR'))
-            except MyOwnToken.DoesNotExist:
-                token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
-                                                  ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                                  user_agent=us_agent)
-                token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
                 'message': gettext_lazy('Successfully logged in'),

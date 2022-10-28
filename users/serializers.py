@@ -8,7 +8,7 @@ from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
-from .constants import RESEND_CODE_CHOICES
+from .constants import RESEND_CODE_CHOICES, GENDER_CHOICES
 from .models import PhoneNumber, SocialNetworkContact, MyOwnToken
 
 User = get_user_model()
@@ -19,6 +19,7 @@ class RegisterAuthSerializer(serializers.Serializer):
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
     version_app = serializers.CharField(allow_null=True, required=False)
+    operating_system = serializers.CharField(allow_null=True, required=False)
 
 
 class PhoneNumberSerializer(serializers.Serializer):
@@ -28,9 +29,7 @@ class PhoneNumberSerializer(serializers.Serializer):
 class TemporaryCodeSerializer(serializers.Serializer):
     code = serializers.IntegerField()
     phone_number = serializers.CharField()
-    location = serializers.CharField(allow_null=True, required=False)
-    device = serializers.CharField(allow_null=True, required=False)
-    version_app = serializers.CharField(allow_null=True, required=False)
+
 
 
 class ResendTemporaryCodeSerializer(serializers.Serializer):
@@ -59,15 +58,18 @@ class ProfileSerializer(serializers.ModelSerializer):
                   'date_of_birth', 'email', 'gender', 'phone_number', 'has_empty_fields',)
 
 
-class ProfileUpdateSerializer(serializers.ModelSerializer):
+class ProfileUpdateSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
     avatar_id = serializers.IntegerField(required=False, allow_null=True)
+    full_name = serializers.CharField(required=True)
+    gender = serializers.ChoiceField(choices=GENDER_CHOICES)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    username = serializers.CharField(required=False, allow_null=True)
     device_type = serializers.CharField(required=False, default=None, allow_null=True, allow_blank=True)
-
-    class Meta:
-        model = User
-        fields = ('avatar_id', 'full_name', 'username',
-                  'date_of_birth', 'email', 'gender', 'device_type')
+    location = serializers.CharField(allow_null=True, required=False)
+    device = serializers.CharField(allow_null=True, required=False)
+    version_app = serializers.CharField(allow_null=True, required=False)
+    operating_system = serializers.CharField(allow_null=True, required=False)
 
 
 class ProfileBriefSerializer(serializers.ModelSerializer):

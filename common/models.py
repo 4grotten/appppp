@@ -309,6 +309,16 @@ class SmsServices(SingletonModel):
         verbose_name_plural = _('Sms services')
 
 
+class TemporaryCodeSwitcher(SingletonModel):
+    is_enable = models.BooleanField(verbose_name=_("Enable"), default=True)
+
+    def __str__(self):
+        return f'{self.is_enable}'
+
+    class Meta:
+        verbose_name = _('Temporary code switcher')
+
+
 class BlockedIps(TimestampModel):
     ip_address = models.CharField(max_length=255, verbose_name=_('Blocked ip'))
 

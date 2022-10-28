@@ -129,7 +129,7 @@ class MyOwnToken(TimestampModel):
     def save(self, *args, **kwargs):
         if not self.key:
             self.key = self.generate_key()
-        self.expired_time = datetime.datetime.now() + datetime.timedelta(days=int(self.expired_time_choice), minutes=0)
+        self.expired_time = timezone.now() + datetime.timedelta(days=int(self.expired_time_choice), minutes=0)
         return super(MyOwnToken, self).save(*args, **kwargs)
 
     def generate_key(self):

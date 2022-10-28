@@ -255,42 +255,13 @@ class LoginAPIView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user = authenticate(**serializer.validated_data)
-        headers = request.headers['User-Agent']
-        user_agent = parse(headers)
+
         if user is not None:
-            location = serializer.validated_data.get('location', None)
-            version_app = serializer.validated_data.get('version_app')
-            operating_system = serializer.validated_data.get('operating_system')
-            device = serializer.validated_data.get('device')
+            device_info = MyOwnTokenService.get_device_info(serializer=serializer, request=request)
+            location = UserService.get_location_info(serializer=serializer)
 
-            if location is None:
-                try:
-                    response_ip = get('https://api64.ipify.org?format=json').json()
-                    loc = get(f'https://ipapi.co/{response_ip["ip"]}/json/')
-                    locs = loc.json()
-                    locs = dict(locs)
-                    location = f"{locs['country_name']} {locs['city']}"
-                except:
-                    location = 'Not found'
+            token = MyOwnTokenService.get_or_create_token(user=user, request=request, location=location, device_info=device_info)
 
-            if operating_system == 'android':
-                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-            elif operating_system == 'ios':
-                us_agent = f'{device} {operating_system}/ {version_app} / {headers}'
-            else:
-                device = f'{user_agent.os.family} {user_agent.os.version_string}'
-                us_agent = request.headers.get('User-Agent')
-                version_app = f'Apofiz Web / {user_agent.browser.family} - {user_agent.browser.version}'
-
-            try:
-                token = MyOwnToken.objects.get(user=user, device=device, operating_system=operating_system,
-                                               version_app=version_app, is_active=True, user_agent=us_agent,
-                                               ip=request.META.get('REMOTE_ADDR'))
-            except MyOwnToken.DoesNotExist:
-                token = MyOwnToken.objects.create(user=user, location=location, device=device, operating_system=operating_system,
-                                                  ip=request.META.get('REMOTE_ADDR'), version_app=version_app,
-                                                  user_agent=us_agent)
-                token.save()
             user_data = ProfileSerializer(user, context={'request': request}).data
             return Response(data={
                 'message': gettext_lazy('Successfully logged in'),

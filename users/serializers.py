@@ -69,13 +69,7 @@ class ProfileUpdateSerializer(serializers.Serializer):
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
     version_app = serializers.CharField(allow_null=True, required=False)
-
-
-
-    # class Meta:
-    #     model = User
-    #     fields = ('avatar_id', 'full_name', 'username',
-    #               'date_of_birth', 'email', 'gender', 'device_type')
+    operating_system = serializers.CharField(allow_null=True, required=False)
 
 
 class ProfileBriefSerializer(serializers.ModelSerializer):

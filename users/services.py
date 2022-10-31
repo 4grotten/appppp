@@ -132,6 +132,7 @@ class MyOwnTokenService:
             if location and device_info:
                 token = MyOwnToken.objects.create(user=user, location=location, device=device_info['device'],
                                               ip=request.META.get('REMOTE_ADDR'),
+                                              operating_system=device_info['operating_system'],
                                               version_app=device_info['version_app'],
                                               user_agent=device_info['us_agent'])
             else:

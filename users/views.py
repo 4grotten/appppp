@@ -59,7 +59,11 @@ class RegisterAuthAPIView(APIView):
 
         token = None
         phone_number = serializer.validated_data.get('phone_number')
-        temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
+
+        try:
+            temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
+        except:
+            temporary_code_enabled = True
 
         if not UserService.filter(phone_number=phone_number).exists():
             ip = request.META.get('REMOTE_ADDR', '')

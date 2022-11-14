@@ -565,6 +565,7 @@ class Service(models.Model):
                                         blank=True,
                                         help_text='Не заполнять при создании!')
     is_discounts = models.BooleanField(default=False)
+    is_entertainment = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'

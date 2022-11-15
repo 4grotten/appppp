@@ -1,6 +1,6 @@
 from typing import Union
 
-from django.db.models import QuerySet, Count, Q
+from django.db.models import QuerySet, Count, Q, Subquery, OuterRef
 
 from common.models import City, Country
 from organizations.models import Service, Organization
@@ -60,7 +60,7 @@ class ItemCategoryService:
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:
         category_ids = cls.get_general_nonempty_category_ids(country=country, city=city)
-        return ItemCategory.objects.filter(id__in=category_ids).order_by('name')
+        return ItemCategory.objects.filter(id__in=category_ids).annotate(count=Count('subcategories__items_in_category')).order_by('-count')
 
     @classmethod
     def get_nonempty_general_service_categories(cls, service: Union[Service, None], country: Union[Country, None],

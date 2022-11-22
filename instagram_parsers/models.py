@@ -21,6 +21,7 @@ class LoginDevice(TimestampModel):
     settings = models.JSONField(null=False, blank=True)
     username = models.CharField(max_length=255, default='nikabenod')
     password = models.CharField(max_length=255, default='1234qwer/')
+    proxy = models.OneToOneField(Proxy, on_delete=models.CASCADE, blank=True, null=True, help_text='Proxy server')
 
     def __str__(self):
         return f'{self.updated_at.date()}'

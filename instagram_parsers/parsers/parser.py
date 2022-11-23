@@ -32,7 +32,7 @@ def get_data_from_post(dict_list):
 
 def get_posts(user_id: int, posts_count: int):
     try:
-        cl = InstagramClientService.get_client()
+        cl = InstagramClientService.get_anon_client()
         media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:

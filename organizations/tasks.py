@@ -4,8 +4,6 @@ from celery import shared_task
 from django.conf import settings
 from django.db import transaction
 from django.utils.timezone import now
-
-from common.models import FileVideo, File
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE

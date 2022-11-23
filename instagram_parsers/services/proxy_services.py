@@ -16,6 +16,10 @@ class InstagramClientService:
         proxy = f'http://{login_device.proxy.login}:{login_device.proxy.password}@{login_device.proxy.http_s}'
         return Client(settings=login_device.settings, proxy=proxy)
 
+    @classmethod
+    def get_anon_client(cls, for_getting_username: bool = False) -> Client:
+        proxy = ProxyService.get_random_formed_proxy(for_getting_username=for_getting_username)
+        return Client(proxy=proxy)
 
 class ProxyService:
     @classmethod

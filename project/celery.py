@@ -20,7 +20,8 @@ app.conf.beat_schedule = {
     # },
     'update-login-device-data': {
         'task': 'organizations.tasks.update_login_device_settings',
-        'schedule': crontab(hour=1, minute=0)
+        # 'schedule': crontab(hour=1, minute=0)
+        'schedule': crontab(0, 0, day_of_month='1')
     },
     'delete-expired-video': {
         'task': 'organizations.tasks.delete_expired_video_url',

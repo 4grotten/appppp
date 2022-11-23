@@ -499,7 +499,7 @@ class InstagramParseLastDataAPIView(APIView):
         if not InstagramIntegration.objects.get(organization=organization):
             raise ObjectNotFoundException(_('Instagram Integration Link not found'))
         transaction.on_commit(
-            lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, posts_count=20)
+            lambda: parse_instagram_to_shop_items.delay(organization_id=organization.id, posts_count=20, anonymous=True)
         )
         return Response({'message': _('Success')})
 

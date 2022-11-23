@@ -30,9 +30,12 @@ def get_data_from_post(dict_list):
     return data_s
 
 
-def get_posts(user_id: int, posts_count: int):
+def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
     try:
-        cl = InstagramClientService.get_anon_client()
+        if anonymous:
+            cl = InstagramClientService.get_anon_client()
+        else:
+            cl = InstagramClientService.get_client()
         media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:

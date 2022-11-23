@@ -14,13 +14,14 @@ from shop.models import ShopItem, ItemInstagramData
 
 
 @shared_task
-def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTAGRAM_POSTS_TO_PARSE):
+def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTAGRAM_POSTS_TO_PARSE,
+                                  anonymous: bool = False):
     video_expired_time = now() + timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
     mix_content_expired_time = now() + timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
 
     organization = Organization.objects.get(id=organization_id)
     instagram_integration = InstagramIntegration.objects.get(organization=organization)
-    instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count)
+    instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count, anonymous=anonymous)
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
                 created_at=instagram.get('created_at'),

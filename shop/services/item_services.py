@@ -130,7 +130,7 @@ class ShopItemService:
 
     @classmethod
     def delete_expired_posts(cls):
-        ShopItem.objects.filter(name='Instagram', price=None, instagram_data__isnull=True, images__isnull=True).delete()
+        ShopItem.objects.filter(name='Instagram', article=None, instagram_data__isnull=True, images__isnull=True).delete()
 
     @classmethod
     def change_updated_at_and_is_updated_and_removed_at_field(cls, item_id):

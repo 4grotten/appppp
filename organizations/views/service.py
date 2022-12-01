@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView
+from django.db.models import Q
 
 from common.exceptions import NotAcceptableException
 from common.serializers import ServiceCountryCityQueryParamSerializer
@@ -32,7 +33,7 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
             organizations = organizations.filter(country=country)
         if city is not None:
             organizations = organizations.filter(city=city)
-        queryset = Service.objects.filter(subcategory__organizations__in=organizations).distinct()
+        queryset = Service.objects.filter(Q(subcategory__organizations__in=organizations) | Q(is_entertainment=True)).distinct()
         return queryset.order_by('-is_discounts', 'ordering')
 
 

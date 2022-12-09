@@ -35,7 +35,7 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
         if anonymous:
             cl = InstagramClientService.get_anon_client()
         else:
-            cl = InstagramClientService.get_client()
+            cl, login_device = InstagramClientService.get_client()
         media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:
@@ -53,14 +53,14 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
 
 
 def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:
-    cl = InstagramClientService.get_client()
+    cl, login_device = InstagramClientService.get_client()
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
     media_info = cl.media_info(media_pk=post_pk_from_url)
     return media_info.video_url, media_info.thumbnail_url
 
 
 def get_urls_from_post(post_url: str):
-    cl = InstagramClientService.get_client()
+    cl, login_device = InstagramClientService.get_client()
     post_pk_from_url = cl.media_pk_from_url(url=post_url)
     media_info = cl.media_info(media_pk=post_pk_from_url)
     dict_list = media_info.dict()

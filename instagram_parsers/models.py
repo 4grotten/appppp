@@ -21,7 +21,11 @@ class LoginDevice(TimestampModel):
     settings = models.JSONField(null=False, blank=True)
     username = models.CharField(max_length=255, default='nikabenod')
     password = models.CharField(max_length=255, default='1234qwer/')
-    proxy = models.OneToOneField(Proxy, on_delete=models.CASCADE, blank=True, null=True, help_text='Proxy server')
+    proxy_http_s = models.CharField(null=True, blank=True, max_length=25, help_text=_('Example : 91.238.224.165:20196'))
+    proxy_socks5 = models.CharField(null=True, blank=True, max_length=25, help_text=_('Example : 91.238.224.165:20196'))
+    proxy_login = models.CharField(max_length=255, null=True)
+    proxy_password = models.CharField(max_length=255, null=True)
+    proxy_expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.updated_at.date()}'

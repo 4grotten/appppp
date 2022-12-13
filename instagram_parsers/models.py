@@ -26,6 +26,7 @@ class LoginDevice(TimestampModel):
     proxy_login = models.CharField(max_length=255, null=True)
     proxy_password = models.CharField(max_length=255, null=True)
     proxy_expires_at = models.DateTimeField(null=True, blank=True)
+    is_broke = models.BooleanField(default=False, help_text='This login_device broke, please update settings')
 
     def __str__(self):
         return f'{self.updated_at.date()}'

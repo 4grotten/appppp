@@ -636,7 +636,9 @@ class OrganizationInstagramIntegrationService:
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username)
-
+        except Exception as e:
+            raise BadRequestException(_('{e}').format(e=str(e)))
+        try:
             avatar = File.objects.create(image_url=user_info.get('profile_image'))
             instance = InstagramIntegration.objects.create(organization=organization,
                                                            url=url,

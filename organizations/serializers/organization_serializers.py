@@ -9,7 +9,7 @@ from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers, OrganizationComplaint
+    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -57,6 +57,17 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
                   'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address', 'verification_status')
         read_only_fields = ['verification_status']
+
+
+class OrganizationBlacklistSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OrganizationBlacklist
+        fields = ['organization']
+
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        return attrs
 
 
 class OrganizationComplaintSerializer(serializers.ModelSerializer):
@@ -206,6 +217,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     time_working = serializers.CharField(read_only=True)
     need_add_item = serializers.SerializerMethodField(read_only=True)
     switcher = serializers.CharField()
+    is_blacklist = serializers.SerializerMethodField(default=False, read_only=True)
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -267,6 +279,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             return True
         return False
 
+    def get_is_blacklist(self, organization: Organization):
+        if 'request' in self.context:
+            user = self.context['request'].user
+            return OrganizationBlacklist.objects.filter(organization_id=organization.id, user_id=user.id).exists()
+
     class Meta:
         model = Organization
         fields = (
@@ -275,7 +292,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
-            'verification_status', 'avg_check', 'need_add_item', 'switcher'
+            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

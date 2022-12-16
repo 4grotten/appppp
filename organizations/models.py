@@ -131,6 +131,10 @@ class Organization(TimestampModel):
         )
         return full_location
 
+class OrganizationBlacklist(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_blacklist')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_blacklist')
+
 
 class OrganizationComplaint(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_complaints')

@@ -8,7 +8,7 @@ from .models import (
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
-    HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers
+    HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist
 )
 
 
@@ -19,6 +19,9 @@ class CashbackGroupAdmin(admin.ModelAdmin):
     def organizations_in_group(self, group: CashbackGroup) -> int:
         return group.organizations.count()
 
+@admin.register(OrganizationBlacklist)
+class OrganizationBlacklistAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization',)
 
 @admin.register(CumulativeGroup)
 class CumulativeGroupAdmin(admin.ModelAdmin):

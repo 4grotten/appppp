@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticate
 
 from common.exceptions import NotAcceptableException
 from organizations.constants import HOTLINK_COLLECTION
+from organizations.models import OrganizationBlacklist, Organization
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
@@ -25,8 +26,10 @@ class FeedView(ListAPIView):
 
     def get_queryset(self):
         search = self.request.GET.get('search', None)
+        organizations = Organization.objects.all()
+        blacklist = OrganizationBlacklist.objects.filter(user=self.request.user, organization__in=organizations).values_list('organization_id', flat=True).distinct()
         qs = ShopItem.objects.exclude(
-            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True) | Q(organization_id__in=blacklist))
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         elif search:

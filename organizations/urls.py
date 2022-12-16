@@ -27,7 +27,8 @@ from .views.organization_views import (
     OrganizationPartnersFollowersCountAPIView, OrganizationAllTypesListView, InstagramIntegrationCreateRetrieveAPIView,
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
-    OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView
+    OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView,
+    OrganizationBlackListCreateView, OrganizationBlackListDestroyView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -89,7 +90,9 @@ organization_urls = [
     ),
     path('accept_follower/', AcceptFollowerView.as_view(), name='accept_follower'),
     path('organizations/<int:pk>/accept_all_followers/', AcceptAllFollowersView.as_view(), name='accept_all_followers'),
-    path('organizations/complaints/', OrganizationComplaintCreateView.as_view(), name='organization_complaint_create')
+    path('organizations/complaints/', OrganizationComplaintCreateView.as_view(), name='organization_complaint_create'),
+    path('organizations/blacklist/', OrganizationBlackListCreateView.as_view(), name='organization_blacklist_create'),
+    path('organizations/blacklist/delete/<int:pk>/', OrganizationBlackListDestroyView.as_view(), name='organization_blacklist_delete'),
 ]
 
 membership_urls = [

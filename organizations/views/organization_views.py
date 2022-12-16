@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView
+    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView, DestroyAPIView
 )
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -21,7 +21,7 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException, I
 from common.utils import method_permission_classes
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
-from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, OrganizationComplaint
+from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, OrganizationComplaint, OrganizationBlacklist
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
     OrganizationTypeSerializer
@@ -33,7 +33,8 @@ from organizations.serializers.organization_serializers import (
     OrgSocialNetworkContactSerializer, OrgSocialNetworkEditSerializer, OrganizationSerializer, OrgMessageSerializer,
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer
+    OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
+    OrganizationBlacklistSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -603,3 +604,24 @@ class OrganizationComplaintCreateView(CreateAPIView):
             super().perform_create(serializer)
         except IntegrityError:
             raise IntegrityException(_('You have already complained about this item'))
+
+
+class OrganizationBlackListCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = OrganizationBlacklist.objects.all()
+    serializer_class = OrganizationBlacklistSerializer
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+
+class OrganizationBlackListDestroyView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            blacklist = OrganizationBlacklist.objects.get(user=self.request.user, organization_id=self.kwargs['pk']).delete()
+            return Response(data={
+                'message': _('Successfully deleted'),
+            }, status=status.HTTP_200_OK)
+        except OrganizationBlacklist.DoesNotExist:
+            raise ObjectNotFoundException(_('OrganizationBlacklist not found'))

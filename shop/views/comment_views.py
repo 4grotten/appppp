@@ -1,14 +1,17 @@
+from django.db import IntegrityError
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
 from organizations.services.organization_services import OrganizationService
-from shop.models import Comment
-from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer
+from shop.models import Comment, CommentComplaint
+from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
+    CommentComplaintSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -22,7 +25,8 @@ class CommentItemListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         item = ShopItemService.get(id=self.kwargs['pk'])
-        return Comment.objects.filter(item=item).order_by('-created_at')
+        comment_complaints_ids = CommentComplaint.objects.filter(user=self.request.user).values_list('comment_id', flat=True).distinct()
+        return Comment.objects.filter(item=item).exclude(id__in=comment_complaints_ids).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         item = ShopItemService.get(id=self.kwargs['pk'])
@@ -99,3 +103,15 @@ class CommentLike(CreateAPIView):
                                         is_liked=serializer.validated_data['is_liked'])
 
         return Response(data={'message': _('Successfully updated like status')})
+
+
+class CommentComplaintCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = CommentComplaint.objects.all()
+    serializer_class = CommentComplaintSerializer
+
+    def perform_create(self, serializer):
+        try:
+            super().perform_create(serializer)
+        except IntegrityError:
+            raise IntegrityException(_('You have already complained about this comment'))

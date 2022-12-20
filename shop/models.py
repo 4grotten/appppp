@@ -199,3 +199,17 @@ class CommentLike(TimestampModel):
         constraints = (
             models.constraints.UniqueConstraint(fields=('user', 'comment'), name='unique_user_comment_like'),
         )
+
+
+class CommentComplaint(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comment_complaints')
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='comment_complaints')
+    reason = models.TextField(max_length=800)
+
+    def __str__(self):
+        return f'Complaint of {self.user} about {self.comment.text}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('user', 'comment'), name='unique_comment_complaint_from_user')
+        ]

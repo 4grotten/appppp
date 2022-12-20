@@ -4,12 +4,12 @@ from typing import Optional
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist
+    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -67,6 +67,25 @@ class OrganizationBlacklistSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
+        return attrs
+
+
+class BlockedUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BlockedUser
+        fields = ['id', 'user', 'organization']
+
+    def validate(self, attrs):
+        organization_id = attrs['organization'].id
+        user_id = self.context['request'].user.id
+        try:
+            organization = Organization.objects.get(id=organization_id)
+            if organization.owner.id != user_id:
+                raise NotAcceptableException(_('No rights to edit organization'))
+        except Organization.DoesNotExist:
+            raise ObjectNotFoundException(_('Organization not found'))
+
         return attrs
 
 

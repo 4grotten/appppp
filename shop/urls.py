@@ -10,7 +10,7 @@ from shop.views.category_views import (
     ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView
 )
 from shop.views.comment_views import CommentItemListCreateView, \
-    CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike
+    CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike, CommentComplaintCreateView
 from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
 )
@@ -63,6 +63,7 @@ urlpatterns = [
     path('comments/<int:pk>/', CommentDestroyUpdateRetrievtView.as_view(), name='comment_retrieve'),
     path('commented/items/', CommentedItemsListView.as_view(), name='commented_items'),
     path('comments/like/', CommentLike.as_view(), name='comment_like'),
+    path('comments/complaints/', CommentComplaintCreateView.as_view(), name='comment_complaint_create'),
 
     path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items'),
 ]

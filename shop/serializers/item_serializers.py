@@ -7,7 +7,7 @@ from rest_framework import serializers
 from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer, VideoSerializer
-from organizations.models import HotlinkCollectionItem, Organization
+from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData
@@ -51,6 +51,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     is_bookmarked = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
@@ -103,13 +104,20 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     def get_comment_count(self, item: ShopItem) -> int:
         return item.comments.count()
 
+    def get_can_comment(self, item: ShopItem) -> bool:
+        if 'request' in self.context:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
+
     class Meta:
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
             'price', 'discount',
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
-            'created_at', 'updated_at', 'removed_at',
+            'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock'
         )
@@ -315,6 +323,7 @@ class ItemFeedSerializer(ItemListSerializer):
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -341,6 +350,12 @@ class ItemFeedSerializer(ItemListSerializer):
         return SizeFormatByItemSerializer(sizes, many=True,
                                           context={'shop_item': item, 'request': self.context['request']}).data
 
+    def get_can_comment(self, item: ShopItem) -> bool:
+        if 'request' in self.context:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
     class Meta:
         model = ShopItem
         fields = (
@@ -349,7 +364,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count', 'available_sizes', 'set_items', 'has_in_stock'
+            'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items', 'has_in_stock'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
-from common.models import File
+from common.models import File, FileVideo
 from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
@@ -31,9 +31,13 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
     def get_image(self, item: ShopItem):
         image = item.images.first()
+        thumbnail = item.videos.first()
         if image:
             image = File.objects.get(id=image.id)
-        return ImageSerializer(image, context=self.context).data
+            return ImageSerializer(image, context=self.context).data
+        else:
+            thumbnail = FileVideo.objects.get(id=thumbnail.id)
+            return VideoSerializer(thumbnail, context=self.context).data
 
     class Meta:
         model = ShopItem

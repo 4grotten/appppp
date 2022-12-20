@@ -21,7 +21,9 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException, I
 from common.utils import method_permission_classes
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
-from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, OrganizationComplaint, OrganizationBlacklist
+from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser
+from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
     OrganizationTypeSerializer
@@ -34,7 +36,7 @@ from organizations.serializers.organization_serializers import (
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
-    OrganizationBlacklistSerializer
+    OrganizationBlacklistSerializer, BlockedUserSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -625,3 +627,23 @@ class OrganizationBlackListDestroyView(DestroyAPIView):
             }, status=status.HTTP_200_OK)
         except OrganizationBlacklist.DoesNotExist:
             raise ObjectNotFoundException(_('OrganizationBlacklist not found'))
+
+
+class BlockUserCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, IsAnyOrganizationOwnerOrAdmin)
+    serializer_class = BlockedUserSerializer
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+
+class UnblockUserDestroyView(DestroyAPIView):
+    permission_classes = (IsAuthenticated, IsAnyOrganizationOwnerOrAdmin)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            blocked_user = BlockedUser.objects.get(user_id=self.kwargs['user_id'], organization_id=self.kwargs['organization_id']).delete()
+            return Response(data={
+                'message': _('Successfully unblocked'),
+            }, status=status.HTTP_200_OK)
+        except BlockedUser.DoesNotExist:
+            raise ObjectNotFoundException(_('BlockedUser not found'))

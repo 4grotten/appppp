@@ -26,10 +26,15 @@ class FeedView(ListAPIView):
 
     def get_queryset(self):
         search = self.request.GET.get('search', None)
-        organizations = Organization.objects.all()
-        blacklist = OrganizationBlacklist.objects.filter(user=self.request.user, organization__in=organizations).values_list('organization_id', flat=True).distinct()
-        qs = ShopItem.objects.exclude(
-            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True) | Q(organization_id__in=blacklist))
+        user = self.request.user
+        if user.is_authenticated:
+            organizations = Organization.objects.all()
+            blacklist = OrganizationBlacklist.objects.filter(user=self.request.user, organization__in=organizations).values_list('organization_id', flat=True).distinct()
+            qs = ShopItem.objects.exclude(
+                Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True) | Q(organization_id__in=blacklist))
+        else:
+            qs = ShopItem.objects.exclude(
+                Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         elif search:

@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from organizations.models import Membership
+from organizations.models import Membership, BlockedUser
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import Comment, CommentLike
+from shop.models import Comment, CommentLike, CommentComplaint
 from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
 from users.serializers import UserShortInfoSerializer
@@ -41,6 +41,7 @@ class CommentSerializer(serializers.ModelSerializer):
     comment_like_count = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
     parent = ParentCommentSerializer()
+    is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
 
     def get_can_delete(self, obj) -> bool:
         user = self.context['request'].user
@@ -76,10 +77,16 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_comment_like_count(self, comment: Comment) -> int:
         return comment.liked_comments.count()
 
+    def get_is_blocked(self, comment: Comment) -> bool:
+        if 'request' in self.context:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=comment.item.organization.id).values_list('user_id', flat=True).distinct()
+            return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked',
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
             'comment_like_count', 'can_delete'
             , 'created_at')
 
@@ -96,6 +103,16 @@ class CommentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('parent', 'text')
+
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        return attrs
+
+
+class CommentComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentComplaint
+        fields = ('comment', 'reason',)
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user

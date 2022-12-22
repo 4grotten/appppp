@@ -111,6 +111,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     def get_can_comment(self, item: ShopItem) -> bool:
         if self.context['request'].user:
             user = self.context['request'].user
+            print(user)
             blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
@@ -357,6 +358,7 @@ class ItemFeedSerializer(ItemListSerializer):
     def get_can_comment(self, item: ShopItem) -> bool:
         if self.context['request'].user:
             user = self.context['request'].user
+            print(user)
             blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 

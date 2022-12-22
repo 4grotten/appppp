@@ -109,10 +109,9 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         return item.comments.count()
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if 'request' in self.context:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id).values_list('user_id', flat=True).distinct()
-            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+        user = self.context['request'].user
+        blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user).values_list('user_id', flat=True).distinct()
+        return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
     class Meta:
@@ -355,10 +354,9 @@ class ItemFeedSerializer(ItemListSerializer):
                                           context={'shop_item': item, 'request': self.context['request']}).data
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if 'request' in self.context:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id).values_list('user_id', flat=True).distinct()
-            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+        user = self.context['request'].user
+        blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user).values_list('user_id', flat=True).distinct()
+        return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     class Meta:
         model = ShopItem

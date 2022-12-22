@@ -78,10 +78,8 @@ class CommentSerializer(serializers.ModelSerializer):
         return comment.liked_comments.count()
 
     def get_is_blocked(self, comment: Comment) -> bool:
-        if 'request' in self.context:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=comment.item.organization.id).values_list('user_id', flat=True).distinct()
-            return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+        blocked_users = BlockedUser.objects.filter(organization_id=comment.item.organization.id, user=comment.user).values_list('user_id', flat=True).distinct()
+        return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     class Meta:
         model = Comment

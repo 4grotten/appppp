@@ -13,6 +13,7 @@ from imagekit.models import ImageSpecField
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
 from common.processors import ResizeWatermarkedSpec, MobileWallpaper
 from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
+from django_resized import ResizedImageField
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -49,7 +50,8 @@ class File(TimestampModel):
     is_watermarked = models.BooleanField(default=False, editable=False)
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
-    file = models.ImageField(
+    file = ResizedImageField(
+        force_format="WEBP", quality=75,
         upload_to=upload_file_with_unique_name,
         help_text=_('Image that you want to store'),
         max_length=1000

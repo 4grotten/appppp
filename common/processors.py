@@ -38,7 +38,7 @@ class ResizeWatermarkedSpec(ImageSpec):
         processors = [ResizeToFit(self.width, self.height, upscale=False)]
         model, field_name = get_field_info(self.source)
         if str(model).endswith('.webp'):
-            self.format = "WEBP"
+            self.format = 'WEBP'
         if model.is_watermarked:
             processors.append(Watermark('watermark/watermark_logo.png'))
         return processors

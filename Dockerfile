@@ -8,10 +8,10 @@ ENV BACKEND_VERSION_REPORT=${build_version_report}
 RUN apt-get update
 RUN apt-get install --no-install-recommends --yes \
     netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev graphviz \
-    libjpeg-dev libpng-dev python-setuptools
+    libjpeg-dev libpng-dev
 
 WORKDIR /app
-
+RUN pip3 install setuptools
 RUN pip3 install poetry
 
 COPY ./pyproject.toml /app

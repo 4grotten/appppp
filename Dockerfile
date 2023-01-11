@@ -11,7 +11,7 @@ RUN apt-get install --no-install-recommends --yes \
     libjpeg-dev libpng-dev
 
 WORKDIR /app
-
+RUN pip3 install setuptools
 RUN pip3 install poetry
 
 COPY ./pyproject.toml /app

@@ -50,8 +50,7 @@ class File(TimestampModel):
     is_watermarked = models.BooleanField(default=False, editable=False)
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
-    file = ResizedImageField(
-        force_format="WEBP", quality=75,
+    file = models.ImageField(
         upload_to=upload_file_with_unique_name,
         help_text=_('Image that you want to store'),
         max_length=1000

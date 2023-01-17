@@ -21,7 +21,7 @@ class User(AbstractUser, TimestampModel):
     full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
     email = models.EmailField(verbose_name='Email', blank=True, null=True)
     phone_number = PhoneNumberField(unique=True, max_length=255)
-    gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
     username = models.CharField(max_length=255, null=True, blank=True)

@@ -13,6 +13,7 @@ from imagekit.models import ImageSpecField
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
 from common.processors import ResizeWatermarkedSpec, MobileWallpaper
 from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
+from django_resized import ResizedImageField
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):

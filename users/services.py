@@ -41,7 +41,7 @@ class UserService:
 
     @classmethod
     def init_profile(cls, user: User, avatar_id: int, full_name: str, username: str,
-                     date_of_birth, gender: str, email: Union[str, None]):
+                     date_of_birth, gender: Union[str, None], email: Union[str, None]):
 
         try:
             user.avatar_id = avatar_id

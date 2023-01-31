@@ -8,6 +8,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from common.exceptions import IntegrityException, NotAcceptableException
 from organizations.models import Organization
@@ -16,8 +17,8 @@ from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilt
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer
+    ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
@@ -30,6 +31,38 @@ from utils.translator import GoogleTranslator
 class ItemCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemCreateUpdateSerializer
+
+
+class ItemRentalCreateView(CreateAPIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ItemRentalCreateUpdateSerializer
+
+
+class RentItemPeriodCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk, format=None):
+        try:
+            rental = ShopItemService.get(id=pk)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
+
+        rental_period_data = {
+            'rent_time_type': request.data.get('rent_time_type'),
+            'start_date': request.data.get('start_date'),
+            'end_date': request.data.get('end_date'),
+            'start_time': request.data.get('start_time'),
+            'end_time': request.data.get('end_time')
+        }
+        rental_period_serializer = RentItemsPeriodSerializer(data=rental_period_data)
+        if rental_period_serializer.is_valid():
+            rental_period = rental_period_serializer.save()
+        else:
+            return Response(rental_period_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        rental.rental_period = rental_period
+        rental.save()
+        rental_serializer = ItemRentalCreateUpdateSerializer(rental)
+        return Response(data={'message': _('Successfully added rental period')})
 
 
 class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

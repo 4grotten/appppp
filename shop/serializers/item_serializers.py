@@ -10,7 +10,7 @@ from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -182,6 +182,88 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
         organization_data = self.validated_data.get('organization')
         Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
+
+
+class RentalPeriodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RentalPeriod
+        fields = (
+            'id', 'start_date', 'end_date', 'start_time', 'end_time'
+        )
+
+
+class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
+    # longitude = serializers.FloatField(allow_null=True, required=False)
+    # latitude = serializers.FloatField(allow_null=True, required=False)
+    rental_period = RentalPeriodSerializer(required=False)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'organization', 'subcategory',
+            'name', 'name_lang', 'description', 'description_lang',
+            'price', 'discount', 'article',
+            'instagram_link', 'images', 'videos', 'youtube_links',
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'full_location'
+        )
+        read_only_fields = ['name_lang', 'description_lang']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        organization = attrs['organization']
+
+        subcategory = attrs.get('subcategory', None)
+        subcategory_organization = getattr(subcategory, 'organization', None)
+        if subcategory_organization is not None and not subcategory_organization == organization:
+            raise NotAcceptableException(_('Organization does not have this subcategory'))
+
+        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        validated_data.pop('organization', None)
+        if 'price' in validated_data and validated_data.get('price') is None:
+            CartItemService.delete_item_from_all_carts(self.instance)
+
+        return super().update(instance, validated_data)
+
+    def save(self, **kwargs):
+        images = self.validated_data.get('images', [])
+        for index, image in enumerate(images):
+            image.order = index
+            image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
+
+        instance = super().save(**kwargs)
+
+        instance.purchase_type = 'rent'
+        instance.save(update_fields=('purchase_type',))
+        if instance.article == '' or instance.article is None:
+            instance.article = f"ART{instance.id}"
+            instance.save(update_fields=('article',))
+
+        if self.validated_data.get('price') == 0.00:
+            instance.price = None
+            instance.save()
+
+        organization_data = self.validated_data.get('organization')
+        Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
+
+
+class RentItemsPeriodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RentalPeriod
+        fields = (
+            'id', 'rent_time_type', 'start_date', 'end_date', 'start_time', 'end_time'
+        )
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

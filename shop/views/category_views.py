@@ -46,6 +46,18 @@ class ItemCategoryListView(ListAPIView):
     queryset = ItemCategory.objects.all()
 
 
+class ItemRentalCategoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = None
+    serializer_class = ItemCategorySerializer
+
+    def get_queryset(self):
+        try:
+            return ItemCategory.objects.filter(Q(name__icontains="Rental"))
+        except ItemCategory.DoesNotExist:
+            raise ObjectNotFoundException(_('ItemCategory not found'))
+
+
 class ItemCategoryRetrieveView(RetrieveAPIView):
     permission_classes = ()
     serializer_class = ItemCategoryWithNonEmptySubcategoriesSerializer

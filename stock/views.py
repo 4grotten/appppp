@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
@@ -22,7 +22,7 @@ from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, Cr
     ShopItemShortSerializer, LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, \
     ShopItemSizeCountSetSerializer, AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, \
     ShopLinkItemsSetSerializer, OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer, \
-    ShopItemSetIdsSerializer
+    ShopItemSetIdsSerializer, RentalStockSerializer
 from stock.services import StockService
 
 
@@ -32,6 +32,15 @@ class StockView(RetrieveAPIView):
 
     def get_object(self):
         return ShopItemService.get(id=self.kwargs['pk'])
+
+
+class RentalStockView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RentalStockSerializer
+
+    def get_object(self):
+        return ShopItemService.get(id=self.kwargs['pk'])
+
 
 class StockSetsView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
@@ -175,6 +184,10 @@ class OrganizationSubcategoryListView(ListAPIView):
 
     def get_queryset(self):
         main_item = ShopItemService.get(id=self.kwargs['pk'])
+        if main_item.purchase_type == 'rent':
+            subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)
+            return subcategories.annotate(
+                search_type_ordering=Case(When(Q(name="Аренда"), then=Value(1)),default=Value(-1),output_field=IntegerField(),)).order_by('-search_type_ordering')
         return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)
 
 

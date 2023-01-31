@@ -5,7 +5,7 @@ from shop.views.cart_views import (
     OrderSelfPickupView, UserCartRetrieveUpdateDestroyView, CartAnonymousCheckoutView, UpdateDeliveryToSendByCourierView
 )
 from shop.views.category_views import (
-    ItemCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
+    ItemCategoryListView, ItemRentalCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
     ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView
 )
@@ -15,8 +15,9 @@ from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
 )
 from shop.views.item_views import (
-    ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView
+    ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
+    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView,
+    RentItemPeriodCreateView
 )
 
 urlpatterns = [
@@ -24,6 +25,9 @@ urlpatterns = [
     path('shop/categories/<int:pk>/', ItemCategoryRetrieveView.as_view(), name='item_category_details'),
     path('shop/categories/<int:pk>/all_subcategories/', ItemCategoryAllSubcategoriesView.as_view(),
          name='all_category_subcategories'),
+
+    path('shop/rentals/categories/', ItemRentalCategoryListView.as_view(), name='rent_categories'),
+    path('add_rental_period/<int:pk>/', RentItemPeriodCreateView.as_view(), name='add_rental_period'),
 
     path('shop/non_empty_categories/', NonEmptyCategoryListView.as_view(), name='non_empty_categories'),
     path('shop/non_empty_partner_categories/<int:pk>/', NonEmptyPartnerCategoryListView.as_view(), name='non_empty_partner_categories'),
@@ -38,6 +42,8 @@ urlpatterns = [
     path('shop/items/<str:pk>/', ItemRetrieveUpdateDestroyView.as_view(), name='item_details'),
     path('shop/doChangeItemPublishedStatus/', ItemChangePublishedStatusView.as_view(), name='item_published_status'),
     path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
+
+    path('shop/rentals/', ItemRentalCreateView.as_view(), name='rent_create'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

@@ -177,12 +177,16 @@ class Notification(TimestampModel):
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru').exclude(type='android')
         fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_ru)
         fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en').exclude(type='android')
         fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_en)
         fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')
         fcm_devices_en_android = notification_setting.fcm_device.filter(settingstotoken__language='en', type='android')
         fcm_devices_en_android.send_message(**notification_payload_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_ru_android.send_message(**notification_payload_ru_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_en_android)
+        print(fcm_devices_ru_android)
 
     @staticmethod
     def get_organization_small_image(organization: Organization):

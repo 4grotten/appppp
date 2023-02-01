@@ -53,7 +53,7 @@ class ItemRentalCategoryListView(ListAPIView):
 
     def get_queryset(self):
         try:
-            return ItemCategory.objects.filter(Q(name__icontains="Rental"))
+            return ItemCategory.objects.filter(Q(name__icontains="Rental") | Q(name__icontains="Аренда") | Q(name__icontains="Kiralama"))
         except ItemCategory.DoesNotExist:
             raise ObjectNotFoundException(_('ItemCategory not found'))
 

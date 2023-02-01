@@ -17,7 +17,7 @@ from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilt
 from shop.models import ShopItem, Complaint
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
+    ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
@@ -46,7 +46,6 @@ class RentItemPeriodCreateView(APIView):
             rental = ShopItemService.get(id=pk)
         except ShopItem.DoesNotExist:
             raise ObjectNotFoundException(_('Shop item not found'))
-
         rental_period_data = {
             'rent_time_type': request.data.get('rent_time_type'),
             'start_date': request.data.get('start_date'),
@@ -89,6 +88,38 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         self.serializer_class = ItemRetrieveSerializer
+        self.serializer_class(context={'request': self.request})
+        return super().retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        CartItemService.delete_item_from_all_carts(item=ShopItem.objects.get(id=kwargs['pk']))
+        return super().delete(self, request, *args, **kwargs)
+
+
+class ItemRentalRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, CanEditItem)
+    serializer_class = ItemRentalCreateUpdateSerializer
+    queryset = ShopItem.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        ShopItemService.delete_instagram_images(item_id=kwargs['pk'])
+        ShopItemService.delete_instagram_video(item_id=kwargs['pk'])
+        ShopItemService.change_updated_at_and_is_updated_and_removed_at_field(item_id=kwargs['pk'])
+        # ShopItemService.remove_stock_if_change_subcategory(item_id=kwargs['pk'], subcategory_id=request.data['subcategory'])
+        return super().put(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            self.permission_classes = (AllowAny, CanViewUnpublishedItem,)
+        return super().get_permissions()
+
+    def retrieve(self, request, *args, **kwargs):
+        if not kwargs['pk'].isdigit():
+            return Response(data={
+                'details': _('Not found')
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        self.serializer_class = ItemRentalRetrieveSerializer
         self.serializer_class(context={'request': self.request})
         return super().retrieve(request, *args, **kwargs)
 

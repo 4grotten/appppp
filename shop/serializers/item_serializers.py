@@ -44,6 +44,15 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
         fields = ('id', 'price', 'discount', 'currency', 'image', 'has_in_stock')
 
 
+class RentItemsPeriodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RentalPeriod
+        fields = (
+            'id', 'rent_time_type', 'start_date', 'end_date', 'start_time', 'end_time'
+        )
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -127,6 +136,92 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
+class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
+    organization = ItemFeedOrganizationSerializer()
+    subcategory = ItemSubcategoryBriefSerializer()
+    images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
+    instagram_data = serializers.SerializerMethodField()
+
+    is_liked = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    available_sizes = serializers.SerializerMethodField()
+    set_items = serializers.SerializerMethodField()
+    has_in_stock = serializers.SerializerMethodField()
+    rental_period = RentItemsPeriodSerializer()
+
+
+    def get_has_in_stock(self, item: ShopItem):
+        if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+        else:
+            return True
+
+    def get_set_items(self, item: ShopItem):
+        items = ShopItem.objects.filter(
+            Q(shop_items_set_stocks__main_shop_item=item) |
+            Q(shop_items_link_set_stocks__main_shop_item=item)
+        )[:2]
+        return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
+
+    def get_available_sizes(self, item: ShopItem):
+        sizes = item.available_sizes.all().order_by('order')
+        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
+            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
+        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+            sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
+            return ShopItemSizeCountSerializer(sizes, many=True, context={'shop_item': item, 'request': self.context['request']}).data
+        return SizeFormatByItemSerializer(sizes, many=True,
+                                          context={'shop_item': item, 'request': self.context['request']}).data
+
+    def get_instagram_data(self, item: ShopItem):
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('pk')
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)
+
+    def get_is_liked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return LikeService.is_item_liked_by_user(item=item, user=user)
+
+    def get_is_bookmarked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
+
+    def get_like_count(self, item: ShopItem) -> int:
+        return item.liked_users.count()
+
+    def get_comment_count(self, item: ShopItem) -> int:
+        return item.comments.count()
+
+    def get_can_comment(self, item: ShopItem) -> bool:
+        if self.context['request'].user:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
+            'price', 'discount',
+            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
+            'can_comment', 'created_at', 'updated_at', 'removed_at',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type', 'address',
+            'full_location', 'rental_period'
+        )
+
+
 class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
@@ -184,19 +279,10 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
 
 
-class RentalPeriodSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = RentalPeriod
-        fields = (
-            'id', 'start_date', 'end_date', 'start_time', 'end_time'
-        )
-
-
 class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
     # longitude = serializers.FloatField(allow_null=True, required=False)
     # latitude = serializers.FloatField(allow_null=True, required=False)
-    rental_period = RentalPeriodSerializer(required=False)
+    rental_period = RentItemsPeriodSerializer(required=False)
 
     class Meta:
         model = ShopItem
@@ -255,15 +341,6 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
 
         organization_data = self.validated_data.get('organization')
         Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
-
-
-class RentItemsPeriodSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = RentalPeriod
-        fields = (
-            'id', 'rent_time_type', 'start_date', 'end_date', 'start_time', 'end_time'
-        )
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

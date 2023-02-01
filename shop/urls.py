@@ -15,9 +15,9 @@ from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
 )
 from shop.views.item_views import (
-    ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView,
-    RentItemPeriodCreateView
+    ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemRentalRetrieveUpdateDestroyView,
+    ItemChangePublishedStatusView, LikeListCreateView, BookmarkListCreateView, ComplaintCreateView,
+    TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView, RentItemPeriodCreateView
 )
 
 urlpatterns = [
@@ -44,6 +44,7 @@ urlpatterns = [
     path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
 
     path('shop/rentals/', ItemRentalCreateView.as_view(), name='rent_create'),
+    path('shop/rentals/<str:pk>/', ItemRentalRetrieveUpdateDestroyView.as_view(), name='rent_details'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

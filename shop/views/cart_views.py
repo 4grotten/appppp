@@ -112,18 +112,11 @@ class OrderDeliveryView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
-        if Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
-                is_delivery_service=True, country=cart.transaction.organization.country).exists():
-            DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
-            return Response(
-                {
-                    "message": _("Success"),
-                    "transaction_id": cart.transaction_id
-                }
-            )
+        DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
+
         return Response(
             {
-                "message": _("Not courier organization in this country"),
+                "message": _("Success"),
                 "transaction_id": cart.transaction_id
             }
         )

@@ -68,6 +68,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
+    rental_period = RentItemsPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -132,7 +133,8 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
+            'purchase_type'
         )
 
 
@@ -218,7 +220,7 @@ class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type', 'address',
-            'full_location', 'rental_period'
+            'full_location', 'rental_period', 'purchase_type'
         )
 
 

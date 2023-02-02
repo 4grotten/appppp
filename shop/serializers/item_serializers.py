@@ -529,7 +529,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
-            'has_in_stock', 'rental_period'
+            'has_in_stock', 'rental_period', 'purchase_type'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

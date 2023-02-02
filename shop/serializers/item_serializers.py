@@ -487,6 +487,7 @@ class ItemFeedSerializer(ItemListSerializer):
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
     can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    rental_period = RentItemsPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -527,7 +528,8 @@ class ItemFeedSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items', 'has_in_stock'
+            'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
+            'has_in_stock', 'rental_period'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

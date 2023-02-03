@@ -2,6 +2,7 @@ import datetime
 
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -282,8 +283,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
-    # longitude = serializers.FloatField(allow_null=True, required=False)
-    # latitude = serializers.FloatField(allow_null=True, required=False)
+    longitude = serializers.FloatField(allow_null=True, required=False)
+    latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
 
     class Meta:
@@ -293,7 +294,8 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
             'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
-            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'full_location'
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'longitude', 'latitude',
+            'full_location'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -311,6 +313,26 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def create(self, validated_data):
+        longitude = validated_data.pop('longitude')
+        latitude = validated_data.pop('latitude')
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+        print(point)
+        shop_item = ShopItem.objects.create(
+            location=point,
+            **validated_data
+        )
+        return shop_item
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('latitude', None)
+        representation.pop('longitude', None)
+        return representation
+
     def update(self, instance, validated_data):
         validated_data.pop('organization', None)
         if 'price' in validated_data and validated_data.get('price') is None:
@@ -321,7 +343,8 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         images = self.validated_data.get('images', [])
         for index, image in enumerate(images):
-            image.order = index
+            self.index = index
+            image.order = self.index
             image.save(update_fields=('order',))
 
         videos = self.validated_data.get('videos', [])
@@ -531,7 +554,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
-            'has_in_stock', 'rental_period', 'purchase_type'
+            'has_in_stock', 'rental_period', 'purchase_type', 'full_location'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

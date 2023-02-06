@@ -14,7 +14,7 @@ from common.exceptions import IntegrityException, NotAcceptableException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint
+from shop.models import ShopItem, Complaint, RentalPeriod
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
@@ -33,9 +33,26 @@ class ItemCreateView(CreateAPIView):
     serializer_class = ItemCreateUpdateSerializer
 
 
+# class ItemRentalCreateView(CreateAPIView):
+#     permissions = (IsAuthenticated,)
+#     serializer_class = ItemRentalCreateUpdateSerializer
+
 class ItemRentalCreateView(CreateAPIView):
-    permissions = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = ItemRentalCreateUpdateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = ItemRentalCreateUpdateSerializer(data=request.data, context={'request': request})
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        rental = ShopItemService.create_rental(**serializer.validated_data)
+        data = ItemRentalCreateUpdateSerializer(rental, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class RentItemPeriodCreateView(APIView):

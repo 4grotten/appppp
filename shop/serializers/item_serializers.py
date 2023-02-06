@@ -2,6 +2,7 @@ import datetime
 
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException
@@ -282,8 +283,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
-    # longitude = serializers.FloatField(allow_null=True, required=False)
-    # latitude = serializers.FloatField(allow_null=True, required=False)
+    longitude = serializers.FloatField(allow_null=True, required=False)
+    latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
 
     class Meta:
@@ -293,7 +294,8 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
             'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
-            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'full_location'
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'full_location', 'longitude',
+            'latitude'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -312,37 +314,24 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        rental_period_data = validated_data.pop('rental_period', None)
+        if rental_period_data:
+            rental_period = instance.rental_period
+            rental_period_serializer = RentItemsPeriodSerializer(rental_period, data=rental_period_data, partial=True)
+            if rental_period_serializer.is_valid(raise_exception=True):
+                rental_period_serializer.save()
+
         validated_data.pop('organization', None)
         if 'price' in validated_data and validated_data.get('price') is None:
             CartItemService.delete_item_from_all_carts(self.instance)
 
         return super().update(instance, validated_data)
 
-    def save(self, **kwargs):
-        images = self.validated_data.get('images', [])
-        for index, image in enumerate(images):
-            image.order = index
-            image.save(update_fields=('order',))
-
-        videos = self.validated_data.get('videos', [])
-        for index, video in enumerate(videos):
-            video.order = index
-            video.save(update_fields=('order',))
-
-        instance = super().save(**kwargs)
-
-        instance.purchase_type = 'rent'
-        instance.save(update_fields=('purchase_type',))
-        if instance.article == '' or instance.article is None:
-            instance.article = f"ART{instance.id}"
-            instance.save(update_fields=('article',))
-
-        if self.validated_data.get('price') == 0.00:
-            instance.price = None
-            instance.save()
-
-        organization_data = self.validated_data.get('organization')
-        Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('latitude', None)
+        representation.pop('longitude', None)
+        return representation
 
 
 class ItemChangePublishedSerializer(serializers.Serializer):

@@ -3,6 +3,7 @@ from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, 
 from django.db.models.expressions import RawSQL
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.geos import Point
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization, Hotlink
@@ -176,3 +177,40 @@ class ShopItemService:
         )).order_by('name_order', '-updated_at', )
 
         return queryset
+
+    @classmethod
+    def create_rental(cls, organization: Organization, name: str, purchase_type='rent',youtube_links=None, images=None, videos=None, subcategory=None, description=None,
+                            price=None, discount=None, instagram_link=None, address=None, latitude=None,
+                            longitude=None, rental_period=None, article=None):
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+
+        rental = ShopItem.objects.create(
+            organization=organization,
+            subcategory=subcategory,
+            name=name,
+            description=description,
+            price=price,
+            discount=discount,
+            instagram_link=instagram_link,
+            address=address,
+            location=point,
+            rental_period=rental_period,
+            article=article,
+            purchase_type=purchase_type
+        )
+        if rental.article == '' or rental.article is None:
+            rental.article = f"ART{rental.id}"
+        if rental.price == 0.00:
+            rental.price = None
+        if images:
+            rental.images.set(images)
+        if videos:
+            rental.videos.set(videos)
+        if youtube_links:
+            rental.youtube_links = youtube_links
+        rental.save()
+
+        return rental

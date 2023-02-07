@@ -180,7 +180,7 @@ class ShopItemService:
 
     @classmethod
     def create_rental(cls, organization: Organization, name: str, purchase_type='rent',youtube_links=None, images=None, videos=None, subcategory=None, description=None,
-                            price=None, discount=None, instagram_link=None, address=None, latitude=None,
+                            price=None, discount=0, instagram_link=None, address=None, latitude=None,
                             longitude=None, rental_period=None, article=None):
         if longitude and latitude:
             point = Point(longitude, latitude)

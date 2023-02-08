@@ -320,12 +320,57 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
             rental_period_serializer = RentItemsPeriodSerializer(rental_period, data=rental_period_data, partial=True)
             if rental_period_serializer.is_valid(raise_exception=True):
                 rental_period_serializer.save()
+                rental_period_data = validated_data.pop('rental_period', None)
+
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+        instance.location = point
+        instance.save()
 
         validated_data.pop('organization', None)
         if 'price' in validated_data and validated_data.get('price') is None:
             CartItemService.delete_item_from_all_carts(self.instance)
 
         return super().update(instance, validated_data)
+
+    def save(self, **kwargs):
+        images = self.validated_data.get('images', [])
+        for index, image in enumerate(images):
+            image.order = index
+            image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
+
+        longitude = self.validated_data.pop('longitude', None)
+        latitude = self.validated_data.pop('latitude', None)
+
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+
+        instance = super().save(**kwargs)
+        instance.location = point
+        instance.save()
+
+        if instance.article == '' or instance.article is None:
+            instance.article = f"ART{instance.id}"
+            instance.save(update_fields=('article',))
+
+
+        if self.validated_data.get('price') == 0.00:
+            instance.price = None
+            instance.save()
+
+        organization_data = self.validated_data.get('organization')
+        Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

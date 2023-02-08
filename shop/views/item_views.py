@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,26 +33,9 @@ class ItemCreateView(CreateAPIView):
     serializer_class = ItemCreateUpdateSerializer
 
 
-# class ItemRentalCreateView(CreateAPIView):
-#     permissions = (IsAuthenticated,)
-#     serializer_class = ItemRentalCreateUpdateSerializer
-
 class ItemRentalCreateView(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permissions = (IsAuthenticated,)
     serializer_class = ItemRentalCreateUpdateSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = ItemRentalCreateUpdateSerializer(data=request.data, context={'request': request})
-
-        if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-        rental = ShopItemService.create_rental(**serializer.validated_data)
-        data = ItemRentalCreateUpdateSerializer(rental, context={'request': request}).data
-        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class RentItemPeriodCreateView(APIView):
@@ -77,8 +60,19 @@ class RentItemPeriodCreateView(APIView):
             return Response(rental_period_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         rental.rental_period = rental_period
         rental.save()
-        rental_serializer = ItemRentalCreateUpdateSerializer(rental)
         return Response(data={'message': _('Successfully added rental period')})
+
+
+class RentalPeriodRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RentItemsPeriodSerializer
+    queryset = ShopItem.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        rental = self.get_object()
+        rental_period = rental.rental_period
+        serializer = self.get_serializer(rental_period)
+        return Response(serializer.data)
 
 
 class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

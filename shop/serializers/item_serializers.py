@@ -360,6 +360,8 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
         instance.location = point
         instance.save()
 
+        instance.purchase_type = 'rent'
+        instance.save(update_fields=('purchase_type',))
         if instance.article == '' or instance.article is None:
             instance.article = f"ART{instance.id}"
             instance.save(update_fields=('article',))

@@ -46,6 +46,8 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
 
 class RentItemsPeriodSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
+    end_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
 
     class Meta:
         model = RentalPeriod
@@ -320,7 +322,6 @@ class ItemRentalCreateUpdateSerializer(serializers.ModelSerializer):
             rental_period_serializer = RentItemsPeriodSerializer(rental_period, data=rental_period_data, partial=True)
             if rental_period_serializer.is_valid(raise_exception=True):
                 rental_period_serializer.save()
-                rental_period_data = validated_data.pop('rental_period', None)
 
         latitude = validated_data.pop('latitude', None)
         longitude = validated_data.pop('longitude', None)

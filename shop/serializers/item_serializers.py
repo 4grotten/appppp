@@ -48,6 +48,8 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 class RentItemsPeriodSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
     end_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
+    start_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
+    end_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
 
     class Meta:
         model = RentalPeriod

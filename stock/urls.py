@@ -4,7 +4,8 @@ from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSu
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
     DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
-    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView
+    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView, \
+    DeleteStockAndRentalPeriodView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('get_not_choosen_sizes/<int:pk>/', GetNotChoosenSizeListView.as_view(), name='get_not_choosen_sizes'),
 
     path('delete_stock/<int:pk>/', DeleteStockView.as_view(), name='delete_stock'),
+    path('delete_stock_and_rental_period/<int:pk>/', DeleteStockAndRentalPeriodView.as_view(), name='delete_stock_and_rental_period'),
     path('delete_shop_item_size/<int:pk>/', DeleteShopItemSizeCountView.as_view(), name='delete_shop_item_size'),
 
 

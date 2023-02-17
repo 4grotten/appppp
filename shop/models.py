@@ -94,7 +94,7 @@ class ShopItem(models.Model):
     address = models.CharField(max_length=255, null=True, blank=True)
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
 
-    rental_period = models.ForeignKey(RentalPeriod, on_delete=models.CASCADE, null=True, blank=True)
+    rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def full_location(self):

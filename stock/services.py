@@ -9,7 +9,7 @@ from transactions.models import Transaction
 from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from shop.models import ShopItem
+from shop.models import ShopItem, RentalPeriod
 from shop.services.item_services import ShopItemService
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory
 
@@ -184,6 +184,11 @@ class StockService:
         ShopItemSetStock.objects.filter(main_shop_item=shop_item).delete()
         ShopItemLinksSetStock.objects.filter(main_shop_item=shop_item).delete()
         shop_item.available_sizes.clear()
+
+    @classmethod
+    def delete_rental_period_by_rental_item_id(cls, rental_period_id):
+        RentalPeriod.objects.filter(id=rental_period_id).delete()
+
 
     @classmethod
     def get_dict_data_for_deals(cls, queryset):

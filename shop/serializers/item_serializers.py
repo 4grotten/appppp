@@ -479,6 +479,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
     available_sizes = serializers.SerializerMethodField()
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
+    rental_period = RentItemsPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -513,7 +514,8 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
+            'full_location', 'purchase_type', 'address'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -631,3 +633,19 @@ class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
         if 'hotlink' not in self.context:
             return False
         return HotlinkCollectionItem.objects.filter(hotlink=self.context['hotlink'], item=item).exists()
+
+
+class ItemRentalYearSerializer(serializers.Serializer):
+    value = serializers.CharField()
+    is_booked = serializers.BooleanField()
+
+    class Meta:
+        fields = ['value', 'is_booked']
+
+    def to_representation(self, instance):
+        value = instance['value']
+        is_booked = instance['is_booked']
+        return {
+            'value': value,
+            'is_booked': is_booked
+        }

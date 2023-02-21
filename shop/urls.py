@@ -18,7 +18,7 @@ from shop.views.item_views import (
     ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemRentalRetrieveUpdateDestroyView,
     ItemChangePublishedStatusView, LikeListCreateView, BookmarkListCreateView, ComplaintCreateView,
     TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView, RentItemPeriodCreateView,
-    RentalPeriodRetrieveView
+    RentalPeriodRetrieveView, GetYearsView
 )
 
 urlpatterns = [
@@ -30,6 +30,7 @@ urlpatterns = [
     path('shop/rentals/categories/', ItemRentalCategoryListView.as_view(), name='rent_categories'),
     path('add_rental_period/<int:pk>/', RentItemPeriodCreateView.as_view(), name='add_rental_period'),
     path('get_rental_period/<int:pk>/', RentalPeriodRetrieveView.as_view(), name='rental_period_details'),
+    path('shop/rentals/<int:pk>/years/', GetYearsView.as_view(), name='get_years'),
 
     path('shop/non_empty_categories/', NonEmptyCategoryListView.as_view(), name='non_empty_categories'),
     path('shop/non_empty_partner_categories/<int:pk>/', NonEmptyPartnerCategoryListView.as_view(), name='non_empty_partner_categories'),

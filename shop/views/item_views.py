@@ -18,7 +18,7 @@ from shop.models import ShopItem, Complaint, RentalPeriod
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
@@ -308,3 +308,19 @@ class SuggestSearchItem(ListAPIView):
         response = ShopItemService.get_suggest_items(response)
 
         return response
+
+
+class GetYearsView(ListAPIView):
+    serializer_class = ItemRentalYearSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+        rental_period = shop_item.rental_period
+        if rental_period is None:
+            return []
+        start_year = rental_period.start_date.year
+        end_year = rental_period.end_date.year
+        return [{'value': str(year), 'is_booked': False} for year in range(start_year, end_year + 1)]

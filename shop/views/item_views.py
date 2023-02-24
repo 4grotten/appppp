@@ -324,7 +324,14 @@ class GetYearsView(ListAPIView):
             return []
         start_year = rental_period.start_date.year
         end_year = rental_period.end_date.year
-        return [{'value': str(year), 'is_booked': False} for year in range(start_year, end_year + 1)]
+        queryset = [{'value': str(year), 'is_booked': False, 'is_available':True} for year in range(start_year, end_year + 1)]
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 class BookRentalView(GenericAPIView):

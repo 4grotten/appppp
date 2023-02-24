@@ -18,6 +18,7 @@ from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
 from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer
+from transactions.models import Transaction
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -639,22 +640,22 @@ class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
 class ItemRentalYearSerializer(serializers.Serializer):
     value = serializers.CharField()
     is_booked = serializers.SerializerMethodField()
+    is_available = serializers.SerializerMethodField()
 
     class Meta:
-        model = ShopItem
-        fields = ('value', 'is_booked')
+        model = Booking
+        fields = ('value', 'is_booked', 'is_available')
 
-    def get_is_booked(self, item: ShopItem):
-        bookings = Booking.objects.all(item=item)
+    def get_is_available(self, booking: Booking) -> bool:
+        year = int(booking['value'])
+        current_year = datetime.datetime.now().year
+        if year < current_year:
+            return False
+        return True
 
-    def to_representation(self, instance):
-        value = instance['value']
-        is_booked = instance['is_booked']
-        return {
-            'value': value,
-            'is_booked': is_booked
-        }
-
+    #TODO fix this method
+    def get_is_booked(self, booking: Booking) -> bool:
+        return False
 
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)

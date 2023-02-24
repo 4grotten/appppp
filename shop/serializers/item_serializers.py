@@ -1,4 +1,5 @@
 import datetime
+import ast
 
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +12,7 @@ from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -138,8 +139,8 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
-            'purchase_type'
+            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
+            'rental_period'
         )
 
 
@@ -637,10 +638,14 @@ class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
 
 class ItemRentalYearSerializer(serializers.Serializer):
     value = serializers.CharField()
-    is_booked = serializers.BooleanField()
+    is_booked = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ['value', 'is_booked']
+        model = ShopItem
+        fields = ('value', 'is_booked')
+
+    def get_is_booked(self, item: ShopItem):
+        bookings = Booking.objects.all(item=item)
 
     def to_representation(self, instance):
         value = instance['value']
@@ -649,3 +654,35 @@ class ItemRentalYearSerializer(serializers.Serializer):
             'value': value,
             'is_booked': is_booked
         }
+
+
+class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos'
+        )
+
+
+
+class BookInfoSerializer(serializers.ModelSerializer):
+    rental_period_list = serializers.ListField(child=serializers.CharField())
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'organization', 'rental_period_list')
+
+
+class TransactionBookingInfoSerializer(serializers.ModelSerializer):
+    rental_period_list = serializers.SerializerMethodField()
+    item = BookingItemRentalRetrieveSerializer()
+
+    def get_rental_period_list(self, obj):
+        return ast.literal_eval(obj.rental_period_list)
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'organization', 'item', 'rental_period_list')

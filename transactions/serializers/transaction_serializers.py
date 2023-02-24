@@ -11,6 +11,7 @@ from organizations.serializers.organization_serializers import (
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
+from shop.serializers.item_serializers import TransactionBookingInfoSerializer, ItemRentalRetrieveSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
@@ -135,6 +136,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
+    booking = TransactionBookingInfoSerializer()
 
     def get_cart(self, instance: Transaction):
         if instance.fixed_cart:
@@ -186,7 +188,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'display_time', 'client', 'delivery_type', 'type', 'cart', 'status',
-            'current_user_can_see_stats', 'delivery_info', 'organization'
+            'current_user_can_see_stats', 'delivery_info', 'organization', 'booking'
         )
 
 

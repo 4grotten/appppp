@@ -14,17 +14,18 @@ from common.exceptions import IntegrityException, NotAcceptableException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, RentalPeriod
+from shop.models import ShopItem, Complaint, RentalPeriod, Booking
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer, BookInfoSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
+from shop.services.booking_services import BookingService
 from utils.translator import GoogleTranslator
 
 
@@ -324,3 +325,32 @@ class GetYearsView(ListAPIView):
         start_year = rental_period.start_date.year
         end_year = rental_period.end_date.year
         return [{'value': str(year), 'is_booked': False} for year in range(start_year, end_year + 1)]
+
+
+class BookRentalView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = BookInfoSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        rental = ShopItem.objects.get(id=pk)
+        rental_period_list = serializer.validated_data.get('rental_period_list')
+        booking = Booking.objects.create(user=request.user,
+                                         item=rental,
+                                         organization=serializer.validated_data.get('organization', None),
+                                         rental_period_list=rental_period_list
+                                         )
+
+        booking_process = BookingService.process_booking(user=request.user, booking_id=booking.id)
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": booking_process.transaction_id
+            }
+        )

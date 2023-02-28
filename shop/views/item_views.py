@@ -17,7 +17,7 @@ from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilt
 from shop.models import ShopItem, Complaint, RentalPeriod, Booking
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRentalCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer, BookInfoSerializer
 )
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
@@ -36,7 +36,15 @@ class ItemCreateView(CreateAPIView):
 
 class ItemRentalCreateView(CreateAPIView):
     permissions = (IsAuthenticated,)
-    serializer_class = ItemRentalCreateUpdateSerializer
+    serializer_class = ItemCreateUpdateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(purchase_type='rent')
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class RentItemPeriodCreateView(APIView):
@@ -110,7 +118,7 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
 class ItemRentalRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, CanEditItem)
-    serializer_class = ItemRentalCreateUpdateSerializer
+    serializer_class = ItemCreateUpdateSerializer
     queryset = ShopItem.objects.all()
 
     def put(self, request, *args, **kwargs):

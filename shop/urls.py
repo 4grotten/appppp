@@ -47,7 +47,6 @@ urlpatterns = [
     path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
 
     path('shop/rentals/', ItemRentalCreateView.as_view(), name='rent_create'),
-    path('shop/rentals/<str:pk>/', ItemRentalRetrieveUpdateDestroyView.as_view(), name='rent_details'),
     path('shop/rentals/<int:pk>/booking/', BookRentalView.as_view(), name='rent_booking'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),

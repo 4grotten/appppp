@@ -615,7 +615,7 @@ class ItemRentalYearSerializer(serializers.Serializer):
 
     class Meta:
         model = Booking
-        fields = ('value', 'is_booked', 'is_available')
+        fields = ('value', 'is_booked', 'is_available', 'item')
 
     def get_is_available(self, booking: Booking) -> bool:
         year = int(booking['value'])
@@ -624,9 +624,16 @@ class ItemRentalYearSerializer(serializers.Serializer):
             return False
         return True
 
-    #TODO fix this method
     def get_is_booked(self, booking: Booking) -> bool:
-        return False
+        year = int(booking['value'])
+        rental = self.context.get('rental')
+
+        bookings = rental.user_bookings.filter(
+            start_time__year__lte=year,
+            end_time__year__gte=year,
+            transaction__is_processed=True
+        )
+        return bookings.exists()
 
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
@@ -641,20 +648,15 @@ class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
 
 
 class BookInfoSerializer(serializers.ModelSerializer):
-    rental_period_list = serializers.ListField(child=serializers.CharField())
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'rental_period_list')
+        fields = ('id', 'organization', 'start_time', 'end_time')
 
 
 class TransactionBookingInfoSerializer(serializers.ModelSerializer):
-    rental_period_list = serializers.SerializerMethodField()
     item = BookingItemRentalRetrieveSerializer()
-
-    def get_rental_period_list(self, obj):
-        return ast.literal_eval(obj.rental_period_list)
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'item', 'rental_period_list')
+        fields = ('id', 'organization', 'item', 'start_time', 'end_time')

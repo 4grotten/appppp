@@ -369,13 +369,41 @@ class TransactionService:
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        print(current_transaction.booking.item, "ITEM")
         item = ShopItem.objects.filter(id=current_transaction.booking.item.id)
-        totals = item.aggregate(
-            original_price=Coalesce(Sum(2 * F('price'), output_field=DecimalField()), 0),
-            discounted_price=Coalesce(Sum(3 * F('discounted_price'), output_field=DecimalField()), 0)
-        )
-        print(totals, "TOTALS")
+        start_time = current_transaction.booking.start_time
+        end_time = current_transaction.booking.end_time
+        rent_time_type = item.values_list('rental_period__rent_time_type', flat=True).first()
+        totals = dict()
+        if rent_time_type == 'year':
+            time_period = (int(end_time.year) - int(start_time.year)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'month':
+            time_period = (int(end_time.month) - int(start_time.month)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'day':
+            time_period = (int(end_time.day) - int(start_time.day)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'hour':
+            time_period = (int(end_time.hour) - int(start_time.hour)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'minute':
+            time_period = (int(end_time.minute) - int(start_time.minute)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
 
         # for cart_item in current_transaction.cart.items.all():
         #     if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
@@ -440,9 +468,7 @@ class TransactionService:
         )
         org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
             is_delivery_service=True, country=organization.country).exists()
-        print("IF ORG")
         if org:
-            print("GIRDI")
             try:
                 send_delivery_notitication_to_organization_or_client(current_transaction.booking.organization.owner,
                                                                      current_transaction.booking.id,

@@ -206,7 +206,8 @@ class Booking(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_bookings', null=True, blank=True)
     is_open = models.BooleanField(default=True)
     transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, related_name='booking', null=True)
-    rental_period_list = models.TextField(null=True, blank=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
 
 
     def __str__(self):
@@ -215,7 +216,7 @@ class Booking(TimestampModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=('organization', 'user'), condition=Q(is_open=True),
-                                    name='unique_bookig_for_user_in_organization')
+                                    name='unique_booking_for_user_in_organization')
         ]
 
 

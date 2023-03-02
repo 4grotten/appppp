@@ -322,6 +322,13 @@ class SuggestSearchItem(ListAPIView):
 class GetYearsView(ListAPIView):
     serializer_class = ItemRentalYearSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        return context
+
     def get_queryset(self):
         pk = self.kwargs.get('pk')
         shop_item = ShopItem.objects.filter(pk=pk).first()
@@ -354,11 +361,13 @@ class BookRentalView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         rental = ShopItem.objects.get(id=pk)
-        rental_period_list = serializer.validated_data.get('rental_period_list')
+        start_time = serializer.validated_data.get('start_time')
+        end_time = serializer.validated_data.get('end_time')
         booking = Booking.objects.create(user=request.user,
                                          item=rental,
                                          organization=serializer.validated_data.get('organization', None),
-                                         rental_period_list=rental_period_list
+                                         start_time=start_time,
+                                         end_time=end_time
                                          )
 
         booking_process = BookingService.process_booking(user=request.user, booking_id=booking.id)

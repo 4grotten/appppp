@@ -70,7 +70,7 @@ class CommentComplaintAdmin(admin.ModelAdmin):
     list_display = ('user', 'comment',)
 
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'organization', 'item', 'is_open', 'transaction', 'rental_period_list')
+    list_display = ('user', 'organization', 'item', 'is_open', 'transaction', 'start_time', 'end_time')
 
 
 admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)

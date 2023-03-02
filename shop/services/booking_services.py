@@ -81,11 +81,39 @@ class BookingService:
 
     @classmethod
     def get_total_prices_in_booking(cls, booking: Booking) -> Tuple[Decimal, Decimal]:
-        rental_period_list = ast.literal_eval(booking.rental_period_list)
-        length = len(rental_period_list)if rental_period_list else 1
+        start_time = booking.start_time
+        end_time = booking.end_time
         item = ShopItem.objects.filter(id=booking.item.id)
-        totals = item.aggregate(
-            original_price=Coalesce(Sum(length * F('price'), output_field=DecimalField()), 0),
-            discounted_price=Coalesce(Sum(length * F('discounted_price'), output_field=DecimalField()), 0)
-        )
+        rent_time_type = item.values_list('rental_period__rent_time_type', flat=True).first()
+        totals = dict()
+        if rent_time_type == 'year':
+            time_period = (int(end_time.year) - int(start_time.year)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'month':
+            time_period = (int(end_time.month) - int(start_time.month)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'day':
+            time_period = (int(end_time.day) - int(start_time.day)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'hour':
+            time_period = (int(end_time.hour) - int(start_time.hour)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
+        if rent_time_type == 'minute':
+            time_period = (int(end_time.minute) - int(start_time.minute)) + 1
+            totals = item.aggregate(
+                original_price=Coalesce(Sum(time_period * F('price'), output_field=DecimalField()), 0),
+                discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
+            )
         return totals['original_price'], totals['discounted_price']

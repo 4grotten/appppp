@@ -185,10 +185,6 @@ class StockService:
         ShopItemLinksSetStock.objects.filter(main_shop_item=shop_item).delete()
         shop_item.available_sizes.clear()
 
-    @classmethod
-    def delete_rental_period_by_rental_item_id(cls, rental_period_id):
-        RentalPeriod.objects.filter(id=rental_period_id).delete()
-
 
     @classmethod
     def get_dict_data_for_deals(cls, queryset):

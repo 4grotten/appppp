@@ -277,20 +277,6 @@ class DeleteStockView(DestroyAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class DeleteStockAndRentalPeriodView(DestroyAPIView):
-    permission_classes = (IsAuthenticated,)
-
-    def destroy(self, request, *args, **kwargs):
-        shop_item = ShopItemService.get(id=kwargs['pk'])
-        StockService.delete_stock_by_shop_item_id(shop_item)
-        if shop_item.rental_period:
-            StockService.delete_rental_period_by_rental_item_id(shop_item.rental_period.id)
-
-        return Response(data={
-            'message': _('Successfully deleted'),
-        }, status=status.HTTP_200_OK)
-
-
 class DeleteShopItemSizeCountView(DestroyAPIView):
     permission_classes = (IsAuthenticated,)
 

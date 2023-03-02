@@ -638,11 +638,12 @@ class ItemRentalYearSerializer(serializers.Serializer):
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     videos = VideoSerializer(many=True)
+    rental_period = RentItemsPeriodSerializer()
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos'
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'rental_period'
         )
 
 

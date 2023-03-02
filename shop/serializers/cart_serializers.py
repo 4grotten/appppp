@@ -9,9 +9,10 @@ from organizations.serializers.organization_serializers import (
     OrganizationShortInfoWithCurrencySerializer, OrganizationInCartDetailsSerializer, OrganizationDetailedSerializer
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, Cart, CartItem
-from shop.serializers.item_serializers import ItemInCartSerializer
+from shop.models import ShopItem, Cart, CartItem, Booking
+from shop.serializers.item_serializers import ItemInCartSerializer, ItemInBookingSerializer
 from shop.services.cart_services import CartService
+from shop.services.booking_services import BookingService
 from stock.models import SizeFormat, ShopItemSizeCount
 from stock.serializers import OnlySizeFormatSerializer
 
@@ -62,6 +63,23 @@ class CartSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ('id', 'organization', 'totals', 'items',)
 
+
+class BookingSerializer(serializers.ModelSerializer):
+    organization = OrganizationInCartDetailsSerializer()
+    totals = serializers.SerializerMethodField()
+    item = ItemInBookingSerializer()
+
+    def get_totals(self, booking: Booking) -> dict:
+        original_price, discounted_price = BookingService.get_total_prices_in_booking(booking=booking)
+
+        return {
+            'original_price': original_price,
+            'discounted_price': discounted_price
+        }
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'organization', 'totals', 'item',)
 
 class EmployeeCartSerializer(CartSerializer):
     can_sell = serializers.SerializerMethodField()

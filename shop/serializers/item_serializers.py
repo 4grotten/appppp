@@ -554,6 +554,37 @@ class ItemInCartSerializer(serializers.ModelSerializer):
         )
 
 
+class ItemInBookingSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, item: ShopItem) -> dict:
+        image = item.images.filter(order=0).first()
+        video = item.videos.filter(order=0).first()
+        if image:
+            return ImageSerializer(image, context=self.context).data
+        if video:
+            return ImageSerializer(video.thumbnail, context=self.context).data
+        image_data = None
+        insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
+        if insta_data is not None:
+            item_video_thumbnail_url = insta_data.thumbnail_url
+            image_data = {
+                "id": 0,
+                "file": item_video_thumbnail_url,
+                "name": "Cart thumbnail",
+                "large": item_video_thumbnail_url,
+                "medium": item_video_thumbnail_url,
+                "small": item_video_thumbnail_url
+            }
+        return image_data
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'price', 'discounted_price', 'image'
+        )
+
+
 class ItemInHotlinkSerializer(ItemInCartSerializer):
     class Meta:
         model = ShopItem

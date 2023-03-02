@@ -213,12 +213,6 @@ class Booking(TimestampModel):
     def __str__(self):
         return f'Booking of {self.user} in {self.organization}'
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=('organization', 'user'), condition=Q(is_open=True),
-                                    name='unique_booking_for_user_in_organization')
-        ]
-
 
 
 class Complaint(TimestampModel):

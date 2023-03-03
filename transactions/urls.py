@@ -8,20 +8,24 @@ from transactions.views.transaction_views import (
     UserTransactionsListView, UserTransactionDetailView, OrganizationTransactionListView,
     OrganizationTransactionRetrieveDestroyView, UserUnprocessedTransactionCountView, UserSaleTotalsView,
     UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView,
-    OrganizationUsersTransactionView, OnlineBookingTransactionCompleteView
+    OrganizationUsersTransactionView, OnlineBookingTransactionCompleteView,
+    OrganizationBookingTransactionRetrieveDestroyView
 )
 
 urlpatterns = [
     path('transactions/', OrganizationTransactionListView.as_view(), name='organization_transactions'),
     path('transactions/<int:pk>/', OrganizationTransactionRetrieveDestroyView.as_view(),
          name='organization_transaction_detail'),
+    path('transactions/<int:pk>/booking/', OrganizationBookingTransactionRetrieveDestroyView.as_view(),
+         name='organization_booking_transaction_detail'),
 
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
     path('transactions/organizations/<int:pk>/users/', OrganizationUsersTransactionView.as_view(),
          name='transactions_organizations_users'),
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
-    path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(), name='online_booking_transaction_complete'),
+    path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(),
+         name='online_booking_transaction_complete'),
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),
     path('statistics/saleTotals/', UserSaleTotalsView.as_view(), name='user_sale_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),

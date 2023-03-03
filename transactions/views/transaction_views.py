@@ -27,6 +27,7 @@ from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
+    BookingTransactionWithClientSerializer
 )
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
@@ -317,6 +318,29 @@ class OrganizationTransactionListView(ListAPIView):
 class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionWithClientSerializer
+
+    def get_object(self):
+        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+
+    def perform_destroy(self, instance: Transaction):
+        # ToDo: implement proper cancellation of transactions
+        if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
+            raise PermissionDeniedException(_('Permission denied'))
+
+        TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
+
+        transaction.on_commit(
+            lambda: Notification.objects.filter(
+                extra_data__transaction_id=instance.id,
+                type__in=[NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                          NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+                          NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT]
+            ).delete())
+
+
+class OrganizationBookingTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BookingTransactionWithClientSerializer
 
     def get_object(self):
         return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)

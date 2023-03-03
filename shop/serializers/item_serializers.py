@@ -657,6 +657,8 @@ class BookInfoSerializer(serializers.ModelSerializer):
 
 class TransactionBookingInfoSerializer(serializers.ModelSerializer):
     item = BookingItemRentalRetrieveSerializer()
+    start_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M')
+    end_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M')
 
     class Meta:
         model = Booking

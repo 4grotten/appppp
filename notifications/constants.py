@@ -712,6 +712,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
+    elif notification_type == DECLINE_RENTAL_TYPE:
+        notification_str = dict(
+            title=DECLINE_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
     elif notification_type == NEW_COMMENT_TYPE:
         notification_str = dict(
             title=NEW_COMMENT_TITLE_EN,
@@ -762,6 +771,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == DECLINE_RENTAL_CLIENT_TYPE:
+        notification_str = dict(
+            title=DECLINE_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_CLIENT_TYPE:

@@ -350,7 +350,7 @@ class OrganizationBookingTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
         if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
             raise PermissionDeniedException(_('Permission denied'))
 
-        TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
+        TransactionService.refund_booking_transaction(old_transaction=instance, user=self.request.user, request=self.request)
 
         transaction.on_commit(
             lambda: Notification.objects.filter(

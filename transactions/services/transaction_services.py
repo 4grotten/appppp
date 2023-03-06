@@ -21,7 +21,7 @@ from notifications.constants import (
     DECLINE_ORDER_TYPE,
     REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM,
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
-    REQUEST_RENTAL_CLIENT_TYPE
+    REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
@@ -416,7 +416,7 @@ class TransactionService:
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
-        from shop.serializers.cart_serializers import CartSerializer, BookingSerializer
+        from shop.serializers.cart_serializers import BookingSerializer
         try:
             current_transaction.is_processed = True
             current_transaction.fixed_cart = BookingSerializer(current_transaction.booking, context={
@@ -735,6 +735,72 @@ class TransactionService:
             sender_id=old_transaction.processed_by_id,
             mode=NOTIFICATION_MODE_PRODUCT,
             notification_type=DECLINE_ORDER_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+    @classmethod
+    @transaction.atomic
+    def refund_booking_transaction(cls, request, old_transaction: Transaction, user: User):
+        if old_transaction.status == Transaction.REJECTED:
+            raise BadRequestException(message=_('This transaction already was rejected'))
+        from shop.serializers.cart_serializers import BookingSerializer
+        try:
+            fixed_cart = BookingSerializer(old_transaction.booking, context={
+                'request': request}).data
+        except Cart.DoesNotExist:
+            fixed_cart = None
+
+        role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
+        try:
+            old_transaction.employee_name = user.full_name
+            old_transaction.employee_role = role
+            if not old_transaction.fixed_cart:
+                old_transaction.fixed_cart = fixed_cart
+            old_transaction.employee_avatar = user.avatar
+            old_transaction.status = Transaction.REJECTED
+            old_transaction.is_processed = False
+            old_transaction.processed_by = user
+            if old_transaction.display_time is None:
+                old_transaction.display_time = now()
+            old_transaction.save()
+        except:
+            raise IntegrityException()
+
+        client_status = OrganizationClientFinancialStatusService.get(
+            user=old_transaction.client, organization=old_transaction.organization
+        )
+        if client_status is not None:
+            OrganizationClientFinancialStatusService.recalculate_cashback_after_refund(
+                client_status=client_status, refunded_transaction=old_transaction
+            )
+            OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=REQUEST_RENTAL_TYPE) | Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=user.id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=DECLINE_RENTAL_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=DECLINE_RENTAL_CLIENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,

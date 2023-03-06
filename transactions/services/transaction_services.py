@@ -19,7 +19,9 @@ from notifications.constants import (
     WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_SELLER_TITLE, WITHDRAW_CASHBACK_SELLER, REQUEST_ORDER_CLIENT_TYPE,
     NOTIFICATION_MODE_PRODUCT, ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_TYPE, DECLINE_ORDER_CLIENT_TYPE,
     DECLINE_ORDER_TYPE,
-    REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM
+    REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM,
+    NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
+    REQUEST_RENTAL_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
@@ -443,12 +445,12 @@ class TransactionService:
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
         Notification.objects.filter(
             Q(extra_data__transaction_id=current_transaction.id) & (
-                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+                    Q(type=REQUEST_RENTAL_TYPE) | Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
             sender_id=current_transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
-            notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACCEPT_RENTAL_CLIENT_TYPE,
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,
@@ -458,8 +460,8 @@ class TransactionService:
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,
             sender_id=current_transaction.client_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
-            notification_type=ACCEPT_ORDER_TYPE,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACCEPT_RENTAL_TYPE,
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_price=current_transaction.final_amount,

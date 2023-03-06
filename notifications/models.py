@@ -11,7 +11,8 @@ from .constants import (get_titles_descriptions_from_type,
                         NOTIFICATION_MODE_DISCOUNT,
                         NOTIFICATION_MODES,
                         NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_PARTNER,
-                        NOTIFICATION_TYPES, SYSTEM_TYPE, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PRODUCT)
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PRODUCT,
+                        NOTIFICATION_MODE_RENTAL)
 
 User = get_user_model()
 
@@ -83,7 +84,8 @@ class Notification(TimestampModel):
                 (mode == NOTIFICATION_MODE_PERSONAL and notification_setting.private_notifications) or
                 (mode == NOTIFICATION_MODE_SYSTEM and notification_setting.private_notifications) or
                 (mode == NOTIFICATION_MODE_PARTNER and notification_setting.organization_notifications) or
-                (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications)):
+                (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications) or
+                (mode == NOTIFICATION_MODE_RENTAL and notification_setting.rental_notifications)):
             return
         notification_payload = {
             'title': title,
@@ -206,6 +208,7 @@ class NotificationSetting(TimestampModel):
     organization_notifications = models.BooleanField(default=False)
     product_notifications = models.BooleanField(default=True)
     delivery_notifications = models.BooleanField(default=True)
+    rental_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)

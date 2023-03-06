@@ -7,7 +7,10 @@ from common.exceptions import (
     StockException
 )
 from django.db.models.functions import Coalesce
-from notifications.constants import NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
+from notifications.constants import (
+    NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE,
+    NOTIFICATION_MODE_RENTAL, REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_TYPE
+)
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from django.db.models import F, Sum, DecimalField
 from django.db import transaction
@@ -40,8 +43,8 @@ class BookingService:
         finally:
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                mode=NOTIFICATION_MODE_RENTAL,
+                notification_type=REQUEST_RENTAL_CLIENT_TYPE,
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id,
                                 total_price=str(current_transaction.final_amount),
@@ -49,10 +52,10 @@ class BookingService:
             )
             send_notifications_organization_members.delay(
                 members_organization_id=current_transaction.organization_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
+                mode=NOTIFICATION_MODE_RENTAL,
                 sender_id=current_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
-                notification_type=REQUEST_ORDER_TYPE,
+                notification_type=REQUEST_RENTAL_TYPE,
                 organization_id=current_transaction.organization_id,
                 extra_data=dict(transaction_id=current_transaction.id,
                                 total_price=str(current_transaction.final_amount),

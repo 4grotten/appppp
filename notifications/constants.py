@@ -4,6 +4,7 @@ NOTIFICATION_MODE_SYSTEM = 'system'
 NOTIFICATION_MODE_PARTNER = 'partner'
 NOTIFICATION_MODE_PERSONAL = 'personal'
 NOTIFICATION_MODE_PRODUCT = 'product'
+NOTIFICATION_MODE_RENTAL = 'rental'
 
 NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_DISCOUNT, NOTIFICATION_MODE_DISCOUNT.capitalize()),
@@ -11,7 +12,8 @@ NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_SYSTEM.capitalize()),
     (NOTIFICATION_MODE_PARTNER, NOTIFICATION_MODE_PARTNER.capitalize()),
     (NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PERSONAL.capitalize()),
-    (NOTIFICATION_MODE_PRODUCT, NOTIFICATION_MODE_PRODUCT.capitalize())
+    (NOTIFICATION_MODE_PRODUCT, NOTIFICATION_MODE_PRODUCT.capitalize()),
+    (NOTIFICATION_MODE_RENTAL, NOTIFICATION_MODE_RENTAL.capitalize()),
 )
 
 NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
@@ -63,9 +65,17 @@ ACCEPT_ORDER_TYPE = 'accepted_order'
 DECLINE_ORDER_TYPE = 'declined_order'
 REQUEST_ORDER_TYPE = 'requested_order'
 
+ACCEPT_RENTAL_TYPE = 'accepted_rental'
+DECLINE_RENTAL_TYPE = 'declined_rental'
+REQUEST_RENTAL_TYPE = 'requested_rental'
+
 ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
 DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
+
+ACCEPT_RENTAL_CLIENT_TYPE = 'accepted_rental_client'
+DECLINE_RENTAL_CLIENT_TYPE = 'declined_rental_client'
+REQUEST_RENTAL_CLIENT_TYPE = 'requested_rental_client'
 
 NEW_COMMENT_TYPE = 'new_comment'
 
@@ -84,11 +94,17 @@ NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION = 'delivery_delivered_for_organizat
 
 NOTIFICATION_TYPES = (
     (ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_CLIENT_TYPE),
+    (ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_CLIENT_TYPE ),
     (DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_CLIENT_TYPE),
+    (DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_CLIENT_TYPE),
     (REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_CLIENT_TYPE),
+    (REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_CLIENT_TYPE),
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
+    (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
     (DECLINE_ORDER_TYPE, DECLINE_ORDER_TYPE),
+    (DECLINE_RENTAL_TYPE, DECLINE_RENTAL_TYPE),
     (REQUEST_ORDER_TYPE, REQUEST_ORDER_TYPE),
+    (REQUEST_RENTAL_TYPE, REQUEST_RENTAL_TYPE),
     (NEW_CASHBACK, NEW_CASHBACK),
     (WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_CLIENT),
     (CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_CLIENT),
@@ -148,11 +164,20 @@ ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
 DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
 REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
 
+ACCEPT_RENTAL_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
+DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
+REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transaction_id}'
+
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
 
+ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
+DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
+REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Ждём подтверждения к оплате аренды.'
+
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
+RENTAL_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
 
 ATTENDANCE_IN_TITLE_RU = 'Вход {organization}'
 ATTENDANCE_OUT_TITLE_RU = 'Выход {organization}'
@@ -251,10 +276,19 @@ ACCEPT_ORDER_TITLE_EN = 'You accepted order #{transaction_id}'
 DECLINE_ORDER_TITLE_EN = 'You canceled order #{transaction_id}'
 REQUEST_ORDER_TITLE_EN = 'You got new order #{transaction_id}'
 
+ACCEPT_RENTAL_TITLE_EN = 'You accepted order #{transaction_id}'
+DECLINE_RENTAL_TITLE_EN = 'You canceled order #{transaction_id}'
+REQUEST_RENTAL_TITLE_EN = 'You got new rental order #{transaction_id}'
+
 ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
+
+ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
+DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
+REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order !!! Waiting for confirmation to pay the rent.'
+RENTAL_DESCRIPTION_EN = 'Rental price: {total_price} {currency}'
 
 ATTENDANCE_IN_TITLE = 'Input {organization}'
 ATTENDANCE_OUT_TITLE = 'Exit {organization}'
@@ -684,6 +718,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
+    elif notification_type == REQUEST_RENTAL_TYPE:
+        notification_str = dict(
+            title=REQUEST_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=REQUEST_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
     elif notification_type == ACCEPT_ORDER_CLIENT_TYPE:
         notification_str = dict(
             title=ACCEPT_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
@@ -710,6 +753,16 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=REQUEST_ORDER_CLIENT_TITLE_RU,
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
+
+    elif notification_type == REQUEST_RENTAL_CLIENT_TYPE:
+        notification_str = dict(
+            title=REQUEST_RENTAL_CLIENT_TITLE_EN,
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=REQUEST_RENTAL_CLIENT_TITLE_RU,
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY:
         notification_str = dict(
             title=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN,

@@ -48,7 +48,7 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         model = NotificationSetting
         fields = (
             'id', 'discount_notifications', 'private_notifications', 'organization_notifications',
-            'product_notifications', 'delivery_notifications')
+            'product_notifications', 'delivery_notifications', 'rental_notifications')
         extra_kwargs = {"id": {"read_only": True, "required": False}}
 
 

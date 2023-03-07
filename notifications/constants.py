@@ -165,7 +165,7 @@ DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
 REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
 
 ACCEPT_RENTAL_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
-DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
+DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ аренды #{transaction_id}'
 REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
@@ -173,7 +173,7 @@ DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transactio
 REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
 
 ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ готов к оплате #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
+DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ аренды #{transaction_id}'
 REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Ждём подтверждения к оплате аренды.'
 
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
@@ -277,7 +277,7 @@ DECLINE_ORDER_TITLE_EN = 'You canceled order #{transaction_id}'
 REQUEST_ORDER_TITLE_EN = 'You got new order #{transaction_id}'
 
 ACCEPT_RENTAL_TITLE_EN = 'You accepted order #{transaction_id}'
-DECLINE_RENTAL_TITLE_EN = 'You canceled order #{transaction_id}'
+DECLINE_RENTAL_TITLE_EN = 'You canceled your rent order #{transaction_id}'
 REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
@@ -286,7 +286,7 @@ REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact yo
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
 ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your order is ready for payment #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
+DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your rent order has been canceled #{transaction_id}'
 REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order !!! Waiting for confirmation to pay the rent.'
 RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 

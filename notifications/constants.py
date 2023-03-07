@@ -172,7 +172,7 @@ ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_i
 DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
 
-ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
+ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ готов к оплате #{transaction_id}'
 DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
 REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Ждём подтверждения к оплате аренды.'
 
@@ -285,7 +285,7 @@ DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
-ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
+ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your order is ready for payment #{transaction_id}'
 DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
 REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order !!! Waiting for confirmation to pay the rent.'
 RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'

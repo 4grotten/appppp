@@ -18,8 +18,10 @@ from shop.models import ShopItem, Complaint, RentalPeriod, Booking
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer, BookInfoSerializer
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer, BookInfoSerializer,
+    BookInfoWithUTCSerializer
 )
+from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer, OffsetUTCSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
@@ -378,3 +380,31 @@ class BookRentalView(GenericAPIView):
                 "transaction_id": booking_process.transaction_id
             }
         )
+
+
+class BookingAnonymousCheckoutView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BookingTransactionWithClientSerializer
+
+    def post(self, request, pk):
+        serializer = BookInfoWithUTCSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        rental = ShopItem.objects.get(id=pk)
+        start_time = serializer.validated_data.get('start_time')
+        end_time = serializer.validated_data.get('end_time')
+        booking = Booking.objects.create(user=request.user,
+                                         item=rental,
+                                         organization=serializer.validated_data.get('organization', None),
+                                         start_time=start_time,
+                                         end_time=end_time
+                                         )
+        transaction = BookingService.checkout_booking_for_anonymous_client(
+            request=request, employee=request.user, booking_id=booking.id,
+            utc_offset_minutes=serializer.validated_data['utc_offset_minutes']
+        )
+        data = self.serializer_class(transaction, context={'request': request}).data
+        return Response(data)

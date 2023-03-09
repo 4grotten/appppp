@@ -11,6 +11,7 @@ from notifications.constants import (
     NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE,
     NOTIFICATION_MODE_RENTAL, REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_TYPE
 )
+from organizations.services.organization_services import OrganizationService
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from django.db.models import F, Sum, DecimalField
 from django.db import transaction
@@ -120,3 +121,35 @@ class BookingService:
                 discounted_price=Coalesce(Sum(time_period * F('discounted_price'), output_field=DecimalField()), 0)
             )
         return totals['original_price'], totals['discounted_price']
+
+    @classmethod
+    @transaction.atomic
+    def checkout_booking_for_anonymous_client(cls, request, employee: User, booking_id: int,
+                                           utc_offset_minutes: int) -> Transaction:
+        booking = cls.get(user=employee, id=booking_id, is_open=True)
+        if not OrganizationService.user_can_sell(organization=booking.organization, user=employee):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+
+        booking.is_open = False
+        try:
+            booking.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not checkout the booking'))
+        finally:
+            from transactions.services.transaction_services import TransactionService
+            accepted_offline_transaction = TransactionService.create_offline_transaction_from_booking(
+                request, booking=booking, utc_offset_minutes=utc_offset_minutes
+            )
+            send_notifications_organization_members.delay(
+                members_organization_id=accepted_offline_transaction.organization_id,
+                mode=NOTIFICATION_MODE_PRODUCT,
+                sender_id=accepted_offline_transaction.client_id,
+                with_permissions=dict(can_see_stats=True),
+                notification_type=ACCEPT_ORDER_TYPE,
+                organization_id=accepted_offline_transaction.organization_id,
+                extra_data=dict(transaction_id=accepted_offline_transaction.id,
+                                total_price=str(accepted_offline_transaction.final_amount),
+                                discount_percent=0,
+                                currency=accepted_offline_transaction.currency.code)
+            )
+        return accepted_offline_transaction

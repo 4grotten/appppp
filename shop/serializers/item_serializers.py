@@ -652,7 +652,15 @@ class BookInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'start_time', 'end_time')
+        fields = ('id', 'organization', 'start_time', 'end_time', )
+
+
+class BookInfoWithUTCSerializer(serializers.ModelSerializer):
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'organization', 'start_time', 'end_time', 'utc_offset_minutes')
 
 
 class TransactionBookingInfoSerializer(serializers.ModelSerializer):

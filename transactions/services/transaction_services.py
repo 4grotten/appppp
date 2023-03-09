@@ -30,8 +30,9 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, ShopItem
+from shop.models import Cart, ShopItem, Booking
 from shop.services.cart_services import CartService
+from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
 from transactions.models import Transaction
 from transactions.services.stats_services import StatisticsService
@@ -524,6 +525,41 @@ class TransactionService:
                 cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
                 cls.change_count_service(size=None, cart_item=cart_item)
+
+        OrganizationService.increment_running_purchase_id(organization=organization)
+
+        return offline_transaction
+
+    @classmethod
+    @transaction.atomic
+    def create_offline_transaction_from_booking(cls, request, booking: Booking, utc_offset_minutes: int) -> Transaction:
+        organization = booking.organization
+        processed_by = booking.user
+        client = UserService.get_common_user()
+        original_price, discounted_price = BookingService.get_total_prices_in_booking(booking=booking)
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        from shop.serializers.cart_serializers import BookingSerializer
+
+        fixed_cart = BookingSerializer(booking, context={'request': request}).data
+        offline_transaction = Transaction.objects.create(
+            booking=booking,
+            client=client,
+            organization=organization,
+            type='offline',
+            original_amount=original_price,
+            currency=organization.currency,
+            status=Transaction.ACCEPTED,
+            savings=original_price - discounted_price,
+            is_processed=True,
+            processed_by=processed_by,
+            employee_name=processed_by.full_name,
+            employee_avatar=processed_by.avatar,
+            employee_role=role,
+            delivery_type=Transaction.CART_CHECKOUT,
+            fixed_cart=fixed_cart,
+            purchase_id=organization.running_purchase_id,
+            display_time=now() + timedelta(minutes=utc_offset_minutes),
+        )
 
         OrganizationService.increment_running_purchase_id(organization=organization)
 

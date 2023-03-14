@@ -69,6 +69,8 @@ ACCEPT_RENTAL_TYPE = 'accepted_rental'
 DECLINE_RENTAL_TYPE = 'declined_rental'
 REQUEST_RENTAL_TYPE = 'requested_rental'
 
+DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
+
 ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
 DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
@@ -167,6 +169,8 @@ REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
 ACCEPT_RENTAL_TITLE_RU = 'Вы приняли заказ аренды #{transaction_id}'
 DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ аренды #{transaction_id}'
 REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transaction_id}'
+
+DECLINE_RENTAL_PAYMENT_TITLE_RU = 'Клиент отклонил заказ #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
@@ -279,6 +283,8 @@ REQUEST_ORDER_TITLE_EN = 'You got new order #{transaction_id}'
 ACCEPT_RENTAL_TITLE_EN = 'You accepted rental order #{transaction_id}'
 DECLINE_RENTAL_TITLE_EN = 'You canceled rental order #{transaction_id}'
 REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
+
+DECLINE_RENTAL_PAYMENT_TITLE_EN = 'The customer rejected order #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
@@ -718,6 +724,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == DECLINE_RENTAL_PAYMENT_TYPE:
+        notification_str = dict(
+            title=DECLINE_RENTAL_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

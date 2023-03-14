@@ -21,7 +21,7 @@ from notifications.constants import (
     DECLINE_ORDER_TYPE,
     REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM,
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
-    REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE
+    REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
@@ -419,11 +419,9 @@ class TransactionService:
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         from shop.serializers.cart_serializers import BookingSerializer
         try:
-            current_transaction.is_processed = True
             current_transaction.fixed_cart = BookingSerializer(current_transaction.booking, context={
                 'request': request}).data if current_transaction.booking else None
-            # current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
-            #     'request': request}).data if current_transaction.cart else None
+
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -837,6 +835,29 @@ class TransactionService:
             sender_id=old_transaction.processed_by_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=DECLINE_RENTAL_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+    @classmethod
+    @transaction.atomic
+    def reject_booking_transaction_by_user(cls, request, old_transaction: Transaction, user: User):
+        print(old_transaction.type)
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=user.id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=DECLINE_RENTAL_PAYMENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,

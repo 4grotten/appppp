@@ -199,16 +199,7 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
-    booking = serializers.SerializerMethodField()
-
-    def get_booking(self, instance: Transaction):
-        if instance.fixed_cart:
-            return instance.fixed_cart
-        try:
-            booking = instance.booking
-        except Booking.DoesNotExist:
-            return None
-        return BookingSerializer(instance=booking, context=self.context).data
+    booking = TransactionBookingInfoSerializer()
 
 
     def get_employee_avatar(self, instance):

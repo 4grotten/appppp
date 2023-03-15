@@ -130,16 +130,16 @@ class BookingService:
         if not OrganizationService.user_can_sell(organization=booking.organization, user=employee):
             raise NotAcceptableException(_('No rights to sell in this organization'))
 
+        from transactions.services.transaction_services import TransactionService
+        accepted_offline_transaction = TransactionService.create_offline_transaction_from_booking(
+            request, booking=booking, utc_offset_minutes=utc_offset_minutes
+        )
         booking.is_open = False
         try:
             booking.save()
         except IntegrityError:
             raise IntegrityException(_('Could not checkout the booking'))
         finally:
-            from transactions.services.transaction_services import TransactionService
-            accepted_offline_transaction = TransactionService.create_offline_transaction_from_booking(
-                request, booking=booking, utc_offset_minutes=utc_offset_minutes
-            )
             send_notifications_organization_members.delay(
                 members_organization_id=accepted_offline_transaction.organization_id,
                 mode=NOTIFICATION_MODE_PRODUCT,

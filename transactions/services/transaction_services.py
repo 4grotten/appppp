@@ -539,25 +539,27 @@ class TransactionService:
         from shop.serializers.cart_serializers import BookingSerializer
 
         fixed_cart = BookingSerializer(booking, context={'request': request}).data
-        offline_transaction = Transaction.objects.create(
-            booking=booking,
-            client=client,
-            organization=organization,
-            type='offline',
-            original_amount=original_price,
-            currency=organization.currency,
-            status=Transaction.ACCEPTED,
-            savings=original_price - discounted_price,
-            is_processed=True,
-            processed_by=processed_by,
-            employee_name=processed_by.full_name,
-            employee_avatar=processed_by.avatar,
-            employee_role=role,
-            delivery_type=Transaction.CART_CHECKOUT,
-            fixed_cart=fixed_cart,
-            purchase_id=organization.running_purchase_id,
-            display_time=now() + timedelta(minutes=utc_offset_minutes),
-        )
+        with transaction.atomic():
+            offline_transaction, _ = Transaction.objects.get_or_create(
+                booking=booking,
+                client=booking.user,
+                defaults={
+                    "organization": organization,
+                    "type": Transaction.OFFLINE,
+                    "original_amount": original_price,
+                    "currency": organization.currency,
+                    "status": Transaction.ACCEPTED,
+                    "savings": original_price - discounted_price,
+                    "is_processed": True,
+                    "processed_by": processed_by,
+                    "employee_name": processed_by.full_name,
+                    "employee_avatar": processed_by.avatar,
+                    "employee_role": role,
+                    "fixed_cart": fixed_cart,
+                    "purchase_id": organization.running_purchase_id,
+                    "display_time": now() + timedelta(minutes=utc_offset_minutes)
+                }
+            )
 
         OrganizationService.increment_running_purchase_id(organization=organization)
 

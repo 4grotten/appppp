@@ -284,7 +284,7 @@ ACCEPT_RENTAL_TITLE_EN = 'You accepted rental order #{transaction_id}'
 DECLINE_RENTAL_TITLE_EN = 'You canceled rental order #{transaction_id}'
 REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
 
-DECLINE_RENTAL_PAYMENT_TITLE_EN = 'The customer rejected order #{transaction_id}'
+DECLINE_RENTAL_PAYMENT_TITLE_EN = 'Customer canceled payment of order #{transaction_id}'
 
 ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'

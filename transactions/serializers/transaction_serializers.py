@@ -9,8 +9,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart
-from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
+from shop.models import Cart, Booking
+from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer, BookingSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, ItemRentalRetrieveSerializer
 from transactions.models import Transaction
 from users.models import User
@@ -199,7 +199,16 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
     employee_role = serializers.SerializerMethodField()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
-    booking = TransactionBookingInfoSerializer()
+    booking = serializers.SerializerMethodField()
+
+    def get_booking(self, instance: Transaction):
+        if instance.fixed_cart:
+            return instance.fixed_cart
+        try:
+            booking = instance.booking
+        except Booking.DoesNotExist:
+            return None
+        return BookingSerializer(instance=booking, context=self.context).data
 
 
     def get_employee_avatar(self, instance):

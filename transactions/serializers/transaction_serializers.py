@@ -90,6 +90,14 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
         fields = ('transaction_id', 'utc_offset_minutes',)
 
 
+class OnlinePaymentCompleteSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = Transaction
+        fields = ('transaction_id',)
+
+
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
@@ -243,7 +251,7 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'display_time', 'client', 'type', 'current_user_can_see_stats', 'organization',
-            'booking', 'status'
+            'booking', 'status', 'payment_status'
         )
 
 

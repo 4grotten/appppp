@@ -46,6 +46,12 @@ class Transaction(TimestampModel):
         (REJECTED, REJECTED)
     )
 
+    PAYMENT_STATUS = (
+        (IN_PROGRESS, IN_PROGRESS),
+        (ACCEPTED, ACCEPTED),
+        (REJECTED, REJECTED),
+    )
+
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
@@ -66,6 +72,7 @@ class Transaction(TimestampModel):
 
     discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
     type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)
+    payment_status = models.CharField(choices=PAYMENT_STATUS, max_length=20, default=IN_PROGRESS)
     delivery_type = models.CharField(choices=DELIVERY_TYPE, max_length=20, default=SELF_PICKUP)
     source_card = models.ForeignKey(DiscountCard, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='transactions')

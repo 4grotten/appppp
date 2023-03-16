@@ -9,7 +9,7 @@ from transactions.views.transaction_views import (
     OrganizationTransactionRetrieveDestroyView, UserUnprocessedTransactionCountView, UserSaleTotalsView,
     UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView,
     OrganizationUsersTransactionView, OnlineBookingTransactionCompleteView,
-    OrganizationBookingTransactionRetrieveDestroyView, RentPaymentRejectView
+    OrganizationBookingTransactionRetrieveDestroyView, RentPaymentRejectView, RentPaymentAcceptView
 )
 
 urlpatterns = [
@@ -26,6 +26,7 @@ urlpatterns = [
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
     path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(),
          name='online_booking_transaction_complete'),
+    path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_reject'),
     path('transactions/<int:pk>/reject/', RentPaymentRejectView.as_view(), name='user_transaction_reject'),
 
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),

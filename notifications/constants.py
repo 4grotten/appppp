@@ -69,7 +69,7 @@ ACCEPT_RENTAL_TYPE = 'accepted_rental'
 DECLINE_RENTAL_TYPE = 'declined_rental'
 REQUEST_RENTAL_TYPE = 'requested_rental'
 
-ACCEPT_RENTAL_PAYMENT_TYPE = 'accept_rental_payment'
+ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
 DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
 
 ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'

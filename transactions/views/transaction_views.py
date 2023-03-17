@@ -426,9 +426,6 @@ class RentPaymentRejectView(RetrieveDestroyAPIView):
         return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
 
     def perform_destroy(self, instance: Transaction):
-        if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
-            raise PermissionDeniedException(_('Permission denied'))
-
         TransactionService.reject_booking_transaction_by_user(old_transaction=instance, user=self.request.user,
                                                       request=self.request)
 

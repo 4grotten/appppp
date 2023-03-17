@@ -22,7 +22,7 @@ from notifications.constants import (
     REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM,
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
-    ACCEPT_RENTAL_PAYMENT_TYPE
+    ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
@@ -864,10 +864,21 @@ class TransactionService:
         discount_percent = old_transaction.discount_percent
 
         sent_notification.delay(
-            recipient_id=user.id,
+            recipient_id=old_transaction.processed_by_id,
             sender_id=old_transaction.client_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=ACCEPT_RENTAL_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,
@@ -891,10 +902,22 @@ class TransactionService:
         discount_percent = old_transaction.discount_percent
 
         sent_notification.delay(
-            recipient_id=user.id,
+            recipient_id=old_transaction.processed_by_id,
             sender_id=old_transaction.client_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=DECLINE_RENTAL_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,

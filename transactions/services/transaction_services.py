@@ -372,7 +372,7 @@ class TransactionService:
                                       status=Transaction.IN_PROGRESS)
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
-            raise NotAcceptableException(_('No rights to sell in this organization'))
+            raise NotAcceptableException(_('Permission denied'))
         item = ShopItem.objects.filter(id=current_transaction.booking.item.id)
         start_time = current_transaction.booking.start_time
         end_time = current_transaction.booking.end_time
@@ -849,6 +849,8 @@ class TransactionService:
     @transaction.atomic
     def accept_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        if old_transaction.client != request.user:
+            raise PermissionDeniedException(_('Permission denied'))
         try:
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
@@ -889,6 +891,8 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def reject_booking_transaction_by_user(cls, request, old_transaction: Transaction, user: User):
+        if old_transaction.client != request.user:
+            raise PermissionDeniedException(_('Permission denied'))
         try:
             old_transaction.payment_status = Transaction.REJECTED
             old_transaction.save()

@@ -820,10 +820,21 @@ class TransactionService:
         if old_transaction.type == Transaction.ONLINE:
             Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=REQUEST_RENTAL_TYPE) | Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
+                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE) |
+                        Q(type=REQUEST_RENTAL_TYPE) |Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
 
         discount_percent = old_transaction.discount_percent
         if old_transaction.status == Transaction.REJECTED and old_transaction.payment_status == Transaction.ACCEPTED:
+            if old_transaction.type == Transaction.ONLINE:
+                Notification.objects.filter(
+                    Q(extra_data__transaction_id=old_transaction.id) & (
+                            Q(type=ACCEPT_RENTAL_PAYMENT_TYPE) | Q(type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE))).delete()
+
+            try:
+                old_transaction.payment_status = Transaction.REFUNDED
+                old_transaction.save()
+            except:
+                raise IntegrityException()
             sent_notification.delay(
                 recipient_id=user.id,
                 sender_id=old_transaction.client_id,

@@ -72,8 +72,8 @@ REQUEST_RENTAL_TYPE = 'requested_rental'
 ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
 DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
 
-DECLINE_ACCEPTED_RENTAL = 'declined_accepted_rental'
-DECLINE_ACCEPTED_RENTAL_CLIENT = 'declined_accepted_rental_client'
+DECLINE_ACCEPTED_RENTAL_TYPE = 'declined_accepted_rental'
+DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE = 'declined_accepted_rental_client'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE = 'accepted_rental_payment_client'
 DECLINE_RENTAL_PAYMENT_CLIENT_TYPE = 'declined_rental_payment_client'
@@ -110,6 +110,10 @@ NOTIFICATION_TYPES = (
     (REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_CLIENT_TYPE),
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
+    (ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_TYPE),
+    (DECLINE_RENTAL_PAYMENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE),
+    (DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_TYPE),
+    (DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE),
     (DECLINE_ORDER_TYPE, DECLINE_ORDER_TYPE),
     (DECLINE_RENTAL_TYPE, DECLINE_RENTAL_TYPE),
     (REQUEST_ORDER_TYPE, REQUEST_ORDER_TYPE),
@@ -785,7 +789,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
-    elif notification_type == DECLINE_ACCEPTED_RENTAL:
+    elif notification_type == DECLINE_ACCEPTED_RENTAL_TYPE:
         notification_str = dict(
             title=DECLINE_ACCEPTED_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
@@ -794,7 +798,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
-    elif notification_type == DECLINE_ACCEPTED_RENTAL_CLIENT:
+    elif notification_type == DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE:
         notification_str = dict(
             title=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),

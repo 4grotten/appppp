@@ -39,6 +39,7 @@ class Transaction(TimestampModel):
     REJECTED = 'rejected'
     IN_PROGRESS = 'in_progress'
     ACCEPTED = 'accepted'
+    REFUNDED = 'refunded'
 
     STATUS = (
         (IN_PROGRESS, IN_PROGRESS),
@@ -50,6 +51,7 @@ class Transaction(TimestampModel):
         (IN_PROGRESS, IN_PROGRESS),
         (ACCEPTED, ACCEPTED),
         (REJECTED, REJECTED),
+        (REFUNDED, REFUNDED),
     )
 
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')

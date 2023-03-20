@@ -822,6 +822,29 @@ class TransactionService:
 
         discount_percent = old_transaction.discount_percent
 
+        if old_transaction.status == Transaction.ACCEPTED and old_transaction.payment_status == Transaction.ACCEPTED:
+            sent_notification.delay(
+                recipient_id=user.id,
+                sender_id=old_transaction.client_id,
+                mode=NOTIFICATION_MODE_RENTAL,
+                notification_type=DECLINE_ACCEPTED_RENTAL,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(transaction_id=old_transaction.id,
+                                total_price=old_transaction.final_amount,
+                                discount_percent=discount_percent,
+                                currency=old_transaction.currency.code)
+            )
+            sent_notification.delay(
+                recipient_id=old_transaction.client_id,
+                sender_id=old_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_RENTAL,
+                notification_type=DECLINE_ACCEPTED_RENTAL_CLIENT,
+                organization_id=old_transaction.organization_id,
+                extra_data=dict(transaction_id=old_transaction.id,
+                                total_price=old_transaction.final_amount,
+                                discount_percent=discount_percent,
+                                currency=old_transaction.currency.code)
+            )
         sent_notification.delay(
             recipient_id=user.id,
             sender_id=old_transaction.client_id,

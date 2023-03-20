@@ -72,6 +72,9 @@ REQUEST_RENTAL_TYPE = 'requested_rental'
 ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
 DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
 
+DECLINE_ACCEPTED_RENTAL = 'declined_accepted_rental'
+DECLINE_ACCEPTED_RENTAL_CLIENT = 'declined_accepted_rental_client'
+
 ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE = 'accepted_rental_payment_client'
 DECLINE_RENTAL_PAYMENT_CLIENT_TYPE = 'declined_rental_payment_client'
 
@@ -176,6 +179,9 @@ REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transa
 
 ACCEPT_RENTAL_PAYMENT_TITLE_RU = 'Клиент оплатил заказ, завершите сделку #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
+
+DECLINE_ACCEPTED_RENTAL_TITLE_RU = 'Вы отменили сделку аренды, возвращение оплаты #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU = 'Вам отменили сделку аренды, возвращение оплаты #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Поздравляем, Ваш заказ оплачен #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату за аренду #{transaction_id}'
@@ -294,6 +300,9 @@ REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_TITLE_EN = 'Customer has paid for the order, complete deal #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_EN = 'Customer canceled rent payment #{transaction_id}'
+
+DECLINE_ACCEPTED_RENTAL_TITLE_EN = 'You canceled rent order, payment refunding #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN = 'Your rent order canceled, payment refunding #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'Congratulations, your order paid #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'You canceled rent payment #{transaction_id}'
@@ -773,6 +782,24 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == DECLINE_ACCEPTED_RENTAL:
+        notification_str = dict(
+            title=DECLINE_ACCEPTED_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_ACCEPTED_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == DECLINE_ACCEPTED_RENTAL_CLIENT:
+        notification_str = dict(
+            title=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

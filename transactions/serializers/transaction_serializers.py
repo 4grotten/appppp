@@ -237,6 +237,8 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
         if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
                                                                                 organization=instance.organization):
             return self.context['request'].user.id
+        elif not instance.processed_by:
+            return None
         return instance.processed_by.id
 
     def get_employee_role(self, instance):

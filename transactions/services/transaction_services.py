@@ -554,6 +554,7 @@ class TransactionService:
                     "status": Transaction.ACCEPTED,
                     "savings": original_price - discounted_price,
                     "is_processed": True,
+                    "payment_status":Transaction.ACCEPTED,
                     "processed_by": processed_by,
                     "employee_name": processed_by.full_name,
                     "employee_avatar": processed_by.avatar,

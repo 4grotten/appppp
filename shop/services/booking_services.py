@@ -9,7 +9,7 @@ from common.exceptions import (
 from django.db.models.functions import Coalesce
 from notifications.constants import (
     NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE,
-    NOTIFICATION_MODE_RENTAL, REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_TYPE
+    NOTIFICATION_MODE_RENTAL, REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_TYPE, ACCEPT_RENTAL_TYPE
 )
 from organizations.services.organization_services import OrganizationService
 from notifications.tasks import sent_notification, send_notifications_organization_members
@@ -142,10 +142,10 @@ class BookingService:
         finally:
             send_notifications_organization_members.delay(
                 members_organization_id=accepted_offline_transaction.organization_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
+                mode=NOTIFICATION_MODE_RENTAL,
                 sender_id=accepted_offline_transaction.client_id,
                 with_permissions=dict(can_see_stats=True),
-                notification_type=ACCEPT_ORDER_TYPE,
+                notification_type=ACCEPT_RENTAL_TYPE,
                 organization_id=accepted_offline_transaction.organization_id,
                 extra_data=dict(transaction_id=accepted_offline_transaction.id,
                                 total_price=str(accepted_offline_transaction.final_amount),

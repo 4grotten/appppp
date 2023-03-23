@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
+from users.models import User
 from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo
 from common.serializers import ImageSerializer, VideoSerializer
@@ -653,6 +654,14 @@ class BookInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ('id', 'organization', 'start_time', 'end_time', )
+
+
+class BookInfoWithClientSerializer(serializers.ModelSerializer):
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'organization', 'client', 'start_time', 'end_time',)
 
 
 class BookInfoWithUTCSerializer(serializers.ModelSerializer):

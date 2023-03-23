@@ -72,6 +72,9 @@ REQUEST_RENTAL_TYPE = 'requested_rental'
 ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
 DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
 
+ACCEPT_RENTAL_SALE_TYPE = 'accepted_rental_sale'
+ACCEPT_RENTAL_SALE_CLIENT_TYPE = 'accepted_rental_sale_client'
+
 DECLINE_ACCEPTED_RENTAL_TYPE = 'declined_accepted_rental'
 DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE = 'declined_accepted_rental_client'
 
@@ -112,6 +115,8 @@ NOTIFICATION_TYPES = (
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
     (ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_TYPE),
     (DECLINE_RENTAL_PAYMENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE),
+    (ACCEPT_RENTAL_SALE_TYPE, ACCEPT_RENTAL_SALE_TYPE),
+    (ACCEPT_RENTAL_SALE_CLIENT_TYPE, ACCEPT_RENTAL_SALE_CLIENT_TYPE),
     (DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_TYPE),
     (DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE),
     (DECLINE_ORDER_TYPE, DECLINE_ORDER_TYPE),
@@ -183,6 +188,9 @@ REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transa
 
 ACCEPT_RENTAL_PAYMENT_TITLE_RU = 'Клиент оплатил заказ, завершите сделку #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
+
+ACCEPT_RENTAL_SALE_TITLE_RU = 'У вас новая аренда #{transaction_id}'
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_RU = 'Спасибо Вам за аренду !!! Ждём вас по этому чеку.'
 
 DECLINE_ACCEPTED_RENTAL_TITLE_RU = 'Вы отменили сделку аренды, возвращение оплаты #{transaction_id}'
 DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU = 'Вам отменили сделку аренды, возвращение оплаты #{transaction_id}'
@@ -304,6 +312,9 @@ REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_TITLE_EN = 'Customer has paid for the order, complete deal #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_EN = 'Customer canceled rent payment #{transaction_id}'
+
+ACCEPT_RENTAL_SALE_TITLE_EN = 'You have a new rent #{transaction_id}'
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_EN = 'Thank you for the rental !!! Looking forward to seeing you on this check.'
 
 DECLINE_ACCEPTED_RENTAL_TITLE_EN = 'You canceled rent order, payment refunding #{transaction_id}'
 DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN = 'Your rent order canceled, payment refunding #{transaction_id}'
@@ -767,6 +778,24 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACCEPT_RENTAL_SALE_TYPE:
+        notification_str = dict(
+            title=ACCEPT_RENTAL_SALE_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPT_RENTAL_SALE_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACCEPT_RENTAL_SALE_CLIENT_TYPE:
+        notification_str = dict(
+            title=ACCEPT_RENTAL_SALE_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPT_RENTAL_SALE_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

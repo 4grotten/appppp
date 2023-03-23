@@ -23,7 +23,8 @@ from notifications.constants import (
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
-    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE
+    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_SALE_TYPE,
+    ACCEPT_RENTAL_SALE_CLIENT_TYPE
 
 )
 from notifications.models import Notification
@@ -70,6 +71,27 @@ class TransactionService:
         if cart is not None:
             cart.transaction = instance
             cart.save()
+
+        return instance
+
+    @classmethod
+    @transaction.atomic
+    def preprocess_booking_transaction(cls, client: User, organization: Organization, booking: Booking,
+                               processed_by: User) -> Transaction:
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to book in this organization'))
+
+        if booking is not None and not booking.user == processed_by:
+            raise NotAcceptableException(_('No rights to use this booking'))
+
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+
+        instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=organization.currency)
+        if booking is not None:
+            booking.transaction = instance
+            booking.save()
 
         return instance
 
@@ -161,6 +183,181 @@ class TransactionService:
                     sender_id=current_transaction.client_id,
                     mode=NOTIFICATION_MODE_PRODUCT,
                     notification_type=ACCEPT_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+
+        except IntegrityError:
+            raise IntegrityException(_('Could not complete transaction'))
+
+        client_status = OrganizationClientFinancialStatusService.get_or_create(
+            user=current_transaction.client,
+            organization=organization
+        )
+        OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+
+        if from_cashback > 0:
+            to_subtract = min(client_status.accrued_cashback, from_cashback)
+
+            client_status.accrued_cashback = F('accrued_cashback') - to_subtract
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            if to_subtract < from_cashback:
+                remaining_amount = from_cashback - to_subtract
+                OrganizationClientFinancialStatusService.use_corporate_cashback(
+                    client=current_transaction.client, organization=organization,
+                    amount=remaining_amount
+                )
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        if source_card is not None and source_card.type == DiscountCard.CASHBACK:
+            cashback = current_transaction.final_amount * cashback_percent / 100
+            client_status.accrued_cashback = F('accrued_cashback') + cashback
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            current_transaction.to_cashback = cashback
+            current_transaction.save(update_fields=('to_cashback',))
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=CHARGE_CASHBACK_CLIENT,
+                title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            sent_notification.delay(
+                recipient_id=current_transaction.processed_by_id,
+                sender_id=current_transaction.client_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=CHARGE_CASHBACK_SELLER,
+                title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_booking_transaction(cls, transaction_id: int, processed_by: User, original_amount: Decimal,
+                             discount_percent: int, source_card: Union[DiscountCard, None], from_cashback: Decimal,
+                             booking: Booking) -> Transaction:
+
+        current_transaction = cls.get(id=transaction_id, processed_by=processed_by, is_processed=False, type='offline',
+                                      status=Transaction.IN_PROGRESS)
+        organization = current_transaction.organization
+
+        if source_card is not None and not OrganizationClientFinancialStatusService.can_use_given_card(
+                client=current_transaction.client, card=source_card):
+            raise NotAcceptableException(_('Client cannot use this card'))
+
+        cashback_percent = 0
+        if source_card is not None and source_card.type == DiscountCard.CASHBACK:
+            cashback_percent = discount_percent
+            discount_percent = 0
+
+        if from_cashback > 0 and not OrganizationClientFinancialStatusService.has_enough_cashback_amount(
+                client=current_transaction.client, organization=organization, amount=from_cashback):
+            raise NotAcceptableException(_('Not enough accrued cashback amount'))
+
+        transaction_cart = getattr(current_transaction, 'booking', None)
+        if not transaction_cart == booking:
+            raise NotAcceptableException(_('Transaction and booking do not match'))
+
+        total_savings = (original_amount * discount_percent) / 100
+
+        if booking is not None:
+            items_price, discounted_items = BookingService.get_total_prices_in_booking(booking=booking)
+            if not original_amount == discounted_items:
+                raise NotAcceptableException(_('Original amount do not match with cart amounts'))
+            booking.is_open = False
+            booking.save()
+            original_amount = items_price
+            total_savings = total_savings + (items_price - discounted_items)
+
+        amount_to_pay = original_amount - total_savings
+        if amount_to_pay < from_cashback:
+            raise NotAcceptableException(_('Cashback amount is greater than original amount'))
+
+        try:
+            current_transaction.original_amount = original_amount
+            current_transaction.savings = total_savings
+            current_transaction.discount_percent = max(discount_percent, cashback_percent)
+            current_transaction.from_cashback = from_cashback
+            current_transaction.source_card = source_card
+            current_transaction.is_processed = True
+            current_transaction.status = Transaction.ACCEPTED
+            current_transaction.delivery_type = Transaction.CART_CHECKOUT
+            current_transaction.purchase_id = organization.running_purchase_id
+
+            OrganizationService.increment_running_purchase_id(organization=organization)
+
+            if source_card is not None:
+                current_transaction.discount_type = source_card.type
+            current_transaction.save()
+
+            if source_card is None or source_card.type != DiscountCard.CASHBACK:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    sender_id=current_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_RENTAL,
+                    notification_type=ACCEPT_RENTAL_SALE_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+                sent_notification.delay(
+                    recipient_id=current_transaction.processed_by_id,
+                    sender_id=current_transaction.client_id,
+                    mode=NOTIFICATION_MODE_RENTAL,
+                    notification_type=ACCEPT_RENTAL_SALE_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,

@@ -22,13 +22,16 @@ from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
 from shop.services.cart_services import CartService
+from shop.services.booking_services import BookingService
 from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer
+    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer
 )
+from shop.serializers.item_serializers import BookInfoWithClientSerializer
+from shop.models import ShopItem, Booking
 from transactions.services.filters import TransactionFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
@@ -83,6 +86,64 @@ class TransactionPreprocessView(GenericAPIView):
         return Response(data=data, status=status.HTTP_200_OK)
 
 
+class TransactionBookingPreprocessView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BookInfoWithClientSerializer
+
+    def post(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+        rental = ShopItem.objects.get(id=pk)
+        start_time = serializer.validated_data['start_time']
+        end_time = serializer.validated_data['end_time']
+        organization = serializer.validated_data['organization']
+        client = serializer.validated_data['client']
+        booking = Booking.objects.create(user=request.user,
+                                         item=rental,
+                                         organization=organization,
+                                         start_time=start_time,
+                                         end_time=end_time
+                                         )
+
+        new_transaction = TransactionService.preprocess_booking_transaction(
+            client=client, organization=organization, booking=booking, processed_by=request.user
+        )
+
+        cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
+                                                                                         organization=organization)
+        fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
+        cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
+
+        accrued_cashback = OrganizationClientFinancialStatusService.get_client_accrued_cashback(
+            client=client, organization=organization
+        )
+
+        if cumulative is not None:
+            cumulative = DiscountCardBriefSerializer(cumulative).data
+
+        discounted_price = 0 if booking is None else BookingService.get_total_prices_in_booking(booking=booking)[1]
+
+        data = {
+            'transaction_id': new_transaction.id,
+            'purchase_id': organization.running_purchase_id,
+            'cumulative': cumulative,
+            'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
+            'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
+            'accrued_cashback': accrued_cashback,
+            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
+            'booking_amount': discounted_price,
+        }
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
+
 class TransactionCompleteView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CompleteSerializer
@@ -105,6 +166,37 @@ class TransactionCompleteView(GenericAPIView):
             from_cashback=serializer.validated_data['from_cashback'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             cart=serializer.validated_data.get('cart', None),
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
+class TransactionBookingCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CompleteBookingSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        transaction = Transaction.objects.get(id=serializer.validated_data['transaction_id'])
+        booking = transaction.booking
+
+        TransactionService.complete_booking_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            processed_by=request.user,
+            original_amount=serializer.validated_data['original_amount'],
+            discount_percent=serializer.validated_data['discount_percent'],
+            source_card=serializer.validated_data['source_card'],
+            from_cashback=serializer.validated_data['from_cashback'],
+            booking=booking,
         )
 
         return Response(data={

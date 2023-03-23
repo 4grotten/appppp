@@ -138,7 +138,7 @@ class TransactionBookingPreprocessView(GenericAPIView):
             'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
             'accrued_cashback': accrued_cashback,
             'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
-            'booking_amount': discounted_price,
+            'cart_amount': discounted_price,
         }
 
         return Response(data=data, status=status.HTTP_200_OK)

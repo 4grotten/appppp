@@ -23,9 +23,7 @@ from notifications.constants import (
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
-    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_SALE_TYPE,
-    ACCEPT_RENTAL_SALE_CLIENT_TYPE
-
+    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
@@ -346,7 +344,7 @@ class TransactionService:
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
                     mode=NOTIFICATION_MODE_RENTAL,
-                    notification_type=ACCEPT_RENTAL_SALE_CLIENT_TYPE,
+                    notification_type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,
@@ -357,7 +355,7 @@ class TransactionService:
                     recipient_id=current_transaction.processed_by_id,
                     sender_id=current_transaction.client_id,
                     mode=NOTIFICATION_MODE_RENTAL,
-                    notification_type=ACCEPT_RENTAL_SALE_TYPE,
+                    notification_type=ACCEPT_RENTAL_PAYMENT_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,

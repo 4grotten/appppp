@@ -9,7 +9,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, Booking
+from shop.models import Cart, Booking, ShopItem
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer, BookingSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, ItemRentalRetrieveSerializer
 from transactions.models import Transaction
@@ -102,18 +102,24 @@ class CompleteBookingSerializer(serializers.ModelSerializer):
 class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
+    purchase_type = serializers.SerializerMethodField()
 
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
             return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
         return None
 
+    def get_purchase_type(self, transaction: Transaction):
+        if transaction.fixed_cart and transaction.fixed_cart.get('item'):
+                return ShopItem.objects.get(id=transaction.fixed_cart.get('item')['id']).purchase_type
+        return 'product'
+
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
-            'payment_status'
+            'payment_status', 'purchase_type'
         )
 
 

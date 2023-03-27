@@ -110,9 +110,12 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return None
 
     def get_purchase_type(self, transaction: Transaction):
-        if transaction.fixed_cart and transaction.fixed_cart.get('item'):
-                return ShopItem.objects.get(id=transaction.fixed_cart.get('item')['id']).purchase_type
-        return 'product'
+        try:
+            booking = transaction.booking
+        except Booking.DoesNotExist:
+            return 'product'
+        return 'rent'
+
 
     class Meta:
         model = Transaction

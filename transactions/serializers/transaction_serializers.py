@@ -10,6 +10,7 @@ from organizations.serializers.organization_serializers import (
 )
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart, Booking, ShopItem
+from notifications.models import Notification
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer, BookingSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, ItemRentalRetrieveSerializer
 from transactions.models import Transaction
@@ -103,6 +104,8 @@ class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
     purchase_type = serializers.SerializerMethodField()
+    notification_type = serializers.SerializerMethodField()
+
 
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
@@ -116,13 +119,19 @@ class TransactionsSerializer(serializers.ModelSerializer):
             return 'product'
         return 'rent'
 
+    def get_notification_type(self, transaction: Transaction):
+        notification = Notification.objects.filter(extra_data__transaction_id=transaction.id).last()
+        if notification:
+            return notification.type
+        return None
+
 
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
-            'payment_status', 'purchase_type'
+            'payment_status', 'purchase_type', 'notification_type'
         )
 
 

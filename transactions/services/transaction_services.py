@@ -980,8 +980,6 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def refund_booking_transaction(cls, request, old_transaction: Transaction, user: User):
-        if old_transaction.status == Transaction.REJECTED:
-            raise BadRequestException(message=_('This transaction already was rejected'))
         from shop.serializers.cart_serializers import BookingSerializer
         try:
             fixed_cart = BookingSerializer(old_transaction.booking, context={
@@ -1002,6 +1000,9 @@ class TransactionService:
             if old_transaction.display_time is None:
                 old_transaction.display_time = now()
             old_transaction.save()
+            booking = old_transaction.booking
+            booking.is_open = False
+            booking.save()
         except:
             raise IntegrityException()
 
@@ -1087,8 +1088,26 @@ class TransactionService:
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
             old_transaction.save()
+            booking = old_transaction.booking
+            booking.is_open = False
+            booking.save()
         except:
             raise IntegrityException()
+
+        old_start_time = old_transaction.booking.start_time
+        old_end_time = old_transaction.booking.end_time
+
+        bookings = Booking.objects.filter(
+            organization=old_transaction.booking.organization,
+            start_time__lt=old_end_time,
+            end_time__gt=old_start_time,
+            is_open=True
+        ).exclude(id=old_transaction.booking.id)
+
+        for booking in bookings:
+            if booking.transaction.type == Transaction.ONLINE:
+                TransactionService.refund_booking_transaction(old_transaction=booking.transaction, user=booking.organization.owner,
+                                                              request=request)
 
         if old_transaction.type == Transaction.ONLINE:
             Notification.objects.filter(

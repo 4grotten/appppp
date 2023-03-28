@@ -36,7 +36,6 @@ class BookingService:
             raise BadRequestException(_('Booking is already closed'))
 
         current_transaction = cls.create_booking_transaction(booking)
-        booking.is_open = False
         try:
             booking.save()
         except IntegrityError:

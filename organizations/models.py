@@ -574,6 +574,9 @@ class Service(models.Model):
                                         help_text='Не заполнять при создании!')
     is_discounts = models.BooleanField(default=False)
     is_entertainment = models.BooleanField(default=False)
+    has_delivery = models.BooleanField(default=False)
+    has_self_pick_up = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'

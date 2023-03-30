@@ -473,12 +473,14 @@ class OrganizationService:
             queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
                                                    has_self_pick_up=service.has_self_pick_up,
                                                    verification_status=VERIFIED,
+                                                   has_license=service.has_license,
                                                    types__in=service.subcategory.all(),
                                                    shop_items__isnull=False, shop_items__price__isnull=False
                                                    ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
         else:
             queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
                                                    has_self_pick_up=service.has_self_pick_up,
+                                                   has_license=service.has_license,
                                                    types__in=service.subcategory.all(),
                                                    shop_items__isnull=False, shop_items__price__isnull=False
                                                    ).exclude(is_banned=True).exclude(is_deleted=True).distinct()

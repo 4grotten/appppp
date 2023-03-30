@@ -89,6 +89,7 @@ class Organization(TimestampModel):
     avg_check = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
+    has_license = models.BooleanField(default=False, help_text=_('Does organization have license?'))
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -576,6 +577,7 @@ class Service(models.Model):
     is_entertainment = models.BooleanField(default=False)
     has_delivery = models.BooleanField(default=False)
     has_self_pick_up = models.BooleanField(default=False)
+    has_license = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
     def __str__(self):

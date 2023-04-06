@@ -16,7 +16,11 @@ from shop.serializers.item_serializers import TransactionBookingInfoSerializer, 
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer
-
+from transactions.constants import (
+    REQUEST_ONLINE_RENTAL_TYPE, DECLINED_ONLINE_RENTAL_TYPE, REQUEST_ONLINE_PAYMENT_TYPE,
+    ACCEPTED_ONLINE_PAYMENT_TYPE, DECLINED_ONLINE_PAYMENT_TYPE, ACCEPTED_OFFLINE_PAYMENT_TYPE,
+    DECLINED_OFFLINE_PAYMENT_TYPE
+)
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
@@ -105,6 +109,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
     delivery_info = DeliveryInfoSerializer()
     purchase_type = serializers.SerializerMethodField()
     notification_type = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
 
 
     def get_display_time(self, transaction: Transaction):
@@ -125,13 +130,35 @@ class TransactionsSerializer(serializers.ModelSerializer):
             return notification.type
         return None
 
+    def get_icon_type(self, transaction: Transaction):
+        if transaction.type == Transaction.ONLINE:
+            if transaction.status == Transaction.IN_PROGRESS and transaction.payment_status == Transaction.IN_PROGRESS:
+                return REQUEST_ONLINE_RENTAL_TYPE
+            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.IN_PROGRESS:
+                return REQUEST_ONLINE_PAYMENT_TYPE
+            elif transaction.status == Transaction.REJECTED and transaction.payment_status == Transaction.IN_PROGRESS:
+                return DECLINED_ONLINE_RENTAL_TYPE
+            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.ACCEPTED:
+                return ACCEPTED_ONLINE_PAYMENT_TYPE
+            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.REJECTED:
+                return DECLINED_ONLINE_PAYMENT_TYPE
+            elif transaction.status == Transaction.REJECTED and transaction.payment_status == Transaction.REFUNDED:
+                return DECLINED_ONLINE_PAYMENT_TYPE
+        else:
+            if transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.ACCEPTED:
+                return ACCEPTED_OFFLINE_PAYMENT_TYPE
+            else:
+                return DECLINED_OFFLINE_PAYMENT_TYPE
+
+
+
 
     class Meta:
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
-            'payment_status', 'purchase_type', 'notification_type'
+            'payment_status', 'purchase_type', 'notification_type', 'icon_type'
         )
 
 

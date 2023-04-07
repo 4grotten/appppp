@@ -774,7 +774,7 @@ class TransactionService:
 
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
-                Transaction.objects.filter(organization=OuterRef('pk'), client=client, is_processed=True
+                Transaction.objects.filter(organization=OuterRef('pk'), client=client,
                                            ).order_by('-updated_at').values('updated_at')[:1]
             )
         ).order_by('-latest_transaction_time')
@@ -855,7 +855,7 @@ class TransactionService:
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(client=client, is_processed=True)
+        transactions = Transaction.objects.filter(client=client)
         return transactions
 
     @classmethod

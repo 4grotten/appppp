@@ -855,7 +855,13 @@ class TransactionService:
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(client=client)
+        transactions = Transaction.objects.filter(Q(client=client) & ~Q(
+            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).annotate(
+            in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
+                                   When(status=Transaction.ACCEPTED, then=1),
+                                   When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
+        ).order_by('in_progress_first', '-updated_at')
+
         return transactions
 
     @classmethod

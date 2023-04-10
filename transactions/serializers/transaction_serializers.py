@@ -1,7 +1,7 @@
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-
+import time
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
@@ -19,7 +19,7 @@ from users.serializers import ProfileBriefWithPhotoSerializer
 from transactions.constants import (
     REQUEST_ONLINE_RENTAL_TYPE, DECLINED_ONLINE_RENTAL_TYPE, REQUEST_ONLINE_PAYMENT_TYPE,
     ACCEPTED_ONLINE_PAYMENT_TYPE, DECLINED_ONLINE_PAYMENT_TYPE, ACCEPTED_OFFLINE_PAYMENT_TYPE,
-    DECLINED_OFFLINE_PAYMENT_TYPE
+    DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP
 )
 
 class OffsetUTCSerializer(serializers.Serializer):
@@ -108,7 +108,6 @@ class TransactionsSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
     purchase_type = serializers.SerializerMethodField()
-    notification_type = serializers.SerializerMethodField()
     icon_type = serializers.SerializerMethodField()
 
 
@@ -124,32 +123,8 @@ class TransactionsSerializer(serializers.ModelSerializer):
             return 'product'
         return 'rent'
 
-    def get_notification_type(self, transaction: Transaction):
-        notification = Notification.objects.filter(extra_data__transaction_id=transaction.id).last()
-        if notification:
-            return notification.type
-        return None
-
     def get_icon_type(self, transaction: Transaction):
-        if transaction.type == Transaction.ONLINE:
-            if transaction.status == Transaction.IN_PROGRESS and transaction.payment_status == Transaction.IN_PROGRESS:
-                return REQUEST_ONLINE_RENTAL_TYPE
-            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.IN_PROGRESS:
-                return REQUEST_ONLINE_PAYMENT_TYPE
-            elif transaction.status == Transaction.REJECTED and transaction.payment_status == Transaction.IN_PROGRESS:
-                return DECLINED_ONLINE_RENTAL_TYPE
-            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.ACCEPTED:
-                return ACCEPTED_ONLINE_PAYMENT_TYPE
-            elif transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.REJECTED:
-                return DECLINED_ONLINE_PAYMENT_TYPE
-            elif transaction.status == Transaction.REJECTED and transaction.payment_status == Transaction.REFUNDED:
-                return DECLINED_ONLINE_PAYMENT_TYPE
-        else:
-            if transaction.status == Transaction.ACCEPTED and transaction.payment_status == Transaction.ACCEPTED:
-                return ACCEPTED_OFFLINE_PAYMENT_TYPE
-            else:
-                return DECLINED_OFFLINE_PAYMENT_TYPE
-
+        return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
 
 
 
@@ -158,7 +133,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
             'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
-            'payment_status', 'purchase_type', 'notification_type', 'icon_type'
+            'payment_status', 'purchase_type', 'icon_type'
         )
 
 

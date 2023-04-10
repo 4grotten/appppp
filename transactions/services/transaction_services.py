@@ -330,6 +330,7 @@ class TransactionService:
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
             current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
 

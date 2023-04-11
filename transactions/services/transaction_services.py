@@ -904,7 +904,7 @@ class TransactionService:
 
         if processed_by is not None:
             transactions = transactions.filter(
-                Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
+                Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS))
         if client is not None:
             transactions = transactions.filter(client=client)
         if start_date is not None and end_date is not None:

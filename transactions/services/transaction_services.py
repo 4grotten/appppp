@@ -411,7 +411,7 @@ class TransactionService:
 
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
-                Transaction.objects.filter(organization=OuterRef('pk'), client=client, is_processed=True
+                Transaction.objects.filter(organization=OuterRef('pk'), client=client,
                                            ).order_by('-updated_at').values('updated_at')[:1]
             )
         ).order_by('-latest_transaction_time')
@@ -492,7 +492,13 @@ class TransactionService:
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(client=client, is_processed=True)
+        transactions = Transaction.objects.filter(Q(client=client) & ~Q(
+            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).annotate(
+            in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
+                                   When(status=Transaction.ACCEPTED, then=1),
+                                   When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
+        ).order_by('in_progress_first', '-updated_at')
+
         return transactions
 
     @classmethod
@@ -534,7 +540,7 @@ class TransactionService:
 
         if processed_by is not None:
             transactions = transactions.filter(
-                Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
+                Q(processed_by=processed_by) | Q(status=Transaction.IN_PROGRESS))
         if client is not None:
             transactions = transactions.filter(client=client)
         if start_date is not None and end_date is not None:

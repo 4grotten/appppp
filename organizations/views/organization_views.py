@@ -428,6 +428,11 @@ class SubscriptionsMessageListAPIView(ListAPIView):
         messages = OrgMessageService.get_messages_of_organization(organization_id=self.request.GET['organization'])
         return messages
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, args, kwargs)
+        response.data['wallpapers'] = CommentService.get_wallpapers()
+        return response
+
 
 class OrgMessageAPIView(ListAPIView):
     serializer_class = OrgMessageSerializer

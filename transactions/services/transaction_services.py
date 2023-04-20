@@ -806,6 +806,30 @@ class TransactionService:
         return organizations
 
     @classmethod
+    def get_user_sale_rental_transaction_organizations(cls, user: User, start_date, end_date):
+        transactions = cls.get_user_sale_rental_transactions(user=user)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(
+                    Q(organization=OuterRef('pk')) & (
+                            (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
+                        Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)))).order_by(
+                    '-updated_at').values('updated_at')[:1]
+            ),
+            unprocessed_transaction_count=Count(
+                Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.ONLINE,
+                                           status=Transaction.IN_PROGRESS).values('id')[:1])
+        )
+
+        organizations = organizations.order_by('-unprocessed_transaction_count',
+                                               F('latest_transaction_time').desc(nulls_last=True))
+        return organizations
+
+    @classmethod
     def get_user_totals(cls, client: User, currency: str,
                         organization: Organization = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(client=client, is_processed=True)
@@ -1217,6 +1241,23 @@ class TransactionService:
             Q(organization__in=organization) & (
                     Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
         )
+        return transactions
+
+    @classmethod
+    def get_user_sale_rental_transactions(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(booking__item__purchase_type='rent') &
+            Q(organization__in=organization) &
+            (
+                Q(processed_by=user) |
+                Q(status__in=[Transaction.IN_PROGRESS, Transaction.ACCEPTED])
+            )
+        )
+
         return transactions
 
     @classmethod

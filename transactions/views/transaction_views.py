@@ -288,6 +288,24 @@ class UserSaleTransactionOrganizationView(ListAPIView):
         )
 
 
+class UserSaleRentalTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return TransactionService.get_user_sale_rental_transaction_organizations(
+            user=self.request.user,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+
 class UserTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 

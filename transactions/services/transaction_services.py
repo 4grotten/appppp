@@ -868,6 +868,26 @@ class TransactionService:
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
+    def get_user_sale_rental_totals(cls, processed_by: User, currency: str,
+                             organization: Organization = None, start_date=None, end_date=None) -> dict:
+        transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
+                                                  booking__item__purchase_type='rent')
+
+        if organization is not None:
+            transactions = transactions.filter(organization=organization)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
     def get_client_total_spent_in_cumulative_group(cls, client: User, organization: Organization,
                                                    currency: str) -> Decimal:
         partner_ids = CumulativeGroupService.get_partners_in_same_cumulative_group(organization=organization)

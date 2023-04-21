@@ -10,7 +10,8 @@ from transactions.views.transaction_views import (
     UserSaleTransactionsListView, UserSaleTransactionOrganizationView, OnlineTransactionCompleteView,
     OrganizationUsersTransactionView, OnlineBookingTransactionCompleteView,
     OrganizationBookingTransactionRetrieveDestroyView, RentPaymentRejectView, RentPaymentAcceptView,
-    TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView
+    TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView,
+    UserSaleRentalTotalsView
 )
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
 
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),
     path('statistics/saleTotals/', UserSaleTotalsView.as_view(), name='user_sale_totals'),
+    path('statistics/saleTotals/rental/', UserSaleRentalTotalsView.as_view(), name='user_sale_rental_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),
     path('statistics/saleTransactions/', UserSaleTransactionsListView.as_view(), name='user_sale_tran'),
     path('statistics/transactions/<int:pk>/', UserTransactionDetailView.as_view(), name='user_transaction_detail'),

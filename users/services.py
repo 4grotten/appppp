@@ -205,9 +205,6 @@ class TemporaryCodeService:
             current_datetime = timezone.now()
             max_datetime = current_datetime + timezone.timedelta(minutes=-30)
 
-            if cls.model.objects.filter(user=user,
-                                        created_at__range=(max_datetime, current_datetime)).count() >= 3:
-                raise ValidationException(_('Limit exceeded'))
 
             code = cls.model.objects.create(user=user)
         except IntegrityError:

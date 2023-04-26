@@ -680,3 +680,22 @@ class TransactionBookingInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ('id', 'organization', 'item', 'start_time', 'end_time')
+
+
+class RentalListSerializer(ItemListSerializer):
+    organization = ItemFeedOrganizationSerializer()
+    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    videos = VideoSerializer(many=True)
+    subcategory = ItemSubcategoryBriefSerializer()
+
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
+            'created_at', 'updated_at', 'youtube_links', 'subcategory', 'images', 'videos', 'organization',
+            'is_updated', 'purchase_type'
+        )
+        read_only_fields = ['name_lang', 'description_lang']

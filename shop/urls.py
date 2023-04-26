@@ -12,7 +12,8 @@ from shop.views.category_views import (
 from shop.views.comment_views import CommentItemListCreateView, \
     CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike, CommentComplaintCreateView
 from shop.views.feed_views import (
-    FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
+    FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView,
+    OrganizationRentalListView
 )
 from shop.views.item_views import (
     ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemRentalRetrieveUpdateDestroyView,
@@ -54,6 +55,7 @@ urlpatterns = [
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
+    path('shop/organization_rentals/', OrganizationRentalListView.as_view(), name='organization_rentals'),
     path('shop/subscription_items/', SubscriptionItemListView.as_view(), name='subscribed_organization_items'),
     path('shop/hotlink_items/<int:pk>/', HotlinkCollectionItemListView.as_view(), name='hotlink_collection_items'),
 

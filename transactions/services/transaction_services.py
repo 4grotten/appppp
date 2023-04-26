@@ -4,7 +4,8 @@ from decimal import Decimal
 from typing import Union
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, Count
+from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, \
+    Count, Value
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -963,6 +964,21 @@ class TransactionService:
         return transactions
 
     @classmethod
+    def get_organization_processed_transactions(cls, rental: ShopItem, start_date=None, end_date=None):
+
+        transactions = Transaction.objects.filter(booking__item=rental, is_processed=True,
+                                                  booking__item__purchase_type='rent').order_by('-updated_at')
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(display_time__range=[start_date, end_date]) | Q(display_time__isnull=True)
+            )
+
+        return transactions
+
+
+    @classmethod
     @transaction.atomic
     def refund_transaction(cls, request, old_transaction: Transaction, user: User):
         if old_transaction.status == Transaction.REJECTED:
@@ -1288,3 +1304,17 @@ class TransactionService:
         return User.objects.filter(
             bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(
             '-max_date')
+
+    @classmethod
+    def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
+        queryset = queryset.filter(client__full_name__icontains=search_word).annotate(
+            search_rank=Case(
+                When(client__full_name__iexact=search_word, then=Value(1)),
+                When(client__full_name__istartswith=search_word, then=Value(2)),
+                When(client__full_name__icontains=search_word, then=Value(3)),
+                default=Value(4),
+                output_field=IntegerField(),
+            ),
+        ).order_by('search_rank', '-created_at')
+
+        return queryset

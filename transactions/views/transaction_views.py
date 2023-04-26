@@ -23,12 +23,14 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.organization_services import OrganizationService
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
+from shop.services.item_services import ShopItemService
 from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer
+    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
+    OrganizationRentalTransactionWithClientSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
@@ -531,6 +533,38 @@ class OrganizationUsersTransactionView(ListAPIView):
             raise NotAcceptableException(_('No rights to see stats of organization'))
         return TransactionService.get_users_of_transactions_in_organization(organization=organization,
                                                                             processed_by=self.request.user)
+
+
+class OrganizationRentalUsersTransactionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationRentalTransactionWithClientSerializer
+
+    def list(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        rental = ShopItemService.get(id=self.kwargs['pk'])
+        queryset = TransactionService.get_organization_processed_transactions(
+            rental=rental,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+        search = self.request.GET.get('search', None)
+        if search:
+            queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class RentPaymentAcceptView(GenericAPIView):

@@ -128,7 +128,9 @@ class VerifyTemporaryCodeAPIView(APIView):
         user = UserService.get(phone_number=phone_number)
 
         try:
-            token = MyOwnToken.objects.get(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR'))
+            token = MyOwnToken.objects.filter(user=user,
+                                           is_active=True,
+                                           ip=request.META.get('REMOTE_ADDR')).order_by('-log_time').first()
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
             token.save()

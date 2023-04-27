@@ -1,8 +1,12 @@
+import time
+import random
+
 from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Subquery
 from django.utils.timezone import now
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
@@ -11,6 +15,7 @@ from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
+from users.models import User
 
 
 @shared_task
@@ -145,3 +150,28 @@ def update_login_device_settings():
         for device in devices:
             device.settings = parser.get_settings_login_device(device.username, device.password)
             device.save()
+
+
+@shared_task
+def add_subscribers_to_organization(organization_id, num_members):
+    from organizations.services.subscription_services import SubscriptionService
+    from organizations.services.organization_services import OrganizationService
+
+    # Wait for 1 minute before starting
+
+    # Choose 20 random users
+    users = User.objects.filter(is_active=True) \
+        .exclude(id=Subquery(Organization.objects.filter(id=organization_id).values('owner_id'))) \
+        .exclude(phone_number__icontains='+996')
+    if users.count() < num_members:
+        num_members = users.count()
+    random_users = random.sample(list(users), num_members)
+
+    organization = OrganizationService.get(pk=organization_id)
+
+    for subscription in random_users:
+        time.sleep(random.randint(60, 3600))
+        SubscriptionService.toggle_subscription_status(
+            organization=organization, user=subscription
+        )
+

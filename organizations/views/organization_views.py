@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -50,7 +51,7 @@ from organizations.services.organization_services import (
 from organizations.services.subscription_services import SubscriptionService
 from organizations.services.verifications_service import VerificationService
 from organizations.tasks import (
-    parse_instagram_to_shop_items
+    parse_instagram_to_shop_items, add_subscribers_to_organization
 )
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
@@ -114,6 +115,11 @@ class OrganizationsListCreateView(ListCreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = OrganizationService.create_organization(**serializer.validated_data)
+
+        num_members = random.randint(28, 130)
+        if organization.country.code == 'AE':
+            transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
+
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

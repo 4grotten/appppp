@@ -47,6 +47,12 @@ services:
                                               delete_expired_video,delete_expired_posts
     env_file: ./env/production.env
 
+  celery_worker_subscription:
+    <<: *django
+    ports: [ ]
+    command: celery worker -n "subscription" -A project --loglevel=INFO -Q org_subscribers
+    env_file: ./env/production.env
+
 #  celery_worker_instagram:
 #    <<: *django
 #    ports: [ ]

@@ -11,7 +11,8 @@ from transactions.views.transaction_views import (
     OrganizationUsersTransactionView, OnlineBookingTransactionCompleteView,
     OrganizationBookingTransactionRetrieveDestroyView, RentPaymentRejectView, RentPaymentAcceptView,
     TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView,
-    UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView
+    UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
+    UserRentalTotalsView
 )
 
 urlpatterns = [
@@ -31,7 +32,8 @@ urlpatterns = [
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),
          name='transaction_booking_preprocess'),
-    path('transactions/complete/booking/', TransactionBookingCompleteView.as_view(), name='transaction_booking_complete'),
+    path('transactions/complete/booking/', TransactionBookingCompleteView.as_view(),
+         name='transaction_booking_complete'),
     path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(),
          name='online_booking_transaction_complete'),
     path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_reject'),
@@ -39,6 +41,7 @@ urlpatterns = [
 
     path('statistics/totals/', UserTotalsView.as_view(), name='user_totals'),
     path('statistics/saleTotals/', UserSaleTotalsView.as_view(), name='user_sale_totals'),
+    path('statistics/totals/rental/', UserRentalTotalsView.as_view(), name='user_rental_totals'),
     path('statistics/saleTotals/rental/', UserSaleRentalTotalsView.as_view(), name='user_sale_rental_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),
     path('statistics/saleTransactions/', UserSaleTransactionsListView.as_view(), name='user_sale_tran'),
@@ -46,6 +49,8 @@ urlpatterns = [
     path('statistics/organizations/', UserTransactionOrganizationView.as_view(), name='transaction_organizations'),
     path('statistics/saleOrganizations/', UserSaleTransactionOrganizationView.as_view(),
          name='sale_transaction_organizations'),
+    path('statistics/organizations/rental/', UserRentalTransactionOrganizationView.as_view(),
+         name='rental_transaction_organizations'),
     path('statistics/saleOrganizations/rental/', UserSaleRentalTransactionOrganizationView.as_view(),
          name='sale_rental_transaction_organizations'),
     path('statistics/unprocessedTranCount/', UserUnprocessedTransactionCountView.as_view(),

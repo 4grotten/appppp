@@ -83,9 +83,8 @@ class OrganizationItemListView(FeedView):
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
 
-class OrganizationRentalListView(FeedView):
+class OrganizationRentalListView(ListAPIView):
     serializer_class = RentalListSerializer
-    filter_class = FeedItemFilterWithoutOrganization
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
@@ -95,7 +94,7 @@ class OrganizationRentalListView(FeedView):
         if organization.is_deleted:
             return ShopItem.objects.none()
 
-        qs = ShopItemService.get_organization_items_queryset_for_user(
+        qs = ShopItemService.get_organization_rentals_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user
         ).order_by('-updated_at')
         search = self.request.GET.get('search', None)

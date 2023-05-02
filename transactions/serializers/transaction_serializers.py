@@ -1,7 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-import time
 from common.exceptions import NotAcceptableException
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
@@ -9,18 +8,13 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, Booking, ShopItem
-from notifications.models import Notification
-from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer, BookingSerializer
-from shop.serializers.item_serializers import TransactionBookingInfoSerializer, ItemRentalRetrieveSerializer
+from shop.models import Cart, Booking
+from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
+from shop.serializers.item_serializers import TransactionBookingInfoSerializer
 from transactions.models import Transaction
 from users.models import User
-from users.serializers import ProfileBriefWithPhotoSerializer
-from transactions.constants import (
-    REQUEST_ONLINE_RENTAL_TYPE, DECLINED_ONLINE_RENTAL_TYPE, REQUEST_ONLINE_PAYMENT_TYPE,
-    ACCEPTED_ONLINE_PAYMENT_TYPE, DECLINED_ONLINE_PAYMENT_TYPE, ACCEPTED_OFFLINE_PAYMENT_TYPE,
-    DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP
-)
+from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
+from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
@@ -335,3 +329,21 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
     end = serializers.DateField(required=False)
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                       default=None)
+
+
+class UserInfoBookingSerializer(serializers.Serializer):
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
+    booking = serializers.PrimaryKeyRelatedField(queryset=Booking.objects.all())
+
+
+class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
+    client = UserInfoSerializer()
+    icon_type = serializers.SerializerMethodField()
+
+    def get_icon_type(self, transaction: Transaction):
+        return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
+            'to_cashback', 'final_amount', 'client', 'type', 'status', 'icon_type', 'created_at', 'updated_at')

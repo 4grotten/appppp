@@ -30,7 +30,8 @@ from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
     BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
-    OrganizationRentalTransactionWithClientSerializer
+    OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
+    ActivateTransactionWithClientSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
@@ -644,3 +645,31 @@ class RentPaymentRejectView(RetrieveDestroyAPIView):
                                                       request=self.request)
 
 
+class TransactionUserInfoView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ActivateTransactionWithClientSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = UserInfoBookingSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        booking = serializer.validated_data['booking']
+        client = serializer.validated_data['client']
+
+        if booking.user.id != client.id:
+            raise NotAcceptableException(_("Users don't match"))
+
+        try:
+            transaction = Transaction.objects.get(booking=booking)
+        except Transaction.DoesNotExist:
+            return Response(data={
+                'message': _('Transaction not found for this booking')
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(transaction)
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)

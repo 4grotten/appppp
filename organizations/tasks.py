@@ -157,10 +157,7 @@ def add_subscribers_to_organization(organization_id, num_members):
     from organizations.services.subscription_services import SubscriptionService
     from organizations.services.organization_services import OrganizationService
 
-    # Wait for 1 minute before starting
-
-    # Choose 20 random users
-    users = User.objects.filter(is_active=True) \
+    users = User.objects.filter(is_active=True, full_name__isnull=False, avatar__isnull=False) \
         .exclude(id=Subquery(Organization.objects.filter(id=organization_id).values('owner_id'))) \
         .exclude(phone_number__icontains='+996')
     if users.count() < num_members:

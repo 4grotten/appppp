@@ -10,7 +10,7 @@ from organizations.serializers.organization_serializers import (
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart, Booking
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
-from shop.serializers.item_serializers import TransactionBookingInfoSerializer
+from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
@@ -339,11 +339,12 @@ class UserInfoBookingSerializer(serializers.Serializer):
 class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
     client = UserInfoSerializer()
     icon_type = serializers.SerializerMethodField()
+    booking = IsActiveBookingSerializer()
 
     def get_icon_type(self, transaction: Transaction):
         return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
 
     class Meta:
         model = Transaction
-        fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
-            'to_cashback', 'final_amount', 'client', 'type', 'status', 'icon_type', 'created_at', 'updated_at')
+        fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+                  'final_amount', 'client', 'type', 'status', 'icon_type', 'booking', 'created_at', 'updated_at')

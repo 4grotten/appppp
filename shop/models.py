@@ -205,6 +205,7 @@ class Booking(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='bookings')
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_bookings', null=True, blank=True)
     is_open = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, related_name='booking', null=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)

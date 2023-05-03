@@ -673,3 +673,14 @@ class TransactionUserInfoView(GenericAPIView):
         serializer = self.get_serializer(transaction)
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class TransactionBookingActivate(GenericAPIView):
+
+    def post(self, request, *args, **kwargs):
+        booking = BookingService.get(id=kwargs['pk'])
+
+        booking.is_active = True
+        booking.save()
+
+        return Response({'message': 'Booking activated successfully'})

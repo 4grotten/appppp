@@ -679,8 +679,14 @@ class TransactionBookingInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'item', 'start_time', 'end_time')
+        fields = ('id', 'organization', 'item', 'start_time', 'end_time', 'is_active')
 
+
+class IsActiveBookingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Booking
+        fields = ('id', 'is_active')
 
 class RentalListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()

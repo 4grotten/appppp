@@ -678,9 +678,8 @@ class TransactionUserInfoView(GenericAPIView):
 class TransactionBookingActivate(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
-        booking = BookingService.get(id=kwargs['pk'])
+        transaction = TransactionService.get(id=kwargs['pk'])
 
-        booking.is_active = True
-        booking.save()
+        TransactionService.activate_rental(transaction)
 
         return Response({'message': 'Booking activated successfully'})

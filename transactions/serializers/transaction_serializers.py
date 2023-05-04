@@ -348,3 +348,7 @@ class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
         model = Transaction
         fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
                   'final_amount', 'client', 'type', 'status', 'icon_type', 'booking', 'created_at', 'updated_at')
+
+
+class TransactionActivateSerializer(serializers.Serializer):
+    transaction = serializers.PrimaryKeyRelatedField(queryset=Transaction.objects.filter(is_processed=True))

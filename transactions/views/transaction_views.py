@@ -31,7 +31,7 @@ from transactions.serializers.transaction_serializers import (
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
     BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer
+    ActivateTransactionWithClientSerializer, TransactionActivateSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
@@ -676,10 +676,18 @@ class TransactionUserInfoView(GenericAPIView):
 
 
 class TransactionBookingActivate(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionActivateSerializer
 
     def post(self, request, *args, **kwargs):
-        transaction = TransactionService.get(id=kwargs['pk'])
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        TransactionService.activate_rental(transaction)
+
+        TransactionService.activate_rental(serializer.validated_data['transaction'])
 
         return Response({'message': 'Booking activated successfully'})

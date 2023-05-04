@@ -1357,7 +1357,7 @@ class TransactionService:
 
     @classmethod
     def activate_rental(cls, transaction: Transaction):
-
+        transaction = cls.get(id=transaction.id)
         booking = transaction.booking
         if booking.is_active:
             raise BadRequestException(message=_('This rental already was activated'))

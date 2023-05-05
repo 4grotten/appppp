@@ -35,7 +35,7 @@ from transactions.serializers.transaction_serializers import (
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
-from transactions.services.filters import TransactionFilter
+from transactions.services.filters import TransactionFilter, TransactionRentalFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
 
@@ -395,9 +395,9 @@ class UserRentalTotalsView(APIView):
             currency = organization.currency.code
         else:
             currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
-
         totals = TransactionService.get_user_rental_totals(client=request.user, currency=currency,
                                                     organization=organization,
+                                                    item=serializer.validated_data.get('item'),
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
         totals['total_savings'] += totals['total_from_cashback']
@@ -452,6 +452,19 @@ class UserSaleTransactionsListView(ListAPIView):
 
     def get_queryset(self):
         transactions = TransactionService.get_user_sale_transactions(user=self.request.user)
+        return transactions
+
+
+class UserRentalTransactionsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionRentalFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        transactions = TransactionService.get_user_rental_transactions(client=self.request.user, item=item)
         return transactions
 
 

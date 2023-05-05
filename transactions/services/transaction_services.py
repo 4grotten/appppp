@@ -885,12 +885,15 @@ class TransactionService:
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
-    def get_user_rental_totals(cls, client: User, currency: str,
-                        organization: Organization = None, start_date=None, end_date=None) -> dict:
+    def get_user_rental_totals(cls, client: User, currency: str,organization: Organization = None,
+                               item: ShopItem = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(client=client, is_processed=True, booking__item__purchase_type='rent')
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(booking__item=item)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -941,6 +944,22 @@ class TransactionService:
             in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
                                    When(status=Transaction.ACCEPTED, then=1),
                                    When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
+        ).order_by('in_progress_first', '-updated_at')
+
+        return transactions
+
+    @classmethod
+    def get_user_rental_transactions(cls, client: User, item: ShopItem):
+        transactions = Transaction.objects.filter(
+            Q(client=client) & ~Q(Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)) &
+            Q(booking__item=item)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
         ).order_by('in_progress_first', '-updated_at')
 
         return transactions

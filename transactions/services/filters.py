@@ -40,3 +40,12 @@ class TransactionFilter(filters.FilterSet):
     class Meta:
         model = Transaction
         fields = ('organization_id', 'start', 'end')
+
+
+class TransactionRentalFilter(filters.FilterSet):
+    start = filters.DateFilter(field_name="updated_at", lookup_expr='gte')
+    end = EndFilter(field_name="updated_at", lookup_expr='lt')
+
+    class Meta:
+        model = Transaction
+        fields = ('start', 'end')

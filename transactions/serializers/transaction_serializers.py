@@ -8,7 +8,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, Booking
+from shop.models import Cart, Booking, ShopItem
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer
 from transactions.models import Transaction
@@ -329,6 +329,7 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
     end = serializers.DateField(required=False)
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                       default=None)
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), default=None)
 
 
 class UserInfoBookingSerializer(serializers.Serializer):

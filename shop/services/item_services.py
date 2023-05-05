@@ -95,7 +95,8 @@ class ShopItemService:
                 queryset = ShopItem.objects.filter(
                     organization__in=organization.items_group.organizations.values_list('id'), is_published=True,
                     purchase_type='rent',
-                    user_bookings__transaction__is_processed=True
+                    user_bookings__transaction__is_processed=True,
+                    user_bookings__user=user
                 )
             else:
                 queryset = ShopItem.objects.filter(
@@ -109,7 +110,7 @@ class ShopItemService:
                                                user_bookings__transaction__is_processed=True)
             if not can_see_own_unpublished:
                 queryset = queryset.exclude(is_published=False, purchase_type='rent',
-                                            user_bookings__transaction__is_processed=True)
+                                            user_bookings__transaction__is_processed=True, user_bookings__user=user)
 
         return queryset.distinct()
 

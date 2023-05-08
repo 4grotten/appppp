@@ -1352,6 +1352,31 @@ class TransactionService:
         return transactions
 
     @classmethod
+    def get_user_sale_transactions_detail(cls, user: User, item: ShopItem):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(organization__in=organization)
+            & (
+                    Q(processed_by=user)
+                    | Q(status=Transaction.IN_PROGRESS)
+                    | Q(status=Transaction.ACCEPTED)
+            )
+            & Q(booking__item=item)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at')
+
+        return transactions
+
+    @classmethod
     def get_user_sale_rental_transactions(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))

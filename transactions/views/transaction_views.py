@@ -455,6 +455,19 @@ class UserSaleTransactionsListView(ListAPIView):
         return transactions
 
 
+class UserSaleTransactionsDetailListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionRentalFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        transactions = TransactionService.get_user_sale_transactions_detail(user=self.request.user, item=item)
+        return transactions
+
+
 class UserRentalTransactionsListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer

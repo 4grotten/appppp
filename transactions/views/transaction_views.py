@@ -463,8 +463,20 @@ class UserRentalTransactionsListView(ListAPIView):
     search_fields = ['id']
 
     def get_queryset(self):
+        transactions = TransactionService.get_user_rental_transactions(client=self.request.user)
+        return transactions
+
+
+class UserRentalTransactionsDetailListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionRentalFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
         item = ShopItemService.get(id=self.kwargs['pk'])
-        transactions = TransactionService.get_user_rental_transactions(client=self.request.user, item=item)
+        transactions = TransactionService.get_user_rental_transactions_detail(client=self.request.user, item=item)
         return transactions
 
 

@@ -12,7 +12,8 @@ from transactions.views.transaction_views import (
     OrganizationBookingTransactionRetrieveDestroyView, RentPaymentRejectView, RentPaymentAcceptView,
     TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView,
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
-    UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsListView
+    UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
+    UserRentalTransactionsListView
 )
 
 urlpatterns = [
@@ -47,7 +48,9 @@ urlpatterns = [
     path('statistics/totals/rental/', UserRentalTotalsView.as_view(), name='user_rental_totals'),
     path('statistics/saleTotals/rental/', UserSaleRentalTotalsView.as_view(), name='user_sale_rental_totals'),
     path('statistics/transactions/', UserTransactionsListView.as_view(), name='user_transactions'),
-    path('statistics/transactions/rental/<int:pk>/', UserRentalTransactionsListView.as_view(), name='user_transactions'),
+    path('statistics/transactions/rental/', UserRentalTransactionsListView.as_view(), name='user_rental_transactions'),
+    path('statistics/transactions/rental/<int:pk>/', UserRentalTransactionsDetailListView.as_view(),
+         name='user_rental_transactions_detail'),
     path('statistics/saleTransactions/', UserSaleTransactionsListView.as_view(), name='user_sale_tran'),
     path('statistics/transactions/<int:pk>/', UserTransactionDetailView.as_view(), name='user_transaction_detail'),
     path('statistics/organizations/', UserTransactionOrganizationView.as_view(), name='transaction_organizations'),

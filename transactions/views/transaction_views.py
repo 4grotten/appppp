@@ -459,7 +459,7 @@ class UserRentalTransactionsListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_class = TransactionRentalFilter
+    filter_class = TransactionFilter
     search_fields = ['id']
 
     def get_queryset(self):

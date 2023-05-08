@@ -85,6 +85,8 @@ class OrganizationItemListView(FeedView):
 
 class OrganizationRentalListView(ListAPIView):
     serializer_class = RentalListSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ['name']
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

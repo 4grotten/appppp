@@ -13,7 +13,7 @@ from transactions.views.transaction_views import (
     TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView,
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
-    UserRentalTransactionsListView, UserSaleTransactionsDetailListView
+    UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView
 )
 
 urlpatterns = [
@@ -52,6 +52,8 @@ urlpatterns = [
     path('statistics/transactions/rental/<int:pk>/', UserRentalTransactionsDetailListView.as_view(),
          name='user_rental_transactions_detail'),
     path('statistics/saleTransactions/', UserSaleTransactionsListView.as_view(), name='user_sale_tran'),
+    path('statistics/saleTransactions/rental/', UserRentalSaleTransactionsListView.as_view(),
+         name='user_rental_sale_tran'),
     path('statistics/saleTransactions/rental/<int:pk>/', UserSaleTransactionsDetailListView.as_view(),
          name='user_rental_sale_tran'),
     path('statistics/transactions/<int:pk>/', UserTransactionDetailView.as_view(), name='user_transaction_detail'),

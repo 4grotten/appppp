@@ -698,15 +698,15 @@ class TransactionUserInfoView(GenericAPIView):
         booking = serializer.validated_data['booking']
         client = serializer.validated_data['client']
 
-        if booking.user.id != client.id:
-            raise NotAcceptableException(_("Users don't match"))
-
         try:
             transaction = Transaction.objects.get(booking=booking)
         except Transaction.DoesNotExist:
             return Response(data={
                 'message': _('Transaction not found for this booking')
             }, status=status.HTTP_404_NOT_FOUND)
+
+        if transaction.client.id != client.id:
+            raise NotAcceptableException(_("Users don't match"))
 
         serializer = self.get_serializer(transaction)
 

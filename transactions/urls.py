@@ -13,7 +13,8 @@ from transactions.views.transaction_views import (
     TransactionBookingPreprocessView, TransactionBookingCompleteView, UserSaleRentalTransactionOrganizationView,
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
-    UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView
+    UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
+    OrganizationRentalCustomerTransactionView
 )
 
 urlpatterns = [
@@ -28,6 +29,8 @@ urlpatterns = [
     path('transactions/organizations/<int:pk>/users/', OrganizationUsersTransactionView.as_view(),
          name='transactions_organizations_users'),
     path('transactions/organizations/rental/<int:pk>/users/', OrganizationRentalUsersTransactionView.as_view(),
+         name='transactions_organizations_rental_users'),
+    path('transactions/organizations/rental/<int:pk>/customers/', OrganizationRentalCustomerTransactionView.as_view(),
          name='transactions_organizations_rental_users'),
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
 

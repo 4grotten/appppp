@@ -1428,6 +1428,13 @@ class TransactionService:
             '-max_date')
 
     @classmethod
+    def get_users_of_rental_in_organization(cls, transactions: Transaction) -> QuerySet:
+
+        return User.objects.filter(
+            bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(
+            '-max_date')
+
+    @classmethod
     def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
         queryset = queryset.filter(client__full_name__icontains=search_word).annotate(
             search_rank=Case(

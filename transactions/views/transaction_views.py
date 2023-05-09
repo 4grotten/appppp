@@ -635,6 +635,7 @@ class OrganizationRentalUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationRentalTransactionWithClientSerializer
 
+
     def list(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
@@ -661,6 +662,36 @@ class OrganizationRentalUsersTransactionView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class OrganizationRentalCustomerTransactionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserShortInfoSerializer
+    search_fields = ['full_name', 'username']
+    filter_backends = [filters.SearchFilter]
+
+    def get_queryset(self):
+        rental = ShopItemService.get(id=self.kwargs['pk'])
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+
+        if not OrganizationService.user_can_see_stats(organization=organization,
+                                                      user=self.request.user):
+            raise NotAcceptableException(_('No rights to see stats of organization'))
+
+        transactions = TransactionService.get_organization_processed_transactions(
+            rental=rental,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+        return TransactionService.get_users_of_rental_in_organization(transactions)
 
 
 class RentPaymentAcceptView(GenericAPIView):

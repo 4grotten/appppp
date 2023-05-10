@@ -1027,7 +1027,7 @@ class TransactionService:
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(
-                Q(display_time__range=[start_date, end_date]) | Q(display_time__isnull=True)
+                Q(updated_at__range=[start_date, end_date])
             )
 
         if search_id is not None:

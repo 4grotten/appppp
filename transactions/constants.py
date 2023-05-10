@@ -16,5 +16,6 @@ ICON_MAP = {
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.ACCEPTED): ACCEPTED_ONLINE_PAYMENT_TYPE,
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.REJECTED): DECLINED_ONLINE_PAYMENT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.REFUNDED): DECLINED_ONLINE_PAYMENT_TYPE,
+    (Transaction.OFFLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS): REQUEST_ONLINE_PAYMENT_TYPE,
     (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.ACCEPTED): ACCEPTED_OFFLINE_PAYMENT_TYPE,
 }

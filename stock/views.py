@@ -327,3 +327,84 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             )
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
+
+
+class DownloadOrgRentalInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_rental_deals(queryset)
+        dict_rental_data = StockService.get_dict_data_for_rentals(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_rentals = pd.DataFrame(dict_rental_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_rentals.to_excel(writer, sheet_name='Аренда', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+
+class DownloadOrgDeliveryRentalInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_deals(queryset)
+        dict_items_data = StockService.get_dict_data_for_shop_item(queryset)
+        dict_rental_data = StockService.get_dict_data_for_rentals(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_items = pd.DataFrame(dict_items_data)
+        df_rentals = pd.DataFrame(dict_rental_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_items.to_excel(writer, sheet_name='Товары', index=False)
+            df_rentals.to_excel(writer, sheet_name='Аренда', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response

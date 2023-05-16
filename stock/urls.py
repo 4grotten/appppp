@@ -4,7 +4,8 @@ from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSu
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
     DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
-    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView
+    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView, \
+    DownloadOrgDeliveryRentalInfoAPIView, DownloadOrgRentalInfoAPIView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -42,4 +43,12 @@ urlpatterns = [
 
     path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryInfoAPIView.as_view(),
          name='download_organization_delivery_info'),
+
+    path('download_org_rental_info/<int:pk>/', DownloadOrgRentalInfoAPIView.as_view(),
+         name='download_organization_delivery_rental_info'),
+
+    path('download_org_delivery_rental_info/<int:pk>/', DownloadOrgDeliveryRentalInfoAPIView.as_view(),
+         name='download_organization_delivery_rental_info'),
+
+
 ]

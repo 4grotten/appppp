@@ -41,13 +41,10 @@ urlpatterns = [
 
     path('get_rental_stock/<int:pk>/', RentalStockView.as_view(), name='get_rental_stock'),
 
-    path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryInfoAPIView.as_view(),
+    path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryRentalInfoAPIView.as_view(),
          name='download_organization_delivery_info'),
 
     path('download_org_rental_info/<int:pk>/', DownloadOrgRentalInfoAPIView.as_view(),
-         name='download_organization_delivery_rental_info'),
-
-    path('download_org_delivery_rental_info/<int:pk>/', DownloadOrgDeliveryRentalInfoAPIView.as_view(),
          name='download_organization_delivery_rental_info'),
 
 

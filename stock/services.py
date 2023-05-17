@@ -234,10 +234,6 @@ class StockService:
         statuses = []
         types = []
         delivery_types = []
-        delivery_orgs = []
-        delivery_statuses = []
-        delivery_display_dates = []
-        delivery_display_times = []
         order_numbers = []
         transaction_dates = []
         transaction_times = []
@@ -265,10 +261,6 @@ class StockService:
                     statuses.append(None)
                 types.append(i.type)
                 delivery_types.append("Аренда")
-                delivery_orgs.append(None)
-                delivery_statuses.append(None)
-                delivery_display_dates.append(None)
-                delivery_display_times.append(None)
                 order_numbers.append(i.id)
                 transaction_dates.append(i.created_at.date().strftime("%Y/%m/%d"))
                 transaction_times.append(i.created_at.time().strftime("%H:%M:%S"))
@@ -307,36 +299,6 @@ class StockService:
                 else:
                     delivery_types.append(i.delivery_type)
 
-                try:
-                    org = Organization.objects.get(id=i.delivery_info.delivery_organization_id).title
-                    delivery_orgs.append(org)
-                except Exception:
-                    delivery_orgs.append(None)
-                try:
-                    if i.delivery_info.status == 'delivery_status_taken_for_delivery':
-                        delivery_statuses.append('Взято на доставку курьерской службой')
-                    elif i.delivery_info.status == 'delivery_status_set_for_delivery':
-                        delivery_statuses.append('Организация поставила заказа на доставку')
-                    elif i.delivery_info.status == 'delivery_status_rejected_by_delivery_service':
-                        delivery_statuses.append('Доставка отменена курьерской службой')
-                    elif i.delivery_info.status == 'delivery_status_accepted_by_delivery_service':
-                        delivery_statuses.append('Доставка подтверждена курьерской службой')
-                    elif i.delivery_info.status == 'delivery_status_delivered':
-                        delivery_statuses.append('Доставлено')
-                    else:
-                        delivery_statuses.append(None)
-                except Exception:
-                    delivery_statuses.append(None)
-
-                try:
-                    delivery_display_dates.append(i.display_time.date().strftime("%Y/%m/%d"))
-                except Exception:
-                    delivery_display_dates.append(None)
-
-                try:
-                    delivery_display_times.append(i.display_time.time().strftime("%H:%M:%S"))
-                except Exception:
-                    delivery_display_times.append(None)
                 order_numbers.append(i.id)
                 transaction_dates.append(i.created_at.date().strftime("%Y/%m/%d"))
                 transaction_times.append(i.created_at.time().strftime("%H:%M:%S"))
@@ -363,10 +325,6 @@ class StockService:
                      _("Статус сделки"): statuses,
                      _("Вид сделки"): types,
                      _("Тип доставки"): delivery_types,
-                     _("Курьерская служба"): delivery_orgs,
-                     _("Статус доставки"): delivery_statuses,
-                     _("Дата  доставки"): delivery_display_dates,
-                     _("Время  доставки"): delivery_display_times,
                      _("Номер заказа"): order_numbers,
                      _("Дата"): transaction_dates,
                      _("Время"): transaction_times,
@@ -374,7 +332,7 @@ class StockService:
                      _("Валюта"): currencies,
                      _("Снято с кэшбэка"): from_cashback,
                      _("Скидка%"): discount_percent,
-                     _("Начисленно на кэшбэк"): to_cashback,
+                     _("Начислено на кэшбэк"): to_cashback,
                      _("Экономия"): savings,
                      _("Сумма итого"): final_amounts,
                      _("Клиент"): clients,
@@ -389,10 +347,6 @@ class StockService:
         statuses = []
         types = []
         delivery_types = []
-        delivery_orgs = []
-        delivery_statuses = []
-        delivery_display_dates = []
-        delivery_display_times = []
         order_numbers = []
         transaction_dates = []
         transaction_times = []
@@ -420,10 +374,6 @@ class StockService:
                     statuses.append(None)
                 types.append(i.type)
                 delivery_types.append("Аренда")
-                delivery_orgs.append(None)
-                delivery_statuses.append(None)
-                delivery_display_dates.append(None)
-                delivery_display_times.append(None)
                 order_numbers.append(i.id)
                 transaction_dates.append(i.created_at.date().strftime("%Y/%m/%d"))
                 transaction_times.append(i.created_at.time().strftime("%H:%M:%S"))
@@ -451,10 +401,6 @@ class StockService:
                      _("Статус сделки"): statuses,
                      _("Вид сделки"): types,
                      _("Тип доставки"): delivery_types,
-                     _("Курьерская служба"): delivery_orgs,
-                     _("Статус доставки"): delivery_statuses,
-                     _("Дата  доставки"): delivery_display_dates,
-                     _("Время  доставки"): delivery_display_times,
                      _("Номер заказа"): order_numbers,
                      _("Дата"): transaction_dates,
                      _("Время"): transaction_times,
@@ -481,6 +427,10 @@ class StockService:
         number_transaction = []
         count = []
         size = []
+        delivery_orgs = []
+        delivery_statuses = []
+        delivery_display_dates = []
+        delivery_display_times = []
         for i in queryset:
             if i.fixed_cart:
                 items = i.fixed_cart.get('items')
@@ -502,6 +452,39 @@ class StockService:
                             item_size = j.get('size', None)
                             item_size = item_size['size'] if item_size else None
                             size.append(item_size)
+
+                            try:
+                                org = Organization.objects.get(id=i.delivery_info.delivery_organization_id).title
+                                delivery_orgs.append(org)
+                            except Exception:
+                                delivery_orgs.append(None)
+                            try:
+                                if i.delivery_info.status == 'delivery_status_taken_for_delivery':
+                                    delivery_statuses.append('Взято на доставку курьерской службой')
+                                elif i.delivery_info.status == 'delivery_status_set_for_delivery':
+                                    delivery_statuses.append('Организация поставила заказа на доставку')
+                                elif i.delivery_info.status == 'delivery_status_rejected_by_delivery_service':
+                                    delivery_statuses.append('Доставка отменена курьерской службой')
+                                elif i.delivery_info.status == 'delivery_status_accepted_by_delivery_service':
+                                    delivery_statuses.append('Доставка подтверждена курьерской службой')
+                                elif i.delivery_info.status == 'delivery_status_delivered':
+                                    delivery_statuses.append('Доставлено')
+                                else:
+                                    delivery_statuses.append(None)
+                            except Exception:
+                                delivery_statuses.append(None)
+
+                            try:
+                                delivery_display_dates.append(i.display_time.date().strftime("%Y/%m/%d"))
+                            except Exception:
+                                delivery_display_dates.append(None)
+
+                            try:
+                                delivery_display_times.append(i.display_time.time().strftime("%H:%M:%S"))
+                            except Exception:
+                                delivery_display_times.append(None)
+
+
                         except ShopItem.DoesNotExist:
                             names.append(None)
                             subcategory.append(None)
@@ -511,14 +494,22 @@ class StockService:
                             number_transaction.append(None)
                             count.append(None)
                             size.append(None)
+                            delivery_orgs.append(None)
+                            delivery_statuses.append(None)
+                            delivery_display_dates.append(None)
+                            delivery_display_times.append(None)
         dict_data = {_('Наименование товара'): names,
                      _('Категория товара'): subcategory,
                      _('Стоимость'): price,
                      _('Валюта'): currency,
-                     _('Артикл'): article,
+                     _('Артикул'): article,
                      _('Номер заказа'): number_transaction,
                      _('Количество товара'): count,
                      _('Размер товара'): size,
+                     _("Курьерская служба"): delivery_orgs,
+                     _("Статус доставки"): delivery_statuses,
+                     _("Дата  доставки"): delivery_display_dates,
+                     _("Время  доставки"): delivery_display_times,
                      }
         return dict_data
 
@@ -535,6 +526,7 @@ class StockService:
         start_time = []
         end_date = []
         end_time = []
+        clients = []
 
         for i in queryset:
             try:
@@ -556,6 +548,12 @@ class StockService:
                     start_time.append(booking.start_time.strftime("%H:%M"))
                     end_date.append(booking.end_time.strftime("%Y/%m/%d"))
                     end_time.append(booking.end_time.strftime("%H:%M"))
+
+                    try:
+                        user = User.objects.get(id=i.client_id).full_name
+                        clients.append(user)
+                    except Exception:
+                        clients.append(None)
                 except ShopItem.DoesNotExist:
                     names.append(None)
                     subcategory.append(None)
@@ -566,6 +564,7 @@ class StockService:
                     rent_time_type.append(None)
                     start_time.append(None)
                     end_time.append(None)
+                    clients.append(None)
             except Transaction.booking.RelatedObjectDoesNotExist:
                 continue
         dict_data = {_('Наименование товара'): names,
@@ -579,5 +578,6 @@ class StockService:
                      _('Время начала'): start_time,
                      _('Дата окончания'): end_date,
                      _('Время окончания'): end_time,
+                     _('Клиент'): clients,
                      }
         return dict_data

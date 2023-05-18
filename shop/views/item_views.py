@@ -1,5 +1,5 @@
 from django.db import IntegrityError
-from django.db.models import Count
+from datetime import datetime
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,9 +17,11 @@ from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilt
 from shop.models import ShopItem, Complaint, RentalPeriod, Booking
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer, BookInfoSerializer,
-    BookInfoWithUTCSerializer
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
+    SubscriptionItemSerializer,
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
+    BookInfoSerializer,
+    BookInfoWithUTCSerializer, ItemRentalMonthSerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer, OffsetUTCSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
@@ -342,6 +344,52 @@ class GetYearsView(ListAPIView):
         start_year = rental_period.start_date.year
         end_year = rental_period.end_date.year
         queryset = [{'value': str(year), 'is_booked': False, 'is_available':True} for year in range(start_year, end_year + 1)]
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class GetMonthsView(ListAPIView):
+    serializer_class = ItemRentalMonthSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        year = time_datetime.year
+
+        queryset = []
+        for month in range(1, 13):
+            month_name = datetime(year, month, 1).strftime('%B')
+            queryset.append({
+                'value': month_name,
+                'is_booked': False,
+                'is_available': True
+            })
+
         return queryset
 
     def get(self, request, *args, **kwargs):

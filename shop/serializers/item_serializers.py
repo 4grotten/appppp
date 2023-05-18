@@ -629,12 +629,83 @@ class ItemRentalYearSerializer(serializers.Serializer):
         year = int(booking['value'])
         rental = self.context.get('rental')
 
+        for month in range(1, 13):
+            bookings = rental.user_bookings.filter(
+                start_time__year__lte=year,
+                end_time__year__gte=year,
+                start_time__month__lte=month,
+                end_time__month__gte=month,
+                transaction__is_processed=True
+            )
+            if not bookings.exists():
+                return False
+
+        return True
+
+
+class ItemRentalMonthSerializer(serializers.Serializer):
+    value = serializers.CharField()
+    is_booked = serializers.SerializerMethodField()
+    is_available = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Booking
+        fields = ('value', 'is_available', 'is_booked')
+
+    def get_is_available(self, booking):
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        year = time_query_datetime.year
+        value = booking['value']
+
+        month = datetime.datetime.strptime(value, '%B').month
+
+        current_year = datetime.datetime.now().year
+        current_month = datetime.datetime.now().month
+
+        if year < current_year:
+            return False
+        if year == current_year and month <= current_month:
+            return False
+
+        return True
+
+    def get_is_booked(self, booking):
+
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        year = time_query_datetime.year
+
+        value = booking['value']
+
+        month = datetime.datetime.strptime(value, '%B').month
+        rental = self.context.get('rental')
+
         bookings = rental.user_bookings.filter(
             start_time__year__lte=year,
             end_time__year__gte=year,
+            start_time__month__lte=month,
+            end_time__month__gte=month,
             transaction__is_processed=True
         )
         return bookings.exists()
+
 
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)

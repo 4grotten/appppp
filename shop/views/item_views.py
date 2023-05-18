@@ -375,7 +375,7 @@ class GetMonthsView(ListAPIView):
             return []
 
         try:
-            time_datetime = datetime.strptime(timestamp, '%Y.%m.%dT%H:%M')
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
         except ValueError:
             return []
 

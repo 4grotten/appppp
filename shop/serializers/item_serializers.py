@@ -659,7 +659,7 @@ class ItemRentalMonthSerializer(serializers.Serializer):
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y.%m.%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
         except ValueError:
             return False
 
@@ -686,7 +686,7 @@ class ItemRentalMonthSerializer(serializers.Serializer):
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y.%m.%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
         except ValueError:
             return False
 

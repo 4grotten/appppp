@@ -23,7 +23,7 @@ from shop.serializers.item_serializers import (
     SubscriptionItemSerializer,
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
-    BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer
+    BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer, OffsetUTCSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
@@ -442,6 +442,54 @@ class GetDaysView(ListAPIView):
             })
 
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class GetHoursView(ListAPIView):
+    serializer_class = ItemRentalHourSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        rental_period = shop_item.rental_period
+        if rental_period is None:
+            return []
+
+        year = time_datetime.year
+        month = time_datetime.month
+        day = time_datetime.day
+
+        start_hour = rental_period.start_time.hour
+        end_hour = rental_period.end_time.hour
+        hours = [{'value': datetime(year, month, day, hour), 'is_booked': False, 'is_available': True} for hour in
+                    range(start_hour, end_hour + 1)]
+
+        return hours
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()

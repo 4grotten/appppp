@@ -767,6 +767,75 @@ class ItemRentalDaySerializer(serializers.Serializer):
         return bookings.exists()
 
 
+class ItemRentalHourSerializer(serializers.Serializer):
+    value = serializers.DateTimeField(format="%Y-%m-%dT%H:%M")
+    is_booked = serializers.SerializerMethodField()
+    is_available = serializers.SerializerMethodField()
+
+
+    def get_is_available(self, booking):
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        value = booking['value']
+
+        year = time_query_datetime.year
+        month = time_query_datetime.month
+        day = time_query_datetime.day
+        hour = value.hour
+
+        current_datetime = datetime.datetime.now()
+        current_year = current_datetime.year
+        current_month = current_datetime.month
+        current_day = current_datetime.day
+        current_hour = current_datetime.hour
+
+        if year < current_year:
+            return False
+        elif year == current_year and month < current_month:
+            return False
+        elif year == current_year and month == current_month and day < current_day:
+            return False
+        elif year == current_year and month == current_month and day == current_day and hour <= current_hour:
+            return False
+
+        return True
+
+
+    def get_is_booked(self, booking):
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        value = booking['value']
+        current_date = time_query_datetime
+        current_hour = value.hour
+
+        rental = self.context.get('rental')
+
+        bookings = rental.user_bookings.filter(
+            start_time__date=current_date,
+            start_time__hour__lte=current_hour,
+            end_time__date=current_date,
+            end_time__hour__gt=current_hour,
+            transaction__is_processed=True
+        )
+        return bookings.exists()
+
+
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     videos = VideoSerializer(many=True)

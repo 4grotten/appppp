@@ -707,6 +707,66 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         return bookings.exists()
 
 
+class ItemRentalDaySerializer(serializers.Serializer):
+    value = serializers.DateField()
+    is_booked = serializers.SerializerMethodField()
+    is_available = serializers.SerializerMethodField()
+
+    def get_is_available(self, booking):
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        value = booking['value']
+
+        year = time_query_datetime.year
+        month = time_query_datetime.month
+        day = value.day
+
+        current_datetime = datetime.datetime.now()
+        current_year = current_datetime.year
+        current_month = current_datetime.month
+        current_day = current_datetime.day
+
+        if year < current_year:
+            return False
+        elif year == current_year and month < current_month:
+            return False
+        elif year == current_year and month == current_month and day <= current_day:
+            return False
+
+        return True
+
+
+    def get_is_booked(self, booking):
+        time_query = self.context.get('time_query')
+
+        if not time_query:
+            return False
+
+        try:
+            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return False
+
+        value = booking['value']
+        current_date = value
+        rental = self.context.get('rental')
+
+        bookings = rental.user_bookings.filter(
+            start_time__date__lte=current_date,
+            end_time__date__gte=current_date,
+            transaction__is_processed=True
+        )
+        return bookings.exists()
+
+
 class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     videos = VideoSerializer(many=True)

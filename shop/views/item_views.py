@@ -1,5 +1,7 @@
+import calendar
+
 from django.db import IntegrityError
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,7 +23,7 @@ from shop.serializers.item_serializers import (
     SubscriptionItemSerializer,
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
-    BookInfoWithUTCSerializer, ItemRentalMonthSerializer
+    BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer, OffsetUTCSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
@@ -386,6 +388,55 @@ class GetMonthsView(ListAPIView):
             month_name = datetime(year, month, 1).strftime('%B')
             queryset.append({
                 'value': month_name,
+                'is_booked': False,
+                'is_available': True
+            })
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+class GetDaysView(ListAPIView):
+    serializer_class = ItemRentalDaySerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        year = time_datetime.year
+        month = time_datetime.month
+        num_days = calendar.monthrange(year, month)[1]
+
+        # Generate the list of days
+        days = [datetime(year, month, day).date() for day in range(1, num_days + 1)]
+
+        queryset = []
+        for day in days:
+            queryset.append({
+                'value': day.strftime('%Y-%m-%d'),
                 'is_booked': False,
                 'is_available': True
             })

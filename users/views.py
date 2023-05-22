@@ -132,6 +132,10 @@ class VerifyTemporaryCodeAPIView(APIView):
         except MyOwnToken.DoesNotExist:
             token = MyOwnToken.objects.create(user=user, ip=request.META.get('REMOTE_ADDR'))
             token.save()
+        except MyOwnToken.MultipleObjectsReturned:
+            tokens = MyOwnToken.objects.filter(user=user, is_active=True, ip=request.META.get('REMOTE_ADDR')).order_by(
+                '-log_time')
+            token = tokens.latest('log_time')
         slack.bot(f'User {user} successfully validated\n'
                   f'============================')
 

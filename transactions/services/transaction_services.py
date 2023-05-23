@@ -22,7 +22,8 @@ from notifications.constants import (
     REQUEST_ORDER_TYPE, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM
 )
 from notifications.models import Notification
-from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client
+from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
+    send_notifications_organization_members
 from organizations.models import Organization, DiscountCard, Subscription, Membership
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -150,10 +151,22 @@ class TransactionService:
                                     discount_percent=discount_percent,
                                     currency=current_transaction.currency.code)
                 )
-                sent_notification.delay(
-                    recipient_id=current_transaction.processed_by_id,
-                    sender_id=current_transaction.client_id,
+                # sent_notification.delay(
+                #     recipient_id=current_transaction.processed_by_id,
+                #     sender_id=current_transaction.client_id,
+                #     mode=NOTIFICATION_MODE_PRODUCT,
+                #     notification_type=ACCEPT_ORDER_TYPE,
+                #     organization_id=current_transaction.organization_id,
+                #     extra_data=dict(transaction_id=current_transaction.id,
+                #                     total_price=current_transaction.final_amount,
+                #                     discount_percent=discount_percent,
+                #                     currency=current_transaction.currency.code)
+                # )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
                     mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_see_stats=True),
                     notification_type=ACCEPT_ORDER_TYPE,
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
@@ -199,10 +212,25 @@ class TransactionService:
                                 currency=current_transaction.currency.code,
                                 final_amount=str(current_transaction.final_amount))
             )
-            sent_notification.delay(
-                recipient_id=current_transaction.processed_by_id,
-                sender_id=current_transaction.client_id,
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=WITHDRAW_CASHBACK_SELLER,
+            #     title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+            #                                                 currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
                 mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_see_stats=True),
                 notification_type=WITHDRAW_CASHBACK_SELLER,
                 title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
                                                             currency=current_transaction.currency.code),
@@ -237,10 +265,25 @@ class TransactionService:
                                 currency=current_transaction.currency.code,
                                 final_amount=str(current_transaction.final_amount))
             )
-            sent_notification.delay(
-                recipient_id=current_transaction.processed_by_id,
-                sender_id=current_transaction.client_id,
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=CHARGE_CASHBACK_SELLER,
+            #     title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+            #                                               currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
                 mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_see_stats=True),
                 notification_type=CHARGE_CASHBACK_SELLER,
                 title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
                                                           currency=current_transaction.currency.code),
@@ -329,10 +372,22 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
-        sent_notification.delay(
-            recipient_id=current_transaction.processed_by_id,
-            sender_id=current_transaction.client_id,
+        # sent_notification.delay(
+        #     recipient_id=current_transaction.processed_by_id,
+        #     sender_id=current_transaction.client_id,
+        #     mode=NOTIFICATION_MODE_PRODUCT,
+        #     notification_type=ACCEPT_ORDER_TYPE,
+        #     organization_id=current_transaction.organization_id,
+        #     extra_data=dict(transaction_id=current_transaction.id,
+        #                     total_price=current_transaction.final_amount,
+        #                     discount_percent=0,
+        #                     currency=current_transaction.currency.code)
+        # )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,
+            sender_id=current_transaction.client_id,
+            with_permissions=dict(can_see_stats=True),
             notification_type=ACCEPT_ORDER_TYPE,
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,

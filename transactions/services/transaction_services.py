@@ -1420,8 +1420,7 @@ class TransactionService:
 
     @classmethod
     def get_users_of_transactions_in_organization(cls, organization: Organization, processed_by: User) -> QuerySet:
-        transactions = cls.get_organization_transactions(organization=organization,
-                                                         processed_by=processed_by)
+        transactions = cls.get_organization_transactions(organization=organization)
 
         return User.objects.filter(
             bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(

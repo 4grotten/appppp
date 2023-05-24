@@ -666,7 +666,8 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         year = time_query_datetime.year
         value = booking['value']
 
-        month = datetime.datetime.strptime(value, '%B').month
+        value_datetime = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M')
+        month = value_datetime.month
 
         current_year = datetime.datetime.now().year
         current_month = datetime.datetime.now().month
@@ -693,8 +694,9 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         year = time_query_datetime.year
 
         value = booking['value']
+        value_datetime = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M')
+        month = value_datetime.month
 
-        month = datetime.datetime.strptime(value, '%B').month
         rental = self.context.get('rental')
 
         bookings = rental.user_bookings.filter(

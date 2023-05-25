@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import ast
 
@@ -674,7 +675,7 @@ class ItemRentalMonthSerializer(serializers.Serializer):
 
         if year < current_year:
             return False
-        if year == current_year and month <= current_month:
+        if year == current_year and month < current_month:
             return False
 
         return True
@@ -698,15 +699,22 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         month = value_datetime.month
 
         rental = self.context.get('rental')
+        num_days = calendar.monthrange(year, month)[1]
+        days = [datetime.datetime(year, month, day).date() for day in range(1, num_days + 1)]
+        for day in days:
+            bookings = rental.user_bookings.filter(
+                start_time__year__lte=year,
+                end_time__year__gte=year,
+                start_time__month__lte=month,
+                end_time__month__gte=month,
+                start_time__day__lte=day.day,
+                end_time__day__gte=day.day,
+                transaction__is_processed=True
+            )
+            if not bookings.exists():
+                return False
 
-        bookings = rental.user_bookings.filter(
-            start_time__year__lte=year,
-            end_time__year__gte=year,
-            start_time__month__lte=month,
-            end_time__month__gte=month,
-            transaction__is_processed=True
-        )
-        return bookings.exists()
+        return True
 
 
 class ItemRentalDaySerializer(serializers.Serializer):

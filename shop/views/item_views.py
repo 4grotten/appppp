@@ -395,10 +395,6 @@ class GetMonthsView(ListAPIView):
             })
 
         return queryset
-        # months = [{'value': datetime(year, month, 1).strftime('%Y-%m-%d'), 'is_booked': False, 'is_available': True} for month in
-        #          range(1, 13)]
-        #
-        # return months
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()

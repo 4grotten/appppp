@@ -469,6 +469,8 @@ class ChangeAndVerifyNewNumber(APIView):
 
 
 class NikitaServiceStatusView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         sms_service = SmsServices.objects.first()
 

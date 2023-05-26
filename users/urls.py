@@ -8,7 +8,7 @@ from users.views import (
     UserPhoneNumbersUpdateAPIView, UserSocialNetworksListAPIView, UserSocialNetworksUpdateAPIView,
     ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView,
     MyOwnTokenListView, MyOwnTokenRetrieveDestroyView, DestroyAllTokens, AuthorisationHistoryListView,
-    MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile
+    MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, NikitaServiceStatusView
 )
 
 urlpatterns = [
@@ -28,6 +28,7 @@ urlpatterns = [
     path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
     path('users/doValidateOldNumber/', ValidateOldNumberAPIView.as_view(), name='validate_old_number'),
     path('users/doSendCode/', SendCodeToNewNumberAPIView.as_view(), name='send_code_to_new_number'),
+    path('users/check_sms_service/', NikitaServiceStatusView.as_view(), name='nikita_service_status'),
     path('users/doChangeAndVerifyNewNumber/', ChangeAndVerifyNewNumber.as_view(), name='change_and_verify_new_number'),
     path('users/get_email/', GetEmailUserAPIView.as_view(), name='get_email_by_phone_number'),
     path('users/get_active_devices/', MyOwnTokenListView.as_view(), name='get_active_devices'),

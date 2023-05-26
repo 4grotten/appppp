@@ -226,7 +226,7 @@ class SocialNetworkEditSerializer(serializers.Serializer):
 class ChangeAndValidateNewNumberSerializer(serializers.Serializer):
     old_phone_number = serializers.CharField()
     new_phone_number = serializers.CharField()
-    code = serializers.IntegerField()
+    code = serializers.IntegerField(required=False)
 
 
 class UserShortInfoSerializer(serializers.ModelSerializer):

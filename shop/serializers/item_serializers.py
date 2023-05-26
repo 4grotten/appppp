@@ -673,9 +673,15 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         current_year = datetime.datetime.now().year
         current_month = datetime.datetime.now().month
 
-        if year < current_year:
+        rental = self.context.get('rental')
+        start_month = rental.rental_period.start_date.month
+        end_month = rental.rental_period.end_date.month
+
+        if month < start_month or month > end_month:
             return False
-        if year == current_year and month < current_month:
+        elif year < current_year:
+            return False
+        elif year == current_year and month < current_month:
             return False
 
         return True
@@ -744,7 +750,13 @@ class ItemRentalDaySerializer(serializers.Serializer):
         current_month = current_datetime.month
         current_day = current_datetime.day
 
-        if year < current_year:
+        rental = self.context.get('rental')
+        start_day = rental.rental_period.start_date.day
+        end_day = rental.rental_period.end_date.day
+
+        if day < start_day or day > end_day:
+            return False
+        elif year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False
@@ -807,11 +819,17 @@ class ItemRentalHourSerializer(serializers.Serializer):
         current_day = current_datetime.day
         current_hour = current_datetime.hour
 
+        rental = self.context.get('rental')
+        start_hour = rental.rental_period.start_time.hour
+        end_hour = rental.rental_period.end_time.hour
+
         if year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False
         elif year == current_year and month == current_month and day < current_day:
+            return False
+        elif hour < start_hour or hour > end_hour:
             return False
         elif year == current_year and month == current_month and day == current_day and hour <= current_hour:
             return False
@@ -840,7 +858,7 @@ class ItemRentalHourSerializer(serializers.Serializer):
             start_time__date=current_date,
             start_time__hour__lte=current_hour,
             end_time__date=current_date,
-            end_time__hour__gt=current_hour,
+            end_time__hour__gte=current_hour,
             transaction__is_processed=True
         )
         return bookings.exists()
@@ -883,7 +901,13 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
         current_hour = current_datetime.hour
         current_minute = current_datetime.minute
 
-        if year < current_year:
+        rental = self.context.get('rental')
+        start_minute = rental.rental_period.start_time.minute
+        end_minute = rental.rental_period.end_time.minute
+
+        if minute < start_minute or minute > end_minute:
+            return False
+        elif year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False

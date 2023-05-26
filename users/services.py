@@ -329,7 +329,7 @@ class TemporaryPhoneNumberService:
             raise IntegrityException(_('Error while creating temporary code for new phone_number'))
 
     @classmethod
-    def validate(cls, code: str, phone_number: str):
+    def validate_code_and_phone_number(cls, code: str, phone_number: str):
         try:
             temporary_code = cls.model.objects.get(code=code, user__phone_number=phone_number)
 
@@ -340,4 +340,11 @@ class TemporaryPhoneNumberService:
 
         except cls.model.DoesNotExist:
             raise ValidationException(_('Code not found'))
+
+    @classmethod
+    def validate_phone_number(cls, phone_number: str):
+        try:
+            cls.model.objects.filter(user__phone_number=phone_number).delete()
+        except cls.model.DoesNotExist:
+            raise ValidationException(_('Wrong phone number'))
 

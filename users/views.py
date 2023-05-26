@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher
+from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher, SmsServices
 from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
@@ -450,9 +450,14 @@ class ChangeAndVerifyNewNumber(APIView):
         if user != request.user:
             raise NotAcceptableException(gettext_lazy('You have not permission to do this operation'))
 
-        TemporaryPhoneNumberService.validate(
-            code=serializer.validated_data.get('code'), phone_number=old_phone_number
-        )
+        code = serializer.validated_data.get('code')
+
+        if code is not None:
+            TemporaryPhoneNumberService.validate_code_and_phone_number(
+                code=serializer.validated_data.get('code'), phone_number=old_phone_number
+            )
+        else:
+            TemporaryPhoneNumberService.validate_phone_number(phone_number=old_phone_number)
 
         UserService.change_phone_number(
             user=user, new_phone_number=serializer.validated_data.get('new_phone_number')
@@ -461,6 +466,15 @@ class ChangeAndVerifyNewNumber(APIView):
         return Response(data={
             'message': gettext_lazy('You have successfully changed auth number')
         })
+
+
+class NikitaServiceStatusView(APIView):
+    def get(self, request):
+        sms_service = SmsServices.objects.first()
+
+        nikita_service_status = sms_service.nikita_service
+
+        return Response({'sms_service': nikita_service_status})
 
 
 class SendCodeToNewNumberAPIView(APIView):

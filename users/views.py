@@ -71,6 +71,8 @@ class RegisterAuthAPIView(APIView):
 
             if temporary_code_enabled:
                 TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
+            elif str(phone_number).startswith("+996"):
+                TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
             else:
                 token = MyOwnTokenService.get_or_create_token(user=user, request=request)
 

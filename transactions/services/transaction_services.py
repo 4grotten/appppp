@@ -1298,10 +1298,11 @@ class TransactionService:
             is_open=True
         ).exclude(id=old_transaction.booking.id)
 
-        for booking in bookings:
-            if booking.transaction.type == Transaction.ONLINE:
-                TransactionService.refund_booking_transaction(old_transaction=booking.transaction, user=booking.organization.owner,
-                                                              request=request)
+        if bookings.exists():
+            for booking in bookings:
+                if booking.transaction.type == Transaction.ONLINE:
+                    TransactionService.refund_booking_transaction(old_transaction=booking.transaction, user=booking.organization.owner,
+                                                                  request=request)
 
         if old_transaction.type == Transaction.ONLINE:
             Notification.objects.filter(

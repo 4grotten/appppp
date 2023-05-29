@@ -473,7 +473,7 @@ class ChangeAndVerifyNewNumber(APIView):
 
 
 class TemporaryCodeSwitcherStatusView(APIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def get(self, request):
 

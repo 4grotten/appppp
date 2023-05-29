@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from transliterate.utils import _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher, SmsServices
+from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher
 from common.services import slack
 from common.services.umai import Umai
 from organizations.models import Subscription, Organization
@@ -468,15 +468,14 @@ class ChangeAndVerifyNewNumber(APIView):
         })
 
 
-class NikitaServiceStatusView(APIView):
+class TemporaryCodeSwitcherStatusView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        sms_service = SmsServices.objects.first()
 
-        nikita_service_status = sms_service.nikita_service
+        temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
 
-        return Response({'sms_service': nikita_service_status})
+        return Response({'sms_service': temporary_code_enabled})
 
 
 class SendCodeToNewNumberAPIView(APIView):

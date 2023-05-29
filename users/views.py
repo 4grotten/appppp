@@ -424,7 +424,11 @@ class ValidateOldNumberAPIView(APIView):
 
     def post(self, request):
         ip = request.META.get('REMOTE_ADDR', '')
-        TemporaryCodeService.create_and_send(user=request.user, ip_addr=ip)
+
+        temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
+
+        if temporary_code_enabled:
+            TemporaryCodeService.create_and_send(user=request.user, ip_addr=ip)
 
         return Response(data={
             'message': gettext_lazy('Code sent to old number and email')

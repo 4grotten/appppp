@@ -622,7 +622,14 @@ class ItemRentalYearSerializer(serializers.Serializer):
     def get_is_available(self, booking: Booking) -> bool:
         year = int(booking['value'])
         current_year = datetime.datetime.now().year
+
+        rental = self.context.get('rental')
+        start_year = rental.rental_period.start_date.year
+        end_year = rental.rental_period.end_date.year
+
         if year < current_year:
+            return False
+        elif year < start_year or year > end_year:
             return False
         return True
 
@@ -677,9 +684,10 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         start_month = rental.rental_period.start_date.month
         end_month = rental.rental_period.end_date.month
 
-        if month < start_month or month > end_month:
+
+        if year < current_year:
             return False
-        elif year < current_year:
+        elif month < start_month or month > end_month:
             return False
         elif year == current_year and month < current_month:
             return False
@@ -754,11 +762,12 @@ class ItemRentalDaySerializer(serializers.Serializer):
         start_day = rental.rental_period.start_date.day
         end_day = rental.rental_period.end_date.day
 
-        if day < start_day or day > end_day:
-            return False
-        elif year < current_year:
+
+        if year < current_year:
             return False
         elif year == current_year and month < current_month:
+            return False
+        elif day < start_day or day > end_day:
             return False
         elif year == current_year and month == current_month and day <= current_day:
             return False
@@ -905,15 +914,16 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
         start_minute = rental.rental_period.start_time.minute
         end_minute = rental.rental_period.end_time.minute
 
-        if minute < start_minute or minute > end_minute:
-            return False
-        elif year < current_year:
+
+        if year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False
         elif year == current_year and month == current_month and day < current_day:
             return False
         elif year == current_year and month == current_month and day == current_day and hour < current_hour:
+            return False
+        elif minute < start_minute or minute > end_minute:
             return False
         elif year == current_year and month == current_month and day == current_day and hour == current_hour and \
                 minute < current_minute:

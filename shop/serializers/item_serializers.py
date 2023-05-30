@@ -681,13 +681,16 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         current_month = datetime.datetime.now().month
 
         rental = self.context.get('rental')
+        start_year = rental.rental_period.start_date.year
+        end_year = rental.rental_period.end_date.year
         start_month = rental.rental_period.start_date.month
         end_month = rental.rental_period.end_date.month
 
 
         if year < current_year:
             return False
-        elif month < start_month or month > end_month:
+        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
+                year == end_year and month > end_month):
             return False
         elif year == current_year and month < current_month:
             return False
@@ -759,6 +762,10 @@ class ItemRentalDaySerializer(serializers.Serializer):
         current_day = current_datetime.day
 
         rental = self.context.get('rental')
+        start_year = rental.rental_period.start_date.year
+        end_year = rental.rental_period.end_date.year
+        start_month = rental.rental_period.start_date.month
+        end_month = rental.rental_period.end_date.month
         start_day = rental.rental_period.start_date.day
         end_day = rental.rental_period.end_date.day
 
@@ -767,7 +774,10 @@ class ItemRentalDaySerializer(serializers.Serializer):
             return False
         elif year == current_year and month < current_month:
             return False
-        elif day < start_day or day > end_day:
+        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
+                year == end_year and month > end_month) or (
+                year == start_year and month == start_month and day < start_day) or (
+                year == end_year and month == end_month and day > end_day):
             return False
         elif year == current_year and month == current_month and day <= current_day:
             return False
@@ -829,6 +839,12 @@ class ItemRentalHourSerializer(serializers.Serializer):
         current_hour = current_datetime.hour
 
         rental = self.context.get('rental')
+        start_year = rental.rental_period.start_date.year
+        end_year = rental.rental_period.end_date.year
+        start_month = rental.rental_period.start_date.month
+        end_month = rental.rental_period.end_date.month
+        start_day = rental.rental_period.start_date.day
+        end_day = rental.rental_period.end_date.day
         start_hour = rental.rental_period.start_time.hour
         end_hour = rental.rental_period.end_time.hour
 
@@ -838,7 +854,12 @@ class ItemRentalHourSerializer(serializers.Serializer):
             return False
         elif year == current_year and month == current_month and day < current_day:
             return False
-        elif hour < start_hour or hour > end_hour:
+        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
+                year == end_year and month > end_month) or (
+                year == start_year and month == start_month and day < start_day) or (
+                year == end_year and month == end_month and day > end_day) or (
+                year == start_year and month == start_month and day == start_day and hour < start_hour) or (
+                year == end_year and month == end_month and day == end_day and hour >= end_hour):
             return False
         elif year == current_year and month == current_month and day == current_day and hour <= current_hour:
             return False
@@ -911,6 +932,14 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
         current_minute = current_datetime.minute
 
         rental = self.context.get('rental')
+        start_year = rental.rental_period.start_date.year
+        end_year = rental.rental_period.end_date.year
+        start_month = rental.rental_period.start_date.month
+        end_month = rental.rental_period.end_date.month
+        start_day = rental.rental_period.start_date.day
+        end_day = rental.rental_period.end_date.day
+        start_hour = rental.rental_period.start_time.hour
+        end_hour = rental.rental_period.end_time.hour
         start_minute = rental.rental_period.start_time.minute
         end_minute = rental.rental_period.end_time.minute
 
@@ -923,7 +952,17 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
             return False
         elif year == current_year and month == current_month and day == current_day and hour < current_hour:
             return False
-        elif minute < start_minute or minute > end_minute:
+        elif (year < start_year or year > end_year or
+                (year == start_year and month < start_month) or
+                (year == end_year and month > end_month) or
+                (year == start_year and month == start_month and day < start_day) or
+                (year == end_year and month == end_month and day > end_day) or
+                (year == start_year and month == start_month and day == start_day and hour < start_hour) or
+                (year == end_year and month == end_month and day == end_day and hour > end_hour) or
+                (
+                        year == start_year and month == start_month and day == start_day and hour == start_hour and minute < start_minute) or
+                (
+                        year == end_year and month == end_month and day == end_day and hour == end_hour and minute > end_minute)):
             return False
         elif year == current_year and month == current_month and day == current_day and hour == current_hour and \
                 minute < current_minute:

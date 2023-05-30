@@ -779,7 +779,7 @@ class ItemRentalDaySerializer(serializers.Serializer):
                 year == start_year and month == start_month and day < start_day) or (
                 year == end_year and month == end_month and day > end_day):
             return False
-        elif year == current_year and month == current_month and day <= current_day:
+        elif year == current_year and month == current_month and day < current_day:
             return False
 
         return True
@@ -861,7 +861,7 @@ class ItemRentalHourSerializer(serializers.Serializer):
                 year == start_year and month == start_month and day == start_day and hour < start_hour) or (
                 year == end_year and month == end_month and day == end_day and hour >= end_hour):
             return False
-        elif year == current_year and month == current_month and day == current_day and hour <= current_hour:
+        elif year == current_year and month == current_month and day == current_day and hour < current_hour:
             return False
 
         return True

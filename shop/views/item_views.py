@@ -486,8 +486,6 @@ class GetHoursView(ListAPIView):
         month = time_datetime.month
         day = time_datetime.day
 
-        start_hour = rental_period.start_time.hour
-        end_hour = rental_period.end_time.hour
         hours = [{'value': datetime(year, month, day, hour), 'is_booked': False, 'is_available': True} for hour in
                     range(0, 24)]
 

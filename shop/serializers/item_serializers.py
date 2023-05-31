@@ -799,13 +799,19 @@ class ItemRentalDaySerializer(serializers.Serializer):
         value = booking['value']
         current_date = value
         rental = self.context.get('rental')
+        hours = [hour for hour in range(0, 24)]
+        for hour in hours:
+            bookings = rental.user_bookings.filter(
+                start_time__date__lte=current_date,
+                end_time__date__gte=current_date,
+                start_time__hour__gte=hour,
+                end_time__hour__lte=hour,
+                transaction__is_processed=True
+            )
+            if not bookings.exists():
+                return False
 
-        bookings = rental.user_bookings.filter(
-            start_time__date__lte=current_date,
-            end_time__date__gte=current_date,
-            transaction__is_processed=True
-        )
-        return bookings.exists()
+        return True
 
 
 class ItemRentalHourSerializer(serializers.Serializer):
@@ -884,14 +890,21 @@ class ItemRentalHourSerializer(serializers.Serializer):
 
         rental = self.context.get('rental')
 
-        bookings = rental.user_bookings.filter(
-            start_time__date=current_date,
-            start_time__hour__lte=current_hour,
-            end_time__date=current_date,
-            end_time__hour__gte=current_hour,
-            transaction__is_processed=True
-        )
-        return bookings.exists()
+        minutes = [minute for minute in range(0, 60)]
+        for minute in minutes:
+            bookings = rental.user_bookings.filter(
+                start_time__date=current_date,
+                start_time__hour__lte=current_hour,
+                end_time__date=current_date,
+                end_time__hour__gte=current_hour,
+                start_time__minute__gte=minute,
+                end_time_minute_lte=minute,
+                transaction__is_processed=True
+            )
+            if not bookings.exists():
+                return False
+
+        return True
 
 
 class ItemRentalMinuteSerializer(serializers.ModelSerializer):

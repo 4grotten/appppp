@@ -898,7 +898,7 @@ class ItemRentalHourSerializer(serializers.Serializer):
                 end_time__date=current_date,
                 end_time__hour__gte=current_hour,
                 start_time__minute__gte=minute,
-                end_time_minute_lte=minute,
+                end_time__minute__lte=minute,
                 transaction__is_processed=True
             )
             if not bookings.exists():

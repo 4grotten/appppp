@@ -804,8 +804,8 @@ class ItemRentalDaySerializer(serializers.Serializer):
             bookings = rental.user_bookings.filter(
                 start_time__date__lte=current_date,
                 end_time__date__gte=current_date,
-                start_time__hour__gte=hour,
-                end_time__hour__lte=hour,
+                start_time__hour__lte=hour,
+                end_time__hour__gte=hour,
                 transaction__is_processed=True
             )
             if not bookings.exists():
@@ -890,21 +890,26 @@ class ItemRentalHourSerializer(serializers.Serializer):
 
         rental = self.context.get('rental')
 
-        minutes = [minute for minute in range(0, 60)]
-        for minute in minutes:
-            bookings = rental.user_bookings.filter(
-                start_time__date=current_date,
-                start_time__hour__lte=current_hour,
-                end_time__date=current_date,
-                end_time__hour__gte=current_hour,
-                start_time__minute__gte=minute,
-                end_time__minute__lte=minute,
-                transaction__is_processed=True
-            )
-            if not bookings.exists():
-                return False
+        bookings = rental.user_bookings.filter(
+            start_time__date=current_date,
+            start_time__hour__lte=current_hour,
+            end_time__date=current_date,
+            end_time__hour__gte=current_hour,
+            transaction__is_processed=True
+        )
 
-        return True
+        if bookings.exists():
+            for minute in range(0, 60):
+                bookings_in_minute = bookings.filter(
+                    start_time__minute__lte=minute,
+                    end_time__minute__gte=minute
+                )
+                if not bookings_in_minute.exists():
+                    return False
+
+            return True
+
+        return False
 
 
 class ItemRentalMinuteSerializer(serializers.ModelSerializer):

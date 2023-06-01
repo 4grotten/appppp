@@ -637,18 +637,21 @@ class ItemRentalYearSerializer(serializers.Serializer):
         year = int(booking['value'])
         rental = self.context.get('rental')
 
-        for month in range(1, 13):
-            bookings = rental.user_bookings.filter(
-                start_time__year__lte=year,
-                end_time__year__gte=year,
-                start_time__month__lte=month,
-                end_time__month__gte=month,
-                transaction__is_processed=True
-            )
-            if not bookings.exists():
-                return False
-
-        return True
+        bookings = rental.user_bookings.filter(
+            start_time__year__lte=year,
+            end_time__year__gte=year,
+            transaction__is_processed=True
+        )
+        if bookings.exists():
+            for month in range(1, 13):
+                bookings_in_month = bookings.filter(
+                    start_time__month__lte=month,
+                    end_time__month__gte=month
+                )
+                if not bookings_in_month.exists():
+                    return False
+            return True
+        return False
 
 
 class ItemRentalMonthSerializer(serializers.Serializer):
@@ -718,20 +721,23 @@ class ItemRentalMonthSerializer(serializers.Serializer):
         rental = self.context.get('rental')
         num_days = calendar.monthrange(year, month)[1]
         days = [datetime.datetime(year, month, day).date() for day in range(1, num_days + 1)]
-        for day in days:
-            bookings = rental.user_bookings.filter(
-                start_time__year__lte=year,
-                end_time__year__gte=year,
-                start_time__month__lte=month,
-                end_time__month__gte=month,
-                start_time__day__lte=day.day,
-                end_time__day__gte=day.day,
-                transaction__is_processed=True
-            )
-            if not bookings.exists():
-                return False
-
-        return True
+        bookings = rental.user_bookings.filter(
+            start_time__year__lte=year,
+            end_time__year__gte=year,
+            start_time__month__lte=month,
+            end_time__month__gte=month,
+            transaction__is_processed=True
+        )
+        if bookings.exists():
+            for day in days:
+                bookings_in_day = bookings.filter(
+                    start_time__day__lte=day.day,
+                    end_time__day__gte=day.day
+                )
+                if not bookings_in_day.exists():
+                    return False
+            return True
+        return False
 
 
 class ItemRentalDaySerializer(serializers.Serializer):
@@ -800,18 +806,22 @@ class ItemRentalDaySerializer(serializers.Serializer):
         current_date = value
         rental = self.context.get('rental')
         hours = [hour for hour in range(0, 24)]
-        for hour in hours:
-            bookings = rental.user_bookings.filter(
-                start_time__date__lte=current_date,
-                end_time__date__gte=current_date,
-                start_time__hour__lte=hour,
-                end_time__hour__gte=hour,
-                transaction__is_processed=True
-            )
-            if not bookings.exists():
-                return False
+        bookings = rental.user_bookings.filter(
+            start_time__date__lte=current_date,
+            end_time__date__gte=current_date,
+            transaction__is_processed=True
+        )
 
-        return True
+        if bookings.exists():
+            for hour in hours:
+                bookings_in_hour = bookings.filter(
+                    start_time__hour__lte=hour,
+                    end_time__hour__gte=hour,
+                )
+                if not bookings_in_hour.exists():
+                    return False
+            return True
+        return False
 
 
 class ItemRentalHourSerializer(serializers.Serializer):
@@ -906,9 +916,7 @@ class ItemRentalHourSerializer(serializers.Serializer):
                 )
                 if not bookings_in_minute.exists():
                     return False
-
             return True
-
         return False
 
 

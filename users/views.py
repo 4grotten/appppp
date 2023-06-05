@@ -12,6 +12,7 @@ from transliterate.utils import _
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher
+from common.pagination import GeneralPagination
 from common.services import slack
 from common.services.umai import Umai
 from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DEVICE_TITLE
@@ -594,7 +595,7 @@ class DestroyAllTokens(DestroyAPIView):
 class AuthorisationHistoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MyOwnTokenSerializer
-    pagination_class = None
+    pagination_class = GeneralPagination
 
     def get_queryset(self):
         user = self.request.user

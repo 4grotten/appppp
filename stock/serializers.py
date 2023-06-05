@@ -1,7 +1,7 @@
 from django.db.models import Sum
 from rest_framework import serializers
 
-from common.serializers import ImageSerializer
+from common.serializers import ImageSerializer, VideoSerializer
 from shop.models import ShopItem, ItemSubcategory, CartItem, ItemInstagramData
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemLinksSetStock, ShopItemSizeCount
 
@@ -99,6 +99,7 @@ class ShopItemSetSerializer(serializers.ModelSerializer):
 
 class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
     subcategory = SubcategorySerializer()
     in_set = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
@@ -126,7 +127,7 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'organization', 'currency', 'name', 'images', 'subcategory', 'price', 'discounted_price',
+        fields = ('id', 'organization', 'currency', 'name', 'images', 'videos', 'subcategory', 'price', 'discounted_price',
                   'in_set', 'instagram_data')
 
 

@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy
-from requests import get
+
+from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import Throttled
 from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, DestroyAPIView
@@ -13,6 +14,7 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import UmaiWallet, BlockedIps, TemporaryCodeSwitcher
 from common.services import slack
 from common.services.umai import Umai
+from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DEVICE_TITLE
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
@@ -25,11 +27,12 @@ from .serializers import (
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
     MyOwnTokenExpiredTimeSerializer,
 )
+from notifications.tasks import sent_notification
 from .services import (
-    UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService, MyOwnTokenService
+    UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService,
+    MyOwnTokenService
 )
 from .throttle.throttle import UserLoginRateThrottle
-from user_agents import parse
 
 class RegisterAuthAPIView(APIView):
     permission_classes = ()
@@ -275,6 +278,15 @@ class LoginAPIView(APIView):
             token = MyOwnTokenService.get_or_create_token(user=user, request=request, location=location, device_info=device_info)
 
             user_data = ProfileSerializer(user, context={'request': request}).data
+
+            transaction.on_commit(lambda: sent_notification.delay(
+                recipient_id=user.id,
+                mode=NOTIFICATION_MODE_SYSTEM,
+                notification_type=NEW_DEVICE,
+                title=NEW_DEVICE_TITLE,
+                extra_data=dict(device_title=device_info['device'], location=location, created_at=token.created_at)
+            ))
+
             return Response(data={
                 'message': gettext_lazy('Successfully logged in'),
                 'token': token.key,

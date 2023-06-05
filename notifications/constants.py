@@ -454,7 +454,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
         notification_str = dict(title=NEW_DEVICE_TITLE,
                                 description=NEW_DEVICE_DESCRIPTION.format(
                                     device_title=extra_data.get('device_title')),
-                                title_ru=NEW_DEVICE_DESCRIPTION_RU,
+                                title_ru=NEW_DEVICE_TITLE_RU,
                                 description_ru=NEW_DEVICE_DESCRIPTION_RU.format(
                                     device_title=extra_data.get('device_title'),
                                     location=extra_data.get('location')),

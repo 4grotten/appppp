@@ -1,7 +1,7 @@
 from django.db.models import Sum
 from rest_framework import serializers
 
-from common.serializers import ImageSerializer, VideoSerializer
+from common.serializers import ImageSerializer
 from shop.models import ShopItem, ItemSubcategory, CartItem, ItemInstagramData
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemLinksSetStock, ShopItemSizeCount
 
@@ -99,7 +99,6 @@ class ShopItemSetSerializer(serializers.ModelSerializer):
 
 class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
-    videos = VideoSerializer(many=True)
     subcategory = SubcategorySerializer()
     in_set = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
@@ -127,7 +126,7 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'organization', 'currency', 'name', 'images', 'videos', 'subcategory', 'price', 'discounted_price',
+        fields = ('id', 'organization', 'currency', 'name', 'images', 'subcategory', 'price', 'discounted_price',
                   'in_set', 'instagram_data')
 
 
@@ -249,6 +248,25 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = ('criteria_subcategory', 'available_sizes', 'collection_items_quantity', 'item_quantity')
+
+
+class RentalStockSerializer(serializers.ModelSerializer):
+    has_time = serializers.SerializerMethodField()
+    collection_items_quantity = serializers.SerializerMethodField()
+
+    def get_has_time(self, item: ShopItem):
+        if item.rental_period is None:
+            return False
+        return True
+
+    def get_collection_items_quantity(self, item: ShopItem):
+        item_set_quantity = ShopItem.objects.filter(shop_items_set_stocks__main_shop_item=item).count()
+        item_set_links_quantity = ShopItem.objects.filter(shop_items_link_set_stocks__main_shop_item=item).count()
+        return item_set_quantity + item_set_links_quantity
+
+    class Meta:
+        model = ShopItem
+        fields = ('collection_items_quantity', 'has_time',)
 
 
 class CreateAvailableSizesSerializer(serializers.Serializer):

@@ -2,7 +2,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from shop.models import ShopItem, ItemSubcategory, CartItem
+from shop.models import ShopItem, ItemSubcategory, CartItem, ItemInstagramData
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory, ShopItemLinksSetStock, ShopItemSizeCount
 
 
@@ -102,6 +102,7 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
     subcategory = SubcategorySerializer()
     in_set = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
+    instagram_data = serializers.SerializerMethodField()
 
     def get_currency(self, item: ShopItem):
         return str(item.organization.currency)
@@ -113,9 +114,20 @@ class OrganizationShopItemsInSetSerializer(serializers.ModelSerializer):
             return True
         return False
 
+    def get_instagram_data(self, item: ShopItem):
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None).order_by('created_at')
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('created_at')
+
+        from shop.serializers.item_serializers import ItemInstagramVideoSerializer
+        from shop.serializers.item_serializers import ItemInstagramImageSerializer
+
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)
+
     class Meta:
         model = ShopItem
-        fields = ('id', 'organization', 'currency', 'name', 'images', 'subcategory', 'price', 'discounted_price', 'in_set')
+        fields = ('id', 'organization', 'currency', 'name', 'images', 'subcategory', 'price', 'discounted_price',
+                  'in_set', 'instagram_data')
 
 
 class ShopItemLinkSetSerializer(serializers.ModelSerializer):

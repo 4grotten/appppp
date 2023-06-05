@@ -32,6 +32,7 @@ NOTIFICATION_TYPE_QUIT_JOB = 'quit'
 
 NEW_DISCOUNT_TYPE = 'new_discount'
 NEW_ORGANIZATION = 'new_organization'
+NEW_DEVICE = 'new_device'
 FOLLOWED_TO_ORGANIZATION_TYPE = 'followed_to_organization'
 ORGANIZATION_FOLLOWED_TYPE = 'organization_followed'
 SYSTEM_TYPE = 'system'
@@ -102,6 +103,7 @@ NOTIFICATION_TYPES = (
     (DECLINE_DISCOUNT_TYPE, DECLINE_DISCOUNT_TYPE),
     (NEW_DISCOUNT_TYPE, NEW_DISCOUNT_TYPE),
     (NEW_ORGANIZATION, NEW_ORGANIZATION),
+    (NEW_DEVICE, NEW_DEVICE),
     (FOLLOWED_TO_ORGANIZATION_TYPE, FOLLOWED_TO_ORGANIZATION_TYPE),
     (ORGANIZATION_FOLLOWED_TYPE, ORGANIZATION_FOLLOWED_TYPE),
     (SYSTEM_TYPE, SYSTEM_TYPE),
@@ -180,6 +182,9 @@ TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_RU = 'Скидка {savings} {curr
 
 NEW_ORGANIZATION_TITLE_RU = 'Новая организация доступна для вас'
 NEW_ORGANIZATION_DESCRIPTION_RU = '{organization_title} '
+
+NEW_DEVICE_TITLE_RU = 'Новая активация пользователя'
+NEW_DEVICE_DESCRIPTION_RU = '{device_title}'
 
 RECRUIT_JOB_TITLE_RU = 'Вы приняли на работу'
 RECRUIT_JOB_DESCRIPTION_RU = '{position} '
@@ -283,6 +288,9 @@ TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Discount {savings} {currency}'
 NEW_ORGANIZATION_TITLE = 'New organization is available for you '
 NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '
 
+NEW_DEVICE_TITLE = 'New user activated'
+NEW_DEVICE_DESCRIPTION = '{device_title}'
+
 RECRUIT_JOB_TITLE = 'You hired an employee'
 RECRUIT_JOB_DESCRIPTION = '{position} '
 
@@ -361,6 +369,16 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 title_ru=NEW_ORGANIZATION_TITLE_RU,
                                 description_ru=NEW_ORGANIZATION_DESCRIPTION_RU.format(
                                     organization_title=extra_data.get('organization_title')))
+
+    elif notification_type == NEW_DEVICE:
+        notification_str = dict(title=NEW_DEVICE_TITLE,
+                                description=NEW_DEVICE_DESCRIPTION.format(
+                                    device_title=extra_data.get('device_title')),
+                                title_ru=NEW_DEVICE_DESCRIPTION_RU,
+                                description_ru=NEW_DEVICE_DESCRIPTION_RU.format(
+                                    device_title=extra_data.get('device_title'),
+                                    location=extra_data.get('location')),
+                                    created_at=extra_data.get('created_at'))
 
     elif notification_type == ORGANIZATION_OWN_TYPE:
         notification_str = dict(title=ORGANIZATION_OWN_TITLE,

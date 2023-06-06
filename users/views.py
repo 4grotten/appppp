@@ -557,7 +557,7 @@ class MyOwnTokenChangeExpiredTimeView(APIView):
 class MyOwnTokenListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MyOwnTokenSerializer
-    pagination_class = None
+    pagination_class = GeneralPagination
 
     def get_queryset(self):
         user = self.request.user

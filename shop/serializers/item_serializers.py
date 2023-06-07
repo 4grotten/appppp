@@ -729,14 +729,19 @@ class ItemRentalMonthSerializer(serializers.Serializer):
             transaction__is_processed=True
         )
         if bookings.exists():
+            month_booked = False
             for day in days:
-                bookings_in_day = bookings.filter(
-                    start_time__day__lte=day.day,
-                    end_time__day__gte=day.day
-                )
-                if not bookings_in_day.exists():
-                    return False
-            return True
+                is_day_booked = bookings.filter(
+                    start_time__date__lte=day,
+                    end_time__date__gte=day
+                ).exists()
+                if not is_day_booked:
+                    month_booked = False
+                    break
+                month_booked = True
+
+            return month_booked
+
         return False
 
 

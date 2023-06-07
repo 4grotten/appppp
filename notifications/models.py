@@ -11,7 +11,8 @@ from .constants import (get_titles_descriptions_from_type,
                         NOTIFICATION_MODE_DISCOUNT,
                         NOTIFICATION_MODES,
                         NOTIFICATION_MODE_SYSTEM, NOTIFICATION_MODE_PARTNER,
-                        NOTIFICATION_TYPES, SYSTEM_TYPE, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PRODUCT)
+                        NOTIFICATION_TYPES, SYSTEM_TYPE, NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PRODUCT,
+                        NOTIFICATION_MODE_RENTAL)
 
 User = get_user_model()
 
@@ -83,7 +84,8 @@ class Notification(TimestampModel):
                 (mode == NOTIFICATION_MODE_PERSONAL and notification_setting.private_notifications) or
                 (mode == NOTIFICATION_MODE_SYSTEM and notification_setting.private_notifications) or
                 (mode == NOTIFICATION_MODE_PARTNER and notification_setting.organization_notifications) or
-                (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications)):
+                (mode == NOTIFICATION_MODE_PRODUCT and notification_setting.product_notifications) or
+                (mode == NOTIFICATION_MODE_RENTAL and notification_setting.rental_notifications)):
             return
         notification_payload = {
             'title': title,
@@ -177,12 +179,16 @@ class Notification(TimestampModel):
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru').exclude(type='android')
         fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_ru)
         fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en').exclude(type='android')
         fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_en)
         fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')
         fcm_devices_en_android = notification_setting.fcm_device.filter(settingstotoken__language='en', type='android')
         fcm_devices_en_android.send_message(**notification_payload_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_ru_android.send_message(**notification_payload_ru_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        print(fcm_devices_en_android)
+        print(fcm_devices_ru_android)
 
     @staticmethod
     def get_organization_small_image(organization: Organization):
@@ -202,6 +208,7 @@ class NotificationSetting(TimestampModel):
     organization_notifications = models.BooleanField(default=False)
     product_notifications = models.BooleanField(default=True)
     delivery_notifications = models.BooleanField(default=True)
+    rental_notifications = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.user.phone_number)

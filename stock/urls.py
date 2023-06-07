@@ -4,7 +4,8 @@ from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSu
     DownloadOrgDeliveryInfoAPIView, AvailableSizeListCreateView, ShopItemsSetCreateView, GetShopItemByLink, \
     ShopItemSetListView, ShopItemLinkSetListView, ShopItemSizeCountView, GetNotChoosenSizeListView, DeleteStockView, \
     DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
-    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView
+    OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView, \
+    DownloadOrgDeliveryRentalInfoAPIView, DownloadOrgRentalInfoAPIView, DownloadRentalInfoAPIView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -38,6 +39,16 @@ urlpatterns = [
     path('get_stock_sets/<int:pk>/', StockSetsView.as_view(), name='get_stock_sets'),
     path('get_stock_set_items/<int:pk>/', StockSetItemsView.as_view(), name='get_stock_set_items'),
 
-    path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryInfoAPIView.as_view(),
-         name='download_organization_delivery_info'),
+    path('get_rental_stock/<int:pk>/', RentalStockView.as_view(), name='get_rental_stock'),
+
+    path('download_org_delivery_info/<int:pk>/', DownloadOrgDeliveryRentalInfoAPIView.as_view(),
+         name='download_organization_delivery_rental_info'),
+
+    path('download_org_rental_info/<int:pk>/', DownloadOrgRentalInfoAPIView.as_view(),
+         name='download_organization_rental_info'),
+
+    path('download_rental_info/<int:pk>/', DownloadRentalInfoAPIView.as_view(),
+         name='download_rental_info'),
+
+
 ]

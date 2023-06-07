@@ -5,18 +5,21 @@ from shop.views.cart_views import (
     OrderSelfPickupView, UserCartRetrieveUpdateDestroyView, CartAnonymousCheckoutView, UpdateDeliveryToSendByCourierView
 )
 from shop.views.category_views import (
-    ItemCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
+    ItemCategoryListView, ItemRentalCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
     ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView
 )
 from shop.views.comment_views import CommentItemListCreateView, \
     CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike, CommentComplaintCreateView
 from shop.views.feed_views import (
-    FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView
+    FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView,
+    OrganizationRentalListView
 )
 from shop.views.item_views import (
-    ItemCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView, LikeListCreateView,
-    BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem, PartnerShopItemsListView
+    ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView,
+    LikeListCreateView, BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem,
+    PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
+    BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView
 )
 
 urlpatterns = [
@@ -24,6 +27,15 @@ urlpatterns = [
     path('shop/categories/<int:pk>/', ItemCategoryRetrieveView.as_view(), name='item_category_details'),
     path('shop/categories/<int:pk>/all_subcategories/', ItemCategoryAllSubcategoriesView.as_view(),
          name='all_category_subcategories'),
+
+    path('shop/rentals/categories/', ItemRentalCategoryListView.as_view(), name='rent_categories'),
+    path('add_rental_period/<int:pk>/', RentItemPeriodCreateView.as_view(), name='add_rental_period'),
+    path('get_rental_period/<int:pk>/', RentalPeriodRetrieveView.as_view(), name='rental_period_details'),
+    path('shop/rentals/<int:pk>/years/', GetYearsView.as_view(), name='get_years'),
+    path('shop/rentals/<int:pk>/months/', GetMonthsView.as_view(), name='get_months'),
+    path('shop/rentals/<int:pk>/days/', GetDaysView.as_view(), name='get_days'),
+    path('shop/rentals/<int:pk>/hours/', GetHoursView.as_view(), name='get_hours'),
+    path('shop/rentals/<int:pk>/minutes/', GetMinutesView.as_view(), name='get_minutes'),
 
     path('shop/non_empty_categories/', NonEmptyCategoryListView.as_view(), name='non_empty_categories'),
     path('shop/non_empty_partner_categories/<int:pk>/', NonEmptyPartnerCategoryListView.as_view(), name='non_empty_partner_categories'),
@@ -39,9 +51,15 @@ urlpatterns = [
     path('shop/doChangeItemPublishedStatus/', ItemChangePublishedStatusView.as_view(), name='item_published_status'),
     path('shop/translateItemText/', TranslateItemTextView.as_view(), name='translate_item_text'),
 
+    path('shop/rentals/', ItemRentalCreateView.as_view(), name='rent_create'),
+    path('shop/rentals/<int:pk>/booking/', BookRentalView.as_view(), name='rent_booking'),
+    path('shop/rentals/<int:pk>/booking/offline_checkout/', BookingAnonymousCheckoutView.as_view(),
+         name='booking_anonymous_checkout'),
+
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
+    path('shop/organization_rentals/', OrganizationRentalListView.as_view(), name='organization_rentals'),
     path('shop/subscription_items/', SubscriptionItemListView.as_view(), name='subscribed_organization_items'),
     path('shop/hotlink_items/<int:pk>/', HotlinkCollectionItemListView.as_view(), name='hotlink_collection_items'),
 

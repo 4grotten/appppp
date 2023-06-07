@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-12 10:41+0600\n"
+"POT-Creation-Date: 2023-05-09 05:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: common/exceptions.py:5 organizations/services/organization_services.py:221
+#: common/exceptions.py:5 organizations/services/organization_services.py:244
 msgid "Something went wrong"
 msgstr ""
 
@@ -28,8 +28,8 @@ msgstr ""
 msgid "Object Not Found"
 msgstr ""
 
-#: common/exceptions.py:16 shop/views/feed_views.py:40
-#: shop/views/feed_views.py:75
+#: common/exceptions.py:16 shop/views/feed_views.py:53
+#: shop/views/feed_views.py:123 shop/views/item_views.py:253
 msgid "Validation Error"
 msgstr ""
 
@@ -53,61 +53,166 @@ msgstr ""
 msgid "You do not have permission"
 msgstr ""
 
-#: common/models.py:50
+#: common/exceptions.py:40
+msgid "Stock error"
+msgstr ""
+
+#: common/models.py:55 common/models.py:110
 msgid "Image that you want to store"
 msgstr ""
 
-#: common/models.py:86
+#: common/models.py:140
+msgid "Web wallpaper that you want to store"
+msgstr ""
+
+#: common/models.py:146
+msgid "Mobile wallpaper that you want to store"
+msgstr ""
+
+#: common/models.py:173
 msgid "Currencies"
 msgstr ""
 
-#: common/models.py:103
+#: common/models.py:190
 msgid "Countries"
 msgstr ""
 
-#: common/models.py:118
+#: common/models.py:205
 msgid "Cities"
 msgstr ""
 
-#: common/models.py:130
+#: common/models.py:217
 msgid "Version"
 msgstr ""
 
-#: common/models.py:131
+#: common/models.py:218
 msgid "Versions"
 msgstr ""
 
-#: common/serializers.py:80
+#: common/models.py:237
+msgid "id for exchange service"
+msgstr ""
+
+#: common/models.py:238
+msgid "id for exchange services"
+msgstr ""
+
+#: common/models.py:259
+msgid "Language"
+msgstr ""
+
+#: common/models.py:260
+msgid "Languages"
+msgstr ""
+
+#: common/models.py:283
+msgid "Registration payment"
+msgstr ""
+
+#: common/models.py:284
+msgid "Registration payments"
+msgstr ""
+
+#: common/models.py:288
+msgid "Message name, unique"
+msgstr ""
+
+#: common/models.py:288
+msgid "*unique"
+msgstr ""
+
+#: common/models.py:289 common/models.py:296
+msgid "Message text"
+msgstr ""
+
+#: common/models.py:290
+msgid "message type"
+msgstr ""
+
+#: common/models.py:297
+msgid "Messages Text"
+msgstr ""
+
+#: common/models.py:301
+msgid "Twilio service"
+msgstr ""
+
+#: common/models.py:302
+msgid "Nikita Service"
+msgstr ""
+
+#: common/models.py:303
+msgid "Bird message Service"
+msgstr ""
+
+#: common/models.py:309
+msgid "Sms service"
+msgstr ""
+
+#: common/models.py:310
+msgid "Sms services"
+msgstr ""
+
+#: common/models.py:314
+msgid "Enable"
+msgstr ""
+
+#: common/models.py:320
+msgid "Temporary code switcher"
+msgstr ""
+
+#: common/models.py:324
+msgid "Blocked ip"
+msgstr ""
+
+#: common/models.py:330
+msgid "IP address"
+msgstr ""
+
+#: common/models.py:331
+msgid "IP addresses"
+msgstr ""
+
+#: common/serializers.py:137
 #, python-format
 msgid "Unknown time zone: '%(time_zone)s'"
 msgstr ""
 
-#: common/serializers.py:86
+#: common/serializers.py:143
 msgid "A valid integer is required."
 msgstr ""
 
-#: common/serializers.py:87
+#: common/serializers.py:144
 msgid "File does not exist."
 msgstr ""
 
-#: common/services/currency.py:18
+#: common/services/currency.py:20
 msgid "Bad response from openexchangerates.org"
 msgstr ""
 
-#: common/services/currency.py:23
+#: common/services/currency.py:37
 #, python-format
 msgid "No currency with code %(currency)s"
 msgstr ""
 
-#: common/services/currency.py:29
+#: common/services/currency.py:43
 msgid "No currency with code {to_currency.upper()}"
+msgstr ""
+
+#: common/services/others.py:13
+msgid "LinkApp not found"
+msgstr ""
+
+#: common/services/shadow.py:24
+msgid "Message not found"
 msgstr ""
 
 #: common/services/version.py:13
 msgid "Version not found"
 msgstr ""
 
-#: common/views.py:40 notifications/views.py:44 notifications/views.py:83
+#: common/views.py:37 common/views.py:103 common/views.py:124
+#: notifications/views.py:44 notifications/views.py:83
 #: organizations/views/attendance_views.py:26
 #: organizations/views/attendance_views.py:47
 #: organizations/views/attendance_views.py:73
@@ -118,58 +223,125 @@ msgstr ""
 #: organizations/views/card_views.py:76
 #: organizations/views/discount_views.py:20
 #: organizations/views/discount_views.py:41
-#: organizations/views/hotlink_views.py:37
-#: organizations/views/hotlink_views.py:63
-#: organizations/views/hotlink_views.py:92
-#: organizations/views/hotlink_views.py:122
-#: organizations/views/hotlink_views.py:143
-#: organizations/views/hotlink_views.py:175
+#: organizations/views/hotlink_views.py:40
+#: organizations/views/hotlink_views.py:76
+#: organizations/views/hotlink_views.py:120
+#: organizations/views/hotlink_views.py:161
+#: organizations/views/hotlink_views.py:192
+#: organizations/views/hotlink_views.py:224
 #: organizations/views/membership_views.py:44
 #: organizations/views/membership_views.py:79
 #: organizations/views/membership_views.py:134
 #: organizations/views/organization_promo_views.py:26
 #: organizations/views/organization_promo_views.py:55
-#: organizations/views/organization_views.py:70
-#: organizations/views/organization_views.py:106
-#: organizations/views/organization_views.py:145
-#: organizations/views/organization_views.py:206
-#: organizations/views/organization_views.py:232
-#: organizations/views/organization_views.py:253
-#: organizations/views/organization_views.py:367
-#: organizations/views/organization_views.py:404
-#: organizations/views/organization_views.py:443
+#: organizations/views/organization_views.py:72
+#: organizations/views/organization_views.py:113
+#: organizations/views/organization_views.py:168
+#: organizations/views/organization_views.py:200
+#: organizations/views/organization_views.py:261
+#: organizations/views/organization_views.py:287
+#: organizations/views/organization_views.py:308
+#: organizations/views/organization_views.py:461
+#: organizations/views/organization_views.py:498
+#: organizations/views/organization_views.py:537
 #: organizations/views/partnerships_views.py:28
-#: organizations/views/partnerships_views.py:54
-#: organizations/views/subscription_views.py:30 shop/views/cart_views.py:47
-#: shop/views/cart_views.py:64 shop/views/cart_views.py:99
-#: shop/views/cart_views.py:120 shop/views/cart_views.py:126
-#: shop/views/cart_views.py:172 shop/views/item_views.py:62
-#: shop/views/item_views.py:84 shop/views/item_views.py:106
-#: shop/views/item_views.py:143 transactions/views/stat_views.py:25
-#: transactions/views/stat_views.py:44 transactions/views/stat_views.py:68
-#: transactions/views/transaction_views.py:41
-#: transactions/views/transaction_views.py:90
-#: transactions/views/transaction_views.py:119
-#: transactions/views/transaction_views.py:143
-#: transactions/views/transaction_views.py:161
-#: transactions/views/transaction_views.py:178
-#: transactions/views/transaction_views.py:204
-#: transactions/views/transaction_views.py:264 users/views.py:33
-#: users/views.py:76 users/views.py:105 users/views.py:138 users/views.py:163
-#: users/views.py:184 users/views.py:226 users/views.py:248 users/views.py:296
-#: users/views.py:326 users/views.py:358 users/views.py:390
+#: organizations/views/partnerships_views.py:55
+#: organizations/views/subscription_views.py:45
+#: organizations/views/subscription_views.py:152
+#: organizations/views/subscription_views.py:178
+#: organizations/views/subscription_views.py:226 shop/views/cart_views.py:58
+#: shop/views/cart_views.py:74 shop/views/cart_views.py:111
+#: shop/views/cart_views.py:133 shop/views/cart_views.py:204
+#: shop/views/category_views.py:137 shop/views/comment_views.py:42
+#: shop/views/comment_views.py:98 shop/views/item_views.py:160
+#: shop/views/item_views.py:182 shop/views/item_views.py:204
+#: shop/views/item_views.py:288 shop/views/item_views.py:362
+#: shop/views/item_views.py:393 sms_sender/views.py:27 stock/views.py:156
+#: transactions/views/stat_views.py:25 transactions/views/stat_views.py:44
+#: transactions/views/stat_views.py:68
+#: transactions/views/transaction_views.py:52
+#: transactions/views/transaction_views.py:101
+#: transactions/views/transaction_views.py:159
+#: transactions/views/transaction_views.py:188
+#: transactions/views/transaction_views.py:218
+#: transactions/views/transaction_views.py:242
+#: transactions/views/transaction_views.py:266
+#: transactions/views/transaction_views.py:284
+#: transactions/views/transaction_views.py:302
+#: transactions/views/transaction_views.py:320
+#: transactions/views/transaction_views.py:337
+#: transactions/views/transaction_views.py:363
+#: transactions/views/transaction_views.py:389
+#: transactions/views/transaction_views.py:415
+#: transactions/views/transaction_views.py:513
+#: transactions/views/transaction_views.py:630
+#: transactions/views/transaction_views.py:662
+#: transactions/views/transaction_views.py:694
+#: transactions/views/transaction_views.py:724 users/views.py:54
+#: users/views.py:119 users/views.py:156 users/views.py:201 users/views.py:240
+#: users/views.py:261 users/views.py:307 users/views.py:329 users/views.py:377
+#: users/views.py:407 users/views.py:440 users/views.py:472 users/views.py:493
+#: users/views.py:509
 msgid "Invalid input"
 msgstr ""
 
-#: common/views.py:85
+#: common/views.py:68 organizations/serializers/card_serializers.py:45
+#: organizations/serializers/organization_serializers.py:85
+#: organizations/services/card_services.py:63
+#: organizations/services/card_services.py:82
+#: organizations/services/hotlink_services.py:50
+#: organizations/services/hotlink_services.py:126
+#: organizations/services/hotlink_services.py:135
+#: organizations/services/hotlink_services.py:150
+#: organizations/services/hotlink_services.py:165
+#: organizations/services/hotlink_services.py:189
+#: organizations/services/hotlink_services.py:195
+#: organizations/services/hotlink_services.py:203
+#: organizations/services/hotlink_services.py:212
+#: organizations/services/membership_services.py:101
+#: organizations/services/organization_promo_services.py:63
+#: organizations/services/organization_services.py:601
+#: organizations/services/organization_services.py:625
+#: organizations/services/partnership_services.py:52
+#: organizations/views/card_views.py:71
+#: organizations/views/hotlink_views.py:140
+#: organizations/views/membership_views.py:37
+#: organizations/views/membership_views.py:65
+#: organizations/views/membership_views.py:100
+#: organizations/views/membership_views.py:116
+#: organizations/views/organization_views.py:67
+#: organizations/views/organization_views.py:174
+#: organizations/views/organization_views.py:191
+#: organizations/views/organization_views.py:214
+#: organizations/views/organization_views.py:228
+#: organizations/views/organization_views.py:242
+#: organizations/views/organization_views.py:315
+#: organizations/views/organization_views.py:512
+#: organizations/views/organization_views.py:527
+#: organizations/views/organization_views.py:544
+#: organizations/views/organization_views.py:553
+#: shop/serializers/category_serializers.py:22
+#: shop/serializers/item_serializers.py:262
+msgid "No rights to edit organization"
+msgstr ""
+
+#: common/views.py:77
+msgid "Successfully send email."
+msgstr ""
+
+#: common/views.py:169
 msgid "Please pass the full youtube link"
 msgstr ""
 
-#: common/views.py:92
+#: common/views.py:176
 msgid "Please provide valid youtube link"
 msgstr ""
 
-#: delivery/delivery_services.py:26
+#: cors/views.py:25
+msgid "Media url is not provided"
+msgstr ""
+
+#: delivery/delivery_services.py:34
 #, python-brace-format
 msgid "Could not add delivery info , {e}"
 msgstr ""
@@ -186,7 +358,7 @@ msgstr ""
 msgid "Rejected by delivery service"
 msgstr ""
 
-#: delivery/models.py:22 delivery/views.py:89 delivery/views.py:126
+#: delivery/models.py:22 delivery/views.py:148 delivery/views.py:236
 msgid "Delivered"
 msgstr ""
 
@@ -206,46 +378,50 @@ msgstr ""
 msgid "Customer location coordinates"
 msgstr ""
 
-#: delivery/views.py:43 delivery/views.py:77 delivery/views.py:113
+#: delivery/views.py:56
 msgid "This user is not delivery service"
 msgstr ""
 
-#: delivery/views.py:44 delivery/views.py:78 delivery/views.py:114
+#: delivery/views.py:57
 msgid "Not delivery service"
 msgstr ""
 
-#: delivery/views.py:50
+#: delivery/views.py:64
 msgid "Already taken"
 msgstr ""
 
-#: delivery/views.py:51
+#: delivery/views.py:65
 msgid "Delivery is already taken"
 msgstr ""
 
-#: delivery/views.py:83 delivery/views.py:119
+#: delivery/views.py:142 delivery/views.py:229
 msgid "This delivery service is not owner of this delivery"
 msgstr ""
 
-#: delivery/views.py:84 delivery/views.py:120
+#: delivery/views.py:143 delivery/views.py:230
 msgid "Not your delivery"
 msgstr ""
 
-#: delivery/views.py:88 delivery/views.py:125
+#: delivery/views.py:147 delivery/views.py:235
 #, fuzzy
 #| msgid "This field is required"
 msgid "This order is already delivered"
 msgstr "Это поле обязательное"
 
 #: instagram_parsers/models.py:8 instagram_parsers/models.py:9
+#: instagram_parsers/models.py:24 instagram_parsers/models.py:25
 msgid "Example : 91.238.224.165:20196"
 msgstr ""
 
-#: instagram_parsers/parsers/parser.py:41
-#: instagram_parsers/parsers/parser.py:85
+#: instagram_parsers/parsers/parser.py:52
 msgid "Connection Error"
 msgstr ""
 
-#: instagram_parsers/services/proxy_services.py:34
+#: instagram_parsers/parsers/user_info.py:20
+msgid "Login device is invalid"
+msgstr ""
+
+#: instagram_parsers/services/proxy_services.py:48
 msgid "Need at least one LoginDevice"
 msgstr ""
 
@@ -257,115 +433,125 @@ msgstr ""
 msgid "Max number of ids should be less than equal 20"
 msgstr ""
 
-#: notifications/serializers.py:39
+#: notifications/serializers.py:45
 #, python-brace-format
 msgid "Error while creating notification setting: {e}"
 msgstr ""
 
-#: notifications/services.py:20
+#: notifications/services.py:24
 msgid "Notification not found"
 msgstr ""
 
-#: notifications/services.py:43
+#: notifications/services.py:48
 #, python-brace-format
 msgid "Error while creating notification: {e}"
 msgstr ""
 
-#: notifications/services.py:67
+#: notifications/services.py:79
 msgid "Settings not found"
 msgstr ""
 
-#: notifications/services.py:90
+#: notifications/services.py:102
 #, python-brace-format
 msgid "Can not update: {e}"
 msgstr ""
 
-#: notifications/services.py:107
+#: notifications/services.py:119
 msgid "Device not found"
 msgstr ""
 
 #: notifications/views.py:70 notifications/views.py:89
-#: organizations/views/organization_views.py:424 shop/views/cart_views.py:106
-#: shop/views/cart_views.py:150 shop/views/cart_views.py:161
+#: organizations/views/organization_views.py:518 shop/views/cart_views.py:119
+#: shop/views/cart_views.py:182 shop/views/cart_views.py:193
+#: shop/views/item_views.py:379
 msgid "Success"
 msgstr ""
 
-#: organizations/models.py:41
+#: organizations/models.py:43
 msgid "Organization categories"
 msgstr ""
 
-#: organizations/models.py:84
+#: organizations/models.py:87
 msgid "For transaction purchase ids"
 msgstr ""
 
-#: organizations/models.py:86
+#: organizations/models.py:90
 msgid "Does organization have courier delivery?"
 msgstr ""
 
-#: organizations/models.py:87
+#: organizations/models.py:91
 msgid "Does organization have self pick up?"
 msgstr ""
 
-#: organizations/models.py:233 organizations/models.py:235
+#: organizations/models.py:92
+msgid "Does organization have license?"
+msgstr ""
+
+#: organizations/models.py:164
+msgid "User name"
+msgstr ""
+
+#: organizations/models.py:165 organizations/views/subscription_views.py:115
+msgid "Phone number"
+msgstr ""
+
+#: organizations/models.py:172 organizations/models.py:173
+msgid "Users data for verification organization"
+msgstr ""
+
+#: organizations/models.py:297 organizations/models.py:299
 msgid "This field is required"
 msgstr "Это поле обязательное"
 
-#: organizations/models.py:260
+#: organizations/models.py:324
 msgid "Organization client financial statuses"
 msgstr ""
 
-#: organizations/models.py:406
+#: organizations/models.py:491
 msgid "hotlink collection subcategories"
 msgstr ""
 
-#: organizations/models.py:424 organizations/models.py:426
-#: organizations/models.py:434
+#: organizations/models.py:509 organizations/models.py:511
+#: organizations/models.py:519
 msgid "Wrong url for shop item"
 msgstr ""
 
-#: organizations/models.py:436
+#: organizations/models.py:521
 msgid "Shop item with given id is not found"
 msgstr ""
 
-#: organizations/serializers/card_serializers.py:45
-#: organizations/services/card_services.py:63
-#: organizations/services/card_services.py:82
-#: organizations/services/hotlink_services.py:45
-#: organizations/services/hotlink_services.py:78
-#: organizations/services/hotlink_services.py:87
-#: organizations/services/hotlink_services.py:102
-#: organizations/services/hotlink_services.py:111
-#: organizations/services/hotlink_services.py:135
-#: organizations/services/hotlink_services.py:141
-#: organizations/services/hotlink_services.py:149
-#: organizations/services/hotlink_services.py:158
-#: organizations/services/membership_services.py:101
-#: organizations/services/organization_promo_services.py:63
-#: organizations/services/organization_services.py:488
-#: organizations/services/organization_services.py:512
-#: organizations/services/partnership_services.py:42
-#: organizations/views/card_views.py:71
-#: organizations/views/membership_views.py:37
-#: organizations/views/membership_views.py:65
-#: organizations/views/membership_views.py:100
-#: organizations/views/membership_views.py:116
-#: organizations/views/organization_views.py:112
-#: organizations/views/organization_views.py:136
-#: organizations/views/organization_views.py:159
-#: organizations/views/organization_views.py:173
-#: organizations/views/organization_views.py:187
-#: organizations/views/organization_views.py:260
-#: organizations/views/organization_views.py:418
-#: organizations/views/organization_views.py:433
-#: organizations/views/organization_views.py:450
-#: organizations/views/organization_views.py:459
-#: shop/serializers/category_serializers.py:21
-#: shop/serializers/item_serializers.py:82
-msgid "No rights to edit organization"
+#: organizations/models.py:596
+msgid "Service"
 msgstr ""
 
-#: organizations/serializers/organization_serializers.py:293
+#: organizations/models.py:597
+msgid "Services"
+msgstr ""
+
+#: organizations/serializers/organization_serializers.py:87
+#: organizations/services/organization_services.py:56
+msgid "Organization not found"
+msgstr ""
+
+#: organizations/serializers/organization_serializers.py:381
 msgid "Should have at least one enabled delivery option"
+msgstr ""
+
+#: organizations/serializers/partnership_serializers.py:22
+msgid ""
+"If one of the - requested_by or accepted_by fields is sent, the second field "
+"is also required"
+msgstr ""
+
+#: organizations/serializers/partnership_serializers.py:26
+#: organizations/serializers/partnership_serializers.py:30
+msgid ""
+"The request must contain fields or requested_by and accepted_by or only "
+"partnerships_id"
+msgstr ""
+
+#: organizations/serializers/partnership_serializers.py:34
+msgid "You cannot create a partnership for yourself"
 msgstr ""
 
 #: organizations/services/attendance_services.py:46
@@ -379,10 +565,10 @@ msgstr ""
 #: organizations/services/banner_services.py:27
 #: organizations/services/banner_services.py:36
 #: organizations/services/banner_services.py:50
-#: organizations/services/partnership_services.py:80
-#: organizations/services/partnership_services.py:93
-#: organizations/services/partnership_services.py:106
-#: organizations/services/partnership_services.py:152
+#: organizations/services/partnership_services.py:143
+#: organizations/services/partnership_services.py:168
+#: organizations/services/partnership_services.py:181
+#: organizations/services/partnership_services.py:270
 msgid "No access to partner settings"
 msgstr ""
 
@@ -428,20 +614,20 @@ msgstr ""
 msgid "Card is not editable"
 msgstr ""
 
-#: organizations/services/hotlink_services.py:22
-#: organizations/services/hotlink_services.py:39
+#: organizations/services/hotlink_services.py:23
+#: organizations/services/hotlink_services.py:40
 msgid "Hotlink not found"
 msgstr ""
 
-#: organizations/services/hotlink_services.py:29
+#: organizations/services/hotlink_services.py:30
 msgid "Could not save hotlink"
 msgstr ""
 
-#: organizations/services/hotlink_services.py:57
+#: organizations/services/hotlink_services.py:105
 msgid "Can not update hotlink: {}"
 msgstr ""
 
-#: organizations/services/hotlink_services.py:130
+#: organizations/services/hotlink_services.py:184
 msgid "Hotlink collection link not found"
 msgstr ""
 
@@ -495,103 +681,113 @@ msgstr ""
 msgid "Could not save promo edit log"
 msgstr ""
 
-#: organizations/services/organization_services.py:50
-msgid "Organization not found"
-msgstr ""
-
-#: organizations/services/organization_services.py:69
-#: organizations/services/organization_services.py:77
+#: organizations/services/organization_services.py:87
+#: organizations/services/organization_services.py:95
 msgid "Owner"
 msgstr "Собственник"
 
-#: organizations/services/organization_services.py:82
+#: organizations/services/organization_services.py:100
 msgid "Client"
 msgstr ""
 
-#: organizations/services/organization_services.py:231
+#: organizations/services/organization_services.py:254
 #, python-brace-format
 msgid "Can not create more than {MAX_ORGANIZATIONS_PER_USER} organizations"
 msgstr ""
 
-#: organizations/services/organization_services.py:298
+#: organizations/services/organization_services.py:328
 msgid "Can not update currency. It is different from partners"
 msgstr ""
 
-#: organizations/services/organization_services.py:314
+#: organizations/services/organization_services.py:350
 #, python-brace-format
 msgid "Could not update organization: {e}"
 msgstr ""
 
-#: organizations/services/organization_services.py:325
+#: organizations/services/organization_services.py:361
 #, python-brace-format
 msgid "Could not deactivate organization: {e}"
 msgstr ""
 
-#: organizations/services/organization_services.py:334
+#: organizations/services/organization_services.py:370
 #, python-brace-format
 msgid "Could not reactivate organization: {e}"
 msgstr ""
 
-#: organizations/services/organization_services.py:343
+#: organizations/services/organization_services.py:379
 #, python-brace-format
 msgid "Could not reset running purchase ID organization: {e}"
 msgstr ""
 
-#: organizations/services/organization_services.py:433
+#: organizations/services/organization_services.py:496
+msgid "Valid time are required in headers"
+msgstr ""
+
+#: organizations/services/organization_services.py:542
 msgid "No rights to change owner"
 msgstr ""
 
-#: organizations/services/organization_services.py:458
+#: organizations/services/organization_services.py:567
 msgid "Could not change owner"
 msgstr ""
 
-#: organizations/services/organization_services.py:465
-#: organizations/services/subscription_services.py:76
-#: transactions/services/transaction_services.py:72
-#: transactions/services/transaction_services.py:447
-#: transactions/services/transaction_services.py:460
-#: transactions/views/transaction_views.py:300
+#: organizations/services/organization_services.py:574
+#: organizations/services/subscription_services.py:125
+#: organizations/views/subscription_views.py:100
+#: transactions/services/transaction_services.py:574
+#: transactions/services/transaction_services.py:992
+#: transactions/services/transaction_services.py:1005
+#: transactions/services/transaction_services.py:1225
+#: transactions/services/transaction_services.py:1285
+#: transactions/views/transaction_views.py:549
+#: transactions/views/transaction_views.py:572
 msgid "Permission denied"
 msgstr ""
 
-#: organizations/services/organization_services.py:470
+#: organizations/services/organization_services.py:579
 msgid "Client not found"
 msgstr ""
 
-#: organizations/services/organization_services.py:531
+#: organizations/services/organization_services.py:644
 msgid "Instagram user not found"
 msgstr ""
 
-#: organizations/services/organization_services.py:549
+#: organizations/services/organization_services.py:652
+#: organizations/services/verifications_service.py:24
+#, python-brace-format
+msgid "{e}"
+msgstr ""
+
+#: organizations/services/organization_services.py:664
 #, python-brace-format
 msgid "Instagram user not found : {e}"
 msgstr ""
 
-#: organizations/services/organization_services.py:559
-#: organizations/services/organization_services.py:567
-#: organizations/views/organization_views.py:420
+#: organizations/services/organization_services.py:674
+#: organizations/services/organization_services.py:682
+#: organizations/views/organization_views.py:514
 msgid "Instagram Integration Link not found"
 msgstr ""
 
-#: organizations/services/partnership_services.py:30
+#: organizations/services/partnership_services.py:33
 msgid "Partnership not found"
 msgstr ""
 
-#: organizations/services/partnership_services.py:37
+#: organizations/services/partnership_services.py:40
 msgid "Could not create partnership request"
 msgstr ""
 
-#: organizations/services/partnership_services.py:161
+#: organizations/services/partnership_services.py:292
 msgid "Should have same currency to have shared discounts and items"
 msgstr ""
 
-#: organizations/services/partnership_services.py:223
+#: organizations/services/partnership_services.py:353
 msgid "Could not update partnership permissions"
 msgstr ""
 
-#: organizations/services/subscription_services.py:79
-#: transactions/services/transaction_services.py:450
-#: transactions/services/transaction_services.py:463
+#: organizations/services/subscription_services.py:128
+#: transactions/services/transaction_services.py:995
+#: transactions/services/transaction_services.py:1008
 msgid "Follower not found"
 msgstr ""
 
@@ -603,8 +799,8 @@ msgid "No rights to check attendance in this organization"
 msgstr ""
 
 #: organizations/views/banner_views.py:47 organizations/views/card_views.py:47
-#: organizations/views/hotlink_views.py:47
-#: organizations/views/hotlink_views.py:152
+#: organizations/views/hotlink_views.py:53
+#: organizations/views/hotlink_views.py:201
 #: organizations/views/membership_views.py:53
 msgid "Successfully created"
 msgstr ""
@@ -614,7 +810,9 @@ msgid "Please provide organization id as a query parameter"
 msgstr ""
 
 #: organizations/views/card_views.py:63
-#: organizations/views/organization_views.py:461
+#: organizations/views/organization_views.py:555
+#: organizations/views/organization_views.py:637 stock/views.py:276
+#: stock/views.py:287
 msgid "Successfully deleted"
 msgstr ""
 
@@ -626,13 +824,13 @@ msgstr ""
 msgid "Successfully deleted cards"
 msgstr ""
 
-#: organizations/views/hotlink_views.py:30
+#: organizations/views/hotlink_views.py:33
 msgid "Wrong organization parameter"
 msgstr ""
 
 #: organizations/views/membership_views.py:33
-#: organizations/views/membership_views.py:96 shop/views/category_views.py:26
-#: shop/views/feed_views.py:53
+#: organizations/views/membership_views.py:96 shop/views/category_views.py:34
+#: shop/views/feed_views.py:72 shop/views/feed_views.py:94
 msgid "Valid organization is required in query parameters"
 msgstr ""
 
@@ -644,323 +842,664 @@ msgstr ""
 msgid "Successfully transferred ownership"
 msgstr ""
 
-#: organizations/views/organization_views.py:190
+#: organizations/views/organization_views.py:245
 msgid "Successfully reset running purchase ID"
 msgstr ""
 
-#: organizations/views/organization_views.py:214
-#: organizations/views/organization_views.py:240
-#: organizations/views/organization_views.py:272 users/views.py:304
-#: users/views.py:334
+#: organizations/views/organization_views.py:269
+#: organizations/views/organization_views.py:295
+#: organizations/views/organization_views.py:327 users/views.py:385
+#: users/views.py:415
 msgid "Successfully updated"
 msgstr ""
 
-#: organizations/views/organization_views.py:286
+#: organizations/views/organization_views.py:341
 msgid "Valid partner id, country and city are required in query parameters"
 msgstr ""
 
-#: organizations/views/organization_views.py:313
+#: organizations/views/organization_views.py:368
 msgid ""
 "Valid category, partner id, country and city are required in query parameters"
 msgstr ""
 
-#: organizations/views/organization_views.py:374
+#: organizations/views/organization_views.py:390
+msgid "Valid country, city  are required in query parameters"
+msgstr ""
+
+#: organizations/views/organization_views.py:468
 msgid "No rights to send message to followers of this organization"
 msgstr ""
 
-#: organizations/views/organization_views.py:377
+#: organizations/views/organization_views.py:471
 msgid "Message is created"
 msgstr ""
 
-#: organizations/views/partnerships_views.py:39
-msgid "Successfully sent partnership request"
-msgstr ""
-
-#: organizations/views/partnerships_views.py:110
-#: organizations/views/partnerships_views.py:125
-#: organizations/views/partnerships_views.py:139
-#: shop/views/category_views.py:51 shop/views/category_views.py:67
-msgid "Valid country and city are required in query parameters"
-msgstr ""
-
-#: organizations/views/subscription_views.py:38
-msgid "Successfully updated subscription status"
-msgstr ""
-
-#: project/settings/base.py:144
-msgid "Russian"
-msgstr "Русский"
-
-#: project/settings/base.py:145
-msgid "English"
-msgstr "Английский"
-
-#: project/settings/base.py:146
-msgid "Turkish"
-msgstr "Турецкий"
-
-#: shop/models.py:23
-msgid "Item categories"
-msgstr ""
-
-#: shop/models.py:37
-msgid "Item subcategories"
-msgstr ""
-
-#: shop/serializers/item_serializers.py:79
-msgid "Organization does not have this subcategory"
-msgstr ""
-
-#: shop/services/cart_services.py:29 shop/services/cart_services.py:38
-msgid "Cart not found"
-msgstr ""
-
-#: shop/services/cart_services.py:63
-#: transactions/services/transaction_services.py:49
-#: transactions/services/transaction_services.py:259
-msgid "No rights to sell in this organization"
-msgstr ""
-
-#: shop/services/cart_services.py:69
-msgid "Could not checkout the cart"
-msgstr ""
-
-#: shop/services/cart_services.py:92 shop/services/cart_services.py:164
-msgid "No rights to change this cart"
-msgstr ""
-
-#: shop/services/cart_services.py:94
-msgid "Cart is already closed"
-msgstr ""
-
-#: shop/services/cart_services.py:97
-msgid "Organization does not have courier delivery"
-msgstr ""
-
-#: shop/services/cart_services.py:100
-msgid "Organization does not have self pick up option"
-msgstr ""
-
-#: shop/services/cart_services.py:108
-msgid "Could not add transaction"
-msgstr ""
-
-#: shop/services/cart_services.py:204
-#: transactions/services/transaction_services.py:160
-#: transactions/services/transaction_services.py:287
-msgid "Could not complete transaction"
-msgstr ""
-
-#: shop/services/cart_services.py:222
-msgid "The item is not related to this organization"
-msgstr ""
-
-#: shop/services/item_services.py:19
-msgid "ShopItem not found"
-msgstr ""
-
-#: shop/services/item_services.py:24
-msgid "No rights to edit this item"
-msgstr ""
-
-#: shop/views/cart_views.py:135
-msgid "Already delivered"
-msgstr ""
-
-#: shop/views/item_views.py:44
-msgid "Not found"
-msgstr ""
-
-#: shop/views/item_views.py:69
-msgid "Successfully updated published status"
-msgstr ""
-
-#: shop/views/item_views.py:91
-msgid "Successfully updated like status"
-msgstr ""
-
-#: shop/views/item_views.py:113
-msgid "Successfully updated bookmark status"
-msgstr ""
-
-#: shop/views/item_views.py:125
+#: organizations/views/organization_views.py:619 shop/views/item_views.py:223
 msgid "You have already complained about this item"
 msgstr ""
 
-#: sms_sender/services.py:49
+#: organizations/views/organization_views.py:640
+msgid "OrganizationBlacklist not found"
+msgstr ""
+
+#: organizations/views/organization_views.py:657
+msgid "Successfully unblocked"
+msgstr ""
+
+#: organizations/views/organization_views.py:660
+msgid "BlockedUser not found"
+msgstr ""
+
+#: organizations/views/partnerships_views.py:40
+msgid "Successfully sent partnership request"
+msgstr ""
+
+#: organizations/views/partnerships_views.py:111
+#: organizations/views/partnerships_views.py:126
+#: organizations/views/partnerships_views.py:140
+#: organizations/views/service.py:24 shop/views/category_views.py:71
+#: shop/views/category_views.py:87
+msgid "Valid country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/service.py:48
+msgid "Valid service, country and city are required in query parameters"
+msgstr ""
+
+#: organizations/views/subscription_views.py:55
+#: organizations/views/subscription_views.py:162
+msgid "Successfully updated subscription status"
+msgstr ""
+
+#: organizations/views/subscription_views.py:112
+msgid "Full name"
+msgstr ""
+
+#: organizations/views/subscription_views.py:113
+msgid "Nickname"
+msgstr ""
+
+#: organizations/views/subscription_views.py:114
+msgid "ID"
+msgstr ""
+
+#: organizations/views/subscription_views.py:186
+#: organizations/views/subscription_views.py:232
+msgid "No rights to allow follower"
+msgstr ""
+
+#: organizations/views/subscription_views.py:215
+msgid "Successfully accept follower"
+msgstr ""
+
+#: organizations/views/subscription_views.py:238
+msgid "Refuse follower"
+msgstr ""
+
+#: organizations/views/subscription_views.py:251
+msgid "No rights to allow followers"
+msgstr ""
+
+#: organizations/views/subscription_views.py:255
+msgid "Successfully accept all followers"
+msgstr ""
+
+#: project/settings/base.py:150
+msgid "Russian"
+msgstr "Русский"
+
+#: project/settings/base.py:151
+msgid "English"
+msgstr "Английский"
+
+#: project/settings/base.py:152
+msgid "Turkish"
+msgstr "Турецкий"
+
+#: shop/models.py:25
+msgid "Item categories"
+msgstr ""
+
+#: shop/models.py:40
+msgid "Item subcategories"
+msgstr ""
+
+#: shop/serializers/item_serializers.py:259
+msgid "Organization does not have this subcategory"
+msgstr ""
+
+#: shop/services/booking_services.py:28
+msgid "Booking not found"
+msgstr ""
+
+#: shop/services/booking_services.py:34
+msgid "No rights to change this booking"
+msgstr ""
+
+#: shop/services/booking_services.py:36
+msgid "Booking is already closed"
+msgstr ""
+
+#: shop/services/booking_services.py:42 shop/services/cart_services.py:111
+msgid "Could not add transaction"
+msgstr ""
+
+#: shop/services/booking_services.py:130 shop/services/cart_services.py:65
+#: transactions/services/transaction_services.py:59
+#: transactions/services/transaction_services.py:481
+msgid "No rights to sell in this organization"
+msgstr ""
+
+#: shop/services/booking_services.py:140
+msgid "Could not checkout the booking"
+msgstr ""
+
+#: shop/services/cart_services.py:31 shop/services/cart_services.py:40
+msgid "Cart not found"
+msgstr ""
+
+#: shop/services/cart_services.py:71
+msgid "Could not checkout the cart"
+msgstr ""
+
+#: shop/services/cart_services.py:95 shop/services/cart_services.py:167
+msgid "No rights to change this cart"
+msgstr ""
+
+#: shop/services/cart_services.py:97
+msgid "Cart is already closed"
+msgstr ""
+
+#: shop/services/cart_services.py:100
+msgid "Organization does not have courier delivery"
+msgstr ""
+
+#: shop/services/cart_services.py:103
+msgid "Organization does not have self pick up option"
+msgstr ""
+
+#: shop/services/cart_services.py:206
+msgid "Insufficient quantity in stock."
+msgstr ""
+
+#: shop/services/cart_services.py:238
+#: transactions/services/transaction_services.py:193
+#: transactions/services/transaction_services.py:369
+#: transactions/services/transaction_services.py:515
+#: transactions/services/transaction_services.py:639
+msgid "Could not complete transaction"
+msgstr ""
+
+#: shop/services/cart_services.py:257 shop/services/cart_services.py:285
+#: transactions/services/transaction_services.py:469
+msgid "Insufficient quantity in stock"
+msgstr ""
+
+#: shop/services/cart_services.py:259
+#: transactions/services/transaction_services.py:471
+msgid "The product has no quantity"
+msgstr ""
+
+#: shop/services/cart_services.py:265
+msgid "The item is not related to this organization"
+msgstr ""
+
+#: shop/services/comment_services.py:23 shop/views/comment_views.py:60
+msgid "Comment not found"
+msgstr ""
+
+#: shop/services/item_services.py:23 stock/services.py:24 stock/services.py:31
+#: stock/services.py:164 stock/views.py:213
+msgid "ShopItem not found"
+msgstr ""
+
+#: shop/services/item_services.py:28
+msgid "No rights to edit this item"
+msgstr ""
+
+#: shop/views/cart_views.py:149
+msgid "Already delivered"
+msgstr ""
+
+#: shop/views/category_views.py:58
+msgid "ItemCategory not found"
+msgstr ""
+
+#: shop/views/comment_views.py:67
+msgid "Successfully deleted comment"
+msgstr ""
+
+#: shop/views/comment_views.py:69
+msgid "No rights to delete comment"
+msgstr ""
+
+#: shop/views/comment_views.py:105 shop/views/item_views.py:189
+msgid "Successfully updated like status"
+msgstr ""
+
+#: shop/views/comment_views.py:117
+msgid "You have already complained about this comment"
+msgstr ""
+
+#: shop/views/item_views.py:59 stock/services.py:38 stock/services.py:54
+#: stock/services.py:77 stock/services.py:94
+msgid "Shop item not found"
+msgstr ""
+
+#: shop/views/item_views.py:74
+msgid "Successfully added rental period"
+msgstr ""
+
+#: shop/views/item_views.py:109 shop/views/item_views.py:141
+msgid "Not found"
+msgstr ""
+
+#: shop/views/item_views.py:167
+msgid "Successfully updated published status"
+msgstr ""
+
+#: shop/views/item_views.py:211
+msgid "Successfully updated bookmark status"
+msgstr ""
+
+#: sms_sender/services.py:61 sms_sender/services.py:95
+#: sms_sender/services.py:133
 msgid "Error while sending SMS"
 msgstr ""
 
+#: stock/services.py:171
+msgid "ShopItemSetStock not found"
+msgstr ""
+
+#: stock/services.py:179
+msgid "ShopItemLinksSetStock not found"
+msgstr ""
+
+#: stock/services.py:277
+msgid "Сотрудник"
+msgstr ""
+
+#: stock/services.py:278
+msgid "Должность"
+msgstr ""
+
+#: stock/services.py:279
+msgid "Статус сделки"
+msgstr ""
+
+#: stock/services.py:280
+msgid "Вид сделки"
+msgstr ""
+
+#: stock/services.py:281
+msgid "Тип доставки"
+msgstr ""
+
+#: stock/services.py:282
+msgid "Курьерская служба"
+msgstr ""
+
+#: stock/services.py:283
+msgid "Статус доставки"
+msgstr ""
+
+#: stock/services.py:284
+msgid "Дата  доставки"
+msgstr ""
+
+#: stock/services.py:285
+msgid "Время  доставки"
+msgstr ""
+
+#: stock/services.py:286 stock/services.py:344
+msgid "Номер заказа"
+msgstr ""
+
+#: stock/services.py:287
+msgid "Дата"
+msgstr ""
+
+#: stock/services.py:288
+msgid "Время"
+msgstr ""
+
+#: stock/services.py:289
+msgid "Сумма до скидки"
+msgstr ""
+
+#: stock/services.py:290 stock/services.py:342
+msgid "Валюта"
+msgstr ""
+
+#: stock/services.py:291
+msgid "Снято с кэшбэка"
+msgstr ""
+
+#: stock/services.py:292
+msgid "Скидка%"
+msgstr ""
+
+#: stock/services.py:293
+msgid "Начисленно на кэшбэк"
+msgstr ""
+
+#: stock/services.py:294
+msgid "Экономия"
+msgstr ""
+
+#: stock/services.py:295
+msgid "Сумма итого"
+msgstr ""
+
+#: stock/services.py:296
+msgid "Клиент"
+msgstr ""
+
+#: stock/services.py:339
+msgid "Наименование товара"
+msgstr ""
+
+#: stock/services.py:340
+msgid "Категория товара"
+msgstr ""
+
+#: stock/services.py:341
+msgid "Стоимость"
+msgstr ""
+
+#: stock/services.py:343
+msgid "Артикл"
+msgstr ""
+
+#: stock/services.py:345
+msgid "Количество товара"
+msgstr ""
+
+#: stock/services.py:346
+msgid "Размер товара"
+msgstr ""
+
+#: stock/views.py:125 stock/views.py:143
+msgid "Successfully add set."
+msgstr ""
+
+#: stock/views.py:290
+msgid "ShopItemSizeCount not found"
+msgstr ""
+
 #: transactions/serializers/transaction_serializers.py:55
-#: transactions/services/transaction_services.py:117
+#: transactions/serializers/transaction_serializers.py:90
+#: transactions/services/transaction_services.py:148
+#: transactions/services/transaction_services.py:324
 msgid "Cashback amount is greater than original amount"
 msgstr ""
 
 #: transactions/serializers/transaction_serializers.py:61
+#: transactions/serializers/transaction_serializers.py:96
 msgid "Discount percent does not match with cards percent"
 msgstr ""
 
 #: transactions/services/stats_services.py:41
 #: transactions/views/stat_views.py:50
-#: transactions/views/transaction_views.py:270
+#: transactions/views/transaction_views.py:519
+#: transactions/views/transaction_views.py:617
 msgid "No rights to see stats of organization"
 msgstr ""
 
-#: transactions/services/transaction_services.py:42
+#: transactions/services/transaction_services.py:52
 msgid "Transaction not found"
 msgstr ""
 
-#: transactions/services/transaction_services.py:52
+#: transactions/services/transaction_services.py:62
 msgid "No rights to use this cart"
 msgstr ""
 
-#: transactions/services/transaction_services.py:89
+#: transactions/services/transaction_services.py:81
+msgid "No rights to book in this organization"
+msgstr ""
+
+#: transactions/services/transaction_services.py:84
+msgid "No rights to use this booking"
+msgstr ""
+
+#: transactions/services/transaction_services.py:120
+#: transactions/services/transaction_services.py:296
 msgid "Client cannot use this card"
 msgstr ""
 
-#: transactions/services/transaction_services.py:98
+#: transactions/services/transaction_services.py:129
+#: transactions/services/transaction_services.py:305
 msgid "Not enough accrued cashback amount"
 msgstr ""
 
-#: transactions/services/transaction_services.py:102
+#: transactions/services/transaction_services.py:133
 msgid "Transaction and cart do not match"
 msgstr ""
 
-#: transactions/services/transaction_services.py:109
+#: transactions/services/transaction_services.py:140
+#: transactions/services/transaction_services.py:316
 msgid "Original amount do not match with cart amounts"
 msgstr ""
 
-#: transactions/services/transaction_services.py:496
+#: transactions/services/transaction_services.py:309
+msgid "Transaction and booking do not match"
+msgstr ""
+
+#: transactions/services/transaction_services.py:1057
 msgid "This transaction already was rejected"
 msgstr ""
 
-#: transactions/views/transaction_views.py:106
-#: transactions/views/transaction_views.py:131
+#: transactions/services/transaction_services.py:1425
+#, fuzzy
+#| msgid "This field is required"
+msgid "This rental already was activated"
+msgstr "Это поле обязательное"
+
+#: transactions/views/transaction_views.py:175
+#: transactions/views/transaction_views.py:206
+#: transactions/views/transaction_views.py:230
+#: transactions/views/transaction_views.py:254
 msgid "Transaction successfully completed"
 msgstr ""
 
-#: users/admin.py:35
+#: transactions/views/transaction_views.py:670
+msgid "Transaction successfully paid"
+msgstr ""
+
+#: transactions/views/transaction_views.py:705
+msgid "Transaction not found for this booking"
+msgstr ""
+
+#: transactions/views/transaction_views.py:709
+msgid "Users don't match"
+msgstr "Пользователи не совпадают"
+
+#: users/admin.py:39
 msgid "Personal info"
 msgstr ""
 
-#: users/admin.py:36
+#: users/admin.py:42
 msgid "Permissions"
 msgstr ""
 
-#: users/admin.py:39
+#: users/admin.py:45
 msgid "Important dates"
+msgstr ""
+
+#: users/admin.py:113
+msgid "Название организации"
+msgstr ""
+
+#: users/admin.py:114
+msgid "Вид деятельности"
+msgstr ""
+
+#: users/admin.py:115
+msgid "номер телефона1"
+msgstr ""
+
+#: users/admin.py:116
+msgid "номер телефона2"
+msgstr ""
+
+#: users/admin.py:117
+msgid "instagram"
+msgstr ""
+
+#: users/admin.py:118
+msgid "страна"
+msgstr ""
+
+#: users/admin.py:119
+msgid "город"
+msgstr ""
+
+#: users/admin.py:120
+msgid "адрес"
+msgstr ""
+
+#: users/admin.py:139
+msgid "Download user organizations"
 msgstr ""
 
 #: users/managers.py:12
 msgid "User must have an phone_number address"
 msgstr ""
 
-#: users/models.py:47
+#: users/models.py:49
 msgid "Only one common client can exist"
 msgstr ""
 
-#: users/services.py:26
+#: users/models.py:111
+msgid "Key"
+msgstr ""
+
+#: users/models.py:126
+msgid "Token"
+msgstr ""
+
+#: users/models.py:127
+msgid "Tokens"
+msgstr ""
+
+#: users/services.py:29
 msgid "User not found"
 msgstr ""
 
-#: users/services.py:37
+#: users/services.py:40
 msgid "Error while creating user"
 msgstr ""
 
-#: users/services.py:61
+#: users/services.py:59
 msgid "Error while initializing profile"
 msgstr ""
 
-#: users/services.py:72
+#: users/services.py:70
 msgid "Incorrect old password"
 msgstr ""
 
-#: users/services.py:83
+#: users/services.py:81
 msgid "Error while changing number"
 msgstr ""
 
-#: users/services.py:98 users/services.py:136 users/services.py:216
+#: users/services.py:195 users/services.py:259 users/services.py:339
 msgid "Code not found"
 msgstr ""
 
-#: users/services.py:112 users/services.py:194
-msgid "Limit exceeded"
-msgstr ""
-
-#: users/services.py:116
+#: users/services.py:211
 msgid "Error while creating temporary code"
 msgstr ""
 
-#: users/services.py:131 users/services.py:211
-msgid "Code expired"
+#: users/services.py:252
+msgid "Code time expired"
 msgstr ""
 
-#: users/services.py:179
+#: users/services.py:302
 msgid "Temporary phone number not found"
 msgstr ""
 
-#: users/services.py:203
+#: users/services.py:317
+msgid "Limit exceeded"
+msgstr ""
+
+#: users/services.py:326
 msgid "Error while creating temporary code for new phone_number"
 msgstr ""
 
-#: users/views.py:47
+#: users/services.py:334
+msgid "Code expired"
+msgstr ""
+
+#: users/views.py:78
 msgid "User has successfully created"
 msgstr ""
 
-#: users/views.py:61
+#: users/views.py:90
+msgid "User deleted"
+msgstr ""
+
+#: users/views.py:103
 msgid "User found"
 msgstr ""
 
-#: users/views.py:90
+#: users/views.py:141
 msgid "Successfully validated"
 msgstr ""
 
-#: users/views.py:115
+#: users/views.py:166
 msgid "You can not resend"
 msgstr ""
 
-#: users/views.py:126
+#: users/views.py:189
 msgid "Code has successfully sent"
 msgstr ""
 
-#: users/views.py:170
+#: users/views.py:247
 msgid "You have successfully set password"
 msgstr ""
 
-#: users/views.py:194
+#: users/views.py:275
 msgid "Successfully logged in"
 msgstr ""
 
-#: users/views.py:200
+#: users/views.py:281
 msgid "Wrong credentials"
 msgstr ""
 
-#: users/views.py:214
+#: users/views.py:295
 msgid "Successfully logged out"
 msgstr ""
 
-#: users/views.py:236
+#: users/views.py:317
 msgid "Password has successfully changed"
 msgstr ""
 
-#: users/views.py:267
+#: users/views.py:348
 msgid "Code sent"
 msgstr ""
 
-#: users/views.py:346
+#: users/views.py:428
 msgid "Code sent to old number and email"
 msgstr ""
 
-#: users/views.py:367
+#: users/views.py:449
 msgid "You have not permission to do this operation"
 msgstr ""
 
-#: users/views.py:378
+#: users/views.py:460
 msgid "You have successfully changed auth number"
 msgstr ""
 
-#: users/views.py:400
+#: users/views.py:482
 msgid "Code sent to new phone number"
+msgstr ""
+
+#: users/views.py:541
+msgid "Invalid id"
+msgstr ""
+
+#: users/views.py:584
+msgid "User does not exists"
 msgstr ""
 
 #, fuzzy

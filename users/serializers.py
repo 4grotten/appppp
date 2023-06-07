@@ -129,6 +129,14 @@ class AttendanceEmployeeSerializer(serializers.ModelSerializer):
         fields = ('id', 'avatar', 'full_name', 'role', 'attendance',)
 
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+
+    class Meta:
+        model = User
+        fields = ('id', 'avatar', 'full_name', 'phone_number')
+
+
 class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     attendance = serializers.SerializerMethodField()

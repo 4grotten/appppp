@@ -1,35 +1,94 @@
+import calendar
+
 from django.db import IntegrityError
-from django.db.models import Count
+from datetime import datetime
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from common.exceptions import IntegrityException, NotAcceptableException
+from common.exceptions import IntegrityException, NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint
+from shop.models import ShopItem, Complaint, Booking
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
-    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemChangePublishedSerializer, SubscriptionItemSerializer,
-    ItemFeedSerializer, StartDateTimeSerializer
+    ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
+    SubscriptionItemSerializer,
+    ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
+    BookInfoSerializer,
+    BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
+    ItemRentalMinuteSerializer
 )
+from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
+from shop.services.booking_services import BookingService
 from utils.translator import GoogleTranslator
 
 
 class ItemCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ItemCreateUpdateSerializer
+
+
+class ItemRentalCreateView(CreateAPIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ItemCreateUpdateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(purchase_type='rent')
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RentItemPeriodCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk, format=None):
+        try:
+            rental = ShopItemService.get(id=pk)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException(_('Shop item not found'))
+        rental_period_data = {
+            'rent_time_type': request.data.get('rent_time_type'),
+            'start_date': request.data.get('start_date'),
+            'end_date': request.data.get('end_date'),
+            'start_time': request.data.get('start_time'),
+            'end_time': request.data.get('end_time')
+        }
+        rental_period_serializer = RentItemsPeriodSerializer(data=rental_period_data)
+        if rental_period_serializer.is_valid():
+            rental_period = rental_period_serializer.save()
+        else:
+            return Response(rental_period_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        rental.rental_period = rental_period
+        rental.save()
+        return Response(data={'message': _('Successfully added rental period')})
+
+
+class RentalPeriodRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RentItemsPeriodSerializer
+    queryset = ShopItem.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        rental = self.get_object()
+        rental_period = rental.rental_period
+        serializer = self.get_serializer(rental_period)
+        return Response(serializer.data)
 
 
 class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -56,6 +115,38 @@ class ItemRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         self.serializer_class = ItemRetrieveSerializer
+        self.serializer_class(context={'request': self.request})
+        return super().retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        CartItemService.delete_item_from_all_carts(item=ShopItem.objects.get(id=kwargs['pk']))
+        return super().delete(self, request, *args, **kwargs)
+
+
+class ItemRentalRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, CanEditItem)
+    serializer_class = ItemCreateUpdateSerializer
+    queryset = ShopItem.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        ShopItemService.delete_instagram_images(item_id=kwargs['pk'])
+        ShopItemService.delete_instagram_video(item_id=kwargs['pk'])
+        ShopItemService.change_updated_at_and_is_updated_and_removed_at_field(item_id=kwargs['pk'])
+        # ShopItemService.remove_stock_if_change_subcategory(item_id=kwargs['pk'], subcategory_id=request.data['subcategory'])
+        return super().put(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            self.permission_classes = (AllowAny, CanViewUnpublishedItem,)
+        return super().get_permissions()
+
+    def retrieve(self, request, *args, **kwargs):
+        if not kwargs['pk'].isdigit():
+            return Response(data={
+                'details': _('Not found')
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        self.serializer_class = ItemRentalRetrieveSerializer
         self.serializer_class(context={'request': self.request})
         return super().retrieve(request, *args, **kwargs)
 
@@ -245,3 +336,281 @@ class SuggestSearchItem(ListAPIView):
         response = ShopItemService.get_suggest_items(response)
 
         return response
+
+
+class GetYearsView(ListAPIView):
+    serializer_class = ItemRentalYearSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+        rental_period = shop_item.rental_period
+        if rental_period is None:
+            return []
+        start_year = rental_period.start_date.year
+        end_year = rental_period.end_date.year
+        queryset = [{'value': str(year), 'is_booked': False, 'is_available':True} for year in range(start_year, end_year + 1)]
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class GetMonthsView(ListAPIView):
+    serializer_class = ItemRentalMonthSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        year = time_datetime.year
+
+        months = [datetime(year, month, 1).date() for month in range(1, 13)]
+
+        queryset = []
+        for month in months:
+            queryset.append({
+                'value': month.strftime('%Y-%m-%dT%H:%M'),
+                'is_booked': False,
+                'is_available': True
+            })
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+class GetDaysView(ListAPIView):
+    serializer_class = ItemRentalDaySerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        year = time_datetime.year
+        month = time_datetime.month
+        num_days = calendar.monthrange(year, month)[1]
+
+        # Generate the list of days
+        days = [datetime(year, month, day).date() for day in range(1, num_days + 1)]
+
+        queryset = []
+        for day in days:
+            queryset.append({
+                'value': day.strftime('%Y-%m-%d'),
+                'is_booked': False,
+                'is_available': True
+            })
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class GetHoursView(ListAPIView):
+    serializer_class = ItemRentalHourSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        rental_period = shop_item.rental_period
+        if rental_period is None:
+            return []
+
+        year = time_datetime.year
+        month = time_datetime.month
+        day = time_datetime.day
+
+        hours = [{'value': datetime(year, month, day, hour), 'is_booked': False, 'is_available': True} for hour in
+                    range(0, 24)]
+
+        return hours
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class GetMinutesView(ListAPIView):
+    serializer_class = ItemRentalMinuteSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        pk = self.kwargs.get('pk')
+        rental = ShopItem.objects.filter(pk=pk).first()
+        context['rental'] = rental
+        context['time_query'] = self.request.query_params.get('time')
+        return context
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        shop_item = ShopItem.objects.filter(pk=pk).first()
+        if shop_item is None:
+            return []
+
+        timestamp = self.request.query_params.get('time')
+        if not timestamp:
+            return []
+
+        try:
+            time_datetime = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            return []
+
+        rental_period = shop_item.rental_period
+        if rental_period is None:
+            return []
+
+        year = time_datetime.year
+        month = time_datetime.month
+        day = time_datetime.day
+        hour = time_datetime.hour
+
+        minutes = [{'value': datetime(year, month, day, hour, minute), 'is_booked': False, 'is_available': True} for minute in
+                    range(0, 60)]
+
+        return minutes
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(data=queryset, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class BookRentalView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = BookInfoSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        rental = ShopItem.objects.get(id=pk)
+        start_time = serializer.validated_data.get('start_time')
+        end_time = serializer.validated_data.get('end_time')
+        booking = Booking.objects.create(user=request.user,
+                                         item=rental,
+                                         organization=serializer.validated_data.get('organization', None),
+                                         start_time=start_time,
+                                         end_time=end_time
+                                         )
+
+        booking_process = BookingService.process_booking(user=request.user, booking_id=booking.id)
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": booking_process.transaction_id
+            }
+        )
+
+
+class BookingAnonymousCheckoutView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BookingTransactionWithClientSerializer
+
+    def post(self, request, pk):
+        serializer = BookInfoWithUTCSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        rental = ShopItem.objects.get(id=pk)
+        start_time = serializer.validated_data.get('start_time')
+        end_time = serializer.validated_data.get('end_time')
+        booking = Booking.objects.create(user=request.user,
+                                         item=rental,
+                                         organization=serializer.validated_data.get('organization', None),
+                                         start_time=start_time,
+                                         end_time=end_time
+                                         )
+        transaction = BookingService.checkout_booking_for_anonymous_client(
+            request=request, employee=request.user, booking_id=booking.id,
+            utc_offset_minutes=serializer.validated_data['utc_offset_minutes']
+        )
+        data = self.serializer_class(transaction, context={'request': request}).data
+        return Response(data)

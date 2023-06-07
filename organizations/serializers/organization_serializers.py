@@ -471,11 +471,18 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     image = ImageSerializer()
     time_working = serializers.CharField(read_only=True)
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, organization: Organization):
+        if self.context['request'].user.is_anonymous:
+            return None
+        return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                             user=self.context['request'].user)
 
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check'
+                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions'
                   )
         read_only_fields = ['verification_status']
 
@@ -488,6 +495,25 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
             'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check'
+        )
+        read_only_fields = ['verification_status']
+
+
+class OrganizationInBookingDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+    time_working = serializers.CharField(read_only=True)
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, organization: Organization):
+        if self.context['request'].user.is_anonymous:
+            return None
+        return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                             user=self.context['request'].user)
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'permissions'
         )
         read_only_fields = ['verification_status']
 

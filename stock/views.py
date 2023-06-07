@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
 from io import BytesIO
@@ -22,7 +22,7 @@ from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, Cr
     ShopItemShortSerializer, LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, \
     ShopItemSizeCountSetSerializer, AddShopItemSizeCountSetSerializer, StockSerializer, StockSetsSerializer, \
     ShopLinkItemsSetSerializer, OrganizationShopItemsInSetSerializer, OrganizationSubcategorySerializer, \
-    ShopItemSetIdsSerializer
+    ShopItemSetIdsSerializer, RentalStockSerializer
 from stock.services import StockService
 
 
@@ -32,6 +32,15 @@ class StockView(RetrieveAPIView):
 
     def get_object(self):
         return ShopItemService.get(id=self.kwargs['pk'])
+
+
+class RentalStockView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RentalStockSerializer
+
+    def get_object(self):
+        return ShopItemService.get(id=self.kwargs['pk'])
+
 
 class StockSetsView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
@@ -175,6 +184,10 @@ class OrganizationSubcategoryListView(ListAPIView):
 
     def get_queryset(self):
         main_item = ShopItemService.get(id=self.kwargs['pk'])
+        if main_item.purchase_type == 'rent':
+            subcategories = ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)
+            return subcategories.annotate(
+                search_type_ordering=Case(When(Q(name="Аренда"), then=Value(1)),default=Value(-1),output_field=IntegerField(),)).order_by('-search_type_ordering')
         return ItemSubcategoryService.get_orgs_nonempty_subcategories(organization_id=main_item.organization_id)
 
 
@@ -297,6 +310,125 @@ class DownloadOrgDeliveryInfoAPIView(APIView):
             writer = pd.ExcelWriter(b, engine='xlsxwriter')
             df_deals.to_excel(writer, sheet_name='Сделки', index=False)
             df_items.to_excel(writer, sheet_name='Товары', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+
+class DownloadOrgRentalInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_rental_deals(queryset)
+        dict_rental_data = StockService.get_dict_data_for_rentals(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_rentals = pd.DataFrame(dict_rental_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_rentals.to_excel(writer, sheet_name='Аренда', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+class DownloadRentalInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        return StockService.get_rental_info(item=item,
+                                           start_time=self.request.query_params.get('start_time'),
+                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_rental_deals(queryset)
+        dict_rental_data = StockService.get_dict_data_for_rentals(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_rentals = pd.DataFrame(dict_rental_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_rentals.to_excel(writer, sheet_name='Аренда', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_rental_min_and_max_date_info(
+                    item=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+class DownloadOrgDeliveryRentalInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_deals(queryset)
+        dict_items_data = StockService.get_dict_data_for_shop_item(queryset)
+        dict_rental_data = StockService.get_dict_data_for_rentals(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_items = pd.DataFrame(dict_items_data)
+        df_rentals = pd.DataFrame(dict_rental_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_items.to_excel(writer, sheet_name='Товары', index=False)
+            df_rentals.to_excel(writer, sheet_name='Аренда', index=False)
             writer.save()
             if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
                 filename = '{start_time} - {end_time}.xlsx'.format(

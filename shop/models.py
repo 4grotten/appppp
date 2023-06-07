@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.db.models import PointField
 
 from common.models import TimestampModel, File, FileVideo
 from organizations.models import Organization
@@ -40,6 +41,24 @@ class ItemSubcategory(models.Model):
         ordering = ('-organization', 'name',)
 
 
+class RentalPeriod(models.Model):
+    time_choices = (
+        ('minute', 'minute'),
+        ('hour', 'hour'),
+        ('day', 'day'),
+        ('month', 'month'),
+        ('year', 'year'),
+    )
+    rent_time_type = models.CharField(max_length=55, choices=time_choices, null=True, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def str(self):
+        return f'{self.start_date} - {self.end_date}, {self.start_time} - {self.end_time}'
+
+
 class ShopItem(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
@@ -65,6 +84,25 @@ class ShopItem(models.Model):
     is_hidden = models.BooleanField(default=False)
 
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
+
+    type_choices = (
+        ('product', 'product'),
+        ('rent', 'rent')
+    )
+    purchase_type = models.CharField(max_length=55, choices=type_choices, default='product', null=True, blank=True)
+
+    address = models.CharField(max_length=255, null=True, blank=True)
+    location = PointField(help_text="Для создания местоположения", null=True, blank=True)
+
+    rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
+
+    @property
+    def full_location(self):
+        full_location = dict(
+            latitude=None if not self.location or not self.location.y else self.location.y,
+            longitude=None if not self.location or not self.location.x else self.location.x
+        )
+        return full_location
 
     @property
     def liked_users_list(self):
@@ -160,6 +198,22 @@ class CartItem(TimestampModel):
             models.UniqueConstraint(fields=('cart', 'item', 'size'), name='unique_item_in_user_cart')
         ]
         ordering = ['-created_at']
+
+
+class Booking(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='bookings')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_bookings', null=True, blank=True)
+    is_open = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
+    transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, related_name='booking', null=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+
+
+    def __str__(self):
+        return f'Booking of {self.user} in {self.organization}'
+
 
 
 class Complaint(TimestampModel):

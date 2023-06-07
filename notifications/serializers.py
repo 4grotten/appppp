@@ -15,11 +15,15 @@ class NotificationSerializer(serializers.ModelSerializer):
     sender = ProfileSerializer(many=False, allow_null=True)
     organization = OrganizationNotificationInfo(allow_null=True)
     item = ItemInHotlinkSerializer(many=False, allow_null=True)
+    is_client = serializers.SerializerMethodField()
+
+    def get_is_client(self, notification: Notification) -> bool:
+        return 'client' in notification.type.lower()
 
     class Meta:
         model = Notification
         fields = ('id', 'created_at', 'updated_at', 'sender', 'extra_data',
-                  'mode', 'title', 'description', 'is_read', 'organization', 'item', 'type')
+                  'mode', 'title', 'description', 'is_read', 'organization', 'item', 'type', 'is_client')
 
 
 class CustomFCMDeviceSerializer(FCMDeviceSerializer):
@@ -48,7 +52,7 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         model = NotificationSetting
         fields = (
             'id', 'discount_notifications', 'private_notifications', 'organization_notifications',
-            'product_notifications', 'delivery_notifications')
+            'product_notifications', 'delivery_notifications', 'rental_notifications')
         extra_kwargs = {"id": {"read_only": True, "required": False}}
 
 

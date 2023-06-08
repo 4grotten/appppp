@@ -513,6 +513,22 @@ class TransactionService:
         except IntegrityError:
             raise StockException(_('The product has no quantity'))
 
+
+    @classmethod
+    def change_back_count_service(cls, cart_item, size):
+        try:
+            if ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item).exists():
+                item_size_count = ShopItemSizeCount.objects.filter(size=size, main_shop_item=cart_item.item)[0]
+                try:
+                    item_size_count.count += cart_item.count
+                    item_size_count.save()
+                except IntegrityError:
+                    raise StockException(_('Insufficient quantity in stock'))
+            else:
+                raise StockException(_('The product has no quantity'))
+        except IntegrityError:
+            raise StockException(_('The product has no quantity'))
+
     @classmethod
     @transaction.atomic
     def complete_online_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
@@ -1132,6 +1148,13 @@ class TransactionService:
             old_transaction.save()
         except:
             raise IntegrityException()
+
+        # Return the goods back to stock
+        for cart_item in old_transaction.cart.items.all():
+            if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                cls.change_back_count_service(size=cart_item.size, cart_item=cart_item)
+            else:
+                cls.change_back_count_service(size=None, cart_item=cart_item)
 
         client_status = OrganizationClientFinancialStatusService.get(
             user=old_transaction.client, organization=old_transaction.organization

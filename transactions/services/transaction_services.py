@@ -524,8 +524,6 @@ class TransactionService:
                     item_size_count.save()
                 except IntegrityError:
                     raise StockException(_('Insufficient quantity in stock'))
-            else:
-                raise StockException(_('The product has no quantity'))
         except IntegrityError:
             raise StockException(_('The product has no quantity'))
 
@@ -1133,6 +1131,14 @@ class TransactionService:
         except Cart.DoesNotExist:
             fixed_cart = None
 
+        if old_transaction.status == Transaction.ACCEPTED:
+            for cart_item in old_transaction.cart.items.all():
+                if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                    cls.change_back_count_service(size=cart_item.size, cart_item=cart_item)
+                else:
+                    cls.change_back_count_service(size=None, cart_item=cart_item)
+
+
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
         try:
             old_transaction.employee_name = user.full_name
@@ -1148,13 +1154,6 @@ class TransactionService:
             old_transaction.save()
         except:
             raise IntegrityException()
-
-        # Return the goods back to stock
-        for cart_item in old_transaction.cart.items.all():
-            if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
-                cls.change_back_count_service(size=cart_item.size, cart_item=cart_item)
-            else:
-                cls.change_back_count_service(size=None, cart_item=cart_item)
 
         client_status = OrganizationClientFinancialStatusService.get(
             user=old_transaction.client, organization=old_transaction.organization

@@ -28,7 +28,8 @@ from .views.organization_views import (
     InstagramAccountAPIView, InstagramParseLastDataAPIView, OrganizationCreationLimitView, DeactivateOrganizationView,
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
     OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView,
-    OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView
+    OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
+    OrganizationsGoogleMapsCreateView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -53,6 +54,7 @@ organization_urls = [
 
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
+    path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(), name='user_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organization/<int:pk>/verifications/', OrgVerifications.as_view(), name='organizations_verifications'),
     path('organizations/<int:pk>/delivery_settings/', DeliverySettingsView.as_view(), name='delivery_settings'),

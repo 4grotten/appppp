@@ -404,3 +404,6 @@ MAP_WIDGETS = {
     # ),
     "GOOGLE_MAP_API_KEY": "AIzaSyBqsPpFSiHwmvV1xz0hqkSWeNLbuChKqg0"
 }
+
+
+GOOGLE_MAP_API_KEY = "AIzaSyA0bvvniHRGe7tLKYupkWSf1_b31mdMlFA"

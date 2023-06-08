@@ -355,6 +355,10 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class OrganizationGoogleMapsCreateSerializer(serializers.Serializer):
+    google_maps_url = serializers.URLField()
+
+
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
     longitude = serializers.FloatField(allow_null=True)

@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
+from common.models import File, Currency, Country, City
 from common.utils import method_permission_classes
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
@@ -37,13 +38,14 @@ from organizations.serializers.organization_serializers import (
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
-    OrganizationBlacklistSerializer, BlockedUserSerializer
+    OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
+from organizations.services.google_maps_services import GoogleMapsService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
     OrganizationInstagramIntegrationService
@@ -55,6 +57,7 @@ from organizations.tasks import (
 )
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from typing import List
 
 
 class OrgVerifications(CreateAPIView):
@@ -119,6 +122,56 @@ class OrganizationsListCreateView(ListCreateAPIView):
         num_members = random.randint(28, 130)
         if organization.country.code == 'AE':
             transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
+
+        data = OrganizationDetailedSerializer(organization, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class OrganizationsGoogleMapsCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationGoogleMapsCreateSerializer
+
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user)).annotate(
+    #         priority=Case(When(owner=user, then=0), default=1, output_field=IntegerField(), )
+    #     ).order_by('priority').distinct()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        google_maps_url = serializer.validated_data['google_maps_url']
+        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        image_id = File.objects.get(id=parsed_data['image_id'])
+        currency = Currency.objects.get(code=parsed_data['currency'])
+        country = Country.objects.get(code=parsed_data['country'])
+        city = City.objects.get(id=parsed_data['city'])
+        organization = OrganizationService.create_organization(owner=request.user,
+                                                               title=parsed_data['title'],
+                                                               image_id=image_id,
+                                                               longitude=parsed_data['longitude'],
+                                                               latitude=parsed_data['latitude'],
+                                                               numbers=parsed_data['numbers'],
+                                                               accounts=parsed_data['accounts'],
+                                                               cards=parsed_data['cards'],
+                                                               description=parsed_data['description'],
+                                                               opens_at=parsed_data['opens_at'],
+                                                               closes_at=parsed_data['closes_at'],
+                                                               address=parsed_data['address'],
+                                                               currency=currency,
+                                                               country=country,
+                                                               city=city,
+                                                               types=[parsed_data['types']]
+                                                               )
+
+        # num_members = random.randint(28, 130)
+        # if organization.country.code == 'AE':
+        #     transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
 
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)

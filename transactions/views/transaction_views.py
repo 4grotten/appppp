@@ -616,6 +616,15 @@ class UserUnprocessedTransactionCountView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class UserRentalUnprocessedTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = TransactionService.get_rental_unprocessed_transactions_count(user=request.user)
+        data = dict(count=count)
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class OrganizationUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserShortInfoSerializer

@@ -57,7 +57,6 @@ from organizations.tasks import (
 )
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
-from typing import List
 
 
 class OrgVerifications(CreateAPIView):
@@ -131,12 +130,6 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationGoogleMapsCreateSerializer
 
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     return Organization.objects.filter(Q(owner=user) | Q(memberships__user=user)).annotate(
-    #         priority=Case(When(owner=user, then=0), default=1, output_field=IntegerField(), )
-    #     ).order_by('priority').distinct()
-
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
 
@@ -147,10 +140,14 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
         parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
-        image_id = File.objects.get(id=parsed_data['image_id'])
-        currency = Currency.objects.get(code=parsed_data['currency'])
-        country = Country.objects.get(code=parsed_data['country'])
-        city = City.objects.get(id=parsed_data['city'])
+        try:
+            image_id = File.objects.get(id=parsed_data['image_id'])
+        except File.DoesNotExist:
+            raise ObjectNotFoundException(_('File not found'))
+        currency = None if parsed_data['currency'] is None else Currency.objects.get(code=parsed_data['currency'])
+        country = None if parsed_data['country'] is None else Country.objects.get(code=parsed_data['country'])
+        city = None if parsed_data['city'] is None else City.objects.get(id=parsed_data['city'])
+        types = None if parsed_data['types'] is None else [parsed_data['types']]
         organization = OrganizationService.create_organization(owner=request.user,
                                                                title=parsed_data['title'],
                                                                image_id=image_id,
@@ -166,12 +163,12 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                                                                currency=currency,
                                                                country=country,
                                                                city=city,
-                                                               types=[parsed_data['types']]
+                                                               types=types
                                                                )
 
-        # num_members = random.randint(28, 130)
-        # if organization.country.code == 'AE':
-        #     transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
+        num_members = random.randint(28, 130)
+        if organization.country.code == 'AE':
+            transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
 
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)

@@ -54,7 +54,8 @@ organization_urls = [
 
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
-    path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(), name='user_organizations'),
+    path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(),
+         name='user_google_maps_organizations'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organization/<int:pk>/verifications/', OrgVerifications.as_view(), name='organizations_verifications'),
     path('organizations/<int:pk>/delivery_settings/', DeliverySettingsView.as_view(), name='delivery_settings'),

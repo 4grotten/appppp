@@ -5,6 +5,7 @@ import requests
 import googlemaps
 from django.conf import settings
 from urllib.parse import urljoin
+from rest_framework.exceptions import ValidationError
 
 HEADERS = {
     'Upgrade-Insecure-Requests': '1',
@@ -26,16 +27,22 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL) -> str:
-        if gMaps_URL.split('/')[4] == 'place':
-            print('[ERR] Неверная ссылка')
-            print('''[INF] Чтобы получить правильную ссылку выберите место на ка нарте,
-                           нажмите поделиться -> Скопировать ссылку''')
-        else:
-            page_source = requests.get(gMaps_URL, headers=HEADERS).text
-            cid = re.search(r'ludocid\\\\u003d(.*?)\\\\u00', page_source).group(1).strip('\\')
-            url = f"https://maps.google.com/?cid={cid}"
+        page_source = requests.get(gMaps_URL, headers=HEADERS).text
+        cid_match = re.search(r'ludocid\\\\u003d(.*?)\\\\u00', page_source)
+        if cid_match is None:
+            error_data = {
+                "message": "Invalid input",
+                "errors": {
+                    "google_maps_url": [
+                        "Enter a valid URL."
+                    ]
+                }
+            }
+            raise ValidationError(error_data)
+        cid = cid_match.group(1).strip('\\')
+        url = f"https://maps.google.com/?cid={cid}"
 
-            return cid
+        return cid
 
     @classmethod
     def get_place_details(cls, gMaps_URL: str) -> Dict:

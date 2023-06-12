@@ -148,6 +148,8 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
         country = None if parsed_data['country'] is None else Country.objects.get(code=parsed_data['country'])
         city = None if parsed_data['city'] is None else City.objects.get(id=parsed_data['city'])
         types = None if parsed_data['types'] is None else [parsed_data['types']]
+        opens_at = "08:00:00" if parsed_data['opens_at'] is None else parsed_data['opens_at']
+        closes_at = "18:00:00" if parsed_data['closes_at'] is None else parsed_data['closes_at']
         organization = OrganizationService.create_organization(owner=request.user,
                                                                title=parsed_data['title'],
                                                                image_id=image_id,
@@ -157,8 +159,8 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                                                                accounts=parsed_data['accounts'],
                                                                cards=parsed_data['cards'],
                                                                description=parsed_data['description'],
-                                                               opens_at=parsed_data['opens_at'],
-                                                               closes_at=parsed_data['closes_at'],
+                                                               opens_at=opens_at,
+                                                               closes_at=closes_at,
                                                                address=parsed_data['address'],
                                                                currency=currency,
                                                                country=country,

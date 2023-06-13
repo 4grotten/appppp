@@ -137,15 +137,24 @@ class GoogleMapsService:
 
         URL_COUNTRIES_AND_CITIES = urljoin(base_url, f'countries_and_cities/?search={sity_name}')
         r = requests.get(URL_COUNTRIES_AND_CITIES)
-        sity_ID = r.json()['results']['cities'][0]['id']
+        results = r.json().get('results', {})
 
-        return sity_ID
+        cities = results.get('cities', [])
+        if cities:
+            city_id = cities[0]['id']
+            return city_id
+        else:
+            return None
 
     @classmethod
-    def get_place_type_ID(cls, gMaps_URL, request) -> str:
+    def get_place_type_ID(cls, gMaps_URL, request):
         page_source = requests.get(gMaps_URL, headers=HEADERS).text
 
-        place_type = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source).group(2)
+        match = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source)
+        if match is None:
+            return None
+
+        place_type = match.group(2)
         token = request.headers.get('Authorization')
         _headers = {'Authorization': token, 'Accept-Language': 'ru'}
 

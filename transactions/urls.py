@@ -14,7 +14,7 @@ from transactions.views.transaction_views import (
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
-    OrganizationRentalCustomerTransactionView
+    OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView
 )
 
 urlpatterns = [
@@ -69,6 +69,8 @@ urlpatterns = [
          name='sale_rental_transaction_organizations'),
     path('statistics/unprocessedTranCount/', UserUnprocessedTransactionCountView.as_view(),
          name='unprocessed_transaction_count'),
+    path('statistics/unprocessedTranCount/rental/', UserRentalUnprocessedTransactionCountView.as_view(),
+         name='unprocessed_rental_transaction_count'),
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),

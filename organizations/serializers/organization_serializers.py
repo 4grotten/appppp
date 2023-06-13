@@ -1,3 +1,5 @@
+import re
+
 from decimal import Decimal
 from typing import Optional
 
@@ -353,6 +355,18 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['owner'] = self.context['request'].user
         return attrs
+
+
+class OrganizationGoogleMapsCreateSerializer(serializers.Serializer):
+    google_maps_url = serializers.URLField()
+
+    def validate_google_maps_url(self, value):
+        pattern = r'^(https:\/\/goo\.gl\/maps\/[a-zA-Z0-9]+)|(https:\/\/maps\.app\.goo\.gl\/[a-zA-Z0-9\?=_-]+)$'
+
+        if not re.match(pattern, value):
+            raise serializers.ValidationError(_("Invalid Google Maps URL"))
+
+        return value
 
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):

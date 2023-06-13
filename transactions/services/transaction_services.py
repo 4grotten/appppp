@@ -1407,6 +1407,14 @@ class TransactionService:
                                           status=Transaction.IN_PROGRESS, type=Transaction.ONLINE).count()
 
     @classmethod
+    def get_rental_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.ONLINE, booking__item__purchase_type='rent').count()
+
+    @classmethod
     def get_user_sale_transactions(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))

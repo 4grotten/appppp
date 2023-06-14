@@ -1,6 +1,10 @@
 import os
+import requests
+import logging
 from urllib import request
-
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.gis.db.models import PointField
 from django.core.files import File as Files
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -84,17 +88,35 @@ class File(TimestampModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if self.image_url and not self.file:
-            counter = 0
-            while counter <= 10:
+            if self.image_url.startswith('https://renty.ae'):
                 try:
-                    result = request.urlretrieve(self.image_url)
-                    self.file.save(
+                    response = requests.get(self.image_url)
+                    img = Image.open(BytesIO(response.content))
+                    img_io = BytesIO()
+                    img.save(img_io, format='JPEG')
+                    img_file = InMemoryUploadedFile(
+                        img_io,
+                        None,
                         os.path.basename(self.image_url),
-                        Files(open(result[0], 'rb'))
+                        'image/jpeg',
+                        img_io.tell,
+                        None
                     )
-                    break
-                except:
-                    continue
+                    self.file = img_file
+                except Exception as e:
+                    logging.error(f"Error occurred during image retrieval: {str(e)}")
+            else:
+                counter = 0
+                while counter <= 10:
+                    try:
+                        result = request.urlretrieve(self.image_url)
+                        self.file.save(
+                            os.path.basename(self.image_url),
+                            Files(open(result[0], 'rb'))
+                        )
+                        break
+                    except:
+                        continue
         super(File, self).save()
 
     class Meta:

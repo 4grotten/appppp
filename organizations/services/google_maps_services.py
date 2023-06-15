@@ -27,9 +27,12 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL) -> str:
-        page_source = requests.get(gMaps_URL, headers=HEADERS).text
-        cid_match = re.search(r'ludocid\\\\u003d(.*?)\\\\u00', page_source)
-        if cid_match is None:
+        try:
+            page_source = requests.get(gMaps_URL, headers=HEADERS).text
+            cid = re.search(r'ludocid\\\\u003d(.*?)\\\\u00', page_source).group(1).strip('\\')
+
+            return cid
+        except:
             error_data = {
                 "message": "Invalid input",
                 "errors": {
@@ -39,10 +42,6 @@ class GoogleMapsService:
                 }
             }
             raise ValidationError(error_data)
-        cid = cid_match.group(1).strip('\\')
-        url = f"https://maps.google.com/?cid={cid}"
-
-        return cid
 
     @classmethod
     def get_place_details(cls, gMaps_URL: str) -> Dict:

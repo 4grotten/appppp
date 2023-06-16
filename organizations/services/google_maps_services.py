@@ -95,9 +95,13 @@ class GoogleMapsService:
         proxy = ProxyService.get_random_proxy_for_requests()
         if not proxy:
             proxy = []
+        print("GOT PROXY")
         r = requests.get(f"https://www.google.com/maps?cid={cid}", proxies=proxy[0])
+        print("GOT r:", r)
         html = BS(r.text, 'lxml')
+        print("GOT HTML", html)
         place_image = html.select('meta[property="og:image"]')[0]['content']
+        print("place_image", place_image)
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
@@ -110,6 +114,7 @@ class GoogleMapsService:
 
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
+        print("MAKE URL")
 
         query = {
             'image_url': place_image,
@@ -119,6 +124,7 @@ class GoogleMapsService:
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query)
+            print("MAKE REQUEST SAVE")
             json_data = json.loads(r_image.text)
             image_ID = json_data['id']
 

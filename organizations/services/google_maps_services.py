@@ -90,7 +90,7 @@ class GoogleMapsService:
         return place_details['result'], cid
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request, cid, HEADERS):
+    def get_image_ID(cls, gMaps_URL: str, request, cid):
         json_data = {}
         proxy = ProxyService.get_random_proxy_for_requests()
         if not proxy:
@@ -114,7 +114,7 @@ class GoogleMapsService:
 
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
-        print("MAKE URL")
+        print("MAKE URL", URL_IMAGE_ENDPOINT)
 
         query = {
             'image_url': place_image,
@@ -124,12 +124,15 @@ class GoogleMapsService:
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query)
+            print(r_image)
+            print(r_image.text)
             print("MAKE REQUEST SAVE")
             json_data = json.loads(r_image.text)
             image_ID = json_data['id']
 
             return image_ID
         except:
+            print("EXCEPT")
             return json_data['detail']
 
     @classmethod
@@ -229,7 +232,7 @@ class GoogleMapsService:
 
         apofiz_add_organization['title'] = data['name']
         print("GOT TITLE")
-        image_id = cls.get_image_ID(gMaps_URL, request, cid, HEADERS)
+        image_id = cls.get_image_ID(gMaps_URL, request, cid)
         print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[

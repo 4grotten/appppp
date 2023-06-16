@@ -209,18 +209,21 @@ class GoogleMapsService:
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
+        print("GOT TITLE", apofiz_add_organization['title'])
 
         image_id = cls.get_image_ID(gMaps_URL, request)
+        print("GOT IMAGE_ID", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
         else:
             apofiz_add_organization['image_id'] = image_id
-
+        print("THE ACTUAL IMAGE:", apofiz_add_organization['image_id'])
         try:
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
         except:
             apofiz_add_organization['description'] = ''
+        print("GOT DESC",apofiz_add_organization['description'])
 
         numbers: List = []
         try:
@@ -228,6 +231,7 @@ class GoogleMapsService:
             apofiz_add_organization['numbers'] = numbers
         except:
             apofiz_add_organization['numbers'] = []
+        print("GOT NUMBERS", apofiz_add_organization['numbers'])
 
         try:
             apofiz_add_organization['opens_at'] = data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
@@ -240,19 +244,29 @@ class GoogleMapsService:
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
-
+        print("GOT OPENS AT:", apofiz_add_organization['opens_at'])
+        print("GOT CLOSES AT:", apofiz_add_organization['closes_at'])
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
+        print("GOT ADDRESS:", apofiz_add_organization['address'])
         apofiz_add_organization['longitude'] = data['geometry']['location']['lng']
+        print("GOT LONGITUDE:", apofiz_add_organization['longitude'])
         apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
+        print("GOT LATITUDE:", apofiz_add_organization['latitude'])
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
+        print("GOT CURRENCY:", apofiz_add_organization['currency'])
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
+        print("GOT COUNTRY:", apofiz_add_organization['country'])
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
+        print("GOT CITY_NAME:", city_name)
         apofiz_add_organization[
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
+        print("CHECKED_CITY:", apofiz_add_organization['check_city'])
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
+        print("ACTUAL CITY:", apofiz_add_organization['city'])
 
         apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request)
+        print("GOT TYPES:", apofiz_add_organization['types'])
 
         accounts: List = []
         try:
@@ -260,8 +274,10 @@ class GoogleMapsService:
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []
+        print("GOT ACCOUNTS:", apofiz_add_organization['accounts'])
 
         apofiz_add_organization['instagram_integration'] = None
         apofiz_add_organization['cards'] = []
-
+        print("GOT CARDS:", apofiz_add_organization['cards'])
+        print("FINISHED PARSING")
         return apofiz_add_organization

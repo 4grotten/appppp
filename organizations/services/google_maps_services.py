@@ -7,6 +7,8 @@ from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
 
+from instagram_parsers.services.proxy_services import ProxyService
+
 HEADERS = {
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
@@ -33,8 +35,12 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL):
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
         try:
-            response = requests.get(gMaps_URL, headers=HEADERS)
+
+            response = requests.get(gMaps_URL, proxies=proxy[0])
             print("response", response)
             text = response.url
             print("text~~", text)
@@ -86,8 +92,10 @@ class GoogleMapsService:
     @classmethod
     def get_image_ID(cls, gMaps_URL: str, request, cid, HEADERS):
         json_data = {}
-
-        r = requests.get(f"https://www.google.com/maps?cid={cid}", headers=HEADERS)
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(f"https://www.google.com/maps?cid={cid}", proxies=proxy[0])
         html = BS(r.text, 'lxml')
         place_image = html.select('meta[property="og:image"]')[0]['content']
 

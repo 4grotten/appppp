@@ -36,7 +36,7 @@ class GoogleMapsService:
             if match:
                 cid_hexadecimal = match.group(1)
                 cid = str(int(cid_hexadecimal, 16))
-                return cid, response.cookies
+                return cid
             else:
                 error_data = {
                     "message": "Invalid input",
@@ -63,19 +63,32 @@ class GoogleMapsService:
     def get_place_details(cls, gMaps_URL: str):
         api_key = cls.get_api_key()
 
-        cid, cookies = cls.get_place_CID(gMaps_URL)
+        cid = cls.get_place_CID(gMaps_URL)
         lang = '&language=ru'  # язык в котором будет json
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
         r = requests.get(details_url)
         place_details = r.json()
-        return place_details['result'], cookies
+        return place_details['result'], cid
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request, cookies):
+    def get_image_ID(cls, gMaps_URL: str, request, cid):
         json_data = {}
-        session = requests.Session()
-        session.cookies = cookies
-        r = session.get(gMaps_URL)
+        headers = {
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+            'sec-ch-ua-arch': '"x86"',
+            'sec-ch-ua-bitness': '"64"',
+            'sec-ch-ua-full-version': '"114.0.5735.134"',
+            'sec-ch-ua-full-version-list': '"Not.A/Brand";v="8.0.0.0", "Chromium";v="114.0.5735.134", "Google Chrome";v="114.0.5735.134"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-model': '""',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-ch-ua-platform-version': '"10.0.0"',
+            'sec-ch-ua-wow64': '?0',
+        }
+
+        r = requests.get(f"https://www.google.com/maps?cid={cid}", headers=headers)
         html = BS(r.text, 'lxml')
         place_image = html.select('meta[property="og:image"]')[0]['content']
 
@@ -197,13 +210,14 @@ class GoogleMapsService:
                     return organization_type_ID
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
-        data, cookies = cls.get_place_details(gMaps_URL)
+        data, cid = cls.get_place_details(gMaps_URL)
 
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
-
-        image_id = cls.get_image_ID(gMaps_URL, request, cookies)
+        print("GOT TITLE")
+        image_id = cls.get_image_ID(gMaps_URL, request, cid)
+        print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
@@ -242,8 +256,9 @@ class GoogleMapsService:
         apofiz_add_organization[
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
-
+        print("BEFORE PLACYEE TYPE")
         apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request)
+        print("AFTER PLACEE TYPE", apofiz_add_organization['types'])
 
         accounts: List = []
         try:

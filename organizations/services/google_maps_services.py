@@ -84,9 +84,13 @@ class GoogleMapsService:
     @classmethod
     def get_image_ID(cls, gMaps_URL: str, request):
         json_data = {}
+        print("BEFOFE REQUEST")
         r = requests.get(gMaps_URL)
+        print("RESPONSE:", r)
         html = BS(r.text, 'lxml')
+        print("GOT HTML", html)
         place_image = html.select('meta[property="og:image"]')[0]['content']
+        print("GOT PLACE_IMAGE")
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
@@ -97,21 +101,29 @@ class GoogleMapsService:
         elif 'apofiz.com' in request.META['HTTP_HOST']:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
+        print("GOT BASE URL:", base_url)
+
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
+        print("URL_IMAGE_ENDPOINT:", URL_IMAGE_ENDPOINT)
 
         query = {
             'image_url': place_image,
             'is_watermarked': True
         }
         token = request.headers.get('Authorization')
+        print("TOKEN:", token)
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query)
+            print("R_IMAGE:", r_image)
             json_data = json.loads(r_image.text)
+            print("JSON_DATA:", json_data)
             image_ID = json_data['id']
+            print("IMAGE_ID:", image_ID)
 
             return image_ID
         except:
+            print("GOT EXCEPT")
             return json_data['detail']
 
     @classmethod

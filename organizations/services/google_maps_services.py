@@ -71,12 +71,14 @@ class GoogleMapsService:
         api_key = cls.get_api_key()
 
         cid = cls.get_place_CID(gMaps_URL)
-
+        print("GOT CID:", cid)
         lang = '&language=ru'  # язык в котором будет json
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
+        print("details_url", details_url)
         r = requests.get(details_url)
+        print("RESPONSE OF DETAILED_URL", r)
         place_details = r.json()
-
+        print("PLACE_DETAILS", place_details)
         return place_details['result']
 
     @classmethod
@@ -202,6 +204,7 @@ class GoogleMapsService:
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
         data = cls.get_place_details(gMaps_URL)
+        print("GOT PLACE DETAILS", data)
 
         apofiz_add_organization = {}
 

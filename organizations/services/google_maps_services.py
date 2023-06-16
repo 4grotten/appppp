@@ -28,27 +28,24 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL) -> str:
         try:
-            if "goo.gl/maps" in gMaps_URL:
-                # Web version URL
-                text = requests.get(gMaps_URL).url
-                feature_id = re.search(r':(0x[a-z0-9]+)!', text).group(1)
-                cid_hexadecimal = feature_id.split(':')[-1]
-                cid = str(int(cid_hexadecimal, 16))
-                return cid
-            elif "maps.app.goo.gl" in gMaps_URL and "?" in gMaps_URL:
-                # iOS version URL
-                text = requests.get(gMaps_URL).url
-                feature_id = re.search(r'tid=(.*?)&hl=', text).group(1)
-                cid_hexadecimal = feature_id.split(':')[-1]
+            text = requests.get(gMaps_URL).url
+            print(text)
+            pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
+            match = re.search(pattern, text)
+            if match:
+                cid_hexadecimal = match.group(1)
                 cid = str(int(cid_hexadecimal, 16))
                 return cid
             else:
-                # Android version URL
-                text = requests.get(gMaps_URL).url
-                feature_id = re.search(r':(0x[a-z0-9]+)\?utm_source=', text).group(1)
-                cid_hexadecimal = feature_id.split(':')[-1]
-                cid = str(int(cid_hexadecimal, 16))
-                return cid
+                error_data = {
+                    "message": "Invalid input",
+                    "errors": {
+                        "google_maps_url": [
+                            "Enter a valid URL."
+                        ]
+                    }
+                }
+                raise ValidationError(error_data)
         except:
             error_data = {
                 "message": "Invalid input",

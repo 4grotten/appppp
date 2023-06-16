@@ -85,7 +85,8 @@ class GoogleMapsService:
     def get_image_ID(cls, gMaps_URL: str, request):
         json_data = {}
         print("BEFOFE REQUEST")
-        r = requests.get(gMaps_URL)
+        session = requests.Session()
+        r = session.get(gMaps_URL)
         print("RESPONSE:", r)
         html = BS(r.text, 'lxml')
         print("GOT HTML", html)
@@ -184,7 +185,9 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_type_ID(cls, gMaps_URL, request):
-        page_source = requests.get(gMaps_URL, headers=HEADERS).text
+        session = requests.Session()
+        r = session.get(gMaps_URL)
+        page_source = r.text
 
         match = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source)
         if match is None:

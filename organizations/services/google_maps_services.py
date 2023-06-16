@@ -28,15 +28,22 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL) -> str:
         try:
-            text = requests.get(gMaps_URL).url
+            session = requests.Session()
+            response = session.get(gMaps_URL)
+            text = response.url
             print(text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
             match = re.search(pattern, text)
+            print("MATCH:", match)
             if match:
+                print("IN MATCCH")
                 cid_hexadecimal = match.group(1)
+                print("cid_hexadecimal:", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
+                print("cid", cid)
                 return cid
             else:
+                print("ELSE STATEMEENT")
                 error_data = {
                     "message": "Invalid input",
                     "errors": {
@@ -47,6 +54,7 @@ class GoogleMapsService:
                 }
                 raise ValidationError(error_data)
         except:
+            print("EXCEPT STATE")
             error_data = {
                 "message": "Invalid input",
                 "errors": {

@@ -84,9 +84,12 @@ class GoogleMapsService:
     @classmethod
     def get_image_ID(cls, gMaps_URL: str, request):
         json_data = {}
+        place_CID = cls.get_place_CID(gMaps_URL)
+        print("PLACE CID:", place_CID)
         print("BEFOFE REQUEST")
-        session = requests.Session()
-        r = session.get(gMaps_URL)
+        # session = requests.Session()
+        # r = session.get(gMaps_URL)
+        r = requests.get(f'https://maps.google.com/?cid={place_CID}')
         print("RESPONSE:", r)
         html = BS(r.text, 'lxml')
         print("GOT HTML", html)

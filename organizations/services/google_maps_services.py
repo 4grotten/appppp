@@ -26,24 +26,18 @@ class GoogleMapsService:
         return api_key
 
     @classmethod
-    def get_place_CID(cls, gMaps_URL) -> str:
+    def get_place_CID(cls, gMaps_URL):
         try:
             session = requests.Session()
             response = session.get(gMaps_URL)
             text = response.url
-            print(text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
             match = re.search(pattern, text)
-            print("MATCH:", match)
             if match:
-                print("IN MATCCH")
                 cid_hexadecimal = match.group(1)
-                print("cid_hexadecimal:", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
-                print("cid", cid)
-                return cid
+                return cid, response.cookies
             else:
-                print("ELSE STATEMEENT")
                 error_data = {
                     "message": "Invalid input",
                     "errors": {
@@ -54,7 +48,6 @@ class GoogleMapsService:
                 }
                 raise ValidationError(error_data)
         except:
-            print("EXCEPT STATE")
             error_data = {
                 "message": "Invalid input",
                 "errors": {
@@ -67,34 +60,24 @@ class GoogleMapsService:
 
 
     @classmethod
-    def get_place_details(cls, gMaps_URL: str) -> Dict:
+    def get_place_details(cls, gMaps_URL: str):
         api_key = cls.get_api_key()
 
-        cid = cls.get_place_CID(gMaps_URL)
-        print("GOT CID:", cid)
+        cid, cookies = cls.get_place_CID(gMaps_URL)
         lang = '&language=ru'  # язык в котором будет json
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
-        print("details_url", details_url)
         r = requests.get(details_url)
-        print("RESPONSE OF DETAILED_URL", r)
         place_details = r.json()
-        print("PLACE_DETAILS", place_details)
-        return place_details['result']
+        return place_details['result'], cookies
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request):
+    def get_image_ID(cls, gMaps_URL: str, request, cookies):
         json_data = {}
-        place_CID = cls.get_place_CID(gMaps_URL)
-        print("PLACE CID:", place_CID)
-        print("BEFOFE REQUEST")
-        # session = requests.Session()
-        # r = session.get(gMaps_URL)
-        r = requests.get(f'https://maps.google.com/?cid={place_CID}')
-        print("RESPONSE:", r)
+        session = requests.Session()
+        session.cookies = cookies
+        r = session.get(gMaps_URL)
         html = BS(r.text, 'lxml')
-        print("GOT HTML", html)
         place_image = html.select('meta[property="og:image"]')[0]['content']
-        print("GOT PLACE_IMAGE")
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
@@ -105,29 +88,22 @@ class GoogleMapsService:
         elif 'apofiz.com' in request.META['HTTP_HOST']:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
-        print("GOT BASE URL:", base_url)
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
-        print("URL_IMAGE_ENDPOINT:", URL_IMAGE_ENDPOINT)
 
         query = {
             'image_url': place_image,
             'is_watermarked': True
         }
         token = request.headers.get('Authorization')
-        print("TOKEN:", token)
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query)
-            print("R_IMAGE:", r_image)
             json_data = json.loads(r_image.text)
-            print("JSON_DATA:", json_data)
             image_ID = json_data['id']
-            print("IMAGE_ID:", image_ID)
 
             return image_ID
         except:
-            print("GOT EXCEPT")
             return json_data['detail']
 
     @classmethod
@@ -221,27 +197,22 @@ class GoogleMapsService:
                     return organization_type_ID
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
-        data = cls.get_place_details(gMaps_URL)
-        print("GOT PLACE DETAILS", data)
+        data, cookies = cls.get_place_details(gMaps_URL)
 
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
-        print("GOT TITLE", apofiz_add_organization['title'])
 
-        image_id = cls.get_image_ID(gMaps_URL, request)
-        print("GOT IMAGE_ID", image_id)
+        image_id = cls.get_image_ID(gMaps_URL, request, cookies)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
         else:
             apofiz_add_organization['image_id'] = image_id
-        print("THE ACTUAL IMAGE:", apofiz_add_organization['image_id'])
         try:
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
         except:
             apofiz_add_organization['description'] = ''
-        print("GOT DESC",apofiz_add_organization['description'])
 
         numbers: List = []
         try:
@@ -249,7 +220,6 @@ class GoogleMapsService:
             apofiz_add_organization['numbers'] = numbers
         except:
             apofiz_add_organization['numbers'] = []
-        print("GOT NUMBERS", apofiz_add_organization['numbers'])
 
         try:
             apofiz_add_organization['opens_at'] = data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
@@ -262,29 +232,18 @@ class GoogleMapsService:
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
-        print("GOT OPENS AT:", apofiz_add_organization['opens_at'])
-        print("GOT CLOSES AT:", apofiz_add_organization['closes_at'])
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
-        print("GOT ADDRESS:", apofiz_add_organization['address'])
         apofiz_add_organization['longitude'] = data['geometry']['location']['lng']
-        print("GOT LONGITUDE:", apofiz_add_organization['longitude'])
         apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
-        print("GOT LATITUDE:", apofiz_add_organization['latitude'])
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
-        print("GOT CURRENCY:", apofiz_add_organization['currency'])
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
-        print("GOT COUNTRY:", apofiz_add_organization['country'])
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
-        print("GOT CITY_NAME:", city_name)
         apofiz_add_organization[
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
-        print("CHECKED_CITY:", apofiz_add_organization['check_city'])
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
-        print("ACTUAL CITY:", apofiz_add_organization['city'])
 
         apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request)
-        print("GOT TYPES:", apofiz_add_organization['types'])
 
         accounts: List = []
         try:
@@ -292,10 +251,8 @@ class GoogleMapsService:
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []
-        print("GOT ACCOUNTS:", apofiz_add_organization['accounts'])
 
         apofiz_add_organization['instagram_integration'] = None
         apofiz_add_organization['cards'] = []
-        print("GOT CARDS:", apofiz_add_organization['cards'])
-        print("FINISHED PARSING")
+
         return apofiz_add_organization

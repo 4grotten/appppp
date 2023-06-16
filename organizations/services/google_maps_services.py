@@ -8,13 +8,19 @@ from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
 
 HEADERS = {
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'Accept-Language': 'ru,ru-RU;q=0.9,en;q=0.8,ru-RU;q=0.7'
-}
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+            'sec-ch-ua-arch': '"x86"',
+            'sec-ch-ua-bitness': '"64"',
+            'sec-ch-ua-full-version': '"114.0.5735.134"',
+            'sec-ch-ua-full-version-list': '"Not.A/Brand";v="8.0.0.0", "Chromium";v="114.0.5735.134", "Google Chrome";v="114.0.5735.134"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-model': '""',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-ch-ua-platform-version': '"10.0.0"',
+            'sec-ch-ua-wow64': '?0',
+        }
 
 
 
@@ -28,16 +34,22 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
-            session = requests.Session()
-            response = session.get(gMaps_URL)
+            response = requests.get(gMaps_URL, headers=HEADERS)
+            print("response", response)
             text = response.url
+            print("text~~", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
             match = re.search(pattern, text)
+            print("AFTER MATCH")
             if match:
+                print("GOT MATCH")
                 cid_hexadecimal = match.group(1)
+                print("cid_hexadecimal", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
+                print("cid:", cid)
                 return cid
             else:
+                print("else statement")
                 error_data = {
                     "message": "Invalid input",
                     "errors": {
@@ -48,6 +60,7 @@ class GoogleMapsService:
                 }
                 raise ValidationError(error_data)
         except:
+            print("except statement")
             error_data = {
                 "message": "Invalid input",
                 "errors": {
@@ -71,24 +84,10 @@ class GoogleMapsService:
         return place_details['result'], cid
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request, cid):
+    def get_image_ID(cls, gMaps_URL: str, request, cid, HEADERS):
         json_data = {}
-        headers = {
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-            'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
-            'sec-ch-ua-arch': '"x86"',
-            'sec-ch-ua-bitness': '"64"',
-            'sec-ch-ua-full-version': '"114.0.5735.134"',
-            'sec-ch-ua-full-version-list': '"Not.A/Brand";v="8.0.0.0", "Chromium";v="114.0.5735.134", "Google Chrome";v="114.0.5735.134"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-model': '""',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-ch-ua-platform-version': '"10.0.0"',
-            'sec-ch-ua-wow64': '?0',
-        }
 
-        r = requests.get(f"https://www.google.com/maps?cid={cid}", headers=headers)
+        r = requests.get(f"https://www.google.com/maps?cid={cid}", headers=HEADERS)
         html = BS(r.text, 'lxml')
         place_image = html.select('meta[property="og:image"]')[0]['content']
 
@@ -216,7 +215,7 @@ class GoogleMapsService:
 
         apofiz_add_organization['title'] = data['name']
         print("GOT TITLE")
-        image_id = cls.get_image_ID(gMaps_URL, request, cid)
+        image_id = cls.get_image_ID(gMaps_URL, request, cid, HEADERS)
         print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[

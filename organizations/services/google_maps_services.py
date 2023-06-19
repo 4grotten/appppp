@@ -35,12 +35,11 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL):
-        proxy = ProxyService.get_random_proxy_for_requests()
-        if not proxy:
-            proxy = []
+        # proxy = ProxyService.get_random_proxy_for_requests()
+        # if not proxy:
+        #     proxy = []
         try:
-
-            response = requests.get(gMaps_URL, proxies=proxy[0])
+            response = requests.get(gMaps_URL)
             print("response", response)
             text = response.url
             print("text~~", text)
@@ -92,11 +91,11 @@ class GoogleMapsService:
     @classmethod
     def get_image_ID(cls, gMaps_URL: str, request, cid):
         json_data = {}
-        proxy = ProxyService.get_random_proxy_for_requests()
-        if not proxy:
-            proxy = []
+        # proxy = ProxyService.get_random_proxy_for_requests()
+        # if not proxy:
+        #     proxy = []
         print("GOT PROXY")
-        r = requests.get(f"https://www.google.com/maps?cid={cid}", proxies=proxy[0])
+        r = requests.get(f"https://www.google.com/maps?cid={cid}")
         print("GOT r:", r)
         html = BS(r.text, 'lxml')
         print("GOT HTML", html)

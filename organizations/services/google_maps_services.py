@@ -35,36 +35,14 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL):
-        # proxy = ProxyService.get_random_proxy_for_requests()
-        # if not proxy:
-        #     proxy = []
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
         try:
-            response = requests.get(gMaps_URL)
-            print("response", response)
-            print("text:", response.text)
-            if response.url.startswith("https://consent.google.com"):
-                soup = BeautifulSoup(response.text, 'html.parser')
-                print("SOUUP:", soup)
-
-                # Find the first form within the saveButtonContainer div
-                save_button_container = soup.find('div', class_='saveButtonContainer')
-                print("FOUND DIV:", save_button_container)
-                first_form = save_button_container.find('form')
-                print("FOUND FORM:", first_form)
-                form_data = {}
-                for input_tag in first_form.find_all('input'):
-                    name = input_tag.get('name')
-                    print("GOT NAME:", name)
-                    value = input_tag.get('value', '')
-                    print("GOT VALUE:", value)
-                    form_data[name] = value
-                    submit_url = first_form.get('action')
-                    print("GET SUBMIT URL", submit_url)
-                    response = requests.post(submit_url, data=form_data)
-                    print("response in redirect:", response)
-
+            response = requests.get(gMaps_URL, proxies=proxy[0])
+            cookies = response.cookies
             text = response.url
-            print("text~~", text)
+            print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
             match = re.search(pattern, text)
             print("AFTER MATCH")
@@ -74,7 +52,7 @@ class GoogleMapsService:
                 print("cid_hexadecimal", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
                 print("cid:", cid)
-                return cid
+                return cid, cookies
             else:
                 print("else statement")
                 error_data = {
@@ -103,37 +81,20 @@ class GoogleMapsService:
     def get_place_details(cls, gMaps_URL: str):
         api_key = cls.get_api_key()
 
-        cid = cls.get_place_CID(gMaps_URL)
+        cid, cookies = cls.get_place_CID(gMaps_URL)
         lang = '&language=ru'  # язык в котором будет json
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
         r = requests.get(details_url)
         place_details = r.json()
-        return place_details['result'], cid
+        return place_details['result'], cid, cookies
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request, cid):
+    def get_image_ID(cls, gMaps_URL: str, request, cid, cookies):
         json_data = {}
         # proxy = ProxyService.get_random_proxy_for_requests()
         # if not proxy:
         #     proxy = []
-        r = requests.get(f"https://www.google.com/maps?cid={cid}")
-        if r.url.startswith("https://consent.google.com"):
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            # Find the first form within the saveButtonContainer div
-            save_button_container = soup.find('div', class_='saveButtonContainer')
-            first_form = save_button_container.find('form')
-            form_data = {}
-            for input_tag in first_form.find_all('input'):
-                name = input_tag.get('name')
-                print("GOT NAME:", name)
-                value = input_tag.get('value', '')
-                print("GOT VALUE:", value)
-                form_data[name] = value
-                submit_url = first_form.get('action')
-                print("GET SUBMIT URL", submit_url)
-                r = requests.post(submit_url, data=form_data)
-                print("IN GET_IMAGE REDIRECT R:", r)
+        r = requests.get(f"https://www.google.com/maps?cid={cid}", cookies=cookies)
         print("GOT r:", r)
         html = BS(r.text, 'lxml')
         print("GOT HTML", html)
@@ -229,21 +190,8 @@ class GoogleMapsService:
             return None
 
     @classmethod
-    def get_place_type_ID(cls, gMaps_URL, request):
-        r = requests.get(gMaps_URL)
-        if r.url.startswith("https://consent.google.com"):
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            # Find the first form within the saveButtonContainer div
-            save_button_container = soup.find('div', class_='saveButtonContainer')
-            first_form = save_button_container.find('form')
-            form_data = {}
-            for input_tag in first_form.find_all('input'):
-                name = input_tag.get('name')
-                value = input_tag.get('value', '')
-                form_data[name] = value
-                submit_url = first_form.get('action')
-                r = requests.post(submit_url, data=form_data)
+    def get_place_type_ID(cls, gMaps_URL, request, cookies):
+        r = requests.get(gMaps_URL, cookies=cookies)
         page_source = r.text
 
         match = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source)
@@ -275,13 +223,13 @@ class GoogleMapsService:
                     return organization_type_ID
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
-        data, cid = cls.get_place_details(gMaps_URL)
+        data, cid, cookies = cls.get_place_details(gMaps_URL)
 
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
         print("GOT TITLE")
-        image_id = cls.get_image_ID(gMaps_URL, request, cid)
+        image_id = cls.get_image_ID(gMaps_URL, request, cid, cookies)
         print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
@@ -322,7 +270,7 @@ class GoogleMapsService:
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
         print("BEFORE PLACYEE TYPE")
-        apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request)
+        apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request, cookies)
         print("AFTER PLACEE TYPE", apofiz_add_organization['types'])
 
         accounts: List = []

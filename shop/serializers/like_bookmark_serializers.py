@@ -22,12 +22,12 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
 
 class ItemCollectionSerializer(serializers.ModelSerializer):
-    is_bookmarked = serializers.SerializerMethodField()
+    in_collection = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCollection
-        fields = ('name', 'is_bookmarked', 'images')
+        fields = ('name', 'in_collection', 'images')
         extra_kwargs = {
             'items': {'required': True}
         }
@@ -41,7 +41,7 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
                 return serializer.data
         return None
 
-    def get_is_bookmarked(self, obj):
+    def get_in_collection(self, obj):
         request = self.context.get('request')
         if request and request.method == 'GET':
             item_id = request.query_params.get('item')
@@ -52,21 +52,12 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
 
 
 class ItemCollectionCreateSerializer(serializers.ModelSerializer):
-    images = serializers.SerializerMethodField()
+    is_bookmarked = serializers.BooleanField()
     items = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
     class Meta:
         model = ItemCollection
-        fields = ('name', 'items', 'images')
+        fields = ('name', 'items', 'is_bookmarked')
         extra_kwargs = {
             'items': {'required': True}
         }
-
-    def get_images(self, obj):
-        first_item = obj.items.first()
-        if first_item:
-            images = first_item.images.first()
-            if images:
-                serializer = ImageSerializer(images)
-                return serializer.data
-        return None

@@ -238,6 +238,8 @@ class CollectionsListCreateView(ListCreateAPIView):
             user=request.user,
             items=[serializer.validated_data['items']]
         )
+        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
+                                                   is_bookmarked=serializer.validated_data['is_bookmarked'])
 
         return Response(data={'message': _('Successfully added to collection')})
 

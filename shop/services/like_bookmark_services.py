@@ -1,4 +1,5 @@
-from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike
+from common.models import File
+from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike, ItemCollection
 from users.models import User
 
 
@@ -37,3 +38,15 @@ class BookmarkService:
     @classmethod
     def is_item_bookmarked_by_user(cls, item: ShopItem, user: User) -> bool:
         return ItemBookmark.objects.filter(user=user, item=item).exists()
+
+
+class CollectionService:
+    @classmethod
+    def create_collection(cls, name: str, user: User, items: list):
+        collection = ItemCollection.objects.create(
+            name=name,
+            user=user,
+        )
+
+        collection.items.set(items)
+        return collection

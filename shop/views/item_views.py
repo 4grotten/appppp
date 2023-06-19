@@ -7,7 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, \
+    RetrieveAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +17,7 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking
+from shop.models import ShopItem, Complaint, Booking, ItemCollection
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -27,11 +28,12 @@ from shop.serializers.item_serializers import (
     ItemRentalMinuteSerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
-from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
+    ItemCollectionCreateSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
-from shop.services.like_bookmark_services import LikeService, BookmarkService
+from shop.services.like_bookmark_services import LikeService, BookmarkService, CollectionService
 from shop.services.booking_services import BookingService
 from utils.translator import GoogleTranslator
 
@@ -214,6 +216,30 @@ class BookmarkListCreateView(ListAPIView):
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
         return Response(data={'message': _('Successfully updated bookmark status')})
+
+
+class CollectionsListCreateView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCollectionSerializer
+
+    def get_queryset(self):
+        return ItemCollection.objects.filter(user=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ItemCollectionCreateSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        CollectionService.create_collection(
+            name=serializer.validated_data['name'],
+            user=request.user,
+            items=[serializer.validated_data['items']]
+        )
+
+        return Response(data={'message': _('Successfully added to collection')})
 
 
 class ComplaintCreateView(CreateAPIView):

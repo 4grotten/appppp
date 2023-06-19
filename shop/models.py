@@ -167,6 +167,15 @@ class ItemBookmark(TimestampModel):
         )
 
 
+class ItemCollection(TimestampModel):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='item_collections')
+    items = models.ManyToManyField(ShopItem, related_name='collections', blank=True)
+
+    def __str__(self):
+        return f"Collection '{self.name}' of user {self.user}"
+
+
 class Cart(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='carts')

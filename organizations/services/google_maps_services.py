@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup as BS
+from bs4 import BeautifulSoup as BS, BeautifulSoup
 from typing import List, Dict
 import sys, os, re, json
 import requests
@@ -41,6 +41,28 @@ class GoogleMapsService:
         try:
             response = requests.get(gMaps_URL)
             print("response", response)
+            print("text:", response.text)
+            if response.url.startswith("https://consent.google.com"):
+                soup = BeautifulSoup(response.text, 'html.parser')
+                print("SOUUP:", soup)
+
+                # Find the first form within the saveButtonContainer div
+                save_button_container = soup.find('div', class_='saveButtonContainer')
+                print("FOUND DIV:", save_button_container)
+                first_form = save_button_container.find('form')
+                print("FOUND FORM:", first_form)
+                form_data = {}
+                for input_tag in first_form.find_all('input'):
+                    name = input_tag.get('name')
+                    print("GOT NAME:", name)
+                    value = input_tag.get('value', '')
+                    print("GOT VALUE:", value)
+                    form_data[name] = value
+                    submit_url = first_form.get('action')
+                    print("GET SUBMIT URL", submit_url)
+                    response = requests.post(submit_url, data=form_data)
+                    print("response in redirect:", response)
+
             text = response.url
             print("text~~", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
@@ -94,8 +116,24 @@ class GoogleMapsService:
         # proxy = ProxyService.get_random_proxy_for_requests()
         # if not proxy:
         #     proxy = []
-        print("GOT PROXY")
         r = requests.get(f"https://www.google.com/maps?cid={cid}")
+        if r.url.startswith("https://consent.google.com"):
+            soup = BeautifulSoup(r.text, 'html.parser')
+
+            # Find the first form within the saveButtonContainer div
+            save_button_container = soup.find('div', class_='saveButtonContainer')
+            first_form = save_button_container.find('form')
+            form_data = {}
+            for input_tag in first_form.find_all('input'):
+                name = input_tag.get('name')
+                print("GOT NAME:", name)
+                value = input_tag.get('value', '')
+                print("GOT VALUE:", value)
+                form_data[name] = value
+                submit_url = first_form.get('action')
+                print("GET SUBMIT URL", submit_url)
+                r = requests.post(submit_url, data=form_data)
+                print("IN GET_IMAGE REDIRECT R:", r)
         print("GOT r:", r)
         html = BS(r.text, 'lxml')
         print("GOT HTML", html)
@@ -192,8 +230,20 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_type_ID(cls, gMaps_URL, request):
-        session = requests.Session()
-        r = session.get(gMaps_URL)
+        r = requests.get(gMaps_URL)
+        if r.url.startswith("https://consent.google.com"):
+            soup = BeautifulSoup(r.text, 'html.parser')
+
+            # Find the first form within the saveButtonContainer div
+            save_button_container = soup.find('div', class_='saveButtonContainer')
+            first_form = save_button_container.find('form')
+            form_data = {}
+            for input_tag in first_form.find_all('input'):
+                name = input_tag.get('name')
+                value = input_tag.get('value', '')
+                form_data[name] = value
+                submit_url = first_form.get('action')
+                r = requests.post(submit_url, data=form_data)
         page_source = r.text
 
         match = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source)

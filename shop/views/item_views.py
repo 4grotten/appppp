@@ -249,8 +249,14 @@ class CollectionsListCreateView(ListCreateAPIView):
         return Response(data={'message': _('Successfully added to collection')})
 
 
-class AddRemoveItemCollectionView(APIView):
+class AddRemoveItemCollectionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = SubscriptionItemSerializer
+
+    def get_queryset(self):
+        qs = CollectionService.get_bookmarked_items_in_collection(user=self.request.user,
+                                                                  collection_id=self.kwargs['pk'])
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def post(self, request, *args, **kwargs):
         serializer = AddRemoveItemCollectionSerializer(data=self.request.data)

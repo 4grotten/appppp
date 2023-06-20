@@ -96,3 +96,10 @@ class CollectionService:
         if not collection.items.exists():
             collection.image = None
             collection.save()
+
+    @classmethod
+    def get_bookmarked_items_in_collection(cls, user: User, collection_id: int):
+        collection = ItemCollection.objects.get(id=collection_id, user=user)
+        items = collection.items.filter(is_published=True, bookmarked_users__user=user,
+                                        organization__is_deleted=False).order_by('-bookmarked_users').distinct()
+        return items

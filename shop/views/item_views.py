@@ -29,7 +29,7 @@ from shop.serializers.item_serializers import (
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
-    ItemCollectionCreateSerializer
+    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
@@ -215,6 +215,10 @@ class BookmarkListCreateView(ListAPIView):
         BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['item'],
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
+        CollectionService.remove_from_all_collections(
+            user=request.user, item=serializer.validated_data['item'],
+            is_bookmarked=serializer.validated_data['is_bookmarked'])
+
         return Response(data={'message': _('Successfully updated bookmark status')})
 
 
@@ -238,10 +242,32 @@ class CollectionsListCreateView(ListCreateAPIView):
             user=request.user,
             items=[serializer.validated_data['items']]
         )
+        is_bookmarked = True
+        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
+                                                   is_bookmarked=is_bookmarked)
+
+        return Response(data={'message': _('Successfully added to collection')})
+
+
+class AddRemoveItemCollectionView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AddRemoveItemCollectionSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        CollectionService.add_remove_bookmarked_item_collection(
+            collection_id=kwargs['pk'], user=request.user, item=serializer.validated_data['items'],
+            is_bookmarked=serializer.validated_data['is_bookmarked'])
+
         BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
-        return Response(data={'message': _('Successfully added to collection')})
+        return Response(data={'message': _('Successfully updated collection')})
 
 
 class ComplaintCreateView(CreateAPIView):

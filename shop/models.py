@@ -171,6 +171,8 @@ class ItemCollection(TimestampModel):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='item_collections')
     items = models.ManyToManyField(ShopItem, related_name='collections', blank=True)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='collection_images')
 
     def __str__(self):
         return f"Collection '{self.name}' of user {self.user}"

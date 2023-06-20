@@ -227,7 +227,11 @@ class CollectionsListCreateView(ListCreateAPIView):
     serializer_class = ItemCollectionSerializer
 
     def get_queryset(self):
-        return ItemCollection.objects.filter(user=self.request.user)
+        queryset = ItemCollection.objects.filter(user=self.request.user)
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(Q(name__icontains=search_query))
+        return queryset
 
     def post(self, request, *args, **kwargs):
         serializer = ItemCollectionCreateSerializer(data=self.request.data)
@@ -249,7 +253,7 @@ class CollectionsListCreateView(ListCreateAPIView):
         return Response(data={'message': _('Successfully added to collection')})
 
 
-class AddRemoveItemCollectionView(ListAPIView):
+class AddRemoveListItemCollectionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SubscriptionItemSerializer
 

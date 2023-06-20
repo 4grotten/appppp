@@ -23,7 +23,7 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
 class ItemCollectionSerializer(serializers.ModelSerializer):
     in_collection = serializers.SerializerMethodField()
-    image = ImageSerializer()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCollection
@@ -31,6 +31,18 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'items': {'required': True}
         }
+
+    def get_image(self, obj):
+        if obj.image:
+            serializer = ImageSerializer(obj.image)
+            return serializer.data
+        first_item = obj.items.last()
+        if first_item:
+            images = first_item.images.first()
+            if images:
+                serializer = ImageSerializer(images)
+                return serializer.data
+        return None
 
     def get_in_collection(self, obj):
         request = self.context.get('request')

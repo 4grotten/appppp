@@ -60,12 +60,6 @@ class CollectionService:
             name=name,
             user=user,
         )
-        if items:
-            first_item = items[0]
-            first_image = first_item.images.first()
-            if first_image:
-                collection.image = first_image
-                collection.save()
 
         collection.items.set(items)
         return collection
@@ -77,12 +71,8 @@ class CollectionService:
             for collection in collections:
                 collection.items.remove(item)
 
-                if not collection.items.exists():
-                    collection.image = None
-                    collection.save()
-
     @classmethod
-    def add_remove_bookmarked_item_collection(cls, user: User, item: list, is_bookmarked: bool, collection_id: int):
+    def add_remove_bookmarked_item_collection(cls, user: User, item: ShopItem, is_bookmarked: bool, collection_id: int):
         collection = cls.get(id=collection_id, user=user)
         if is_bookmarked:
             if item in collection.items.all():
@@ -90,12 +80,8 @@ class CollectionService:
             collection.items.add(item)
         else:
             if item not in collection.items.all():
-                return NotAcceptableException(_('Item does not exist in the collection.'))
+                raise NotAcceptableException(_('Item does not exist in the collection.'))
             collection.items.remove(item)
-
-        if not collection.items.exists():
-            collection.image = None
-            collection.save()
 
     @classmethod
     def get_bookmarked_items_in_collection(cls, user: User, collection_id: int):

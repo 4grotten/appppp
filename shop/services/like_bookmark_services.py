@@ -65,6 +65,18 @@ class CollectionService:
         return collection
 
     @classmethod
+    def update_collection(cls, collection, name=None, image=None, items=None):
+        if name is not None:
+            collection.name = name
+        if image is not None:
+            collection.image = image
+        if items is not None:
+            collection.items.remove(*items)
+        collection.save()
+
+        return collection
+
+    @classmethod
     def remove_from_all_collections(cls, user: User, item: list, is_bookmarked: bool):
         if not is_bookmarked:
             collections = ItemCollection.objects.filter(user=user)

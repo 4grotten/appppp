@@ -54,6 +54,13 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
         return None
 
 
+class ItemCollectionDetailUpdateSerializer(serializers.ModelSerializer):
+    items = serializers.ListField(child=serializers.IntegerField(), required=False)
+
+    class Meta:
+        model = ItemCollection
+        fields = ('id', 'name', 'image', 'items')
+
 class ItemCollectionCreateSerializer(serializers.ModelSerializer):
     items = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 

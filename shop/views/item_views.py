@@ -29,7 +29,7 @@ from shop.serializers.item_serializers import (
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
-    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer
+    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
@@ -278,6 +278,35 @@ class AddRemoveListItemCollectionView(ListAPIView):
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
         return Response(data={'message': _('Successfully updated collection')})
+
+
+class CollectionRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCollectionSerializer
+
+    def get_queryset(self):
+        return ItemCollection.objects.filter(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        serializer = ItemCollectionDetailUpdateSerializer(instance=self.get_object(), data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        collection = CollectionService.update_collection(
+            collection=self.get_object(),
+            name=serializer.validated_data.get('name'),
+            image=serializer.validated_data.get('image'),
+            items=serializer.validated_data.get('items')
+        )
+
+        serialized_collection = ItemCollectionSerializer(collection, context={'request': request}).data
+        return Response(serialized_collection)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class ComplaintCreateView(CreateAPIView):

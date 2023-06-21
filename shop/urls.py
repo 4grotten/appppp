@@ -20,7 +20,7 @@ from shop.views.item_views import (
     LikeListCreateView, BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem,
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
-    AddRemoveListItemCollectionView
+    AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView
 )
 
 urlpatterns = [
@@ -69,6 +69,8 @@ urlpatterns = [
     path('shop/collections/', CollectionsListCreateView.as_view(), name='collection_list_create'),
     path('shop/collections/<int:pk>/', AddRemoveListItemCollectionView.as_view(),
          name='collection_add_remove_list_item'),
+    path('shop/collections/<int:pk>/update/', CollectionRetrieveUpdateDestroyView.as_view(),
+         name='collection_retrieve_update_delete'),
     path('shop/complaints/', ComplaintCreateView.as_view(), name='complaint_create'),
 
     path('carts/', UserCartListView.as_view(), name='user_cart_list'),

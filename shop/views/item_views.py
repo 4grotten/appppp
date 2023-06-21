@@ -252,6 +252,7 @@ class CollectionsListCreateView(ListCreateAPIView):
         search_query = self.request.query_params.get('search', None)
         if search_query:
             queryset = queryset.filter(Q(name__icontains=search_query))
+        queryset = queryset.order_by('-updated_at')
         return queryset
 
     def post(self, request, *args, **kwargs):

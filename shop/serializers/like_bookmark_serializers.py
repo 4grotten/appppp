@@ -21,6 +21,10 @@ class BookmarkSerializer(serializers.ModelSerializer):
         fields = ('item', 'is_bookmarked')
 
 
+class ItemBookmarkBulkDeleteSerializer(serializers.Serializer):
+    items = serializers.ListField(child=serializers.IntegerField(), required=True)
+
+
 class ItemCollectionSerializer(serializers.ModelSerializer):
     in_collection = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()

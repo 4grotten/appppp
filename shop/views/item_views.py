@@ -2,6 +2,7 @@ import calendar
 
 from django.db import IntegrityError
 from datetime import datetime
+from django.db import models
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +18,7 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking, ItemCollection
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -29,7 +30,8 @@ from shop.serializers.item_serializers import (
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
-    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer
+    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
+    ItemBookmarkBulkDeleteSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
@@ -220,6 +222,25 @@ class BookmarkListCreateView(ListAPIView):
             is_bookmarked=serializer.validated_data['is_bookmarked'])
 
         return Response(data={'message': _('Successfully updated bookmark status')})
+
+
+class ItemBookmarkBulkDeleteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ItemBookmarkBulkDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        item_ids = serializer.validated_data.get('items', [])
+        user = request.user
+
+        ItemBookmark.objects.filter(user=user, item__in=item_ids).delete()
+
+        collections = ItemCollection.objects.filter(user=user)
+        for collection in collections:
+            collection.items.remove(*item_ids)
+
+        return Response({'message': 'Items deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
 
 class CollectionsListCreateView(ListCreateAPIView):

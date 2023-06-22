@@ -19,6 +19,8 @@ from common.processors import ResizeWatermarkedSpec, MobileWallpaper
 from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
 from django_resized import ResizedImageField
 
+from instagram_parsers.services.proxy_services import ProxyService
+
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
     height = 600
@@ -107,7 +109,10 @@ class File(TimestampModel):
                     logging.error(f"Error occurred during image retrieval: {str(e)}")
             elif "googleusercontent" in self.image_url:
                 try:
-                    response = requests.get(self.image_url)
+                    proxy = ProxyService.get_random_proxy_for_requests()
+                    if not proxy:
+                        proxy = []
+                    response = requests.get(self.image_url, proxies=proxy[0])
                     img = Image.open(BytesIO(response.content))
                     img_io = BytesIO()
                     img.save(img_io, format='JPEG')

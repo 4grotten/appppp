@@ -40,7 +40,6 @@ class GoogleMapsService:
             proxy = []
         try:
             response = requests.get(gMaps_URL, proxies=proxy[0])
-            cookies = response.cookies
             text = response.url
             print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
@@ -52,7 +51,7 @@ class GoogleMapsService:
                 print("cid_hexadecimal", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
                 print("cid:", cid)
-                return cid, cookies
+                return cid
             else:
                 print("else statement")
                 error_data = {
@@ -81,25 +80,20 @@ class GoogleMapsService:
     def get_place_details(cls, gMaps_URL: str):
         api_key = cls.get_api_key()
 
-        cid, cookies = cls.get_place_CID(gMaps_URL)
+        cid = cls.get_place_CID(gMaps_URL)
         lang = '&language=ru'  # язык в котором будет json
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
         r = requests.get(details_url)
         place_details = r.json()
-        return place_details['result'], cid, cookies
+        print("place_details", place_details['result'])
+        return place_details['result']
 
     @classmethod
-    def get_image_ID(cls, gMaps_URL: str, request, cid, cookies):
+    def get_image_ID(cls, photo_reference: str, request):
+        api_key = cls.get_api_key()
         json_data = {}
-        # proxy = ProxyService.get_random_proxy_for_requests()
-        # if not proxy:
-        #     proxy = []
-        r = requests.get(f"https://www.google.com/maps?cid={cid}", cookies=cookies)
-        print("GOT r:", r)
-        html = BS(r.text, 'lxml')
-        print("GOT HTML", html)
-        place_image = html.select('meta[property="og:image"]')[0]['content']
-        print("place_image", place_image)
+        r = requests.get(f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference={photo_reference}&key={api_key}")
+        place_image = r.url
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
@@ -190,15 +184,7 @@ class GoogleMapsService:
             return None
 
     @classmethod
-    def get_place_type_ID(cls, gMaps_URL, request, cookies):
-        r = requests.get(gMaps_URL, cookies=cookies)
-        page_source = r.text
-
-        match = re.search(r'(★|☆) · (.*?)" itemprop="description">', page_source)
-        if match is None:
-            return None
-
-        place_type = match.group(2)
+    def get_place_type_ID(cls, place_type, request):
         token = request.headers.get('Authorization')
         _headers = {'Authorization': token, 'Accept-Language': 'ru'}
 
@@ -223,13 +209,13 @@ class GoogleMapsService:
                     return organization_type_ID
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
-        data, cid, cookies = cls.get_place_details(gMaps_URL)
+        data = cls.get_place_details(gMaps_URL)
 
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
-        print("GOT TITLE")
-        image_id = cls.get_image_ID(gMaps_URL, request, cid, cookies)
+        photo_reference = data['photos'][0]['photo_reference']
+        image_id = cls.get_image_ID(photo_reference, request)
         print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
@@ -270,7 +256,8 @@ class GoogleMapsService:
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
         print("BEFORE PLACYEE TYPE")
-        apofiz_add_organization['types'] = cls.get_place_type_ID(gMaps_URL, request, cookies)
+        place_type = data['types'][0]
+        apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
         print("AFTER PLACEE TYPE", apofiz_add_organization['types'])
 
         accounts: List = []

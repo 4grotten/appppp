@@ -113,11 +113,16 @@ class GoogleMapsService:
             'is_watermarked': True
         }
         token = request.headers.get('Authorization')
+        print(place_image)
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
+            print(URL_IMAGE_ENDPOINT)
+            print(HEADERS)
+            print(query)
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query)
-            print(r_image)
-            print(r_image.text)
+            print("CONTENT", r_image.content)
+            print("DEBUG: Response status code:", r_image.status_code)
+            print("DEBUG: Response body:", r_image.text)
             print("MAKE REQUEST SAVE")
             json_data = json.loads(r_image.text)
             image_ID = json_data['id']

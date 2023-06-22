@@ -128,9 +128,9 @@ class GoogleMapsService:
             image_ID = json_data['id']
 
             return image_ID
-        except:
-            print("EXCEPT")
-            return json_data['detail']
+        except Exception as e:
+            # Print debug information in case of an exception
+            print("DEBUG: Exception occurred:", str(e))
 
     @classmethod
     def get_curency_CODE(cls, gMaps_country_short_name, request) -> str:

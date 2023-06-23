@@ -2,13 +2,7 @@ from bs4 import BeautifulSoup as BS, BeautifulSoup
 from typing import List, Dict
 import sys, os, re, json
 import requests
-import googlemaps
-import http.cookiejar as cookielib
 import traceback
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 from django.conf import settings
 from urllib.parse import urljoin
@@ -130,6 +124,18 @@ class GoogleMapsService:
             print("DEBUG: Response body:", r_image.text)
             print("MAKE REQUEST SAVE")
             json_data = json.loads(r_image.text)
+            print(json_data)
+            url_image = json_data["large"]
+            body = {
+                'image_url': url_image,
+                'is_watermarked': True
+            }
+            endpoint_url = "https://apofiz.com/api/v1/save_image_from_url/"
+            token = request.headers.get('Authorization')
+            new_headers = {'Authorization': token, 'Accept-Language': 'ru'}
+            image_request = requests.post(url=endpoint_url, headers=new_headers, data=body)
+            json_data = json.loads(image_request.text)
+            print(json_data, "prod json data")
             image_ID = json_data['id']
 
             return image_ID
@@ -233,10 +239,12 @@ class GoogleMapsService:
         else:
             apofiz_add_organization['image_id'] = image_id
         try:
+            print("before desc")
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
+            print(apofiz_add_organization['description'])
         except:
             apofiz_add_organization['description'] = ''
-
+        print("after desc")
         numbers: List = []
         try:
             numbers.append(data['international_phone_number'].replace(' ', ''))
@@ -252,6 +260,7 @@ class GoogleMapsService:
             apofiz_add_organization['closes_at'] = data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
                                                    + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
                                                            2:]
+            print("after opens and closes")
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None

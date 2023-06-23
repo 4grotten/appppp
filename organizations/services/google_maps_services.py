@@ -264,13 +264,20 @@ class GoogleMapsService:
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
+        print("BEFORE ADDRESS")
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
+        print("AFTER ADDRESS")
         apofiz_add_organization['longitude'] = data['geometry']['location']['lng']
+        print("AFTER LONG")
         apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
+        print("AFTER LAT")
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
+        print("AFTER CURRENCY")
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
+        print("AFTER COUNTRY")
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
+        print("AFTER CITY_NAME")
         apofiz_add_organization[
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)

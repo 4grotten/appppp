@@ -39,7 +39,7 @@ class GoogleMapsService:
         try:
             cookie_file = '/app/Cookies'
             cj = cookielib.MozillaCookieJar(cookie_file)
-            cj.load()
+            cj.load(ignore_discard=True, ignore_expires=True)
             response = requests.get(gMaps_URL, cookies=cj)
             text = response.url
             print("TEXT:", text)

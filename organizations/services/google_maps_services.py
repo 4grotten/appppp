@@ -3,6 +3,7 @@ from typing import List, Dict
 import sys, os, re, json
 import requests
 import googlemaps
+import http.cookiejar as cookielib
 import traceback
 from django.conf import settings
 from urllib.parse import urljoin
@@ -36,7 +37,10 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
-            response = requests.get(gMaps_URL)
+            cookie_file = '/app/Cookies'
+            cj = cookielib.MozillaCookieJar(cookie_file)
+            cj.load()
+            response = requests.get(gMaps_URL, cookies=cj)
             text = response.url
             print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'

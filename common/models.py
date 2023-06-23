@@ -106,29 +106,6 @@ class File(TimestampModel):
                     self.file = img_file
                 except Exception as e:
                     logging.error(f"Error occurred during image retrieval: {str(e)}")
-            elif "googleusercontent.com" in self.image_url:
-                try:
-                    from instagram_parsers.services.proxy_services import ProxyService
-                    proxy = ProxyService.get_random_proxy_for_requests()
-                    if not proxy:
-                        proxy = []
-                    print("IM HEREEEE, proxy:", proxy)
-                    response = requests.get(self.image_url, proxies=proxy[0])
-                    print("response", response)
-                    img = Image.open(BytesIO(response.content))
-                    img_io = BytesIO()
-                    img.save(img_io, format='JPEG')
-                    img_file = InMemoryUploadedFile(
-                        img_io,
-                        None,
-                        os.path.basename(self.image_url),
-                        'image/jpeg',
-                        img_io.tell,
-                        None
-                    )
-                    self.file = img_file
-                except Exception as e:
-                    logging.error(f"Error occurred during image retrieval: {str(e)}")
             else:
                 counter = 0
                 while counter <= 10:

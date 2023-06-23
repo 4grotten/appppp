@@ -7,7 +7,6 @@ from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
 
-from instagram_parsers.services.proxy_services import ProxyService
 
 HEADERS = {
             'Upgrade-Insecure-Requests': '1',
@@ -35,11 +34,8 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL):
-        proxy = ProxyService.get_random_proxy_for_requests()
-        if not proxy:
-            proxy = []
         try:
-            response = requests.get(gMaps_URL, proxies=proxy[0])
+            response = requests.get(gMaps_URL)
             text = response.url
             print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'

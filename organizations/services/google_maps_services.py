@@ -3,6 +3,7 @@ from typing import List, Dict
 import sys, os, re, json
 import requests
 import googlemaps
+import traceback
 from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
@@ -59,17 +60,19 @@ class GoogleMapsService:
                     }
                 }
                 raise ValidationError(error_data)
-        except:
-            print("except statement")
-            error_data = {
-                "message": "Invalid input",
-                "errors": {
-                    "google_maps_url": [
-                        "Enter a valid URL."
-                    ]
-                }
-            }
-            raise ValidationError(error_data)
+        except Exception as e:
+            print("EXCEPT")
+            traceback.print_exc()
+            # print("except statement")
+            # error_data = {
+            #     "message": "Invalid input",
+            #     "errors": {
+            #         "google_maps_url": [
+            #             "Enter a valid URL."
+            #         ]
+            #     }
+            # }
+            # raise ValidationError(error_data)
 
 
     @classmethod

@@ -14,7 +14,7 @@ from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
 
-
+TOKEN = "Token bcf33d66e4bc4c27c30a1dabea8233c437c84cec"
 HEADERS = {
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
@@ -42,14 +42,6 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
-            firefox_binary = FirefoxBinary()
-            browser = webdriver.Firefox(firefox_binary=firefox_binary)
-            browser.get('https://www.google.com/search?q=cats&source=lnms&tbm=isch')
-            xpath = "/html/body/div[2]/div[2]/form[1]/input[11]"
-            browser.find_element(By.XPATH, xpath).click()
-            # cookie_file = '/app/Cookies'
-            # cj = cookielib.MozillaCookieJar(cookie_file)
-            # cj.load(ignore_discard=True, ignore_expires=True)
             response = requests.get(gMaps_URL)
             text = response.url
             print("TEXT:", text)
@@ -110,12 +102,12 @@ class GoogleMapsService:
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
-            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+        # if 'localhost' in request.META['HTTP_HOST']:
+        #     base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        # elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+        #     base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        # elif 'apofiz.com' in request.META['HTTP_HOST']:
+        #     base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
@@ -125,10 +117,10 @@ class GoogleMapsService:
             'image_url': place_image,
             'is_watermarked': True
         }
-        token = request.headers.get('Authorization')
+        # token = request.headers.get('Authorization')
         print(place_image)
         try:
-            HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
+            HEADERS = {'Authorization': TOKEN, 'Accept-Language': 'ru'}
             print(URL_IMAGE_ENDPOINT)
             print(HEADERS)
             print(query)

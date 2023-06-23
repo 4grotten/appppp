@@ -90,18 +90,17 @@ class GoogleMapsService:
     @classmethod
     def get_image_ID(cls, photo_reference: str, request):
         api_key = cls.get_api_key()
-        json_data = {}
         r = requests.get(f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference={photo_reference}&key={api_key}")
         place_image = r.url
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        # if 'localhost' in request.META['HTTP_HOST']:
-        #     base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        # elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-        #     base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        # elif 'apofiz.com' in request.META['HTTP_HOST']:
-        #     base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
@@ -111,10 +110,9 @@ class GoogleMapsService:
             'image_url': place_image,
             'is_watermarked': True
         }
-        # token = request.headers.get('Authorization')
-        print(place_image)
+        token = request.headers.get('Authorization')
         try:
-            HEADERS = {'Authorization': TOKEN, 'Accept-Language': 'ru'}
+            HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             print(URL_IMAGE_ENDPOINT)
             print(HEADERS)
             print(query)
@@ -124,18 +122,6 @@ class GoogleMapsService:
             print("DEBUG: Response body:", r_image.text)
             print("MAKE REQUEST SAVE")
             json_data = json.loads(r_image.text)
-            print(json_data)
-            url_image = json_data["large"]
-            body = {
-                'image_url': url_image,
-                'is_watermarked': True
-            }
-            endpoint_url = "https://apofiz.com/api/v1/save_image_from_url/"
-            token = request.headers.get('Authorization')
-            new_headers = {'Authorization': token, 'Accept-Language': 'ru'}
-            image_request = requests.post(url=endpoint_url, headers=new_headers, data=body)
-            json_data = json.loads(image_request.text)
-            print(json_data, "prod json data")
             image_ID = json_data['id']
 
             return image_ID

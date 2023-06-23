@@ -1,5 +1,6 @@
 import datetime
 import random
+import requests
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -139,7 +140,9 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
-        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        parse_url = "https://test.apofiz.com/api/v1/organizations/parse_data_from_google_maps/"
+        response = requests.post(url=parse_url, data={'google_maps_url': google_maps_url})
+        parsed_data = response.json()
         print("PARSED_DATA:", parsed_data)
         try:
             image_id = File.objects.get(id=parsed_data['image_id'])
@@ -178,6 +181,14 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         print("FINISHED DATA FOR SERIALIZER")
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ParseDataFromGoogleMapsView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        google_maps_url = request.data['google_maps_url']
+        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        return Response(parsed_data)
 
 
 class OrganizationTypesListView(ListAPIView):

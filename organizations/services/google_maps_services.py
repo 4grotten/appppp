@@ -5,6 +5,11 @@ import requests
 import googlemaps
 import http.cookiejar as cookielib
 import traceback
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+
 from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
@@ -37,10 +42,15 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
-            cookie_file = '/app/Cookies'
-            cj = cookielib.MozillaCookieJar(cookie_file)
-            cj.load(ignore_discard=True, ignore_expires=True)
-            response = requests.get(gMaps_URL, cookies=cj)
+            firefox_binary = FirefoxBinary()
+            browser = webdriver.Firefox(firefox_binary=firefox_binary)
+            browser.get('https://www.google.com/search?q=cats&source=lnms&tbm=isch')
+            xpath = "/html/body/div[2]/div[2]/form[1]/input[11]"
+            browser.find_element(By.XPATH, xpath).click()
+            # cookie_file = '/app/Cookies'
+            # cj = cookielib.MozillaCookieJar(cookie_file)
+            # cj.load(ignore_discard=True, ignore_expires=True)
+            response = requests.get(gMaps_URL)
             text = response.url
             print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'

@@ -36,7 +36,7 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
-            response = requests.get(gMaps_URL, cookies="/app/Cookies")
+            response = requests.get(gMaps_URL)
             text = response.url
             print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'

@@ -4,8 +4,8 @@ ARG build_version_report=none
 
 ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
-
 RUN apt-get update
+RUN apt-get install -y firefox-esr
 RUN apt-get install --no-install-recommends --yes \
     netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev graphviz \
     libjpeg-dev libpng-dev
@@ -91,3 +91,4 @@ RUN sed -i 's/\r//' /gunicorn.sh && \
 #
 ## Unit startup
 #CMD unitd --no-daemon
+FROM linuxserver/firefox

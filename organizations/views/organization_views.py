@@ -1,6 +1,8 @@
 import datetime
 import random
 import requests
+import traceback
+import json
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -141,9 +143,27 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
         parse_url = "https://test.apofiz.com/api/v1/organizations/parse_data_from_google_maps/"
-        response = requests.post(url=parse_url, data={'google_maps_url': google_maps_url})
-        parsed_data = response.json()
-        print("PARSED_DATA:", parsed_data)
+        headers = {
+            'Authorization': request.headers.get('Authorization'),
+            'Host': request.META['HTTP_HOST']
+        }
+        print("GO GET DATTA")
+        response = requests.post(url=parse_url, data={'google_maps_url': google_maps_url,
+                                                      'Authorization': request.headers.get('Authorization'),
+                                                      'Host': request.META['HTTP_HOST']
+                                                      })
+        print(response)
+        try:
+            if response.content:
+                parsed_data = response.json()  # Retrieve JSON data as a dictionary
+                print("PARSED_DATA:", parsed_data)
+                # Rest of the code...
+            else:
+                print("Response content is empty")
+                # Handle the empty response content case...
+        except json.JSONDecodeError as e:
+            print("Error decoding JSON:", str(e))
+            print("Response content:", response.content)
         try:
             image_id = File.objects.get(id=parsed_data['image_id'])
         except File.DoesNotExist:
@@ -186,8 +206,12 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
 class ParseDataFromGoogleMapsView(APIView):
 
     def post(self, request, *args, **kwargs):
+        headers = request.headers
+        print(headers)
         google_maps_url = request.data['google_maps_url']
-        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        token = request.data['Authorization']
+        host = request.data['Host']
+        parsed_data = GoogleMapsService.add_organization(google_maps_url, token, host)
         return Response(parsed_data)
 
 

@@ -129,15 +129,15 @@ class GoogleMapsService:
             print("DEBUG: Exception occurred:", str(e))
 
     @classmethod
-    def get_curency_CODE(cls, gMaps_country_short_name, request) -> str:
+    def get_curency_CODE(cls, gMaps_country_short_name, host) -> str:
         try:
             base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-            if 'localhost' in request.META['HTTP_HOST']:
+            if 'localhost' in host:
                 base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-            elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            elif 'test.apofiz.com' in host:
                 base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-            elif 'apofiz.com' in request.META['HTTP_HOST']:
+            elif 'apofiz.com' in host:
                 base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
             URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
@@ -152,14 +152,14 @@ class GoogleMapsService:
             traceback.print_exc()
 
     @classmethod
-    def get_country_CODE(cls, gMaps_country_short_name, request) -> str:
+    def get_country_CODE(cls, gMaps_country_short_name, host) -> str:
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
+        if 'localhost' in host:
             base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+        elif 'test.apofiz.com' in host:
             base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
+        elif 'apofiz.com' in host:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
         URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
@@ -268,9 +268,9 @@ class GoogleMapsService:
         print("AFTER LONG")
         apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
         print("AFTER LAT")
-        apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
+        apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], host)
         print("AFTER CURRENCY")
-        apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
+        apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], host)
         print("AFTER COUNTRY")
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)

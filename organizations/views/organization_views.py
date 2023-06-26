@@ -153,6 +153,7 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                                                       'Host': request.META['HTTP_HOST']
                                                       })
         print(response)
+        parsed_data = {}
         try:
             if response.content:
                 parsed_data = response.json()  # Retrieve JSON data as a dictionary

@@ -151,7 +151,7 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
         response = requests.post(url=parse_url, data={'google_maps_url': google_maps_url,
                                                       'Authorization': request.headers.get('Authorization'),
                                                       'Host': request.META['HTTP_HOST']
-                                                      })
+                                                      }, verify=False)
         print(response)
         parsed_data = {}
         try:

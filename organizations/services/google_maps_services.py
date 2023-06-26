@@ -88,18 +88,18 @@ class GoogleMapsService:
         return place_details['result']
 
     @classmethod
-    def get_image_ID(cls, photo_reference: str, request):
+    def get_image_ID(cls, photo_reference: str, token, host):
         api_key = cls.get_api_key()
         r = requests.get(f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference={photo_reference}&key={api_key}")
         place_image = r.url
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
+        if 'localhost' in host:
             base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+        elif 'test.apofiz.com' in host:
             base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
+        elif 'apofiz.com' in host:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
 
@@ -110,7 +110,6 @@ class GoogleMapsService:
             'image_url': place_image,
             'is_watermarked': True
         }
-        token = request.headers.get('Authorization')
         try:
             HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
             print(URL_IMAGE_ENDPOINT)
@@ -170,14 +169,14 @@ class GoogleMapsService:
                 return country['code']
 
     @classmethod
-    def get_city_ID(cls, sity_name, request):
+    def get_city_ID(cls, sity_name, host):
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
+        if 'localhost' in host:
             base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+        elif 'test.apofiz.com' in host:
             base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
+        elif 'apofiz.com' in host:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
         URL_COUNTRIES_AND_CITIES = urljoin(base_url, f'countries_and_cities/?search={sity_name}')
@@ -192,17 +191,16 @@ class GoogleMapsService:
             return None
 
     @classmethod
-    def get_place_type_ID(cls, place_type, request):
-        token = request.headers.get('Authorization')
+    def get_place_type_ID(cls, place_type, token, host):
         _headers = {'Authorization': token, 'Accept-Language': 'ru'}
 
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
+        if 'localhost' in host:
             base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+        elif 'test.apofiz.com' in host:
             base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
+        elif 'apofiz.com' in host:
             base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
         URL_ORGANIZATION_TYPES = urljoin(base_url, f'organization_all_types/?search={place_type}')
@@ -216,14 +214,14 @@ class GoogleMapsService:
                     organization_type_ID = item['id']
                     return organization_type_ID
     @classmethod
-    def add_organization(cls, gMaps_URL: str, request):
+    def add_organization(cls, gMaps_URL: str, token, host):
         data = cls.get_place_details(gMaps_URL)
 
         apofiz_add_organization = {}
 
         apofiz_add_organization['title'] = data['name']
         photo_reference = data['photos'][0]['photo_reference']
-        image_id = cls.get_image_ID(photo_reference, request)
+        image_id = cls.get_image_ID(photo_reference, token, host)
         print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
@@ -278,11 +276,11 @@ class GoogleMapsService:
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
         print("AFTER CITY_NAME")
         apofiz_add_organization[
-            'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
-        apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
+            'check_city'] = f'{cls.get_city_ID(city_name, host)} | {city_name}'  # для проверки правильности нахождния города
+        apofiz_add_organization['city'] = cls.get_city_ID(city_name, host)
         print("BEFORE PLACYEE TYPE")
         place_type = data['types'][0]
-        apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
+        apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, token, host)
         print("AFTER PLACEE TYPE", apofiz_add_organization['types'])
 
         accounts: List = []

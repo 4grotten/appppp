@@ -3,7 +3,7 @@ from typing import List, Dict
 import sys, os, re, json
 import requests
 import traceback
-
+from django.http import HttpRequest, HttpResponse
 from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
@@ -145,20 +145,26 @@ class GoogleMapsService:
 
     @classmethod
     def get_curency_CODE(cls, gMaps_country_short_name, request) -> str:
-        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+        try:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-        if 'localhost' in request.META['HTTP_HOST']:
-            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+            if 'localhost' in request.META['HTTP_HOST']:
+                base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+            elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+                base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+            elif 'apofiz.com' in request.META['HTTP_HOST']:
+                base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
-        URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
-        r = requests.get(URL_COUNTRIES_AND_CITIES)
-        for country in r.json()['results']['countries']:
-            if country['code'] == gMaps_country_short_name:
-                return country['currency']['code']
+            URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
+            print(URL_COUNTRIES_AND_CITIES, "URL CHECK")
+            r = requests.get(URL_COUNTRIES_AND_CITIES)
+            print("RESPONSE", r)
+            for country in r.json()['results']['countries']:
+                if country['code'] == gMaps_country_short_name:
+                    return country['currency']['code']
+        except Exception as e:
+            print("EXCEPT")
+            traceback.print_exc()
 
     @classmethod
     def get_country_CODE(cls, gMaps_country_short_name, request) -> str:
@@ -257,9 +263,16 @@ class GoogleMapsService:
                                                   + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
                                                           2:]
 
+            print(data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
+                                                  + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
+                                                          2:])
+
             apofiz_add_organization['closes_at'] = data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
                                                    + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
                                                            2:]
+            print(data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
+                                                   + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
+                                                           2:])
             print("after opens and closes")
         except:
             apofiz_add_organization['opens_at'] = None

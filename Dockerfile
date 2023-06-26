@@ -16,7 +16,6 @@ RUN pip3 install poetry
 
 COPY ./pyproject.toml /app
 COPY ./poetry.lock /app
-COPY ./Cookies /app
 
 #COPY ./Pipfile /app/
 #COPY ./Pipfile.lock /app/

@@ -142,29 +142,8 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
-        parse_url = "https://test.apofiz.com/api/v1/organizations/parse_data_from_google_maps/"
-        headers = {
-            'Authorization': request.headers.get('Authorization'),
-            'Host': request.META['HTTP_HOST']
-        }
-        print("GO GET DATTA")
-        response = requests.post(url=parse_url, data={'google_maps_url': google_maps_url,
-                                                      'Authorization': request.headers.get('Authorization'),
-                                                      'Host': request.META['HTTP_HOST']
-                                                      }, verify=False)
-        print(response)
-        parsed_data = {}
-        try:
-            if response.content:
-                parsed_data = response.json()  # Retrieve JSON data as a dictionary
-                print("PARSED_DATA:", parsed_data)
-                # Rest of the code...
-            else:
-                print("Response content is empty")
-                # Handle the empty response content case...
-        except json.JSONDecodeError as e:
-            print("Error decoding JSON:", str(e))
-            print("Response content:", response.content)
+        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        print("PARSED_DATA:", parsed_data)
         try:
             image_id = File.objects.get(id=parsed_data['image_id'])
         except File.DoesNotExist:
@@ -202,18 +181,6 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         print("FINISHED DATA FOR SERIALIZER")
         return Response(data, status=status.HTTP_201_CREATED)
-
-
-class ParseDataFromGoogleMapsView(APIView):
-
-    def post(self, request, *args, **kwargs):
-        headers = request.headers
-        print(headers)
-        google_maps_url = request.data['google_maps_url']
-        token = request.data['Authorization']
-        host = request.data['Host']
-        parsed_data = GoogleMapsService.add_organization(google_maps_url, token, host)
-        return Response(parsed_data)
 
 
 class OrganizationTypesListView(ListAPIView):

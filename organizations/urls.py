@@ -29,7 +29,7 @@ from .views.organization_views import (
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
     OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView,
     OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
-    OrganizationsGoogleMapsCreateView, ParseDataFromGoogleMapsView
+    OrganizationsGoogleMapsCreateView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -56,8 +56,6 @@ organization_urls = [
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
     path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(),
          name='user_google_maps_organizations'),
-    path('organizations/parse_data_from_google_maps/', ParseDataFromGoogleMapsView.as_view(),
-         name='parse_data_from_google_maps'),
     path('organizations/<int:pk>/', OrganizationRetrieveUpdateView.as_view(), name='organization_details'),
     path('organization/<int:pk>/verifications/', OrgVerifications.as_view(), name='organizations_verifications'),
     path('organizations/<int:pk>/delivery_settings/', DeliverySettingsView.as_view(), name='delivery_settings'),

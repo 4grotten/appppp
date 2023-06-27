@@ -1,32 +1,11 @@
-from bs4 import BeautifulSoup as BS, BeautifulSoup
-from typing import List, Dict
-import sys, os, re, json
+import re, json
 import requests
-import traceback
-from django.http import HttpRequest, HttpResponse
+
+from typing import List
 from django.conf import settings
 from urllib.parse import urljoin
 from rest_framework.exceptions import ValidationError
-
 from instagram_parsers.services.proxy_services import ProxyService
-
-TOKEN = "Token bcf33d66e4bc4c27c30a1dabea8233c437c84cec"
-HEADERS = {
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-            'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
-            'sec-ch-ua-arch': '"x86"',
-            'sec-ch-ua-bitness': '"64"',
-            'sec-ch-ua-full-version': '"114.0.5735.134"',
-            'sec-ch-ua-full-version-list': '"Not.A/Brand";v="8.0.0.0", "Chromium";v="114.0.5735.134", "Google Chrome";v="114.0.5735.134"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-model': '""',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-ch-ua-platform-version': '"10.0.0"',
-            'sec-ch-ua-wow64': '?0',
-        }
-
-
 
 
 class GoogleMapsService:
@@ -40,41 +19,22 @@ class GoogleMapsService:
         try:
             response = requests.get(gMaps_URL)
             text = response.url
-            print("TEXT:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
             match = re.search(pattern, text)
-            print("AFTER MATCH")
             if match:
-                print("GOT MATCH")
                 cid_hexadecimal = match.group(1)
-                print("cid_hexadecimal", cid_hexadecimal)
                 cid = str(int(cid_hexadecimal, 16))
-                print("cid:", cid)
                 return cid
-            else:
-                print("else statement")
-                error_data = {
-                    "message": "Invalid input",
-                    "errors": {
-                        "google_maps_url": [
-                            "Enter a valid URL."
-                        ]
-                    }
-                }
-                raise ValidationError(error_data)
         except Exception as e:
-            print("EXCEPT")
-            traceback.print_exc()
-            # print("except statement")
-            # error_data = {
-            #     "message": "Invalid input",
-            #     "errors": {
-            #         "google_maps_url": [
-            #             "Enter a valid URL."
-            #         ]
-            #     }
-            # }
-            # raise ValidationError(error_data)
+            error_data = {
+                "message": "Invalid input",
+                "errors": {
+                    "google_maps_url": [
+                        "Enter a valid URL."
+                    ]
+                }
+            }
+            raise ValidationError(error_data)
 
 
     @classmethod
@@ -86,7 +46,6 @@ class GoogleMapsService:
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
         r = requests.get(details_url)
         place_details = r.json()
-        print("place_details", place_details['result'])
         return place_details['result']
 
     @classmethod
@@ -106,7 +65,6 @@ class GoogleMapsService:
 
 
         URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
-        print("MAKE URL", URL_IMAGE_ENDPOINT)
 
         query = {
             'image_url': place_image,
@@ -116,49 +74,43 @@ class GoogleMapsService:
         proxy = ProxyService.get_random_proxy_for_requests()
         if not proxy:
             proxy = []
+        r_image_headers = {'Authorization': token, 'Accept-Language': 'ru'}
         try:
-            HEADERS = {'Authorization': token, 'Accept-Language': 'ru'}
-            print(URL_IMAGE_ENDPOINT)
-            print(HEADERS)
-            print(query)
-            r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=HEADERS, data=query, proxies=proxy[0])
-            print("CONTENT", r_image.content)
-            print("DEBUG: Response status code:", r_image.status_code)
-            print("DEBUG: Response body:", r_image.text)
-            print("MAKE REQUEST SAVE")
+            r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=r_image_headers, data=query, proxies=proxy[0])
             json_data = json.loads(r_image.text)
             image_ID = json_data['id']
 
             return image_ID
         except Exception as e:
-            # Print debug information in case of an exception
-            print("DEBUG: Exception occurred:", str(e))
+            error_data = {
+                "message": "Invalid input",
+                "errors": {
+                    "google_maps_url": [
+                        "Enter a valid URL."
+                    ]
+                }
+            }
+            raise ValidationError(error_data)
 
     @classmethod
     def get_curency_CODE(cls, gMaps_country_short_name, request) -> str:
-        try:
-            base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
-            if 'localhost' in request.META['HTTP_HOST']:
-                base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-            elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-                base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-            elif 'apofiz.com' in request.META['HTTP_HOST']:
-                base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
 
-            URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
-            print(URL_COUNTRIES_AND_CITIES, "URL CHECK")
-            proxy = ProxyService.get_random_proxy_for_requests()
-            if not proxy:
-                proxy = []
-            r = requests.get(URL_COUNTRIES_AND_CITIES, proxies=proxy[0])
-            print("RESPONSE", r)
-            for country in r.json()['results']['countries']:
-                if country['code'] == gMaps_country_short_name:
-                    return country['currency']['code']
-        except Exception as e:
-            print("EXCEPT")
-            traceback.print_exc()
+        URL_COUNTRIES_AND_CITIES = urljoin(base_url, 'countries_and_cities/?limit=240')
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(URL_COUNTRIES_AND_CITIES, proxies=proxy[0])
+        for country in r.json()['results']['countries']:
+            if country['code'] == gMaps_country_short_name:
+                return country['currency']['code']
 
     @classmethod
     def get_country_CODE(cls, gMaps_country_short_name, request) -> str:
@@ -226,7 +178,6 @@ class GoogleMapsService:
         r = requests.get(URL_ORGANIZATION_TYPES, headers=_headers, proxies=proxy[0])
         if r.json() == []:
             return None
-            # return place_type
         else:
             for item in r.json():
                 if item['title'] == place_type:
@@ -241,19 +192,15 @@ class GoogleMapsService:
         apofiz_add_organization['title'] = data['name']
         photo_reference = data['photos'][0]['photo_reference']
         image_id = cls.get_image_ID(photo_reference, request)
-        print("GOT IMAGE:", image_id)
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
         else:
             apofiz_add_organization['image_id'] = image_id
         try:
-            print("before desc")
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
-            print(apofiz_add_organization['description'])
         except:
             apofiz_add_organization['description'] = ''
-        print("after desc")
         numbers: List = []
         try:
             numbers.append(data['international_phone_number'].replace(' ', ''))
@@ -266,41 +213,25 @@ class GoogleMapsService:
                                                   + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
                                                           2:]
 
-            print(data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
-                                                  + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
-                                                          2:])
 
             apofiz_add_organization['closes_at'] = data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
                                                    + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
                                                            2:]
-            print(data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
-                                                   + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
-                                                           2:])
-            print("after opens and closes")
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
-        print("BEFORE ADDRESS")
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
-        print("AFTER ADDRESS")
         apofiz_add_organization['longitude'] = data['geometry']['location']['lng']
-        print("AFTER LONG")
         apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
-        print("AFTER LAT")
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
-        print("AFTER CURRENCY")
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
-        print("AFTER COUNTRY")
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
-        print("AFTER CITY_NAME")
         apofiz_add_organization[
             'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
-        print("BEFORE PLACYEE TYPE")
         place_type = data['types'][0]
         apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
-        print("AFTER PLACEE TYPE", apofiz_add_organization['types'])
 
         accounts: List = []
         try:

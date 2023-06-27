@@ -292,12 +292,14 @@ class AddRemoveListItemCollectionView(ListAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        is_bookmarked = serializer.validated_data['is_bookmarked']
         CollectionService.add_remove_bookmarked_item_collection(
             collection_id=kwargs['pk'], user=request.user, item=serializer.validated_data['items'],
-            is_bookmarked=serializer.validated_data['is_bookmarked'])
+            is_bookmarked=is_bookmarked)
 
-        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
-                                                   is_bookmarked=serializer.validated_data['is_bookmarked'])
+        if is_bookmarked:
+            BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
+                                                       is_bookmarked=is_bookmarked)
 
         return Response(data={'message': _('Successfully updated collection')})
 

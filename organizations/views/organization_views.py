@@ -143,7 +143,6 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
         parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
-        print("PARSED_DATA:", parsed_data)
         try:
             image_id = File.objects.get(id=parsed_data['image_id'])
         except File.DoesNotExist:
@@ -154,7 +153,6 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
         types = None if parsed_data['types'] is None else [parsed_data['types']]
         opens_at = "08:00:00" if parsed_data['opens_at'] is None else parsed_data['opens_at']
         closes_at = "18:00:00" if parsed_data['closes_at'] is None else parsed_data['closes_at']
-        print("BEFORE CREATING ORG")
         organization = OrganizationService.create_organization(owner=request.user,
                                                                title=parsed_data['title'],
                                                                image_id=image_id,
@@ -172,14 +170,11 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                                                                city=city,
                                                                types=types
                                                                )
-        print("AFTER CREATED ORG")
 
         num_members = random.randint(28, 130)
         if organization.country.code == 'AE':
             transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
-        print("MAKING DATA FOR SERIALIZER")
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
-        print("FINISHED DATA FOR SERIALIZER")
         return Response(data, status=status.HTTP_201_CREATED)
 
 

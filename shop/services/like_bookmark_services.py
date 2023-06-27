@@ -1,5 +1,8 @@
-from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike
+from common.exceptions import ObjectNotFoundException, NotAcceptableException
+from common.models import File
+from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike, ItemCollection
 from users.models import User
+from django.utils.translation import gettext_lazy as _
 
 
 class LikeService:
@@ -37,3 +40,64 @@ class BookmarkService:
     @classmethod
     def is_item_bookmarked_by_user(cls, item: ShopItem, user: User) -> bool:
         return ItemBookmark.objects.filter(user=user, item=item).exists()
+
+
+class CollectionService:
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return ItemCollection.objects.get(**filters)
+        except ItemCollection.DoesNotExist:
+            raise ObjectNotFoundException(_('Collection not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return ItemCollection.objects.filter(**filters)
+
+    @classmethod
+    def create_collection(cls, name: str, user: User, items: list, image=None):
+        collection = ItemCollection.objects.create(
+            name=name,
+            user=user,
+        )
+
+        collection.items.set(items)
+        return collection
+
+    @classmethod
+    def update_collection(cls, collection, name=None, image=None, items=None):
+        if name is not None:
+            collection.name = name
+        if image is not None:
+            collection.image = image
+        if items is not None:
+            collection.items.remove(*items)
+        collection.save()
+
+        return collection
+
+    @classmethod
+    def remove_from_all_collections(cls, user: User, item: list, is_bookmarked: bool):
+        if not is_bookmarked:
+            collections = ItemCollection.objects.filter(user=user)
+            for collection in collections:
+                collection.items.remove(item)
+
+    @classmethod
+    def add_remove_bookmarked_item_collection(cls, user: User, item: ShopItem, is_bookmarked: bool, collection_id: int):
+        collection = cls.get(id=collection_id, user=user)
+        if is_bookmarked:
+            if item in collection.items.all():
+                raise NotAcceptableException(_('Item already exists in the collection.'))
+            collection.items.add(item)
+        else:
+            if item not in collection.items.all():
+                raise NotAcceptableException(_('Item does not exist in the collection.'))
+            collection.items.remove(item)
+
+    @classmethod
+    def get_bookmarked_items_in_collection(cls, user: User, collection_id: int):
+        collection = ItemCollection.objects.get(id=collection_id, user=user)
+        items = collection.items.filter(is_published=True, bookmarked_users__user=user,
+                                        organization__is_deleted=False).order_by('-bookmarked_users').distinct()
+        return items

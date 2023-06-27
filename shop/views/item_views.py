@@ -2,12 +2,14 @@ import calendar
 
 from django.db import IntegrityError
 from datetime import datetime
+from django.db import models
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, \
+    RetrieveAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +18,7 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -27,11 +29,13 @@ from shop.serializers.item_serializers import (
     ItemRentalMinuteSerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
-from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer
+from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
+    ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
+    ItemBookmarkBulkDeleteSerializer
 from shop.serializers.other_serializers import ComplaintSerializer, SuggestItemSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
-from shop.services.like_bookmark_services import LikeService, BookmarkService
+from shop.services.like_bookmark_services import LikeService, BookmarkService, CollectionService
 from shop.services.booking_services import BookingService
 from utils.translator import GoogleTranslator
 
@@ -213,7 +217,120 @@ class BookmarkListCreateView(ListAPIView):
         BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['item'],
                                                    is_bookmarked=serializer.validated_data['is_bookmarked'])
 
+        CollectionService.remove_from_all_collections(
+            user=request.user, item=serializer.validated_data['item'],
+            is_bookmarked=serializer.validated_data['is_bookmarked'])
+
         return Response(data={'message': _('Successfully updated bookmark status')})
+
+
+class ItemBookmarkBulkDeleteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ItemBookmarkBulkDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        item_ids = serializer.validated_data.get('items', [])
+        user = request.user
+
+        ItemBookmark.objects.filter(user=user, item__in=item_ids).delete()
+
+        collections = ItemCollection.objects.filter(user=user)
+        for collection in collections:
+            collection.items.remove(*item_ids)
+
+        return Response({'message': 'Items deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class CollectionsListCreateView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCollectionSerializer
+
+    def get_queryset(self):
+        queryset = ItemCollection.objects.filter(user=self.request.user)
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(Q(name__icontains=search_query))
+        queryset = queryset.order_by('-updated_at')
+        return queryset
+
+    def post(self, request, *args, **kwargs):
+        serializer = ItemCollectionCreateSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        CollectionService.create_collection(
+            name=serializer.validated_data['name'],
+            user=request.user,
+            items=[serializer.validated_data['items']]
+        )
+        is_bookmarked = True
+        BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
+                                                   is_bookmarked=is_bookmarked)
+
+        return Response(data={'message': _('Successfully added to collection')})
+
+
+class AddRemoveListItemCollectionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SubscriptionItemSerializer
+
+    def get_queryset(self):
+        qs = CollectionService.get_bookmarked_items_in_collection(user=self.request.user,
+                                                                  collection_id=self.kwargs['pk'])
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AddRemoveItemCollectionSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        is_bookmarked = serializer.validated_data['is_bookmarked']
+        CollectionService.add_remove_bookmarked_item_collection(
+            collection_id=kwargs['pk'], user=request.user, item=serializer.validated_data['items'],
+            is_bookmarked=is_bookmarked)
+
+        if is_bookmarked:
+            BookmarkService.add_remove_bookmarked_item(user=request.user, item=serializer.validated_data['items'],
+                                                       is_bookmarked=is_bookmarked)
+
+        return Response(data={'message': _('Successfully updated collection')})
+
+
+class CollectionRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ItemCollectionSerializer
+
+    def get_queryset(self):
+        return ItemCollection.objects.filter(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        serializer = ItemCollectionDetailUpdateSerializer(instance=self.get_object(), data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        collection = CollectionService.update_collection(
+            collection=self.get_object(),
+            name=serializer.validated_data.get('name'),
+            image=serializer.validated_data.get('image'),
+            items=serializer.validated_data.get('items')
+        )
+
+        serialized_collection = ItemCollectionSerializer(collection, context={'request': request}).data
+        return Response(serialized_collection)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class ComplaintCreateView(CreateAPIView):

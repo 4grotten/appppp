@@ -240,6 +240,8 @@ class ItemBookmarkBulkDeleteView(APIView):
         for collection in collections:
             collection.items.remove(*item_ids)
 
+            CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
+
         return Response({'message': 'Items deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
 

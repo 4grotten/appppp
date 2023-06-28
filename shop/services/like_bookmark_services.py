@@ -73,6 +73,7 @@ class CollectionService:
             collection.image = item
         if items is not None:
             collection.items.remove(*items)
+            CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
         collection.save()
 
         return collection
@@ -83,6 +84,7 @@ class CollectionService:
             collections = ItemCollection.objects.filter(user=user)
             for collection in collections:
                 collection.items.remove(item)
+                CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
 
     @classmethod
     def add_remove_bookmarked_item_collection(cls, user: User, item: ShopItem, is_bookmarked: bool, collection_id: int):
@@ -96,9 +98,18 @@ class CollectionService:
                 raise NotAcceptableException(_('Item does not exist in the collection.'))
             collection.items.remove(item)
 
+        CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
+
     @classmethod
     def get_bookmarked_items_in_collection(cls, user: User, collection_id: int):
         collection = ItemCollection.objects.get(id=collection_id, user=user)
         items = collection.items.filter(is_published=True, bookmarked_users__user=user,
                                         organization__is_deleted=False).order_by('-bookmarked_users').distinct()
         return items
+
+
+    @classmethod
+    def set_image_to_null_if_collection_has_no_items(cls, collection: ItemCollection):
+        if collection.image is not None and collection.image not in collection.items.all():
+            collection.image = None
+            collection.save()

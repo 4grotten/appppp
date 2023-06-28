@@ -30,10 +30,11 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
     in_collection = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     video = serializers.SerializerMethodField()
+    has_items = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCollection
-        fields = ('id', 'name', 'in_collection', 'image', 'video')
+        fields = ('id', 'name', 'in_collection', 'image', 'video', 'has_items')
         extra_kwargs = {
             'items': {'required': True}
         }
@@ -62,6 +63,9 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
                 return serializer.data
         return None
 
+    def get_has_items(self, obj):
+        return obj.items.exists()
+
     # def get_instagram_data(self, obj):
     #     first_item = obj.items.last()
     #     print(first_item)
@@ -83,10 +87,11 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
 
 class ItemCollectionDetailUpdateSerializer(serializers.ModelSerializer):
     items = serializers.ListField(child=serializers.IntegerField(), required=False)
+    item_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = ItemCollection
-        fields = ('id', 'name', 'image', 'video', 'items')
+        fields = ('id', 'name', 'items', 'item_id')
 
 class ItemCollectionCreateSerializer(serializers.ModelSerializer):
     items = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())

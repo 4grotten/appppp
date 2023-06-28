@@ -65,13 +65,15 @@ class CollectionService:
         return collection
 
     @classmethod
-    def update_collection(cls, collection, name=None, image=None, video=None, items=None):
+    def update_collection(cls, collection, name=None, item_id=None, items=None):
         if name is not None:
             collection.name = name
-        if image is not None:
-            collection.image = image
-        if video is not None:
-            collection.video = video
+        if item_id is not None:
+            item = collection.items.filter(id=item_id).first()
+            if item.images.first():
+                collection.image = item.images.first()
+            elif item.videos.first():
+                collection.video = item.videos.first()
         if items is not None:
             collection.items.remove(*items)
         collection.save()

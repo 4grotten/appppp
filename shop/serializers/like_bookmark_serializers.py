@@ -39,7 +39,7 @@ class ItemCollectionSerializer(serializers.ModelSerializer):
         }
 
     def get_image(self, obj):
-        if obj.image:
+        if obj.image and obj.image in obj.items.all():
             serializer = ShopItemInCollectionSerializer(obj.image)
             return serializer.data
         first_item = obj.items.last()

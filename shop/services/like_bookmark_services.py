@@ -69,11 +69,8 @@ class CollectionService:
         if name is not None:
             collection.name = name
         if item_id is not None:
-            item = collection.items.filter(id=item_id).first()
-            if item.images.first():
-                collection.image = item.images.first()
-            elif item.videos.first():
-                collection.video = item.videos.first()
+            item = ShopItem.objects.get(id=item_id)
+            collection.image = item
         if items is not None:
             collection.items.remove(*items)
         collection.save()

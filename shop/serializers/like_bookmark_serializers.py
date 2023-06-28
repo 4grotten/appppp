@@ -29,51 +29,27 @@ class ItemBookmarkBulkDeleteSerializer(serializers.Serializer):
 class ItemCollectionSerializer(serializers.ModelSerializer):
     in_collection = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
-    video = serializers.SerializerMethodField()
     has_items = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCollection
-        fields = ('id', 'name', 'in_collection', 'image', 'video', 'has_items')
+        fields = ('id', 'name', 'in_collection', 'image', 'has_items')
         extra_kwargs = {
             'items': {'required': True}
         }
 
     def get_image(self, obj):
         if obj.image:
-            serializer = ImageSerializer(obj.image)
+            serializer = ShopItemInCollectionSerializer(obj.image)
             return serializer.data
         first_item = obj.items.last()
         if first_item:
-            images = first_item.images.first()
-            if images:
-                serializer = ImageSerializer(images)
-                return serializer.data
-        return None
-
-    def get_video(self, obj):
-        if obj.video:
-            serializer = VideoSerializer(obj.video)
+            serializer = ShopItemInCollectionSerializer(first_item)
             return serializer.data
-        first_item = obj.items.last()
-        if first_item:
-            videos = first_item.videos.first()
-            if videos:
-                serializer = VideoSerializer(videos)
-                return serializer.data
         return None
 
     def get_has_items(self, obj):
         return obj.items.exists()
-
-    # def get_instagram_data(self, obj):
-    #     first_item = obj.items.last()
-    #     print(first_item)
-    #     if first_item:
-    #         videos = ItemInstagramData.objects.filter(item=first_item).exclude(video_url=None)
-    #         images = ItemInstagramData.objects.filter(item=first_item, video_url=None).order_by('pk')
-    #         return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
-    #                     images=ItemInstagramImageSerializer(images, many=True).data)
 
     def get_in_collection(self, obj):
         request = self.context.get('request')
@@ -107,3 +83,19 @@ class ItemCollectionCreateSerializer(serializers.ModelSerializer):
 class AddRemoveItemCollectionSerializer(serializers.Serializer):
     is_bookmarked = serializers.BooleanField()
     items = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+
+
+class ShopItemInCollectionSerializer(serializers.ModelSerializer):
+    instagram_data = serializers.SerializerMethodField()
+    images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'images', 'videos', 'instagram_data')
+
+    def get_instagram_data(self, item: ShopItem):
+        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None).order_by('created_at')
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('created_at')
+        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
+                    images=ItemInstagramImageSerializer(images, many=True).data)

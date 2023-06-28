@@ -240,6 +240,8 @@ class ItemBookmarkBulkDeleteView(APIView):
         for collection in collections:
             collection.items.remove(*item_ids)
 
+            CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
+
         return Response({'message': 'Items deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -322,7 +324,7 @@ class CollectionRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         collection = CollectionService.update_collection(
             collection=self.get_object(),
             name=serializer.validated_data.get('name'),
-            image=serializer.validated_data.get('image'),
+            item_id=serializer.validated_data.get('item_id'),
             items=serializer.validated_data.get('items')
         )
 

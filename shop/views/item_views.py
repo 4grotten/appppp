@@ -323,6 +323,7 @@ class CollectionRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             collection=self.get_object(),
             name=serializer.validated_data.get('name'),
             image=serializer.validated_data.get('image'),
+            video=serializer.validated_data.get('video'),
             items=serializer.validated_data.get('items')
         )
 

@@ -41,14 +41,15 @@ from organizations.serializers.organization_serializers import (
     OrgMessageCreateSerializer, SubscriptionsMessageSerializer, OrganizationWithImageSerializer,
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
-    OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer
+    OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
+    OrganizationTwoGisCreateSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
-from organizations.services.google_maps_services import GoogleMapsService
+from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
     OrganizationInstagramIntegrationService
@@ -143,6 +144,55 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         google_maps_url = serializer.validated_data['google_maps_url']
         parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+        try:
+            image_id = File.objects.get(id=parsed_data['image_id'])
+        except File.DoesNotExist:
+            raise ObjectNotFoundException(_('File not found'))
+        currency = None if parsed_data['currency'] is None else Currency.objects.get(code=parsed_data['currency'])
+        country = None if parsed_data['country'] is None else Country.objects.get(code=parsed_data['country'])
+        city = None if parsed_data['city'] is None else City.objects.get(id=parsed_data['city'])
+        types = None if parsed_data['types'] is None else [parsed_data['types']]
+        opens_at = "08:00:00" if parsed_data['opens_at'] is None else parsed_data['opens_at']
+        closes_at = "18:00:00" if parsed_data['closes_at'] is None else parsed_data['closes_at']
+        organization = OrganizationService.create_organization(owner=request.user,
+                                                               title=parsed_data['title'],
+                                                               image_id=image_id,
+                                                               longitude=parsed_data['longitude'],
+                                                               latitude=parsed_data['latitude'],
+                                                               numbers=parsed_data['numbers'],
+                                                               accounts=parsed_data['accounts'],
+                                                               cards=parsed_data['cards'],
+                                                               description=parsed_data['description'],
+                                                               opens_at=opens_at,
+                                                               closes_at=closes_at,
+                                                               address=parsed_data['address'],
+                                                               currency=currency,
+                                                               country=country,
+                                                               city=city,
+                                                               types=types
+                                                               )
+
+        num_members = random.randint(28, 130)
+        if organization.country.code == 'AE':
+            transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, num_members))
+        data = OrganizationDetailedSerializer(organization, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class OrganizationsTwoGisCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationTwoGisCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        two_gis_url = serializer.validated_data['two_gis_url']
+        parsed_data = TwoGisService.add_organization(two_gis_url, request)
         try:
             image_id = File.objects.get(id=parsed_data['image_id'])
         except File.DoesNotExist:

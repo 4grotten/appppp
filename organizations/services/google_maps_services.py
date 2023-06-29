@@ -1,11 +1,50 @@
-import re, json
+import sys, re, json
 import requests
 
-from typing import List
 from django.conf import settings
 from urllib.parse import urljoin
+from typing import List, Dict
 from rest_framework.exceptions import ValidationError
 from instagram_parsers.services.proxy_services import ProxyService
+
+COOKIES = {
+    '_2gis_webapi_user': '9d9e9ba1-5aaf-40a3-846e-438a8bb1033a',
+    '_ym_uid': '1638952700395286379',
+    'ipp_uid': '1646311517080%2fhfGopZHXwiC266DR%2fhjmNPYIoz6HNKdxytE9gow%3d%3d',
+    'ipp_uid1': '',
+    'ipp_uid2': '',
+    'ipp_uid_tst': '',
+    'ipp_static_key': '',
+    'dg5_jur': '{%22ru_sng%22:{%22status%22:%22agree%22%2C%22ts%22:1656398590507%2C%22v%22:2}}',
+    'spid': '1661511089287_6bdc58bd69f3b0932c23875bf29fe1f5_ruxbx26r0hxfkt29',
+    '_ym_d': '1673239575',
+    'tmr_lvid': 'd3040bcc13db5b5dae1ca6e3c3c95ea5',
+    'tmr_lvidTS': '1680520665191',
+    '_2gis_webapi_session': '23b99453-e636-4ac1-9c5b-c53f906bbbb3',
+    '_gid': 'GA1.2.167659839.1687409387',
+    '_ym_isad': '2',
+    'dg5_pos': '74.606476%3B42.88036%3B11.75',
+    'spsc': '1687423830114_870bc4aaaf55dd8a56681b2a750b43e2_a5476469b72f558bb72e6aae99c6a060',
+    '_ga': 'GA1.2.1479943786.1638952700',
+    'tmr_detect': '0%7C1687423844441',
+    '_gat_online5': '1',
+    '_ga_LCKYJS0XZC': 'GS1.1.1687423615.8.1.1687423900.0.0.0',
+}
+
+HEADERS = {
+    'authority': '2gis.kg',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'accept-language': 'ru,en-US;q=0.9,en;q=0.8,ru-RU;q=0.7',
+    'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'none',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+}
 
 
 class GoogleMapsService:
@@ -236,6 +275,274 @@ class GoogleMapsService:
         accounts: List = []
         try:
             accounts.append(data['website'])
+            apofiz_add_organization['accounts'] = accounts
+        except:
+            apofiz_add_organization['accounts'] = []
+
+        apofiz_add_organization['instagram_integration'] = None
+        apofiz_add_organization['cards'] = []
+
+        return apofiz_add_organization
+
+
+class TwoGisService:
+
+    @classmethod
+    def find_dict_in_json(cls, data, dict_name, path=""):
+        if isinstance(data, dict):
+            if dict_name in data:
+                print("Найден словарь '{}' по пути:\n{}\n".format(dict_name, path))
+                return data[dict_name]
+            else:
+                for key, value in data.items():
+                    if isinstance(value, (dict, list)):
+                        result = cls.find_dict_in_json(value, dict_name, "{}['{}']".format(path, key))
+                        if result is not None:
+                            return result
+        elif isinstance(data, list):
+            for i in range(len(data)):
+                if isinstance(data[i], (dict, list)):
+                    result = cls.find_dict_in_json(data[i], dict_name, '{}[{}]'.format(path, i))
+                    if result is not None:
+                        return result
+        return None
+
+    @classmethod
+    def get_image_ID(cls, image_URL, request):
+        token = request.headers.get('Authorization')
+
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+
+        URL_IMAGE_ENDPOINT = urljoin(base_url, 'save_image_from_url/')
+
+        query = {
+            'image_url': image_URL,
+            'is_watermarked': True
+        }
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        try:
+            _headers = {'Authorization': token, 'Accept-Language': 'ru'}
+            r = requests.post(url=URL_IMAGE_ENDPOINT, headers=_headers, data=query, proxies=proxy[0])
+
+            json_data = json.loads(r.text)
+            image_ID = json_data['id']
+            return image_ID
+        except Exception as e:
+            print(e)
+            print(sys.exc_info())
+            return 59503
+
+    @classmethod
+    def get_place_type_ID(cls,place_type, request):
+        token = request.headers.get('Authorization')
+
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+
+        URL_PLACE_TYPE = urljoin(base_url, f'organization_all_types/?search={place_type}')
+
+        _headers = {'Authorization': token, 'Accept-Language': 'ru'}
+
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(URL_PLACE_TYPE, headers=_headers, proxies=proxy[0])
+        try:
+            if r.json() == []:
+                return None
+            else:
+                for item in r.json():
+                    if item['title'] == place_type.capitalize():
+                        organization_type_ID = item['id']
+                        return organization_type_ID
+        except Exception as e:
+            print('get_place_type_ID', e, r.json())
+            return None
+
+    @classmethod
+    def get_city_ID(cls, sity_name, request):
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+
+        URL_CITY_ID = urljoin(base_url, f'countries_and_cities/?search={sity_name}')
+
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(URL_CITY_ID, proxies=proxy[0])
+        sity_ID = r.json()['results']['cities'][0]['id']
+
+        return sity_ID
+
+    @classmethod
+    def get_country_CODE(cls,gMaps_country_short_name, request) -> str:
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+
+        URL_COUNTRY_CODE = urljoin(base_url, f'countries_and_cities/?limit=240')
+
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(URL_COUNTRY_CODE, proxies=proxy[0])
+        for country in r.json()['results']['countries']:
+            if country['code'] == gMaps_country_short_name:
+                return country['code']
+
+    @classmethod
+    def get_curency_CODE(cls, gMaps_country_short_name, request):
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'  # Base URL for production version
+
+        URL_CURRENCY_CODE = urljoin(base_url, f'countries_and_cities/?limit=240')
+
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        r = requests.get(URL_CURRENCY_CODE, proxies=proxy[0])
+        for country in r.json()['results']['countries']:
+            if country['code'] == gMaps_country_short_name:
+                return country['currency']['code']
+
+    @classmethod
+    def get_2gis_place_details(cls,URL_2gis: str) -> Dict:
+        try:
+            r = requests.get(URL_2gis, headers=HEADERS, cookies=COOKIES)
+            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1)
+            place_details = json.loads(result)
+
+            return place_details['data']
+        except Exception as e:
+            error_data = {
+                "message": "Invalid input",
+                "errors": {
+                    "google_maps_url": [
+                        "Enter a valid URL."
+                    ]
+                }
+            }
+            raise ValidationError(error_data)
+
+    @classmethod
+    def add_organization(cls, URL_2gis, request) -> Dict:
+        data = cls.get_2gis_place_details(URL_2gis)
+
+        apofiz_add_organization = {}
+
+        place_ID = list(data['entity']['profile'].keys())[0]
+
+        try:
+            apofiz_add_organization['title'] = data["entity"]["profile"][place_ID]["data"]["name_ex"]["primary"]
+        except Exception as e:
+            apofiz_add_organization['title'] = ''
+
+        apofiz_add_organization['image_id'] = cls.get_image_ID(data['entity']['profile'][place_ID]['data']['external_content'][0]['main_photo_url'], request)
+
+        try:
+            apofiz_add_organization['description'] = data['seoStore']['data']['description']
+        except Exception as e:
+            apofiz_add_organization['description'] = ''
+
+        numbers: List = []
+        try:
+            numbers.append(data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts'][0]['value'])
+            apofiz_add_organization['numbers'] = numbers
+        except Exception as e:
+            apofiz_add_organization['numbers'] = []
+
+        try:
+            apofiz_add_organization['opens_at'] = \
+                data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['from']
+            apofiz_add_organization['closes_at'] = \
+                data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['to']
+        except Exception as e:
+            apofiz_add_organization['opens_at'] = None
+            apofiz_add_organization['closes_at'] = None
+
+        try:
+            street_name = data['entity']['profile'][place_ID]['data']['address']['components'][0]['street']
+            buinding_number = data['entity']['profile'][place_ID]['data']['address']['components'][0]['number']
+            postcode = data['entity']['profile'][place_ID]['data']['address']['postcode']
+            country = data['entity']['profile'][place_ID]['data']['adm_div'][0]['name']
+            sity = data['entity']['profile'][place_ID]['data']['adm_div'][1]['name']
+            district = data['entity']['profile'][place_ID]['data']['adm_div'][3]['name']
+            try:
+                address_comment = f"({data['entity']['profile'][place_ID]['data']['address_comment']})"
+            except:
+                address_comment = ''
+
+            address = f'ул. {street_name}, д. {buinding_number} {address_comment} • {country} - {sity} - {district} ({postcode})'
+            apofiz_add_organization['address'] = address
+        except Exception as e:
+            apofiz_add_organization['address'] = ''
+
+        try:
+            apofiz_add_organization['longitude'] = data['entity']['profile'][place_ID]['data']['point']['lon']
+            apofiz_add_organization['latitude'] = data['entity']['profile'][place_ID]['data']['point']['lat']
+        except Exception as e:
+            apofiz_add_organization['longitude'] = None
+            apofiz_add_organization['latitude'] = None
+
+        try:
+            apofiz_add_organization['currency'] = cls.get_curency_CODE(
+                data['region']['detector']['default']['data']['countryCode'].upper(), request)
+        except Exception as e:
+            apofiz_add_organization['currency'] = None
+
+        try:
+            apofiz_add_organization['country'] = data['region']['detector']['default']['data']['countryCode'].upper()
+        except Exception as e:
+            apofiz_add_organization['country'] = None
+
+        try:
+            apofiz_add_organization['city'] = cls.get_city_ID(data['region']['detector']['default']['data']['name'], request)
+        except Exception as e:
+            apofiz_add_organization['city'] = None
+
+        try:
+            apofiz_add_organization['types'] = cls.get_place_type_ID(
+                data['entity']['profile'][place_ID]['data']['name_ex']['extension'], request)
+        except:
+            apofiz_add_organization['types'] = None
+
+        accounts: List = []
+        try:
+            for link in data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts']:
+                if link.get('url') != None:
+                    accounts.append(link['url'])
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []

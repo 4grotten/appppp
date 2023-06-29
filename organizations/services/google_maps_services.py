@@ -449,7 +449,7 @@ class TwoGisService:
             error_data = {
                 "message": "Invalid input",
                 "errors": {
-                    "google_maps_url": [
+                    "two_gis_url": [
                         "Enter a valid URL."
                     ]
                 }

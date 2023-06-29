@@ -543,11 +543,14 @@ class TwoGisService:
             for link in data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts']:
                 if link.get('url') != None:
                     accounts.append(link['url'])
+            accounts.append(URL_2gis)
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []
 
         apofiz_add_organization['instagram_integration'] = None
         apofiz_add_organization['cards'] = []
+
+        print(apofiz_add_organization)
 
         return apofiz_add_organization

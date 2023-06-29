@@ -369,6 +369,18 @@ class OrganizationGoogleMapsCreateSerializer(serializers.Serializer):
         return value
 
 
+class OrganizationTwoGisCreateSerializer(serializers.Serializer):
+    two_gis_url = serializers.URLField()
+
+    def validate_two_gis_url(self, value):
+        pattern = r'^(https:\/\/go\.2gis\.com\/[a-zA-Z0-9]+|https:\/\/2gis\.kg\/bishkek\/geo\/\d+)$'
+
+        if not re.match(pattern, value):
+            raise serializers.ValidationError(_("Invalid 2Gis URL"))
+
+        return value
+
+
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
     longitude = serializers.FloatField(allow_null=True)

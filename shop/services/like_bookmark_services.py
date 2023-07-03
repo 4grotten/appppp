@@ -2,6 +2,7 @@ from common.exceptions import ObjectNotFoundException, NotAcceptableException
 from common.models import File
 from shop.models import ShopItem, ItemLike, ItemBookmark, Comment, CommentLike, ItemCollection
 from users.models import User
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 
@@ -93,6 +94,7 @@ class CollectionService:
             if item in collection.items.all():
                 raise NotAcceptableException(_('Item already exists in the collection.'))
             collection.items.add(item)
+            collection.save()
         else:
             if item not in collection.items.all():
                 raise NotAcceptableException(_('Item does not exist in the collection.'))

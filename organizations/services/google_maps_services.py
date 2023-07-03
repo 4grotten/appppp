@@ -304,6 +304,29 @@ class TwoGisService:
         return None
 
     @classmethod
+    def place_images(cls, place_ID):
+        base_url = 'https://api.photo.2gis.com/2.0/photo/get?'
+        params = f'key=gYu1s9N1wP&' \
+                 f'object_id={place_ID}&' \
+                 'object_type=branch&' \
+                 'locale=ru_KG&' \
+                 'status=active&' \
+                 'sort_by=position&' \
+                 'album_code=common&' \
+                 'preview_size=656x340&' \
+                 'size=1&' \
+                 'page=1'
+        r = requests.get(base_url, params)
+
+        for item in r.json()['result'][0]['items']:
+            if item['is_pinned'] == True:
+                if item['pinned_position'] == 1:
+                    return item['url']
+            else:
+                return item['url']
+            break
+
+    @classmethod
     def get_image_ID(cls, image_URL, request):
         token = request.headers.get('Authorization')
 
@@ -460,8 +483,7 @@ class TwoGisService:
             apofiz_add_organization['title'] = data["entity"]["profile"][place_ID]["data"]["name_ex"]["primary"]
         except Exception as e:
             apofiz_add_organization['title'] = ''
-
-        apofiz_add_organization['image'] = cls.get_image_ID(data['entity']['profile'][place_ID]['data']['external_content'][0]['main_photo_url'], request)
+        apofiz_add_organization['image'] = cls.get_image_ID(cls.place_images(place_ID), request)
 
         try:
             apofiz_add_organization['description'] = data['seoStore']['data']['description']

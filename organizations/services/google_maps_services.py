@@ -260,8 +260,10 @@ class GoogleMapsService:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
-        apofiz_add_organization['longitude'] = data['geometry']['location']['lng']
-        apofiz_add_organization['latitude'] = data['geometry']['location']['lat']
+        apofiz_add_organization['full_location'] = {
+            'latitude': data['geometry']['location']['lat'],
+            'longitude': data['geometry']['location']['lng']
+        }
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
 
@@ -534,8 +536,10 @@ class TwoGisService:
             apofiz_add_organization['address'] = ''
 
         try:
-            apofiz_add_organization['longitude'] = data['entity']['profile'][place_ID]['data']['point']['lon']
-            apofiz_add_organization['latitude'] = data['entity']['profile'][place_ID]['data']['point']['lat']
+            apofiz_add_organization['full_location'] = {
+                'latitude': data['entity']['profile'][place_ID]['data']['point']['lat'],
+                'longitude': data['entity']['profile'][place_ID]['data']['point']['lon']
+            }
         except Exception as e:
             apofiz_add_organization['longitude'] = None
             apofiz_add_organization['latitude'] = None

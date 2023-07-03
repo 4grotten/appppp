@@ -214,13 +214,14 @@ class GoogleMapsService:
         if not proxy:
             proxy = []
         r = requests.get(URL_ORGANIZATION_TYPES, headers=_headers, proxies=proxy[0])
+        type_list = []
         if r.json() == []:
             return None
         else:
             for item in r.json():
                 if item['title'] == place_type:
-                    organization_type_ID = item['id']
-                    return organization_type_ID
+                    type_list.append(item)
+                    return type_list
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
         data = cls.get_place_details(gMaps_URL)
@@ -378,14 +379,16 @@ class TwoGisService:
         if not proxy:
             proxy = []
         r = requests.get(URL_PLACE_TYPE, headers=_headers, proxies=proxy[0])
+        type_list = []
         try:
             if r.json() == []:
                 return None
             else:
+                print(r.json())
                 for item in r.json():
                     if item['title'] == place_type.capitalize():
-                        organization_type_ID = item['id']
-                        return organization_type_ID
+                        type_list.append(item)
+                        return type_list
         except Exception as e:
             return None
 
@@ -411,7 +414,7 @@ class TwoGisService:
         return city
 
     @classmethod
-    def get_country_CODE(cls,gMaps_country_short_name, request) -> str:
+    def get_country_CODE(cls,gMaps_country_short_name, request):
         base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
 
         if 'localhost' in request.META['HTTP_HOST']:

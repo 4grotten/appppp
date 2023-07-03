@@ -117,9 +117,8 @@ class GoogleMapsService:
         try:
             r_image = requests.post(url=URL_IMAGE_ENDPOINT, headers=r_image_headers, data=query, proxies=proxy[0])
             json_data = json.loads(r_image.text)
-            image_ID = json_data['id']
 
-            return image_ID
+            return json_data
         except Exception as e:
             error_data = {
                 "message": "Invalid input",
@@ -169,7 +168,7 @@ class GoogleMapsService:
         r = requests.get(URL_COUNTRIES_AND_CITIES, proxies=proxy[0])
         for country in r.json()['results']['countries']:
             if country['code'] == gMaps_country_short_name:
-                return country['code']
+                return country
 
     @classmethod
     def get_city_ID(cls, sity_name, request):
@@ -191,7 +190,7 @@ class GoogleMapsService:
 
         cities = results.get('cities', [])
         if cities:
-            city_id = cities[0]['id']
+            city_id = cities[0]
             return city_id
         else:
             return None
@@ -235,7 +234,7 @@ class GoogleMapsService:
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
         else:
-            apofiz_add_organization['image_id'] = image_id
+            apofiz_add_organization['image'] = image_id
         try:
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
         except:
@@ -266,8 +265,6 @@ class GoogleMapsService:
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
 
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
-        apofiz_add_organization[
-            'check_city'] = f'{cls.get_city_ID(city_name, request)} | {city_name}'  # для проверки правильности нахождния города
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
         place_type = data['types'][0]
         apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
@@ -291,7 +288,6 @@ class TwoGisService:
     def find_dict_in_json(cls, data, dict_name, path=""):
         if isinstance(data, dict):
             if dict_name in data:
-                print("Найден словарь '{}' по пути:\n{}\n".format(dict_name, path))
                 return data[dict_name]
             else:
                 for key, value in data.items():
@@ -334,11 +330,8 @@ class TwoGisService:
             r = requests.post(url=URL_IMAGE_ENDPOINT, headers=_headers, data=query, proxies=proxy[0])
 
             json_data = json.loads(r.text)
-            image_ID = json_data['id']
-            return image_ID
+            return json_data
         except Exception as e:
-            print(e)
-            print(sys.exc_info())
             return 59503
 
     @classmethod
@@ -371,7 +364,6 @@ class TwoGisService:
                         organization_type_ID = item['id']
                         return organization_type_ID
         except Exception as e:
-            print('get_place_type_ID', e, r.json())
             return None
 
     @classmethod
@@ -391,9 +383,9 @@ class TwoGisService:
         if not proxy:
             proxy = []
         r = requests.get(URL_CITY_ID, proxies=proxy[0])
-        sity_ID = r.json()['results']['cities'][0]['id']
+        city = r.json()['results']['cities'][0]
 
-        return sity_ID
+        return city
 
     @classmethod
     def get_country_CODE(cls,gMaps_country_short_name, request) -> str:
@@ -414,7 +406,7 @@ class TwoGisService:
         r = requests.get(URL_COUNTRY_CODE, proxies=proxy[0])
         for country in r.json()['results']['countries']:
             if country['code'] == gMaps_country_short_name:
-                return country['code']
+                return country
 
     @classmethod
     def get_curency_CODE(cls, gMaps_country_short_name, request):
@@ -441,7 +433,7 @@ class TwoGisService:
     def get_2gis_place_details(cls,URL_2gis: str) -> Dict:
         try:
             r = requests.get(URL_2gis, headers=HEADERS, cookies=COOKIES)
-            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1)
+            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1).replace('\\\\', '\\')
             place_details = json.loads(result)
 
             return place_details['data']
@@ -469,7 +461,7 @@ class TwoGisService:
         except Exception as e:
             apofiz_add_organization['title'] = ''
 
-        apofiz_add_organization['image_id'] = cls.get_image_ID(data['entity']['profile'][place_ID]['data']['external_content'][0]['main_photo_url'], request)
+        apofiz_add_organization['image'] = cls.get_image_ID(data['entity']['profile'][place_ID]['data']['external_content'][0]['main_photo_url'], request)
 
         try:
             apofiz_add_organization['description'] = data['seoStore']['data']['description']
@@ -484,10 +476,17 @@ class TwoGisService:
             apofiz_add_organization['numbers'] = []
 
         try:
-            apofiz_add_organization['opens_at'] = \
-                data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['from']
-            apofiz_add_organization['closes_at'] = \
-                data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['to']
+            opens_at = data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['from']
+            closes_at = data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['to']
+
+            if opens_at == "24:00":
+                opens_at = "00:00"
+
+            if closes_at == "24:00":
+                closes_at = "00:00"
+
+            apofiz_add_organization['opens_at'] = opens_at
+            apofiz_add_organization['closes_at'] = closes_at
         except Exception as e:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
@@ -523,7 +522,7 @@ class TwoGisService:
             apofiz_add_organization['currency'] = None
 
         try:
-            apofiz_add_organization['country'] = data['region']['detector']['default']['data']['countryCode'].upper()
+            apofiz_add_organization['country'] = cls.get_country_CODE(data['region']['detector']['default']['data']['countryCode'].upper(), request)
         except Exception as e:
             apofiz_add_organization['country'] = None
 
@@ -551,6 +550,5 @@ class TwoGisService:
         apofiz_add_organization['instagram_integration'] = None
         apofiz_add_organization['cards'] = []
 
-        print(apofiz_add_organization)
 
         return apofiz_add_organization

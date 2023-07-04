@@ -498,7 +498,14 @@ class TwoGisService:
             apofiz_add_organization['image'] = cls.get_image_ID(cls.place_images(place_ID), request)
 
         try:
-            apofiz_add_organization['description'] = data['seoStore']['data']['description']
+            seoStore = data['seoStore']['data']['description']
+            try:
+                searchContext = data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads']['article'].replace(
+                    '<br />', '\n')
+                apofiz_add_organization['description'] = f'{searchContext}\n\n{seoStore}'
+            except Exception as e:
+                apofiz_add_organization['description'] = seoStore
+
         except Exception as e:
             apofiz_add_organization['description'] = ''
 

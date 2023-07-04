@@ -386,7 +386,6 @@ class TwoGisService:
             if r.json() == []:
                 return None
             else:
-                print(r.json())
                 for item in r.json():
                     if item['title'] == place_type.capitalize():
                         type_list.append(item)
@@ -488,7 +487,15 @@ class TwoGisService:
             apofiz_add_organization['title'] = data["entity"]["profile"][place_ID]["data"]["name_ex"]["primary"]
         except Exception as e:
             apofiz_add_organization['title'] = ''
-        apofiz_add_organization['image'] = cls.get_image_ID(cls.place_images(place_ID), request)
+
+        try:
+            place_logo = data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads']['options']['logo'][
+                'img_url'].strip("image.png")
+            rect_logo_URL = f'{place_logo}image_512x512.png?api-version=2.0'
+            if rect_logo_URL:
+                apofiz_add_organization['image'] = cls.get_image_ID(rect_logo_URL, request)
+        except Exception as e:
+            apofiz_add_organization['image'] = cls.get_image_ID(cls.place_images(place_ID), request)
 
         try:
             apofiz_add_organization['description'] = data['seoStore']['data']['description']

@@ -1299,7 +1299,10 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def accept_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
+        print("request", request)
+        print("GIRDI")
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        print("GOT TRANSACTION")
         if old_transaction.client != request.user:
             raise PermissionDeniedException(_('Permission denied'))
         try:

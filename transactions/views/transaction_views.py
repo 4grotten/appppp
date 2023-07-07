@@ -718,26 +718,13 @@ class RentPaymentAcceptView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
-        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        payment_data = {
-            'pg_order_id': str(transaction_id),
-            'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
-            'pg_amount': str(transaction.final_amount),
-            'pg_description': transaction.booking.item.description,
-            'pg_salt': 'apofiz',
-            'pg_currency': str(transaction.currency),
-            'pg_testing_mode': '1',
-        }
+        TransactionService.accept_booking_transaction_by_user(transaction_id=transaction_id,
+                                                              user=self.request.user,
+                                                              request=self.request)
 
-        request_for_signature = TransactionService.make_flat_params_array(payment_data)
-        sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
-        signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
-        signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
-        payment_data['pg_sig'] = signature
-
-        response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
-
-        return Response(response.text)
+        return Response(data={
+            'message': _('Transaction successfully paid')
+        }, status=status.HTTP_200_OK)
 
 
 class RentPaymentRejectView(RetrieveDestroyAPIView):
@@ -798,6 +785,41 @@ class TransactionBookingActivate(GenericAPIView):
         TransactionService.activate_rental(serializer.validated_data['transaction'])
 
         return Response({'message': 'Booking activated successfully'})
+
+
+class RentInitPaymentView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        transaction_id = serializer.validated_data['transaction_id']
+        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        payment_data = {
+            'pg_order_id': str(transaction_id),
+            'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
+            'pg_amount': str(transaction.final_amount),
+            'pg_description': transaction.booking.item.description,
+            'pg_salt': 'apofiz',
+            'pg_currency': str(transaction.currency),
+            'pg_testing_mode': '1',
+        }
+
+        request_for_signature = TransactionService.make_flat_params_array(payment_data)
+        sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
+        signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
+        signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
+        payment_data['pg_sig'] = signature
+
+        response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+
+        return Response(response.text)
+
 
 class ResultURLView(APIView):
 

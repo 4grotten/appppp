@@ -14,7 +14,7 @@ from transactions.views.transaction_views import (
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
-    OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView
+    OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView
 )
 
 urlpatterns = [
@@ -74,4 +74,7 @@ urlpatterns = [
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
+
+
+    path('transactions/result/', ResultURLView.as_view(), name='pg_result_url'),
 ]

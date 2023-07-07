@@ -1,3 +1,6 @@
+import hashlib
+import xml.etree.ElementTree as ET
+import requests
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -8,7 +11,7 @@ from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroy
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -31,7 +34,7 @@ from transactions.serializers.transaction_serializers import (
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
     BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer, TransactionActivateSerializer
+    ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
@@ -714,13 +717,27 @@ class RentPaymentAcceptView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        transaction_id = serializer.validated_data['transaction_id']
+        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        payment_data = {
+            'pg_order_id': str(transaction_id),
+            'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
+            'pg_amount': str(transaction.final_amount),
+            'pg_description': transaction.booking.item.description,
+            'pg_salt': 'apofiz',
+            'pg_currency': str(transaction.currency),
+            'pg_testing_mode': '1',
+        }
 
-        TransactionService.accept_booking_transaction_by_user(transaction_id=serializer.validated_data['transaction_id'], user=self.request.user,
-                                                              request=self.request)
+        request_for_signature = TransactionService.make_flat_params_array(payment_data)
+        sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
+        signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
+        signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
+        payment_data['pg_sig'] = signature
 
-        return Response(data={
-            'message': _('Transaction successfully paid')
-        }, status=status.HTTP_200_OK)
+        response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+
+        return Response(response.text)
 
 
 class RentPaymentRejectView(RetrieveDestroyAPIView):
@@ -781,3 +798,42 @@ class TransactionBookingActivate(GenericAPIView):
         TransactionService.activate_rental(serializer.validated_data['transaction'])
 
         return Response({'message': 'Booking activated successfully'})
+
+class ResultURLView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        serializer = ResultURLSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            pg_order_id = validated_data.get('pg_order_id', 1)
+            pg_can_reject = validated_data.get('pg_can_reject', 0)
+            pg_result = validated_data.get('pg_result', 0)
+            pg_description = validated_data.get('pg_description', '')
+
+            if pg_can_reject == 1 and pg_result != 1:
+                # Платеж не может быть принят, отправляем ответ со статусом rejected
+                response_data = {
+                    'pg_status': 'rejected',
+                    'pg_description': pg_description,
+                    'pg_salt': validated_data.get('pg_salt', ''),
+                    'pg_sig': validated_data.get('pg_sig', '')
+                }
+            else:
+                # Платеж принят, отправляем ответ со статусом ok
+                TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
+                                                                      user=self.request.user,
+                                                                      request=self.request)
+
+                # return Response(data={
+                #     'message': _('Transaction successfully paid')
+                # }, status=status.HTTP_200_OK)
+                response_data = {
+                    'pg_status': 'ok',
+                    'pg_description': 'Заказ оплачен',
+                    'pg_salt': validated_data.get('pg_salt', ''),
+                    'pg_sig': validated_data.get('pg_sig', '')
+                }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

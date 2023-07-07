@@ -353,3 +353,27 @@ class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
 
 class TransactionActivateSerializer(serializers.Serializer):
     transaction = serializers.PrimaryKeyRelatedField(queryset=Transaction.objects.filter(is_processed=True))
+
+
+class ResultURLSerializer(serializers.Serializer):
+    pg_order_id = serializers.CharField(required=False)
+    pg_payment_id = serializers.CharField(required=False)
+    pg_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    pg_currency = serializers.CharField(required=False)
+    pg_net_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    pg_ps_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    pg_ps_full_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    pg_ps_currency = serializers.CharField(required=False)
+    pg_description = serializers.CharField(required=False)
+    pg_result = serializers.IntegerField(required=False)
+    pg_payment_date = serializers.DateTimeField(required=False)
+    pg_can_reject = serializers.IntegerField(required=False)
+    pg_user_phone = serializers.CharField(required=False)
+    pg_user_contact_email = serializers.EmailField(required=False)
+    pg_need_email_notification = serializers.IntegerField(required=False)
+    pg_testing_mode = serializers.IntegerField(required=False)
+    pg_captured = serializers.IntegerField(required=False)
+    pg_card_pan = serializers.CharField(required=False)
+    pg_salt = serializers.CharField(required=False)
+    pg_sig = serializers.CharField(required=False)
+    pg_payment_method = serializers.CharField(required=False)

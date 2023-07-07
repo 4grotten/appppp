@@ -1,8 +1,10 @@
+import hashlib
 import logging
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
+from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, \
     Count, Value
@@ -1306,6 +1308,7 @@ class TransactionService:
             old_transaction.save()
             booking = old_transaction.booking
             booking.is_open = False
+            print("ALL GOOD, TRANSACTION_CHANGED")
             booking.save()
         except:
             raise IntegrityException()
@@ -1562,3 +1565,16 @@ class TransactionService:
             organization_id=transaction.organization_id,
             extra_data=extra_data
         )
+
+    @classmethod
+    def make_flat_params_array(cls, arr_params, parent_name=''):
+        arr_flat_params = {}
+        i = 0
+        for key, val in arr_params.items():
+            i += 1
+            name = parent_name + key + str(i).zfill(3)
+            if isinstance(val, dict):
+                arr_flat_params.update(cls.make_flat_params_array(val, name))
+                continue
+            arr_flat_params[name] = str(val)
+        return arr_flat_params

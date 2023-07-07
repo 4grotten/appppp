@@ -242,7 +242,7 @@ class ItemBookmarkBulkDeleteView(APIView):
 
             CollectionService.set_image_to_null_if_collection_has_no_items(collection=collection)
 
-        return Response({'message': 'Items deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        return Response(data={'message': _('Items deleted successfully.')})
 
 
 class CollectionsListCreateView(ListCreateAPIView):

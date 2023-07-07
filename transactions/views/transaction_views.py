@@ -41,6 +41,7 @@ from shop.models import ShopItem, Booking
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
+from users.services import UserService
 
 
 class TransactionPreprocessView(GenericAPIView):
@@ -808,7 +809,9 @@ class RentInitPaymentView(GenericAPIView):
             'pg_salt': 'apofiz',
             'pg_currency': str(transaction.currency),
             'pg_testing_mode': '1',
+            'user_id': str(self.request.user.id)
         }
+        print(payment_data)
 
         request_for_signature = TransactionService.make_flat_params_array(payment_data)
         sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
@@ -831,7 +834,8 @@ class ResultURLView(APIView):
             pg_can_reject = validated_data.get('pg_can_reject', 0)
             pg_result = validated_data.get('pg_result', 0)
             pg_description = validated_data.get('pg_description', '')
-            print("GOT REQUEST")
+            user_id = validated_data.get('user_id')
+            user = UserService.get(id=int(user_id))
 
             if pg_can_reject == 1 and pg_result != 1:
                 print("REJECTED")
@@ -846,9 +850,9 @@ class ResultURLView(APIView):
                 print("ACCEPTED")
                 # Платеж принят, отправляем ответ со статусом ok
                 TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
-                                                                      user=self.request.user,
+                                                                      user=user,
                                                                       request=self.request)
-
+                print("AFTER TransactionService")
                 # return Response(data={
                 #     'message': _('Transaction successfully paid')
                 # }, status=status.HTTP_200_OK)

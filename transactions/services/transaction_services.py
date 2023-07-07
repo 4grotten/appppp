@@ -1316,6 +1316,7 @@ class TransactionService:
         except:
             raise IntegrityException()
 
+        print("OLD_START_TIME")
         old_start_time = old_transaction.booking.start_time
         old_end_time = old_transaction.booking.end_time
 

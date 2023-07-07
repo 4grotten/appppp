@@ -89,10 +89,12 @@ class File(TimestampModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if self.image_url and not self.file:
-            if self.image_url.startswith('https://renty.ae') or "photo.2gis.com" in self.image_url:
+            if self.image_url.startswith('https://renty.ae') or ".2gis.com" in self.image_url:
                 try:
                     response = requests.get(self.image_url)
                     img = Image.open(BytesIO(response.content))
+                    if img.mode == 'RGBA':
+                        img = img.convert('RGB')
                     img_io = BytesIO()
                     img.save(img_io, format='JPEG')
                     img_file = InMemoryUploadedFile(

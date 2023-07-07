@@ -831,8 +831,10 @@ class ResultURLView(APIView):
             pg_can_reject = validated_data.get('pg_can_reject', 0)
             pg_result = validated_data.get('pg_result', 0)
             pg_description = validated_data.get('pg_description', '')
+            print("GOT REQUEST")
 
             if pg_can_reject == 1 and pg_result != 1:
+                print("REJECTED")
                 # Платеж не может быть принят, отправляем ответ со статусом rejected
                 response_data = {
                     'pg_status': 'rejected',
@@ -841,6 +843,7 @@ class ResultURLView(APIView):
                     'pg_sig': validated_data.get('pg_sig', '')
                 }
             else:
+                print("ACCEPTED")
                 # Платеж принят, отправляем ответ со статусом ok
                 TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
                                                                       user=self.request.user,

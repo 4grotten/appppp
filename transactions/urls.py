@@ -15,7 +15,7 @@ from transactions.views.transaction_views import (
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
-    RentInitPaymentView
+    RentInitPaymentView, PaymentSuccessView
 )
 
 urlpatterns = [
@@ -78,4 +78,5 @@ urlpatterns = [
 
     path('transactions/pay/', RentInitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
+    path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')
 ]

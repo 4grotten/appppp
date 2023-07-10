@@ -34,7 +34,8 @@ from transactions.serializers.transaction_serializers import (
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
     BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer
+    ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
+    PaymentSuccessSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking
@@ -868,3 +869,18 @@ class ResultURLView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentSuccessView(APIView):
+    def post(self, request):
+        serializer = PaymentSuccessSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            pg_order_id = validated_data.get('pg_order_id')
+            pg_payment_id = validated_data.get('pg_payment_id')
+            pg_error_code = validated_data.get('pg_error_code')
+            pg_error_description = validated_data.get('pg_error_description')
+            print("pg_order_id-", pg_order_id, "pg_payment_id-", pg_payment_id, "pg_error_code-", pg_error_code,
+                  "pg_error_description-", pg_error_description)
+
+            return Response({'message': 'Payment successful', **validated_data})

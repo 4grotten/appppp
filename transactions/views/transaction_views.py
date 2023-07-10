@@ -835,7 +835,9 @@ class ResultURLView(APIView):
             pg_result = validated_data.get('pg_result', 0)
             pg_description = validated_data.get('pg_description', '')
             user_id = validated_data.get('user_id')
-            user = UserService.get(id=int(user_id))
+            print(validated_data)
+            user_id = int(user_id)
+            user = UserService.get(id=user_id)
 
             if pg_can_reject == 1 and pg_result != 1:
                 print("REJECTED")

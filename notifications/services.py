@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
@@ -49,9 +50,14 @@ class NotificationService:
 
     @classmethod
     def get_own_notifications(cls, user: User):
-        return cls.filter(recipient=user).exclude(type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                  created_at__lt=timezone.now() - timedelta(hours=2)
-                                                  )
+        return cls.filter(
+            recipient=user
+        ).exclude(
+            Q(type='new_organization') & Q(organization__isnull=True)
+        ).exclude(
+            type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+            created_at__lt=timezone.now() - timedelta(hours=2)
+        )
 
     @classmethod
     def get_user_notifications_count(cls, user: User):

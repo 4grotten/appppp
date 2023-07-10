@@ -1200,9 +1200,12 @@ class TransactionService:
     def refund_booking_transaction(cls, request, old_transaction: Transaction, user: User):
         from shop.serializers.cart_serializers import BookingSerializer
         try:
+            print("BEFORE FIXED_CART")
             fixed_cart = BookingSerializer(old_transaction.booking, context={
                 'request': request}).data
+            print("AFTER FIXED CART")
         except Cart.DoesNotExist:
+            print("DOES NOT EXIST")
             fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
@@ -1303,9 +1306,10 @@ class TransactionService:
         print("GIRDI")
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
         print("GOT TRANSACTION")
-        if old_transaction.client != request.user:
+        if old_transaction.client != user:
             raise PermissionDeniedException(_('Permission denied'))
         try:
+            print("TRY TOT CHANGE")
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
             old_transaction.save()

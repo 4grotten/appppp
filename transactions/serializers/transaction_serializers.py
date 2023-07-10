@@ -377,3 +377,4 @@ class ResultURLSerializer(serializers.Serializer):
     pg_salt = serializers.CharField(required=False)
     pg_sig = serializers.CharField(required=False)
     pg_payment_method = serializers.CharField(required=False)
+    user_id = serializers.CharField(required=False)

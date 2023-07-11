@@ -224,64 +224,90 @@ class GoogleMapsService:
                     return type_list
     @classmethod
     def add_organization(cls, gMaps_URL: str, request):
+        print("BEFORE get_place_details")
         data = cls.get_place_details(gMaps_URL)
+        print("AFTER get_place_details")
 
         apofiz_add_organization = {}
-
+        print("BEFORE apofiz_add_organization['title'] = data['name']")
         apofiz_add_organization['title'] = data['name']
+        print("BEFORE photo_reference = data['photos'][0]['photo_reference']")
         photo_reference = data['photos'][0]['photo_reference']
+        print("BEFORE get_image_ID")
         image_id = cls.get_image_ID(photo_reference, request)
+        print("AFTER get_image_ID")
         if image_id == 'Учетные данные не были предоставлены.':
             apofiz_add_organization[
                 'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
         else:
+            print("BEFORE apofiz_add_organization['image'] = image_id")
             apofiz_add_organization['image'] = image_id
         try:
+            print("BEFORE apofiz_add_organization['description'] = data['editorial_summary']['overview']")
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
         except:
+            print("BEFOREE apofiz_add_organization['description'] = ''")
             apofiz_add_organization['description'] = ''
         numbers: List = []
         try:
+            print("BEFORE numbers.append(data['international_phone_number'].replace(' ', ''))")
             numbers.append(data['international_phone_number'].replace(' ', ''))
+            print("BEFORE apofiz_add_organization['numbers'] = numbers")
             apofiz_add_organization['numbers'] = numbers
         except:
+            print("BEFORE apofiz_add_organization['numbers'] = []")
             apofiz_add_organization['numbers'] = []
 
         try:
+            print("BEFORE apofiz_add_organization['opens_at']")
             apofiz_add_organization['opens_at'] = data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
                                                   + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
                                                           2:]
 
-
+            print("BEFORE apofiz_add_organization['closes_at']")
             apofiz_add_organization['closes_at'] = data['current_opening_hours']['periods'][0]['close']['time'][:-2] \
                                                    + ':' + data['current_opening_hours']['periods'][0]['close']['time'][
                                                            2:]
         except:
+            print("BEFORE apofiz_add_organization['opens_at'] = None")
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
+        print("BEFORE apofiz_add_organization['address']")
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
+        print("BEFORE apofiz_add_organization['full_location']")
         apofiz_add_organization['full_location'] = {
             'latitude': data['geometry']['location']['lat'],
             'longitude': data['geometry']['location']['lng']
         }
+        print("BEFORE apofiz_add_organization['currency']")
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
+        print("BEFORE apofiz_add_organization['country']")
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
 
+        print("BEFORE city_name")
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
+        print("BEFORE apofiz_add_organization['city']")
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
+        print("BEFORE place_type = data['types'][0]")
         place_type = data['types'][0]
+        print("BEFORE apofiz_add_organization['types']")
         apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
-
+        print("BEFORE accounts: List = []")
         accounts: List = []
         try:
+            print("BEFORE accounts.append(data['website'])")
             accounts.append(data['website'])
+            print("BEFORE apofiz_add_organization['accounts'] = accounts")
             apofiz_add_organization['accounts'] = accounts
         except:
+            print("BEFORE apofiz_add_organization['accounts'] = []")
             apofiz_add_organization['accounts'] = []
 
+        print("BEFORE apofiz_add_organization['instagram_integration'] = None")
         apofiz_add_organization['instagram_integration'] = None
+        print("BEFORE apofiz_add_organization['cards'] = []")
         apofiz_add_organization['cards'] = []
-
+        print("ALL DONE!")
         return apofiz_add_organization
 
 

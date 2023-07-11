@@ -11,6 +11,8 @@ from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroy
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from common.services.currency import CurrencyConverterService
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
@@ -802,13 +804,15 @@ class RentInitPaymentView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
         transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency,
+                                                        to_currency="KGS", amount=transaction.final_amount)
         payment_data = {
             'pg_order_id': str(transaction_id),
             'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
-            'pg_amount': str(transaction.final_amount),
+            'pg_amount': str(converted_amount),
             'pg_description': transaction.booking.item.description,
             'pg_salt': 'apofiz',
-            'pg_currency': str(transaction.currency),
+            'pg_currency': "KGS",
             'pg_testing_mode': '1',
             'user_id': str(self.request.user.id)
         }

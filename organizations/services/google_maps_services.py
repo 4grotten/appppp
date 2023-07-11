@@ -460,7 +460,7 @@ class TwoGisService:
     def get_2gis_place_details(cls,URL_2gis: str) -> Dict:
         try:
             r = requests.get(URL_2gis, headers=HEADERS, cookies=COOKIES)
-            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1).replace('\\\\', '\\')
+            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1).replace('\\\\', '\\').replace("'", '"')
             place_details = json.loads(result)
 
             return place_details['data']

@@ -56,15 +56,24 @@ class GoogleMapsService:
     @classmethod
     def get_place_CID(cls, gMaps_URL):
         try:
+            print("BEFORE response = requests.get(gMaps_URL)")
             response = requests.get(gMaps_URL)
+            print("BEFORE text = response.url")
             text = response.url
+            print("TEXT IN get_place_CID:", text)
             pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
+            print("BEFORE match = re.search(pattern, text)")
             match = re.search(pattern, text)
+            print("BEFORE if match")
             if match:
+                print("BEFORE cid_hexadecimal = match.group(1)")
                 cid_hexadecimal = match.group(1)
+                print("BEFORE cid = str(int(cid_hexadecimal, 16))")
                 cid = str(int(cid_hexadecimal, 16))
+                print("CID:", cid)
                 return cid
         except Exception as e:
+            print("BEFORE error_data")
             error_data = {
                 "message": "Invalid input",
                 "errors": {
@@ -78,12 +87,19 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_details(cls, gMaps_URL: str):
+        print("BEFORE API KEY")
         api_key = cls.get_api_key()
 
+
+        print("BEFORE get_place_CID")
         cid = cls.get_place_CID(gMaps_URL)
         lang = '&language=ru'  # язык в котором будет json
+        print("BEFORE details_url")
         details_url = f'https://maps.googleapis.com/maps/api/place/details/json?cid={cid}&key={api_key}{lang}'
+        print("BEFORE r = requests.get(details_url)")
         r = requests.get(details_url)
+        print("TEXT:", r.text)
+        print("BEFORE place_details = r.json()")
         place_details = r.json()
         return place_details['result']
 

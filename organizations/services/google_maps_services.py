@@ -55,9 +55,12 @@ class GoogleMapsService:
 
     @classmethod
     def get_place_CID(cls, gMaps_URL):
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
         try:
             print("BEFORE response = requests.get(gMaps_URL)")
-            response = requests.get(gMaps_URL)
+            response = requests.get(gMaps_URL, proxies=proxy[0])
             print("BEFORE text = response.url")
             text = response.url
             print("TEXT IN get_place_CID:", text)

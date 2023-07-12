@@ -806,7 +806,7 @@ class RentInitPaymentView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
         transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency,
+        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                         to_currency="KGS", amount=transaction.final_amount)
         payment_data = {
             'pg_order_id': str(transaction_id),
@@ -818,7 +818,7 @@ class RentInitPaymentView(GenericAPIView):
             'pg_testing_mode': '1',
             'user_id': str(self.request.user.id)
         }
-        print(payment_data)
+
 
         request_for_signature = TransactionService.make_flat_params_array(payment_data)
         sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])

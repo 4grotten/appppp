@@ -1,5 +1,6 @@
 import hashlib
 import json
+import xmltodict
 import xml.etree.ElementTree as ET
 import requests
 from django.conf import settings
@@ -827,18 +828,10 @@ class RentInitPaymentView(GenericAPIView):
 
         response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
         xml_data = response.text
-
-        root = ET.fromstring(xml_data)
-
-        response_dict = {}
-
-        for element in root.iter():
-            if element.text is not None:
-                response_dict[element.tag] = element.text
-
+        response_dict = xmltodict.parse(xml_data)
         json_data = json.dumps(response_dict)
 
-        return Response(json_data)
+        return Response(json_data, content_type='application/json')
 
 
 class ResultURLView(APIView):

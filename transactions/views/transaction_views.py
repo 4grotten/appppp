@@ -829,7 +829,8 @@ class RentInitPaymentView(GenericAPIView):
         response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
         xml_data = response.text
         response_dict = xmltodict.parse(xml_data)
-        json_data = json.dumps(response_dict)
+        json_string = json.dumps(response_dict)
+        json_data = json.loads(json_string)
 
         return Response(json_data, content_type='application/json')
 

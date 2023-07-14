@@ -1,4 +1,5 @@
 import requests
+import base64
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException
+from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
 from organizations.services.organization_services import OrganizationService
 from .constants import SHADOW_BAN
@@ -203,3 +205,26 @@ class LinkAppAPIView(APIView):
                     'name_link': link
                 }
             )
+
+
+class ImageToBase64View(APIView):
+
+    def get(self, request):
+        image_url = request.query_params.get('image_url')
+
+        if not image_url:
+            return Response({'message': 'Image URL not provided'}, status=400)
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        try:
+            response = requests.get(image_url, proxies=proxy[0])
+            response.raise_for_status()  # Raise an exception if the request was unsuccessful
+            image_data = response.content
+
+            base64_data = base64.b64encode(image_data)
+            base64_string = base64_data.decode('utf-8')
+
+            return Response({'base64_image': base64_string}, status=200)
+        except requests.exceptions.RequestException as e:
+            return Response({'message': str(e)}, status=400)

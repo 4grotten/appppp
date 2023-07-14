@@ -3,7 +3,7 @@ from django.urls import path
 from common.views import (
     ImageCreateView, CountriesListView, CountryCitySearchView, WatermarkImageCreateView, ImageCreateFromUrlView,
     YoutubeEmbedView, GetLatestAppVersion, LanguagesList, SendEmailToApofiz, ShadowBanStatus, CurrencyConversion,
-    VideoCreateFromUrlView, LinkAppAPIView
+    VideoCreateFromUrlView, LinkAppAPIView, ImageToBase64View
 )
 
 urlpatterns = [
@@ -19,5 +19,6 @@ urlpatterns = [
     path('request_from_shadow_ban/<int:pk>/', SendEmailToApofiz.as_view(), name='email_to_apofiz'),
     path('shadow_ban_status/<int:pk>/', ShadowBanStatus.as_view(), name='shadow_ban_status'),
     path('currency_conversion/', CurrencyConversion.as_view(), name='currency_conversion'),
-    path('link_app/', LinkAppAPIView.as_view(), name='link_app')
+    path('link_app/', LinkAppAPIView.as_view(), name='link_app'),
+    path('image_to_base64/', ImageToBase64View.as_view(), name='image_to_base64')
 ]

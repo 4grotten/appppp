@@ -463,10 +463,12 @@ class TwoGisService:
     def get_2gis_place_details(cls,URL_2gis: str) -> Dict:
         try:
             r = requests.get(URL_2gis, headers=HEADERS, cookies=COOKIES)
-            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1).replace('\\\\', '\\').replace("'", '"')
-            place_details = json.loads(result)
+            result = re.search(r"var initialState = JSON.parse\('(.*?)'\);", r.text).group(1).replace('\\\\',
+                                                                                                      '\\').replace("'",
+                                                                                                                    '"')
+            place_details = json.loads(result)['data']
 
-            return place_details['data']
+            return place_details
         except Exception as e:
             error_data = {
                 "message": "Invalid input",
@@ -514,7 +516,14 @@ class TwoGisService:
 
         numbers: List = []
         try:
-            numbers.append(data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts'][0]['value'])
+            for item in data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts']:
+                if item.get('type') == 'phone' and item.get('type') is not None:
+                    numbers.append(item['value'])
+            try:
+                numbers.append(data['entity']['profile'][place_ID]['data']['contact_groups'][1]['contacts'][0]['value'])
+            except:
+                pass
+
             apofiz_add_organization['numbers'] = numbers
         except Exception as e:
             apofiz_add_organization['numbers'] = []
@@ -586,9 +595,14 @@ class TwoGisService:
         accounts: List = []
         try:
             for link in data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts']:
-                if link.get('url') != None:
+                if link.get('url') is not None:
                     accounts.append(link['url'])
             accounts.append(URL_2gis)
+            try:
+                accounts.append(data['entity']['profile'][place_ID]['data']['contact_groups'][1]['contacts'][1]['url'])
+            except:
+                pass
+
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []

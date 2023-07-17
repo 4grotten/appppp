@@ -26,7 +26,7 @@ from notifications.constants import (
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
-    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE
+    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -1200,12 +1200,9 @@ class TransactionService:
     def refund_booking_transaction(cls, request, old_transaction: Transaction, user: User):
         from shop.serializers.cart_serializers import BookingSerializer
         try:
-            print("BEFORE FIXED_CART")
             fixed_cart = BookingSerializer(old_transaction.booking, context={
                 'request': request}).data
-            print("AFTER FIXED CART")
         except Cart.DoesNotExist:
-            print("DOES NOT EXIST")
             fixed_cart = None
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)
@@ -1302,25 +1299,19 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def accept_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
-        print("request", request)
-        print("GIRDI")
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        print("GOT TRANSACTION")
         if old_transaction.client != user:
             raise PermissionDeniedException(_('Permission denied'))
         try:
-            print("TRY TOT CHANGE")
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
             old_transaction.save()
             booking = old_transaction.booking
             booking.is_open = False
-            print("ALL GOOD, TRANSACTION_CHANGED")
             booking.save()
         except:
             raise IntegrityException()
 
-        print("OLD_START_TIME")
         old_start_time = old_transaction.booking.start_time
         old_end_time = old_transaction.booking.end_time
 
@@ -1570,6 +1561,15 @@ class TransactionService:
             sender_id=transaction.processed_by_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=ACTIVATE_RENTAL_CLIENT_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=extra_data
+        )
+
+        sent_notification.delay(
+            recipient_id=transaction.processed_by_id,
+            sender_id=transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACTIVATE_RENTAL_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data
         )

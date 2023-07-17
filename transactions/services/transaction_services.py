@@ -24,7 +24,7 @@ from notifications.constants import (
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
-    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE
+    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -1559,6 +1559,15 @@ class TransactionService:
             sender_id=transaction.processed_by_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=ACTIVATE_RENTAL_CLIENT_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=extra_data
+        )
+
+        sent_notification.delay(
+            recipient_id=transaction.processed_by_id,
+            sender_id=transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACTIVATE_RENTAL_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data
         )

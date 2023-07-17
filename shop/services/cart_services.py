@@ -95,7 +95,7 @@ class CartService:
             raise PermissionDeniedException(_('No rights to change this cart'))
         if not cart.is_open:
             raise BadRequestException(_('Cart is already closed'))
-        if delivery_type == Transaction.CASH_COURIER:
+        if delivery_type == Transaction.CASH_COURIER or delivery_type == Transaction.ONLINE_PAYMENT:
             if not cart.organization.has_delivery:
                 raise BadRequestException(_('Organization does not have courier delivery'))
         elif delivery_type == Transaction.SELF_PICKUP:

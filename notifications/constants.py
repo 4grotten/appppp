@@ -83,6 +83,8 @@ ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
 DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
 REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
 
+ACCEPTED_ONLINE_ORDER_CLIENT_TYPE = 'accepted_online_order_client'
+
 ACCEPT_RENTAL_CLIENT_TYPE = 'accepted_rental_client'
 DECLINE_RENTAL_CLIENT_TYPE = 'declined_rental_client'
 REQUEST_RENTAL_CLIENT_TYPE = 'requested_rental_client'
@@ -107,6 +109,7 @@ NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION = 'delivery_delivered_for_organizat
 
 NOTIFICATION_TYPES = (
     (ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_CLIENT_TYPE),
+    (ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE),
     (ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_CLIENT_TYPE),
     (DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_CLIENT_TYPE),
     (DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_CLIENT_TYPE),
@@ -205,6 +208,8 @@ DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату �
 ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
+
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU = 'Ваш заказ готов к оплате #{transaction_id}'
 
 ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ аренды готов к оплате #{transaction_id}'
 DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ аренды #{transaction_id}'
@@ -336,6 +341,8 @@ ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
 DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
 REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
 ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
+
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN = 'Your order is ready for payment #{transaction_id}'
 
 ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your rent order is ready for payment #{transaction_id}'
 DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your rental order canceled #{transaction_id}'
@@ -874,6 +881,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACCEPTED_ONLINE_ORDER_CLIENT_TYPE:
+        notification_str = dict(
+            title=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

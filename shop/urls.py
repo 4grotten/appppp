@@ -2,7 +2,8 @@ from django.urls import path
 
 from shop.views.cart_views import (
     CartItemCountChangeView, UserCartListView, OrderDeliveryView, TotalCartItemsCount,
-    OrderSelfPickupView, UserCartRetrieveUpdateDestroyView, CartAnonymousCheckoutView, UpdateDeliveryToSendByCourierView
+    OrderSelfPickupView, UserCartRetrieveUpdateDestroyView, CartAnonymousCheckoutView,
+    UpdateDeliveryToSendByCourierView, OnlinePaymentOrderDeliveryView
 )
 from shop.views.category_views import (
     ItemCategoryListView, ItemRentalCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
@@ -82,6 +83,7 @@ urlpatterns = [
     path('carts/<int:pk>/updateDelivery/', UpdateDeliveryToSendByCourierView.as_view(), name='order_delivery'),
     path('carts/<int:pk>/selfPickup/', OrderSelfPickupView.as_view(), name='order_self_pickup'),
     path('carts/<int:pk>/offline_checkout/', CartAnonymousCheckoutView.as_view(), name='cart_anonymous_checkout'),
+    path('carts/<int:pk>/online_payment/', OnlinePaymentOrderDeliveryView.as_view(), name='order_online'),
 
     path('comments/item/<int:pk>/', CommentItemListCreateView.as_view(), name='comment_item_list'),
     path('comments/<int:pk>/', CommentDestroyUpdateRetrievtView.as_view(), name='comment_retrieve'),

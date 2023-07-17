@@ -26,7 +26,8 @@ from notifications.constants import (
     NOTIFICATION_MODE_RENTAL, ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_TYPE, REQUEST_RENTAL_TYPE,
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
-    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_TYPE
+    DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE,
+    ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -580,28 +581,31 @@ class TransactionService:
         Notification.objects.filter(
             Q(extra_data__transaction_id=current_transaction.id) & (
                     Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
-        sent_notification.delay(
-            recipient_id=current_transaction.client_id,
-            sender_id=current_transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
-            notification_type=ACCEPT_ORDER_CLIENT_TYPE,
-            organization_id=current_transaction.organization_id,
-            extra_data=dict(transaction_id=current_transaction.id,
-                            total_price=current_transaction.final_amount,
-                            discount_percent=0,
-                            currency=current_transaction.currency.code)
-        )
-        # sent_notification.delay(
-        #     recipient_id=current_transaction.processed_by_id,
-        #     sender_id=current_transaction.client_id,
-        #     mode=NOTIFICATION_MODE_PRODUCT,
-        #     notification_type=ACCEPT_ORDER_TYPE,
-        #     organization_id=current_transaction.organization_id,
-        #     extra_data=dict(transaction_id=current_transaction.id,
-        #                     total_price=current_transaction.final_amount,
-        #                     discount_percent=0,
-        #                     currency=current_transaction.currency.code)
-        # )
+
+        if current_transaction.delivery_type == Transaction.CASH_COURIER:
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_PRODUCT,
+                notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=current_transaction.final_amount,
+                                discount_percent=0,
+                                currency=current_transaction.currency.code)
+            )
+        else:
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_PRODUCT,
+                notification_type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id,
+                                total_price=current_transaction.final_amount,
+                                discount_percent=0,
+                                currency=current_transaction.currency.code)
+            )
         send_notifications_organization_members.delay(
             members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,

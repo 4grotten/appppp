@@ -87,6 +87,7 @@ ACCEPT_RENTAL_CLIENT_TYPE = 'accepted_rental_client'
 DECLINE_RENTAL_CLIENT_TYPE = 'declined_rental_client'
 REQUEST_RENTAL_CLIENT_TYPE = 'requested_rental_client'
 
+ACTIVATE_RENTAL_TYPE = 'activated_rental'
 ACTIVATE_RENTAL_CLIENT_TYPE = 'activated_rental_client'
 
 NEW_COMMENT_TYPE = 'new_comment'
@@ -111,6 +112,7 @@ NOTIFICATION_TYPES = (
     (DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_CLIENT_TYPE),
     (REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_CLIENT_TYPE),
     (REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_CLIENT_TYPE),
+    (ACTIVATE_RENTAL_TYPE, ACTIVATE_RENTAL_TYPE),
     (ACTIVATE_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE),
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
@@ -209,6 +211,7 @@ DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ аренд�
 REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ #{transaction_id} !!! Ждём подтверждения к оплате аренды.'
 
 ACTIVATE_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ аренды активирован #{transaction_id}'
+ACTIVATE_RENTAL_TITLE_RU = 'Вы активировали заказ аренды #{transaction_id}'
 
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
 RENTAL_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
@@ -339,6 +342,7 @@ DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your rental order canceled #{transaction_id}'
 REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order #{transaction_id} !!! Waiting for confirmation to pay the rent.'
 RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
+ACTIVATE_RENTAL_TITLE_EN = 'You activated rent order #{transaction_id}'
 ACTIVATE_RENTAL_CLIENT_TITLE_EN = 'Your rent order is activated #{transaction_id}'
 
 ATTENDANCE_IN_TITLE = 'Input {organization}'
@@ -915,6 +919,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACTIVATE_RENTAL_TYPE:
+        notification_str = dict(
+            title=ACTIVATE_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACTIVATE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

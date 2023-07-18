@@ -231,18 +231,21 @@ class GoogleMapsService:
 
         apofiz_add_organization = {}
 
+        # title
         apofiz_add_organization['title'] = data['name']
         photo_reference = data['photos'][0]['photo_reference']
+
+        # image
         image_id = cls.get_image_ID(photo_reference, request)
-        if image_id == 'Учетные данные не были предоставлены.':
-            apofiz_add_organization[
-                'image_id'] = 57323  # default geocode result icon из гугл карт на случай ошибки с картинкой
-        else:
-            apofiz_add_organization['image'] = image_id
+        apofiz_add_organization['image'] = image_id
+
+        # description
         try:
             apofiz_add_organization['description'] = data['editorial_summary']['overview']
         except:
             apofiz_add_organization['description'] = ''
+
+        # numbers
         numbers: List = []
         try:
             numbers.append(data['international_phone_number'].replace(' ', ''))
@@ -250,6 +253,7 @@ class GoogleMapsService:
         except:
             apofiz_add_organization['numbers'] = []
 
+        # work schedule
         try:
             apofiz_add_organization['opens_at'] = data['current_opening_hours']['periods'][0]['open']['time'][:-2] \
                                                   + ':' + data['current_opening_hours']['periods'][0]['open']['time'][
@@ -262,25 +266,38 @@ class GoogleMapsService:
         except:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
+
+        # address
         apofiz_add_organization['address'] = data['formatted_address'].replace(' - ', '. ')
+
+        # latitude longitude
         apofiz_add_organization['full_location'] = {
             'latitude': data['geometry']['location']['lat'],
             'longitude': data['geometry']['location']['lng']
         }
+
+        # currency code
         apofiz_add_organization['currency'] = cls.get_curency_CODE(data['address_components'][-1]['short_name'], request)
+
+        # country code
         apofiz_add_organization['country'] = cls.get_country_CODE(data['address_components'][-1]['short_name'], request)
 
+        # city
         city_name = re.search(r'"(locality|region)">(.*?)</span>', data['adr_address']).group(2)
         apofiz_add_organization['city'] = cls.get_city_ID(city_name, request)
+
+        # types
         place_type = data['types'][0]
         apofiz_add_organization['types'] = cls.get_place_type_ID(place_type, request)
 
+        # accounts
         accounts: List = []
         try:
             accounts.append(data['website'])
             apofiz_add_organization['accounts'] = accounts
         except:
             apofiz_add_organization['accounts'] = []
+        accounts.append(gMaps_URL)
 
         apofiz_add_organization['instagram_integration'] = None
         apofiz_add_organization['cards'] = []
@@ -488,11 +505,13 @@ class TwoGisService:
 
         place_ID = list(data['entity']['profile'].keys())[0]
 
+        # title
         try:
             apofiz_add_organization['title'] = data["entity"]["profile"][place_ID]["data"]["name_ex"]["primary"]
         except Exception as e:
             apofiz_add_organization['title'] = ''
 
+        # image
         try:
             place_logo = data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads']['options']['logo'][
                 'img_url'].strip("image.png")
@@ -502,17 +521,39 @@ class TwoGisService:
         except Exception as e:
             apofiz_add_organization['image'] = cls.get_image_ID(cls.place_images(place_ID), request)
 
+        # description
         try:
-            seoStore = data['seoStore']['data']['description']
-            try:
-                searchContext = data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads']['article'].replace(
-                    '<br />', '\n')
-                apofiz_add_organization['description'] = f'{searchContext}\n\n{seoStore}'
-            except Exception as e:
-                apofiz_add_organization['description'] = seoStore
+            searchContext_article = '\n' + data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads'][
+                'article'].replace('<br />', '\n') + '\n━━━━━━━ ••• ━━━━━━━\n'
+        except:
+            searchContext_article = ''
 
-        except Exception as e:
-            apofiz_add_organization['description'] = ''
+        try:
+            searchContext_text = '\n' + data['searchContext'][f'DEFAULT_SEARCH_ID_{place_ID}']['ads']['text'].replace(
+                '<br />', '\n') + '\n━━━━━━━ ••• ━━━━━━━\n'
+        except:
+            searchContext_text = ''
+
+        try:
+            place_attributes = ''
+            for item in data["entity"]["profile"][place_ID]["data"]['attribute_groups']:
+                place_attributes += f'\n🔹 {item["name"]}\n'
+                for attribute in item['attributes']:
+                    place_attributes += f'✔️ {attribute["name"]}\n'
+        except:
+            place_attributes = ''
+
+        try:
+            seoStore = '\n━━━━━━━ ••• ━━━━━━━\n' + data['seoStore']['data']['description']
+        except:
+            seoStore = ''
+
+        description = f'{searchContext_text}{searchContext_article}{place_attributes}{seoStore}'
+
+        if description == '':
+            apofiz_add_organization['description'] = 'Описание'
+        else:
+            apofiz_add_organization['description'] = description.strip()
 
         numbers: List = []
         try:
@@ -528,6 +569,7 @@ class TwoGisService:
         except Exception as e:
             apofiz_add_organization['numbers'] = []
 
+        # work schedule
         try:
             opens_at = data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['from']
             closes_at = data['entity']['profile'][place_ID]['data']['schedule']['Mon']['working_hours'][0]['to']
@@ -544,23 +586,62 @@ class TwoGisService:
             apofiz_add_organization['opens_at'] = None
             apofiz_add_organization['closes_at'] = None
 
+        # address
         try:
-            street_name = data['entity']['profile'][place_ID]['data']['address']['components'][0]['street']
-            buinding_number = data['entity']['profile'][place_ID]['data']['address']['components'][0]['number']
-            postcode = data['entity']['profile'][place_ID]['data']['address']['postcode']
-            country = data['entity']['profile'][place_ID]['data']['adm_div'][0]['name']
-            sity = data['entity']['profile'][place_ID]['data']['adm_div'][1]['name']
-            district = data['entity']['profile'][place_ID]['data']['adm_div'][3]['name']
+            # building name
             try:
+                building_name = data['entity']['profile'][place_ID]['data']['address']['building_name'] + ' • '
+            except:
+                building_name = ''
+
+            try:
+                # street
+                street_name = data['entity']['profile'][place_ID]['data']['address']['components'][0]['street']
+            except:
+                street_name = ''
+
+            try:
+                # House number
+                buinding_number = data['entity']['profile'][place_ID]['data']['address']['components'][0]['number']
+            except:
+                buinding_number = ''
+
+            try:
+                # postal code
+                postcode = f"({data['entity']['profile'][place_ID]['data']['address']['postcode']})"
+            except:
+                postcode = ''
+
+            try:
+                # country
+                country = data['entity']['profile'][place_ID]['data']['adm_div'][0]['name']
+            except:
+                country = ''
+
+            try:
+                # city
+                city = data['entity']['profile'][place_ID]['data']['adm_div'][1]['name']
+            except:
+                city = ''
+
+            try:
+                # District / Region / Province
+                district = data['entity']['profile'][place_ID]['data']['adm_div'][3]['name']
+            except:
+                district = ''
+
+            try:
+                # Address Comment / Floor
                 address_comment = f"({data['entity']['profile'][place_ID]['data']['address_comment']})"
             except:
                 address_comment = ''
 
-            address = f'ул. {street_name}, д. {buinding_number} {address_comment} • {country} - {sity} - {district} ({postcode})'
-            apofiz_add_organization['address'] = address
+            address = f'{building_name}, {street_name}, {buinding_number} {address_comment} • {country} - {city} - {district} {postcode}'
+            apofiz_add_organization['address'] = address.strip()
         except Exception as e:
-            apofiz_add_organization['address'] = ''
+            apofiz_add_organization['address'] = None
 
+        # latitude longitude
         try:
             apofiz_add_organization['full_location'] = {
                 'latitude': data['entity']['profile'][place_ID]['data']['point']['lat'],
@@ -570,17 +651,20 @@ class TwoGisService:
             apofiz_add_organization['longitude'] = None
             apofiz_add_organization['latitude'] = None
 
+        # currency code
         try:
             apofiz_add_organization['currency'] = cls.get_curency_CODE(
                 data['region']['detector']['default']['data']['countryCode'].upper(), request)
         except Exception as e:
             apofiz_add_organization['currency'] = None
 
+        # country code
         try:
             apofiz_add_organization['country'] = cls.get_country_CODE(data['region']['detector']['default']['data']['countryCode'].upper(), request)
         except Exception as e:
             apofiz_add_organization['country'] = None
 
+        # city
         try:
             apofiz_add_organization['city'] = cls.get_city_ID(data['region']['detector']['default']['data']['name'], request)
         except Exception as e:
@@ -592,6 +676,7 @@ class TwoGisService:
         except:
             apofiz_add_organization['types'] = None
 
+        # accounts
         accounts: List = []
         try:
             for link in data['entity']['profile'][place_ID]['data']['contact_groups'][0]['contacts']:

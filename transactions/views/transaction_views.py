@@ -240,6 +240,30 @@ class OnlineTransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class OnlinePaymentTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_online_payment_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            processed_by=request.user,
+            request=request
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
 class OnlineBookingTransactionCompleteView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineCompleteSerializer
@@ -725,6 +749,27 @@ class RentPaymentAcceptView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
         TransactionService.accept_booking_transaction_by_user(transaction_id=transaction_id,
+                                                              user=self.request.user,
+                                                              request=self.request)
+
+        return Response(data={
+            'message': _('Transaction successfully paid')
+        }, status=status.HTTP_200_OK)
+
+
+class OrderPaymentAcceptView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        transaction_id = serializer.validated_data['transaction_id']
+        TransactionService.accept_order_transaction_by_user(transaction_id=transaction_id,
                                                               user=self.request.user,
                                                               request=self.request)
 

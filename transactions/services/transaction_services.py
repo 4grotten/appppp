@@ -27,7 +27,7 @@ from notifications.constants import (
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
     DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE,
-    ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE
+    ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE, ACCEPT_ORDER_PAYMENT_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -582,30 +582,111 @@ class TransactionService:
             Q(extra_data__transaction_id=current_transaction.id) & (
                     Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
 
-        if current_transaction.delivery_type == Transaction.CASH_COURIER:
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                sender_id=current_transaction.processed_by_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                notification_type=ACCEPT_ORDER_CLIENT_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=current_transaction.final_amount,
-                                discount_percent=0,
-                                currency=current_transaction.currency.code)
-            )
-        else:
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                sender_id=current_transaction.processed_by_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                notification_type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=current_transaction.final_amount,
-                                discount_percent=0,
-                                currency=current_transaction.currency.code)
-            )
+        sent_notification.delay(
+            recipient_id=current_transaction.client_id,
+            sender_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            discount_percent=0,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            sender_id=current_transaction.client_id,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ACCEPT_ORDER_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            discount_percent=0,
+                            currency=current_transaction.currency.code)
+        )
+        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+            is_delivery_service=True, country=organization.country).exists()
+        if org:
+            try:
+                send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
+                                                                     current_transaction.cart.id,
+                                                                     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                     mode=NOTIFICATION_MODE_SYSTEM)
+
+                organization_members = list(current_transaction.cart.organization.memberships.filter(
+                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                for member in organization_members:
+                    send_delivery_notitication_to_organization_or_client(member.user,
+                                                                         current_transaction.cart.id,
+                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                         mode=NOTIFICATION_MODE_SYSTEM)
+            except Exception as e:
+                logging.exception(e)
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_online_payment_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
+                                    processed_by: User) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
+                                      status=Transaction.IN_PROGRESS)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+
+        totals = current_transaction.cart.items.aggregate(
+            original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
+            discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
+        )
+        for cart_item in current_transaction.cart.items.all():
+            if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+            else:
+                cls.change_count_service(size=None, cart_item=cart_item)
+
+        original_price = totals['original_price']
+        discounted_price = totals['discounted_price']
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        from shop.serializers.cart_serializers import CartSerializer
+        try:
+            current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
+                'request': request}).data if current_transaction.cart else None
+            current_transaction.processed_by = processed_by
+            current_transaction.employee_role = role
+            current_transaction.employee_name = processed_by.full_name
+            current_transaction.employee_avatar = processed_by.avatar
+            current_transaction.status = Transaction.ACCEPTED
+            current_transaction.original_amount = original_price
+            current_transaction.savings = original_price - discounted_price
+            current_transaction.purchase_id = organization.running_purchase_id
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+
+            OrganizationService.increment_running_purchase_id(organization=organization)
+        except IntegrityError:
+            raise IntegrityException(_('Could not complete transaction'))
+        client_status = OrganizationClientFinancialStatusService.get_or_create(
+            user=current_transaction.client,
+            organization=current_transaction.organization
+        )
+        OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+        Notification.objects.filter(
+            Q(extra_data__transaction_id=current_transaction.id) & (
+                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=current_transaction.client_id,
+            sender_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            discount_percent=0,
+                            currency=current_transaction.currency.code)
+        )
         send_notifications_organization_members.delay(
             members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,
@@ -1356,6 +1437,55 @@ class TransactionService:
             sender_id=old_transaction.processed_by_id,
             mode=NOTIFICATION_MODE_RENTAL,
             notification_type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+    @classmethod
+    @transaction.atomic
+    def accept_order_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
+        old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        print("HEREE")
+        if old_transaction.client != user:
+            raise PermissionDeniedException(_('Permission denied'))
+        try:
+            print("EST")
+            old_transaction.payment_status = Transaction.ACCEPTED
+            print("NET")
+            old_transaction.is_processed = True
+            print("OBED")
+            old_transaction.save()
+            print("CHET")
+        except:
+            print("LOL")
+            raise IntegrityException()
+        print("HAHA")
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=old_transaction.processed_by_id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,

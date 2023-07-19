@@ -15,7 +15,7 @@ from transactions.views.transaction_views import (
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
-    RentInitPaymentView, PaymentSuccessView
+    RentInitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView
 )
 
 urlpatterns = [
@@ -39,9 +39,12 @@ urlpatterns = [
          name='transaction_booking_preprocess'),
     path('transactions/complete/booking/', TransactionBookingCompleteView.as_view(),
          name='transaction_booking_complete'),
+    path('onlinePaymentTransactions/complete/', OnlinePaymentTransactionCompleteView.as_view(),
+         name='online_payment_transaction_complete'),
     path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(),
          name='online_booking_transaction_complete'),
-    path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_reject'),
+    path('transactions/order/payment/accept/', OrderPaymentAcceptView.as_view(), name='user_transaction_order_accept'),
+    path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_accept'),
     path('transactions/<int:pk>/reject/', RentPaymentRejectView.as_view(), name='user_transaction_reject'),
     path('transactions/booking/user/', TransactionUserInfoView.as_view(), name='transaction_user_info'),
     path('transactions/booking/activate/', TransactionBookingActivate.as_view(),
@@ -76,7 +79,7 @@ urlpatterns = [
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 
-    path('transactions/pay/', RentInitPaymentView.as_view(), name='init_payment'),
+    path('transactions/rental/pay/', RentInitPaymentView.as_view(), name='rental_init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')
 ]

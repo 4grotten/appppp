@@ -853,6 +853,13 @@ class RentInitPaymentView(GenericAPIView):
         transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
         converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                         to_currency="KGS", amount=transaction.final_amount)
+        descriptions_list = []
+        if transaction.booking:
+            purchase_type = 'rent'
+        else:
+            purchase_type = 'product'
+            for cart_item in transaction.cart.items.all():
+                descriptions_list.append(cart_item.item.description)
         payment_data = {
             'pg_order_id': str(transaction_id),
             'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
@@ -861,7 +868,8 @@ class RentInitPaymentView(GenericAPIView):
             'pg_salt': 'apofiz',
             'pg_currency': "KGS",
             'pg_testing_mode': '1',
-            'user_id': str(self.request.user.id)
+            'user_id': str(self.request.user.id),
+            'purchase_type': purchase_type
         }
 
 
@@ -881,7 +889,6 @@ class RentInitPaymentView(GenericAPIView):
 
 
 class ResultURLView(APIView):
-
     def post(self, request, *args, **kwargs):
         serializer = ResultURLSerializer(data=request.data)
         if serializer.is_valid():
@@ -891,13 +898,13 @@ class ResultURLView(APIView):
             pg_result = validated_data.get('pg_result', 0)
             pg_description = validated_data.get('pg_description', '')
             user_id = validated_data.get('user_id')
+            purchase_type = validated_data.get('purchase_type')
             print(validated_data)
             user_id = int(user_id)
             user = UserService.get(id=user_id)
 
             if pg_can_reject == 1 and pg_result != 1:
                 print("REJECTED")
-                # Платеж не может быть принят, отправляем ответ со статусом rejected
                 response_data = {
                     'pg_status': 'rejected',
                     'pg_description': pg_description,
@@ -906,20 +913,28 @@ class ResultURLView(APIView):
                 }
             else:
                 print("ACCEPTED")
-                # Платеж принят, отправляем ответ со статусом ok
-                TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
-                                                                      user=user,
-                                                                      request=self.request)
-                print("AFTER TransactionService")
-                # return Response(data={
-                #     'message': _('Transaction successfully paid')
-                # }, status=status.HTTP_200_OK)
-                response_data = {
-                    'pg_status': 'ok',
-                    'pg_description': 'Заказ оплачен',
-                    'pg_salt': validated_data.get('pg_salt', ''),
-                    'pg_sig': validated_data.get('pg_sig', '')
-                }
+                if purchase_type == 'product':
+                    TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
+                                                                            user=user,
+                                                                            request=self.request)
+                    print("AFTER TransactionService")
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+                else:
+                    TransactionService.accept_order_transaction_by_user(transaction_id=pg_order_id,
+                                                                         user=user,
+                                                                         request=self.request)
+                    print("AFTER TransactionService.accept_order_transaction_by_user")
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
 
             return Response(response_data, status=status.HTTP_200_OK)
         else:

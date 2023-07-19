@@ -378,6 +378,7 @@ class ResultURLSerializer(serializers.Serializer):
     pg_sig = serializers.CharField(required=False)
     pg_payment_method = serializers.CharField(required=False)
     user_id = serializers.CharField(required=False)
+    purchase_type = serializers.CharField(required=False)
 
 
 class PaymentSuccessSerializer(serializers.Serializer):

@@ -854,17 +854,21 @@ class RentInitPaymentView(GenericAPIView):
         converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                         to_currency="KGS", amount=transaction.final_amount)
         descriptions_list = []
-        if transaction.booking:
+        try:
+            booking = transaction.booking
             purchase_type = 'rent'
-        else:
+            pg_description = booking.item.description
+        except Booking.DoesNotExist:
             purchase_type = 'product'
             for cart_item in transaction.cart.items.all():
                 descriptions_list.append(cart_item.item.description)
+            pg_description = '\n'.join(descriptions_list)
+
         payment_data = {
             'pg_order_id': str(transaction_id),
             'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
             'pg_amount': str(converted_amount),
-            'pg_description': transaction.booking.item.description,
+            'pg_description': pg_description,
             'pg_salt': 'apofiz',
             'pg_currency': "KGS",
             'pg_testing_mode': '1',

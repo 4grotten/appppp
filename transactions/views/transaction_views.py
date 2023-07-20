@@ -918,7 +918,7 @@ class ResultURLView(APIView):
             else:
                 print("ACCEPTED")
                 if purchase_type == 'product':
-                    TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
+                    TransactionService.accept_order_transaction_by_user(transaction_id=pg_order_id,
                                                                             user=user,
                                                                             request=self.request)
                     print("AFTER TransactionService")
@@ -929,7 +929,7 @@ class ResultURLView(APIView):
                         'pg_sig': validated_data.get('pg_sig', '')
                     }
                 else:
-                    TransactionService.accept_order_transaction_by_user(transaction_id=pg_order_id,
+                    TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
                                                                          user=user,
                                                                          request=self.request)
                     print("AFTER TransactionService.accept_order_transaction_by_user")

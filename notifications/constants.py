@@ -62,6 +62,8 @@ CHARGE_CASHBACK_SELLER = 'charge_cashback_seller'
 
 NEW_CASHBACK = 'new_cashback'
 
+REQUEST_ONLINE_ORDER_TYPE = 'requested_online_order'
+
 ACCEPT_ORDER_TYPE = 'accepted_order'
 DECLINE_ORDER_TYPE = 'declined_order'
 REQUEST_ORDER_TYPE = 'requested_order'
@@ -133,6 +135,7 @@ NOTIFICATION_TYPES = (
     (DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE),
     (DECLINE_ORDER_TYPE, DECLINE_ORDER_TYPE),
     (DECLINE_RENTAL_TYPE, DECLINE_RENTAL_TYPE),
+    (REQUEST_ONLINE_ORDER_TYPE, REQUEST_ONLINE_ORDER_TYPE),
     (REQUEST_ORDER_TYPE, REQUEST_ORDER_TYPE),
     (REQUEST_RENTAL_TYPE, REQUEST_RENTAL_TYPE),
     (NEW_CASHBACK, NEW_CASHBACK),
@@ -884,6 +887,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
             title_ru=NEW_COMMENT_TITLE_RU,
             description_ru=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')))
+
+    elif notification_type == REQUEST_ONLINE_ORDER_TYPE:
+        notification_str = dict(
+            title=REQUEST_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_TYPE:
         notification_str = dict(

@@ -27,7 +27,9 @@ from notifications.constants import (
     REQUEST_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_TYPE, DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE,
     ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE, DECLINE_RENTAL_PAYMENT_CLIENT_TYPE,
     DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE,
-    ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE, ACCEPT_ORDER_PAYMENT_CLIENT_TYPE
+    ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE,
+    ACCEPT_ORDER_PAYMENT_CLIENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
+    REQUEST_ONLINE_ORDER_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -674,7 +676,7 @@ class TransactionService:
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
         Notification.objects.filter(
             Q(extra_data__transaction_id=current_transaction.id) & (
-                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+                    Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
 
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
@@ -1486,6 +1488,47 @@ class TransactionService:
             sender_id=old_transaction.processed_by_id,
             mode=NOTIFICATION_MODE_PRODUCT,
             notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+    @classmethod
+    @transaction.atomic
+    def reject_order_transaction_by_user(cls, request, old_transaction: Transaction, user: User):
+        if old_transaction.client != request.user:
+            raise PermissionDeniedException(_('Permission denied'))
+        try:
+            old_transaction.payment_status = Transaction.REJECTED
+            old_transaction.save()
+        except:
+            raise IntegrityException()
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=old_transaction.processed_by_id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=DECLINE_ORDER_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
             organization_id=old_transaction.organization_id,
             extra_data=dict(transaction_id=old_transaction.id,
                             total_price=old_transaction.final_amount,

@@ -778,6 +778,18 @@ class OrderPaymentAcceptView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class OrderPaymentRejectView(RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithClientSerializer
+
+    def get_object(self):
+        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+
+    def perform_destroy(self, instance: Transaction):
+        TransactionService.reject_order_transaction_by_user(old_transaction=instance, user=self.request.user,
+                                                      request=self.request)
+
+
 class RentPaymentRejectView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = BookingTransactionWithClientSerializer

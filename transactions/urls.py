@@ -15,7 +15,8 @@ from transactions.views.transaction_views import (
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
-    RentInitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView
+    RentInitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView,
+    OrderPaymentRejectView
 )
 
 urlpatterns = [
@@ -45,6 +46,7 @@ urlpatterns = [
          name='online_booking_transaction_complete'),
     path('transactions/order/payment/accept/', OrderPaymentAcceptView.as_view(), name='user_transaction_order_accept'),
     path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_accept'),
+    path('transactions/<int:pk>/order/reject/', OrderPaymentRejectView.as_view(), name='user_transaction_order_reject'),
     path('transactions/<int:pk>/reject/', RentPaymentRejectView.as_view(), name='user_transaction_reject'),
     path('transactions/booking/user/', TransactionUserInfoView.as_view(), name='transaction_user_info'),
     path('transactions/booking/activate/', TransactionBookingActivate.as_view(),

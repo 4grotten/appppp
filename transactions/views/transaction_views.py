@@ -867,10 +867,12 @@ class RentInitPaymentView(GenericAPIView):
                                                         to_currency="KGS", amount=transaction.final_amount)
         descriptions_list = []
         try:
+            print("HAHA")
             booking = transaction.booking
             purchase_type = 'rent'
             pg_description = booking.item.description
         except Booking.DoesNotExist:
+            print("NEEET")
             purchase_type = 'product'
             for cart_item in transaction.cart.items.all():
                 descriptions_list.append(cart_item.item.description)
@@ -887,6 +889,7 @@ class RentInitPaymentView(GenericAPIView):
             'user_id': str(self.request.user.id),
             'purchase_type': purchase_type
         }
+        print(payment_data)
 
 
         request_for_signature = TransactionService.make_flat_params_array(payment_data)
@@ -894,12 +897,14 @@ class RentInitPaymentView(GenericAPIView):
         signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
         signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
         payment_data['pg_sig'] = signature
-
+        print("BEFORE REQUEST")
         response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+        print("AFTER REQUEST")
         xml_data = response.text
         response_dict = xmltodict.parse(xml_data)
         json_string = json.dumps(response_dict)
         json_data = json.loads(json_string)
+        print("AFTER JSON", json_data)
 
         return Response(json_data, content_type='application/json')
 

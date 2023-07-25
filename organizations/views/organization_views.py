@@ -11,7 +11,7 @@ from django.db.models import Q, Case, When, IntegerField
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
@@ -42,7 +42,7 @@ from organizations.serializers.organization_serializers import (
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer
+    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -698,3 +698,32 @@ class UnblockUserDestroyView(DestroyAPIView):
             }, status=status.HTTP_200_OK)
         except BlockedUser.DoesNotExist:
             raise ObjectNotFoundException(_('BlockedUser not found'))
+
+
+class PaymentSystemListView(generics.ListAPIView):
+    serializer_class = PaymentSystemSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        organization_id = self.kwargs.get('pk')
+
+        organization = OrganizationService.get(id=organization_id)
+
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        confirmed_payment_systems = []
+        if organization.freedompay_confirmed:
+            confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS'})
+        if organization.embily_confirmed:
+            confirmed_payment_systems.append({'id': 2, 'name': 'Embily в USD'})
+        if organization.cryptobox_confirmed:
+            confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto'})
+
+        return confirmed_payment_systems
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

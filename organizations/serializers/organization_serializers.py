@@ -624,3 +624,8 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationVerificationUsers
         fields = ('username', 'phone_number', 'email')
+
+
+class PaymentSystemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()

@@ -91,15 +91,15 @@ class Organization(TimestampModel):
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
     has_license = models.BooleanField(default=False, help_text=_('Does organization have license?'))
 
-    freedompay_enabled = models.BooleanField(default=False)
-    embily_enabled = models.BooleanField(default=False)
-    cryptobox_enabled = models.BooleanField(default=False)
+    freedompay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    embily_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    cryptobox_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
 
-    payment_systems_enabled = models.BooleanField(default=False)
+    payment_systems_activated = models.BooleanField(default=False, help_text=_('All payment systems are activated'))
 
-    freedompay_confirmed = models.BooleanField(default=False)
-    embily_confirmed = models.BooleanField(default=False)
-    cryptobox_confirmed = models.BooleanField(default=False)
+    freedompay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    embily_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    cryptobox_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)

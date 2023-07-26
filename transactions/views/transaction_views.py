@@ -867,16 +867,20 @@ class RentInitPaymentView(GenericAPIView):
                                                         to_currency="KGS", amount=transaction.final_amount)
         descriptions_list = []
         try:
-            print("HAHA")
             booking = transaction.booking
             purchase_type = 'rent'
             pg_description = booking.item.description
+            if pg_description == '':
+                pg_description = booking.item.name
         except Booking.DoesNotExist:
-            print("NEEET")
             purchase_type = 'product'
             for cart_item in transaction.cart.items.all():
                 descriptions_list.append(cart_item.item.description)
-            pg_description = '\n'.join(descriptions_list)
+            pg_description = ' * '.join(descriptions_list)
+            if pg_description == '':
+                for cart_item in transaction.cart.items.all():
+                    descriptions_list.append(cart_item.item.name)
+                pg_description = ' * '.join(descriptions_list)
 
         payment_data = {
             'pg_order_id': str(transaction_id),

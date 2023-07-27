@@ -30,7 +30,7 @@ from .views.organization_views import (
     OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView,
     OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
     OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView, OrganizationPaymentSystemListView,
-    PaymentSystemListView, OrgPaymentSystemConfirmation
+    PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -76,7 +76,9 @@ organization_urls = [
     path('organizations/<int:pk>/download_followers/', OrgDownloadFollowersAPIView.as_view(), name='org_followers'),
     path('organizations/<int:pk>/payment_systems/', OrganizationPaymentSystemListView.as_view(),
          name='organization_payment_systems_list'),
-        path('organization/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),
+    path('organization/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),
+         name='organization_payment_systems_confirmation'),
+    path('organizations/<int:pk>/payment_systems/activation/', OrganizationPaymentSystemsActivationView.as_view(),
          name='organization_payment_systems_confirmation'),
     path('organizations/payment_systems/', PaymentSystemListView.as_view(), name='payment_systems_list'),
     path('organizations/<int:organization_id>/clients/<int:user_id>/', OrganizationClientDetailsAPIView.as_view(),

@@ -629,3 +629,4 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
 class PaymentSystemSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
+    is_available = serializers.BooleanField(required=False)

@@ -15,7 +15,8 @@ from rest_framework import status, generics
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView, DestroyAPIView
+    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView, DestroyAPIView,
+    RetrieveUpdateAPIView
 )
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -249,6 +250,25 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
             raise NotAcceptableException(_('No rights to edit organization'))
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
+
+
+class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
+    queryset = Organization.objects.all()
+    permission_classes = (IsAuthenticated,)
+
+    def update(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        payment_systems_activated = request.data.get('payment_systems_activated', None)
+
+        if payment_systems_activated is not None:
+            organization.payment_systems_activated = payment_systems_activated
+            organization.save()
+
+        return Response({"message": _("Payment systems activation status successfully updated.")},
+                        status=status.HTTP_200_OK)
 
 
 class DeliverySettingsView(UpdateAPIView):

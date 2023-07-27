@@ -700,7 +700,7 @@ class UnblockUserDestroyView(DestroyAPIView):
             raise ObjectNotFoundException(_('BlockedUser not found'))
 
 
-class PaymentSystemListView(generics.ListAPIView):
+class OrganizationPaymentSystemListView(generics.ListAPIView):
     serializer_class = PaymentSystemSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -721,6 +721,25 @@ class PaymentSystemListView(generics.ListAPIView):
             confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto'})
 
         return confirmed_payment_systems
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class PaymentSystemListView(generics.ListAPIView):
+    serializer_class = PaymentSystemSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        available_payment_systems = []
+        available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
+        available_payment_systems.append({'id': 2, 'name': 'Embily в USD', 'is_available': False})
+        available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
+
+        return available_payment_systems
 
 
     def list(self, request, *args, **kwargs):

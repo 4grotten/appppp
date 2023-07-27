@@ -183,6 +183,24 @@ class OrganizationVerificationUsers(TimestampModel):
         verbose_name_plural = _('Users data for verification organization')
 
 
+class OrganizationPaymentSystemUsers(TimestampModel):
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.CASCADE,
+        related_name='payment_system_users_data'
+    )
+    username = models.CharField(max_length=255, verbose_name=_('User name'))
+    phone_number = PhoneNumberField(max_length=255, verbose_name=_('Phone number'))
+    email = models.EmailField(verbose_name='Email')
+
+    def __str__(self):
+        return f'{self.id} - {self.username} - {self.phone_number}'
+
+    class Meta:
+        verbose_name = _('Users data for payment settings of organization')
+        verbose_name_plural = _('Users data for payment settings of organization')
+
+
 class PhoneNumber(TimestampModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='phone_numbers')
     phone_number = models.CharField(max_length=255)

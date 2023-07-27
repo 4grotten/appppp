@@ -11,7 +11,8 @@ from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser
+    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
+    OrganizationPaymentSystemUsers
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -624,6 +625,13 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationVerificationUsers
         fields = ('username', 'phone_number', 'email')
+
+
+class OrgPaymentSystemConfirmationSerializer(serializers.ModelSerializer):
+    payment_system_id = serializers.IntegerField(required=False)
+    class Meta:
+        model = OrganizationPaymentSystemUsers
+        fields = ('username', 'phone_number', 'email', 'payment_system_id')
 
 
 class PaymentSystemSerializer(serializers.Serializer):

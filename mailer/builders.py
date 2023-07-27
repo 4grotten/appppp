@@ -122,3 +122,37 @@ class VerificationOrganizationsEmailBuilder(BaseEmailBuilder):
         )
         message.content_subtype = 'html'
         return message
+
+
+class PaymentSystemOrganizationsEmailBuilder(BaseEmailBuilder):
+    TEMPLATE_NAME = 'payment_system_data.html'
+    FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
+
+    @classmethod
+    def _get_rendered_template(cls, context: dict) -> Template:
+        template = loader.get_template(cls.TEMPLATE_NAME)
+        return template.render(context)
+
+    @classmethod
+    def build_message(cls, email: str, **kwargs) -> EmailMessage:
+
+        """
+        kwargs dict should contain "id", "time" & "payment_system_name" key
+        """
+
+        context = {
+            'id': kwargs['org_id'],
+            'time': kwargs['send_time'],
+            'payment_system_name': kwargs['payment_system_name']
+        }
+
+        body = cls._get_rendered_template(context)
+
+        message = EmailMessage(
+            subject='Запрос на подключение платежной системы',
+            body=body,
+            to=[email],
+            from_email=cls.FROM_EMAIL
+        )
+        message.content_subtype = 'html'
+        return message

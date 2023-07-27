@@ -42,7 +42,7 @@ from organizations.serializers.organization_serializers import (
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer
+    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -55,7 +55,7 @@ from organizations.services.organization_services import (
     OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
-from organizations.services.verifications_service import VerificationService
+from organizations.services.verifications_service import VerificationService, PaymentSystemConfirmationService
 from organizations.tasks import (
     parse_instagram_to_shop_items, add_subscribers_to_organization
 )
@@ -88,6 +88,41 @@ class OrgVerifications(CreateAPIView):
         organization.save(update_fields=('verification_status',))
 
         return Response({"message": "verifications data successfully created"}, status=status.HTTP_201_CREATED)
+
+
+class OrgPaymentSystemConfirmation(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrgPaymentSystemConfirmationSerializer
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        serializer = OrgPaymentSystemConfirmationSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        payment_system_id = serializer.validated_data.get('payment_system_id', None)
+        if payment_system_id == 1:
+            payment_system_name = "FreedomPay"
+        elif payment_system_id == 2:
+            payment_system_name = "Embily"
+        elif payment_system_id == 3:
+            payment_system_name = "Crypto Box"
+        else:
+            raise NotAcceptableException(_('Unknown Payment System'))
+
+        PaymentSystemConfirmationService.create(organization, **serializer.validated_data)
+
+        apofiz_email = settings.EMAIL_HOST_USER
+        MailerService.send_payment_verification_email(email=apofiz_email, org_id=organization.pk,
+                                                      send_time=timezone.now(), payment_system_name=payment_system_name)
+
+        return Response({"message": "Payment system data successfully created"}, status=status.HTTP_201_CREATED)
 
 
 class OrganizationCreationLimitView(APIView):

@@ -9,7 +9,7 @@ from .models import (
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
-    BlockedUser
+    BlockedUser, OrganizationPaymentSystemUsers
 )
 
 
@@ -79,6 +79,11 @@ class OrganizationVerificationUsersInLine(admin.TabularInline):
     extra = 1
 
 
+class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
+    model = OrganizationPaymentSystemUsers
+    extra = 1
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_select_related = True
@@ -98,7 +103,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         PhoneInline,
         SocialInline,
         DiscountInline,
-        OrganizationVerificationUsersInLine,  # 2:18
+        OrganizationVerificationUsersInLine,
+        OrganizationPaymentSystemUsersInLine, # 2:18
         MembershipInLine,
     )
     fieldsets = (

@@ -527,12 +527,23 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
     time_working = serializers.CharField(read_only=True)
+    has_online_payment = serializers.SerializerMethodField()
+
+    def get_has_online_payment(self, organization: Organization):
+        payment_systems_activated = organization.payment_systems_activated
+        if not payment_systems_activated:
+            return False
+        freedompay_activated = organization.freedompay_activated
+        embily_activated = organization.embily_activated
+        cryptobox_activated = organization.cryptobox_activated
+
+        return freedompay_activated or embily_activated or cryptobox_activated
 
     class Meta:
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check'
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'has_online_payment'
         )
         read_only_fields = ['verification_status']
 

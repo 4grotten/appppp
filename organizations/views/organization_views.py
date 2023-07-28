@@ -271,6 +271,39 @@ class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
                         status=status.HTTP_200_OK)
 
 
+class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
+    queryset = Organization.objects.all()
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return organization
+
+    def update(self, request, *args, **kwargs):
+        organization = self.get_object()
+
+        id = request.data.get('id', None)
+        is_active = request.data.get('is_active', None)
+
+        if id == 1:
+            organization.freedompay_activated = is_active
+            organization.save()
+        elif id == 2:
+            organization.embily_activated = is_active
+            organization.save()
+        elif id == 3:
+            organization.cryptobox_activated = is_active
+            organization.save()
+        else:
+            raise NotAcceptableException(_('Unknown Payment System'))
+
+
+        return Response({"message": _("Activation status successfully updated.")},
+                        status=status.HTTP_200_OK)
+
+
 class DeliverySettingsView(UpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = DeliverySettingsUpdateSerializer
@@ -769,11 +802,14 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
 
         confirmed_payment_systems = []
         if organization.freedompay_confirmed:
-            confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS'})
+            confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS',
+                                              'is_active': organization.freedompay_activated})
         if organization.embily_confirmed:
-            confirmed_payment_systems.append({'id': 2, 'name': 'Embily в USD'})
+            confirmed_payment_systems.append({'id': 2, 'name': 'Embily в USD',
+                                              'is_active': organization.embily_activated})
         if organization.cryptobox_confirmed:
-            confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto'})
+            confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto',
+                                              'is_active': organization.cryptobox_activated})
 
         return confirmed_payment_systems
 

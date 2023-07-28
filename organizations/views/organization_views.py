@@ -256,11 +256,20 @@ class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
     queryset = Organization.objects.all()
     permission_classes = (IsAuthenticated,)
 
-    def update(self, request, *args, **kwargs):
-        organization = OrganizationService.get(id=kwargs['pk'])
-        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
-            raise NotAcceptableException(_('No rights to edit organization'))
+    def retrieve(self, request, *args, **kwargs):
+        organization = self.get_object()
+        payment_systems_activated = organization.payment_systems_activated
+        return Response({"payment_systems_activated": payment_systems_activated},
+                        status=status.HTTP_200_OK)
 
+    def get_object(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return organization
+
+    def update(self, request, *args, **kwargs):
+        organization = self.get_object()
         payment_systems_activated = request.data.get('payment_systems_activated', None)
 
         if payment_systems_activated is not None:

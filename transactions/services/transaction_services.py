@@ -159,7 +159,6 @@ class TransactionService:
             current_transaction.discount_percent = max(discount_percent, cashback_percent)
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
-            current_transaction.is_processed = True
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
@@ -171,7 +170,27 @@ class TransactionService:
                 current_transaction.discount_type = source_card.type
             current_transaction.save()
 
-            if source_card is None or source_card.type != DiscountCard.CASHBACK:
+        except IntegrityError:
+            raise IntegrityException(_('Could not complete transaction'))
+
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_transaction_offline(cls, transaction_id: int) -> Transaction:
+
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type='offline')
+        organization = current_transaction.organization
+
+        cashback_percent = 0
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
+            cashback_percent = current_transaction.discount_percent
+
+        try:
+            current_transaction.is_processed = True
+            current_transaction.save()
+
+            if current_transaction.source_card is None or current_transaction.source_card.type != DiscountCard.CASHBACK:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,
                     sender_id=current_transaction.processed_by_id,
@@ -180,7 +199,7 @@ class TransactionService:
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,
-                                    discount_percent=discount_percent,
+                                    discount_percent=current_transaction.discount_percent,
                                     currency=current_transaction.currency.code)
                 )
                 # sent_notification.delay(
@@ -203,7 +222,7 @@ class TransactionService:
                     organization_id=current_transaction.organization_id,
                     extra_data=dict(transaction_id=current_transaction.id,
                                     total_price=current_transaction.final_amount,
-                                    discount_percent=discount_percent,
+                                    discount_percent=current_transaction.discount_percent,
                                     currency=current_transaction.currency.code)
                 )
 
@@ -216,15 +235,15 @@ class TransactionService:
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
-        if from_cashback > 0:
-            to_subtract = min(client_status.accrued_cashback, from_cashback)
+        if current_transaction.from_cashback > 0:
+            to_subtract = min(client_status.accrued_cashback, current_transaction.from_cashback)
 
             client_status.accrued_cashback = F('accrued_cashback') - to_subtract
             client_status.save(update_fields=('accrued_cashback',))
             client_status.refresh_from_db()
 
-            if to_subtract < from_cashback:
-                remaining_amount = from_cashback - to_subtract
+            if to_subtract < current_transaction.from_cashback:
+                remaining_amount = current_transaction.from_cashback - to_subtract
                 OrganizationClientFinancialStatusService.use_corporate_cashback(
                     client=current_transaction.client, organization=organization,
                     amount=remaining_amount
@@ -235,12 +254,12 @@ class TransactionService:
                 sender_id=current_transaction.processed_by_id,
                 mode=NOTIFICATION_MODE_DISCOUNT,
                 notification_type=WITHDRAW_CASHBACK_CLIENT,
-                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(from_cashback),
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(current_transaction.from_cashback),
                                                             currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
                                 currency=current_transaction.currency.code,
                                 final_amount=str(current_transaction.final_amount))
             )
@@ -264,17 +283,17 @@ class TransactionService:
                 sender_id=current_transaction.client_id,
                 with_permissions=dict(can_edit_organization=True),
                 notification_type=WITHDRAW_CASHBACK_SELLER,
-                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(current_transaction.from_cashback),
                                                             currency=current_transaction.currency.code),
                 description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
                                                                  currency=current_transaction.currency.code),
                 organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
                                 currency=current_transaction.currency.code,
                                 final_amount=str(current_transaction.final_amount))
             )
 
-        if source_card is not None and source_card.type == DiscountCard.CASHBACK:
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
             cashback = current_transaction.final_amount * cashback_percent / 100
             client_status.accrued_cashback = F('accrued_cashback') + cashback
             client_status.save(update_fields=('accrued_cashback',))

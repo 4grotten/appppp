@@ -36,7 +36,7 @@ from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
+    BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer
@@ -182,6 +182,28 @@ class TransactionCompleteView(GenericAPIView):
 
         return Response(data={
             'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
+class TransactionPayOfflineView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_transaction_offline(
+            transaction_id=serializer.validated_data['transaction_id']
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully paid!')
         }, status=status.HTTP_200_OK)
 
 
@@ -738,7 +760,7 @@ class OrganizationRentalCustomerTransactionView(ListAPIView):
 
 class RentPaymentAcceptView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OnlinePaymentCompleteSerializer
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -759,7 +781,7 @@ class RentPaymentAcceptView(GenericAPIView):
 
 class OrderPaymentAcceptView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OnlinePaymentCompleteSerializer
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -852,7 +874,7 @@ class TransactionBookingActivate(GenericAPIView):
 
 class RentInitPaymentView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OnlinePaymentCompleteSerializer
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

@@ -140,7 +140,7 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
         fields = ('transaction_id', 'utc_offset_minutes',)
 
 
-class OnlinePaymentCompleteSerializer(serializers.ModelSerializer):
+class OnlineOfflinePaymentCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)
 
     class Meta:

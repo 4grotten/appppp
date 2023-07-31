@@ -16,7 +16,7 @@ from transactions.views.transaction_views import (
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
     RentInitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView,
-    OrderPaymentRejectView
+    OrderPaymentRejectView, TransactionPayOfflineView
 )
 
 urlpatterns = [
@@ -28,6 +28,7 @@ urlpatterns = [
 
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
+    path('transactions/complete/offline/', TransactionPayOfflineView.as_view(), name='transaction_complete_offline'),
     path('transactions/organizations/<int:pk>/users/', OrganizationUsersTransactionView.as_view(),
          name='transactions_organizations_users'),
     path('transactions/organizations/rental/<int:pk>/users/', OrganizationRentalUsersTransactionView.as_view(),

@@ -928,7 +928,7 @@ class ResultURLView(APIView):
             user_id = int(user_id)
             user = UserService.get(id=user_id)
 
-            if pg_can_reject == 1 and pg_result != 1:
+            if pg_result == 0:
                 print("REJECTED")
                 response_data = {
                     'pg_status': 'rejected',

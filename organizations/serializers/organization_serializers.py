@@ -240,6 +240,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     need_add_item = serializers.SerializerMethodField(read_only=True)
     switcher = serializers.CharField()
     is_blacklist = serializers.SerializerMethodField(default=False, read_only=True)
+    has_online_payment = serializers.SerializerMethodField()
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -306,6 +307,14 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             return OrganizationBlacklist.objects.filter(organization_id=organization.id, user_id=user.id).exists()
 
+
+    def get_has_online_payment(self, organization: Organization):
+        freedompay_confirmed = organization.freedompay_confirmed
+        embily_confirmed = organization.embily_confirmed
+        cryptobox_confirmed = organization.cryptobox_confirmed
+
+        return freedompay_confirmed or embily_confirmed or cryptobox_confirmed
+
     class Meta:
         model = Organization
         fields = (
@@ -314,7 +323,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
-            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist'
+            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -499,9 +508,9 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     time_working = serializers.CharField(read_only=True)
     permissions = serializers.SerializerMethodField()
-    has_online_payment = serializers.SerializerMethodField()
+    online_payment_activated = serializers.SerializerMethodField()
 
-    def get_has_online_payment(self, organization: Organization):
+    def get_online_payment_activated(self, organization: Organization):
         payment_systems_activated = organization.payment_systems_activated
         if not payment_systems_activated:
             return False
@@ -520,16 +529,16 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'has_online_payment'
+                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated'
                   )
         read_only_fields = ['verification_status']
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
     time_working = serializers.CharField(read_only=True)
-    has_online_payment = serializers.SerializerMethodField()
+    online_payment_activated = serializers.SerializerMethodField()
 
-    def get_has_online_payment(self, organization: Organization):
+    def get_online_payment_activated(self, organization: Organization):
         payment_systems_activated = organization.payment_systems_activated
         if not payment_systems_activated:
             return False
@@ -543,7 +552,7 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'has_online_payment'
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated'
         )
         read_only_fields = ['verification_status']
 

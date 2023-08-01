@@ -42,7 +42,7 @@ from transactions.serializers.transaction_serializers import (
     PaymentSuccessSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
-from shop.models import ShopItem, Booking
+from shop.models import ShopItem, Booking, Cart
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
@@ -872,7 +872,7 @@ class TransactionBookingActivate(GenericAPIView):
         return Response({'message': 'Booking activated successfully'})
 
 
-class RentInitPaymentView(GenericAPIView):
+class InitPaymentView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineOfflinePaymentCompleteSerializer
 
@@ -887,22 +887,19 @@ class RentInitPaymentView(GenericAPIView):
         transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
         converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                         to_currency="KGS", amount=transaction.final_amount)
-        descriptions_list = []
         try:
             booking = transaction.booking
             purchase_type = 'rent'
-            pg_description = booking.item.description
-            if pg_description == '':
-                pg_description = booking.item.name
+            pg_description = booking.item.description or booking.item.name
         except Booking.DoesNotExist:
-            purchase_type = 'product'
-            for cart_item in transaction.cart.items.all():
-                descriptions_list.append(cart_item.item.description)
-            pg_description = ' * '.join(descriptions_list)
-            if pg_description == '':
-                for cart_item in transaction.cart.items.all():
-                    descriptions_list.append(cart_item.item.name)
+            try:
+                purchase_type = 'product'
+                cart_items = transaction.cart.items.all()
+                descriptions_list = [cart_item.item.description or cart_item.item.name for cart_item in cart_items]
                 pg_description = ' * '.join(descriptions_list)
+            except Cart.DoesNotExist:
+                purchase_type = 'deal'
+                pg_description = 'Касса'
 
         payment_data = {
             'pg_order_id': str(transaction_id),
@@ -965,6 +962,16 @@ class ResultURLView(APIView):
                                                                             user=user,
                                                                             request=self.request)
                     print("AFTER TransactionService")
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+                elif purchase_type == 'deal':
+                    TransactionService.complete_transaction_online(transaction_id=pg_order_id)
+                    print("TransactionService.complete_transaction_online")
+
                     response_data = {
                         'pg_status': 'ok',
                         'pg_description': 'Заказ оплачен',

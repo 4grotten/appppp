@@ -834,10 +834,18 @@ class PaymentSystemListView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        organization_id = self.request.query_params.get('organization_id', None)
+        if organization_id is None:
+            return []
+
+        organization = OrganizationService.get(pk=organization_id)
         available_payment_systems = []
-        available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
-        available_payment_systems.append({'id': 2, 'name': 'Embily в USD', 'is_available': False})
-        available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
+        if not organization.freedompay_confirmed:
+            available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
+        if not organization.embily_confirmed:
+            available_payment_systems.append({'id': 2, 'name': 'Embily в USD', 'is_available': False})
+        if not organization.cryptobox_confirmed:
+            available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
 
         return available_payment_systems
 

@@ -178,7 +178,6 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def complete_transaction_offline(cls, transaction_id: int) -> Transaction:
-
         current_transaction = cls.get(id=transaction_id, is_processed=False, type='offline')
         organization = current_transaction.organization
 
@@ -188,6 +187,181 @@ class TransactionService:
 
         try:
             current_transaction.is_processed = True
+            current_transaction.save()
+
+            if current_transaction.source_card is None or current_transaction.source_card.type != DiscountCard.CASHBACK:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    sender_id=current_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=current_transaction.discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+                # sent_notification.delay(
+                #     recipient_id=current_transaction.processed_by_id,
+                #     sender_id=current_transaction.client_id,
+                #     mode=NOTIFICATION_MODE_PRODUCT,
+                #     notification_type=ACCEPT_ORDER_TYPE,
+                #     organization_id=current_transaction.organization_id,
+                #     extra_data=dict(transaction_id=current_transaction.id,
+                #                     total_price=current_transaction.final_amount,
+                #                     discount_percent=discount_percent,
+                #                     currency=current_transaction.currency.code)
+                # )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_edit_organization=True),
+                    notification_type=ACCEPT_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=current_transaction.discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+
+        except IntegrityError:
+            raise IntegrityException(_('Could not complete transaction'))
+
+        client_status = OrganizationClientFinancialStatusService.get_or_create(
+            user=current_transaction.client,
+            organization=organization
+        )
+        OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+
+        if current_transaction.from_cashback > 0:
+            to_subtract = min(client_status.accrued_cashback, current_transaction.from_cashback)
+
+            client_status.accrued_cashback = F('accrued_cashback') - to_subtract
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            if to_subtract < current_transaction.from_cashback:
+                remaining_amount = current_transaction.from_cashback - to_subtract
+                OrganizationClientFinancialStatusService.use_corporate_cashback(
+                    client=current_transaction.client, organization=organization,
+                    amount=remaining_amount
+                )
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(current_transaction.from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=WITHDRAW_CASHBACK_SELLER,
+            #     title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+            #                                                 currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_edit_organization=True),
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(current_transaction.from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
+            cashback = current_transaction.final_amount * cashback_percent / 100
+            client_status.accrued_cashback = F('accrued_cashback') + cashback
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            current_transaction.to_cashback = cashback
+            current_transaction.save(update_fields=('to_cashback',))
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=CHARGE_CASHBACK_CLIENT,
+                title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=CHARGE_CASHBACK_SELLER,
+            #     title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+            #                                               currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_edit_organization=True),
+                notification_type=CHARGE_CASHBACK_SELLER,
+                title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_transaction_online(cls, transaction_id: int) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type='offline')
+        organization = current_transaction.organization
+
+        cashback_percent = 0
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
+            cashback_percent = current_transaction.discount_percent
+
+        try:
+            current_transaction.type = Transaction.ONLINE
+            current_transaction.is_processed = True
+            current_transaction.payment_status = Transaction.ACCEPTED
+            current_transaction.delivery_type = Transaction.ONLINE_PAYMENT
             current_transaction.save()
 
             if current_transaction.source_card is None or current_transaction.source_card.type != DiscountCard.CASHBACK:

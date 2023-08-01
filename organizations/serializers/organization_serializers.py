@@ -241,6 +241,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     switcher = serializers.CharField()
     is_blacklist = serializers.SerializerMethodField(default=False, read_only=True)
     has_online_payment = serializers.SerializerMethodField()
+    online_payment_activated = serializers.SerializerMethodField()
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -315,6 +316,16 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
         return freedompay_confirmed or embily_confirmed or cryptobox_confirmed
 
+    def get_online_payment_activated(self, organization: Organization):
+        payment_systems_activated = organization.payment_systems_activated
+        if not payment_systems_activated:
+            return False
+        freedompay_activated = organization.freedompay_activated
+        embily_activated = organization.embily_activated
+        cryptobox_activated = organization.cryptobox_activated
+
+        return freedompay_activated or embily_activated or cryptobox_activated
+
     class Meta:
         model = Organization
         fields = (
@@ -323,7 +334,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
-            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment'
+            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
+            'online_payment_activated'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

@@ -909,6 +909,8 @@ class InitPaymentView(GenericAPIView):
             'pg_salt': 'apofiz',
             'pg_currency': "KGS",
             'pg_testing_mode': '1',
+            'pg_failure_url': 'https://test.apofiz.com/payment-failure',
+            'pg_timeout_after_payment': '5',
             'user_id': str(self.request.user.id),
             'purchase_type': purchase_type
         }

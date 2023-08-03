@@ -185,6 +185,35 @@ class TransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class CashierTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_transaction_cashier(
+            transaction_id=serializer.validated_data['transaction_id'],
+            processed_by=request.user,
+            original_amount=serializer.validated_data['original_amount'],
+            discount_percent=serializer.validated_data['discount_percent'],
+            source_card=serializer.validated_data['source_card'],
+            from_cashback=serializer.validated_data['from_cashback'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            cart=serializer.validated_data.get('cart', None),
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
 class TransactionPayOfflineView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineOfflinePaymentCompleteSerializer

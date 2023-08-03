@@ -1132,11 +1132,15 @@ class TransactionService:
             fixed_cart = None
 
         if old_transaction.status == Transaction.ACCEPTED:
-            for cart_item in old_transaction.cart.items.all():
-                if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
-                    cls.change_back_count_service(size=cart_item.size, cart_item=cart_item)
-                else:
-                    cls.change_back_count_service(size=None, cart_item=cart_item)
+            try:
+                for cart_item in old_transaction.cart.items.all():
+                    if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                        cls.change_back_count_service(size=cart_item.size, cart_item=cart_item)
+                    else:
+                        cls.change_back_count_service(size=None, cart_item=cart_item)
+            except Cart.DoesNotExist:
+                print("PASSED")
+                pass
 
 
         role = OrganizationService.get_user_role_in_organization(organization=old_transaction.organization, user=user)

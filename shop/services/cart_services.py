@@ -132,6 +132,28 @@ class CartService:
                                     total_price=str(current_transaction.final_amount),
                                     currency=current_transaction.currency.code)
                 )
+            elif delivery_type == Transaction.SELF_PICKUP:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_see_stats=True),
+                    notification_type=REQUEST_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                return cart
             else:
                 sent_notification.delay(
                     recipient_id=current_transaction.client_id,

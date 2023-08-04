@@ -2172,6 +2172,49 @@ class TransactionService:
         )
 
     @classmethod
+    def get_pg_description_and_purchase_type(cls, transaction: Transaction):
+        try:
+            booking = transaction.booking
+            purchase_type = 'rent'
+            pg_description = booking.item.description or booking.item.name
+        except Booking.DoesNotExist:
+            try:
+                purchase_type = 'product'
+                cart_items = transaction.cart.items.all()
+                descriptions_list = [cart_item.item.description or cart_item.item.name for cart_item in cart_items]
+                pg_description = ' * '.join(descriptions_list)
+            except Cart.DoesNotExist:
+                purchase_type = 'deal'
+                pg_description = 'Касса'
+
+        return pg_description, purchase_type
+
+
+    @classmethod
+    def get_pg_result_url(cls, request):
+        pg_result_url = 'https://apofiz.com/api/v1/transactions/result/'
+        if 'test.apofiz.com' in request.META['HTTP_HOST']:
+            pg_result_url = 'https://test.apofiz.com/api/v1/transactions/result/'  # Base URL for dev version
+
+        return pg_result_url
+
+    @classmethod
+    def get_pg_success_url(cls, request):
+        pg_success_url = 'https://apofiz.com/payment-success'
+        if 'test.apofiz.com' in request.META['HTTP_HOST']:
+            pg_success_url = 'https://test.apofiz.com/payment-success'
+
+        return pg_success_url
+
+    @classmethod
+    def get_pg_failure_url(cls, request):
+        pg_success_url = 'https://apofiz.com/payment-failure'
+        if 'test.apofiz.com' in request.META['HTTP_HOST']:
+            pg_success_url = 'https://test.apofiz.com/payment-failure'
+
+        return pg_success_url
+
+    @classmethod
     def make_flat_params_array(cls, arr_params, parent_name=''):
         arr_flat_params = {}
         i = 0

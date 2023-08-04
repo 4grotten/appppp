@@ -916,19 +916,10 @@ class InitPaymentView(GenericAPIView):
         transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
         converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                         to_currency="KGS", amount=transaction.final_amount)
-        try:
-            booking = transaction.booking
-            purchase_type = 'rent'
-            pg_description = booking.item.description or booking.item.name
-        except Booking.DoesNotExist:
-            try:
-                purchase_type = 'product'
-                cart_items = transaction.cart.items.all()
-                descriptions_list = [cart_item.item.description or cart_item.item.name for cart_item in cart_items]
-                pg_description = ' * '.join(descriptions_list)
-            except Cart.DoesNotExist:
-                purchase_type = 'deal'
-                pg_description = 'Касса'
+        pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        pg_result_url = TransactionService.get_pg_result_url(request=request)
+        pg_success_url = TransactionService.get_pg_success_url(request=request)
+        pg_failure_url = TransactionService.get_pg_failure_url(request=request)
 
         payment_data = {
             'pg_order_id': str(transaction_id),
@@ -937,8 +928,10 @@ class InitPaymentView(GenericAPIView):
             'pg_description': pg_description,
             'pg_salt': 'apofiz',
             'pg_currency': "KGS",
-            'pg_testing_mode': '1',
-            'pg_failure_url': 'https://test.apofiz.com/payment-failure',
+            # 'pg_testing_mode': '1',
+            'pg_result_url': pg_result_url,
+            'pg_success_url': pg_success_url,
+            'pg_failure_url': pg_failure_url,
             'pg_timeout_after_payment': '5',
             'user_id': str(self.request.user.id),
             'purchase_type': purchase_type

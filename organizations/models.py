@@ -91,6 +91,16 @@ class Organization(TimestampModel):
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
     has_license = models.BooleanField(default=False, help_text=_('Does organization have license?'))
 
+    freedompay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    embily_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    cryptobox_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+
+    payment_systems_activated = models.BooleanField(default=False, help_text=_('All payment systems are activated'))
+
+    freedompay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    embily_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    cryptobox_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
@@ -171,6 +181,24 @@ class OrganizationVerificationUsers(TimestampModel):
     class Meta:
         verbose_name = _('Users data for verification organization')
         verbose_name_plural = _('Users data for verification organization')
+
+
+class OrganizationPaymentSystemUsers(TimestampModel):
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.CASCADE,
+        related_name='payment_system_users_data'
+    )
+    username = models.CharField(max_length=255, verbose_name=_('User name'))
+    phone_number = PhoneNumberField(max_length=255, verbose_name=_('Phone number'))
+    email = models.EmailField(verbose_name='Email')
+
+    def __str__(self):
+        return f'{self.id} - {self.username} - {self.phone_number}'
+
+    class Meta:
+        verbose_name = _('Users data for payment settings of organization')
+        verbose_name_plural = _('Users data for payment settings of organization')
 
 
 class PhoneNumber(TimestampModel):

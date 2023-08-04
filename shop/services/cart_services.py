@@ -11,7 +11,8 @@ from common.exceptions import (
     ObjectNotFoundException, PermissionDeniedException, IntegrityException, BadRequestException, NotAcceptableException,
     StockException
 )
-from notifications.constants import NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, ACCEPT_ORDER_TYPE
+from notifications.constants import NOTIFICATION_MODE_PRODUCT, REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_TYPE, \
+    ACCEPT_ORDER_TYPE, REQUEST_ONLINE_ORDER_TYPE
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
@@ -95,7 +96,7 @@ class CartService:
             raise PermissionDeniedException(_('No rights to change this cart'))
         if not cart.is_open:
             raise BadRequestException(_('Cart is already closed'))
-        if delivery_type == Transaction.CASH_COURIER:
+        if delivery_type == Transaction.CASH_COURIER or delivery_type == Transaction.ONLINE_PAYMENT:
             if not cart.organization.has_delivery:
                 raise BadRequestException(_('Organization does not have courier delivery'))
         elif delivery_type == Transaction.SELF_PICKUP:
@@ -110,26 +111,70 @@ class CartService:
         except IntegrityError:
             raise IntegrityException(_('Could not add transaction'))
         finally:
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                notification_type=REQUEST_ORDER_CLIENT_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=str(current_transaction.final_amount),
-                                currency=current_transaction.currency.code)
-            )
-            send_notifications_organization_members.delay(
-                members_organization_id=current_transaction.organization_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                sender_id=current_transaction.client_id,
-                with_permissions=dict(can_see_stats=True),
-                notification_type=REQUEST_ORDER_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(transaction_id=current_transaction.id,
-                                total_price=str(current_transaction.final_amount),
-                                currency=current_transaction.currency.code)
-            )
+            if delivery_type == Transaction.CASH_COURIER:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_see_stats=True),
+                    notification_type=REQUEST_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+            elif delivery_type == Transaction.SELF_PICKUP:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_see_stats=True),
+                    notification_type=REQUEST_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                return cart
+            else:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_see_stats=True),
+                    notification_type=REQUEST_ONLINE_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=str(current_transaction.final_amount),
+                                    currency=current_transaction.currency.code)
+                )
             return cart
 
     @classmethod

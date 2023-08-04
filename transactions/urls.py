@@ -14,7 +14,9 @@ from transactions.views.transaction_views import (
     UserSaleRentalTotalsView, OrganizationRentalUsersTransactionView, UserRentalTransactionOrganizationView,
     UserRentalTotalsView, TransactionUserInfoView, TransactionBookingActivate, UserRentalTransactionsDetailListView,
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
-    OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView
+    OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
+    InitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView,
+    OrderPaymentRejectView, TransactionPayOfflineView, CashierTransactionCompleteView
 )
 
 urlpatterns = [
@@ -26,6 +28,8 @@ urlpatterns = [
 
     path('transactions/preprocess/', TransactionPreprocessView.as_view(), name='transaction_preprocess'),
     path('transactions/complete/', TransactionCompleteView.as_view(), name='transaction_complete'),
+    path('transactions/complete/cashier/', CashierTransactionCompleteView.as_view(), name='transaction_complete'),
+    path('transactions/complete/offline/', TransactionPayOfflineView.as_view(), name='transaction_complete_offline'),
     path('transactions/organizations/<int:pk>/users/', OrganizationUsersTransactionView.as_view(),
          name='transactions_organizations_users'),
     path('transactions/organizations/rental/<int:pk>/users/', OrganizationRentalUsersTransactionView.as_view(),
@@ -38,9 +42,13 @@ urlpatterns = [
          name='transaction_booking_preprocess'),
     path('transactions/complete/booking/', TransactionBookingCompleteView.as_view(),
          name='transaction_booking_complete'),
+    path('onlinePaymentTransactions/complete/', OnlinePaymentTransactionCompleteView.as_view(),
+         name='online_payment_transaction_complete'),
     path('onlineBookingTransactions/complete/', OnlineBookingTransactionCompleteView.as_view(),
          name='online_booking_transaction_complete'),
-    path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_reject'),
+    path('transactions/order/payment/accept/', OrderPaymentAcceptView.as_view(), name='user_transaction_order_accept'),
+    path('transactions/payment/accept/', RentPaymentAcceptView.as_view(), name='user_transaction_accept'),
+    path('transactions/<int:pk>/order/reject/', OrderPaymentRejectView.as_view(), name='user_transaction_order_reject'),
     path('transactions/<int:pk>/reject/', RentPaymentRejectView.as_view(), name='user_transaction_reject'),
     path('transactions/booking/user/', TransactionUserInfoView.as_view(), name='transaction_user_info'),
     path('transactions/booking/activate/', TransactionBookingActivate.as_view(),
@@ -74,4 +82,8 @@ urlpatterns = [
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
+
+    path('transactions/pay/', InitPaymentView.as_view(), name='init_payment'),
+    path('transactions/result/', ResultURLView.as_view(), name='result_url'),
+    path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')
 ]

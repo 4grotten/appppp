@@ -122,6 +122,28 @@ class OrderDeliveryView(GenericAPIView):
         )
 
 
+class OnlinePaymentOrderDeliveryView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        serializer = DeliveryInfoSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.ONLINE_PAYMENT)
+        DeliveryInfoService.create_for_online_payment(**serializer.validated_data, transaction=cart.transaction, )
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": cart.transaction_id
+            }
+        )
+
+
 class UpdateDeliveryToSendByCourierView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 

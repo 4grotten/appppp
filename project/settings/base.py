@@ -407,3 +407,11 @@ MAP_WIDGETS = {
 
 
 GOOGLE_MAP_API_KEY = "AIzaSyA0bvvniHRGe7tLKYupkWSf1_b31mdMlFA"
+
+# FreedomPay settings
+# Project_id
+FREEDOMPAY_PROJECT_ID = config('FREEDOMPAY_PROJECT_ID', default='notasecret')
+# The secret key for receiving
+FREEDOMPAY_RECEIVE_SECRET = config('FREEDOMPAY_RECEIVE_SECRET', default='notasecret')
+# Secret key for payments
+FREEDOMPAY_PAYOUT_SECRET = config('FREEDOMPAY_PAYOUT_SECRET', default='notasecret')

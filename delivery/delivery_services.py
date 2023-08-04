@@ -34,6 +34,25 @@ class DeliveryInfoService:
             raise BadRequestException(_(f'Could not add delivery info , {e}'))
 
     @classmethod
+    def create_for_online_payment(cls, longitude, latitude, *args, **kwargs):
+        try:
+            if longitude and latitude:
+                point = Point(longitude, latitude)
+            else:
+                point = None
+            transaction = kwargs['transaction']
+            transaction.delivery_type = 'online_payment'
+            transaction.save()
+            country = transaction.cart.organization.country
+            city = transaction.cart.organization.city
+
+            created = DeliveryInfo.objects.create(*args, location=point, country=country, city=city, **kwargs)
+
+            return created
+        except Exception as e:
+            raise BadRequestException(_(f'Could not add delivery info , {e}'))
+
+    @classmethod
     def _get_queryset(self, user: User):
         delivery_service_organizations = list(user.owned_organizations.filter(is_delivery_service=True))
         memberships = list(user.memberships.filter(

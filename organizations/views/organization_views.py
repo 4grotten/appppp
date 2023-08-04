@@ -11,11 +11,12 @@ from django.db.models import Q, Case, When, IntegerField
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView, DestroyAPIView
+    ListCreateAPIView, ListAPIView, RetrieveAPIView, GenericAPIView, UpdateAPIView, CreateAPIView, DestroyAPIView,
+    RetrieveUpdateAPIView
 )
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -42,7 +43,7 @@ from organizations.serializers.organization_serializers import (
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer
+    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -55,7 +56,7 @@ from organizations.services.organization_services import (
     OrganizationInstagramIntegrationService
 )
 from organizations.services.subscription_services import SubscriptionService
-from organizations.services.verifications_service import VerificationService
+from organizations.services.verifications_service import VerificationService, PaymentSystemConfirmationService
 from organizations.tasks import (
     parse_instagram_to_shop_items, add_subscribers_to_organization
 )
@@ -88,6 +89,41 @@ class OrgVerifications(CreateAPIView):
         organization.save(update_fields=('verification_status',))
 
         return Response({"message": "verifications data successfully created"}, status=status.HTTP_201_CREATED)
+
+
+class OrgPaymentSystemConfirmation(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrgPaymentSystemConfirmationSerializer
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        serializer = OrgPaymentSystemConfirmationSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        payment_system_id = serializer.validated_data.get('payment_system_id', None)
+        if payment_system_id == 1:
+            payment_system_name = "FreedomPay"
+        elif payment_system_id == 2:
+            payment_system_name = "Embily"
+        elif payment_system_id == 3:
+            payment_system_name = "Crypto Box"
+        else:
+            raise NotAcceptableException(_('Unknown Payment System'))
+
+        PaymentSystemConfirmationService.create(organization, **serializer.validated_data)
+
+        apofiz_email = settings.EMAIL_HOST_USER
+        MailerService.send_payment_verification_email(email=apofiz_email, org_id=organization.pk,
+                                                      send_time=timezone.now(), payment_system_name=payment_system_name)
+
+        return Response({"message": "Payment system data successfully created"}, status=status.HTTP_201_CREATED)
 
 
 class OrganizationCreationLimitView(APIView):
@@ -214,6 +250,67 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
             raise NotAcceptableException(_('No rights to edit organization'))
         updated_organization = OrganizationService.update(organization=organization, **serializer.validated_data)
         return Response(self.serializer_class(updated_organization, context={'request': request}).data)
+
+
+class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
+    queryset = Organization.objects.all()
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        organization = self.get_object()
+        payment_systems_activated = organization.payment_systems_activated
+        return Response({"payment_systems_activated": payment_systems_activated},
+                        status=status.HTTP_200_OK)
+
+    def get_object(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return organization
+
+    def update(self, request, *args, **kwargs):
+        organization = self.get_object()
+        payment_systems_activated = request.data.get('payment_systems_activated', None)
+
+        if payment_systems_activated is not None:
+            organization.payment_systems_activated = payment_systems_activated
+            organization.save()
+
+        return Response({"message": _("Payment systems activation status successfully updated.")},
+                        status=status.HTTP_200_OK)
+
+
+class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
+    queryset = Organization.objects.all()
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return organization
+
+    def update(self, request, *args, **kwargs):
+        organization = self.get_object()
+
+        id = request.data.get('id', None)
+        is_active = request.data.get('is_active', None)
+
+        if id == 1:
+            organization.freedompay_activated = is_active
+            organization.save()
+        elif id == 2:
+            organization.embily_activated = is_active
+            organization.save()
+        elif id == 3:
+            organization.cryptobox_activated = is_active
+            organization.save()
+        else:
+            raise NotAcceptableException(_('Unknown Payment System'))
+
+
+        return Response({"message": _("Activation status successfully updated.")},
+                        status=status.HTTP_200_OK)
 
 
 class DeliverySettingsView(UpdateAPIView):
@@ -698,3 +795,62 @@ class UnblockUserDestroyView(DestroyAPIView):
             }, status=status.HTTP_200_OK)
         except BlockedUser.DoesNotExist:
             raise ObjectNotFoundException(_('BlockedUser not found'))
+
+
+class OrganizationPaymentSystemListView(generics.ListAPIView):
+    serializer_class = PaymentSystemSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        organization_id = self.kwargs.get('pk')
+
+        organization = OrganizationService.get(id=organization_id)
+
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        confirmed_payment_systems = []
+        if organization.freedompay_confirmed:
+            confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS',
+                                              'is_active': organization.freedompay_activated})
+        if organization.embily_confirmed:
+            confirmed_payment_systems.append({'id': 2, 'name': 'Embily в USD',
+                                              'is_active': organization.embily_activated})
+        if organization.cryptobox_confirmed:
+            confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto',
+                                              'is_active': organization.cryptobox_activated})
+
+        return confirmed_payment_systems
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class PaymentSystemListView(generics.ListAPIView):
+    serializer_class = PaymentSystemSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        organization_id = self.request.query_params.get('organization_id', None)
+        if organization_id is None:
+            return []
+
+        organization = OrganizationService.get(pk=organization_id)
+        available_payment_systems = []
+        if not organization.freedompay_confirmed:
+            available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
+        if not organization.embily_confirmed:
+            available_payment_systems.append({'id': 2, 'name': 'Embily в USD', 'is_available': False})
+        if not organization.cryptobox_confirmed:
+            available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
+
+        return available_payment_systems
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

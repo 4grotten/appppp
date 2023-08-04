@@ -9,7 +9,7 @@ from .models import (
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
-    BlockedUser
+    BlockedUser, OrganizationPaymentSystemUsers
 )
 
 
@@ -79,6 +79,11 @@ class OrganizationVerificationUsersInLine(admin.TabularInline):
     extra = 1
 
 
+class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
+    model = OrganizationPaymentSystemUsers
+    extra = 1
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_select_related = True
@@ -98,8 +103,33 @@ class OrganizationAdmin(admin.ModelAdmin):
         PhoneInline,
         SocialInline,
         DiscountInline,
-        OrganizationVerificationUsersInLine,  # 2:18
+        OrganizationVerificationUsersInLine,
+        OrganizationPaymentSystemUsersInLine, # 2:18
         MembershipInLine,
+    )
+    fieldsets = (
+        ('General Information', {
+            'fields': ('owner', 'title', 'title_lang', 'description', 'description_lang', 'address', 'location',
+                       'currency', 'country', 'city', 'image', 'types', 'avg_check', 'show_contacts')
+        }),
+        ('Timings', {
+            'fields': ('opens_at', 'closes_at')
+        }),
+        ('Types of Delivery', {
+            'fields': ('has_delivery', 'has_self_pick_up')
+        }),
+        ('Payment Systems', {
+            'fields': ('freedompay_activated', 'embily_activated', 'cryptobox_activated', 'payment_systems_activated',
+                       'freedompay_confirmed', 'embily_confirmed', 'cryptobox_confirmed')
+        }),
+        ('Status of Organization', {
+            'fields': ('is_active', 'is_deleted', 'is_banned', 'is_private', 'is_under_review', 'is_delivery_service',
+                       'is_bank', 'has_license', 'verification_status')
+        }),
+        ('Other configurations', {
+            'fields': (
+            'cashback_group', 'cumulative_group', 'items_group', 'running_purchase_id', 'switcher')
+        }),
     )
 
     def save_model(self, request, obj, form, change):

@@ -29,7 +29,9 @@ from .views.organization_views import (
     ReactivateOrganizationView, ResetPurchaseIDView, OrganizationClientDetailsAPIView, DeliverySettingsView,
     OrganizationsInServicesView, OrgVerifications, HomepageSearchView, OrganizationComplaintCreateView,
     OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
-    OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView
+    OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView, OrganizationPaymentSystemListView,
+    PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
+    OrganizationPaymentSystemsActivationDetailView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -73,6 +75,16 @@ organization_urls = [
     path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
     path('organizations/<int:pk>/download_followers/', OrgDownloadFollowersAPIView.as_view(), name='org_followers'),
+    path('organizations/<int:pk>/payment_systems/', OrganizationPaymentSystemListView.as_view(),
+         name='organization_payment_systems_list'),
+    path('organizations/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),
+         name='organization_payment_systems_confirmation'),
+    path('organizations/<int:pk>/payment_systems/activation/', OrganizationPaymentSystemsActivationView.as_view(),
+         name='organization_payment_systems_activation'),
+    path('organizations/<int:pk>/payment_systems/activation/detail/',
+         OrganizationPaymentSystemsActivationDetailView.as_view(),
+         name='organization_payment_systems_activation_detail'),
+    path('organizations/payment_systems/', PaymentSystemListView.as_view(), name='payment_systems_list'),
     path('organizations/<int:organization_id>/clients/<int:user_id>/', OrganizationClientDetailsAPIView.as_view(),
          name='org_client_detail'),
     path('organizations/<int:organization_id>/followers/<int:user_id>/', OrgFollowersDetailsAPIView.as_view(),

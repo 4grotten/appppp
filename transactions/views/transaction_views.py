@@ -1,3 +1,8 @@
+import hashlib
+import json
+import xmltodict
+import xml.etree.ElementTree as ET
+import requests
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -9,6 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.services.currency import CurrencyConverterService
+from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from common.exceptions import NotAcceptableException, PermissionDeniedException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -29,15 +36,17 @@ from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer, OnlinePaymentCompleteSerializer, CompleteBookingSerializer,
+    BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer, TransactionActivateSerializer
+    ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
+    PaymentSuccessSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
-from shop.models import ShopItem, Booking
+from shop.models import ShopItem, Booking, Cart
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
+from users.services import UserService
 
 
 class TransactionPreprocessView(GenericAPIView):
@@ -176,6 +185,57 @@ class TransactionCompleteView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+class CashierTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_transaction_cashier(
+            transaction_id=serializer.validated_data['transaction_id'],
+            processed_by=request.user,
+            original_amount=serializer.validated_data['original_amount'],
+            discount_percent=serializer.validated_data['discount_percent'],
+            source_card=serializer.validated_data['source_card'],
+            from_cashback=serializer.validated_data['from_cashback'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            cart=serializer.validated_data.get('cart', None),
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
+class TransactionPayOfflineView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_transaction_offline(
+            transaction_id=serializer.validated_data['transaction_id']
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully paid!')
+        }, status=status.HTTP_200_OK)
+
+
 class TransactionBookingCompleteView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CompleteBookingSerializer
@@ -220,6 +280,30 @@ class OnlineTransactionCompleteView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         TransactionService.complete_online_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            processed_by=request.user,
+            request=request
+        )
+
+        return Response(data={
+            'message': _('Transaction successfully completed')
+        }, status=status.HTTP_200_OK)
+
+
+class OnlinePaymentTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.complete_online_payment_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             processed_by=request.user,
@@ -705,7 +789,7 @@ class OrganizationRentalCustomerTransactionView(ListAPIView):
 
 class RentPaymentAcceptView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OnlinePaymentCompleteSerializer
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -714,13 +798,47 @@ class RentPaymentAcceptView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-        TransactionService.accept_booking_transaction_by_user(transaction_id=serializer.validated_data['transaction_id'], user=self.request.user,
+        transaction_id = serializer.validated_data['transaction_id']
+        TransactionService.accept_booking_transaction_by_user(transaction_id=transaction_id,
+                                                              user=self.request.user,
                                                               request=self.request)
 
         return Response(data={
             'message': _('Transaction successfully paid')
         }, status=status.HTTP_200_OK)
+
+
+class OrderPaymentAcceptView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        transaction_id = serializer.validated_data['transaction_id']
+        TransactionService.accept_order_transaction_by_user(transaction_id=transaction_id,
+                                                              user=self.request.user,
+                                                              request=self.request)
+
+        return Response(data={
+            'message': _('Transaction successfully paid')
+        }, status=status.HTTP_200_OK)
+
+
+class OrderPaymentRejectView(RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithClientSerializer
+
+    def get_object(self):
+        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+
+    def perform_destroy(self, instance: Transaction):
+        TransactionService.reject_order_transaction_by_user(old_transaction=instance, user=self.request.user,
+                                                      request=self.request)
 
 
 class RentPaymentRejectView(RetrieveDestroyAPIView):
@@ -781,3 +899,136 @@ class TransactionBookingActivate(GenericAPIView):
         TransactionService.activate_rental(serializer.validated_data['transaction'])
 
         return Response({'message': 'Booking activated successfully'})
+
+
+class InitPaymentView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        transaction_id = serializer.validated_data['transaction_id']
+        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                        to_currency="KGS", amount=transaction.final_amount)
+        pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        pg_result_url = TransactionService.get_pg_result_url(request=request)
+        pg_success_url = TransactionService.get_pg_success_url(request=request)
+        pg_failure_url = TransactionService.get_pg_failure_url(request=request)
+
+        payment_data = {
+            'pg_order_id': str(transaction_id),
+            'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
+            'pg_amount': str(converted_amount),
+            'pg_description': pg_description,
+            'pg_salt': 'apofiz',
+            'pg_currency': "KGS",
+            # 'pg_testing_mode': '1',
+            'pg_result_url': pg_result_url,
+            'pg_success_url': pg_success_url,
+            'pg_failure_url': pg_failure_url,
+            'pg_timeout_after_payment': '5',
+            'user_id': str(self.request.user.id),
+            'purchase_type': purchase_type
+        }
+        print(payment_data)
+
+
+        request_for_signature = TransactionService.make_flat_params_array(payment_data)
+        sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
+        signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
+        signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
+        payment_data['pg_sig'] = signature
+        print("BEFORE REQUEST")
+        response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+        print("AFTER REQUEST")
+        xml_data = response.text
+        response_dict = xmltodict.parse(xml_data)
+        json_string = json.dumps(response_dict)
+        json_data = json.loads(json_string)
+        print("AFTER JSON", json_data)
+
+        return Response(json_data, content_type='application/json')
+
+
+class ResultURLView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ResultURLSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            pg_order_id = validated_data.get('pg_order_id', 1)
+            pg_can_reject = validated_data.get('pg_can_reject', 0)
+            pg_result = validated_data.get('pg_result', 0)
+            pg_description = validated_data.get('pg_description', '')
+            user_id = validated_data.get('user_id')
+            purchase_type = validated_data.get('purchase_type')
+            print(validated_data)
+            user_id = int(user_id)
+            user = UserService.get(id=user_id)
+
+            if pg_result == 0:
+                print("REJECTED")
+                response_data = {
+                    'pg_status': 'rejected',
+                    'pg_description': pg_description,
+                    'pg_salt': validated_data.get('pg_salt', ''),
+                    'pg_sig': validated_data.get('pg_sig', '')
+                }
+            else:
+                print("ACCEPTED")
+                if purchase_type == 'product':
+                    TransactionService.accept_order_transaction_by_user(transaction_id=pg_order_id,
+                                                                            user=user,
+                                                                            request=self.request)
+                    print("AFTER TransactionService")
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+                elif purchase_type == 'deal':
+                    TransactionService.complete_transaction_online(transaction_id=pg_order_id)
+                    print("TransactionService.complete_transaction_online")
+
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+                else:
+                    TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
+                                                                         user=user,
+                                                                         request=self.request)
+                    print("AFTER TransactionService.accept_order_transaction_by_user")
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentSuccessView(APIView):
+    def post(self, request):
+        serializer = PaymentSuccessSerializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            pg_order_id = validated_data.get('pg_order_id')
+            pg_payment_id = validated_data.get('pg_payment_id')
+            pg_error_code = validated_data.get('pg_error_code')
+            pg_error_description = validated_data.get('pg_error_description')
+            print("pg_order_id-", pg_order_id, "pg_payment_id-", pg_payment_id, "pg_error_code-", pg_error_code,
+                  "pg_error_description-", pg_error_description)
+
+            return Response({'message': 'Payment successful', **validated_data})

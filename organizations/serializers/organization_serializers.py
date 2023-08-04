@@ -11,7 +11,8 @@ from common.models import File
 from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser
+    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
+    OrganizationPaymentSystemUsers
 )
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
@@ -239,6 +240,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     need_add_item = serializers.SerializerMethodField(read_only=True)
     switcher = serializers.CharField()
     is_blacklist = serializers.SerializerMethodField(default=False, read_only=True)
+    has_online_payment = serializers.SerializerMethodField()
+    online_payment_activated = serializers.SerializerMethodField()
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -305,6 +308,24 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             return OrganizationBlacklist.objects.filter(organization_id=organization.id, user_id=user.id).exists()
 
+
+    def get_has_online_payment(self, organization: Organization):
+        freedompay_confirmed = organization.freedompay_confirmed
+        embily_confirmed = organization.embily_confirmed
+        cryptobox_confirmed = organization.cryptobox_confirmed
+
+        return freedompay_confirmed or embily_confirmed or cryptobox_confirmed
+
+    def get_online_payment_activated(self, organization: Organization):
+        payment_systems_activated = organization.payment_systems_activated
+        if not payment_systems_activated:
+            return False
+        freedompay_activated = organization.freedompay_activated
+        embily_activated = organization.embily_activated
+        cryptobox_activated = organization.cryptobox_activated
+
+        return freedompay_activated or embily_activated or cryptobox_activated
+
     class Meta:
         model = Organization
         fields = (
@@ -313,7 +334,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
-            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist'
+            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
+            'online_payment_activated'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -498,6 +520,17 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     time_working = serializers.CharField(read_only=True)
     permissions = serializers.SerializerMethodField()
+    online_payment_activated = serializers.SerializerMethodField()
+
+    def get_online_payment_activated(self, organization: Organization):
+        payment_systems_activated = organization.payment_systems_activated
+        if not payment_systems_activated:
+            return False
+        freedompay_activated = organization.freedompay_activated
+        embily_activated = organization.embily_activated
+        cryptobox_activated = organization.cryptobox_activated
+
+        return freedompay_activated or embily_activated or cryptobox_activated
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -508,19 +541,30 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions'
+                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated'
                   )
         read_only_fields = ['verification_status']
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
     time_working = serializers.CharField(read_only=True)
+    online_payment_activated = serializers.SerializerMethodField()
+
+    def get_online_payment_activated(self, organization: Organization):
+        payment_systems_activated = organization.payment_systems_activated
+        if not payment_systems_activated:
+            return False
+        freedompay_activated = organization.freedompay_activated
+        embily_activated = organization.embily_activated
+        cryptobox_activated = organization.cryptobox_activated
+
+        return freedompay_activated or embily_activated or cryptobox_activated
 
     class Meta:
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check'
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated'
         )
         read_only_fields = ['verification_status']
 
@@ -624,3 +668,17 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationVerificationUsers
         fields = ('username', 'phone_number', 'email')
+
+
+class OrgPaymentSystemConfirmationSerializer(serializers.ModelSerializer):
+    payment_system_id = serializers.IntegerField(required=False)
+    class Meta:
+        model = OrganizationPaymentSystemUsers
+        fields = ('username', 'phone_number', 'email', 'payment_system_id')
+
+
+class PaymentSystemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    is_available = serializers.BooleanField(required=False)
+    is_active = serializers.BooleanField(required=False)

@@ -58,6 +58,19 @@ class ItemRentalCreateView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class ItemTicketCreateView(CreateAPIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ItemCreateUpdateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(purchase_type=ShopItem.TICKET)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 class RentItemPeriodCreateView(APIView):
     permission_classes = (IsAuthenticated,)
 

@@ -60,6 +60,14 @@ class RentalPeriod(models.Model):
 
 
 class ShopItem(models.Model):
+    PRODUCT = 'product'
+    RENTAL = 'rent'
+    TICKET = 'ticket'
+    TYPE_CHOICES = (
+        (PRODUCT, PRODUCT),
+        (RENTAL, RENTAL),
+        (TICKET, TICKET)
+    )
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
@@ -85,11 +93,7 @@ class ShopItem(models.Model):
 
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
 
-    type_choices = (
-        ('product', 'product'),
-        ('rent', 'rent')
-    )
-    purchase_type = models.CharField(max_length=55, choices=type_choices, default='product', null=True, blank=True)
+    purchase_type = models.CharField(max_length=55, choices=TYPE_CHOICES, default='product', null=True, blank=True)
 
     address = models.CharField(max_length=255, null=True, blank=True)
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)

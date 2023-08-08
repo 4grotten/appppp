@@ -58,6 +58,21 @@ class ItemRentalCategoryListView(ListAPIView):
             raise ObjectNotFoundException(_('ItemCategory not found'))
 
 
+class ItemTicketCategoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = None
+    serializer_class = ItemCategorySerializer
+
+    def get_queryset(self):
+        try:
+            return ItemCategory.objects.filter(Q(name__icontains="Subscription") | Q(name__icontains="Абонемент") | Q(name__icontains="Abonelik") |
+                                               Q(name__icontains="Concert") | Q(name__icontains="Концерт") | Q(name__icontains="Konser") |
+                                               Q(name__icontains="Event") | Q(name__icontains="Событие") | Q(name__icontains="Etkinlik") |
+                                               Q(name__icontains="Presentation") | Q(name__icontains="Презентация") | Q(name__icontains="Sunum"))
+        except ItemCategory.DoesNotExist:
+            raise ObjectNotFoundException(_('ItemCategory not found'))
+
+
 class ItemCategoryRetrieveView(RetrieveAPIView):
     permission_classes = ()
     serializer_class = ItemCategoryWithNonEmptySubcategoriesSerializer

@@ -59,6 +59,16 @@ class RentalPeriod(models.Model):
         return f'{self.start_date} - {self.end_date}, {self.start_time} - {self.end_time}'
 
 
+class TicketPeriod(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def str(self):
+        return f'{self.start_date} - {self.end_date}, {self.start_time} - {self.end_time}'
+
+
 class ShopItem(models.Model):
     PRODUCT = 'product'
     RENTAL = 'rent'
@@ -99,6 +109,7 @@ class ShopItem(models.Model):
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
 
     rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_period = models.ForeignKey(TicketPeriod, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def full_location(self):

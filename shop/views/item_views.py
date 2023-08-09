@@ -26,7 +26,7 @@ from shop.serializers.item_serializers import (
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
-    ItemRentalMinuteSerializer
+    ItemRentalMinuteSerializer, TicketPeriodSerializer
 )
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
@@ -69,6 +69,27 @@ class ItemTicketCreateView(CreateAPIView):
         serializer.save(purchase_type=ShopItem.TICKET)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TicketPeriodCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk, format=None):
+        ticket = ShopItemService.get(id=pk)
+        ticket_period_data = {
+            'start_date': request.data.get('start_date'),
+            'end_date': request.data.get('end_date'),
+            'start_time': request.data.get('start_time'),
+            'end_time': request.data.get('end_time')
+        }
+        ticket_period_serializer = TicketPeriodSerializer(data=ticket_period_data)
+        if ticket_period_serializer.is_valid():
+            ticket_period = ticket_period_serializer.save()
+        else:
+            return Response(ticket_period_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        ticket.ticket_period = ticket_period
+        ticket.save()
+        return Response(data={'message': _('Successfully added ticket period')})
 
 
 class RentItemPeriodCreateView(APIView):

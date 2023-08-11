@@ -324,6 +324,20 @@ class OrganizationRentalTransactionWithClientSerializer(TransactionDetailSeriali
         )
 
 
+class OrganizationTicketTransactionWithClientSerializer(TransactionDetailSerializer):
+    client = ProfileBriefWithPhotoSerializer()
+    organization = OrganizationShortInfoWithCurrencySerializer()
+    current_user_can_see_stats = serializers.SerializerMethodField()
+
+    def get_current_user_can_see_stats(self, instance):
+        return OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                      organization=instance.organization)
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization')
+
+
 class StartEndDateTransactionSerializer(serializers.Serializer):
     start = serializers.DateField(required=False)
     end = serializers.DateField(required=False)

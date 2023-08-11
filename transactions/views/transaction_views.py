@@ -39,7 +39,7 @@ from transactions.serializers.transaction_serializers import (
     BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer
+    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking, Cart
@@ -793,6 +793,39 @@ class OrganizationRentalUsersTransactionView(ListAPIView):
         rental = ShopItemService.get(id=self.kwargs['pk'])
         queryset = TransactionService.get_organization_processed_transactions(
             rental=rental,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+        search = self.request.GET.get('search', None)
+        if search:
+            queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class OrganizationTicketUsersTransactionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationTicketTransactionWithClientSerializer
+
+
+    def list(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ticket = ShopItemService.get(id=self.kwargs['pk'])
+        queryset = TransactionService.get_organization_processed_ticket_transactions(
+            ticket=ticket,
             start_date=serializer.validated_data.get('start'),
             end_date=serializer.validated_data.get('end')
         )

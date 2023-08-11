@@ -1663,6 +1663,21 @@ class TransactionService:
 
         return transactions
 
+    @classmethod
+    def get_organization_processed_ticket_transactions(cls, ticket: ShopItem, start_date=None, end_date=None):
+
+        transactions = Transaction.objects.filter(cart__items__item=ticket,
+                                                  cart__items__item__purchase_type=ShopItem.TICKET,
+                                                  is_processed=True).order_by('-updated_at')
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(display_time__range=[start_date, end_date]) | Q(display_time__isnull=True)
+            )
+
+        return transactions
+
 
     @classmethod
     @transaction.atomic

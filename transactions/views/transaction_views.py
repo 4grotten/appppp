@@ -411,6 +411,24 @@ class UserSaleRentalTransactionOrganizationView(ListAPIView):
         )
 
 
+class UserSaleTicketTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return TransactionService.get_user_sale_ticket_transaction_organizations(
+            user=self.request.user,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+
 class UserTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -507,6 +525,32 @@ class UserSaleRentalTotalsView(APIView):
             currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
 
         totals = TransactionService.get_user_sale_rental_totals(processed_by=request.user, currency=currency,
+                                                         organization=organization,
+                                                         start_date=serializer.validated_data.get('start'),
+                                                         end_date=serializer.validated_data.get('end'))
+        totals['total_savings'] += totals['total_from_cashback']
+        data = TotalStatsSerializer(totals).data
+        return Response(data)
+
+
+class UserSaleTicketTotalsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        if organization is not None:
+            currency = organization.currency.code
+        else:
+            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+
+        totals = TransactionService.get_user_sale_ticket_totals(processed_by=request.user, currency=currency,
                                                          organization=organization,
                                                          start_date=serializer.validated_data.get('start'),
                                                          end_date=serializer.validated_data.get('end'))
@@ -705,6 +749,15 @@ class UserRentalUnprocessedTransactionCountView(APIView):
 
     def get(self, request):
         count = TransactionService.get_rental_unprocessed_transactions_count(user=request.user)
+        data = dict(count=count)
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class UserTicketUnprocessedTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = TransactionService.get_ticket_unprocessed_transactions_count(user=request.user)
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
 

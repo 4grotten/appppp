@@ -16,7 +16,8 @@ from transactions.views.transaction_views import (
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
     InitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView,
-    OrderPaymentRejectView, TransactionPayOfflineView, CashierTransactionCompleteView
+    OrderPaymentRejectView, TransactionPayOfflineView, CashierTransactionCompleteView,
+    UserTicketUnprocessedTransactionCountView, UserSaleTicketTransactionOrganizationView, UserSaleTicketTotalsView
 )
 
 urlpatterns = [
@@ -79,10 +80,19 @@ urlpatterns = [
          name='unprocessed_transaction_count'),
     path('statistics/unprocessedTranCount/rental/', UserRentalUnprocessedTransactionCountView.as_view(),
          name='unprocessed_rental_transaction_count'),
+
+    # tickets
+    path('statistics/unprocessedTranCount/ticket/', UserTicketUnprocessedTransactionCountView.as_view(),
+         name='unprocessed_ticket_transaction_count'),
+    path('statistics/saleOrganizations/ticket/', UserSaleTicketTransactionOrganizationView.as_view(),
+         name='sale_ticket_transaction_organizations'),
+    path('statistics/saleTotals/ticket/', UserSaleTicketTotalsView.as_view(), name='user_sale_ticket_totals'),
+
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 
+    # pay
     path('transactions/pay/', InitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')

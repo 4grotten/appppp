@@ -1102,7 +1102,7 @@ class IsActiveBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = ('id', 'is_active')
 
-class RentalListSerializer(ItemListSerializer):
+class RentalTicketListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
     created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')

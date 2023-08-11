@@ -351,6 +351,11 @@ class UserInfoBookingSerializer(serializers.Serializer):
     booking = serializers.PrimaryKeyRelatedField(queryset=Booking.objects.all())
 
 
+class UserInfoTicketSerializer(serializers.Serializer):
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
+    ticket = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+
+
 class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
     client = UserInfoSerializer()
     icon_type = serializers.SerializerMethodField()

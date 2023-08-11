@@ -2179,13 +2179,14 @@ class TransactionService:
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
 
         transactions = Transaction.objects.filter(
-            Q(booking__item__purchase_type=ShopItem.TICKET) &
+            Q(cart__items__item__purchase_type=ShopItem.TICKET) &
             Q(organization__in=organization) &
             (
                     Q(processed_by=user) |
                     Q(status__in=[Transaction.IN_PROGRESS, Transaction.ACCEPTED])
             )
         )
+        print(transactions)
 
         return transactions
 

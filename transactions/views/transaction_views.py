@@ -39,7 +39,7 @@ from transactions.serializers.transaction_serializers import (
     BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer
+    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking, Cart
@@ -841,6 +841,27 @@ class OrganizationTicketUsersTransactionView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class CheckTicketInUsersView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserInfoTicketSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        ticket = serializer.validated_data['ticket']
+        client = serializer.validated_data['client']
+        transactions = TransactionService.get_organization_processed_ticket_transactions(ticket=ticket)
+        has_transaction = transactions.filter(client=client).exists()
+
+        return Response(data={
+            'has_transaction': has_transaction
+        }, status=status.HTTP_200_OK)
 
 
 class OrganizationRentalCustomerTransactionView(ListAPIView):

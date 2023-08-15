@@ -39,7 +39,8 @@ from transactions.serializers.transaction_serializers import (
     BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer
+    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer,
+    ActivateTransactionTicketWithClientSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer
 from shop.models import ShopItem, Booking, Cart
@@ -986,6 +987,28 @@ class TransactionUserInfoView(GenericAPIView):
             raise NotAcceptableException(_("Users don't match"))
 
         serializer = self.get_serializer(transaction)
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class TransactionTicketUserInfoView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ActivateTransactionTicketWithClientSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = UserInfoTicketSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ticket = serializer.validated_data['ticket']
+        client = serializer.validated_data['client']
+
+        transactions = Transaction.objects.filter(cart__items__item=ticket, client_id=client.id)
+
+        serializer = self.get_serializer(transactions, many=True)
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 

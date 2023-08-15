@@ -1286,6 +1286,8 @@ class TransactionService:
             purchase_id=organization.running_purchase_id,
             display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
+        cart.transaction = offline_transaction
+        cart.save()
 
         for cart_item in offline_transaction.cart.items.all():
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
@@ -2185,8 +2187,7 @@ class TransactionService:
                     Q(processed_by=user) |
                     Q(status__in=[Transaction.IN_PROGRESS, Transaction.ACCEPTED])
             )
-        )
-        print(transactions)
+        ).distinct()
 
         return transactions
 

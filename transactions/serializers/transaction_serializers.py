@@ -10,7 +10,8 @@ from organizations.serializers.organization_serializers import (
 from organizations.services.organization_services import OrganizationService
 from shop.models import Cart, Booking, ShopItem
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
-from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer
+from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
+    TicketPeriodSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
@@ -368,6 +369,21 @@ class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
         model = Transaction
         fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
                   'final_amount', 'client', 'type', 'status', 'icon_type', 'booking', 'created_at', 'updated_at')
+
+
+class ActivateTransactionTicketWithClientSerializer(TransactionDetailSerializer):
+    client = UserInfoSerializer()
+    is_active = serializers.SerializerMethodField()
+
+    def get_is_active(self, transaction: Transaction):
+        ticket = transaction.cart.items.first().item
+        return ticket.ticket_period.is_active
+
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+                  'final_amount', 'client', 'type', 'status', 'created_at', 'updated_at', 'is_active')
 
 
 class TransactionActivateSerializer(serializers.Serializer):

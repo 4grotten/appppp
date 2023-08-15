@@ -60,6 +60,7 @@ class RentalPeriod(models.Model):
 
 
 class TicketPeriod(models.Model):
+    is_active = models.BooleanField(default=False)
     start_date = models.DateField()
     end_date = models.DateField()
     start_time = models.TimeField()

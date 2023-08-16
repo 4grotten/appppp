@@ -39,7 +39,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, ShopItem, Booking
+from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
@@ -76,6 +76,12 @@ class TransactionService:
         if cart is not None:
             cart.transaction = instance
             cart.save()
+            for cart_item in instance.cart.items.all():
+                if cart_item.item.purchase_type == ShopItem.TICKET:
+                    for _ in range(cart_item.count):
+                        Ticket.objects.create(user=client, organization=instance.organization,
+                                              item=cart_item.item,
+                                              transaction=instance)
 
         return instance
 
@@ -148,6 +154,11 @@ class TransactionService:
             cart.save()
             original_amount = items_price
             total_savings = total_savings + (items_price - discounted_items)
+            for cart_item in current_transaction.cart.items.all():
+                if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                    cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+                else:
+                    cls.change_count_service(size=None, cart_item=cart_item)
 
         amount_to_pay = original_amount - total_savings
         if amount_to_pay < from_cashback:
@@ -1290,6 +1301,10 @@ class TransactionService:
         cart.save()
 
         for cart_item in offline_transaction.cart.items.all():
+            if cart_item.item.purchase_type == ShopItem.TICKET:
+                for _ in range(cart_item.count):
+                    Ticket.objects.create(user=processed_by, organization=organization, item=cart_item.item,
+                                          transaction=offline_transaction)
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
                 cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
@@ -1525,7 +1540,7 @@ class TransactionService:
     def get_user_sale_ticket_totals(cls, processed_by: User, currency: str,
                                     organization: Organization = None, start_date=None, end_date=None) -> dict:
         transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
-                                                  booking__item__purchase_type=ShopItem.TICKET)
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)
@@ -1668,8 +1683,8 @@ class TransactionService:
     @classmethod
     def get_organization_processed_ticket_transactions(cls, ticket: ShopItem, start_date=None, end_date=None):
 
-        transactions = Transaction.objects.filter(cart__items__item=ticket,
-                                                  cart__items__item__purchase_type=ShopItem.TICKET,
+        transactions = Transaction.objects.filter(ticket__item=ticket,
+                                                  ticket__item__purchase_type=ShopItem.TICKET,
                                                   is_processed=True).order_by('-updated_at')
 
         if start_date is not None and end_date is not None:
@@ -2081,7 +2096,7 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.ONLINE, booking__item__purchase_type=ShopItem.TICKET).count()
+                                          type=Transaction.ONLINE, ticket__item__purchase_type=ShopItem.TICKET).count()
 
     @classmethod
     def get_user_sale_transactions(cls, user: User):
@@ -2181,7 +2196,7 @@ class TransactionService:
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
 
         transactions = Transaction.objects.filter(
-            Q(cart__items__item__purchase_type=ShopItem.TICKET) &
+            Q(ticket__item__purchase_type=ShopItem.TICKET) &
             Q(organization__in=organization) &
             (
                     Q(processed_by=user) |
@@ -2230,6 +2245,43 @@ class TransactionService:
         try:
             booking.is_active = True
             booking.save()
+        except:
+            raise IntegrityException()
+
+        extra_data = {
+            'transaction_id': transaction.id,
+            'total_price': transaction.final_amount,
+            'discount_percent': transaction.discount_percent,
+            'currency': transaction.currency.code
+        }
+
+        sent_notification.delay(
+            recipient_id=transaction.client_id,
+            sender_id=transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACTIVATE_RENTAL_CLIENT_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=extra_data
+        )
+
+        sent_notification.delay(
+            recipient_id=transaction.processed_by_id,
+            sender_id=transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACTIVATE_RENTAL_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=extra_data
+        )
+
+    @classmethod
+    def activate_ticket(cls, transaction: Transaction):
+        transaction = cls.get(id=transaction.id)
+        ticket = transaction.cart.items.get()
+        if ticket.is_active:
+            raise BadRequestException(message=_('This ticket already was activated'))
+        try:
+            ticket.is_active = True
+            ticket.save()
         except:
             raise IntegrityException()
 

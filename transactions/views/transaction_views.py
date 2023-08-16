@@ -42,11 +42,11 @@ from transactions.serializers.transaction_serializers import (
     PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer,
     ActivateTransactionTicketWithClientSerializer
 )
-from shop.serializers.item_serializers import BookInfoWithClientSerializer
-from shop.models import ShopItem, Booking, Cart
+from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
+from shop.models import ShopItem, Booking, Cart, Ticket
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter
 from transactions.services.transaction_services import TransactionService
-from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer
+from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
 from users.services import UserService
 
 
@@ -993,7 +993,7 @@ class TransactionUserInfoView(GenericAPIView):
 
 class TransactionTicketUserInfoView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = ActivateTransactionTicketWithClientSerializer
+    serializer_class = IsActiveTicketSerializer
 
     def get(self, request, *args, **kwargs):
         serializer = UserInfoTicketSerializer(data=request.GET)
@@ -1006,11 +1006,16 @@ class TransactionTicketUserInfoView(GenericAPIView):
         ticket = serializer.validated_data['ticket']
         client = serializer.validated_data['client']
 
-        transactions = Transaction.objects.filter(cart__items__item=ticket, client_id=client.id)
+        tickets = Ticket.objects.filter(item_id=ticket.id, user_id=client.id)
 
-        serializer = self.get_serializer(transactions, many=True)
+        serializer = self.get_serializer(tickets, many=True)
 
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        response_data = {
+            'client': UserInfoSerializer(client).data,
+            'tickets': serializer.data,
+        }
+
+        return Response(data=response_data, status=status.HTTP_200_OK)
 
 
 class TransactionBookingActivate(GenericAPIView):
@@ -1029,6 +1034,23 @@ class TransactionBookingActivate(GenericAPIView):
         TransactionService.activate_rental(serializer.validated_data['transaction'])
 
         return Response({'message': 'Booking activated successfully'})
+
+
+class TransactionTicketActivate(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionActivateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        TransactionService.activate_rental(serializer.validated_data['transaction'])
+
+        return Response({'message': 'Ticket activated successfully'})
 
 
 class InitPaymentView(GenericAPIView):

@@ -14,13 +14,14 @@ from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
-from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer
+from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer, SubcategorySerializer
 from transactions.models import Transaction
+from users.serializers import UserInfoSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -1062,6 +1063,17 @@ class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
+class TicketItemRetrieveSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
+    ticket_period = TicketPeriodSerializer()
+    subcategory = SubcategorySerializer()
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'subcategory', 'ticket_period'
+        )
 
 class BookInfoSerializer(serializers.ModelSerializer):
 
@@ -1101,6 +1113,14 @@ class IsActiveBookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ('id', 'is_active')
+
+
+class IsActiveTicketSerializer(serializers.ModelSerializer):
+    item = TicketItemRetrieveSerializer()
+
+    class Meta:
+        model = Ticket
+        fields = ('id', 'item', 'is_active')
 
 class RentalTicketListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()

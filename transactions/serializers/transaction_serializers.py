@@ -329,14 +329,22 @@ class OrganizationTicketTransactionWithClientSerializer(TransactionDetailSeriali
     client = ProfileBriefWithPhotoSerializer()
     organization = OrganizationShortInfoWithCurrencySerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context['request'].user,
                                                       organization=instance.organization)
 
+    def get_is_active(self, transaction: Transaction):
+        tickets = Ticket.objects.filter(transaction=transaction)
+        all_tickets_active = all(ticket.is_active for ticket in tickets)
+
+        return all_tickets_active
+
+
     class Meta:
         model = Transaction
-        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization')
+        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization', 'is_active')
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

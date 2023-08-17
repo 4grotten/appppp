@@ -2243,7 +2243,7 @@ class TransactionService:
             '-max_date')
 
     @classmethod
-    def get_users_of_rental_in_organization(cls, transactions: Transaction) -> QuerySet:
+    def get_users_of_rental_or_ticket_in_organization(cls, transactions: Transaction) -> QuerySet:
 
         return User.objects.filter(
             bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(

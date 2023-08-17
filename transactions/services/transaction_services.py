@@ -172,6 +172,7 @@ class TransactionService:
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
             current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
@@ -987,6 +988,7 @@ class TransactionService:
             current_transaction.employee_name = processed_by.full_name
             current_transaction.employee_avatar = processed_by.avatar
             current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
@@ -1286,6 +1288,7 @@ class TransactionService:
             original_amount=original_price,
             currency=organization.currency,
             status=Transaction.ACCEPTED,
+            payment_status=Transaction.ACCEPTED,
             savings=original_price - discounted_price,
             is_processed=True,
             processed_by=processed_by,
@@ -2161,6 +2164,31 @@ class TransactionService:
                     | Q(status=Transaction.ACCEPTED)
             )
             & Q(booking__item=item)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at')
+
+        return transactions
+
+    @classmethod
+    def get_user_sale_ticket_transactions_detail(cls, user: User, item: ShopItem):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(organization__in=organization)
+            & (
+                    Q(processed_by=user)
+                    | Q(status=Transaction.IN_PROGRESS)
+                    | Q(status=Transaction.ACCEPTED)
+            )
+            & Q(ticket__item=item)
         ).annotate(
             in_progress_first=Case(
                 When(status=Transaction.IN_PROGRESS, then=0),

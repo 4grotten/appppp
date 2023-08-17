@@ -45,7 +45,7 @@ from transactions.serializers.transaction_serializers import (
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Cart, Ticket
-from transactions.services.filters import TransactionFilter, TransactionRentalFilter
+from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
 from users.services import UserService
@@ -607,6 +607,19 @@ class UserSaleTransactionsDetailListView(ListAPIView):
     def get_queryset(self):
         item = ShopItemService.get(id=self.kwargs['pk'])
         transactions = TransactionService.get_user_sale_transactions_detail(user=self.request.user, item=item)
+        return transactions
+
+
+class UserSaleTicketTransactionsDetailListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionTicketFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        transactions = TransactionService.get_user_sale_ticket_transactions_detail(user=self.request.user, item=item)
         return transactions
 
 

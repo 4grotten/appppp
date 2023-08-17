@@ -112,6 +112,8 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return None
 
     def get_purchase_type(self, transaction: Transaction):
+        if transaction.ticket:
+            return 'ticket'
         try:
             booking = transaction.booking
         except Booking.DoesNotExist:

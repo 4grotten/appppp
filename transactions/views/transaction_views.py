@@ -906,7 +906,37 @@ class OrganizationRentalCustomerTransactionView(ListAPIView):
             end_date=serializer.validated_data.get('end')
         )
 
-        return TransactionService.get_users_of_rental_in_organization(transactions)
+        return TransactionService.get_users_of_rental_or_ticket_in_organization(transactions)
+
+
+class OrganizationTicketCustomerTransactionView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserShortInfoSerializer
+    search_fields = ['full_name', 'username']
+    filter_backends = [filters.SearchFilter]
+
+    def get_queryset(self):
+        ticket = ShopItemService.get(id=self.kwargs['pk'])
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+
+        if not OrganizationService.user_can_see_stats(organization=organization,
+                                                      user=self.request.user):
+            raise NotAcceptableException(_('No rights to see stats of organization'))
+
+        transactions = TransactionService.get_organization_processed_ticket_transactions(
+            ticket=ticket,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+        return TransactionService.get_users_of_rental_or_ticket_in_organization(transactions)
 
 
 class RentPaymentAcceptView(GenericAPIView):

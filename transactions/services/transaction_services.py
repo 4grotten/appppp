@@ -2274,43 +2274,6 @@ class TransactionService:
         )
 
     @classmethod
-    def activate_ticket(cls, transaction: Transaction):
-        transaction = cls.get(id=transaction.id)
-        ticket = transaction.cart.items.get()
-        if ticket.is_active:
-            raise BadRequestException(message=_('This ticket already was activated'))
-        try:
-            ticket.is_active = True
-            ticket.save()
-        except:
-            raise IntegrityException()
-
-        extra_data = {
-            'transaction_id': transaction.id,
-            'total_price': transaction.final_amount,
-            'discount_percent': transaction.discount_percent,
-            'currency': transaction.currency.code
-        }
-
-        sent_notification.delay(
-            recipient_id=transaction.client_id,
-            sender_id=transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_RENTAL,
-            notification_type=ACTIVATE_RENTAL_CLIENT_TYPE,
-            organization_id=transaction.organization_id,
-            extra_data=extra_data
-        )
-
-        sent_notification.delay(
-            recipient_id=transaction.processed_by_id,
-            sender_id=transaction.client_id,
-            mode=NOTIFICATION_MODE_RENTAL,
-            notification_type=ACTIVATE_RENTAL_TYPE,
-            organization_id=transaction.organization_id,
-            extra_data=extra_data
-        )
-
-    @classmethod
     def get_pg_description_and_purchase_type(cls, transaction: Transaction):
         try:
             booking = transaction.booking

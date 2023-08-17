@@ -1068,11 +1068,13 @@ class TicketItemRetrieveSerializer(serializers.ModelSerializer):
     videos = VideoSerializer(many=True)
     ticket_period = TicketPeriodSerializer()
     subcategory = SubcategorySerializer()
+    currency = serializers.CharField(source='organization.currency.code')
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'subcategory', 'ticket_period'
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'subcategory', 'currency',
+                  'ticket_period'
         )
 
 class BookInfoSerializer(serializers.ModelSerializer):

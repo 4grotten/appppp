@@ -5,6 +5,7 @@ NOTIFICATION_MODE_PARTNER = 'partner'
 NOTIFICATION_MODE_PERSONAL = 'personal'
 NOTIFICATION_MODE_PRODUCT = 'product'
 NOTIFICATION_MODE_RENTAL = 'rental'
+NOTIFICATION_MODE_TICKET = 'ticket'
 
 NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_DISCOUNT, NOTIFICATION_MODE_DISCOUNT.capitalize()),
@@ -14,6 +15,7 @@ NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_PERSONAL, NOTIFICATION_MODE_PERSONAL.capitalize()),
     (NOTIFICATION_MODE_PRODUCT, NOTIFICATION_MODE_PRODUCT.capitalize()),
     (NOTIFICATION_MODE_RENTAL, NOTIFICATION_MODE_RENTAL.capitalize()),
+    (NOTIFICATION_MODE_TICKET, NOTIFICATION_MODE_TICKET.capitalize()),
 )
 
 NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
@@ -100,6 +102,9 @@ REQUEST_RENTAL_CLIENT_TYPE = 'requested_rental_client'
 ACTIVATE_RENTAL_TYPE = 'activated_rental'
 ACTIVATE_RENTAL_CLIENT_TYPE = 'activated_rental_client'
 
+ACTIVATE_TICKET_TYPE = 'activated_ticket'
+ACTIVATE_TICKET_CLIENT_TYPE = 'activated_ticket_client'
+
 NEW_COMMENT_TYPE = 'new_comment'
 
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
@@ -125,6 +130,8 @@ NOTIFICATION_TYPES = (
     (REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_CLIENT_TYPE),
     (ACTIVATE_RENTAL_TYPE, ACTIVATE_RENTAL_TYPE),
     (ACTIVATE_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE),
+    (ACTIVATE_TICKET_TYPE, ACTIVATE_TICKET_TYPE),
+    (ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_CLIENT_TYPE),
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
     (ACCEPT_ORDER_PAYMENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE),
@@ -235,6 +242,9 @@ REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ #{transa
 
 ACTIVATE_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ аренды активирован #{transaction_id}'
 ACTIVATE_RENTAL_TITLE_RU = 'Вы активировали заказ аренды #{transaction_id}'
+
+ACTIVATE_TICKET_CLIENT_TITLE_RU = 'Ваш билет активирован #{transaction_id}'
+ACTIVATE_TICKET_TITLE_RU = 'Вы активировали билет #{transaction_id}'
 
 ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
 RENTAL_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
@@ -374,6 +384,9 @@ RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
 ACTIVATE_RENTAL_TITLE_EN = 'You activated rent order #{transaction_id}'
 ACTIVATE_RENTAL_CLIENT_TITLE_EN = 'Your rent order is activated #{transaction_id}'
+
+ACTIVATE_TICKET_TITLE_EN = 'You activated ticket #{transaction_id}'
+ACTIVATE_TICKET_CLIENT_TITLE_EN = 'Your ticket is activated #{transaction_id}'
 
 ATTENDANCE_IN_TITLE = 'Input {organization}'
 ATTENDANCE_OUT_TITLE = 'Exit {organization}'
@@ -1021,6 +1034,24 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
                                                     currency=extra_data.get('currency')),
             title_ru=ACTIVATE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACTIVATE_TICKET_TYPE:
+        notification_str = dict(
+            title=ACTIVATE_TICKET_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACTIVATE_TICKET_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ACTIVATE_TICKET_CLIENT_TYPE:
+        notification_str = dict(
+            title=ACTIVATE_TICKET_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACTIVATE_TICKET_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 

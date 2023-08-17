@@ -31,6 +31,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
+from shop.services.ticket_services import TicketService
 from transactions.models import Transaction
 from transactions.serializers.stats_serializers import TotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
@@ -40,7 +41,7 @@ from transactions.serializers.transaction_serializers import (
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer,
-    ActivateTransactionTicketWithClientSerializer
+    ActivateTransactionTicketWithClientSerializer, TicketActivateSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Cart, Ticket
@@ -1038,7 +1039,7 @@ class TransactionBookingActivate(GenericAPIView):
 
 class TransactionTicketActivate(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = TransactionActivateSerializer
+    serializer_class = TicketActivateSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1048,7 +1049,7 @@ class TransactionTicketActivate(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        TransactionService.activate_rental(serializer.validated_data['transaction'])
+        TicketService.activate_ticket(serializer.validated_data['ticket'])
 
         return Response({'message': 'Ticket activated successfully'})
 

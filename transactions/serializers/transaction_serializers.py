@@ -8,7 +8,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, Booking, ShopItem
+from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
     TicketPeriodSerializer, IsActiveTicketSerializer
@@ -383,6 +383,10 @@ class ActivateTransactionTicketWithClientSerializer(TransactionDetailSerializer)
 
 class TransactionActivateSerializer(serializers.Serializer):
     transaction = serializers.PrimaryKeyRelatedField(queryset=Transaction.objects.filter(is_processed=True))
+
+
+class TicketActivateSerializer(serializers.Serializer):
+    ticket = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.filter(is_active=False))
 
 
 class ResultURLSerializer(serializers.Serializer):

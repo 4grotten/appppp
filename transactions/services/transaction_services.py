@@ -1521,12 +1521,16 @@ class TransactionService:
 
     @classmethod
     def get_user_sale_rental_totals(cls, processed_by: User, currency: str,
-                             organization: Organization = None, start_date=None, end_date=None) -> dict:
+                             organization: Organization = None, item: ShopItem = None, start_date=None,
+                                    end_date=None) -> dict:
         transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
                                                   booking__item__purchase_type='rent')
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(booking__item=item)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -1541,12 +1545,16 @@ class TransactionService:
 
     @classmethod
     def get_user_sale_ticket_totals(cls, processed_by: User, currency: str,
-                                    organization: Organization = None, start_date=None, end_date=None) -> dict:
+                                    organization: Organization = None, item: ShopItem = None, start_date=None,
+                                    end_date=None) -> dict:
         transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
                                                   ticket__item__purchase_type=ShopItem.TICKET)
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(ticket__item=item)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -2196,7 +2204,7 @@ class TransactionService:
                 When(status=Transaction.REJECTED, then=1),
                 output_field=IntegerField()
             )
-        ).order_by('in_progress_first', '-updated_at')
+        ).order_by('in_progress_first', '-updated_at').distinct()
 
         return transactions
 

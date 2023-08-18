@@ -526,8 +526,9 @@ class UserSaleRentalTotalsView(APIView):
         else:
             currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
 
+        item = serializer.validated_data['item']
         totals = TransactionService.get_user_sale_rental_totals(processed_by=request.user, currency=currency,
-                                                         organization=organization,
+                                                         organization=organization, item=item,
                                                          start_date=serializer.validated_data.get('start'),
                                                          end_date=serializer.validated_data.get('end'))
         totals['total_savings'] += totals['total_from_cashback']
@@ -552,8 +553,9 @@ class UserSaleTicketTotalsView(APIView):
         else:
             currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
 
+        item = serializer.validated_data['item']
         totals = TransactionService.get_user_sale_ticket_totals(processed_by=request.user, currency=currency,
-                                                         organization=organization,
+                                                         organization=organization, item=item,
                                                          start_date=serializer.validated_data.get('start'),
                                                          end_date=serializer.validated_data.get('end'))
         totals['total_savings'] += totals['total_from_cashback']

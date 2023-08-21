@@ -346,7 +346,7 @@ class OrganizationTicketTransactionWithClientSerializer(TransactionDetailSeriali
 
     class Meta:
         model = Transaction
-        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization', 'is_active')
+        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization', 'is_active', 'updated_at')
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

@@ -40,11 +40,10 @@ from transactions.serializers.transaction_serializers import (
     BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer, OrganizationTicketTransactionWithClientSerializer, UserInfoTicketSerializer,
-    ActivateTransactionTicketWithClientSerializer, TicketActivateSerializer
+    PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer, OrganizationTicketWithClientSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
-from shop.models import ShopItem, Booking, Cart, Ticket
+from shop.models import ShopItem, Booking, Ticket
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
@@ -395,6 +394,24 @@ class UserRentalTransactionOrganizationView(ListAPIView):
         )
 
 
+class UserTicketTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return TransactionService.get_user_ticket_transaction_organizations(
+            client=self.request.user,
+            start_date=serializer.validated_data.get('start'),
+            end_date=serializer.validated_data.get('end')
+        )
+
+
 class UserSaleRentalTransactionOrganizationView(ListAPIView):
     serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
     permission_classes = (IsAuthenticated,)
@@ -500,6 +517,32 @@ class UserRentalTotalsView(APIView):
         else:
             currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
         totals = TransactionService.get_user_rental_totals(client=request.user, currency=currency,
+                                                    organization=organization,
+                                                    item=serializer.validated_data.get('item'),
+                                                    start_date=serializer.validated_data.get('start'),
+                                                    end_date=serializer.validated_data.get('end'))
+        totals['total_savings'] += totals['total_from_cashback']
+        data = TotalStatsSerializer(totals).data
+        return Response(data)
+
+
+class UserTicketTotalsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        if organization is not None:
+            currency = organization.currency.code
+        else:
+            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+        totals = TransactionService.get_user_ticket_totals(client=request.user, currency=currency,
                                                     organization=organization,
                                                     item=serializer.validated_data.get('item'),
                                                     start_date=serializer.validated_data.get('start'),
@@ -829,7 +872,7 @@ class OrganizationRentalUsersTransactionView(ListAPIView):
 
 class OrganizationTicketUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = OrganizationTicketTransactionWithClientSerializer
+    serializer_class = OrganizationTicketWithClientSerializer
 
 
     def list(self, request, *args, **kwargs):
@@ -851,12 +894,13 @@ class OrganizationTicketUsersTransactionView(ListAPIView):
         if search:
             queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
 
-        page = self.paginate_queryset(queryset)
+        ticket_queryset = Ticket.objects.filter(transaction__in=queryset)
+        page = self.paginate_queryset(ticket_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(ticket_queryset, many=True)
         return Response(serializer.data)
 
 

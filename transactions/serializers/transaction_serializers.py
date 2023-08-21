@@ -11,7 +11,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
-    TicketPeriodSerializer, IsActiveTicketSerializer
+    TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
@@ -327,26 +327,26 @@ class OrganizationRentalTransactionWithClientSerializer(TransactionDetailSeriali
         )
 
 
-class OrganizationTicketTransactionWithClientSerializer(TransactionDetailSerializer):
-    client = ProfileBriefWithPhotoSerializer()
+class OrganizationTicketWithClientSerializer(TransactionDetailSerializer):
+    client = ProfileBriefWithPhotoSerializer(source='user')
     organization = OrganizationShortInfoWithCurrencySerializer()
+    item = TicketWithTicketPeriodSerializer()
     current_user_can_see_stats = serializers.SerializerMethodField()
-    is_active = serializers.SerializerMethodField()
+    activated_time = serializers.SerializerMethodField()
 
     def get_current_user_can_see_stats(self, instance):
         return OrganizationService.user_can_see_stats(user=self.context['request'].user,
                                                       organization=instance.organization)
 
-    def get_is_active(self, transaction: Transaction):
-        tickets = Ticket.objects.filter(transaction=transaction)
-        all_tickets_active = all(ticket.is_active for ticket in tickets)
-
-        return all_tickets_active
+    def get_activated_time(self, ticket: Ticket):
+        if ticket.is_active:
+            return ticket.updated_at
+        return None
 
 
     class Meta:
-        model = Transaction
-        fields = ('id', 'client', 'type', 'current_user_can_see_stats', 'organization', 'is_active', 'updated_at')
+        model = Ticket
+        fields = ('id', 'client', 'item', 'current_user_can_see_stats', 'organization', 'is_active', 'activated_time')
 
 
 class StartEndDateTransactionSerializer(serializers.Serializer):

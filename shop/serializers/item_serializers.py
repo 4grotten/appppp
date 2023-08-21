@@ -1062,6 +1062,15 @@ class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
             'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'rental_period', 'ticket_period'
         )
 
+class TicketWithTicketPeriodSerializer(serializers.ModelSerializer):
+    ticket_period = TicketPeriodSerializer()
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'ticket_period'
+        )
+
 
 class TicketItemRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)

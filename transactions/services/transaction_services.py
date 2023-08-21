@@ -1412,6 +1412,23 @@ class TransactionService:
         return organizations
 
     @classmethod
+    def get_user_ticket_transaction_organizations(cls, client: User, start_date, end_date):
+        transactions = Transaction.objects.filter(client=client, is_processed=True,
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(organization=OuterRef('pk'), client=client,
+                                           ).order_by('-updated_at').values('updated_at')[:1]
+            )
+        ).order_by('-latest_transaction_time')
+        return organizations
+
+    @classmethod
     def get_user_sale_rental_transaction_organizations(cls, user: User, start_date, end_date):
         transactions = cls.get_user_sale_rental_transactions(user=user)
 
@@ -1507,6 +1524,29 @@ class TransactionService:
 
         if item is not None:
             transactions = transactions.filter(booking__item=item)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_user_ticket_totals(cls, client: User, currency: str, organization: Organization = None,
+                               item: ShopItem = None, start_date=None, end_date=None) -> dict:
+        transactions = Transaction.objects.filter(client=client, is_processed=True,
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
+
+        if organization is not None:
+            transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(ticket__item=item)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)

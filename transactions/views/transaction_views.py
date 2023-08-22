@@ -24,6 +24,7 @@ from notifications.models import Notification
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
+    PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer,
 )
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
@@ -433,7 +434,7 @@ class UserSaleRentalTransactionOrganizationView(ListAPIView):
 
 
 class UserSaleTicketTransactionOrganizationView(ListAPIView):
-    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    serializer_class = PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -671,7 +672,7 @@ class UserSaleTransactionsDetailListView(ListAPIView):
 
 class UserSaleTicketTransactionsDetailListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = TransactionsSerializer
+    serializer_class = TransactionsTicketSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionTicketFilter
     search_fields = ['id']

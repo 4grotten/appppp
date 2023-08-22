@@ -21,6 +21,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from shop.models import ShopItem
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
@@ -195,6 +196,26 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
     def get_unprocessed_transaction_count(self, organization: Organization):
         return Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
                                           type=Transaction.ONLINE).count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners', 'verification_status')
+        read_only_fields = ['verification_status']
+
+
+class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        # Annotated field
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        return Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.ONLINE, ticket__item__purchase_type=ShopItem.TICKET).count()
 
     class Meta:
         model = Organization

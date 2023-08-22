@@ -20,7 +20,7 @@ from transactions.views.transaction_views import (
     UserTicketUnprocessedTransactionCountView, UserSaleTicketTransactionOrganizationView, UserSaleTicketTotalsView,
     OrganizationTicketUsersTransactionView, CheckTicketInUsersView, TransactionTicketUserInfoView,
     TransactionTicketActivate, UserSaleTicketTransactionsDetailListView, OrganizationTicketCustomerTransactionView,
-    UserTicketTotalsView, UserTicketTransactionOrganizationView
+    UserTicketTotalsView, UserTicketTransactionOrganizationView, UserTicketSaleTransactionsListView
 )
 
 urlpatterns = [
@@ -96,8 +96,10 @@ urlpatterns = [
     path('transactions/ticket/user/', TransactionTicketUserInfoView.as_view(), name='transaction_ticket_user_info'),
     path('transactions/ticket/activate/', TransactionTicketActivate.as_view(),
          name='transaction_ticket_activate'),
-    path('statistics/saleTransactions/ticket/<int:pk>/', UserSaleTicketTransactionsDetailListView.as_view(),
+    path('statistics/saleTransactions/ticket/', UserTicketSaleTransactionsListView.as_view(),
          name='user_ticket_sale_tran'),
+    path('statistics/saleTransactions/ticket/<int:pk>/', UserSaleTicketTransactionsDetailListView.as_view(),
+         name='user_ticket_sale_tran_detail'),
     path('transactions/organizations/ticket/<int:pk>/customers/', OrganizationTicketCustomerTransactionView.as_view(),
          name='transactions_organizations_ticket_users'),
     path('statistics/totals/ticket/', UserTicketTotalsView.as_view(), name='user_ticket_totals'),

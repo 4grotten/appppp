@@ -15,7 +15,9 @@ from shop.serializers.item_serializers import TransactionBookingInfoSerializer, 
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
-from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP
+from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP, TICKET_ICON_MAP, \
+    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE
+
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
@@ -112,8 +114,6 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return None
 
     def get_purchase_type(self, transaction: Transaction):
-        if transaction.ticket:
-            return 'ticket'
         try:
             booking = transaction.booking
         except Booking.DoesNotExist:
@@ -122,6 +122,36 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
     def get_icon_type(self, transaction: Transaction):
         return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
+
+
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
+            'payment_status', 'purchase_type', 'icon_type'
+        )
+
+
+class TransactionsTicketSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+    purchase_type = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_purchase_type(self, transaction: Transaction):
+        return ShopItem.TICKET
+
+    def get_icon_type(self, transaction: Transaction):
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                   DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
 
 

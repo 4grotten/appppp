@@ -40,7 +40,8 @@ from transactions.serializers.transaction_serializers import (
     BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer, OrganizationTicketWithClientSerializer
+    PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
+    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -639,6 +640,18 @@ class UserRentalSaleTransactionsListView(ListAPIView):
 
     def get_queryset(self):
         transactions = TransactionService.get_user_rental_sale_transactions(user=self.request.user)
+        return transactions
+
+
+class UserTicketSaleTransactionsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsTicketSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        transactions = TransactionService.get_user_ticket_sale_transactions(user=self.request.user)
         return transactions
 
 

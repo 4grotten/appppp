@@ -908,7 +908,7 @@ class OrganizationTicketUsersTransactionView(ListAPIView):
         if search:
             queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
 
-        ticket_queryset = Ticket.objects.filter(transaction__in=queryset)
+        ticket_queryset = Ticket.objects.filter(transaction__in=queryset).order_by('-updated_at')
         page = self.paginate_queryset(ticket_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

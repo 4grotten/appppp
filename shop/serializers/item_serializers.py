@@ -1128,10 +1128,16 @@ class IsActiveBookingSerializer(serializers.ModelSerializer):
 
 class IsActiveTicketSerializer(serializers.ModelSerializer):
     item = TicketItemRetrieveSerializer()
+    activated_time = serializers.SerializerMethodField()
+
+    def get_activated_time(self, ticket: Ticket):
+        if ticket.is_active:
+            return ticket.updated_at
+        return None
 
     class Meta:
         model = Ticket
-        fields = ('id', 'item', 'is_active')
+        fields = ('id', 'item', 'is_active', 'activated_time')
 
 class RentalTicketListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()

@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Case, When, Value, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
@@ -1109,7 +1110,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
         ticket = serializer.validated_data['ticket']
         client = serializer.validated_data['client']
 
-        tickets = Ticket.objects.filter(item_id=ticket.id, user_id=client.id)
+        tickets = Ticket.objects.filter(item_id=ticket.id, user_id=client.id).order_by('-updated_at')
 
         serializer = self.get_serializer(tickets, many=True)
 

@@ -1111,7 +1111,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
         ticket = serializer.validated_data['ticket']
         client = serializer.validated_data['client']
 
-        tickets = Ticket.objects.filter(item_id=ticket.id, user_id=client.id).order_by('-updated_at')
+        tickets = Ticket.objects.filter(item=ticket, user=client).order_by('-updated_at')
 
         serializer = self.get_serializer(tickets, many=True)
 
@@ -1121,6 +1121,27 @@ class TransactionTicketUserInfoView(GenericAPIView):
         }
 
         return Response(data=response_data, status=status.HTTP_200_OK)
+
+
+class TransactionOwnTicketInfoView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = IsActiveTicketSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = UserInfoTicketSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ticket = serializer.validated_data['ticket']
+
+        tickets = Ticket.objects.filter(item=ticket, user=request.user).order_by('-updated_at')
+
+        serializer = self.get_serializer(tickets, many=True)
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class TransactionBookingActivate(GenericAPIView):

@@ -1145,6 +1145,7 @@ class RentalTicketListSerializer(ItemListSerializer):
     updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
+    ticket_period = TicketPeriodSerializer()
 
 
     class Meta:
@@ -1153,6 +1154,6 @@ class RentalTicketListSerializer(ItemListSerializer):
             'id', 'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'created_at', 'updated_at', 'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'is_updated', 'purchase_type'
+            'is_updated', 'purchase_type', 'ticket_period'
         )
         read_only_fields = ['name_lang', 'description_lang']

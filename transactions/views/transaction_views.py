@@ -43,7 +43,7 @@ from transactions.serializers.transaction_serializers import (
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
-    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer
+    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -930,7 +930,7 @@ class CheckTicketInUsersView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        ticket = serializer.validated_data['ticket']
+        ticket = serializer.validated_data['item']
         client = serializer.validated_data['client']
         transactions = TransactionService.get_organization_processed_ticket_transactions(ticket=ticket)
         has_transaction = transactions.filter(client=client).exists()
@@ -1108,7 +1108,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        ticket = serializer.validated_data['ticket']
+        ticket = serializer.validated_data['item']
         client = serializer.validated_data['client']
 
         tickets = Ticket.objects.filter(item=ticket, user=client).order_by('-updated_at')
@@ -1135,11 +1135,31 @@ class TransactionOwnTicketInfoView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        ticket = serializer.validated_data['ticket']
+        ticket = serializer.validated_data['item']
 
         tickets = Ticket.objects.filter(item=ticket, user=request.user).order_by('-updated_at')
 
         serializer = self.get_serializer(tickets, many=True)
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+class TransactionTicketInfoView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsTicketSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = TicketSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ticket = serializer.validated_data['ticket']
+
+        # tickets = Ticket.objects.filter(id=, user=request.user).order_by('-updated_at')
+        transaction = TransactionService.get(ticket=ticket)
+        serializer = self.get_serializer(transaction)
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 

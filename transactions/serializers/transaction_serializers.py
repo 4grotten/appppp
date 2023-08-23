@@ -153,8 +153,6 @@ class TransactionsTicketSerializer(serializers.ModelSerializer):
         return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
                                    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
-
-
     class Meta:
         model = Transaction
         fields = (
@@ -394,7 +392,7 @@ class UserInfoBookingSerializer(serializers.Serializer):
 
 class UserInfoTicketSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True), required=False)
-    ticket = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 
 class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
@@ -423,6 +421,10 @@ class ActivateTransactionTicketWithClientSerializer(TransactionDetailSerializer)
 
 class TransactionActivateSerializer(serializers.Serializer):
     transaction = serializers.PrimaryKeyRelatedField(queryset=Transaction.objects.filter(is_processed=True))
+
+
+class TicketSerializer(serializers.Serializer):
+    ticket = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all())
 
 
 class TicketActivateSerializer(serializers.Serializer):

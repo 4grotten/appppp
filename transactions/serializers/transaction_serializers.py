@@ -393,7 +393,7 @@ class UserInfoBookingSerializer(serializers.Serializer):
 
 
 class UserInfoTicketSerializer(serializers.Serializer):
-    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True), required=False)
     ticket = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 

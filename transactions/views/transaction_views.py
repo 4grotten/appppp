@@ -695,6 +695,18 @@ class UserRentalTransactionsListView(ListAPIView):
         return transactions
 
 
+class UserTicketTransactionsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_class = TransactionFilter
+    search_fields = ['id']
+
+    def get_queryset(self):
+        transactions = TransactionService.get_user_ticket_transactions(client=self.request.user)
+        return transactions
+
+
 class UserRentalTransactionsDetailListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsSerializer

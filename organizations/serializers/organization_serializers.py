@@ -208,6 +208,15 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
 class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
+
+    def get_permissions(self, organization: Organization):
+        if 'request' in self.context:
+            if self.context['request'].user.is_anonymous:
+                return None
+            return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                                 user=self.context['request'].user)
 
     def get_latest_transaction_time(self, organization: Organization):
         # Annotated field
@@ -221,7 +230,7 @@ class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(Pa
         model = Organization
         fields = (
             'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
-            'partners', 'verification_status')
+            'partners', 'verification_status', 'permissions')
         read_only_fields = ['verification_status']
 
 

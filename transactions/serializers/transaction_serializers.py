@@ -114,14 +114,21 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return None
 
     def get_purchase_type(self, transaction: Transaction):
-        try:
-            booking = transaction.booking
-        except Booking.DoesNotExist:
-            return 'product'
-        return 'rent'
+        booking = Booking.objects.filter(transaction=transaction)
+        if booking.exists():
+            return ShopItem.RENTAL
+        ticket = Ticket.objects.filter(transaction=transaction)
+        if ticket.exists():
+            return ShopItem.TICKET
+        return ShopItem.PRODUCT
 
     def get_icon_type(self, transaction: Transaction):
-        return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
+        purchase_type = self.get_purchase_type(transaction)
+        if purchase_type == ShopItem.RENTAL:
+            return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                DECLINED_OFFLINE_PAYMENT_TYPE)
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                   DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
 
 

@@ -2163,8 +2163,8 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
-        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.ONLINE, ticket__item__purchase_type=ShopItem.TICKET).count()
+        queryset = Transaction.objects.filter(organization__in=organization, ticket__item__purchase_type=ShopItem.TICKET)
+        return Ticket.objects.filter(transaction__in=queryset, is_active=False).count()
 
     @classmethod
     def get_user_sale_transactions(cls, user: User):

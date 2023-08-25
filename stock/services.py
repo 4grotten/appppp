@@ -9,7 +9,7 @@ from transactions.models import Transaction
 from transliterate.utils import _
 
 from common.exceptions import ObjectNotFoundException
-from shop.models import ShopItem, RentalPeriod
+from shop.models import ShopItem, RentalPeriod, Ticket
 from shop.services.item_services import ShopItemService
 from stock.models import FormatCriteria, SizeFormat, CriteriaSubcategory
 
@@ -163,6 +163,18 @@ class StockService:
                 .order_by('-id')
         else:
             return Transaction.objects.filter(ticket__item=item).order_by('-id')
+
+
+    @classmethod
+    def get_organization_ticket_delivery_info(cls, organization_id, start_time, end_time):
+        if start_time and end_time:
+            return Transaction.objects.filter(
+                Q(organization__id=organization_id) & Q(ticket__item__purchase_type=ShopItem.TICKET) &
+                Q(created_at__gte=start_time) & Q(created_at__lte=end_time)) \
+                .order_by('-id')
+        else:
+            return Transaction.objects.filter(organization__id=organization_id,
+                                              ticket__item__purchase_type=ShopItem.TICKET).order_by('-id')
 
     @classmethod
     def get_organization_products_info(cls, organization_id, start_time, end_time):
@@ -696,17 +708,13 @@ class StockService:
         delivery_display_times = []
 
         for i in queryset:
-            print("HELLO")
             if i.fixed_cart:
-                print("IM HERE")
                 items = i.fixed_cart.get('items')
                 if items:
-                    print("AFTER ITEMS")
                     for j in items:
                         shop_id = j['item']['id']
                         try:
                             shop_item = ShopItem.objects.get(id=shop_id, purchase_type=ShopItem.TICKET)
-                            print("GOT ITEM", shop_item)
                             names.append(shop_item.name)
                             try:
                                 subcategory.append(shop_item.subcategory.name)
@@ -768,6 +776,11 @@ class StockService:
                      _('Валюта'): currency,
                      _('Артикл'): article,
                      _('Номер заказа'): number_transaction,
+                     _('Количество товара'): count,
+                     _("Курьерская служба"): delivery_orgs,
+                     _("Статус доставки"): delivery_statuses,
+                     _("Дата  доставки"): delivery_display_dates,
+                     _("Время  доставки"): delivery_display_times,
                      _('Клиент'): clients,
                      }
         return dict_data

@@ -6,7 +6,7 @@ from stock.views import FormatCriteriaListView, SizeByFormatListView, CriteriaSu
     DeleteShopItemSizeCountView, StockView, StockSetsView, StockSetItemsView, ShopLinkItemsSetCreateView, \
     OrganizationShopItemsInSetListView, OrganizationSubcategoryListView, ShopItemSetIdsListView, RentalStockView, \
     DownloadOrgDeliveryRentalInfoAPIView, DownloadOrgRentalInfoAPIView, DownloadRentalInfoAPIView, \
-    DownloadTicketInfoAPIView
+    DownloadTicketInfoAPIView, DownloadOrgTicketInfoAPIView
 
 urlpatterns = [
     path('criteria_by_subcategory/<int:pk>/', CriteriaSubcategoryListView.as_view(), name='criteria_by_subcategory'),
@@ -51,10 +51,11 @@ urlpatterns = [
     path('download_rental_info/<int:pk>/', DownloadRentalInfoAPIView.as_view(),
          name='download_rental_info'),
 
+    # ticket
     path('download_ticket_info/<int:pk>/', DownloadTicketInfoAPIView.as_view(),
          name='download_ticket_info'),
 
-
-
+    path('download_org_ticket_info/<int:pk>/', DownloadOrgTicketInfoAPIView.as_view(),
+         name='download_organization_rental_info'),
 
 ]

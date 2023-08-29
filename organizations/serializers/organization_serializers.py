@@ -571,7 +571,8 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated'
+                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated',
+                  'payment_with_confirmation'
                   )
         read_only_fields = ['verification_status']
 
@@ -594,7 +595,8 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated'
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated',
+            'payment_with_confirmation'
         )
         read_only_fields = ['verification_status']
 

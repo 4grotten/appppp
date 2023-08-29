@@ -1667,7 +1667,11 @@ class TransactionService:
                 client_status=client_status, refunded_transaction=old_transaction
             )
             OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-        if old_transaction.type == Transaction.ONLINE and old_transaction.delivery_type == Transaction.CASH_COURIER:
+        if (
+                old_transaction.type == Transaction.ONLINE and
+                old_transaction.delivery_type == Transaction.CASH_COURIER) or (
+                old_transaction.type == Transaction.ONLINE and
+                old_transaction.delivery_type == Transaction.SELF_PICKUP):
             Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
                         Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()

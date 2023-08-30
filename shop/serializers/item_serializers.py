@@ -14,13 +14,14 @@ from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
-from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer
+from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer, SubcategorySerializer
 from transactions.models import Transaction
+from users.serializers import UserInfoSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -62,6 +63,19 @@ class RentItemsPeriodSerializer(serializers.ModelSerializer):
         )
 
 
+class TicketPeriodSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
+    end_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
+    start_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
+    end_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
+
+    class Meta:
+        model = TicketPeriod
+        fields = (
+            'id', 'start_date', 'end_date', 'start_time', 'end_time'
+        )
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -78,6 +92,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
     rental_period = RentItemsPeriodSerializer()
+    ticket_period = TicketPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -143,7 +158,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
-            'rental_period', 'address', 'full_location'
+            'rental_period', 'ticket_period', 'address', 'full_location'
         )
 
 
@@ -163,6 +178,7 @@ class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
     rental_period = RentItemsPeriodSerializer()
+    ticket_period = TicketPeriodSerializer()
 
 
     def get_has_in_stock(self, item: ShopItem):
@@ -229,7 +245,7 @@ class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type', 'address',
-            'full_location', 'rental_period', 'purchase_type'
+            'full_location', 'rental_period', 'ticket_period', 'purchase_type'
         )
 
 
@@ -237,6 +253,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(allow_null=True, required=False)
     latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
+    ticket_period = TicketPeriodSerializer(required=False)
 
     class Meta:
         model = ShopItem
@@ -245,8 +262,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
-            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'full_location', 'longitude',
-            'latitude'
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
+            'longitude', 'latitude'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -424,6 +441,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
     set_items = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
     rental_period = RentItemsPeriodSerializer()
+    ticket_period = TicketPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -459,7 +477,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
-            'full_location', 'purchase_type', 'address'
+            'ticket_period', 'full_location', 'purchase_type', 'address'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -475,6 +493,7 @@ class ItemFeedSerializer(ItemListSerializer):
     has_in_stock = serializers.SerializerMethodField()
     can_comment = serializers.SerializerMethodField(default=True, read_only=True)
     rental_period = RentItemsPeriodSerializer()
+    ticket_period = TicketPeriodSerializer()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -516,7 +535,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
-            'has_in_stock', 'rental_period', 'purchase_type', 'full_location', 'address'
+            'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -1035,14 +1054,37 @@ class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
     videos = VideoSerializer(many=True)
     rental_period = RentItemsPeriodSerializer()
+    ticket_period = TicketPeriodSerializer()
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'rental_period'
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'rental_period', 'ticket_period'
+        )
+
+class TicketWithTicketPeriodSerializer(serializers.ModelSerializer):
+    ticket_period = TicketPeriodSerializer()
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'ticket_period'
         )
 
 
+class TicketItemRetrieveSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    videos = VideoSerializer(many=True)
+    ticket_period = TicketPeriodSerializer()
+    subcategory = SubcategorySerializer()
+    currency = serializers.CharField(source='organization.currency.code')
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'subcategory', 'currency',
+                  'ticket_period'
+        )
 
 class BookInfoSerializer(serializers.ModelSerializer):
 
@@ -1083,12 +1125,27 @@ class IsActiveBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = ('id', 'is_active')
 
-class RentalListSerializer(ItemListSerializer):
+
+class IsActiveTicketSerializer(serializers.ModelSerializer):
+    item = TicketItemRetrieveSerializer()
+    activated_time = serializers.SerializerMethodField()
+
+    def get_activated_time(self, ticket: Ticket):
+        if ticket.is_active:
+            return ticket.updated_at
+        return None
+
+    class Meta:
+        model = Ticket
+        fields = ('id', 'item', 'is_active', 'activated_time')
+
+class RentalTicketListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
     created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
+    ticket_period = TicketPeriodSerializer()
 
 
     class Meta:
@@ -1097,6 +1154,6 @@ class RentalListSerializer(ItemListSerializer):
             'id', 'name', 'name_lang', 'description', 'description_lang',
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'created_at', 'updated_at', 'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'is_updated', 'purchase_type'
+            'is_updated', 'purchase_type', 'ticket_period'
         )
         read_only_fields = ['name_lang', 'description_lang']

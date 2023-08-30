@@ -8,13 +8,16 @@ from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, Booking, ShopItem
+from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
-from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer
+from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
+    TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
-from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP
+from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP, TICKET_ICON_MAP, \
+    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE
+
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
@@ -111,16 +114,51 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return None
 
     def get_purchase_type(self, transaction: Transaction):
-        try:
-            booking = transaction.booking
-        except Booking.DoesNotExist:
-            return 'product'
-        return 'rent'
+        booking = Booking.objects.filter(transaction=transaction)
+        if booking.exists():
+            return ShopItem.RENTAL
+        ticket = Ticket.objects.filter(transaction=transaction)
+        if ticket.exists():
+            return ShopItem.TICKET
+        return ShopItem.PRODUCT
 
     def get_icon_type(self, transaction: Transaction):
-        return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
+        purchase_type = self.get_purchase_type(transaction)
+        if purchase_type == ShopItem.RENTAL:
+            return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                DECLINED_OFFLINE_PAYMENT_TYPE)
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                   DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
 
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
+            'payment_status', 'purchase_type', 'icon_type'
+        )
+
+
+class TransactionsTicketSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+    purchase_type = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_purchase_type(self, transaction: Transaction):
+        return ShopItem.TICKET
+
+    def get_icon_type(self, transaction: Transaction):
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                   DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
     class Meta:
         model = Transaction
@@ -324,6 +362,28 @@ class OrganizationRentalTransactionWithClientSerializer(TransactionDetailSeriali
         )
 
 
+class OrganizationTicketWithClientSerializer(TransactionDetailSerializer):
+    client = ProfileBriefWithPhotoSerializer(source='user')
+    organization = OrganizationShortInfoWithCurrencySerializer()
+    item = TicketWithTicketPeriodSerializer()
+    current_user_can_see_stats = serializers.SerializerMethodField()
+    activated_time = serializers.SerializerMethodField()
+
+    def get_current_user_can_see_stats(self, instance):
+        return OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                      organization=instance.organization)
+
+    def get_activated_time(self, ticket: Ticket):
+        if ticket.is_active:
+            return ticket.updated_at
+        return None
+
+
+    class Meta:
+        model = Ticket
+        fields = ('id', 'client', 'item', 'current_user_can_see_stats', 'organization', 'is_active', 'activated_time')
+
+
 class StartEndDateTransactionSerializer(serializers.Serializer):
     start = serializers.DateField(required=False)
     end = serializers.DateField(required=False)
@@ -335,6 +395,11 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
 class UserInfoBookingSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
     booking = serializers.PrimaryKeyRelatedField(queryset=Booking.objects.all())
+
+
+class UserInfoTicketSerializer(serializers.Serializer):
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True), required=False)
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
 
 
 class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
@@ -351,8 +416,26 @@ class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
                   'final_amount', 'client', 'type', 'status', 'icon_type', 'booking', 'created_at', 'updated_at')
 
 
+class ActivateTransactionTicketWithClientSerializer(TransactionDetailSerializer):
+    client = UserInfoSerializer()
+    ticket = IsActiveTicketSerializer(many=True)
+
+    class Meta:
+        model = Transaction
+        fields = ('id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+                  'final_amount', 'client', 'type', 'status', 'created_at', 'updated_at', 'ticket')
+
+
 class TransactionActivateSerializer(serializers.Serializer):
     transaction = serializers.PrimaryKeyRelatedField(queryset=Transaction.objects.filter(is_processed=True))
+
+
+class TicketSerializer(serializers.Serializer):
+    ticket = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all())
+
+
+class TicketActivateSerializer(serializers.Serializer):
+    ticket = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.filter(is_active=False))
 
 
 class ResultURLSerializer(serializers.Serializer):

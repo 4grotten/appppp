@@ -59,7 +59,25 @@ class RentalPeriod(models.Model):
         return f'{self.start_date} - {self.end_date}, {self.start_time} - {self.end_time}'
 
 
+class TicketPeriod(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def str(self):
+        return f'{self.start_date} - {self.end_date}, {self.start_time} - {self.end_time}'
+
+
 class ShopItem(models.Model):
+    PRODUCT = 'product'
+    RENTAL = 'rent'
+    TICKET = 'ticket'
+    TYPE_CHOICES = (
+        (PRODUCT, PRODUCT),
+        (RENTAL, RENTAL),
+        (TICKET, TICKET)
+    )
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
@@ -85,16 +103,13 @@ class ShopItem(models.Model):
 
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
 
-    type_choices = (
-        ('product', 'product'),
-        ('rent', 'rent')
-    )
-    purchase_type = models.CharField(max_length=55, choices=type_choices, default='product', null=True, blank=True)
+    purchase_type = models.CharField(max_length=55, choices=TYPE_CHOICES, default='product', null=True, blank=True)
 
     address = models.CharField(max_length=255, null=True, blank=True)
     location = PointField(help_text="Для создания местоположения", null=True, blank=True)
 
     rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
+    ticket_period = models.ForeignKey(TicketPeriod, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
     def full_location(self):
@@ -224,6 +239,17 @@ class Booking(TimestampModel):
 
     def __str__(self):
         return f'Booking of {self.user} in {self.organization}'
+
+
+class Ticket(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_ticket')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='user_tickets', null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, related_name='ticket', null=True)
+
+    def __str__(self):
+        return f'Ticket of {self.user} in {self.organization}'
 
 
 

@@ -8,20 +8,22 @@ from shop.views.cart_views import (
 from shop.views.category_views import (
     ItemCategoryListView, ItemRentalCategoryListView, SubcategoryRetrieveUpdateDestroyView, ItemSubcategoryCreateView,
     OrganizationSubcategoryListView, NonEmptyCategoryListView, ItemCategoryRetrieveView,
-    ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView
+    ItemCategoryAllSubcategoriesView, NonEmptyPartnerCategoryListView, NonEmptyPartnerSubcategoryListView,
+    ItemTicketCategoryListView
 )
 from shop.views.comment_views import CommentItemListCreateView, \
     CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike, CommentComplaintCreateView
 from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView,
-    OrganizationRentalListView
+    OrganizationRentalListView, OrganizationTicketListView, OrganizationOwnTicketListView
 )
 from shop.views.item_views import (
     ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView,
     LikeListCreateView, BookmarkListCreateView, ComplaintCreateView, TranslateItemTextView, SuggestSearchItem,
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
-    AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView
+    AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView,
+    ItemTicketCreateView, TicketPeriodCreateView
 )
 
 urlpatterns = [
@@ -58,10 +60,16 @@ urlpatterns = [
     path('shop/rentals/<int:pk>/booking/offline_checkout/', BookingAnonymousCheckoutView.as_view(),
          name='booking_anonymous_checkout'),
 
+    path('shop/tickets/', ItemTicketCreateView.as_view(), name='ticket_create'),
+    path('shop/tickets/categories/', ItemTicketCategoryListView.as_view(), name='rent_categories'),
+    path('shop/tickets/<int:pk>/ticket_period/', TicketPeriodCreateView.as_view(), name='add_ticket_period'),
+
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
     path('shop/organization_rentals/', OrganizationRentalListView.as_view(), name='organization_rentals'),
+    path('shop/organization_tickets/', OrganizationTicketListView.as_view(), name='organization_tickets'),
+    path('shop/organization_tickets/own/', OrganizationOwnTicketListView.as_view(), name='own_organization_tickets'),
     path('shop/subscription_items/', SubscriptionItemListView.as_view(), name='subscribed_organization_items'),
     path('shop/hotlink_items/<int:pk>/', HotlinkCollectionItemListView.as_view(), name='hotlink_collection_items'),
 

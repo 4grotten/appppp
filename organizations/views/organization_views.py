@@ -259,7 +259,9 @@ class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
     def retrieve(self, request, *args, **kwargs):
         organization = self.get_object()
         payment_systems_activated = organization.payment_systems_activated
-        return Response({"payment_systems_activated": payment_systems_activated},
+        payment_with_confirmation = organization.payment_with_confirmation
+        return Response({"payment_systems_activated": payment_systems_activated,
+                         "payment_with_confirmation": payment_with_confirmation},
                         status=status.HTTP_200_OK)
 
     def get_object(self):
@@ -271,12 +273,17 @@ class OrganizationPaymentSystemsActivationView(RetrieveUpdateAPIView):
     def update(self, request, *args, **kwargs):
         organization = self.get_object()
         payment_systems_activated = request.data.get('payment_systems_activated', None)
+        payment_with_confirmation = request.data.get('payment_with_confirmation', None)
 
         if payment_systems_activated is not None:
             organization.payment_systems_activated = payment_systems_activated
             organization.save()
 
-        return Response({"message": _("Payment systems activation status successfully updated.")},
+        if payment_with_confirmation is not None:
+            organization.payment_with_confirmation = payment_with_confirmation
+            organization.save()
+
+        return Response({"message": _("Payment systems settings updated.")},
                         status=status.HTTP_200_OK)
 
 

@@ -367,6 +367,46 @@ class DownloadOrgRentalInfoAPIView(APIView):
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
 
+
+class DownloadOrgTicketInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        return StockService.get_organization_ticket_delivery_info(organization_id=self.kwargs['pk'],
+                                                           start_time=self.request.query_params.get('start_time'),
+                                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_ticket_deals(queryset)
+        dict_ticket_data = StockService.get_dict_data_for_tickets(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_tickets = pd.DataFrame(dict_ticket_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_tickets.to_excel(writer, sheet_name='Билеты', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_organization_delivery_min_and_max_date_info(
+                    organization_id=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+
 class DownloadRentalInfoAPIView(APIView):
     # permission_classes = (IsAuthenticated,)
 
@@ -397,6 +437,46 @@ class DownloadRentalInfoAPIView(APIView):
                     filename = f'{self.request.query_params.get("start_time")}.xlsx'
             else:
                 start_date, end_date = StockService.get_rental_min_and_max_date_info(
+                    item=self.kwargs['pk'])
+                filename = f'{start_date} - {end_date} (all time report).xlsx'
+            response = HttpResponse(
+                b.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
+
+
+class DownloadTicketInfoAPIView(APIView):
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self, *args, **kwargs):
+        item = ShopItemService.get(id=self.kwargs['pk'])
+        return StockService.get_ticket_info(item=item,
+                                           start_time=self.request.query_params.get('start_time'),
+                                           end_time=self.request.query_params.get('end_time'))
+
+    def get(self, request, *args, **kwargs):
+        queryset = list(self.get_queryset(*args, **kwargs))
+
+        dict_deals_data = StockService.get_dict_data_for_ticket_deals(queryset)
+        dict_ticket_data = StockService.get_dict_data_for_tickets(queryset)
+
+        df_deals = pd.DataFrame(dict_deals_data)
+        df_ticket = pd.DataFrame(dict_ticket_data)
+        with BytesIO() as b:
+            writer = pd.ExcelWriter(b, engine='xlsxwriter')
+            df_deals.to_excel(writer, sheet_name='Сделки', index=False)
+            df_ticket.to_excel(writer, sheet_name='Билеты и абонементы', index=False)
+            writer.save()
+            if self.request.query_params.get('start_time') and self.request.query_params.get('end_time'):
+                filename = '{start_time} - {end_time}.xlsx'.format(
+                    start_time=self.request.query_params.get('start_time'),
+                    end_time=self.request.query_params.get('end_time'))
+                if self.request.query_params.get('start_time') == self.request.query_params.get('end_time'):
+                    filename = f'{self.request.query_params.get("start_time")}.xlsx'
+            else:
+                start_date, end_date = StockService.get_ticket_min_and_max_date_info(
                     item=self.kwargs['pk'])
                 filename = f'{start_date} - {end_date} (all time report).xlsx'
             response = HttpResponse(

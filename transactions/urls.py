@@ -16,7 +16,12 @@ from transactions.views.transaction_views import (
     UserRentalTransactionsListView, UserSaleTransactionsDetailListView, UserRentalSaleTransactionsListView,
     OrganizationRentalCustomerTransactionView, UserRentalUnprocessedTransactionCountView, ResultURLView,
     InitPaymentView, PaymentSuccessView, OnlinePaymentTransactionCompleteView, OrderPaymentAcceptView,
-    OrderPaymentRejectView, TransactionPayOfflineView, CashierTransactionCompleteView
+    OrderPaymentRejectView, TransactionPayOfflineView, CashierTransactionCompleteView,
+    UserTicketUnprocessedTransactionCountView, UserSaleTicketTransactionOrganizationView, UserSaleTicketTotalsView,
+    OrganizationTicketUsersTransactionView, CheckTicketInUsersView, TransactionTicketUserInfoView,
+    TransactionTicketActivate, UserSaleTicketTransactionsDetailListView, OrganizationTicketCustomerTransactionView,
+    UserTicketTotalsView, UserTicketTransactionOrganizationView, UserTicketSaleTransactionsListView,
+    TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView
 )
 
 urlpatterns = [
@@ -79,10 +84,37 @@ urlpatterns = [
          name='unprocessed_transaction_count'),
     path('statistics/unprocessedTranCount/rental/', UserRentalUnprocessedTransactionCountView.as_view(),
          name='unprocessed_rental_transaction_count'),
+
+    # tickets
+    path('statistics/unprocessedTranCount/ticket/', UserTicketUnprocessedTransactionCountView.as_view(),
+         name='unprocessed_ticket_transaction_count'),
+    path('statistics/saleOrganizations/ticket/', UserSaleTicketTransactionOrganizationView.as_view(),
+         name='sale_ticket_transaction_organizations'),
+    path('statistics/saleTotals/ticket/', UserSaleTicketTotalsView.as_view(), name='user_sale_ticket_totals'),
+    path('transactions/organizations/ticket/<int:pk>/users/', OrganizationTicketUsersTransactionView.as_view(),
+         name='transactions_organizations_ticket_users'),
+    path('transactions/ticket/', TransactionTicketInfoView.as_view(), name='transaction_ticket'),
+    path('transactions/ticket/check_user/', CheckTicketInUsersView.as_view(), name='check_ticket_in_ticket_users'),
+    path('transactions/ticket/user/', TransactionTicketUserInfoView.as_view(), name='transaction_ticket_user_info'),
+    path('transactions/ticket/own/', TransactionOwnTicketInfoView.as_view(), name='transaction_ticket_own'),
+    path('transactions/ticket/activate/', TransactionTicketActivate.as_view(),
+         name='transaction_ticket_activate'),
+    path('statistics/saleTransactions/ticket/', UserTicketSaleTransactionsListView.as_view(),
+         name='user_ticket_sale_tran'),
+    path('statistics/saleTransactions/ticket/<int:pk>/', UserSaleTicketTransactionsDetailListView.as_view(),
+         name='user_ticket_sale_tran_detail'),
+    path('transactions/organizations/ticket/<int:pk>/customers/', OrganizationTicketCustomerTransactionView.as_view(),
+         name='transactions_organizations_ticket_users'),
+    path('statistics/totals/ticket/', UserTicketTotalsView.as_view(), name='user_ticket_totals'),
+    path('statistics/organizations/ticket/', UserTicketTransactionOrganizationView.as_view(),
+         name='ticket_transaction_organizations'),
+    path('statistics/transactions/ticket/', UserTicketTransactionsListView.as_view(), name='user_ticket_transactions'),
+
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 
+    # pay
     path('transactions/pay/', InitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')

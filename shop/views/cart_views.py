@@ -22,6 +22,7 @@ from shop.serializers.cart_serializers import (
 from shop.services.cart_services import CartItemService, CartService
 from transactions.models import Transaction
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer, OffsetUTCSerializer
+from transactions.services.transaction_services import TransactionService
 
 
 class UserCartListView(ListAPIView):
@@ -135,6 +136,16 @@ class OnlinePaymentOrderDeliveryView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.ONLINE_PAYMENT)
         DeliveryInfoService.create_for_online_payment(**serializer.validated_data, transaction=cart.transaction, )
+        organization = cart.transaction.organization
+
+        if not organization.payment_with_confirmation:
+            utc_offset_minutes = int(request.query_params.get('utc_offset_minutes'))
+            TransactionService.complete_online_payment_transaction(
+                transaction_id=cart.transaction.id,
+                utc_offset_minutes=utc_offset_minutes,
+                processed_by=organization.owner,
+                request=request
+            )
 
         return Response(
             {

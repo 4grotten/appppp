@@ -21,6 +21,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
 from users.serializers import UserShortInfoSerializer
 
@@ -201,6 +202,35 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         fields = (
             'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
             'partners', 'verification_status')
+        read_only_fields = ['verification_status']
+
+
+class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
+
+    def get_permissions(self, organization: Organization):
+        if 'request' in self.context:
+            if self.context['request'].user.is_anonymous:
+                return None
+            return OrganizationService.get_user_permissions_dict(organization=organization,
+                                                                 user=self.context['request'].user)
+
+    def get_latest_transaction_time(self, organization: Organization):
+        # Annotated field
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        queryset = Transaction.objects.filter(organization=organization, ticket__item__purchase_type=ShopItem.TICKET)
+        return Ticket.objects.filter(transaction__in=queryset, is_active=False).count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners', 'verification_status', 'permissions')
         read_only_fields = ['verification_status']
 
 
@@ -541,7 +571,8 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated'
+                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated',
+                  'payment_with_confirmation'
                   )
         read_only_fields = ['verification_status']
 
@@ -564,7 +595,8 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         model = Organization
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated'
+            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated',
+            'payment_with_confirmation'
         )
         read_only_fields = ['verification_status']
 

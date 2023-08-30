@@ -13,7 +13,7 @@ from organizations.services.hotlink_services import HotlinkService
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer, \
-    RentalListSerializer
+    RentalTicketListSerializer
 from shop.services.item_services import ShopItemService
 
 
@@ -84,7 +84,7 @@ class OrganizationItemListView(FeedView):
 
 
 class OrganizationRentalListView(ListAPIView):
-    serializer_class = RentalListSerializer
+    serializer_class = RentalTicketListSerializer
     filter_backends = (SearchFilter,)
     search_fields = ['name']
 
@@ -97,6 +97,50 @@ class OrganizationRentalListView(ListAPIView):
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_rentals_queryset_for_user(
+            organization=serializer.validated_data['organization'], user=self.request.user
+        ).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+        return qs
+
+
+class OrganizationTicketListView(ListAPIView):
+    serializer_class = RentalTicketListSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ['name']
+
+    def get_queryset(self):
+        serializer = OrganizationQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
+        organization = serializer.validated_data['organization']
+        if organization.is_deleted:
+            return ShopItem.objects.none()
+
+        qs = ShopItemService.get_organization_tickets_queryset_for_user(
+            organization=serializer.validated_data['organization'], user=self.request.user
+        ).order_by('-updated_at')
+        search = self.request.GET.get('search', None)
+        if search:
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+        return qs
+
+
+class OrganizationOwnTicketListView(ListAPIView):
+    serializer_class = RentalTicketListSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ['name']
+
+    def get_queryset(self):
+        serializer = OrganizationQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
+        organization = serializer.validated_data['organization']
+        if organization.is_deleted:
+            return ShopItem.objects.none()
+
+        qs = ShopItemService.get_organization_own_tickets_queryset_for_user(
             organization=serializer.validated_data['organization'], user=self.request.user
         ).order_by('-updated_at')
         search = self.request.GET.get('search', None)

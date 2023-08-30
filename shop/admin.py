@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
-    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection
+    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -80,6 +80,9 @@ class CommentComplaintAdmin(admin.ModelAdmin):
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('user', 'organization', 'item', 'is_open', 'transaction', 'start_time', 'end_time')
 
+class TicketAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization', 'item', 'is_active', 'transaction')
+
 
 admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)
 admin.site.register(ItemCategory, MainCategoryAdmin)
@@ -95,3 +98,4 @@ admin.site.register(CartItem, CartItemAdmin)
 admin.site.register(Complaint, ComplaintAdmin)
 admin.site.register(CommentComplaint, CommentComplaintAdmin)
 admin.site.register(Booking, BookingAdmin)
+admin.site.register(Ticket, TicketAdmin)

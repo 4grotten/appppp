@@ -39,7 +39,7 @@ from organizations.services.client_status_services import OrganizationClientFina
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from shop.models import Cart, ShopItem, Booking
+from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
@@ -76,6 +76,12 @@ class TransactionService:
         if cart is not None:
             cart.transaction = instance
             cart.save()
+            for cart_item in instance.cart.items.all():
+                if cart_item.item.purchase_type == ShopItem.TICKET:
+                    for _ in range(cart_item.count):
+                        Ticket.objects.create(user=client, organization=instance.organization,
+                                              item=cart_item.item,
+                                              transaction=instance)
 
         return instance
 
@@ -148,6 +154,11 @@ class TransactionService:
             cart.save()
             original_amount = items_price
             total_savings = total_savings + (items_price - discounted_items)
+            for cart_item in current_transaction.cart.items.all():
+                if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
+                    cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+                else:
+                    cls.change_count_service(size=None, cart_item=cart_item)
 
         amount_to_pay = original_amount - total_savings
         if amount_to_pay < from_cashback:
@@ -161,6 +172,7 @@ class TransactionService:
             current_transaction.source_card = source_card
             current_transaction.is_processed = True
             current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
@@ -976,6 +988,7 @@ class TransactionService:
             current_transaction.employee_name = processed_by.full_name
             current_transaction.employee_avatar = processed_by.avatar
             current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
             current_transaction.original_amount = original_price
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
@@ -1275,6 +1288,7 @@ class TransactionService:
             original_amount=original_price,
             currency=organization.currency,
             status=Transaction.ACCEPTED,
+            payment_status=Transaction.ACCEPTED,
             savings=original_price - discounted_price,
             is_processed=True,
             processed_by=processed_by,
@@ -1286,8 +1300,14 @@ class TransactionService:
             purchase_id=organization.running_purchase_id,
             display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
+        cart.transaction = offline_transaction
+        cart.save()
 
         for cart_item in offline_transaction.cart.items.all():
+            if cart_item.item.purchase_type == ShopItem.TICKET:
+                for _ in range(cart_item.count):
+                    Ticket.objects.create(user=processed_by, organization=organization, item=cart_item.item,
+                                          transaction=offline_transaction)
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
                 cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
@@ -1392,8 +1412,49 @@ class TransactionService:
         return organizations
 
     @classmethod
+    def get_user_ticket_transaction_organizations(cls, client: User, start_date, end_date):
+        transactions = Transaction.objects.filter(client=client, is_processed=True,
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(organization=OuterRef('pk'), client=client,
+                                           ).order_by('-updated_at').values('updated_at')[:1]
+            )
+        ).order_by('-latest_transaction_time')
+        return organizations
+
+    @classmethod
     def get_user_sale_rental_transaction_organizations(cls, user: User, start_date, end_date):
         transactions = cls.get_user_sale_rental_transactions(user=user)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(created_at__range=[start_date, end_date])
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(
+                    Q(organization=OuterRef('pk')) & (
+                            (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
+                        Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)))).order_by(
+                    '-updated_at').values('updated_at')[:1]
+            ),
+            unprocessed_transaction_count=Count(
+                Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.ONLINE,
+                                           status=Transaction.IN_PROGRESS).values('id')[:1])
+        )
+
+        organizations = organizations.order_by('-unprocessed_transaction_count',
+                                               F('latest_transaction_time').desc(nulls_last=True))
+        return organizations
+
+    @classmethod
+    def get_user_sale_ticket_transaction_organizations(cls, user: User, start_date, end_date):
+        transactions = cls.get_user_sale_ticket_transactions(user=user)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -1476,13 +1537,16 @@ class TransactionService:
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
-    def get_user_sale_rental_totals(cls, processed_by: User, currency: str,
-                             organization: Organization = None, start_date=None, end_date=None) -> dict:
-        transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
-                                                  booking__item__purchase_type='rent')
+    def get_user_ticket_totals(cls, client: User, currency: str, organization: Organization = None,
+                               item: ShopItem = None, start_date=None, end_date=None) -> dict:
+        transactions = Transaction.objects.filter(client=client, is_processed=True,
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
 
         if organization is not None:
             transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(ticket__item=item)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -1494,6 +1558,55 @@ class TransactionService:
             total_from_cashback=Coalesce(Sum('from_cashback'), 0)
         )
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_user_sale_rental_totals(cls, processed_by: User, currency: str,
+                             organization: Organization = None, item: ShopItem = None, start_date=None,
+                                    end_date=None) -> dict:
+        transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
+                                                  booking__item__purchase_type='rent')
+
+        if organization is not None:
+            transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(booking__item=item)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_user_sale_ticket_totals(cls, processed_by: User, currency: str,
+                                    organization: Organization = None, item: ShopItem = None, start_date=None,
+                                    end_date=None) -> dict:
+        transactions = Transaction.objects.filter(processed_by=processed_by, is_processed=True,
+                                                  ticket__item__purchase_type=ShopItem.TICKET)
+
+        if organization is not None:
+            transactions = transactions.filter(organization=organization)
+
+        if item is not None:
+            transactions = transactions.filter(ticket__item=item)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_spent=Coalesce(Sum('final_amount'), 0),
+            total_savings=Coalesce(Sum('savings'), 0),
+            total_from_cashback=Coalesce(Sum('from_cashback'), 0)
+        )
+        return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
+
 
     @classmethod
     def get_client_total_spent_in_cumulative_group(cls, client: User, organization: Organization,
@@ -1523,6 +1636,23 @@ class TransactionService:
             Q(client=client)
             & ~Q(Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))
             & Q(booking__item__purchase_type='rent')
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at')
+
+        return transactions
+
+    @classmethod
+    def get_user_ticket_transactions(cls, client: User):
+        transactions = Transaction.objects.filter(
+            Q(client=client)
+            & ~Q(Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))
+            & Q(ticket__item__purchase_type=ShopItem.TICKET)
         ).annotate(
             in_progress_first=Case(
                 When(status=Transaction.IN_PROGRESS, then=0),
@@ -1609,6 +1739,21 @@ class TransactionService:
 
         transactions = Transaction.objects.filter(booking__item=rental, is_processed=True,
                                                   booking__item__purchase_type='rent').order_by('-updated_at')
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(display_time__range=[start_date, end_date]) | Q(display_time__isnull=True)
+            )
+
+        return transactions
+
+    @classmethod
+    def get_organization_processed_ticket_transactions(cls, ticket: ShopItem, start_date=None, end_date=None):
+
+        transactions = Transaction.objects.filter(ticket__item=ticket,
+                                                  ticket__item__purchase_type=ShopItem.TICKET,
+                                                  is_processed=True).order_by('-updated_at')
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -2018,6 +2163,14 @@ class TransactionService:
                                           type=Transaction.ONLINE, booking__item__purchase_type='rent').count()
 
     @classmethod
+    def get_ticket_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        queryset = Transaction.objects.filter(organization__in=organization, ticket__item__purchase_type=ShopItem.TICKET)
+        return Ticket.objects.filter(transaction__in=queryset, is_active=False).count()
+
+    @classmethod
     def get_user_sale_transactions(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
@@ -2066,6 +2219,32 @@ class TransactionService:
 
         return transactions
 
+
+    @classmethod
+    def get_user_ticket_sale_transactions(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(organization__in=organization)
+            & (
+                    Q(processed_by=user)
+                    | Q(status=Transaction.IN_PROGRESS)
+                    | Q(status=Transaction.ACCEPTED)
+            )
+            & Q(ticket__item__purchase_type=ShopItem.TICKET)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at')
+
+        return transactions
+
     @classmethod
     def get_user_sale_transactions_detail(cls, user: User, item: ShopItem):
         memberships = Membership.objects.filter(
@@ -2092,6 +2271,31 @@ class TransactionService:
         return transactions
 
     @classmethod
+    def get_user_sale_ticket_transactions_detail(cls, user: User, item: ShopItem):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(organization__in=organization)
+            & (
+                    Q(processed_by=user)
+                    | Q(status=Transaction.IN_PROGRESS)
+                    | Q(status=Transaction.ACCEPTED)
+            )
+            & Q(ticket__item=item)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at').distinct()
+
+        return transactions
+
+    @classmethod
     def get_user_sale_rental_transactions(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
@@ -2109,6 +2313,23 @@ class TransactionService:
         return transactions
 
     @classmethod
+    def get_user_sale_ticket_transactions(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(ticket__item__purchase_type=ShopItem.TICKET) &
+            Q(organization__in=organization) &
+            (
+                    Q(processed_by=user) |
+                    Q(status__in=[Transaction.IN_PROGRESS, Transaction.ACCEPTED])
+            )
+        ).distinct()
+
+        return transactions
+
+    @classmethod
     def get_users_of_transactions_in_organization(cls, organization: Organization, processed_by: User) -> QuerySet:
         transactions = cls.get_organization_transactions(organization=organization)
 
@@ -2117,7 +2338,7 @@ class TransactionService:
             '-max_date')
 
     @classmethod
-    def get_users_of_rental_in_organization(cls, transactions: Transaction) -> QuerySet:
+    def get_users_of_rental_or_ticket_in_organization(cls, transactions: Transaction) -> QuerySet:
 
         return User.objects.filter(
             bought_transactions__in=transactions).annotate(max_date=Max('bought_transactions__created_at')).order_by(

@@ -17,7 +17,7 @@ from notifications.tasks import sent_notification, send_notifications_organizati
 from organizations.models import Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.organization_services import OrganizationService
-from shop.models import CartItem, Cart, ShopItem
+from shop.models import CartItem, Cart, ShopItem, Ticket
 from stock.models import ShopItemSizeCount
 from transactions.models import Transaction
 from users.models import User
@@ -106,6 +106,11 @@ class CartService:
         # ToDo: try to get transaction from cart
         current_transaction = cls.create_transaction(cart)
         cart.is_open = False
+        for cart_item in current_transaction.cart.items.all():
+            if cart_item.item.purchase_type == ShopItem.TICKET:
+                for _ in range(cart_item.count):
+                    Ticket.objects.create(user=user, organization=current_transaction.organization, item=cart_item.item,
+                                          transaction=current_transaction)
         try:
             cart.save()
         except IntegrityError:
@@ -155,26 +160,27 @@ class CartService:
                 )
                 return cart
             else:
-                sent_notification.delay(
-                    recipient_id=current_transaction.client_id,
-                    mode=NOTIFICATION_MODE_PRODUCT,
-                    notification_type=REQUEST_ORDER_CLIENT_TYPE,
-                    organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id,
-                                    total_price=str(current_transaction.final_amount),
-                                    currency=current_transaction.currency.code)
-                )
-                send_notifications_organization_members.delay(
-                    members_organization_id=current_transaction.organization_id,
-                    mode=NOTIFICATION_MODE_PRODUCT,
-                    sender_id=current_transaction.client_id,
-                    with_permissions=dict(can_see_stats=True),
-                    notification_type=REQUEST_ONLINE_ORDER_TYPE,
-                    organization_id=current_transaction.organization_id,
-                    extra_data=dict(transaction_id=current_transaction.id,
-                                    total_price=str(current_transaction.final_amount),
-                                    currency=current_transaction.currency.code)
-                )
+                if current_transaction.organization.payment_with_confirmation:
+                    sent_notification.delay(
+                        recipient_id=current_transaction.client_id,
+                        mode=NOTIFICATION_MODE_PRODUCT,
+                        notification_type=REQUEST_ORDER_CLIENT_TYPE,
+                        organization_id=current_transaction.organization_id,
+                        extra_data=dict(transaction_id=current_transaction.id,
+                                        total_price=str(current_transaction.final_amount),
+                                        currency=current_transaction.currency.code)
+                    )
+                    send_notifications_organization_members.delay(
+                        members_organization_id=current_transaction.organization_id,
+                        mode=NOTIFICATION_MODE_PRODUCT,
+                        sender_id=current_transaction.client_id,
+                        with_permissions=dict(can_see_stats=True),
+                        notification_type=REQUEST_ONLINE_ORDER_TYPE,
+                        organization_id=current_transaction.organization_id,
+                        extra_data=dict(transaction_id=current_transaction.id,
+                                        total_price=str(current_transaction.final_amount),
+                                        currency=current_transaction.currency.code)
+                    )
             return cart
 
     @classmethod

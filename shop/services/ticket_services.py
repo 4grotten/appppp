@@ -38,7 +38,7 @@ class TicketService:
         sent_notification.delay(
             recipient_id=transaction.client_id,
             sender_id=transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
+            mode=NOTIFICATION_MODE_TICKET,
             notification_type=ACTIVATE_TICKET_CLIENT_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data
@@ -47,7 +47,7 @@ class TicketService:
         sent_notification.delay(
             recipient_id=transaction.processed_by_id,
             sender_id=transaction.client_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
+            mode=NOTIFICATION_MODE_TICKET,
             notification_type=ACTIVATE_TICKET_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data

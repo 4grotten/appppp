@@ -1,5 +1,6 @@
 from common.exceptions import ObjectNotFoundException, BadRequestException, IntegrityException
-from notifications.constants import NOTIFICATION_MODE_TICKET, ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_TYPE
+from notifications.constants import NOTIFICATION_MODE_TICKET, ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_TYPE, \
+    NOTIFICATION_MODE_PRODUCT
 from shop.models import Ticket
 from notifications.tasks import sent_notification
 
@@ -37,7 +38,7 @@ class TicketService:
         sent_notification.delay(
             recipient_id=transaction.client_id,
             sender_id=transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_TICKET,
+            mode=NOTIFICATION_MODE_PRODUCT,
             notification_type=ACTIVATE_TICKET_CLIENT_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data
@@ -46,7 +47,7 @@ class TicketService:
         sent_notification.delay(
             recipient_id=transaction.processed_by_id,
             sender_id=transaction.client_id,
-            mode=NOTIFICATION_MODE_TICKET,
+            mode=NOTIFICATION_MODE_PRODUCT,
             notification_type=ACTIVATE_TICKET_TYPE,
             organization_id=transaction.organization_id,
             extra_data=extra_data

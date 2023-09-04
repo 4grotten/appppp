@@ -1,5 +1,6 @@
 from common.exceptions import ObjectNotFoundException, BadRequestException, IntegrityException
-from notifications.constants import NOTIFICATION_MODE_TICKET, ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_TYPE
+from notifications.constants import NOTIFICATION_MODE_TICKET, ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_TYPE, \
+    NOTIFICATION_MODE_PRODUCT
 from shop.models import Ticket
 from notifications.tasks import sent_notification
 

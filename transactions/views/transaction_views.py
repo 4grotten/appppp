@@ -35,7 +35,7 @@ from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
 from shop.services.ticket_services import TicketService
 from transactions.models import Transaction
-from transactions.serializers.stats_serializers import TotalStatsSerializer
+from transactions.serializers.stats_serializers import TotalStatsSerializer, BalanceTotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
     TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
@@ -474,6 +474,28 @@ class UserTotalsView(APIView):
                                                     end_date=serializer.validated_data.get('end'))
         totals['total_savings'] += totals['total_from_cashback']
         data = TotalStatsSerializer(totals).data
+        return Response(data)
+
+
+class UserBalanceTotalsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+
+        totals = TransactionService.get_user_balance_totals(client=request.user, currency=currency,
+                                                    organization=organization,
+                                                    start_date=serializer.validated_data.get('start'),
+                                                    end_date=serializer.validated_data.get('end'))
+        data = BalanceTotalStatsSerializer(totals).data
         return Response(data)
 
 

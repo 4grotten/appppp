@@ -26,6 +26,11 @@ class TotalStatsSerializer(serializers.Serializer):
     currency = serializers.CharField()
 
 
+class BalanceTotalStatsSerializer(serializers.Serializer):
+    total_balance = serializers.DecimalField(max_digits=16, decimal_places=2)
+    currency = serializers.CharField()
+
+
 class OrganizationCalendarSerializer(serializers.Serializer):
     month_year = serializers.DateField(default=None, input_formats=["%Y-%m"])
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=True)

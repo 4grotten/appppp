@@ -785,6 +785,39 @@ class OrganizationTransactionListView(ListAPIView):
         return Response(serializer.data)
 
 
+class OrganizationBalanceTransactionListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionsSerializer
+    queryset = Transaction.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
+                                                      user=request.user):
+            raise NotAcceptableException(_('No rights to see stats of organization'))
+
+        queryset = TransactionService.get_organization_balance_transactions(
+            organization=serializer.validated_data['organization'],
+            start_date=serializer.validated_data['start'],
+            end_date=serializer.validated_data['end'],
+            search_id=serializer.validated_data['search'],
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionWithClientSerializer

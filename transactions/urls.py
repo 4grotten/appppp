@@ -21,7 +21,8 @@ from transactions.views.transaction_views import (
     OrganizationTicketUsersTransactionView, CheckTicketInUsersView, TransactionTicketUserInfoView,
     TransactionTicketActivate, UserSaleTicketTransactionsDetailListView, OrganizationTicketCustomerTransactionView,
     UserTicketTotalsView, UserTicketTransactionOrganizationView, UserTicketSaleTransactionsListView,
-    TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView
+    TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView,
+    OrganizationBalanceTransactionListView
 )
 
 urlpatterns = [
@@ -120,5 +121,7 @@ urlpatterns = [
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url'),
 
     # balance
+    path('transactions/balance/', OrganizationBalanceTransactionListView.as_view(),
+         name='organization_balance_transactions'),
     path('statistics/balance/totals/', UserBalanceTotalsView.as_view(), name='user_balance_totals'),
 ]

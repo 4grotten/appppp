@@ -1125,24 +1125,6 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
-        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
-            is_delivery_service=True, country=organization.country).exists()
-        if org:
-            try:
-                send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
-                                                                     current_transaction.cart.id,
-                                                                     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                                     mode=NOTIFICATION_MODE_SYSTEM)
-
-                organization_members = list(current_transaction.cart.organization.memberships.filter(
-                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
-                for member in organization_members:
-                    send_delivery_notitication_to_organization_or_client(member.user,
-                                                                         current_transaction.cart.id,
-                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                                         mode=NOTIFICATION_MODE_SYSTEM)
-            except Exception as e:
-                logging.exception(e)
         return current_transaction
 
     @classmethod
@@ -2058,21 +2040,14 @@ class TransactionService:
     @transaction.atomic
     def accept_order_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        print("HEREE")
         if old_transaction.client != user:
             raise PermissionDeniedException(_('Permission denied'))
         try:
-            print("EST")
             old_transaction.payment_status = Transaction.ACCEPTED
-            print("NET")
             old_transaction.is_processed = True
-            print("OBED")
             old_transaction.save()
-            print("CHET")
         except:
-            print("LOL")
             raise IntegrityException()
-        print("HAHA")
         if old_transaction.type == Transaction.ONLINE:
             Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
@@ -2102,6 +2077,25 @@ class TransactionService:
                             discount_percent=discount_percent,
                             currency=old_transaction.currency.code)
         )
+        organization = old_transaction.organization
+        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+            is_delivery_service=True, country=organization.country).exists()
+        if org:
+            try:
+                send_delivery_notitication_to_organization_or_client(old_transaction.cart.organization.owner,
+                                                                     old_transaction.cart.id,
+                                                                     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                     mode=NOTIFICATION_MODE_SYSTEM)
+
+                organization_members = list(old_transaction.cart.organization.memberships.filter(
+                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                for member in organization_members:
+                    send_delivery_notitication_to_organization_or_client(member.user,
+                                                                         old_transaction.cart.id,
+                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                         mode=NOTIFICATION_MODE_SYSTEM)
+            except Exception as e:
+                logging.exception(e)
 
     @classmethod
     @transaction.atomic

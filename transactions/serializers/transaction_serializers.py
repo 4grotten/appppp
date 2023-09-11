@@ -15,8 +15,8 @@ from shop.serializers.item_serializers import TransactionBookingInfoSerializer, 
 from transactions.models import Transaction
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
-from transactions.constants import DECLINED_OFFLINE_PAYMENT_TYPE, ICON_MAP, TICKET_ICON_MAP, \
-    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE
+from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
+    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE, PRODUCT_ICON_MAP, DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE
 
 
 class OffsetUTCSerializer(serializers.Serializer):
@@ -124,9 +124,12 @@ class TransactionsSerializer(serializers.ModelSerializer):
 
     def get_icon_type(self, transaction: Transaction):
         purchase_type = self.get_purchase_type(transaction)
+        if purchase_type == ShopItem.PRODUCT:
+            return PRODUCT_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                        DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE)
         if purchase_type == ShopItem.RENTAL:
-            return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
-                                DECLINED_OFFLINE_PAYMENT_TYPE)
+            return RENTAL_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                       DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE)
         return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
                                    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
@@ -408,7 +411,7 @@ class ActivateTransactionWithClientSerializer(TransactionDetailSerializer):
     booking = IsActiveBookingSerializer()
 
     def get_icon_type(self, transaction: Transaction):
-        return ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_OFFLINE_PAYMENT_TYPE)
+        return RENTAL_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status), DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE)
 
     class Meta:
         model = Transaction

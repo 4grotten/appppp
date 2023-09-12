@@ -110,6 +110,7 @@ class Organization(TimestampModel):
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)
+    show_followers = models.BooleanField(default=True)
 
     add_item_date = models.DateTimeField(auto_now_add=True)
 

@@ -160,8 +160,8 @@ class TransactionsTicketSerializer(serializers.ModelSerializer):
         return ShopItem.TICKET
 
     def get_icon_type(self, transaction: Transaction):
-        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
-                                   DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,
+                                    transaction.delivery_type), DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
 
     class Meta:
         model = Transaction

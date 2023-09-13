@@ -106,24 +106,27 @@ class SubscriptionService:
     @classmethod
     def get_organization_followers(cls, organization_id: int, user: User = None) -> QuerySet:
         organization = Organization.objects.get(id=organization_id)
-        # if user:
-        #     if OrganizationService.user_can_edit_organization(organization=organization, user=user):
-        #         return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
-        #             '-subscriptions__id')
-        #     return User.objects.filter(
-        #         Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
-        #         '-subscriptions__id')
-        # return User.objects.filter(
-        #     Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
-        #     '-subscriptions__id')
-        if not user:
+        if organization.is_private:
+            if not user:
+                return User.objects.none()
+
+            if OrganizationService.user_can_edit_organization(organization=organization, user=user) and \
+                    OrganizationService.user_can_see_stats(organization=organization, user=user):
+                return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
+                    '-subscriptions__id')
+
             return User.objects.none()
-
-        if OrganizationService.user_can_edit_organization(organization=organization, user=user):
-            return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
+        else:
+            if user:
+                if OrganizationService.user_can_edit_organization(organization=organization, user=user):
+                    return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
+                        '-subscriptions__id')
+                return User.objects.filter(
+                    Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
+                    '-subscriptions__id')
+            return User.objects.filter(
+                Q(subscriptions__organization=organization) & Q(subscriptions__status='subscribed')).order_by(
                 '-subscriptions__id')
-
-        return User.objects.none()
 
     @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:

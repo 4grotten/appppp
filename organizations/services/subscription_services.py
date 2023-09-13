@@ -2,7 +2,7 @@ from django.db.models import QuerySet, F, Q
 from django.db.models import Subquery, OuterRef
 from django.utils.translation import gettext_lazy as _
 
-from common.exceptions import PermissionDeniedException, ObjectNotFoundException
+from common.exceptions import PermissionDeniedException, ObjectNotFoundException, NotAcceptableException
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
@@ -124,7 +124,7 @@ class SubscriptionService:
                     return User.objects.filter(subscriptions__organization_id=organization_id).order_by(
                         '-subscriptions__id')
 
-            return User.objects.none()
+            raise PermissionDeniedException(_('No rights to get followers'))
 
     @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:

@@ -49,6 +49,8 @@ TICKET_ICON_MAP = {
         ACCEPTED_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
         DECLINED_ONLINE_TICKET_TYPE,
+    (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
+        DECLINED_ONLINE_TICKET_TYPE,
 
     # self_pickup
     (Transaction.ONLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
@@ -57,12 +59,14 @@ TICKET_ICON_MAP = {
         ACCEPTED_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         DECLINED_ONLINE_TICKET_TYPE,
+    (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.SELF_PICKUP):
+        DECLINED_ONLINE_TICKET_TYPE,
 
     # cart_checkout
-    (Transaction.OFFLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.CART_CHECKOUT):
-        REQUEST_ONLINE_PAYMENT_TYPE,
     (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         ACCEPTED_TICKET_OFFLINE_PAYMENT_TYPE,
+    (Transaction.OFFLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
+        DECLINED_TICKET_OFFLINE_PAYMENT_TYPE,
 }
 
 
@@ -95,6 +99,8 @@ PRODUCT_ICON_MAP = {
         ACCEPTED_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
         DECLINED_ONLINE_PRODUCT_TYPE,
+    (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
+        DECLINED_ONLINE_PRODUCT_TYPE,
 
     # self_pickup
     (Transaction.ONLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
@@ -103,10 +109,12 @@ PRODUCT_ICON_MAP = {
         ACCEPTED_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         DECLINED_ONLINE_PRODUCT_TYPE,
+    (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.SELF_PICKUP):
+        DECLINED_ONLINE_PRODUCT_TYPE,
 
     # cart_checkout
-    (Transaction.OFFLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.CART_CHECKOUT):
-        REQUEST_ONLINE_PAYMENT_TYPE,
     (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         ACCEPTED_PRODUCT_OFFLINE_PAYMENT_TYPE,
+    (Transaction.OFFLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
+        DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE,
 }

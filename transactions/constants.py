@@ -65,6 +65,8 @@ TICKET_ICON_MAP = {
     # cart_checkout
     (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         ACCEPTED_TICKET_OFFLINE_PAYMENT_TYPE,
+    (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.CART_CHECKOUT):
+        ACCEPTED_TICKET_OFFLINE_PAYMENT_TYPE,
     (Transaction.OFFLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         DECLINED_TICKET_OFFLINE_PAYMENT_TYPE,
 }
@@ -114,6 +116,8 @@ PRODUCT_ICON_MAP = {
 
     # cart_checkout
     (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
+        ACCEPTED_PRODUCT_OFFLINE_PAYMENT_TYPE,
+    (Transaction.OFFLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.CART_CHECKOUT):
         ACCEPTED_PRODUCT_OFFLINE_PAYMENT_TYPE,
     (Transaction.OFFLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE,

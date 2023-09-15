@@ -12,7 +12,7 @@ from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
     TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
-from transactions.models import Transaction
+from transactions.models import Transaction, PayoutSystem
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
 from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
@@ -472,3 +472,11 @@ class PaymentSuccessSerializer(serializers.Serializer):
     pg_payment_id = serializers.IntegerField(required=False)
     pg_error_code = serializers.CharField(required=False)
     pg_error_description = serializers.CharField(required=False)
+
+
+class PayoutSystemSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = PayoutSystem
+        fields = ('id', 'name', 'image', 'fee_percent')

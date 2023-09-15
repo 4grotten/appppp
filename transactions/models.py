@@ -95,3 +95,31 @@ class Transaction(TimestampModel):
     def save(self, *args, **kwargs):
         self.final_amount = self.original_amount - self.savings - self.from_cashback
         super().save(*args, **kwargs)
+
+
+class PayoutSystem(models.Model):
+    name = models.CharField(max_length=255)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    fee_percent = models.PositiveSmallIntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+class Recipient(models.Model):
+    payout_system = models.ForeignKey(PayoutSystem, on_delete=models.PROTECT, related_name='recipients')
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    owner_name_on_card = models.CharField(max_length=255)
+    transfer_amount = models.DecimalField(max_digits=16, decimal_places=2)
+
+    def __str__(self):
+        return f"Recipient {self.owner_name_on_card} using {self.payout_system}"
+
+
+class Balance(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='balances')
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default='KGS')
+    balance_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
+    payout_systems = models.ManyToManyField(PayoutSystem)
+
+    def __str__(self):
+        return f"Balance for {self.organization}"

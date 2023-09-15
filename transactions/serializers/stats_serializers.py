@@ -3,6 +3,7 @@ from rest_framework import serializers
 from common.serializers import ImageSerializer
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
+from transactions.models import Balance
 from transactions.services.stats_services import StatisticsService
 from users.models import User
 from users.serializers import UserWhitClientOrRoleInfoSerializer
@@ -26,9 +27,11 @@ class TotalStatsSerializer(serializers.Serializer):
     currency = serializers.CharField()
 
 
-class BalanceTotalStatsSerializer(serializers.Serializer):
-    total_balance = serializers.DecimalField(max_digits=16, decimal_places=2)
-    currency = serializers.CharField()
+class BalanceTotalStatsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'currency', 'balance_amount')
 
 
 class OrganizationCalendarSerializer(serializers.Serializer):

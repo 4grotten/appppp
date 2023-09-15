@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Transaction
+from .models import Transaction, Balance, PayoutSystem, Recipient
 
 
 class TransactionAdmin(admin.ModelAdmin):
@@ -25,4 +25,17 @@ class TransactionAdmin(admin.ModelAdmin):
         return False
 
 
+class BalanceAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'currency', 'balance_amount')
+
+
+class PayoutSystemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'image', 'fee_percent')
+
+class RecipientAdmin(admin.ModelAdmin):
+    list_display = ('payout_system', 'image', 'owner_name_on_card', 'transfer_amount')
+
 admin.site.register(Transaction, TransactionAdmin)
+admin.site.register(Balance, BalanceAdmin)
+admin.site.register(PayoutSystem, PayoutSystemAdmin)
+admin.site.register(Recipient, RecipientAdmin)

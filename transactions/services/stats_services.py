@@ -128,7 +128,7 @@ class StatisticsService:
         }
 
     @staticmethod
-    def get_transaction_balance_in_one_currency(totals: QuerySet, currency: str) -> dict:
+    def get_transaction_balance_in_one_currency(totals: QuerySet, currency: str):
         """
         "totals" queryset should look like this
         QuerySet [
@@ -156,10 +156,7 @@ class StatisticsService:
                 amount=currency_transaction['total_balance']
             )
 
-        return {
-            'total_balance': total_balance,
-            'currency': currency
-        }
+        return total_balance
 
     @staticmethod
     def get_total_spent_in_one_currency(totals: QuerySet, currency: str) -> Decimal:

@@ -1,5 +1,7 @@
 import hashlib
 import json
+from decimal import Decimal
+
 import xmltodict
 import xml.etree.ElementTree as ET
 import requests
@@ -15,9 +17,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.models import Currency
 from common.services.currency import CurrencyConverterService
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
-from common.exceptions import NotAcceptableException, PermissionDeniedException
+from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
 from notifications.models import Notification
@@ -34,7 +37,7 @@ from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
 from shop.services.ticket_services import TicketService
-from transactions.models import Transaction
+from transactions.models import Transaction, PayoutSystem, Balance
 from transactions.serializers.stats_serializers import TotalStatsSerializer, BalanceTotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
@@ -43,7 +46,7 @@ from transactions.serializers.transaction_serializers import (
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
-    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer
+    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -480,6 +483,7 @@ class UserTotalsView(APIView):
 class UserBalanceTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    # TODO: make separate balance for every payment system
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
@@ -489,14 +493,32 @@ class UserBalanceTotalsView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = serializer.validated_data['organization']
-        currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+        currency_code = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
 
-        totals = TransactionService.get_user_balance_totals(client=request.user, currency=currency,
+        totals = TransactionService.get_user_balance_totals(client=request.user, currency=currency_code,
                                                     organization=organization,
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
-        data = BalanceTotalStatsSerializer(totals).data
-        return Response(data)
+        if totals is None:
+            totals = Decimal('0.00')
+        try:
+            currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
+        except Currency.DoesNotExist:
+            raise ObjectNotFoundException(_('Currency not found'))
+        balance, created = Balance.objects.get_or_create(
+            organization=organization,
+            currency=currency
+        )
+        balance.balance_amount = totals
+        balance.save()
+
+        serializer = BalanceTotalStatsSerializer(balance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PayoutSystemListAPIView(ListAPIView):
+    queryset = PayoutSystem.objects.all()
+    serializer_class = PayoutSystemSerializer
 
 
 class UserSaleTotalsView(APIView):

@@ -22,7 +22,7 @@ from transactions.views.transaction_views import (
     TransactionTicketActivate, UserSaleTicketTransactionsDetailListView, OrganizationTicketCustomerTransactionView,
     UserTicketTotalsView, UserTicketTransactionOrganizationView, UserTicketSaleTransactionsListView,
     TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView,
-    OrganizationBalanceTransactionListView, PayoutSystemListAPIView
+    OrganizationBalanceTransactionListView, PayoutSystemListAPIView, PayoutSystemDetailAPIView
 )
 
 urlpatterns = [
@@ -124,6 +124,7 @@ urlpatterns = [
     path('transactions/balance/', OrganizationBalanceTransactionListView.as_view(),
          name='organization_balance_transactions'),
     path('statistics/balance/totals/', UserBalanceTotalsView.as_view(), name='user_balance_totals'),
-    path('transactions/payout-system/', PayoutSystemListAPIView.as_view(), name='payout_systems_list')
+    path('transactions/payout-system/', PayoutSystemListAPIView.as_view(), name='payout_systems_list'),
+    path('transactions/payout-system/<int:pk>/', PayoutSystemDetailAPIView.as_view(), name='payout_system_detail'),
 
 ]

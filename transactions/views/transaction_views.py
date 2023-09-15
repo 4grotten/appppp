@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -517,6 +517,11 @@ class UserBalanceTotalsView(APIView):
 
 
 class PayoutSystemListAPIView(ListAPIView):
+    queryset = PayoutSystem.objects.all()
+    serializer_class = PayoutSystemSerializer
+
+
+class PayoutSystemDetailAPIView(RetrieveAPIView):
     queryset = PayoutSystem.objects.all()
     serializer_class = PayoutSystemSerializer
 

@@ -47,6 +47,8 @@ TICKET_ICON_MAP = {
         REQUEST_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
         ACCEPTED_ONLINE_TICKET_TYPE,
+    (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
+        ACCEPTED_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
         DECLINED_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
@@ -56,6 +58,8 @@ TICKET_ICON_MAP = {
     (Transaction.ONLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         REQUEST_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.SELF_PICKUP):
+        ACCEPTED_ONLINE_TICKET_TYPE,
+    (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         ACCEPTED_ONLINE_TICKET_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         DECLINED_ONLINE_TICKET_TYPE,
@@ -99,6 +103,8 @@ PRODUCT_ICON_MAP = {
         REQUEST_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
         ACCEPTED_ONLINE_PRODUCT_TYPE,
+    (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
+        ACCEPTED_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.CASH_COURIER):
         DECLINED_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CASH_COURIER):
@@ -108,6 +114,8 @@ PRODUCT_ICON_MAP = {
     (Transaction.ONLINE, Transaction.IN_PROGRESS, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         REQUEST_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.ACCEPTED, Transaction.SELF_PICKUP):
+        ACCEPTED_ONLINE_PRODUCT_TYPE,
+    (Transaction.ONLINE, Transaction.ACCEPTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         ACCEPTED_ONLINE_PRODUCT_TYPE,
     (Transaction.ONLINE, Transaction.REJECTED, Transaction.IN_PROGRESS, Transaction.SELF_PICKUP):
         DECLINED_ONLINE_PRODUCT_TYPE,

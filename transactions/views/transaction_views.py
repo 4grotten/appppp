@@ -46,11 +46,13 @@ from transactions.serializers.transaction_serializers import (
     OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
-    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer
+    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
+    TransactionWithdrawalSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
+from transactions.services.recipient_services import RecipientService
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
 from users.services import UserService
@@ -495,12 +497,15 @@ class UserBalanceTotalsView(APIView):
         organization = serializer.validated_data['organization']
         currency_code = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
 
-        totals = TransactionService.get_user_balance_totals(client=request.user, currency=currency_code,
+        totals = TransactionService.get_user_balance_totals(currency=currency_code,
                                                     organization=organization,
                                                     start_date=serializer.validated_data.get('start'),
                                                     end_date=serializer.validated_data.get('end'))
-        if totals is None:
-            totals = Decimal('0.00')
+        withdrawal_totals = TransactionService.get_organization_processed_withdrawals(currency=currency_code,
+                                                    organization=organization,
+                                                    start_date=serializer.validated_data.get('start'),
+                                                    end_date=serializer.validated_data.get('end'))
+        totals = totals - withdrawal_totals
         try:
             currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         except Currency.DoesNotExist:
@@ -1424,3 +1429,38 @@ class PaymentSuccessView(APIView):
                   "pg_error_description-", pg_error_description)
 
             return Response({'message': 'Payment successful', **validated_data})
+
+
+class TransactionWithdrawalView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithdrawalSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        payout_system = serializer.validated_data['payout_system']
+        balance = serializer.validated_data['balance']
+        image_id = serializer.validated_data.get('image_id', None)
+        owner_name_on_card = serializer.validated_data['owner_name_on_card']
+        card_number = serializer.validated_data['card_number']
+        transfer_amount = serializer.validated_data['transfer_amount']
+        utc_offset_minutes = serializer.validated_data.get('utc_offset_minutes')
+
+        # create recipient service
+        recipient = RecipientService.create_recipient(payout_system=payout_system, image_id=image_id,
+                                                      owner_name_on_card=owner_name_on_card, card_number=card_number,
+                                                      transfer_amount=transfer_amount)
+
+        # create transaction of withdrawal service
+        TransactionService.create_withdrawal_transaction(request=request, organization=organization, recipient=recipient,
+                                                         balance=balance, processed_by=request.user,
+                                                         utc_offset_minutes=utc_offset_minutes)
+
+        return Response({'message': 'Transfer successfully sent'})

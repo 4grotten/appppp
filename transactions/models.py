@@ -21,9 +21,11 @@ class Transaction(TimestampModel):
 
     ONLINE = 'online'
     OFFLINE = 'offline'
+    WITHDRAWAL = 'withdrawal'
     TYPE = (
         (ONLINE, ONLINE),
         (OFFLINE, OFFLINE),
+        (WITHDRAWAL, WITHDRAWAL)
     )
 
     CASH_COURIER = 'cash_courier'
@@ -69,6 +71,8 @@ class Transaction(TimestampModel):
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
     discount_percent = models.PositiveSmallIntegerField(default=0)
+    fee_percent = models.PositiveSmallIntegerField(default=0)
+    fee_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
@@ -93,7 +97,7 @@ class Transaction(TimestampModel):
         ordering = ('-updated_at',)
 
     def save(self, *args, **kwargs):
-        self.final_amount = self.original_amount - self.savings - self.from_cashback
+        self.final_amount = self.original_amount - self.savings - self.from_cashback - self.fee_amount
         super().save(*args, **kwargs)
 
 
@@ -109,6 +113,7 @@ class Recipient(models.Model):
     payout_system = models.ForeignKey(PayoutSystem, on_delete=models.PROTECT, related_name='recipients')
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
     owner_name_on_card = models.CharField(max_length=255)
+    card_number = models.CharField(max_length=16, null=True)
     transfer_amount = models.DecimalField(max_digits=16, decimal_places=2)
 
     def __str__(self):

@@ -2,6 +2,7 @@ from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from common.exceptions import NotAcceptableException
+from common.models import File
 from common.serializers import ImageSerializer
 from organizations.models import Organization, DiscountCard
 from organizations.serializers.organization_serializers import (
@@ -12,7 +13,7 @@ from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
     TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
-from transactions.models import Transaction, PayoutSystem
+from transactions.models import Transaction, PayoutSystem, Recipient, Balance
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
 from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
@@ -480,3 +481,29 @@ class PayoutSystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayoutSystem
         fields = ('id', 'name', 'image', 'fee_percent')
+
+
+class RecipientSerializer(serializers.ModelSerializer):
+    payout_system = PayoutSystemSerializer()
+
+    class Meta:
+        model = Recipient
+        fields = ('id', 'payout_system', 'image', 'owner_name_on_card', 'card_number', 'transfer_amount')
+
+
+class TransactionWithdrawalSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
+    payout_system = serializers.PrimaryKeyRelatedField(queryset=PayoutSystem.objects.all())
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all())
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), required=False, allow_null=True
+    )
+    owner_name_on_card = serializers.CharField(max_length=255)
+    card_number = serializers.CharField(max_length=16)
+    transfer_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+    utc_offset_minutes = serializers.IntegerField(required=False)
+
+    def validate_transfer_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Transfer amount must be greater than zero.")
+        return value

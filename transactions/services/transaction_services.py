@@ -43,7 +43,8 @@ from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
-from transactions.models import Transaction
+from transactions.models import Transaction, Recipient, Balance
+from transactions.serializers.transaction_serializers import RecipientSerializer
 from transactions.services.stats_services import StatisticsService
 from users.models import User
 from users.services import UserService
@@ -56,6 +57,32 @@ class TransactionService:
             return Transaction.objects.get(**kwargs)
         except Transaction.DoesNotExist:
             raise ObjectNotFoundException(_('Transaction not found'))
+
+    @classmethod
+    @transaction.atomic
+    def create_withdrawal_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
+                                      processed_by: User, utc_offset_minutes) -> Transaction:
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            balance = Balance.objects.get(id=balance.id)
+            fee_percent = recipient.payout_system.fee_percent
+            currency = balance.currency
+        except Balance.DoesNotExist:
+            raise ObjectNotFoundException("Organization does not have a balance")
+        original_amount = recipient.transfer_amount
+        fee_amount = (original_amount * fee_percent) / 100
+        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=currency,
+                                              original_amount=original_amount, fee_percent=fee_percent,
+                                              fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
+        instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data
+        instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
+        instance.save()
+
+        return instance
 
     @classmethod
     @transaction.atomic
@@ -1479,16 +1506,25 @@ class TransactionService:
 
 
     @classmethod
-    def get_user_balance_totals(cls, client: User, currency: str,
-                        organization: Organization = None, start_date=None, end_date=None) -> dict:
-        transactions = Transaction.objects.filter(client=client, is_processed=True, type=Transaction.ONLINE,
+    def get_user_balance_totals(cls, currency: str, organization: Organization = None,
+                                start_date=None, end_date=None):
+        transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
                                                   delivery_type=Transaction.ONLINE_PAYMENT)
 
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
 
+        transactions = transactions.order_by().values('currency').annotate(
+            total_balance=Coalesce(Sum('final_amount'), 0)
+        )
+        return StatisticsService.get_transaction_balance_in_one_currency(totals=transactions, currency=currency)
 
-        if organization is not None:
-            transactions = transactions.filter(organization=organization)
-
+    @classmethod
+    def get_organization_processed_withdrawals(cls, currency: str, organization: Organization = None,
+                                               start_date=None, end_date=None):
+        transactions = Transaction.objects.filter(organization=organization, is_processed=True,
+                                                  type=Transaction.WITHDRAWAL, currency=currency)
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])

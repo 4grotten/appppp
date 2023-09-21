@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
 from common.models import File
-from transactions.models import Recipient, PayoutSystem
+from transactions.models import Recipient, PayoutSystem, Balance
 
 
 class RecipientService:
@@ -33,3 +33,12 @@ class RecipientService:
         except PayoutSystem.DoesNotExist:
             raise ObjectNotFoundException(_('PayoutSystem not found'))
         return recipient
+
+
+    @classmethod
+    def get_organization_balance_recipient(cls, balance: Balance):
+
+        recipients = Recipient.objects.filter(payout_system__in=balance.payout_systems.all())
+
+        return recipients
+

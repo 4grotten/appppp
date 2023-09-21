@@ -37,7 +37,7 @@ from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
 from shop.services.ticket_services import TicketService
-from transactions.models import Transaction, PayoutSystem, Balance
+from transactions.models import Transaction, PayoutSystem, Balance, Recipient
 from transactions.serializers.stats_serializers import TotalStatsSerializer, BalanceTotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
@@ -47,7 +47,7 @@ from transactions.serializers.transaction_serializers import (
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
     OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
-    TransactionWithdrawalSerializer
+    TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -841,6 +841,35 @@ class OrganizationBalanceTransactionListView(ListAPIView):
             search_id=serializer.validated_data['search'],
         )
 
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class OrganizationBalanceRecipientListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RecipientSerializer
+    queryset = Recipient.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        serializer = BalanceQueryParamSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
+                                                      user=request.user):
+            raise NotAcceptableException(_('No rights to see stats of organization'))
+
+        queryset = RecipientService.get_organization_balance_recipient(
+            balance=serializer.validated_data['balance']
+        )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

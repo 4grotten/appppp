@@ -485,10 +485,16 @@ class PayoutSystemSerializer(serializers.ModelSerializer):
 
 class RecipientSerializer(serializers.ModelSerializer):
     payout_system = PayoutSystemSerializer()
+    image = ImageSerializer()
 
     class Meta:
         model = Recipient
         fields = ('id', 'payout_system', 'image', 'owner_name_on_card', 'card_number', 'transfer_amount')
+
+
+class BalanceQueryParamSerializer(serializers.Serializer):
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all())
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
 
 
 class TransactionWithdrawalSerializer(serializers.Serializer):

@@ -1778,8 +1778,12 @@ class TransactionService:
     def get_organization_balance_transactions(cls, organization: Organization, start_date=None, end_date=None,
                                               search_id: int = None):
 
-        transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
+        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
                                                   delivery_type=Transaction.ONLINE_PAYMENT).order_by('-updated_at')
+
+        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+
+        transactions = simple_transactions | withdrawal_transactions
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)

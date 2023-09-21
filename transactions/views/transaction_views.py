@@ -47,7 +47,8 @@ from transactions.serializers.transaction_serializers import (
     ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
     OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
-    TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer
+    TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
+    TransactionWithdrawalDetailSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -1488,8 +1489,9 @@ class TransactionWithdrawalView(GenericAPIView):
                                                       transfer_amount=transfer_amount)
 
         # create transaction of withdrawal service
-        TransactionService.create_withdrawal_transaction(request=request, organization=organization, recipient=recipient,
+        transaction = TransactionService.create_withdrawal_transaction(request=request, organization=organization, recipient=recipient,
                                                          balance=balance, processed_by=request.user,
                                                          utc_offset_minutes=utc_offset_minutes)
 
-        return Response({'message': 'Transfer successfully sent'})
+        transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
+        return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)

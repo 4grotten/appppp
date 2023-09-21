@@ -17,7 +17,8 @@ from transactions.models import Transaction, PayoutSystem, Recipient, Balance
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
 from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
-    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE, PRODUCT_ICON_MAP, DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE
+    DECLINED_TICKET_OFFLINE_PAYMENT_TYPE, PRODUCT_ICON_MAP, DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE, WITHDRAWAL_ICON_MAP, \
+    DECLINED_WITHDRAWAL_TYPE
 
 
 class OffsetUTCSerializer(serializers.Serializer):
@@ -498,7 +499,7 @@ class BalanceQueryParamSerializer(serializers.Serializer):
 
 
 class TransactionWithdrawalSerializer(serializers.Serializer):
-    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     payout_system = serializers.PrimaryKeyRelatedField(queryset=PayoutSystem.objects.all())
     balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all())
     image_id = serializers.PrimaryKeyRelatedField(
@@ -513,3 +514,22 @@ class TransactionWithdrawalSerializer(serializers.Serializer):
         if value <= 0:
             raise serializers.ValidationError("Transfer amount must be greater than zero.")
         return value
+
+class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+    recipient_info = serializers.JSONField(source='fixed_cart')
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_icon_type(self, transaction: Transaction):
+        return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type', 'recipient_info')

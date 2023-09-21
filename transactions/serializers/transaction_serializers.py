@@ -125,6 +125,8 @@ class TransactionsSerializer(serializers.ModelSerializer):
         return ShopItem.PRODUCT
 
     def get_icon_type(self, transaction: Transaction):
+        if transaction.type == Transaction.WITHDRAWAL:
+            return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
         purchase_type = self.get_purchase_type(transaction)
         if purchase_type == ShopItem.PRODUCT:
             return PRODUCT_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,

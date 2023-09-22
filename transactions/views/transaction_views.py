@@ -851,6 +851,14 @@ class OrganizationBalanceTransactionListView(ListAPIView):
         return Response(serializer.data)
 
 
+class TransactionWithdrawalRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithdrawalDetailSerializer
+
+    def get_object(self):
+        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+
+
 class OrganizationBalanceRecipientListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = RecipientSerializer

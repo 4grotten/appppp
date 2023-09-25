@@ -1323,6 +1323,7 @@ class TransactionService:
                     "savings": original_price - discounted_price,
                     "is_processed": True,
                     "payment_status":Transaction.ACCEPTED,
+                    "delivery_type": Transaction.CART_CHECKOUT,
                     "processed_by": processed_by,
                     "employee_name": processed_by.full_name,
                     "employee_avatar": processed_by.avatar,

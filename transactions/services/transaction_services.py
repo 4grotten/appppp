@@ -1660,6 +1660,8 @@ class TransactionService:
             )
         ).order_by('in_progress_first', '-updated_at')
         print(t)
+        t2 = Transaction.objects.filter(booking__item=item)
+        print(t2)
         transactions = Transaction.objects.filter(
             Q(client=client)
             & ~Q(Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))

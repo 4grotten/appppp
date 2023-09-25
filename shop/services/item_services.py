@@ -90,21 +90,17 @@ class ShopItemService:
     def get_organization_rentals_queryset_for_user(cls, organization: Organization, user: User) -> QuerySet:
         can_see_own_unpublished = user.is_authenticated and OrganizationService.user_can_edit_organization(
             user=user, organization=organization)
-        print("can_see_own_unpublished", can_see_own_unpublished)
-        bookings = Booking.objects.filter(user=user)
-        print(bookings)
+
         exclude_condition = Q(user_bookings__transaction__type=Transaction.OFFLINE) & \
                             Q(user_bookings__transaction__status=Transaction.IN_PROGRESS)
 
         if organization.items_group is not None:
             if not can_see_own_unpublished:
-                print("1")
                 queryset = ShopItem.objects.filter(
                     organization__in=organization.items_group.organizations.values_list('id'), is_published=True,
                     purchase_type=ShopItem.RENTAL, user_bookings__transaction__client=user
                 ).exclude(exclude_condition)
             else:
-                print("2")
                 queryset = ShopItem.objects.filter(
                     Q(organization=organization) |
                     Q(organization__in=organization.items_group.organizations.values_list('id')),
@@ -112,13 +108,10 @@ class ShopItemService:
                     user_bookings__transaction__client=user
                 ).exclude(exclude_condition)
         else:
-            print("3")
             queryset = ShopItem.objects.filter(organization=organization, purchase_type=ShopItem.RENTAL,
                                                user_bookings__transaction__client=user).exclude(exclude_condition)
             if not can_see_own_unpublished:
-                print(4)
                 queryset = queryset.exclude(is_published=False)
-        print("final", queryset)
         return queryset.distinct()
 
     @classmethod

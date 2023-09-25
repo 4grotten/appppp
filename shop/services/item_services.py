@@ -11,6 +11,7 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, ItemInstagramData, Ticket
 from shop.services.cart_services import CartItemService
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -90,23 +91,25 @@ class ShopItemService:
         can_see_own_unpublished = user.is_authenticated and OrganizationService.user_can_edit_organization(
             user=user, organization=organization)
 
+        exclude_condition = Q(user_bookings__transaction__type=Transaction.OFFLINE) & \
+                            Q(user_bookings__transaction__status=Transaction.IN_PROGRESS)
+
         if organization.items_group is not None:
             if not can_see_own_unpublished:
                 queryset = ShopItem.objects.filter(
                     organization__in=organization.items_group.organizations.values_list('id'), is_published=True,
                     purchase_type=ShopItem.RENTAL, user_bookings__user=user
-                )
+                ).exclude(exclude_condition)
             else:
-                print("123")
                 queryset = ShopItem.objects.filter(
                     Q(organization=organization) |
                     Q(organization__in=organization.items_group.organizations.values_list('id')),
                     purchase_type=ShopItem.RENTAL,
                     user_bookings__user=user
-                )
+                ).exclude(exclude_condition)
         else:
             queryset = ShopItem.objects.filter(organization=organization, purchase_type=ShopItem.RENTAL,
-                                               user_bookings__user=user)
+                                               user_bookings__user=user).exclude(exclude_condition)
             if not can_see_own_unpublished:
                 queryset = queryset.exclude(is_published=False)
 

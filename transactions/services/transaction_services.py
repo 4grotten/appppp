@@ -44,7 +44,7 @@ from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
 from transactions.models import Transaction, Recipient, Balance
-from transactions.serializers.transaction_serializers import RecipientSerializer
+from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer
 from transactions.services.stats_services import StatisticsService
 from users.models import User
 from users.services import UserService
@@ -79,6 +79,33 @@ class TransactionService:
                                               original_amount=original_amount, fee_percent=fee_percent,
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
         instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data
+        instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
+        instance.save()
+
+        return instance
+
+    @classmethod
+    @transaction.atomic
+    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
+                                      processed_by: User, utc_offset_minutes) -> Transaction:
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            balance = Balance.objects.get(id=balance.id)
+            fee_percent = recipient.payout_system.fee_percent
+            currency = balance.currency
+        except Balance.DoesNotExist:
+            raise ObjectNotFoundException("Organization does not have a balance")
+        original_amount = recipient.transfer_amount
+        fee_amount = (original_amount * fee_percent) / 100
+        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=currency,
+                                              original_amount=original_amount, fee_percent=fee_percent,
+                                              fee_amount=fee_amount, type=Transaction.WITHDRAWAL,
+                                              withdrawal_type=Transaction.SWIFT)
+        instance.fixed_cart = RecipientSwiftSerializer(recipient, context={'request': request}).data
         instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
         instance.save()
 

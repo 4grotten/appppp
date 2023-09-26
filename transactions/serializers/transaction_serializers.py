@@ -492,7 +492,17 @@ class RecipientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipient
-        fields = ('id', 'payout_system', 'image', 'owner_name_on_card', 'card_number', 'transfer_amount')
+        fields = ('id', 'payout_system', 'image', 'owner_name', 'card_number', 'transfer_amount')
+
+
+class RecipientSwiftSerializer(serializers.ModelSerializer):
+    payout_system = PayoutSystemSerializer()
+    image = ImageSerializer()
+
+    class Meta:
+        model = Recipient
+        fields = ('id', 'payout_system', 'image', 'owner_name', 'swift_bic_code', 'iban_account_number', 'country',
+                  'city', 'address', 'postcode', 'email', 'transfer_amount')
 
 
 class BalanceQueryParamSerializer(serializers.Serializer):
@@ -507,7 +517,7 @@ class TransactionWithdrawalSerializer(serializers.Serializer):
     image_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all(), required=False, allow_null=True
     )
-    owner_name_on_card = serializers.CharField(max_length=255)
+    owner_name = serializers.CharField(max_length=255)
     card_number = serializers.CharField(max_length=16)
     transfer_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
     utc_offset_minutes = serializers.IntegerField(required=False)
@@ -516,6 +526,30 @@ class TransactionWithdrawalSerializer(serializers.Serializer):
         if value <= 0:
             raise serializers.ValidationError("Transfer amount must be greater than zero.")
         return value
+
+
+class TransactionWithdrawalSwiftSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all())
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), required=False, allow_null=True
+    )
+    owner_name = serializers.CharField(max_length=255)
+    swift_bic_code = serializers.CharField(max_length=11)
+    iban_account_number = serializers.CharField(max_length=34)
+    country = serializers.CharField(max_length=255)
+    city = serializers.CharField(max_length=255)
+    address = serializers.CharField()
+    postcode = serializers.CharField(max_length=20)
+    email = serializers.EmailField()
+    transfer_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+    utc_offset_minutes = serializers.IntegerField(required=False)
+
+    def validate_transfer_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Transfer amount must be greater than zero.")
+        return value
+
 
 class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
@@ -534,4 +568,26 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type', 'recipient_info')
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type',
+            'withdrawal_type', 'recipient_info')
+
+
+class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+    recipient_info = serializers.JSONField(source='fixed_cart')
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_icon_type(self, transaction: Transaction):
+        return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type',
+            'withdrawal_type', 'recipient_info')

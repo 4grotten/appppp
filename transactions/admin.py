@@ -33,7 +33,7 @@ class PayoutSystemAdmin(admin.ModelAdmin):
     list_display = ('name', 'image', 'fee_percent')
 
 class RecipientAdmin(admin.ModelAdmin):
-    list_display = ('payout_system', 'image', 'owner_name_on_card', 'transfer_amount')
+    list_display = ('payout_system', 'image', 'owner_name', 'transfer_amount')
 
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Balance, BalanceAdmin)

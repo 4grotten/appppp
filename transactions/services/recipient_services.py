@@ -16,12 +16,34 @@ class RecipientService:
             raise ObjectNotFoundException(_('Recipient not found'))
 
     @classmethod
-    def create_recipient(cls, payout_system: PayoutSystem, owner_name_on_card: str, card_number: str,
+    def create_recipient(cls, payout_system: PayoutSystem, owner_name: str, card_number: str,
                          transfer_amount: Decimal, image_id: File = None,):
         try:
             payout_system = PayoutSystem.objects.get(id=payout_system.id)
             recipient = Recipient.objects.create(payout_system=payout_system,
-                                                 owner_name_on_card=owner_name_on_card, card_number=card_number,
+                                                 owner_name=owner_name, card_number=card_number,
+                                                 transfer_amount=transfer_amount)
+            if image_id is not None:
+                recipient.image = image_id
+                recipient.save()
+            else:
+                image = payout_system.image
+                recipient.image = image
+                recipient.save()
+        except PayoutSystem.DoesNotExist:
+            raise ObjectNotFoundException(_('PayoutSystem not found'))
+        return recipient
+
+    @classmethod
+    def create_swift_recipient(cls, owner_name: str, swift_bic_code: str, iban_account_number: str, country: str,
+                               city: str, address: str, postcode: str, email: str, transfer_amount: Decimal,
+                               image_id: File = None):
+        try:
+            payout_system = PayoutSystem.objects.get(name="Swift")
+            recipient = Recipient.objects.create(payout_system=payout_system,
+                                                 owner_name=owner_name, swift_bic_code=swift_bic_code,
+                                                 iban_account_number=iban_account_number, country=country,
+                                                 city=city, address=address, postcode=postcode, email=email,
                                                  transfer_amount=transfer_amount)
             if image_id is not None:
                 recipient.image = image_id

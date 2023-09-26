@@ -28,6 +28,14 @@ class Transaction(TimestampModel):
         (WITHDRAWAL, WITHDRAWAL)
     )
 
+    BANKCARD = 'bankcard'
+    SWIFT = 'swift'
+
+    WITHDRAWAL_TYPES = (
+        (BANKCARD, BANKCARD),
+        (SWIFT, SWIFT)
+    )
+
     CASH_COURIER = 'cash_courier'
     SELF_PICKUP = 'self_pickup'
     CART_CHECKOUT = 'cart_checkout'
@@ -78,6 +86,8 @@ class Transaction(TimestampModel):
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     fixed_cart = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
 
+    withdrawal_type = models.CharField(choices=WITHDRAWAL_TYPES, max_length=20, default=BANKCARD)
+
     discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
     type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)
     payment_status = models.CharField(choices=PAYMENT_STATUS, max_length=20, default=IN_PROGRESS)
@@ -112,12 +122,23 @@ class PayoutSystem(models.Model):
 class Recipient(models.Model):
     payout_system = models.ForeignKey(PayoutSystem, on_delete=models.PROTECT, related_name='recipients')
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
-    owner_name_on_card = models.CharField(max_length=255)
-    card_number = models.CharField(max_length=16, null=True)
+
+    owner_name = models.CharField(max_length=255, null=True, blank=True)
+    card_number = models.CharField(max_length=16, null=True, blank=True)
+
+    swift_bic_code = models.CharField(max_length=11, null=True, blank=True)
+    iban_account_number = models.CharField(max_length=34, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    postcode = models.CharField(max_length=20, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+
+
     transfer_amount = models.DecimalField(max_digits=16, decimal_places=2)
 
     def __str__(self):
-        return f"Recipient {self.owner_name_on_card} using {self.payout_system}"
+        return f"Recipient {self.owner_name} using {self.payout_system}"
 
 
 class Balance(models.Model):

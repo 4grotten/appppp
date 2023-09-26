@@ -48,7 +48,7 @@ from transactions.serializers.transaction_serializers import (
     PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
     OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
     TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
-    TransactionWithdrawalDetailSerializer
+    TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -1486,20 +1486,64 @@ class TransactionWithdrawalView(GenericAPIView):
         payout_system = serializer.validated_data['payout_system']
         balance = serializer.validated_data['balance']
         image_id = serializer.validated_data.get('image_id', None)
-        owner_name_on_card = serializer.validated_data['owner_name_on_card']
+        owner_name = serializer.validated_data['owner_name']
         card_number = serializer.validated_data['card_number']
         transfer_amount = serializer.validated_data['transfer_amount']
         utc_offset_minutes = serializer.validated_data.get('utc_offset_minutes')
 
         # create recipient service
         recipient = RecipientService.create_recipient(payout_system=payout_system, image_id=image_id,
-                                                      owner_name_on_card=owner_name_on_card, card_number=card_number,
+                                                      owner_name=owner_name, card_number=card_number,
                                                       transfer_amount=transfer_amount)
 
         # create transaction of withdrawal service
         transaction = TransactionService.create_withdrawal_transaction(request=request, organization=organization, recipient=recipient,
                                                          balance=balance, processed_by=request.user,
                                                          utc_offset_minutes=utc_offset_minutes)
+
+        transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
+        return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TransactionWithdrawalSwiftView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithdrawalSwiftSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        balance = serializer.validated_data['balance']
+        image_id = serializer.validated_data.get('image_id', None)
+        owner_name = serializer.validated_data['owner_name']
+        swift_bic_code = serializer.validated_data['swift_bic_code']
+        iban_account_number = serializer.validated_data['iban_account_number']
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+        address = serializer.validated_data['address']
+        postcode = serializer.validated_data['postcode']
+        email = serializer.validated_data['email']
+        transfer_amount = serializer.validated_data['transfer_amount']
+        utc_offset_minutes = serializer.validated_data.get('utc_offset_minutes')
+
+        # create recipient swift service
+        recipient = RecipientService.create_swift_recipient(image_id=image_id,
+                                                            owner_name=owner_name, swift_bic_code=swift_bic_code,
+                                                            iban_account_number=iban_account_number, country=country,
+                                                            city=city, address=address, postcode=postcode, email=email,
+                                                            transfer_amount=transfer_amount)
+
+        # create transaction of withdrawal service
+        transaction = TransactionService.create_withdrawal_swift_transaction(request=request, organization=organization,
+                                                                       recipient=recipient, balance=balance,
+                                                                       processed_by=request.user,
+                                                                       utc_offset_minutes=utc_offset_minutes)
 
         transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
         return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)

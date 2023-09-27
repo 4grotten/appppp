@@ -263,7 +263,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
-            'longitude', 'latitude'
+            'longitude', 'latitude', 'minimum_purchase'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

@@ -158,7 +158,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
-            'rental_period', 'ticket_period', 'address', 'full_location'
+            'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase'
         )
 
 
@@ -535,7 +535,8 @@ class ItemFeedSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
-            'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address'
+            'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address',
+            'minimum_purchase'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

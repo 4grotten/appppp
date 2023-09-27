@@ -295,8 +295,8 @@ class OrganizationService:
     @classmethod
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at,
-               address, currency,
-               show_contacts, country, is_private, show_followers=True, switcher=None, avg_check=None, description=None, city=None):
+               address, currency, show_contacts, country, is_private, show_followers=None, is_wholesale=None,
+               switcher=None, avg_check=None, description=None, city=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -319,7 +319,10 @@ class OrganizationService:
             organization.address = address
             organization.avg_check = avg_check
             organization.is_private = is_private
-            organization.show_followers = show_followers
+            if show_followers is not None:
+                organization.show_followers = show_followers
+            if is_wholesale is not None:
+                organization.is_wholesale = is_wholesale
             if switcher:
                 organization.switcher = switcher
 

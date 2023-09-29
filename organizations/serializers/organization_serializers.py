@@ -352,20 +352,20 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
     def get_has_online_payment(self, organization: Organization):
         freedompay_confirmed = organization.freedompay_confirmed
-        embily_confirmed = organization.embily_confirmed
+        paysy_confirmed = organization.paysy_confirmed
         cryptobox_confirmed = organization.cryptobox_confirmed
 
-        return freedompay_confirmed or embily_confirmed or cryptobox_confirmed
+        return freedompay_confirmed or paysy_confirmed or cryptobox_confirmed
 
     def get_online_payment_activated(self, organization: Organization):
         payment_systems_activated = organization.payment_systems_activated
         if not payment_systems_activated:
             return False
         freedompay_activated = organization.freedompay_activated
-        embily_activated = organization.embily_activated
+        paysy_activated = organization.paysy_activated
         cryptobox_activated = organization.cryptobox_activated
 
-        return freedompay_activated or embily_activated or cryptobox_activated
+        return freedompay_activated or paysy_activated or cryptobox_activated
 
     class Meta:
         model = Organization
@@ -569,10 +569,10 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
         if not payment_systems_activated:
             return False
         freedompay_activated = organization.freedompay_activated
-        embily_activated = organization.embily_activated
+        paysy_activated = organization.paysy_activated
         cryptobox_activated = organization.cryptobox_activated
 
-        return freedompay_activated or embily_activated or cryptobox_activated
+        return freedompay_activated or paysy_activated or cryptobox_activated
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -598,10 +598,10 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         if not payment_systems_activated:
             return False
         freedompay_activated = organization.freedompay_activated
-        embily_activated = organization.embily_activated
+        paysy_activated = organization.paysy_activated
         cryptobox_activated = organization.cryptobox_activated
 
-        return freedompay_activated or embily_activated or cryptobox_activated
+        return freedompay_activated or paysy_activated or cryptobox_activated
 
     class Meta:
         model = Organization

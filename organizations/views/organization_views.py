@@ -112,7 +112,7 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
         if payment_system_id == 1:
             payment_system_name = "FreedomPay"
         elif payment_system_id == 2:
-            payment_system_name = "Embily"
+            payment_system_name = "PaySy"
         elif payment_system_id == 3:
             payment_system_name = "Crypto Box"
         else:
@@ -335,7 +335,7 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
             organization.freedompay_activated = is_active
             organization.save()
         elif id == 2:
-            organization.embily_activated = is_active
+            organization.paysy_activated = is_active
             organization.save()
         elif id == 3:
             organization.cryptobox_activated = is_active
@@ -848,9 +848,9 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         if organization.freedompay_confirmed:
             confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS',
                                               'is_active': organization.freedompay_activated})
-        if organization.embily_confirmed:
-            confirmed_payment_systems.append({'id': 2, 'name': 'Embily в USD',
-                                              'is_active': organization.embily_activated})
+        if organization.paysy_confirmed:
+            confirmed_payment_systems.append({'id': 2, 'name': 'PaySy в USD',
+                                              'is_active': organization.paysy_activated})
         if organization.cryptobox_confirmed:
             confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto',
                                               'is_active': organization.cryptobox_activated})
@@ -877,8 +877,8 @@ class PaymentSystemListView(generics.ListAPIView):
         available_payment_systems = []
         if not organization.freedompay_confirmed:
             available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
-        if not organization.embily_confirmed:
-            available_payment_systems.append({'id': 2, 'name': 'Embily в USD', 'is_available': False})
+        if not organization.paysy_confirmed:
+            available_payment_systems.append({'id': 2, 'name': 'PaySy в TRC', 'is_available': False})
         if not organization.cryptobox_confirmed:
             available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
 

@@ -596,7 +596,7 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         fields = (
             'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
             'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated',
-            'payment_with_confirmation'
+            'payment_with_confirmation', 'is_wholesale'
         )
         read_only_fields = ['verification_status']
 

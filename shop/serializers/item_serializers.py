@@ -572,7 +572,7 @@ class ItemInCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'price', 'discounted_price', 'image'
+            'id', 'name', 'price', 'discounted_price', 'image', 'minimum_purchase'
         )
 
 

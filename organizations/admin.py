@@ -119,8 +119,8 @@ class OrganizationAdmin(admin.ModelAdmin):
             'fields': ('has_delivery', 'has_self_pick_up')
         }),
         ('Payment Systems', {
-            'fields': ('freedompay_activated', 'embily_activated', 'cryptobox_activated', 'payment_systems_activated',
-                       'payment_with_confirmation', 'freedompay_confirmed', 'embily_confirmed', 'cryptobox_confirmed')
+            'fields': ('freedompay_activated', 'paysy_activated', 'cryptobox_activated', 'payment_systems_activated',
+                       'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed', 'cryptobox_confirmed')
         }),
         ('Status of Organization', {
             'fields': ('is_active', 'is_deleted', 'is_banned', 'is_private', 'is_under_review', 'is_delivery_service',

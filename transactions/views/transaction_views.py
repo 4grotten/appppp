@@ -528,10 +528,14 @@ class PayoutSystemListAPIView(ListAPIView):
 
 
 class SwiftPayoutSystemAPIView(APIView):
+
     def get(self, request, format=None):
-        swift_payouts = PayoutSystem.objects.filter(name='Swift')
-        serializer = PayoutSystemSerializer(swift_payouts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        swift_payout = PayoutSystem.objects.filter(name='Swift').first()
+        if swift_payout:
+            serializer = PayoutSystemSerializer(swift_payout)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Swift PayoutSystem not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PayoutSystemDetailAPIView(RetrieveAPIView):

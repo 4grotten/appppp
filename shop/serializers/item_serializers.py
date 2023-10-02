@@ -477,7 +477,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
-            'ticket_period', 'full_location', 'purchase_type', 'address'
+            'ticket_period', 'full_location', 'purchase_type', 'address', 'minimum_purchase'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

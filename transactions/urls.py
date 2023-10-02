@@ -24,7 +24,7 @@ from transactions.views.transaction_views import (
     TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView,
     OrganizationBalanceTransactionListView, PayoutSystemListAPIView, PayoutSystemDetailAPIView,
     TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
-    TransactionWithdrawalSwiftView
+    TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView
 )
 
 urlpatterns = [
@@ -131,6 +131,7 @@ urlpatterns = [
          name='organization_recipients'),
     path('statistics/balance/totals/', UserBalanceTotalsView.as_view(), name='user_balance_totals'),
     path('transactions/payout-system/', PayoutSystemListAPIView.as_view(), name='payout_systems_list'),
+    path('transactions/payout-system/swift/', SwiftPayoutSystemAPIView.as_view(), name='payout_systems_swift_detail'),
     path('transactions/payout-system/<int:pk>/', PayoutSystemDetailAPIView.as_view(), name='payout_system_detail'),
     path('transactions/withdrawal/', TransactionWithdrawalView.as_view(), name='transaction_withdrawal'),
     path('transactions/withdrawal/swift/', TransactionWithdrawalSwiftView.as_view(),

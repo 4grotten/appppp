@@ -523,8 +523,15 @@ class UserBalanceTotalsView(APIView):
 
 
 class PayoutSystemListAPIView(ListAPIView):
-    queryset = PayoutSystem.objects.all()
+    queryset = PayoutSystem.objects.all().exclude(name='Swift')
     serializer_class = PayoutSystemSerializer
+
+
+class SwiftPayoutSystemAPIView(APIView):
+    def get(self, request, format=None):
+        swift_payouts = PayoutSystem.objects.filter(name='Swift')
+        serializer = PayoutSystemSerializer(swift_payouts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PayoutSystemDetailAPIView(RetrieveAPIView):

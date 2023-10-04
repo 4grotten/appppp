@@ -108,6 +108,8 @@ class Organization(TimestampModel):
     is_under_review = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     is_wholesale = models.BooleanField(default=False)
+    can_update_is_wholesale = models.BooleanField(default=False)
+    is_wholesale_request_timestamp = models.DateTimeField(null=True, blank=True)
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)

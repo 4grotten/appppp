@@ -1,7 +1,7 @@
 from typing import Type
 
 from mailer.builders import BaseEmailBuilder, VerificaitonCodeEmailBuilder, ShadowBanEmailBuilder, \
-    VerificationOrganizationsEmailBuilder, PaymentSystemOrganizationsEmailBuilder
+    VerificationOrganizationsEmailBuilder, PaymentSystemOrganizationsEmailBuilder, WholesaleOrganizationsEmailBuilder
 from mailer.senders import EmailSender
 
 
@@ -28,3 +28,7 @@ class MailerService:
     def send_payment_verification_email(cls, email, org_id, send_time, payment_system_name):
         cls._send(PaymentSystemOrganizationsEmailBuilder, email=email, org_id=org_id, send_time=send_time,
                   payment_system_name=payment_system_name)
+
+    @classmethod
+    def send_wholesale_verification_email(cls, email, org_id, send_time):
+        cls._send(WholesaleOrganizationsEmailBuilder, email=email, org_id=org_id, send_time=send_time)

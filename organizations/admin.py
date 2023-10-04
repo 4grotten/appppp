@@ -124,7 +124,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         }),
         ('Status of Organization', {
             'fields': ('is_active', 'is_deleted', 'is_banned', 'is_private', 'is_under_review', 'is_delivery_service',
-                       'is_bank', 'has_license', 'verification_status')
+                       'is_bank', 'is_wholesale', 'can_update_is_wholesale', 'is_wholesale_request_timestamp',
+                       'has_license', 'verification_status')
         }),
         ('Other configurations', {
             'fields': (

@@ -31,7 +31,7 @@ from .views.organization_views import (
     OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
     OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView, OrganizationPaymentSystemListView,
     PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
-    OrganizationPaymentSystemsActivationDetailView
+    OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -79,6 +79,8 @@ organization_urls = [
          name='organization_payment_systems_list'),
     path('organizations/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),
          name='organization_payment_systems_confirmation'),
+    path('organizations/<int:pk>/wholesale/confirmation/', OrgWholesaleConfirmation.as_view(),
+         name='organization_wholesale_confirmation'),
     path('organizations/<int:pk>/payment_systems/activation/', OrganizationPaymentSystemsActivationView.as_view(),
          name='organization_payment_systems_activation'),
     path('organizations/<int:pk>/payment_systems/activation/detail/',

@@ -2,6 +2,8 @@ import re
 
 from decimal import Decimal
 from typing import Optional
+from datetime import timedelta
+from django.utils import timezone
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -272,6 +274,15 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     is_blacklist = serializers.SerializerMethodField(default=False, read_only=True)
     has_online_payment = serializers.SerializerMethodField()
     online_payment_activated = serializers.SerializerMethodField()
+    is_wholesale_in_request = serializers.SerializerMethodField()
+
+    def get_is_wholesale_in_request(self, organization: Organization):
+        request_timestamp = organization.is_wholesale_request_timestamp
+        if request_timestamp is None:
+            return False
+        if timezone.now() - request_timestamp >= timedelta(hours=24):
+            return False
+        return True
 
     def get_is_adult_content(self, organization: Organization):
         has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
@@ -365,7 +376,8 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
-            'online_payment_activated', 'show_followers', 'is_wholesale'
+            'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
+            'is_wholesale_in_request'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

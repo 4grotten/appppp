@@ -25,6 +25,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
 from common.models import File, Currency, Country, City
 from common.utils import method_permission_classes
+from common.services import slack
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
@@ -124,6 +125,33 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
                                                       send_time=timezone.now(), payment_system_name=payment_system_name)
 
         return Response({"message": "Payment system data successfully created"}, status=status.HTTP_201_CREATED)
+
+
+class OrgWholesaleConfirmation(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        if not organization.can_update_is_wholesale:
+            apofiz_email = settings.EMAIL_HOST_USER
+            MailerService.send_wholesale_verification_email(email=apofiz_email, org_id=organization.pk,
+                                                            send_time=timezone.now())
+            slack_message = (
+                f'Organization\n'
+                f'https://apofiz.com/971585333939admin/organizations/organization/{organization.pk}/change/\n'
+                f'sent a connection request to the wholesale organization.\n'
+                f'============================'
+            )
+            slack.bot(slack_message)
+            organization.is_wholesale_request_timestamp = timezone.now()
+            organization.save()
+
+            return Response({"message": "Request successfully sent"}, status=status.HTTP_200_OK)
+
+        return Response({"message": "You can already update the is_wholesale field"}, status=status.HTTP_200_OK)
 
 
 class OrganizationCreationLimitView(APIView):

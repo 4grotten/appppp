@@ -495,6 +495,16 @@ class RecipientSerializer(serializers.ModelSerializer):
         fields = ('id', 'payout_system', 'image', 'owner_name', 'card_number', 'transfer_amount')
 
 
+class RecipientGeneralSerializer(serializers.ModelSerializer):
+    payout_system = PayoutSystemSerializer()
+    image = ImageSerializer()
+
+    class Meta:
+        model = Recipient
+        fields = ('id', 'payout_system', 'image', 'owner_name', 'card_number', 'swift_bic_code', 'iban_account_number',
+                  'country', 'city', 'address', 'postcode', 'email', 'transfer_amount')
+
+
 class RecipientSwiftSerializer(serializers.ModelSerializer):
     payout_system = PayoutSystemSerializer()
     image = ImageSerializer()

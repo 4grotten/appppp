@@ -19,7 +19,8 @@ from rest_framework.views import APIView
 
 from common.models import Currency
 from common.services.currency import CurrencyConverterService
-from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
+from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
+    PAYSY_API_KEY
 from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -1364,8 +1365,8 @@ class InitPaymentView(GenericAPIView):
                                                         to_currency="KGS", amount=transaction.final_amount)
         pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
         pg_result_url = TransactionService.get_pg_result_url(request=request)
-        pg_success_url = TransactionService.get_pg_success_url(request=request)
-        pg_failure_url = TransactionService.get_pg_failure_url(request=request)
+        pg_success_url = TransactionService.get_success_url(request=request)
+        pg_failure_url = TransactionService.get_failure_url(request=request)
 
         payment_data = {
             'pg_order_id': str(transaction_id),
@@ -1396,6 +1397,108 @@ class InitPaymentView(GenericAPIView):
         json_data = json.loads(json_string)
 
         return Response(json_data, content_type='application/json')
+
+
+class InitPaymentSwiftView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OnlineOfflinePaymentCompleteSerializer
+
+    def get_company_info(self):
+        company_info_url = 'https://devnet-api.paysy.net/companies/get'
+
+        headers = {
+            'accept': 'application/json',
+            'X-API-Key': PAYSY_API_KEY
+        }
+
+        try:
+            response = requests.get(company_info_url, headers=headers)
+            if response.status_code == 200:
+                company_info = response.json().get('result', {})
+                if company_info.get('status', False):
+                    deposit_info = company_info.get('deposit', {}).get('5', {})
+                    currency = deposit_info.get('currency', 'USDT')
+                    chain_id = deposit_info.get('chain', 5)
+                    return currency, chain_id
+                else:
+                    return None, None
+
+            else:
+                return 'USDT', 5
+
+        except Exception as e:
+            return 'USD', 5
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        currency, chain_id = self.get_company_info()
+        if currency is None or chain_id is None:
+            return Response(data={
+                'message': _('Failed to retrieve company information from PaySy'),
+                'error': _('Company information retrieval failed')
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        transaction_id = serializer.validated_data['transaction_id']
+        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                            to_currency="USD", amount=transaction.final_amount)
+        converted_amount = Decimal(str(converted_amount))
+        increase = converted_amount * Decimal('0.02')
+        converted_amount += increase
+        converted_amount = converted_amount.normalize()
+
+        _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        success_url = TransactionService.get_success_url(request=request)
+        failure_url = TransactionService.get_failure_url(request=request)
+        params = {
+            'currency': currency,
+            'chain_id': chain_id,
+            'amount': str(converted_amount),
+            'is_validation': False,
+            'any_key': str(transaction_id),
+            'description': purchase_type,
+            'success_url': success_url,
+            'failure_url': failure_url,
+            # 'webhook':
+            'lang': 'en'
+            # 'is_redirect': False,
+        }
+        headers = {
+            'accept': 'application/json',
+            'X-API-Key': PAYSY_API_KEY,
+            'Content-Type': 'application/json',
+        }
+
+        url = 'https://devnet-api.paysy.net/orders/create_order'
+        response = requests.post(url, headers=headers, params=params)
+        response_json = response.json()
+        print(response_json)
+
+        order_id = response_json.get('result', {}).get('id')
+
+        if order_id:
+            redirect_url = f'https://devnet.paysy.net/en/orders/{order_id}'
+            return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
+        else:
+            return Response(data={
+                'message': _('Failed to retrieve order ID from PaySy response'),
+                'error': _('Order ID retrieval failed')
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class PaySyWebhookView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        print("request.data:", request.data)
+        print("request.GET", request.GET)
+        return Response("Hello")
 
 
 class ResultURLView(APIView):

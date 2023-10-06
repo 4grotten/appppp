@@ -582,22 +582,9 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
             'withdrawal_type', 'recipient_info')
 
 
-class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
-    display_time = serializers.SerializerMethodField()
-    icon_type = serializers.SerializerMethodField()
-    recipient_info = serializers.JSONField(source='fixed_cart')
-
-    def get_display_time(self, transaction: Transaction):
-        if transaction.display_time is not None:
-            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
-        return None
-
-    def get_icon_type(self, transaction: Transaction):
-        return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
+class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(required=True)
 
     class Meta:
         model = Transaction
-        fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type',
-            'withdrawal_type', 'recipient_info')
+        fields = ('transaction_id',)

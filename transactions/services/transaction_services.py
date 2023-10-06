@@ -2530,7 +2530,7 @@ class TransactionService:
         return pg_result_url
 
     @classmethod
-    def get_pg_success_url(cls, request):
+    def get_success_url(cls, request):
         pg_success_url = 'https://apofiz.com/payment-success'
         if 'test.apofiz.com' in request.META['HTTP_HOST']:
             pg_success_url = 'https://test.apofiz.com/payment-success'
@@ -2538,7 +2538,7 @@ class TransactionService:
         return pg_success_url
 
     @classmethod
-    def get_pg_failure_url(cls, request):
+    def get_failure_url(cls, request):
         pg_success_url = 'https://apofiz.com/payment-failure'
         if 'test.apofiz.com' in request.META['HTTP_HOST']:
             pg_success_url = 'https://test.apofiz.com/payment-failure'

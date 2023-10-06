@@ -1462,7 +1462,7 @@ class InitPaymentSwiftView(GenericAPIView):
             'chain_id': chain_id,
             'amount': str(converted_amount),
             'is_validation': False,
-            'any_key': str(transaction_id),
+            'any_key': str(self.request.user.id) + "|" + str(transaction_id),
             'description': purchase_type,
             'success_url': success_url,
             'failure_url': failure_url,
@@ -1497,9 +1497,51 @@ class InitPaymentSwiftView(GenericAPIView):
 class PaySyWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
-        print("request.data:", request.data)
-        print("request.GET", request.GET)
-        return Response("Hello")
+        payload = request.data
+        event_type = payload.get("event")
+        any_key = payload.get("any_key")
+        purchase_type = payload.get("description")
+        user_id, transaction_id = any_key.split("|")
+
+
+        user_id = int(user_id)
+        user = UserService.get(id=user_id)
+        transaction_id = int(transaction_id)
+        transaction = TransactionService.get(id=transaction_id)
+
+
+        if event_type == "ORDER_COMPLETED":
+            print("1")
+            if purchase_type == 'product':
+                TransactionService.accept_order_transaction_by_user(transaction_id=transaction.id,
+                                                                    user=user,
+                                                                    request=self.request)
+
+            elif purchase_type == 'deal':
+                TransactionService.complete_transaction_online(transaction_id=transaction.id)
+                print("TransactionService.complete_transaction_online")
+
+            else:
+                TransactionService.accept_booking_transaction_by_user(transaction_id=transaction.id,
+                                                                      user=user,
+                                                                      request=self.request)
+            response_data = {
+                'status': 'ok',
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        elif event_type == "ORDER_CREATED":
+            response_data = {
+                'status': 'ORDER_CREATED',
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        elif event_type == "ORDER_PAYMENT_EXPIRED":
+            response_data = {
+                'status': 'ORDER_PAYMENT_EXPIRED',
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        return Response({"message": "Received an unknown event type"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ResultURLView(APIView):

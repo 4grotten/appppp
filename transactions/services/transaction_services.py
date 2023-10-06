@@ -2546,6 +2546,14 @@ class TransactionService:
         return pg_success_url
 
     @classmethod
+    def get_webhook_paysy(cls, request):
+        pg_success_url = 'https://apofiz.com/api/v1/transactions/result/paysy/'
+        if 'test.apofiz.com' in request.META['HTTP_HOST']:
+            pg_success_url = 'https://test.apofiz.com/api/v1/transactions/result/paysy/'
+
+        return pg_success_url
+
+    @classmethod
     def make_flat_params_array(cls, arr_params, parent_name=''):
         arr_flat_params = {}
         i = 0

@@ -1456,6 +1456,7 @@ class InitPaymentSwiftView(GenericAPIView):
         _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
         success_url = TransactionService.get_success_url(request=request)
         failure_url = TransactionService.get_failure_url(request=request)
+        webhook = TransactionService.get_webhook_paysy(request=request)
         params = {
             'currency': currency,
             'chain_id': chain_id,
@@ -1465,7 +1466,7 @@ class InitPaymentSwiftView(GenericAPIView):
             'description': purchase_type,
             'success_url': success_url,
             'failure_url': failure_url,
-            # 'webhook':
+            'webhook': webhook,
             'lang': 'en'
             # 'is_redirect': False,
         }

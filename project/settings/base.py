@@ -415,3 +415,5 @@ FREEDOMPAY_PROJECT_ID = config('FREEDOMPAY_PROJECT_ID', default='notasecret')
 FREEDOMPAY_RECEIVE_SECRET = config('FREEDOMPAY_RECEIVE_SECRET', default='notasecret')
 # Secret key for payments
 FREEDOMPAY_PAYOUT_SECRET = config('FREEDOMPAY_PAYOUT_SECRET', default='notasecret')
+
+PAYSY_API_KEY = config('PAYSY_API_KEY', default='notasecret')

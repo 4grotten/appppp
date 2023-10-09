@@ -1497,6 +1497,7 @@ class InitPaymentSwiftView(GenericAPIView):
 class PaySyWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
+        print("HELLO DEV~~~~~~~~~~~~")
         payload = request.data
         event_type = payload.get("event")
         any_key = payload.get("any_key")
@@ -1509,9 +1510,9 @@ class PaySyWebhookView(APIView):
         transaction_id = int(transaction_id)
         transaction = TransactionService.get(id=transaction_id)
 
-
+        print("ALL GOT~~~~~~~~~~~~~")
         if event_type == "ORDER_COMPLETED":
-            print("1")
+            print("WOOOOOOOW!")
             if purchase_type == 'product':
                 TransactionService.accept_order_transaction_by_user(transaction_id=transaction.id,
                                                                     user=user,

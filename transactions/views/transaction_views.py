@@ -1,6 +1,6 @@
 import hashlib
 import json
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 
 import xmltodict
 import xml.etree.ElementTree as ET
@@ -1451,6 +1451,7 @@ class InitPaymentSwiftView(GenericAPIView):
         converted_amount = Decimal(str(converted_amount))
         increase = converted_amount * Decimal('0.02')
         converted_amount += increase
+        converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
 
         _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
         success_url = TransactionService.get_success_url(request=request)
@@ -1466,19 +1467,17 @@ class InitPaymentSwiftView(GenericAPIView):
             'success_url': success_url,
             'failure_url': failure_url,
             'webhook': webhook,
-            'lang': 'en'
-            # 'is_redirect': False,
+            'lang': 'en',
+            'is_redirect': True
         }
         headers = {
             'accept': 'application/json',
             'X-API-Key': PAYSY_API_KEY,
             'Content-Type': 'application/json',
         }
-
         url = 'https://devnet-api.paysy.net/orders/create_order'
         response = requests.post(url, headers=headers, params=params)
         response_json = response.json()
-        print(response_json)
 
         order_id = response_json.get('result', {}).get('id')
 
@@ -1496,7 +1495,6 @@ class InitPaymentSwiftView(GenericAPIView):
 class PaySyWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
-        print("HELLO DEV~~~~~~~~~~~~")
         payload = request.data
         print(payload)
         event_type = payload.get("event")
@@ -1511,9 +1509,7 @@ class PaySyWebhookView(APIView):
         transaction_id = int(transaction_id)
         transaction = TransactionService.get(id=transaction_id)
 
-        print("ALL GOT~~~~~~~~~~~~~")
         if event_type == "ORDER_COMPLETED":
-            print("WOOOOOOOW!")
             if purchase_type == 'product':
                 TransactionService.accept_order_transaction_by_user(transaction_id=transaction.id,
                                                                     user=user,
@@ -1521,7 +1517,6 @@ class PaySyWebhookView(APIView):
 
             elif purchase_type == 'deal':
                 TransactionService.complete_transaction_online(transaction_id=transaction.id)
-                print("TransactionService.complete_transaction_online")
 
             else:
                 TransactionService.accept_booking_transaction_by_user(transaction_id=transaction.id,
@@ -1534,6 +1529,16 @@ class PaySyWebhookView(APIView):
         elif event_type == "ORDER_CREATED":
             response_data = {
                 'status': 'ORDER_CREATED',
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        elif event_type == "DEPOSIT_PENDING":
+            response_data = {
+                'status': 'DEPOSIT_PENDING',
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        elif event_type == "DEPOSIT_CONFIRMED":
+            response_data = {
+                'status': 'DEPOSIT_CONFIRMED',
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif event_type == "ORDER_PAYMENT_EXPIRED":

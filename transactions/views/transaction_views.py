@@ -1500,7 +1500,8 @@ class PaySyWebhookView(APIView):
         payload = request.data
         print(payload)
         event_type = payload.get("event")
-        any_key = payload.get("any_key")
+        order = payload.get("order")
+        any_key = order.get('any_key')
         purchase_type = payload.get("description")
         user_id, transaction_id = any_key.split("|")
 

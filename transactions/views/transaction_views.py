@@ -1452,7 +1452,7 @@ class InitPaymentSwiftView(GenericAPIView):
         increase = converted_amount * Decimal('0.02')
         converted_amount += increase
         converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
-
+        print("CHET TAM")
         _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
         success_url = TransactionService.get_success_url(request=request)
         failure_url = TransactionService.get_failure_url(request=request)
@@ -1467,20 +1467,25 @@ class InitPaymentSwiftView(GenericAPIView):
             'success_url': success_url,
             'failure_url': failure_url,
             'webhook': webhook,
-            'lang': 'en',
-            'is_redirect': True
+            'lang': 'en'
+            # 'is_redirect': True
         }
+        print(params)
         headers = {
             'accept': 'application/json',
             'X-API-Key': PAYSY_API_KEY,
             'Content-Type': 'application/json',
         }
+        print("BEFORE URL")
         url = 'https://devnet-api.paysy.net/orders/create_order'
         response = requests.post(url, headers=headers, params=params)
+        print(response.url)
+        print("WOOOOOOW")
+        print(response.text)
         response_json = response.json()
 
         order_id = response_json.get('result', {}).get('id')
-
+        print("GOT ORDER_ID", order_id)
         if order_id:
             redirect_url = f'https://devnet.paysy.net/en/orders/{order_id}'
             return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)

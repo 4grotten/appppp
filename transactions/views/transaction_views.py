@@ -1451,7 +1451,6 @@ class InitPaymentSwiftView(GenericAPIView):
         converted_amount = Decimal(str(converted_amount))
         increase = converted_amount * Decimal('0.02')
         converted_amount += increase
-        converted_amount = converted_amount.normalize()
 
         _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
         success_url = TransactionService.get_success_url(request=request)
@@ -1499,6 +1498,7 @@ class PaySyWebhookView(APIView):
     def post(self, request, *args, **kwargs):
         print("HELLO DEV~~~~~~~~~~~~")
         payload = request.data
+        print(payload)
         event_type = payload.get("event")
         any_key = payload.get("any_key")
         purchase_type = payload.get("description")

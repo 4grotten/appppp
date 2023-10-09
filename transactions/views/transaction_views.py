@@ -1502,7 +1502,7 @@ class PaySyWebhookView(APIView):
         event_type = payload.get("event")
         order = payload.get("order")
         any_key = order.get('any_key')
-        purchase_type = payload.get("description")
+        purchase_type = order.get("description")
         user_id, transaction_id = any_key.split("|")
 
 

@@ -41,6 +41,7 @@ class BookingService:
         except IntegrityError:
             raise IntegrityException(_('Could not add transaction'))
         finally:
+            print("sent_notification")
             sent_notification.delay(
                 recipient_id=current_transaction.client_id,
                 mode=NOTIFICATION_MODE_RENTAL,
@@ -50,6 +51,7 @@ class BookingService:
                                 total_price=str(current_transaction.final_amount),
                                 currency=current_transaction.currency.code)
             )
+            print("send_notifications_organization_members")
             send_notifications_organization_members.delay(
                 members_organization_id=current_transaction.organization_id,
                 mode=NOTIFICATION_MODE_RENTAL,
@@ -61,6 +63,7 @@ class BookingService:
                                 total_price=str(current_transaction.final_amount),
                                 currency=current_transaction.currency.code)
             )
+            print("ALL SENT!")
             return booking
 
 

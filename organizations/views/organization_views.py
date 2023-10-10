@@ -337,9 +337,6 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 2:
             organization.paysy_activated = is_active
             organization.save()
-        elif id == 3:
-            organization.cryptobox_activated = is_active
-            organization.save()
         else:
             raise NotAcceptableException(_('Unknown Payment System'))
 
@@ -851,9 +848,6 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         if organization.paysy_confirmed:
             confirmed_payment_systems.append({'id': 2, 'name': 'PaySy в USD',
                                               'is_active': organization.paysy_activated})
-        if organization.cryptobox_confirmed:
-            confirmed_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto',
-                                              'is_active': organization.cryptobox_activated})
 
         return confirmed_payment_systems
 
@@ -879,8 +873,6 @@ class PaymentSystemListView(generics.ListAPIView):
             available_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS', 'is_available': True})
         if not organization.paysy_confirmed:
             available_payment_systems.append({'id': 2, 'name': 'PaySy в TRC', 'is_available': False})
-        if not organization.cryptobox_confirmed:
-            available_payment_systems.append({'id': 3, 'name': 'Crypto Box в Crypto', 'is_available': False})
 
         return available_payment_systems
 

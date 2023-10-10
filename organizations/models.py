@@ -93,14 +93,12 @@ class Organization(TimestampModel):
 
     freedompay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
     paysy_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
-    cryptobox_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
 
     payment_systems_activated = models.BooleanField(default=False, help_text=_('All payment systems are activated'))
     payment_with_confirmation = models.BooleanField(default=True, help_text=_('Payments with confirmation'))
 
     freedompay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
     paysy_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
-    cryptobox_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)

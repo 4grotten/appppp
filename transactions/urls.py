@@ -21,7 +21,10 @@ from transactions.views.transaction_views import (
     OrganizationTicketUsersTransactionView, CheckTicketInUsersView, TransactionTicketUserInfoView,
     TransactionTicketActivate, UserSaleTicketTransactionsDetailListView, OrganizationTicketCustomerTransactionView,
     UserTicketTotalsView, UserTicketTransactionOrganizationView, UserTicketSaleTransactionsListView,
-    TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView
+    TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView,
+    OrganizationBalanceTransactionListView, PayoutSystemListAPIView, PayoutSystemDetailAPIView,
+    TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
+    TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView
 )
 
 urlpatterns = [
@@ -117,5 +120,25 @@ urlpatterns = [
     # pay
     path('transactions/pay/', InitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
-    path('transactions/success/', PaymentSuccessView.as_view(), name='success_url')
+    path('transactions/success/', PaymentSuccessView.as_view(), name='success_url'),
+
+    # PaySy
+    path('transactions/pay/paysy/', InitPaymentSwiftView.as_view(), name='create_order_paysy'),
+    path('transactions/result/paysy/', PaySyWebhookView.as_view(), name='paysy_webhook'),
+
+    # balance
+    path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),
+         name='organization_balance_transactions'),
+    path('balances/transactions/<int:pk>/', TransactionWithdrawalRetrieveView.as_view(),
+         name='organization_balance_transactions_detail'),
+    path('transactions/recipients/', OrganizationBalanceRecipientListView.as_view(),
+         name='organization_recipients'),
+    path('statistics/balance/totals/', UserBalanceTotalsView.as_view(), name='user_balance_totals'),
+    path('transactions/payout-system/', PayoutSystemListAPIView.as_view(), name='payout_systems_list'),
+    path('transactions/payout-system/swift/', SwiftPayoutSystemAPIView.as_view(), name='payout_systems_swift_detail'),
+    path('transactions/payout-system/<int:pk>/', PayoutSystemDetailAPIView.as_view(), name='payout_system_detail'),
+    path('transactions/withdrawal/', TransactionWithdrawalView.as_view(), name='transaction_withdrawal'),
+    path('transactions/withdrawal/swift/', TransactionWithdrawalSwiftView.as_view(),
+         name='transaction_withdrawal_swift'),
+
 ]

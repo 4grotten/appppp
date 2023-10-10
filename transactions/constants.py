@@ -130,3 +130,15 @@ PRODUCT_ICON_MAP = {
     (Transaction.OFFLINE, Transaction.REJECTED, Transaction.ACCEPTED, Transaction.CART_CHECKOUT):
         DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE,
 }
+
+
+REQUEST_WITHDRAWAL_TYPE = 'request_withdrawal'
+ACCEPTED_WITHDRAWAL_TYPE = 'accept_withdrawal'
+DECLINED_WITHDRAWAL_TYPE = 'decline_withdrawal'
+
+
+WITHDRAWAL_ICON_MAP = {
+    (Transaction.WITHDRAWAL, Transaction.IN_PROGRESS): REQUEST_WITHDRAWAL_TYPE,
+    (Transaction.WITHDRAWAL, Transaction.ACCEPTED): ACCEPTED_WITHDRAWAL_TYPE,
+    (Transaction.WITHDRAWAL, Transaction.REJECTED, ): DECLINED_WITHDRAWAL_TYPE
+}

@@ -128,6 +128,37 @@ class StatisticsService:
         }
 
     @staticmethod
+    def get_transaction_balance_in_one_currency(totals: QuerySet, currency: str):
+        """
+        "totals" queryset should look like this
+        QuerySet [
+            {
+                'currency': 'USD', 'total_spent': Decimal('7320.80'),
+                'total_savings': Decimal('85.00'),
+                'total_from_cashback': Decimal('494.20')
+            },
+            {
+                'currency': 'KGS', 'total_spent': Decimal('10000.00'),
+                'total_savings': Decimal('0.00'),
+                'total_from_cashback': Decimal('494.20')
+            }
+        ]
+        """
+
+        total_balance = 0
+
+        for currency_transaction in totals:
+            if currency_transaction['currency'] == currency:
+                total_balance += currency_transaction['total_balance']
+                continue
+            total_balance += CurrencyConverterService.convert(
+                from_currency=currency_transaction['currency'], to_currency=currency,
+                amount=currency_transaction['total_balance']
+            )
+
+        return total_balance
+
+    @staticmethod
     def get_total_spent_in_one_currency(totals: QuerySet, currency: str) -> Decimal:
         """
         "totals" queryset should look like this

@@ -43,7 +43,8 @@ from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
-from transactions.models import Transaction
+from transactions.models import Transaction, Recipient, Balance
+from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer
 from transactions.services.stats_services import StatisticsService
 from users.models import User
 from users.services import UserService
@@ -56,6 +57,59 @@ class TransactionService:
             return Transaction.objects.get(**kwargs)
         except Transaction.DoesNotExist:
             raise ObjectNotFoundException(_('Transaction not found'))
+
+    @classmethod
+    @transaction.atomic
+    def create_withdrawal_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
+                                      processed_by: User, utc_offset_minutes) -> Transaction:
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            balance = Balance.objects.get(id=balance.id)
+            fee_percent = recipient.payout_system.fee_percent
+            currency = balance.currency
+        except Balance.DoesNotExist:
+            raise ObjectNotFoundException("Organization does not have a balance")
+        original_amount = recipient.transfer_amount
+        fee_amount = (original_amount * fee_percent) / 100
+        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=currency,
+                                              original_amount=original_amount, fee_percent=fee_percent,
+                                              fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
+        instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data
+        instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
+        instance.save()
+
+        return instance
+
+    @classmethod
+    @transaction.atomic
+    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
+                                      processed_by: User, utc_offset_minutes) -> Transaction:
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            balance = Balance.objects.get(id=balance.id)
+            fee_percent = recipient.payout_system.fee_percent
+            currency = balance.currency
+        except Balance.DoesNotExist:
+            raise ObjectNotFoundException("Organization does not have a balance")
+        original_amount = recipient.transfer_amount
+        fee_amount = (original_amount * fee_percent) / 100
+        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
+                                              employee_name=processed_by.full_name, employee_role=role,
+                                              employee_avatar=processed_by.avatar, currency=currency,
+                                              original_amount=original_amount, fee_percent=fee_percent,
+                                              fee_amount=fee_amount, type=Transaction.WITHDRAWAL,
+                                              withdrawal_type=Transaction.SWIFT)
+        instance.fixed_cart = RecipientSwiftSerializer(recipient, context={'request': request}).data
+        instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
+        instance.save()
+
+        return instance
 
     @classmethod
     @transaction.atomic
@@ -1478,6 +1532,37 @@ class TransactionService:
         )
         return StatisticsService.get_transaction_totals_in_one_currency(totals=transactions, currency=currency)
 
+
+    @classmethod
+    def get_user_balance_totals(cls, currency: str, organization: Organization = None,
+                                start_date=None, end_date=None):
+        transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
+                                                  delivery_type=Transaction.ONLINE_PAYMENT)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_balance=Coalesce(Sum('final_amount'), 0)
+        )
+        return StatisticsService.get_transaction_balance_in_one_currency(totals=transactions, currency=currency)
+
+    @classmethod
+    def get_organization_processed_withdrawals(cls, currency: str, organization: Organization = None,
+                                               start_date=None, end_date=None):
+        transactions = Transaction.objects.filter(organization=organization, is_processed=True,
+                                                  type=Transaction.WITHDRAWAL, currency=currency)
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        transactions = transactions.order_by().values('currency').annotate(
+            total_balance=Coalesce(Sum('final_amount'), 0)
+        )
+        return StatisticsService.get_transaction_balance_in_one_currency(totals=transactions, currency=currency)
+
+
     @classmethod
     def get_user_sale_totals(cls, processed_by: User, currency: str,
                              organization: Organization = None, start_date=None, end_date=None) -> dict:
@@ -1604,8 +1689,11 @@ class TransactionService:
 
     @classmethod
     def get_user_transactions(cls, client: User):
-        transactions = Transaction.objects.filter(Q(client=client) & ~Q(
-            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).annotate(
+        transactions = Transaction.objects.filter(
+            Q(client=client) & ~Q(
+                Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE) | Q(type=Transaction.WITHDRAWAL)
+            )
+        ).annotate(
             in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
                                    When(status=Transaction.ACCEPTED, then=1),
                                    When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
@@ -1694,8 +1782,10 @@ class TransactionService:
     def get_organization_transactions(cls, organization: Organization, processed_by: User = None,
                                       start_date=None, end_date=None, search_id: int = None, client: User = None):
 
-        transactions = Transaction.objects.filter(Q(organization=organization) & ~Q(
-            Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE))).annotate(
+        transactions = Transaction.objects.filter(
+            Q(organization=organization) & ~Q(
+                Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)) & ~Q(type=Transaction.WITHDRAWAL)
+        ).annotate(
             in_progress_first=Case(When(status=Transaction.IN_PROGRESS, then=0),
                                    When(status=Transaction.ACCEPTED, then=1),
                                    When(status=Transaction.REJECTED, then=1), output_field=IntegerField())
@@ -1712,6 +1802,27 @@ class TransactionService:
                 Q(updated_at__range=[start_date, end_date])
             )
 
+        if search_id is not None:
+            transactions = transactions.filter(id__contains=search_id)
+
+        return transactions
+
+    @classmethod
+    def get_organization_balance_transactions(cls, organization: Organization, start_date=None, end_date=None,
+                                              search_id: int = None):
+
+        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
+                                                  delivery_type=Transaction.ONLINE_PAYMENT).order_by('-updated_at')
+
+        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+
+        transactions = simple_transactions | withdrawal_transactions
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(updated_at__range=[start_date, end_date])
+            )
         if search_id is not None:
             transactions = transactions.filter(id__contains=search_id)
 
@@ -2428,7 +2539,7 @@ class TransactionService:
         return pg_result_url
 
     @classmethod
-    def get_pg_success_url(cls, request):
+    def get_success_url(cls, request):
         pg_success_url = 'https://apofiz.com/payment-success'
         if 'test.apofiz.com' in request.META['HTTP_HOST']:
             pg_success_url = 'https://test.apofiz.com/payment-success'
@@ -2436,10 +2547,18 @@ class TransactionService:
         return pg_success_url
 
     @classmethod
-    def get_pg_failure_url(cls, request):
+    def get_failure_url(cls, request):
         pg_success_url = 'https://apofiz.com/payment-failure'
         if 'test.apofiz.com' in request.META['HTTP_HOST']:
             pg_success_url = 'https://test.apofiz.com/payment-failure'
+
+        return pg_success_url
+
+    @classmethod
+    def get_webhook_paysy(cls, request):
+        pg_success_url = 'https://apofiz.com/api/v1/transactions/result/paysy/'
+        if 'test.apofiz.com' in request.META['HTTP_HOST']:
+            pg_success_url = 'https://test.apofiz.com/api/v1/transactions/result/paysy/'
 
         return pg_success_url
 

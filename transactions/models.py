@@ -21,9 +21,19 @@ class Transaction(TimestampModel):
 
     ONLINE = 'online'
     OFFLINE = 'offline'
+    WITHDRAWAL = 'withdrawal'
     TYPE = (
         (ONLINE, ONLINE),
         (OFFLINE, OFFLINE),
+        (WITHDRAWAL, WITHDRAWAL)
+    )
+
+    BANKCARD = 'bankcard'
+    SWIFT = 'swift'
+
+    WITHDRAWAL_TYPES = (
+        (BANKCARD, BANKCARD),
+        (SWIFT, SWIFT)
     )
 
     CASH_COURIER = 'cash_courier'
@@ -69,10 +79,14 @@ class Transaction(TimestampModel):
     final_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False,
                                        validators=[MinValueValidator(0)])
     discount_percent = models.PositiveSmallIntegerField(default=0)
+    fee_percent = models.PositiveSmallIntegerField(default=0)
+    fee_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     savings = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     fixed_cart = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
+
+    withdrawal_type = models.CharField(choices=WITHDRAWAL_TYPES, max_length=20, default=BANKCARD)
 
     discount_type = models.CharField(choices=DISCOUNT_TYPES, max_length=20, default=MANUAL)
     type = models.CharField(choices=TYPE, max_length=20, default=OFFLINE)
@@ -93,5 +107,45 @@ class Transaction(TimestampModel):
         ordering = ('-updated_at',)
 
     def save(self, *args, **kwargs):
-        self.final_amount = self.original_amount - self.savings - self.from_cashback
+        self.final_amount = self.original_amount - self.savings - self.from_cashback - self.fee_amount
         super().save(*args, **kwargs)
+
+
+class PayoutSystem(models.Model):
+    name = models.CharField(max_length=255)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    fee_percent = models.PositiveSmallIntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+class Recipient(models.Model):
+    payout_system = models.ForeignKey(PayoutSystem, on_delete=models.PROTECT, related_name='recipients')
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+
+    owner_name = models.CharField(max_length=255, null=True, blank=True)
+    card_number = models.CharField(max_length=16, null=True, blank=True)
+
+    swift_bic_code = models.CharField(max_length=11, null=True, blank=True)
+    iban_account_number = models.CharField(max_length=34, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    postcode = models.CharField(max_length=20, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+
+
+    transfer_amount = models.DecimalField(max_digits=16, decimal_places=2)
+
+    def __str__(self):
+        return f"Recipient {self.owner_name} using {self.payout_system}"
+
+
+class Balance(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='balances')
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default='KGS')
+    balance_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
+    payout_systems = models.ManyToManyField(PayoutSystem)
+
+    def __str__(self):
+        return f"Balance for {self.organization}"

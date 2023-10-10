@@ -36,7 +36,6 @@ class CurrencyConverterService:
         except KeyError:
             raise NotAcceptableException(_('No currency with code %(currency)s') % {'currency': from_currency.upper()})
         cache.set(f'{settings.OER_BASE_CURRENCY}{from_currency}', from_rate_to_base, timeout=settings.OER_CACHE_TIMEOUT)
-
         try:
             to_rate_to_base = response.json()['rates'][to_currency.upper()]
         except KeyError:

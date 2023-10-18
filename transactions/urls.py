@@ -24,7 +24,8 @@ from transactions.views.transaction_views import (
     TransactionOwnTicketInfoView, TransactionTicketInfoView, UserTicketTransactionsListView, UserBalanceTotalsView,
     OrganizationBalanceTransactionListView, PayoutSystemListAPIView, PayoutSystemDetailAPIView,
     TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
-    TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView
+    TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
+    UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView
 )
 
 urlpatterns = [
@@ -79,12 +80,16 @@ urlpatterns = [
     path('statistics/organizations/', UserTransactionOrganizationView.as_view(), name='transaction_organizations'),
     path('statistics/saleOrganizations/', UserSaleTransactionOrganizationView.as_view(),
          name='sale_transaction_organizations'),
+    path('statistics/organizations/withdrawal/', UserWithdrawalTransactionOrganizationView.as_view(),
+         name='withdrawal_transaction_organizations'),
     path('statistics/organizations/rental/', UserRentalTransactionOrganizationView.as_view(),
          name='rental_transaction_organizations'),
     path('statistics/saleOrganizations/rental/', UserSaleRentalTransactionOrganizationView.as_view(),
          name='sale_rental_transaction_organizations'),
     path('statistics/unprocessedTranCount/', UserUnprocessedTransactionCountView.as_view(),
          name='unprocessed_transaction_count'),
+    path('statistics/unprocessedTranCount/withdrawal/', UserWithdrawalTransactionCountView.as_view(),
+     name='unprocessed_withdrawal_transaction_count'),
     path('statistics/unprocessedTranCount/rental/', UserRentalUnprocessedTransactionCountView.as_view(),
          name='unprocessed_rental_transaction_count'),
 

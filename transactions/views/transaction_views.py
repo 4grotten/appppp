@@ -367,6 +367,21 @@ class UserTransactionOrganizationView(ListAPIView):
             end_date=serializer.validated_data.get('end')
         )
 
+class UserWithdrawalTransactionOrganizationView(ListAPIView):
+    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return TransactionService.get_user_withdrawal_transaction_organizations(
+            user=self.request.user
+        )
+
 
 class UserSaleTransactionOrganizationView(ListAPIView):
     serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
@@ -964,6 +979,15 @@ class UserUnprocessedTransactionCountView(APIView):
 
     def get(self, request):
         count = TransactionService.get_unprocessed_transactions_count(user=request.user)
+        data = dict(count=count)
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class UserWithdrawalTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        count = TransactionService.get_withdrawal_unprocessed_transactions_count(user=request.user)
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
 

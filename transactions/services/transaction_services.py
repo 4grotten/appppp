@@ -2292,6 +2292,23 @@ class TransactionService:
                                           status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL).count()
 
     @classmethod
+    def get_payment_system_withdrawal_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD).count()
+
+    @classmethod
+    def get_swift_withdrawal_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.SWIFT).count()
+
+
+    @classmethod
     def get_rental_unprocessed_transactions_count(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))

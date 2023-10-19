@@ -25,7 +25,8 @@ from transactions.views.transaction_views import (
     OrganizationBalanceTransactionListView, PayoutSystemListAPIView, PayoutSystemDetailAPIView,
     TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
     TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
-    UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView
+    UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
+    UserWithdrawalFundsTransactionCountView
 )
 
 urlpatterns = [
@@ -89,7 +90,9 @@ urlpatterns = [
     path('statistics/unprocessedTranCount/', UserUnprocessedTransactionCountView.as_view(),
          name='unprocessed_transaction_count'),
     path('statistics/unprocessedTranCount/withdrawal/', UserWithdrawalTransactionCountView.as_view(),
-     name='unprocessed_withdrawal_transaction_count'),
+         name='unprocessed_withdrawal_transaction_count'),
+    path('statistics/unprocessedTranCount/withdrawal/funds/', UserWithdrawalFundsTransactionCountView.as_view(),
+         name='unprocessed_withdrawal_funds_transaction_count'),
     path('statistics/unprocessedTranCount/rental/', UserRentalUnprocessedTransactionCountView.as_view(),
          name='unprocessed_rental_transaction_count'),
 
@@ -123,12 +126,12 @@ urlpatterns = [
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 
     # pay
-    path('transactions/pay/', InitPaymentView.as_view(), name='init_payment'),
+    path('transactions/pay/<int:pk>/', InitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url'),
 
     # PaySy
-    path('transactions/pay/paysy/', InitPaymentSwiftView.as_view(), name='create_order_paysy'),
+    # path('transactions/pay/paysy/', InitPaymentSwiftView.as_view(), name='create_order_paysy'),
     path('transactions/result/paysy/', PaySyWebhookView.as_view(), name='paysy_webhook'),
 
     # balance

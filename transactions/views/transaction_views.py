@@ -992,6 +992,20 @@ class UserWithdrawalTransactionCountView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class UserWithdrawalFundsTransactionCountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        payment_system_count = TransactionService.get_payment_system_withdrawal_unprocessed_transactions_count(
+            user=request.user)
+        individual_account_count = TransactionService.get_swift_withdrawal_unprocessed_transactions_count(
+            user=request.user)
+        organization_account_count = 0
+        data = dict(payment_system_count=payment_system_count, individual_account_count=individual_account_count,
+                    organization_account_count=organization_account_count)
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class UserRentalUnprocessedTransactionCountView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -1375,6 +1389,36 @@ class TransactionTicketActivate(GenericAPIView):
 class InitPaymentView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineOfflinePaymentCompleteSerializer
+    """
+    1 - FreedomPay
+    2 - PaySy
+    """
+
+    def get_company_info(self):
+        company_info_url = 'https://devnet-api.paysy.net/companies/get'
+
+        headers = {
+            'accept': 'application/json',
+            'X-API-Key': PAYSY_API_KEY
+        }
+
+        try:
+            response = requests.get(company_info_url, headers=headers)
+            if response.status_code == 200:
+                company_info = response.json().get('result', {})
+                if company_info.get('status', False):
+                    deposit_info = company_info.get('deposit', {}).get('5', {})
+                    currency = deposit_info.get('currency', 'USDT')
+                    chain_id = deposit_info.get('chain', 5)
+                    return currency, chain_id
+                else:
+                    return None, None
+
+            else:
+                return 'USDT', 5
+
+        except Exception as e:
+            return 'USD', 5
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1383,44 +1427,94 @@ class InitPaymentView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        transaction_id = serializer.validated_data['transaction_id']
-        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                        to_currency="KGS", amount=transaction.final_amount)
-        pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
-        pg_result_url = TransactionService.get_pg_result_url(request=request)
-        pg_success_url = TransactionService.get_success_url(request=request)
-        pg_failure_url = TransactionService.get_failure_url(request=request)
+        if kwargs['pk'] == 1:
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                            to_currency="KGS", amount=transaction.final_amount)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            pg_result_url = TransactionService.get_pg_result_url(request=request)
+            pg_success_url = TransactionService.get_success_url(request=request)
+            pg_failure_url = TransactionService.get_failure_url(request=request)
 
-        payment_data = {
-            'pg_order_id': str(transaction_id),
-            'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
-            'pg_amount': str(converted_amount),
-            'pg_description': pg_description,
-            'pg_salt': 'apofiz',
-            'pg_currency': "KGS",
-            # 'pg_testing_mode': '1',
-            'pg_result_url': pg_result_url,
-            'pg_success_url': pg_success_url,
-            'pg_failure_url': pg_failure_url,
-            'pg_timeout_after_payment': '5',
-            'user_id': str(self.request.user.id),
-            'purchase_type': purchase_type
-        }
+            payment_data = {
+                'pg_order_id': str(transaction_id),
+                'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
+                'pg_amount': str(converted_amount),
+                'pg_description': pg_description,
+                'pg_salt': 'apofiz',
+                'pg_currency': "KGS",
+                # 'pg_testing_mode': '1',
+                'pg_result_url': pg_result_url,
+                'pg_success_url': pg_success_url,
+                'pg_failure_url': pg_failure_url,
+                'pg_timeout_after_payment': '5',
+                'user_id': str(self.request.user.id),
+                'purchase_type': purchase_type
+            }
 
 
-        request_for_signature = TransactionService.make_flat_params_array(payment_data)
-        sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
-        signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
-        signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
-        payment_data['pg_sig'] = signature
-        response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
-        xml_data = response.text
-        response_dict = xmltodict.parse(xml_data)
-        json_string = json.dumps(response_dict)
-        json_data = json.loads(json_string)
+            request_for_signature = TransactionService.make_flat_params_array(payment_data)
+            sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
+            signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
+            signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
+            payment_data['pg_sig'] = signature
+            response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+            xml_data = response.text
+            response_dict = xmltodict.parse(xml_data)
+            json_string = json.dumps(response_dict)
+            json_data = json.loads(json_string)
+            redirect_url = json_data["response"]["pg_redirect_url"]
+            response_data = {"redirect_url": redirect_url}
+            return Response(data=response_data, status=status.HTTP_200_OK)
+        elif kwargs['pk'] == 2:
+            currency, chain_id = self.get_company_info()
+            if currency is None or chain_id is None:
+                return Response(data={
+                    'message': _('Failed to retrieve company information from PaySy'),
+                    'error': _('Company information retrieval failed')
+                }, status=status.HTTP_400_BAD_REQUEST)
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="USD", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.02')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
 
-        return Response(json_data, content_type='application/json')
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            webhook = TransactionService.get_webhook_paysy(request=request)
+            params = {
+                'currency': currency,
+                'chain_id': chain_id,
+                'amount': str(converted_amount),
+                'is_validation': False,
+                'any_key': str(self.request.user.id) + "|" + str(transaction_id),
+                'description': purchase_type,
+                'success_url': success_url,
+                'failure_url': failure_url,
+                'webhook': webhook,
+                'lang': 'en'
+                # 'is_redirect': True
+            }
+            headers = {
+                'accept': 'application/json',
+                'X-API-Key': PAYSY_API_KEY,
+                'Content-Type': 'application/json',
+            }
+            url = 'https://devnet-api.paysy.net/orders/create_order'
+            response = requests.post(url, headers=headers, params=params)
+            response_json = response.json()
+
+            order_id = response_json.get('result', {}).get('id')
+            if order_id:
+                redirect_url = f'https://devnet.paysy.net/en/orders/{order_id}'
+                return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
+        else:
+            return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class InitPaymentSwiftView(GenericAPIView):

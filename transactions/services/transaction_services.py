@@ -1409,6 +1409,29 @@ class TransactionService:
         return organizations
 
     @classmethod
+    def get_user_withdrawal_transaction_organizations(cls, user: User):
+        transactions = cls.get_user_withdrawal_transactions(user=user)
+
+        organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
+            latest_transaction_time=Subquery(
+                Transaction.objects.filter(
+                    Q(organization=OuterRef('pk')) & (
+                            (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
+                        Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)
+                    ) & Q(type=Transaction.WITHDRAWAL)
+                    )
+                ).order_by('-updated_at').values('updated_at')[:1]
+            ),
+            unprocessed_transaction_count=Count(
+                Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.WITHDRAWAL,
+                                           status=Transaction.IN_PROGRESS).values('id')[:1])
+        )
+
+        organizations = organizations.order_by('-unprocessed_transaction_count',
+                                               F('latest_transaction_time').desc(nulls_last=True))
+        return organizations
+
+    @classmethod
     def get_user_sale_transaction_organizations(cls, user: User, start_date, end_date):
         transactions = cls.get_user_sale_transactions(user=user)
 
@@ -2261,6 +2284,31 @@ class TransactionService:
                                           status=Transaction.IN_PROGRESS, type=Transaction.ONLINE).count()
 
     @classmethod
+    def get_withdrawal_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization,
+                                          status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL).count()
+
+    @classmethod
+    def get_payment_system_withdrawal_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD).count()
+
+    @classmethod
+    def get_swift_withdrawal_unprocessed_transactions_count(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.SWIFT).count()
+
+
+    @classmethod
     def get_rental_unprocessed_transactions_count(cls, user: User):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
@@ -2298,6 +2346,31 @@ class TransactionService:
             Q(organization__in=organization) & (
                     Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS) | Q(status=Transaction.ACCEPTED))
         )
+        return transactions
+
+    @classmethod
+    def get_user_withdrawal_transactions(cls, user: User):
+        memberships = Membership.objects.filter(
+            Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
+        organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
+
+        transactions = Transaction.objects.filter(
+            Q(organization__in=organization)
+            & (
+                    Q(processed_by=user)
+                    | Q(status=Transaction.IN_PROGRESS)
+                    | Q(status=Transaction.ACCEPTED)
+            )
+            & Q(type=Transaction.WITHDRAWAL)
+        ).annotate(
+            in_progress_first=Case(
+                When(status=Transaction.IN_PROGRESS, then=0),
+                When(status=Transaction.ACCEPTED, then=1),
+                When(status=Transaction.REJECTED, then=1),
+                output_field=IntegerField()
+            )
+        ).order_by('in_progress_first', '-updated_at')
+
         return transactions
 
     @classmethod

@@ -108,7 +108,7 @@ class CartService:
         cart.is_open = False
         for cart_item in current_transaction.cart.items.all():
             if cart_item.item.purchase_type == ShopItem.TICKET:
-                for _ in range(cart_item.count):
+                for i in range(cart_item.count):
                     Ticket.objects.create(user=user, organization=current_transaction.organization, item=cart_item.item,
                                           transaction=current_transaction)
         try:

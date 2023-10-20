@@ -142,8 +142,14 @@ class Recipient(models.Model):
 
 
 class Balance(models.Model):
+    KGS = 'KGS'
+    TRC = 'TRC20'
+    CURRENCY = (
+        (KGS, KGS),
+        (TRC, TRC)
+    )
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='balances')
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default='KGS')
+    currency = models.CharField(max_length=20, choices=CURRENCY, default=KGS)
     balance_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
     payout_systems = models.ManyToManyField(PayoutSystem)
 

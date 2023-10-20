@@ -588,3 +588,11 @@ class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('transaction_id',)
+
+
+class BalanceSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems')

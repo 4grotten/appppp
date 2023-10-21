@@ -50,13 +50,17 @@ class Transaction(TimestampModel):
 
     REJECTED = 'rejected'
     IN_PROGRESS = 'in_progress'
+    UNDER_REVIEW = 'under_review'
     ACCEPTED = 'accepted'
     REFUNDED = 'refunded'
+    ERROR = 'error'
 
     STATUS = (
         (IN_PROGRESS, IN_PROGRESS),
+        (UNDER_REVIEW, UNDER_REVIEW),
         (ACCEPTED, ACCEPTED),
-        (REJECTED, REJECTED)
+        (REJECTED, REJECTED),
+        (ERROR, ERROR)
     )
 
     PAYMENT_STATUS = (

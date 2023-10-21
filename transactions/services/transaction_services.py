@@ -1831,8 +1831,8 @@ class TransactionService:
         return transactions
 
     @classmethod
-    def get_organization_balance_transactions(cls, organization: Organization, start_date=None, end_date=None,
-                                              search_id: int = None):
+    def get_organization_balance_all_transactions(cls, organization: Organization, start_date=None, end_date=None,
+                                                  search_id: int = None):
 
         simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
                                                   delivery_type=Transaction.ONLINE_PAYMENT).order_by('-updated_at')
@@ -1848,6 +1848,26 @@ class TransactionService:
             )
         if search_id is not None:
             transactions = transactions.filter(id__contains=search_id)
+
+        return transactions
+
+    @classmethod
+    def get_organization_balance_withdrawal_transactions(cls, organization: Organization, start_date=None,
+                                                         end_date=None,
+                                                         search_id: int = None, status=None):
+
+        transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(updated_at__range=[start_date, end_date])
+            )
+        if search_id is not None:
+            transactions = transactions.filter(id__contains=search_id)
+
+        if status is not None:
+            transactions = transactions.filter(status=status)
 
         return transactions
 

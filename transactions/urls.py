@@ -26,7 +26,8 @@ from transactions.views.transaction_views import (
     TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
     TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
-    UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView
+    UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
+    OrganizationBalanceWithdrawalTransactionListView
 )
 
 urlpatterns = [
@@ -138,6 +139,8 @@ urlpatterns = [
     path('balances/', OrganizationBalanceListView.as_view(), name='organization_balance_transactions'),
     path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),
          name='organization_balance_transactions'),
+    path('balances/transactions/withdrawal/', OrganizationBalanceWithdrawalTransactionListView.as_view(),
+         name='organization_balance_withdrawal_transactions'),
     path('balances/transactions/<int:pk>/', TransactionWithdrawalRetrieveView.as_view(),
          name='organization_balance_transactions_detail'),
     path('transactions/recipients/', OrganizationBalanceRecipientListView.as_view(),

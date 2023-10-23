@@ -1394,8 +1394,11 @@ class InitPaymentView(GenericAPIView):
     2 - PaySy
     """
 
-    def get_company_info(self):
-        company_info_url = 'https://devnet-api.paysy.net/companies/get'
+    def get_company_info(self, base_url):
+        if base_url == 'https://apofiz.com/api/v1/':
+            company_info_url = 'https://api.paysy.net/companies/get'
+        else:
+            company_info_url = 'https://devnet-api.paysy.net/companies/get'
 
         headers = {
             'accept': 'application/json',
@@ -1408,17 +1411,17 @@ class InitPaymentView(GenericAPIView):
                 company_info = response.json().get('result', {})
                 if company_info.get('status', False):
                     deposit_info = company_info.get('deposit', {}).get('5', {})
-                    currency = deposit_info.get('currency', 'USDT')
-                    chain_id = deposit_info.get('chain', 5)
+                    currency = deposit_info.get('currency')
+                    chain_id = deposit_info.get('chain')
                     return currency, chain_id
                 else:
                     return None, None
 
             else:
-                return 'USDT', 5
+                return 'USDT', 56
 
         except Exception as e:
-            return 'USD', 5
+            return 'USD', 56
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1427,6 +1430,14 @@ class InitPaymentView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+
+        if 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
+        elif 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
         if kwargs['pk'] == 1:
             transaction_id = serializer.validated_data['transaction_id']
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
@@ -1468,12 +1479,17 @@ class InitPaymentView(GenericAPIView):
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
         elif kwargs['pk'] == 2:
-            currency, chain_id = self.get_company_info()
-            if currency is None or chain_id is None:
-                return Response(data={
-                    'message': _('Failed to retrieve company information from PaySy'),
-                    'error': _('Company information retrieval failed')
-                }, status=status.HTTP_400_BAD_REQUEST)
+            if base_url == 'https://apofiz.com/api/v1/':
+                currency = "USDT"
+                chain_id = 56
+                url = 'https://api.paysy.net/orders/create_order'
+                redirect_url = f'https://api.paysy.net/en/orders/'
+            else:
+                currency = "USDT"
+                chain_id = 5
+                url = 'https://devnet-api.paysy.net/orders/create_order'
+                redirect_url = f'https://devnet.paysy.net/en/orders/'
+            # currency, chain_id = self.get_company_info(base_url=base_url)
             transaction_id = serializer.validated_data['transaction_id']
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
             converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
@@ -1505,13 +1521,12 @@ class InitPaymentView(GenericAPIView):
                 'X-API-Key': PAYSY_API_KEY,
                 'Content-Type': 'application/json',
             }
-            url = 'https://devnet-api.paysy.net/orders/create_order'
             response = requests.post(url, headers=headers, params=params)
             response_json = response.json()
 
             order_id = response_json.get('result', {}).get('id')
             if order_id:
-                redirect_url = f'https://devnet.paysy.net/en/orders/{order_id}'
+                redirect_url = redirect_url + order_id
                 return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
         else:
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)

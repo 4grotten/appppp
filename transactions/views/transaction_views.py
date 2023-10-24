@@ -1492,15 +1492,14 @@ class InitPaymentView(GenericAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        base_url = 'https://test.apofiz.com/api/v1/'  # Default base URL for dev version
+        base_url = 'https://test.apofiz.com/api/v1/'
 
-        if 'apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://apofiz.com/api/v1/'
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'
         elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://test.apofiz.com/api/v1/'  # Base URL for dev version
-        elif 'localhost' in request.META['HTTP_HOST']:
-            base_url = 'http://localhost:8000/api/v1/'  # Base URL for local development
-        print("base_url:", base_url)
+            base_url = 'https://test.apofiz.com/api/v1/'
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'
         if kwargs['pk'] == 1:
             transaction_id = serializer.validated_data['transaction_id']
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
@@ -1553,10 +1552,6 @@ class InitPaymentView(GenericAPIView):
                 url = 'https://devnet-api.paysy.net/orders/create_order'
                 redirect_url = f'https://devnet.paysy.net/en/orders/'
             # currency, chain_id = self.get_company_info(base_url=base_url)
-            print("currency:", currency)
-            print("chain_id:", chain_id)
-            print("url:", url)
-            print("redirect_url", redirect_url)
             transaction_id = serializer.validated_data['transaction_id']
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
             converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
@@ -1583,26 +1578,19 @@ class InitPaymentView(GenericAPIView):
                 'lang': 'en'
                 # 'is_redirect': True
             }
-            print("params:", params)
             headers = {
                 'accept': 'application/json',
                 'X-API-Key': PAYSY_API_KEY,
                 'Content-Type': 'application/json',
             }
-            print("BEFORE REQUEST")
             response = requests.post(url, headers=headers, params=params)
-            print(response.json())
-            print("AFTERR REQUEST")
             response_json = response.json()
 
             order_id = response_json.get('result', {}).get('id')
-            print("order_id:", order_id)
             if order_id:
                 redirect_url = redirect_url + order_id
-                print("redirect_url:", redirect_url)
                 return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
         else:
-            print("ELSE STAT")
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
 

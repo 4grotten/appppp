@@ -29,7 +29,8 @@ from notifications.constants import (
     DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE,
     ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE,
     ACCEPT_ORDER_PAYMENT_CLIENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
-    REQUEST_ONLINE_ORDER_TYPE
+    REQUEST_ONLINE_ORDER_TYPE, NOTIFICATION_MODE_PERSONAL, WITHDRAWAL_UNDER_REVIEW_TYPE,
+    ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -72,6 +73,7 @@ class TransactionService:
         except Balance.DoesNotExist:
             raise ObjectNotFoundException("Organization does not have a balance")
         original_amount = recipient.transfer_amount
+
         fee_amount = (original_amount * fee_percent) / 100
         instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
                                               employee_name=processed_by.full_name, employee_role=role,
@@ -1103,6 +1105,50 @@ class TransactionService:
                                                                          mode=NOTIFICATION_MODE_SYSTEM)
             except Exception as e:
                 logging.exception(e)
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def review_withdrawal_transaction(cls, transaction_id: int, utc_offset_minutes: int,
+                                    processed_by: User) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.WITHDRAWAL,
+                                      status=Transaction.IN_PROGRESS)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            current_transaction.processed_by = processed_by
+            current_transaction.employee_role = role
+            current_transaction.employee_name = processed_by.full_name
+            current_transaction.employee_avatar = processed_by.avatar
+            current_transaction.status = Transaction.UNDER_REVIEW
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not review transaction'))
+
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=WITHDRAWAL_UNDER_REVIEW_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_price=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
         return current_transaction
 
     @classmethod

@@ -27,7 +27,7 @@ from transactions.views.transaction_views import (
     TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
-    OrganizationBalanceWithdrawalTransactionListView
+    OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView
 )
 
 urlpatterns = [
@@ -48,6 +48,9 @@ urlpatterns = [
     path('transactions/organizations/rental/<int:pk>/customers/', OrganizationRentalCustomerTransactionView.as_view(),
          name='transactions_organizations_rental_users'),
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
+
+    path('transactions/withdrawal/under_review/', WithdrawalTransactionReviewView.as_view(),
+         name='online_transaction_complete'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),
          name='transaction_booking_preprocess'),

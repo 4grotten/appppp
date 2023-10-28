@@ -35,6 +35,27 @@ class StatisticsService:
         return cls.get_stats_in_one_currency(totals=transactions, currency=organization.currency.code)
 
     @classmethod
+    def get_accepted_withdrawal_totals_of_organization(cls, organization: Organization, start_date=None, end_date=None,
+                                   processed_by: User = None, client: User = None) -> dict:
+        transactions = Transaction.objects.filter(is_processed=True, organization=organization,
+                                                  type=Transaction.WITHDRAWAL, status=Transaction.ACCEPTED_WITHDRAWAL)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(updated_at__range=[start_date, end_date])
+
+        if processed_by is not None:
+            transactions = transactions.filter(processed_by=processed_by)
+
+        if client is not None:
+            transactions = transactions.filter(client=client)
+
+        transactions = transactions.order_by().values('currency').\
+            annotate(total_withdrawal=Coalesce(Sum('final_amount'), 0))
+
+        return cls.get_withdrawal_stats_in_one_currency(totals=transactions, currency=organization.currency.code)
+
+    @classmethod
     def get_total_stats_of_partners(cls, organization: Organization, requesting_user: User, currency: str,
                                     start_date=None, end_date=None) -> dict:
         if not OrganizationService.user_can_see_stats(organization=organization, user=requesting_user):
@@ -76,6 +97,28 @@ class StatisticsService:
         return {
             'total_spent': total_spent,
             'total_savings': total_savings,
+            'currency': currency
+        }
+
+    @staticmethod
+    def get_withdrawal_stats_in_one_currency(totals: QuerySet, currency: str):
+        """
+        "totals" queryset should look like this
+        QuerySet [{'currency': 'USD', 'total_spent': Decimal('80400.00'), 'total_savings': Decimal('20100.00')},
+                  {'currency': 'KGS', 'total_spent': Decimal('10000.00'), 'total_savings': Decimal('0.00')}
+                 ]
+        """
+        total_withdrawal = 0
+
+        for transaction in totals:
+            if transaction['currency'] == currency:
+                total_withdrawal += transaction['total_withdrawal']
+                continue
+            total_withdrawal += CurrencyConverterService.convert(from_currency=transaction['currency'],
+                                                            to_currency=currency, amount=transaction['total_withdrawal'])
+
+        return {
+            'total_withdrawal': total_withdrawal,
             'currency': currency
         }
 
@@ -159,7 +202,7 @@ class StatisticsService:
         return total_balance
 
     @staticmethod
-    def get_total_spent_in_one_currency(totals: QuerySet, currency: str) -> Decimal:
+    def get_total_spent_in_one_currency(totals: QuerySet, currency: str):
         """
         "totals" queryset should look like this
         QuerySet [

@@ -2,6 +2,7 @@ from django.urls import path
 
 from transactions.views.stat_views import (
     PartnersTotalStatsView, OrganizationTotalsView, OrganizationTransactionCalendarView,
+    OrganizationAcceptedWithdrawalTotalsView,
 )
 from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView, UserTotalsView,
@@ -50,7 +51,7 @@ urlpatterns = [
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
 
     path('transactions/withdrawal/under_review/', WithdrawalTransactionReviewView.as_view(),
-         name='online_transaction_complete'),
+         name='transaction_withdrawal_under_review'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),
          name='transaction_booking_preprocess'),
@@ -128,6 +129,9 @@ urlpatterns = [
     path('statistics/<int:pk>/partners_totals/', PartnersTotalStatsView.as_view(), name='partners_totals'),
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
+
+    path('statistics/<int:pk>/accepted_withdrawal/totals/', OrganizationAcceptedWithdrawalTotalsView.as_view(),
+         name='organization_accepted_withdrawal_totals'),
 
     # pay
     path('transactions/pay/<int:pk>/', InitPaymentView.as_view(), name='init_payment'),

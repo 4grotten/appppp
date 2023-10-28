@@ -27,6 +27,11 @@ class TotalStatsSerializer(serializers.Serializer):
     currency = serializers.CharField()
 
 
+class TotalAcceptedWithdrawalStatsSerializer(serializers.Serializer):
+    total_withdrawal = serializers.DecimalField(max_digits=16, decimal_places=2)
+    currency = serializers.CharField()
+
+
 class BalanceTotalStatsSerializer(serializers.ModelSerializer):
 
     class Meta:

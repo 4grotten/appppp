@@ -305,6 +305,7 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
     booking = TransactionBookingInfoSerializer()
 
 
+
     def get_employee_avatar(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(
                 user=self.context['request'].user,
@@ -565,6 +566,43 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     icon_type = serializers.SerializerMethodField()
     recipient_info = serializers.JSONField(source='fixed_cart')
+    processed_by = serializers.SerializerMethodField()
+    employee_name = serializers.SerializerMethodField()
+    employee_avatar = serializers.SerializerMethodField()
+    employee_role = serializers.SerializerMethodField()
+
+    def get_employee_avatar(self, instance):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(
+                user=self.context['request'].user,
+                organization=instance.organization
+        ):
+            return ImageSerializer(self.context['request'].user.avatar).data
+
+        return ImageSerializer(
+            instance.employee_avatar,
+            context={"request": self.context.get("request")}
+        ).data
+
+    def get_employee_name(self, instance):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=instance.organization):
+            return self.context['request'].user.full_name
+        return instance.employee_name
+
+    def get_processed_by(self, instance):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=instance.organization):
+            return self.context['request'].user.id
+        elif not instance.processed_by:
+            return None
+        return instance.processed_by.id
+
+    def get_employee_role(self, instance):
+        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=instance.organization):
+            return OrganizationService.get_user_role_in_organization(organization=instance.organization,
+                                                                     user=self.context['request'].user)
+        return instance.employee_role
 
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
@@ -577,9 +615,9 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type',
-            'withdrawal_type', 'recipient_info')
+            'id', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role', 'currency', 'original_amount',
+            'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount', 'updated_at', 'created_at',
+            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info')
 
 
 class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):

@@ -572,36 +572,26 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     employee_role = serializers.SerializerMethodField()
 
     def get_employee_avatar(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(
-                user=self.context['request'].user,
-                organization=instance.organization
-        ):
-            return ImageSerializer(self.context['request'].user.avatar).data
-
+        if not instance.processed_by:
+            return None
         return ImageSerializer(
             instance.employee_avatar,
             context={"request": self.context.get("request")}
         ).data
 
     def get_employee_name(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=instance.organization):
-            return self.context['request'].user.full_name
+        if not instance.processed_by:
+            return None
         return instance.employee_name
 
     def get_processed_by(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=instance.organization):
-            return self.context['request'].user.id
-        elif not instance.processed_by:
+        if not instance.processed_by:
             return None
         return instance.processed_by.id
 
     def get_employee_role(self, instance):
-        if not instance.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=instance.organization):
-            return OrganizationService.get_user_role_in_organization(organization=instance.organization,
-                                                                     user=self.context['request'].user)
+        if not instance.processed_by:
+            return None
         return instance.employee_role
 
     def get_display_time(self, transaction: Transaction):

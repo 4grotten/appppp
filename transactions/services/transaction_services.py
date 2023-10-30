@@ -4,6 +4,9 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
+from django.conf import settings
+
+from common.models import Currency
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, \
@@ -65,19 +68,15 @@ class TransactionService:
                                       processed_by: User, utc_offset_minutes) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
         try:
-            balance = Balance.objects.get(id=balance.id)
             fee_percent = recipient.payout_system.fee_percent
-            currency = balance.currency
+            currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         except Balance.DoesNotExist:
             raise ObjectNotFoundException("Organization does not have a balance")
         original_amount = recipient.transfer_amount
 
         fee_amount = (original_amount * fee_percent) / 100
-        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
-                                              employee_name=processed_by.full_name, employee_role=role,
-                                              employee_avatar=processed_by.avatar, currency=currency,
+        instance = Transaction.objects.create(organization=organization, currency=currency,
                                               original_amount=original_amount, fee_percent=fee_percent,
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
         instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data

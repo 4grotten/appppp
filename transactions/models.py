@@ -72,7 +72,7 @@ class Transaction(TimestampModel):
         (REFUNDED, REFUNDED),
     )
 
-    client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
+    client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions', null=True)
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 

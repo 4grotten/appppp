@@ -315,15 +315,14 @@ class WithdrawalTransactionReviewView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        TransactionService.review_withdrawal_transaction(
+        transaction = TransactionService.review_withdrawal_transaction(
             transaction_id=serializer.validated_data['transaction_id'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             processed_by=request.user
         )
 
-        return Response(data={
-            'message': _('Transaction successfully under review')
-        }, status=status.HTTP_200_OK)
+        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        return Response(data)
 
 
 class OnlinePaymentTransactionCompleteView(GenericAPIView):

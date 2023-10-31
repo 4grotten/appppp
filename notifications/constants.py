@@ -991,10 +991,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     elif notification_type == WITHDRAWAL_UNDER_REVIEW_TYPE:
         notification_str = dict(
             title=UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
                                                     currency=extra_data.get('currency')),
             title_ru=UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
                                                        currency=extra_data.get('currency')))
 
 

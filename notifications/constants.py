@@ -312,7 +312,7 @@ ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Вы отправил�
 
 ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Ваш вывод на рассмотрении #{transaction_id}'
 UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Вы передали вывод на рассмотрение #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_RU = 'Сумма вывода: {total_price} {currency}'
+WITHDRAWAL_DESCRIPTION_RU = 'Сумма вывода: {total_withdrawal} {currency}'
 
 ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника'
 ORGANIZATION_GAVE_DESCRIPTION_RU = ' '
@@ -412,7 +412,7 @@ DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
 
 ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'Your withdrawal is under review #{transaction_id}'
 UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'You submitted a withdrawal for review #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_EN = 'Withdrawal amount: {total_price} {currency}'
+WITHDRAWAL_DESCRIPTION_EN = 'Withdrawal amount: {total_withdrawal} {currency}'
 
 NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
 NEW_CASHBACK_TITLE = 'New cashback available {percent} %'
@@ -982,10 +982,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     elif notification_type == ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE:
         notification_str = dict(
             title=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
                                                     currency=extra_data.get('currency')),
             title_ru=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == WITHDRAWAL_UNDER_REVIEW_TYPE:

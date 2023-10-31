@@ -1141,7 +1141,7 @@ class TransactionService:
             notification_type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
-                            total_price=current_transaction.final_amount,
+                            total_withdrawal=current_transaction.final_amount,
                             currency=current_transaction.currency.code)
         )
         return current_transaction

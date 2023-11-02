@@ -55,7 +55,7 @@ from transactions.serializers.transaction_serializers import (
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
-from transactions.services.recipient_services import RecipientService
+from transactions.services.recipient_services import RecipientService, BalanceService
 from transactions.services.transaction_services import TransactionService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
 from users.services import UserService
@@ -525,6 +525,48 @@ class UserTotalsView(APIView):
 class UserBalanceTotalsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get(self, request, *args, **kwargs):
+        serializer = StartEndDateTransactionSerializer(data=request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        currency_code = settings.APP_BASE_CURRENCY
+
+        balances = []
+
+        for currency in [Balance.KGS, Balance.TRC]:
+            totals = TransactionService.get_user_balance_totals(currency=currency_code,
+                                                                balance_currency=currency,
+                                                                organization=organization,
+                                                                start_date=serializer.validated_data.get('start'),
+                                                                end_date=serializer.validated_data.get('end'))
+            withdrawal_totals = TransactionService.get_organization_processed_withdrawals(currency=currency_code,
+                                                                                          balance_currency=currency,
+                                                                                          organization=organization,
+                                                                                          start_date=serializer.validated_data.get('start'),
+                                                                                          end_date=serializer.validated_data.get('end'))
+            totals = totals - withdrawal_totals
+
+            balance, created = Balance.objects.get_or_create(
+                organization=organization,
+                currency=currency
+            )
+            balance.balance_amount = totals
+            balance.save()
+
+            balances.append(balance)
+
+        serializer = BalanceTotalStatsSerializer(balances, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserBalanceDetailTotalsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     # TODO: make separate balance for every payment system
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
@@ -535,25 +577,22 @@ class UserBalanceTotalsView(APIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         organization = serializer.validated_data['organization']
-        currency_code = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+        currency_code = settings.APP_BASE_CURRENCY
+
+        balance = BalanceService.get(id=kwargs['pk'])
+        currency = balance.currency
 
         totals = TransactionService.get_user_balance_totals(currency=currency_code,
-                                                    organization=organization,
-                                                    start_date=serializer.validated_data.get('start'),
-                                                    end_date=serializer.validated_data.get('end'))
+                                                            balance_currency=currency,
+                                                            organization=organization,
+                                                            start_date=serializer.validated_data.get('start'),
+                                                            end_date=serializer.validated_data.get('end'))
         withdrawal_totals = TransactionService.get_organization_processed_withdrawals(currency=currency_code,
-                                                    organization=organization,
-                                                    start_date=serializer.validated_data.get('start'),
-                                                    end_date=serializer.validated_data.get('end'))
+                                                                                      balance_currency=currency,
+                                                                                      organization=organization,
+                                                                                      start_date=serializer.validated_data.get('start'),
+                                                                                      end_date=serializer.validated_data.get('end'))
         totals = totals - withdrawal_totals
-        try:
-            currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
-        except Currency.DoesNotExist:
-            raise ObjectNotFoundException(_('Currency not found'))
-        balance, created = Balance.objects.get_or_create(
-            organization=organization,
-            currency=currency
-        )
         balance.balance_amount = totals
         balance.save()
 

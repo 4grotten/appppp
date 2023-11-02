@@ -64,3 +64,12 @@ class RecipientService:
 
         return recipients
 
+
+class BalanceService:
+    @classmethod
+    def get(cls, *args, **kwargs):
+        try:
+            return Balance.objects.get(**kwargs)
+        except Balance.DoesNotExist:
+            raise ObjectNotFoundException(_('Balance not found'))
+

@@ -69,11 +69,8 @@ class TransactionService:
                                       processed_by: User, utc_offset_minutes) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        try:
-            fee_percent = recipient.payout_system.fee_percent
-            currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
-        except Balance.DoesNotExist:
-            raise ObjectNotFoundException("Organization does not have a balance")
+        fee_percent = recipient.payout_system.fee_percent
+        currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         original_amount = recipient.transfer_amount
 
         fee_amount = (original_amount * fee_percent) / 100
@@ -81,6 +78,7 @@ class TransactionService:
                                               original_amount=original_amount, fee_percent=fee_percent,
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
         instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data
+        instance.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
         instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
         instance.save()
 
@@ -1778,25 +1776,30 @@ class TransactionService:
 
 
     @classmethod
-    def get_user_balance_totals(cls, currency: str, organization: Organization = None,
+    def get_user_balance_totals(cls, currency: str, balance_currency: str, organization: Organization = None,
                                 start_date=None, end_date=None):
+        if balance_currency == Balance.TRC:
+            currency = "USD"
         transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
-                                                  delivery_type=Transaction.ONLINE_PAYMENT)
+                                                  delivery_type=Transaction.ONLINE_PAYMENT,
+                                                  payment_info__currency=balance_currency)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
-
         transactions = transactions.order_by().values('currency').annotate(
             total_balance=Coalesce(Sum('final_amount'), 0)
         )
         return StatisticsService.get_transaction_balance_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
-    def get_organization_processed_withdrawals(cls, currency: str, organization: Organization = None,
-                                               start_date=None, end_date=None):
+    def get_organization_processed_withdrawals(cls, currency: str, balance_currency: str,
+                                               organization: Organization = None, start_date=None, end_date=None):
+        if balance_currency == Balance.TRC:
+            currency = "USD"
         transactions = Transaction.objects.filter(organization=organization, is_processed=True,
-                                                  type=Transaction.WITHDRAWAL, currency=currency)
+                                                  type=Transaction.WITHDRAWAL, currency=currency,
+                                                  payment_info__currency=balance_currency)
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
@@ -2055,10 +2058,13 @@ class TransactionService:
     def get_organization_balance_all_transactions(cls, organization: Organization, start_date=None, end_date=None,
                                                   search_id: int = None):
 
-        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
-                                                  delivery_type=Transaction.ONLINE_PAYMENT).order_by('-updated_at')
+        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True,
+                                                         type=Transaction.ONLINE,
+                                                         delivery_type=Transaction.ONLINE_PAYMENT,
+                                                         payment_info__isnull=False).order_by('-updated_at')
 
-        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL,
+                                                             payment_info__isnull=False)
 
         transactions = simple_transactions | withdrawal_transactions
 

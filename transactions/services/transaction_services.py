@@ -1635,13 +1635,13 @@ class TransactionService:
                     Q(organization=OuterRef('pk')) & (
                             (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
                         Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)
-                    ) & Q(type=Transaction.WITHDRAWAL)
+                    ) & Q(type=Transaction.WITHDRAWAL) & Q(payment_info__isnull=False)
                     )
                 ).order_by('-updated_at').values('updated_at')[:1]
             ),
             unprocessed_transaction_count=Count(
                 Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.WITHDRAWAL,
-                                           status=Transaction.IN_PROGRESS).values('id')[:1])
+                                           status=Transaction.IN_PROGRESS, payment_info__isnull=False).values('id')[:1])
         )
 
         organizations = organizations.order_by('-unprocessed_transaction_count',
@@ -2670,8 +2670,8 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
-        return Transaction.objects.filter(organization__in=organization,
-                                          status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL).count()
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False).count()
 
     @classmethod
     def get_payment_system_withdrawal_unprocessed_transactions_count(cls, user: User):
@@ -2679,7 +2679,8 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD).count()
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD,
+                                          payment_info__isnull=False).count()
 
     @classmethod
     def get_swift_withdrawal_unprocessed_transactions_count(cls, user: User):
@@ -2744,6 +2745,7 @@ class TransactionService:
                     | Q(status=Transaction.ACCEPTED)
             )
             & Q(type=Transaction.WITHDRAWAL)
+            & Q(payment_info__isnull=False)
         ).annotate(
             in_progress_first=Case(
                 When(status=Transaction.IN_PROGRESS, then=0),

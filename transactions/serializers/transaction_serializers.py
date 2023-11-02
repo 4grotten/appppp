@@ -624,3 +624,10 @@ class BalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Balance
         fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems')
+
+class BalanceInTransactionSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'payout_systems')

@@ -1283,9 +1283,9 @@ class RentPaymentAcceptView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
-        TransactionService.accept_booking_transaction_by_user(transaction_id=transaction_id,
-                                                              user=self.request.user,
-                                                              request=self.request)
+        TransactionService.accept_freedompay_booking_transaction_by_user(transaction_id=transaction_id,
+                                                                         user=self.request.user,
+                                                                         request=self.request)
 
         return Response(data={
             'message': _('Transaction successfully paid')
@@ -1304,9 +1304,8 @@ class OrderPaymentAcceptView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         transaction_id = serializer.validated_data['transaction_id']
-        TransactionService.accept_order_transaction_by_user(transaction_id=transaction_id,
-                                                              user=self.request.user,
-                                                              request=self.request)
+        TransactionService.accept_freedompay_order_transaction_by_user(transaction_id=transaction_id,
+                                                                       user=self.request.user)
 
         return Response(data={
             'message': _('Transaction successfully paid')
@@ -1477,35 +1476,6 @@ class InitPaymentView(GenericAPIView):
     1 - FreedomPay
     2 - PaySy
     """
-
-    def get_company_info(self, base_url):
-        if base_url == 'https://apofiz.com/api/v1/':
-            company_info_url = 'https://api.paysy.net/companies/get'
-        else:
-            company_info_url = 'https://devnet-api.paysy.net/companies/get'
-
-        headers = {
-            'accept': 'application/json',
-            'X-API-Key': PAYSY_API_KEY
-        }
-
-        try:
-            response = requests.get(company_info_url, headers=headers)
-            if response.status_code == 200:
-                company_info = response.json().get('result', {})
-                if company_info.get('status', False):
-                    deposit_info = company_info.get('deposit', {}).get('5', {})
-                    currency = deposit_info.get('currency')
-                    chain_id = deposit_info.get('chain')
-                    return currency, chain_id
-                else:
-                    return None, None
-
-            else:
-                return 'USDT', 56
-
-        except Exception as e:
-            return 'USD', 56
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1727,17 +1697,16 @@ class PaySyWebhookView(APIView):
 
         if event_type == "ORDER_COMPLETED":
             if purchase_type == 'product':
-                TransactionService.accept_order_transaction_by_user(transaction_id=transaction.id,
-                                                                    user=user,
-                                                                    request=self.request)
+                TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
+                                                                               user=user)
 
             elif purchase_type == 'deal':
-                TransactionService.complete_transaction_online(transaction_id=transaction.id)
+                TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
 
             else:
-                TransactionService.accept_booking_transaction_by_user(transaction_id=transaction.id,
-                                                                      user=user,
-                                                                      request=self.request)
+                TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
+                                                                                 user=user,
+                                                                                 request=self.request)
             response_data = {
                 'status': 'ok',
             }
@@ -1793,9 +1762,8 @@ class ResultURLView(APIView):
             else:
                 print("ACCEPTED")
                 if purchase_type == 'product':
-                    TransactionService.accept_order_transaction_by_user(transaction_id=pg_order_id,
-                                                                            user=user,
-                                                                            request=self.request)
+                    TransactionService.accept_freedompay_order_transaction_by_user(transaction_id=pg_order_id,
+                                                                                   user=user)
                     print("AFTER TransactionService")
                     response_data = {
                         'pg_status': 'ok',
@@ -1804,7 +1772,7 @@ class ResultURLView(APIView):
                         'pg_sig': validated_data.get('pg_sig', '')
                     }
                 elif purchase_type == 'deal':
-                    TransactionService.complete_transaction_online(transaction_id=pg_order_id)
+                    TransactionService.complete_freedompay_transaction_online(transaction_id=pg_order_id)
                     print("TransactionService.complete_transaction_online")
 
                     response_data = {
@@ -1814,9 +1782,9 @@ class ResultURLView(APIView):
                         'pg_sig': validated_data.get('pg_sig', '')
                     }
                 else:
-                    TransactionService.accept_booking_transaction_by_user(transaction_id=pg_order_id,
-                                                                         user=user,
-                                                                         request=self.request)
+                    TransactionService.accept_freedompay_booking_transaction_by_user(transaction_id=pg_order_id,
+                                                                                     user=user,
+                                                                                     request=self.request)
                     print("AFTER TransactionService.accept_order_transaction_by_user")
                     response_data = {
                         'pg_status': 'ok',

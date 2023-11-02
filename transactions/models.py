@@ -91,6 +91,7 @@ class Transaction(TimestampModel):
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     fixed_cart = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
+    payment_info = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
 
     withdrawal_type = models.CharField(choices=WITHDRAWAL_TYPES, max_length=20, default=BANKCARD)
 

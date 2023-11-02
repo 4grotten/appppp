@@ -625,6 +625,19 @@ class BalanceSerializer(serializers.ModelSerializer):
         model = Balance
         fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems')
 
+
+class BalanceWithUnprocessedTransactionCountSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_unprocessed_transaction_count(self, balance: Balance):
+        return Transaction.objects.filter(payment_info__id=balance.id, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL).count()
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems', 'unprocessed_transaction_count')
+
 class BalanceInTransactionSerializer(serializers.ModelSerializer):
     payout_systems = PayoutSystemSerializer(many=True)
 

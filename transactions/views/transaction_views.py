@@ -50,7 +50,7 @@ from transactions.serializers.transaction_serializers import (
     OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
     TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
     TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
-    BalanceSerializer
+    BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -976,7 +976,7 @@ class OrganizationBalanceWithdrawalTransactionListView(ListAPIView):
 
 class OrganizationBalanceListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = BalanceSerializer
+    serializer_class = BalanceWithUnprocessedTransactionCountSerializer
     queryset = Balance.objects.all()
 
     def list(self, request, *args, **kwargs):

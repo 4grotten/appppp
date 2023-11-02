@@ -86,15 +86,12 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
-                                      processed_by: User, utc_offset_minutes) -> Transaction:
+    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient,
+                                            balance: Balance, processed_by: User, utc_offset_minutes) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        try:
-            fee_percent = recipient.payout_system.fee_percent
-            currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
-        except Balance.DoesNotExist:
-            raise ObjectNotFoundException("Organization does not have a balance")
+        fee_percent = recipient.payout_system.fee_percent
+        currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         original_amount = recipient.transfer_amount
         fee_amount = (original_amount * fee_percent) / 100
         instance = Transaction.objects.create(organization=organization, currency=currency,
@@ -102,6 +99,7 @@ class TransactionService:
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL,
                                               withdrawal_type=Transaction.SWIFT)
         instance.fixed_cart = RecipientSwiftSerializer(recipient, context={'request': request}).data
+        instance.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
         instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
         instance.save()
 

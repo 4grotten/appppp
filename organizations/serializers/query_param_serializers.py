@@ -35,6 +35,7 @@ class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     search = serializers.IntegerField(default=None)
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
     status = serializers.ChoiceField(choices=Transaction.STATUS, default=None)
+    withdrawal_type = serializers.ChoiceField(choices=Transaction.WITHDRAWAL_TYPES, default=None)
 
 
 class OrganizationQueryParamSerializer(serializers.Serializer):

@@ -207,6 +207,29 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         read_only_fields = ['verification_status']
 
 
+class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        withdrawal_type = self.context['request'].GET.get('withdrawal_type', None)
+        transactions = Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False)
+        if withdrawal_type is not None:
+            transactions = transactions.filter(withdrawal_type=withdrawal_type)
+        return transactions.count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners', 'verification_status')
+        read_only_fields = ['verification_status']
+
+
 class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()

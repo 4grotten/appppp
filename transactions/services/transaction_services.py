@@ -1626,8 +1626,8 @@ class TransactionService:
         return organizations
 
     @classmethod
-    def get_user_withdrawal_transaction_organizations(cls, user: User):
-        transactions = cls.get_user_withdrawal_transactions(user=user)
+    def get_user_withdrawal_transaction_organizations(cls, user: User, withdrawal_type: str):
+        transactions = cls.get_user_withdrawal_transactions(user=user, withdrawal_type=withdrawal_type)
 
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
@@ -1635,13 +1635,15 @@ class TransactionService:
                     Q(organization=OuterRef('pk')) & (
                             (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
                         Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)
-                    ) & Q(type=Transaction.WITHDRAWAL) & Q(payment_info__isnull=False)
+                    ) & Q(type=Transaction.WITHDRAWAL) & Q(payment_info__isnull=False) &
+                            Q(withdrawal_type=withdrawal_type)
                     )
                 ).order_by('-updated_at').values('updated_at')[:1]
             ),
             unprocessed_transaction_count=Count(
                 Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.WITHDRAWAL,
-                                           status=Transaction.IN_PROGRESS, payment_info__isnull=False).values('id')[:1])
+                                           status=Transaction.IN_PROGRESS, payment_info__isnull=False,
+                                           withdrawal_type=withdrawal_type).values('id')[:1])
         )
 
         organizations = organizations.order_by('-unprocessed_transaction_count',
@@ -2732,7 +2734,7 @@ class TransactionService:
         return transactions
 
     @classmethod
-    def get_user_withdrawal_transactions(cls, user: User):
+    def get_user_withdrawal_transactions(cls, user: User, withdrawal_type: str):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
@@ -2746,6 +2748,7 @@ class TransactionService:
             )
             & Q(type=Transaction.WITHDRAWAL)
             & Q(payment_info__isnull=False)
+            & Q(withdrawal_type=withdrawal_type)
         ).annotate(
             in_progress_first=Case(
                 When(status=Transaction.IN_PROGRESS, then=0),

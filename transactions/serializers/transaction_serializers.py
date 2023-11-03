@@ -400,6 +400,10 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), default=None)
 
 
+class WithdrawalTypeTransactionSerializer(serializers.Serializer):
+    withdrawal_type = serializers.ChoiceField(choices=Transaction.WITHDRAWAL_TYPES, default=None)
+
+
 class UserInfoBookingSerializer(serializers.Serializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
     booking = serializers.PrimaryKeyRelatedField(queryset=Booking.objects.all())

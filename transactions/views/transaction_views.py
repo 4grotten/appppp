@@ -29,6 +29,7 @@ from organizations.serializers.card_serializers import DiscountCardBriefSerializ
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
     PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer,
+    PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer,
 )
 from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
 from organizations.services.card_services import DiscountCardService
@@ -50,7 +51,7 @@ from transactions.serializers.transaction_serializers import (
     OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
     TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
     TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
-    BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer
+    BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer, WithdrawalTypeTransactionSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -391,18 +392,19 @@ class UserTransactionOrganizationView(ListAPIView):
         )
 
 class UserWithdrawalTransactionOrganizationView(ListAPIView):
-    serializer_class = PartnerWithLatestTransactionUnprocessedTransactionCountSerializer
+    serializer_class = PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        serializer = WithdrawalTypeTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         return TransactionService.get_user_withdrawal_transaction_organizations(
-            user=self.request.user
+            user=self.request.user,
+            withdrawal_type=serializer.validated_data['withdrawal_type']
         )
 
 

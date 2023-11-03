@@ -148,6 +148,51 @@ class TransactionsSerializer(serializers.ModelSerializer):
         )
 
 
+class TransactionsWithdrawalSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+    purchase_type = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_purchase_type(self, transaction: Transaction):
+        booking = Booking.objects.filter(transaction=transaction)
+        if booking.exists():
+            return ShopItem.RENTAL
+        ticket = Ticket.objects.filter(transaction=transaction)
+        if ticket.exists():
+            return ShopItem.TICKET
+        return ShopItem.PRODUCT
+
+    def get_icon_type(self, transaction: Transaction):
+        if transaction.type == Transaction.WITHDRAWAL:
+            return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
+        purchase_type = self.get_purchase_type(transaction)
+        if purchase_type == ShopItem.PRODUCT:
+            return PRODUCT_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,
+                                         transaction.delivery_type), DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE)
+        if purchase_type == ShopItem.RENTAL:
+            return RENTAL_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                       DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE)
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,
+                                    transaction.delivery_type), DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
+
+
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
+            'payment_status', 'purchase_type', 'icon_type', 'payment_info'
+        )
+
+
 class TransactionsTicketSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
@@ -635,8 +680,13 @@ class BalanceWithUnprocessedTransactionCountSerializer(serializers.ModelSerializ
     unprocessed_transaction_count = serializers.SerializerMethodField()
 
     def get_unprocessed_transaction_count(self, balance: Balance):
-        return Transaction.objects.filter(payment_info__id=balance.id, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.WITHDRAWAL).count()
+        withdrawal_type = self.context['request'].GET.get('withdrawal_type', None)
+        transactions = Transaction.objects.filter(payment_info__id=balance.id, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False)
+        if withdrawal_type is not None:
+            transactions = transactions.filter(withdrawal_type=withdrawal_type)
+
+        return transactions.count()
 
     class Meta:
         model = Balance

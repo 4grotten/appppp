@@ -47,7 +47,7 @@ from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
-from transactions.models import Transaction, Recipient, Balance
+from transactions.models import Transaction, Recipient, Balance, PayoutSystem
 from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer, \
     BalanceInTransactionSerializer
 from transactions.services.stats_services import StatisticsService
@@ -2079,11 +2079,14 @@ class TransactionService:
         return transactions
 
     @classmethod
-    def get_organization_balance_withdrawal_transactions(cls, organization: Organization, start_date=None,
-                                                         end_date=None,
-                                                         search_id: int = None, status=None):
+    def get_organization_balance_withdrawal_transactions(cls, organization: Organization,
+                                                         payout_system: PayoutSystem = None, start_date=None,
+                                                         end_date=None, search_id: int = None, status=None):
+        transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL,
+                                                  payment_info__isnull=False)
 
-        transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+        if payout_system is not None:
+            transactions = transactions.filter(fixed_cart__payout_system__id=payout_system.id)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)

@@ -442,6 +442,7 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
     end = serializers.DateField(required=False)
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                       default=None)
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all(), default=None)
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), default=None)
 
 
@@ -534,6 +535,20 @@ class PayoutSystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayoutSystem
         fields = ('id', 'name', 'image', 'fee_percent')
+
+class PayoutSystemWithUnprocessedTransactionCountSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_unprocessed_transaction_count(self, payout_system: PayoutSystem):
+        transactions = Transaction.objects.filter(fixed_cart__payout_system__id=payout_system.id,
+                                                  status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL,
+                                                  payment_info__isnull=False)
+        return transactions.count()
+
+    class Meta:
+        model = PayoutSystem
+        fields = ('id', 'name', 'image', 'fee_percent', 'unprocessed_transaction_count')
 
 
 class RecipientSerializer(serializers.ModelSerializer):

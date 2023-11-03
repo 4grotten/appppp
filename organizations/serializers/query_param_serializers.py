@@ -3,7 +3,7 @@ from rest_framework import serializers
 from common.models import Country, City
 from organizations.models import Organization, OrganizationCategory
 from shop.models import ItemSubcategory
-from transactions.models import Transaction
+from transactions.models import Transaction, PayoutSystem
 from users.models import User
 
 
@@ -34,6 +34,7 @@ class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     end = serializers.DateField(default=None)
     search = serializers.IntegerField(default=None)
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
+    payout_system = serializers.PrimaryKeyRelatedField(queryset=PayoutSystem.objects.all(), default=None)
     status = serializers.ChoiceField(choices=Transaction.STATUS, default=None)
     withdrawal_type = serializers.ChoiceField(choices=Transaction.WITHDRAWAL_TYPES, default=None)
 

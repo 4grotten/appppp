@@ -52,7 +52,7 @@ from transactions.serializers.transaction_serializers import (
     TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
     TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
     BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer, WithdrawalTypeTransactionSerializer,
-    TransactionsWithdrawalSerializer
+    TransactionsWithdrawalSerializer, PayoutSystemWithUnprocessedTransactionCountSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -604,8 +604,18 @@ class UserBalanceDetailTotalsView(APIView):
 
 
 class PayoutSystemListAPIView(ListAPIView):
-    queryset = PayoutSystem.objects.all().exclude(name='Swift')
-    serializer_class = PayoutSystemSerializer
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PayoutSystemWithUnprocessedTransactionCountSerializer
+
+    def get_queryset(self):
+        serializer = StartEndDateTransactionSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        balance = serializer.validated_data['balance']
+        return balance.payout_systems.all().exclude(name='Swift')
 
 
 class SwiftPayoutSystemAPIView(APIView):
@@ -962,6 +972,7 @@ class OrganizationBalanceWithdrawalTransactionListView(ListAPIView):
 
         queryset = TransactionService.get_organization_balance_withdrawal_transactions(
             organization=serializer.validated_data['organization'],
+            payout_system=serializer.validated_data['payout_system'],
             start_date=serializer.validated_data['start'],
             end_date=serializer.validated_data['end'],
             search_id=serializer.validated_data['search'],

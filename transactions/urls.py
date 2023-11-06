@@ -55,7 +55,7 @@ urlpatterns = [
     path('transactions/withdrawal/under_review/', WithdrawalTransactionReviewView.as_view(),
          name='transaction_withdrawal_under_review'),
 
-    path('transactions/withdrawal/under_review/complete/', WithdrawalTransactionCompleteView.as_view(),
+    path('transactions/withdrawal/complete/', WithdrawalTransactionCompleteView.as_view(),
          name='transaction_withdrawal_complete'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),

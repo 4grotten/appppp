@@ -635,6 +635,18 @@ class TransactionWithdrawalSwiftSerializer(serializers.Serializer):
         return value
 
 
+class TransactionFilesSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TransactionFile
+        fields = ('id', 'file', 'name')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
+
+
 class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     icon_type = serializers.SerializerMethodField()
@@ -643,6 +655,7 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     employee_avatar = serializers.SerializerMethodField()
     employee_role = serializers.SerializerMethodField()
+    files = TransactionFilesSerializer(many=True)
 
     def get_employee_avatar(self, instance):
         if not instance.processed_by:
@@ -682,17 +695,6 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
             'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount', 'updated_at', 'created_at',
             'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info', 'files', 'comment')
 
-
-class TransactionFilesSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = TransactionFile
-        fields = ('id', 'file', 'name')
-        read_only_fields = ('name',)
-
-    def get_name(self, obj):
-        return obj.file.name.split("/")[-1]
 
 class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)

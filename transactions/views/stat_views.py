@@ -10,7 +10,8 @@ from common.exceptions import NotAcceptableException, PermissionDeniedException
 from organizations.services.organization_services import OrganizationService
 from transactions.serializers.stats_serializers import (
     StartEndDateSerializer, TotalStatsSerializer, StartEndProcessedByQueryParamSerializer,
-    OrganizationCalendarSerializer, CalendarClientSerializer, TotalAcceptedWithdrawalStatsSerializer
+    OrganizationCalendarSerializer, CalendarClientSerializer, TotalAcceptedWithdrawalStatsSerializer,
+    BalanceStartEndProcessedByQueryParamSerializer
 )
 from transactions.services.stats_services import StatisticsService
 
@@ -60,7 +61,7 @@ class OrganizationTotalsView(GenericAPIView):
 
 class OrganizationAcceptedWithdrawalTotalsView(GenericAPIView):
     def get(self, request, *args, **kwargs):
-        serializer = StartEndProcessedByQueryParamSerializer(data=request.GET)
+        serializer = BalanceStartEndProcessedByQueryParamSerializer(data=request.GET)
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
@@ -71,11 +72,14 @@ class OrganizationAcceptedWithdrawalTotalsView(GenericAPIView):
         if not OrganizationService.user_can_see_stats(organization=organization, user=request.user):
             raise NotAcceptableException(_('No rights to see stats of organization'))
 
+        balance = serializer.validated_data['balance']
+        currency = balance.currency
         stats = StatisticsService.get_accepted_withdrawal_totals_of_organization(organization=organization,
                                                              start_date=serializer.validated_data['start'],
                                                              end_date=serializer.validated_data['end'],
                                                              processed_by=serializer.validated_data['processed_by'],
-                                                             client=serializer.validated_data['client'])
+                                                             client=serializer.validated_data['client'],
+                                                             currency=currency)
         data = TotalAcceptedWithdrawalStatsSerializer(stats).data
         return Response(data)
 

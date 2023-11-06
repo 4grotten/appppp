@@ -9,7 +9,7 @@ from common.exceptions import NotAcceptableException
 from common.services.currency import CurrencyConverterService
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
-from transactions.models import Transaction
+from transactions.models import Transaction, Balance
 from users.models import User
 
 
@@ -36,9 +36,12 @@ class StatisticsService:
 
     @classmethod
     def get_accepted_withdrawal_totals_of_organization(cls, organization: Organization, start_date=None, end_date=None,
-                                   processed_by: User = None, client: User = None) -> dict:
+                                   processed_by: User = None, client: User = None, currency: str = None) -> dict:
+        if currency == Balance.TRC:
+            currency = 'USD'
         transactions = Transaction.objects.filter(is_processed=True, organization=organization,
-                                                  type=Transaction.WITHDRAWAL, status=Transaction.ACCEPTED_WITHDRAWAL)
+                                                  type=Transaction.WITHDRAWAL, status=Transaction.ACCEPTED_WITHDRAWAL,
+                                                  payment_info__isnull=False)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
@@ -53,7 +56,7 @@ class StatisticsService:
         transactions = transactions.order_by().values('currency').\
             annotate(total_withdrawal=Coalesce(Sum('final_amount'), 0))
 
-        return cls.get_withdrawal_stats_in_one_currency(totals=transactions, currency=organization.currency.code)
+        return cls.get_withdrawal_stats_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
     def get_total_stats_of_partners(cls, organization: Organization, requesting_user: User, currency: str,

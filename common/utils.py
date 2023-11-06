@@ -48,6 +48,15 @@ def upload_file_with_unique_name(instance, filename):
         Path(filename).suffix
     )
 
+def upload_transaction_file_with_unique_name(instance, filename):
+    return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(
+        hashlib.sha256(
+            datetime.date.today().strftime('%Y%m').encode()
+        ).hexdigest()[32:-16]
+    ) / Path(str(uuid.uuid4())).with_suffix(
+        Path(filename + 'transaction_file').suffix
+    )
+
 
 def upload_file_video_with_unique_name(instance, filename):
     return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(

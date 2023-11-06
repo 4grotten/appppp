@@ -1,10 +1,29 @@
+from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db import models
 
 from common.models import Currency, TimestampModel
-from common.utils import DecimalEncoder, DecimalDecoder
+from common.utils import DecimalEncoder, DecimalDecoder, upload_file_with_unique_name
 from organizations.models import Organization, DiscountCard
 from users.models import User
+
+
+class TransactionFile(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+    file = models.FileField(upload_to=upload_file_with_unique_name,
+                             help_text=_('File that you want to store'),
+                             null=True, blank=True)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(TransactionFile, self).save()
+
+    class Meta:
+        ordering = ('order',)
 
 
 class Transaction(TimestampModel):
@@ -104,6 +123,9 @@ class Transaction(TimestampModel):
     is_processed = models.BooleanField(default=False)
     status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
     purchase_id = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    files = models.ManyToManyField(TransactionFile, blank=True, related_name='transactions')
+    comment = models.TextField(null=True, blank=True)
 
     display_time = models.DateTimeField(null=True)
 

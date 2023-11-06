@@ -13,7 +13,7 @@ from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
     TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
-from transactions.models import Transaction, PayoutSystem, Recipient, Balance
+from transactions.models import Transaction, PayoutSystem, Recipient, Balance, TransactionFile
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
 from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
@@ -228,6 +228,15 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('transaction_id', 'utc_offset_minutes',)
+
+
+class TransactionWithdrawalCompleteSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(required=True)
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+    class Meta:
+        model = Transaction
+        fields = ('transaction_id', 'utc_offset_minutes', 'files', 'comment')
 
 
 class OnlineOfflinePaymentCompleteSerializer(serializers.ModelSerializer):
@@ -671,8 +680,19 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role', 'currency', 'original_amount',
             'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount', 'updated_at', 'created_at',
-            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info')
+            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info', 'files', 'comment')
 
+
+class TransactionFilesSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TransactionFile
+        fields = ('id', 'file', 'name')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
 
 class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
     transaction_id = serializers.IntegerField(required=True)

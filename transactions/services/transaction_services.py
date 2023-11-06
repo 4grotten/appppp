@@ -33,7 +33,7 @@ from notifications.constants import (
     ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE,
     ACCEPT_ORDER_PAYMENT_CLIENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
     REQUEST_ONLINE_ORDER_TYPE, NOTIFICATION_MODE_PERSONAL, WITHDRAWAL_UNDER_REVIEW_TYPE,
-    ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE
+    ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE, WITHDRAWAL_ACCEPTED_TYPE, ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -1315,6 +1315,53 @@ class TransactionService:
             mode=NOTIFICATION_MODE_PERSONAL,
             with_permissions=dict(can_edit_organization=True),
             notification_type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_review_withdrawal_transaction(cls, transaction_id: int, utc_offset_minutes: int, processed_by: User,
+                                               files=None, comment=None) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.WITHDRAWAL,
+                                      status=Transaction.UNDER_REVIEW, payment_info__isnull=False)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        if processed_by != current_transaction.processed_by:
+            raise NotAcceptableException(_('No rights to edit the transaction'))
+
+        try:
+            for index, file in enumerate(files):
+                file.order = index
+                file.save(update_fields=('order',))
+                current_transaction.files.add(file)
+            current_transaction.status = Transaction.ACCEPTED_WITHDRAWAL
+            current_transaction.comment = comment
+            current_transaction.is_processed = True
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not review transaction'))
+
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=WITHDRAWAL_ACCEPTED_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE,
             organization_id=current_transaction.organization_id,
             extra_data=dict(transaction_id=current_transaction.id,
                             total_withdrawal=current_transaction.final_amount,

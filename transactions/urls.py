@@ -28,11 +28,13 @@ from transactions.views.transaction_views import (
     TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
-    OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView
+    OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
+    WithdrawalTransactionCompleteView, TransactionFilesCreateView
 )
 
 urlpatterns = [
     path('transactions/', OrganizationTransactionListView.as_view(), name='organization_transactions'),
+    path('transactions/files/', TransactionFilesCreateView.as_view(), name='transaction_files'),
     path('transactions/<int:pk>/', OrganizationTransactionRetrieveDestroyView.as_view(),
          name='organization_transaction_detail'),
     path('transactions/<int:pk>/booking/', OrganizationBookingTransactionRetrieveDestroyView.as_view(),
@@ -52,6 +54,9 @@ urlpatterns = [
 
     path('transactions/withdrawal/under_review/', WithdrawalTransactionReviewView.as_view(),
          name='transaction_withdrawal_under_review'),
+
+    path('transactions/withdrawal/under_review/complete/', WithdrawalTransactionCompleteView.as_view(),
+         name='transaction_withdrawal_complete'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),
          name='transaction_booking_preprocess'),

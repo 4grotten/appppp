@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Transaction, Balance, PayoutSystem, Recipient
+from .models import Transaction, Balance, PayoutSystem, Recipient, TransactionFile
 
 
 class TransactionAdmin(admin.ModelAdmin):
@@ -34,6 +34,11 @@ class PayoutSystemAdmin(admin.ModelAdmin):
 
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ('payout_system', 'image', 'owner_name', 'transfer_amount')
+
+@admin.register(TransactionFile)
+class FileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'file', 'created_at')
+
 
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Balance, BalanceAdmin)

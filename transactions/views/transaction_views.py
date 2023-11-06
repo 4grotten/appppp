@@ -12,12 +12,14 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.models import Currency
+from common.serializers import ImageSerializer
 from common.services.currency import CurrencyConverterService
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
     PAYSY_API_KEY
@@ -39,7 +41,7 @@ from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
 from shop.services.ticket_services import TicketService
-from transactions.models import Transaction, PayoutSystem, Balance, Recipient
+from transactions.models import Transaction, PayoutSystem, Balance, Recipient, TransactionFile
 from transactions.serializers.stats_serializers import TotalStatsSerializer, BalanceTotalStatsSerializer
 from transactions.serializers.transaction_serializers import (
     PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
@@ -52,7 +54,8 @@ from transactions.serializers.transaction_serializers import (
     TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
     TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
     BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer, WithdrawalTypeTransactionSerializer,
-    TransactionsWithdrawalSerializer, PayoutSystemWithUnprocessedTransactionCountSerializer
+    TransactionsWithdrawalSerializer, PayoutSystemWithUnprocessedTransactionCountSerializer,
+    TransactionWithdrawalCompleteSerializer, TransactionFilesSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
@@ -321,6 +324,37 @@ class WithdrawalTransactionReviewView(GenericAPIView):
             transaction_id=serializer.validated_data['transaction_id'],
             utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
             processed_by=request.user
+        )
+
+        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        return Response(data)
+
+
+class TransactionFilesCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
+    serializer_class = TransactionFilesSerializer
+    queryset = TransactionFile.objects.all()
+
+class WithdrawalTransactionCompleteView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithdrawalCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        files = serializer.validated_data.get('files', [])
+        comment = serializer.validated_data.get('comment', None)
+        transaction = TransactionService.complete_review_withdrawal_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            files=files, comment=comment,
+            processed_by=request.user,
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
         )
 
         data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data

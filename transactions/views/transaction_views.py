@@ -1495,7 +1495,11 @@ class TransactionTicketUserInfoView(GenericAPIView):
 
         tickets = Ticket.objects.filter(item=ticket, user=client).order_by('-updated_at')
 
-        serializer = self.get_serializer(tickets, many=True)
+        page = self.paginate_queryset(tickets)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.get_serializer(tickets, many=True)
 
         response_data = {
             'client': UserInfoSerializer(client).data,

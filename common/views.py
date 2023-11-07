@@ -228,3 +228,26 @@ class ImageToBase64View(APIView):
             return Response({'base64_image': base64_string}, status=200)
         except requests.exceptions.RequestException as e:
             return Response({'message': str(e)}, status=400)
+
+
+class FileToBase64View(APIView):
+
+    def get(self, request):
+        file_url = request.query_params.get('file_url')
+
+        if not file_url:
+            return Response({'message': 'File URL not provided'}, status=400)
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        try:
+            response = requests.get(file_url, proxies=proxy[0])
+            response.raise_for_status()  # Raise an exception if the request was unsuccessful
+            image_data = response.content
+
+            base64_data = base64.b64encode(image_data)
+            base64_string = base64_data.decode('utf-8')
+
+            return Response({'base64_image': base64_string}, status=200)
+        except requests.exceptions.RequestException as e:
+            return Response({'message': str(e)}, status=400)

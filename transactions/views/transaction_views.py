@@ -1311,7 +1311,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
             'tickets': serializer.data,
         }
 
-        return Response(data=response_data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(response_data)
 
 
 class TransactionOwnTicketInfoView(GenericAPIView):

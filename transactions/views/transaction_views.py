@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.models import Currency
+from common.pagination import GeneralPagination
 from common.serializers import ImageSerializer
 from common.services.currency import CurrencyConverterService
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
@@ -1506,7 +1507,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
             'tickets': serializer.data,
         }
 
-        return Response(data=response_data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(response_data)
 
 
 class TransactionOwnTicketInfoView(GenericAPIView):

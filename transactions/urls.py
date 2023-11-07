@@ -29,7 +29,7 @@ from transactions.views.transaction_views import (
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
     OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
-    WithdrawalTransactionCompleteView, TransactionFilesCreateView
+    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView
 )
 
 urlpatterns = [
@@ -56,6 +56,8 @@ urlpatterns = [
          name='transaction_withdrawal_under_review'),
 
     path('transactions/withdrawal/complete/', WithdrawalTransactionCompleteView.as_view(),
+         name='transaction_withdrawal_complete'),
+    path('transactions/withdrawal/decline/', WithdrawalTransactionDeclineView.as_view(),
          name='transaction_withdrawal_complete'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),

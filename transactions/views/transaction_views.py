@@ -361,6 +361,31 @@ class WithdrawalTransactionCompleteView(GenericAPIView):
         return Response(data)
 
 
+class WithdrawalTransactionDeclineView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TransactionWithdrawalCompleteSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        files = serializer.validated_data.get('files', [])
+        comment = serializer.validated_data.get('comment', None)
+        transaction = TransactionService.decline_review_withdrawal_transaction(
+            transaction_id=serializer.validated_data['transaction_id'],
+            files=files, comment=comment,
+            processed_by=request.user,
+            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+        )
+
+        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        return Response(data)
+
+
 class OnlinePaymentTransactionCompleteView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineCompleteSerializer

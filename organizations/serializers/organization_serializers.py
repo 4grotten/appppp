@@ -418,6 +418,18 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         read_only_fields = ['verification_status']
 
 
+class OrganizationMapsListSerializer(serializers.ModelSerializer):
+    image = ImageSerializer(many=False)
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'image', 'avg_check', 'longitude', 'latitude')
+        read_only_fields = ['verification_status']
+
+
 class OrganizationCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all()

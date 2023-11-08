@@ -44,7 +44,8 @@ from organizations.serializers.organization_serializers import (
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer
+    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
+    OrganizationMapsListSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
@@ -193,6 +194,13 @@ class OrganizationsListCreateView(ListCreateAPIView):
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
+
+class OrganizationsMapsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationMapsListSerializer
+
+    def get_queryset(self):
+        return Organization.objects.filter(is_active=True).exclude(is_banned=True).exclude(is_deleted=True).distinct()
 
 class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)

@@ -1349,6 +1349,12 @@ class TransactionService:
         except IntegrityError:
             raise IntegrityException(_('Could not review transaction'))
 
+        if current_transaction.type == Transaction.WITHDRAWAL:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=current_transaction.id) & (
+                        Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
+
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,
             mode=NOTIFICATION_MODE_PERSONAL,
@@ -1395,6 +1401,12 @@ class TransactionService:
             current_transaction.save()
         except IntegrityError:
             raise IntegrityException(_('Could not review transaction'))
+
+        if current_transaction.type == Transaction.WITHDRAWAL:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=current_transaction.id) & (
+                        Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
 
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,

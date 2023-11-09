@@ -655,6 +655,7 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     employee_avatar = serializers.SerializerMethodField()
     employee_role = serializers.SerializerMethodField()
+    can_withdrawal = serializers.SerializerMethodField()
     files = TransactionFilesSerializer(many=True)
 
     def get_employee_avatar(self, instance):
@@ -688,12 +689,17 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     def get_icon_type(self, transaction: Transaction):
         return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
 
+    def get_can_withdrawal(self, transaction: Transaction):
+        request_user = self.context['request'].user
+        return transaction.processed_by == request_user
+
     class Meta:
         model = Transaction
         fields = (
             'id', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role', 'currency', 'original_amount',
             'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount', 'updated_at', 'created_at',
-            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info', 'files', 'comment')
+            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info', 'files', 'comment',
+            'can_withdrawal')
 
 
 class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):

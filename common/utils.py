@@ -97,6 +97,13 @@ def method_permission_classes(classes):
     return decorator
 
 
+def zoom_to_radius(zoom):
+    if 1 <= zoom <= 19:
+        return 200 * (2 ** (zoom - 1))
+    else:
+        return 52428800
+
+
 class DecimalEncoder(DjangoJSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):

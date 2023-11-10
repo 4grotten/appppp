@@ -420,13 +420,11 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
     image = ImageSerializer(many=False)
-    longitude = serializers.FloatField(allow_null=True)
-    latitude = serializers.FloatField(allow_null=True)
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'longitude', 'latitude')
+            'id', 'title', 'image', 'avg_check', 'full_location')
         read_only_fields = ['verification_status']
 
 

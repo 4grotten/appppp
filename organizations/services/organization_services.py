@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Tuple, Union
 
+from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField, \
@@ -15,6 +16,7 @@ from common.exceptions import (
     BadRequestException
 )
 from common.models import Country, City, File, Currency
+from common.utils import zoom_to_radius
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
@@ -463,6 +465,21 @@ class OrganizationService:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
 
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
+        return queryset
+
+    @classmethod
+    def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int) -> QuerySet:
+        radius = zoom_to_radius(zoom)
+
+        user_location = Point(longitude, latitude)
+
+        queryset = Organization.objects.filter(
+            Q(location__isnull=False) & Q(location__distance_lte=(user_location, radius)) &
+            Q(is_active=True) & Q(is_banned=False) & Q(is_deleted=False)
+        ).annotate(
+            distance=Distance('location', user_location)
+        ).order_by('distance')
 
         return queryset
 

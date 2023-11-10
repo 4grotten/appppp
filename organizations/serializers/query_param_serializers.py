@@ -27,6 +27,12 @@ class OrganizationCoutrySerializer(serializers.Serializer):
     subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
 
 
+class OrganizationMapsLocationSerializer(serializers.Serializer):
+    longitude = serializers.FloatField(allow_null=True)
+    latitude = serializers.FloatField(allow_null=True)
+    zoom = serializers.IntegerField()
+
+
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)

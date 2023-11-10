@@ -5,6 +5,7 @@ import traceback
 import json
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Case, When, IntegerField
@@ -48,7 +49,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationMapsListSerializer
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
+    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
+    OrganizationMapsLocationSerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
@@ -200,7 +202,20 @@ class OrganizationsMapsListView(ListAPIView):
     serializer_class = OrganizationMapsListSerializer
 
     def get_queryset(self):
-        return Organization.objects.filter(is_active=True).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+        serializer = OrganizationMapsLocationSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        longitude = serializer.validated_data['longitude']
+        latitude = serializer.validated_data['latitude']
+        zoom = serializer.validated_data['zoom']
+
+        return OrganizationService.get_organizations_by_location_for_map(longitude=longitude, latitude=latitude,
+                                                                         zoom=zoom)
+
 
 class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)

@@ -18,9 +18,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.models import Currency
-from common.pagination import GeneralPagination
-from common.serializers import ImageSerializer
 from common.services.currency import CurrencyConverterService
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
     PAYSY_API_KEY
@@ -1510,7 +1507,7 @@ class TransactionTicketUserInfoView(GenericAPIView):
         return self.get_paginated_response(response_data)
 
 
-class TransactionOwnTicketInfoView(GenericAPIView):
+class TransactionOwnTicketInfoView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = IsActiveTicketSerializer
 
@@ -1524,11 +1521,15 @@ class TransactionOwnTicketInfoView(GenericAPIView):
 
         ticket = serializer.validated_data['item']
 
-        tickets = Ticket.objects.filter(item=ticket, user=request.user).order_by('-updated_at')
+        queryset = Ticket.objects.filter(item=ticket, user=request.user).order_by('-updated_at')
 
-        serializer = self.get_serializer(tickets, many=True)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class TransactionTicketInfoView(GenericAPIView):
     permission_classes = (IsAuthenticated,)

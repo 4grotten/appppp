@@ -99,9 +99,10 @@ def method_permission_classes(classes):
 
 def zoom_to_radius(zoom):
     if 1 <= zoom <= 19:
-        return 200 * (2 ** (zoom - 1))
+        reversed_zoom = 20 - zoom
+        return 200 * (2 ** (reversed_zoom - 1))
     else:
-        return 52428800
+        return 200
 
 
 class DecimalEncoder(DjangoJSONEncoder):

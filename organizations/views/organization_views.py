@@ -200,6 +200,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
 class OrganizationsMapsListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationMapsListSerializer
+    pagination_class = None
 
     def get_queryset(self):
         serializer = OrganizationMapsLocationSerializer(data=self.request.GET)

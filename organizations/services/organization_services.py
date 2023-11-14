@@ -3,7 +3,8 @@ from decimal import Decimal
 from typing import Tuple, Union
 
 from django.contrib.gis.db.models.functions import Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import Point, GEOSGeometry
+from django.contrib.gis.measure import D
 from django.db import transaction, IntegrityError
 from django.db.models import QuerySet, Count, Q, F, Value, ExpressionWrapper, Case, When, IntegerField, TimeField, \
     CharField
@@ -475,8 +476,11 @@ class OrganizationService:
         user_location = Point(longitude, latitude)
 
         queryset = Organization.objects.filter(
-            ~Q(location=None) & Q(location__distance_lte=(user_location, radius)) &
-            Q(is_active=True) & Q(is_banned=False) & Q(is_deleted=False)
+            location__isnull=False,
+            location__distance_lte=(user_location, D(m=radius)),
+            is_active=True, is_banned=False, is_deleted=False
+        ).exclude(
+            location__exact=Point(0, 0)
         ).annotate(
             distance=Distance('location', user_location)
         ).order_by('distance')

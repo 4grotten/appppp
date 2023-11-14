@@ -475,7 +475,7 @@ class OrganizationService:
         user_location = Point(longitude, latitude)
 
         queryset = Organization.objects.filter(
-            Q(location__isnull=False) & Q(location__distance_lte=(user_location, radius)) &
+            ~Q(location=None) & Q(location__distance_lte=(user_location, radius)) &
             Q(is_active=True) & Q(is_banned=False) & Q(is_deleted=False)
         ).annotate(
             distance=Distance('location', user_location)

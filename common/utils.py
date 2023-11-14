@@ -98,9 +98,11 @@ def method_permission_classes(classes):
 
 
 def zoom_to_radius(zoom):
-    if 1 <= zoom <= 19:
+    if 10 <= zoom <= 19:
         reversed_zoom = 20 - zoom
         return 200 * (2 ** (reversed_zoom - 1))
+    elif zoom < 10:
+        return 102400
     else:
         return 200
 

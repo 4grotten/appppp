@@ -470,7 +470,8 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int) -> QuerySet:
+    def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int,
+                                              subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
         radius = zoom_to_radius(zoom)
 
         user_location = Point(longitude, latitude)
@@ -484,6 +485,9 @@ class OrganizationService:
         ).annotate(
             distance=Distance('location', user_location)
         ).order_by('distance')
+
+        if subcategory is not None:
+            queryset = queryset.filter(shop_items__subcategory=subcategory)
 
         return queryset
 

@@ -31,6 +31,7 @@ class OrganizationMapsLocationSerializer(serializers.Serializer):
     longitude = serializers.FloatField(allow_null=True)
     latitude = serializers.FloatField(allow_null=True)
     zoom = serializers.IntegerField()
+    subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

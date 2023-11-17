@@ -148,7 +148,8 @@ def update_login_device_settings():
     devices = LoginDevice.objects.filter(updated_at__lte=update_login_device_before_this_date)
     if devices:
         for device in devices:
-            device.settings = parser.get_settings_login_device(device.username, device.password)
+            proxy = f'http://{device.proxy_login}:{device.proxy_password}@{device.proxy_http_s}'
+            device.settings = parser.get_settings_login_device(device.username, device.password, proxy=proxy)
             device.save()
 
 

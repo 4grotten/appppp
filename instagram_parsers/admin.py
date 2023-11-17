@@ -26,6 +26,7 @@ class LoginDeviceAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not obj.settings:
-            obj.settings = parser.get_settings_login_device(obj.username, obj.password)
+            proxy = f'http://{obj.proxy_login}:{obj.proxy_password}@{obj.proxy_http_s}'
+            obj.settings = parser.get_settings_login_device(obj.username, obj.password, proxy=proxy)
             obj.for_getting_username = True
         super().save_model(request, obj, form, change)

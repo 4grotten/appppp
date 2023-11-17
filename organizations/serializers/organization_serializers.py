@@ -424,7 +424,7 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'full_location')
+            'id', 'title', 'image', 'avg_check', 'full_location', 'types')
         read_only_fields = ['verification_status']
 
 

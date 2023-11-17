@@ -68,7 +68,7 @@ def get_urls_from_post(post_url: str):
     return post_data
 
 
-def get_settings_login_device(username, password, wait=60, max_retry=0):
+def get_settings_login_device(username, password, proxy, wait=60, max_retry=0):
     time.sleep(wait)
     result = {}
     if max_retry > 10:
@@ -76,6 +76,7 @@ def get_settings_login_device(username, password, wait=60, max_retry=0):
     try:
         cl = Client()
         cl.login(username=username, password=password)
+        cl.set_proxy(proxy)
         result = cl.get_settings()
         return result
     except Exception:

@@ -611,6 +611,7 @@ class Service(models.Model):
     has_self_pick_up = models.BooleanField(default=False)
     has_license = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.name}'

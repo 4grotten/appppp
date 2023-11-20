@@ -489,6 +489,8 @@ class OrganizationService:
         if subcategory is not None:
             queryset = queryset.filter(shop_items__subcategory=subcategory)
 
+        queryset = queryset.distinct()
+
         return queryset
 
     @classmethod

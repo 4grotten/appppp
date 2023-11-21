@@ -34,7 +34,7 @@ from organizations.constants import (
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership, InstagramIntegration, Service
+    Partnership, InstagramIntegration, Service, OrganizationType
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
@@ -471,7 +471,7 @@ class OrganizationService:
 
     @classmethod
     def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int,
-                                              subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
+                                              type: Union[OrganizationType, None] = None) -> QuerySet:
         radius = zoom_to_radius(zoom)
 
         user_location = Point(longitude, latitude)
@@ -486,8 +486,8 @@ class OrganizationService:
             distance=Distance('location', user_location)
         ).order_by('distance')
 
-        if subcategory is not None:
-            queryset = queryset.filter(shop_items__subcategory=subcategory)
+        if type is not None:
+            queryset = queryset.filter(types=type)
 
         queryset = queryset.distinct()
 

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.models import Country, City
-from organizations.models import Organization, OrganizationCategory
+from organizations.models import Organization, OrganizationCategory, OrganizationType
 from shop.models import ItemSubcategory
 from transactions.models import Transaction, PayoutSystem
 from users.models import User
@@ -31,7 +31,7 @@ class OrganizationMapsLocationSerializer(serializers.Serializer):
     longitude = serializers.FloatField(allow_null=True)
     latitude = serializers.FloatField(allow_null=True)
     zoom = serializers.IntegerField()
-    subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
+    type = serializers.PrimaryKeyRelatedField(queryset=OrganizationType.objects.all(), default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):

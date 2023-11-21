@@ -214,10 +214,10 @@ class OrganizationsMapsListView(ListAPIView):
         longitude = serializer.validated_data['longitude']
         latitude = serializer.validated_data['latitude']
         zoom = serializer.validated_data['zoom']
-        subcategory = serializer.validated_data['subcategory']
+        type = serializer.validated_data['type']
 
         return OrganizationService.get_organizations_by_location_for_map(longitude=longitude, latitude=latitude,
-                                                                         zoom=zoom, subcategory=subcategory)
+                                                                         zoom=zoom, type=type)
 
 
 class OrganizationsGoogleMapsCreateView(CreateAPIView):

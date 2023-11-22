@@ -425,7 +425,7 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'full_location', 'types', 'subcategories')
+            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'subcategories')
         read_only_fields = ['verification_status']
 
     def get_subcategories(self, obj):

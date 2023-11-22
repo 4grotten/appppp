@@ -477,6 +477,7 @@ class OrganizationService:
                 .annotate(num_organizations=Count('organizations'))
                 .exclude(num_organizations=0)
                 .order_by('-num_organizations')
+                .distinct()
         )
 
         return queryset

@@ -420,16 +420,12 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
     image = ImageSerializer(many=False)
-    subcategories = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'subcategories')
+            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types')
         read_only_fields = ['verification_status']
-
-    def get_subcategories(self, obj):
-        return [item.subcategory.id for item in obj.shop_items.all() if item.subcategory]
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):

@@ -507,6 +507,20 @@ class OrganizationService:
         return queryset
 
     @classmethod
+    def get_organizations_by_country_city_for_map(cls, country: Union[Country, None] = None,
+                                              city: Union[City, None] = None,
+                                              type: Union[OrganizationType, None] = None) -> QuerySet:
+
+        queryset = Organization.objects.filter(is_active=True, shop_items__isnull=False, shop_items__price__isnull=False
+                                               ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+        if type is not None:
+            queryset = queryset.filter(types=type)
+
+        return queryset
+
+
+    @classmethod
     def get_organizations_in_service(cls, request, service: Service, country: Union[Country, None] = None,
                                      city: Union[City, None] = None,
                                      subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:

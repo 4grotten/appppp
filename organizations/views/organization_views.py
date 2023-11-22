@@ -279,10 +279,14 @@ class OrganizationMapsTypesListView(ListAPIView):
     search_fields = ['title']
 
     def get_queryset(self):
-        queryset = OrganizationType.objects.annotate(num_organizations=Count('organizations'))
-        queryset = queryset.order_by('-num_organizations')
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        return queryset
+        return OrganizationService.get_organization_types_by_country(country=serializer.validated_data['country'])
 
 
 class OrganizationRetrieveUpdateView(RetrieveAPIView):

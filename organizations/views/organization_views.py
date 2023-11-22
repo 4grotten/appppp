@@ -220,6 +220,27 @@ class OrganizationsMapsListView(ListAPIView):
                                                                          zoom=zoom, type=type)
 
 
+class OrganizationsMapsCountryCityListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationMapsListSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
+
+    def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+        type = serializer.validated_data['type']
+
+        return OrganizationService.get_organizations_by_country_city_for_map(country=country, city=city, type=type)
+
+
 class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationGoogleMapsCreateSerializer

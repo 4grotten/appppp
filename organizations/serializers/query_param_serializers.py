@@ -25,6 +25,7 @@ class OrganizationCoutrySerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
     subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
+    type = serializers.PrimaryKeyRelatedField(queryset=OrganizationType.objects.all(), default=None)
 
 
 class OrganizationMapsLocationSerializer(serializers.Serializer):

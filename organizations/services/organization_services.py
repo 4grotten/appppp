@@ -470,6 +470,18 @@ class OrganizationService:
         return queryset
 
     @classmethod
+    def get_organization_types_by_country(cls, country: Union[Country, None] = None) -> QuerySet:
+        queryset = (
+            OrganizationType.objects
+                .filter(organizations__country=country)
+                .annotate(num_organizations=Count('organizations'))
+                .exclude(num_organizations=0)
+                .order_by('-num_organizations')
+        )
+
+        return queryset
+
+    @classmethod
     def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int,
                                               type: Union[OrganizationType, None] = None) -> QuerySet:
         radius = zoom_to_radius(zoom)

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, Count
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -269,6 +269,20 @@ class OrganizationAllTypesListView(ListAPIView):
     filter_fields = ['category']
     search_fields = ['title']
     queryset = OrganizationType.objects.all()
+
+
+class OrganizationMapsTypesListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationTypeSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ['category']
+    search_fields = ['title']
+
+    def get_queryset(self):
+        queryset = OrganizationType.objects.annotate(num_organizations=Count('organizations'))
+        queryset = queryset.order_by('-num_organizations')
+
+        return queryset
 
 
 class OrganizationRetrieveUpdateView(RetrieveAPIView):

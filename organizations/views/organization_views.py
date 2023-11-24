@@ -197,13 +197,11 @@ class OrganizationsListCreateView(ListCreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
-class OrganizationsMapsListView(ListAPIView):
+class OrganizationsMapsListView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationMapsListSerializer
-    filter_backends = [SearchFilter]
-    search_fields = ['title']
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         serializer = OrganizationMapsLocationSerializer(data=self.request.GET)
         if not serializer.is_valid():
             return Response(data={
@@ -211,13 +209,9 @@ class OrganizationsMapsListView(ListAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        longitude = serializer.validated_data['longitude']
-        latitude = serializer.validated_data['latitude']
-        zoom = serializer.validated_data['zoom']
-        type = serializer.validated_data['type']
+        data = OrganizationService.get_organizations_by_location_for_map(type=serializer.validated_data['type'])
 
-        return OrganizationService.get_organizations_by_location_for_map(longitude=longitude, latitude=latitude,
-                                                                         zoom=zoom, type=type)
+        return Response(data)
 
 
 class OrganizationsMapsCountryCityListView(ListAPIView):

@@ -29,9 +29,6 @@ class OrganizationCoutrySerializer(serializers.Serializer):
 
 
 class OrganizationMapsLocationSerializer(serializers.Serializer):
-    longitude = serializers.FloatField(allow_null=True)
-    latitude = serializers.FloatField(allow_null=True)
-    zoom = serializers.IntegerField()
     type = serializers.PrimaryKeyRelatedField(queryset=OrganizationType.objects.all(), default=None)
 
 

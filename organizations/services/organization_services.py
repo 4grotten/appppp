@@ -1,5 +1,7 @@
+import json
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Tuple, Union
 
 from django.contrib.gis.db.models.functions import Distance
@@ -17,7 +19,7 @@ from common.exceptions import (
     BadRequestException
 )
 from common.models import Country, City, File, Currency
-from common.utils import zoom_to_radius
+from common.utils import zoom_to_radius, DecimalEncoder, DecimalDecoder
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from notifications.constants import (
@@ -350,6 +352,28 @@ class OrganizationService:
 
             # Organization.objects.filter(id=organization.id).update(title_lang=title_lang,
 
+            types_list = [type.id for type in types]
+            image = File.objects.get(id=image_id)
+            small = f'https://apofiz-media.s3.amazonaws.com/{image.small}'
+            json_file_path = Path("organization_maps.json")
+            if json_file_path.is_file():
+                with open(json_file_path, 'r') as file:
+                    data = json.load(file, cls=DecimalDecoder)
+
+                    organization_data = next((org for org in data if org['id'] == organization.id), None)
+                    if organization_data:
+                        organization_data['title'] = title
+                        organization_data['avg_check'] = avg_check
+                        organization_data['currency'] = currency.code
+                        organization_data['full_location']['latitude'] = latitude
+                        organization_data['full_location']['longitude'] = longitude
+                        organization_data['types'] = types_list
+                        organization_data['image']['small'] = small
+
+
+                with open(json_file_path, 'w') as file:
+                    json.dump(data, file, cls=DecimalEncoder)
+
             # organization.types.set(types)
             return organization
 
@@ -483,36 +507,38 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_organizations_by_location_for_map(cls, latitude: float, longitude: float, zoom: int,
-                                              type: Union[OrganizationType, None] = None) -> QuerySet:
-        radius = zoom_to_radius(zoom)
+    def get_organizations_by_location_for_map(cls, type: Union[OrganizationType, None] = None) -> QuerySet:
+        json_file_path = Path("organization_maps.json")
+        if json_file_path.is_file():
+            with open(json_file_path, 'r') as file:
+                data = json.load(file, cls=DecimalDecoder)
+            if type is not None:
+                data = [item for item in data if type.id in item.get("types", [])]
 
-        user_location = Point(longitude, latitude)
+            return data
 
-        queryset = Organization.objects.filter(
-            location__isnull=False,
-            location__distance_lte=(user_location, D(m=radius)),
-            is_active=True, is_banned=False, is_deleted=False
-        ).exclude(
-            location__exact=Point(0, 0)
-        ).annotate(
-            distance=Distance('location', user_location)
-        ).order_by('distance')
+        queryset = Organization.objects.filter(location__isnull=False, is_active=True, is_banned=False, is_deleted=False
+                                               ).exclude(location__exact=Point(0, 0)).distinct()
 
-        if type is not None:
-            queryset = queryset.filter(types=type)
+        from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+        serializer = OrganizationMapsListSerializer(queryset, many=True)
+        serialized_data = serializer.data
+        with open(json_file_path, 'w') as file:
+            json.dump(serialized_data, file, cls=DecimalEncoder)
 
-        queryset = queryset.distinct()
-
-        return queryset
+        return serialized_data
 
     @classmethod
     def get_organizations_by_country_city_for_map(cls, country: Union[Country, None] = None,
                                               city: Union[City, None] = None,
                                               type: Union[OrganizationType, None] = None) -> QuerySet:
 
-        queryset = Organization.objects.filter(is_active=True, shop_items__isnull=False, shop_items__price__isnull=False
-                                               ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+        queryset = Organization.objects.filter(is_active=True, shop_items__isnull=False,
+                                               shop_items__price__isnull=False, location__isnull=False
+                                               ).exclude(is_banned=True
+                                                         ).exclude(is_deleted=True
+                                                                   ).exclude(location__exact=Point(0, 0)
+                                                                             ).distinct()
         queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
         if type is not None:
             queryset = queryset.filter(types=type)

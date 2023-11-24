@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
-from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
+from common.serializers import ImageSerializer, CountrySerializer, CitySerializer, SmallImageSerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
@@ -419,12 +419,16 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
-    image = ImageSerializer(many=False)
+    image = SmallImageSerializer(many=False)
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types')
+            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'country', 'city',
+            'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
+            'paysy_activated', 'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed',
+            'paysy_confirmed', 'is_active', 'is_deleted', 'is_banned', 'is_under_review', 'is_private', 'is_wholesale',
+            'can_update_is_wholesale', 'is_delivery_service', 'is_bank', 'show_followers')
         read_only_fields = ['verification_status']
 
 

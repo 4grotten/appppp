@@ -140,11 +140,13 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.avg_check == 0:
             obj.avg_check = None
-
         image_file = f'https://apofiz-media.s3.amazonaws.com/{obj.image.file.name}'
         small = f'https://apofiz-media.s3.amazonaws.com/{obj.image.small}'
         types = form.cleaned_data.get('types')
         types_list = [type.id for type in types]
+
+        from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+        is_show_on_map = OrganizationMapsListSerializer().get_is_show_on_map(obj)
         json_file_path = Path("organization_maps.json")
         if json_file_path.is_file():
             with open(json_file_path, 'r') as file:
@@ -181,9 +183,51 @@ class OrganizationAdmin(admin.ModelAdmin):
                     organization_data['is_delivery_service'] = obj.is_delivery_service
                     organization_data['is_bank'] = obj.is_bank
                     organization_data['show_followers'] = obj.show_followers
+                    organization_data['is_show_on_map'] = is_show_on_map
+                    with open(json_file_path, 'w') as file:
+                        json.dump(data, file, cls=DecimalEncoder)
+
+        super().save_model(request, obj, form, change)
+        if not change:
+            from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+            serialized_organization = OrganizationMapsListSerializer(obj).data
+            json_file_path = Path("organization_maps.json")
+            if json_file_path.is_file():
+                with open(json_file_path, 'r') as file:
+                    data = json.load(file, cls=DecimalDecoder)
+                    data.append(serialized_organization)
+
+                with open(json_file_path, 'w') as file:
+                    json.dump(data, file, cls=DecimalEncoder)
+
+    def delete_model(self, request, obj):
+        json_file_path = Path("organization_maps.json")
+        if json_file_path.is_file():
+            with open(json_file_path, 'r') as file:
+                data = json.load(file, cls=DecimalDecoder)
+                data = [org for org in data if org['id'] != obj.id]
+
             with open(json_file_path, 'w') as file:
                 json.dump(data, file, cls=DecimalEncoder)
-        super().save_model(request, obj, form, change)
+
+        super().delete_model(request, obj)
+
+
+    def delete_queryset(self, request, queryset):
+        json_file_path = Path("organization_maps.json")
+        if json_file_path.is_file():
+            with open(json_file_path, 'r') as file:
+                data = json.load(file, cls=DecimalDecoder)
+
+            data = [org for org in data if org['id'] not in queryset.values_list('id', flat=True)]
+
+            with open(json_file_path, 'w') as file:
+                json.dump(data, file, cls=DecimalEncoder)
+
+        super().delete_queryset(request, queryset)
+
+
+
 
 
 @admin.register(OrganizationType)

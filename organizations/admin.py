@@ -1,8 +1,12 @@
+import json
+from pathlib import Path
+
 from django.contrib import admin
 from django.contrib.gis.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
+from common.utils import DecimalDecoder, DecimalEncoder
 from .models import (
     Organization, OrganizationType, OrganizationCategory, PhoneNumber,
     SocialNetworkContact, Role, Membership, DiscountCard, Subscription, OrganizationClientFinancialStatus,
@@ -136,6 +140,49 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.avg_check == 0:
             obj.avg_check = None
+
+        image_file = f'https://apofiz-media.s3.amazonaws.com/{obj.image.file.name}'
+        small = f'https://apofiz-media.s3.amazonaws.com/{obj.image.small}'
+        types = form.cleaned_data.get('types')
+        types_list = [type.id for type in types]
+        json_file_path = Path("organization_maps.json")
+        if json_file_path.is_file():
+            with open(json_file_path, 'r') as file:
+                data = json.load(file, cls=DecimalDecoder)
+                organization_data = next((org for org in data if org['id'] == obj.id), None)
+                if organization_data:
+                    organization_data['title'] = obj.title
+                    organization_data['avg_check'] = obj.avg_check
+                    organization_data['currency'] = obj.currency.code
+                    organization_data['full_location']['latitude'] = None if not obj.location or not obj.location.y else obj.location.y
+                    organization_data['full_location']['longitude'] = None if not obj.location or not obj.location.x else obj.location.x
+                    organization_data['types'] = types_list
+                    organization_data['image']['file'] = image_file
+                    organization_data['image']['small'] = small
+                    organization_data['country'] = obj.country.code
+                    organization_data['city'] = obj.city.id
+                    organization_data['verification_status'] = obj.verification_status
+                    organization_data['has_delivery'] = obj.has_delivery
+                    organization_data['has_self_pick_up'] = obj.has_self_pick_up
+                    organization_data['has_license'] = obj.has_license
+                    organization_data['freedompay_activated'] = obj.freedompay_activated
+                    organization_data['payment_systems_activated'] = obj.payment_systems_activated
+                    organization_data['payment_with_confirmation'] = obj.payment_with_confirmation
+                    organization_data['freedompay_confirmed'] = obj.freedompay_confirmed
+                    organization_data['paysy_confirmed'] = obj.paysy_confirmed
+                    organization_data['is_active'] = obj.is_active
+                    organization_data['is_deleted'] = obj.is_deleted
+                    organization_data['is_banned'] = obj.is_banned
+                    organization_data['is_under_review'] = obj.is_under_review
+                    organization_data['is_private'] = obj.is_private
+                    organization_data['show_contacts'] = obj.show_contacts
+                    organization_data['is_wholesale'] = obj.is_wholesale
+                    organization_data['can_update_is_wholesale'] = obj.can_update_is_wholesale
+                    organization_data['is_delivery_service'] = obj.is_delivery_service
+                    organization_data['is_bank'] = obj.is_bank
+                    organization_data['show_followers'] = obj.show_followers
+            with open(json_file_path, 'w') as file:
+                json.dump(data, file, cls=DecimalEncoder)
         super().save_model(request, obj, form, change)
 
 

@@ -5,6 +5,7 @@ from typing import Optional
 from datetime import timedelta
 from django.utils import timezone
 
+from django.contrib.gis.geos import Point
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -420,6 +421,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
     image = FileSmallImageSerializer(many=False)
+    is_show_on_map = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -428,8 +430,25 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
             'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
             'paysy_activated', 'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed',
             'paysy_confirmed', 'is_active', 'is_deleted', 'is_banned', 'is_under_review', 'is_private', 'show_contacts',
-            'is_wholesale', 'can_update_is_wholesale', 'is_delivery_service', 'is_bank', 'show_followers')
+            'is_wholesale', 'can_update_is_wholesale', 'is_delivery_service', 'is_bank', 'show_followers',
+            'is_show_on_map')
         read_only_fields = ['verification_status']
+
+    def get_is_show_on_map(self, organization: Organization):
+        if organization.is_banned:
+            return False
+        if organization.is_deleted:
+            return False
+        if not organization.is_active:
+            return False
+        if not organization.location:
+            return False
+        if not organization.location.x:
+            return False
+        if not organization.location.y:
+            return False
+        return True
+
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):

@@ -295,6 +295,18 @@ class OrganizationService:
             extra_data=dict(organization_title=organization.title)
         ))
 
+        from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+        serialized_organization = OrganizationMapsListSerializer(organization).data
+
+        json_file_path = Path("organization_maps.json")
+        if json_file_path.is_file():
+            with open(json_file_path, 'r') as file:
+                data = json.load(file, cls=DecimalDecoder)
+                data.append(serialized_organization)
+
+            with open(json_file_path, 'w') as file:
+                json.dump(data, file, cls=DecimalEncoder)
+
         return organization
 
     @classmethod
@@ -357,6 +369,8 @@ class OrganizationService:
             small = f'https://apofiz-media.s3.amazonaws.com/{image.small}'
 
             types_list = [type.id for type in types]
+            from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+            is_show_on_map = OrganizationMapsListSerializer().get_is_show_on_map(organization)
 
             json_file_path = Path("organization_maps.json")
             if json_file_path.is_file():
@@ -380,8 +394,9 @@ class OrganizationService:
                             organization_data['is_wholesale'] = is_wholesale
                         if show_followers is not None:
                             organization_data['show_followers'] = show_followers
-                with open(json_file_path, 'w') as file:
-                    json.dump(data, file, cls=DecimalEncoder)
+                        organization_data['is_show_on_map'] = is_show_on_map
+                        with open(json_file_path, 'w') as file:
+                            json.dump(data, file, cls=DecimalEncoder)
 
             # organization.types.set(types)
             return organization
@@ -396,6 +411,21 @@ class OrganizationService:
             organization.save()
             from shop.services.cart_services import CartService
             CartService.delete_organization_carts(organization=organization)
+
+            from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+            is_show_on_map = OrganizationMapsListSerializer().get_is_show_on_map(organization)
+
+            json_file_path = Path("organization_maps.json")
+            if json_file_path.is_file():
+                with open(json_file_path, 'r') as file:
+                    data = json.load(file, cls=DecimalDecoder)
+                    organization_data = next((org for org in data if org['id'] == organization.id), None)
+                    if organization_data:
+                        organization_data['is_deleted'] = organization.is_deleted
+                        organization_data['is_show_on_map'] = is_show_on_map
+                        with open(json_file_path, 'w') as file:
+                            json.dump(data, file, cls=DecimalEncoder)
+
             return organization
         except Exception as e:
             raise IntegrityException(_('Could not deactivate organization: {e}').format(e=str(e)))
@@ -405,6 +435,21 @@ class OrganizationService:
         try:
             organization.is_deleted = False
             organization.save()
+
+            from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
+            is_show_on_map = OrganizationMapsListSerializer().get_is_show_on_map(organization)
+
+            json_file_path = Path("organization_maps.json")
+            if json_file_path.is_file():
+                with open(json_file_path, 'r') as file:
+                    data = json.load(file, cls=DecimalDecoder)
+                    organization_data = next((org for org in data if org['id'] == organization.id), None)
+                    if organization_data:
+                        organization_data['is_deleted'] = organization.is_deleted
+                        organization_data['is_show_on_map'] = is_show_on_map
+                        with open(json_file_path, 'w') as file:
+                            json.dump(data, file, cls=DecimalEncoder)
+
             return organization
         except Exception as e:
             raise IntegrityException(_('Could not reactivate organization: {e}').format(e=str(e)))
@@ -526,8 +571,7 @@ class OrganizationService:
 
             return data
 
-        queryset = Organization.objects.filter(location__isnull=False, is_active=True, is_banned=False, is_deleted=False
-                                               ).exclude(location__exact=Point(0, 0)).distinct()
+        queryset = Organization.objects.all()
 
         from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
         serializer = OrganizationMapsListSerializer(queryset, many=True)

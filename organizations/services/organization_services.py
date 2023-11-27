@@ -352,14 +352,16 @@ class OrganizationService:
 
             # Organization.objects.filter(id=organization.id).update(title_lang=title_lang,
 
-            types_list = [type.id for type in types]
             image = File.objects.get(id=image_id)
+            image_file = f'https://apofiz-media.s3.amazonaws.com/{image.file.name}'
             small = f'https://apofiz-media.s3.amazonaws.com/{image.small}'
+
+            types_list = [type.id for type in types]
+
             json_file_path = Path("organization_maps.json")
             if json_file_path.is_file():
                 with open(json_file_path, 'r') as file:
                     data = json.load(file, cls=DecimalDecoder)
-
                     organization_data = next((org for org in data if org['id'] == organization.id), None)
                     if organization_data:
                         organization_data['title'] = title
@@ -368,9 +370,16 @@ class OrganizationService:
                         organization_data['full_location']['latitude'] = latitude
                         organization_data['full_location']['longitude'] = longitude
                         organization_data['types'] = types_list
+                        organization_data['image']['file'] = image_file
                         organization_data['image']['small'] = small
-
-
+                        organization_data['country'] = country.code
+                        organization_data['city'] = city.id if city else None
+                        organization_data['is_private'] = is_private
+                        organization_data['show_contacts'] = show_contacts
+                        if is_wholesale is not None:
+                            organization_data['is_wholesale'] = is_wholesale
+                        if show_followers is not None:
+                            organization_data['show_followers'] = show_followers
                 with open(json_file_path, 'w') as file:
                     json.dump(data, file, cls=DecimalEncoder)
 

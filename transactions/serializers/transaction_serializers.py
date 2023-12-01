@@ -13,7 +13,7 @@ from shop.models import Cart, Booking, ShopItem, Ticket
 from shop.serializers.cart_serializers import CartSerializer, DeliveryInfoSerializer
 from shop.serializers.item_serializers import TransactionBookingInfoSerializer, IsActiveBookingSerializer, \
     TicketPeriodSerializer, IsActiveTicketSerializer, TicketWithTicketPeriodSerializer
-from transactions.models import Transaction, PayoutSystem, Recipient, Balance
+from transactions.models import Transaction, PayoutSystem, Recipient, Balance, TransactionFile
 from users.models import User
 from users.serializers import ProfileBriefWithPhotoSerializer, UserInfoSerializer
 from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_ICON_MAP, TICKET_ICON_MAP, \
@@ -148,6 +148,51 @@ class TransactionsSerializer(serializers.ModelSerializer):
         )
 
 
+class TransactionsWithdrawalSerializer(serializers.ModelSerializer):
+    display_time = serializers.SerializerMethodField()
+    delivery_info = DeliveryInfoSerializer()
+    purchase_type = serializers.SerializerMethodField()
+    icon_type = serializers.SerializerMethodField()
+
+
+    def get_display_time(self, transaction: Transaction):
+        if transaction.display_time is not None:
+            return transaction.display_time.replace(tzinfo=None, second=0, microsecond=0)
+        return None
+
+    def get_purchase_type(self, transaction: Transaction):
+        booking = Booking.objects.filter(transaction=transaction)
+        if booking.exists():
+            return ShopItem.RENTAL
+        ticket = Ticket.objects.filter(transaction=transaction)
+        if ticket.exists():
+            return ShopItem.TICKET
+        return ShopItem.PRODUCT
+
+    def get_icon_type(self, transaction: Transaction):
+        if transaction.type == Transaction.WITHDRAWAL:
+            return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
+        purchase_type = self.get_purchase_type(transaction)
+        if purchase_type == ShopItem.PRODUCT:
+            return PRODUCT_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,
+                                         transaction.delivery_type), DECLINED_PRODUCT_OFFLINE_PAYMENT_TYPE)
+        if purchase_type == ShopItem.RENTAL:
+            return RENTAL_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status),
+                                       DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE)
+        return TICKET_ICON_MAP.get((transaction.type, transaction.status, transaction.payment_status,
+                                    transaction.delivery_type), DECLINED_TICKET_OFFLINE_PAYMENT_TYPE)
+
+
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
+            'payment_status', 'purchase_type', 'icon_type', 'payment_info'
+        )
+
+
 class TransactionsTicketSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     delivery_info = DeliveryInfoSerializer()
@@ -183,6 +228,15 @@ class OnlineCompleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('transaction_id', 'utc_offset_minutes',)
+
+
+class TransactionWithdrawalCompleteSerializer(serializers.ModelSerializer):
+    transaction_id = serializers.IntegerField(required=True)
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+    class Meta:
+        model = Transaction
+        fields = ('transaction_id', 'utc_offset_minutes', 'files', 'comment')
 
 
 class OnlineOfflinePaymentCompleteSerializer(serializers.ModelSerializer):
@@ -305,6 +359,7 @@ class BookingTransactionWithClientSerializer(TransactionDetailSerializer):
     booking = TransactionBookingInfoSerializer()
 
 
+
     def get_employee_avatar(self, instance):
         if not instance.processed_by and OrganizationService.user_can_see_stats(
                 user=self.context['request'].user,
@@ -396,7 +451,12 @@ class StartEndDateTransactionSerializer(serializers.Serializer):
     end = serializers.DateField(required=False)
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                       default=None)
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all(), default=None)
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all(), default=None)
+
+
+class WithdrawalTypeTransactionSerializer(serializers.Serializer):
+    withdrawal_type = serializers.ChoiceField(choices=Transaction.WITHDRAWAL_TYPES, default=None)
 
 
 class UserInfoBookingSerializer(serializers.Serializer):
@@ -485,6 +545,20 @@ class PayoutSystemSerializer(serializers.ModelSerializer):
         model = PayoutSystem
         fields = ('id', 'name', 'image', 'fee_percent')
 
+class PayoutSystemWithUnprocessedTransactionCountSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_unprocessed_transaction_count(self, payout_system: PayoutSystem):
+        transactions = Transaction.objects.filter(fixed_cart__payout_system__id=payout_system.id,
+                                                  status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL,
+                                                  payment_info__isnull=False)
+        return transactions.count()
+
+    class Meta:
+        model = PayoutSystem
+        fields = ('id', 'name', 'image', 'fee_percent', 'unprocessed_transaction_count')
+
 
 class RecipientSerializer(serializers.ModelSerializer):
     payout_system = PayoutSystemSerializer()
@@ -561,10 +635,51 @@ class TransactionWithdrawalSwiftSerializer(serializers.Serializer):
         return value
 
 
+class TransactionFilesSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TransactionFile
+        fields = ('id', 'file', 'name')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
+
+
 class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     display_time = serializers.SerializerMethodField()
     icon_type = serializers.SerializerMethodField()
     recipient_info = serializers.JSONField(source='fixed_cart')
+    processed_by = serializers.SerializerMethodField()
+    employee_name = serializers.SerializerMethodField()
+    employee_avatar = serializers.SerializerMethodField()
+    employee_role = serializers.SerializerMethodField()
+    can_withdrawal = serializers.SerializerMethodField()
+    files = TransactionFilesSerializer(many=True)
+
+    def get_employee_avatar(self, instance):
+        if not instance.processed_by:
+            return None
+        return ImageSerializer(
+            instance.employee_avatar,
+            context={"request": self.context.get("request")}
+        ).data
+
+    def get_employee_name(self, instance):
+        if not instance.processed_by:
+            return None
+        return instance.employee_name
+
+    def get_processed_by(self, instance):
+        if not instance.processed_by:
+            return None
+        return instance.processed_by.id
+
+    def get_employee_role(self, instance):
+        if not instance.processed_by:
+            return None
+        return instance.employee_role
 
     def get_display_time(self, transaction: Transaction):
         if transaction.display_time is not None:
@@ -574,12 +689,17 @@ class TransactionWithdrawalDetailSerializer(serializers.ModelSerializer):
     def get_icon_type(self, transaction: Transaction):
         return WITHDRAWAL_ICON_MAP.get((transaction.type, transaction.status), DECLINED_WITHDRAWAL_TYPE)
 
+    def get_can_withdrawal(self, transaction: Transaction):
+        request_user = self.context['request'].user
+        return transaction.processed_by == request_user
+
     class Meta:
         model = Transaction
         fields = (
-            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
-            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'icon_type',
-            'withdrawal_type', 'recipient_info')
+            'id', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role', 'currency', 'original_amount',
+            'discount_percent', 'savings', 'from_cashback', 'to_cashback', 'final_amount', 'updated_at', 'created_at',
+            'display_time', 'type', 'status', 'icon_type', 'withdrawal_type', 'recipient_info', 'files', 'comment',
+            'can_withdrawal')
 
 
 class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
@@ -588,3 +708,36 @@ class SwiftPaymentCompleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('transaction_id',)
+
+
+class BalanceSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems')
+
+
+class BalanceWithUnprocessedTransactionCountSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_unprocessed_transaction_count(self, balance: Balance):
+        withdrawal_type = self.context['request'].GET.get('withdrawal_type', None)
+        transactions = Transaction.objects.filter(payment_info__id=balance.id, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False)
+        if withdrawal_type is not None:
+            transactions = transactions.filter(withdrawal_type=withdrawal_type)
+
+        return transactions.count()
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'balance_amount', 'payout_systems', 'unprocessed_transaction_count')
+
+class BalanceInTransactionSerializer(serializers.ModelSerializer):
+    payout_systems = PayoutSystemSerializer(many=True)
+
+    class Meta:
+        model = Balance
+        fields = ('id', 'organization', 'currency', 'payout_systems')

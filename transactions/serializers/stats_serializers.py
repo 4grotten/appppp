@@ -20,10 +20,22 @@ class StartEndProcessedByQueryParamSerializer(serializers.Serializer):
     processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
 
+class BalanceStartEndProcessedByQueryParamSerializer(serializers.Serializer):
+    balance = serializers.PrimaryKeyRelatedField(queryset=Balance.objects.all(), default=None)
+    start = serializers.DateField(default=None)
+    end = serializers.DateField(default=None)
+    processed_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
+    client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
+
 
 class TotalStatsSerializer(serializers.Serializer):
     total_spent = serializers.DecimalField(max_digits=16, decimal_places=2)
     total_savings = serializers.DecimalField(max_digits=16, decimal_places=2)
+    currency = serializers.CharField()
+
+
+class TotalAcceptedWithdrawalStatsSerializer(serializers.Serializer):
+    total_withdrawal = serializers.DecimalField(max_digits=16, decimal_places=2)
     currency = serializers.CharField()
 
 

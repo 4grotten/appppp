@@ -31,7 +31,8 @@ from .views.organization_views import (
     OrganizationBlackListCreateView, OrganizationBlackListDestroyView, BlockUserCreateView, UnblockUserDestroyView,
     OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView, OrganizationPaymentSystemListView,
     PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
-    OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation
+    OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
+    OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -53,9 +54,12 @@ organization_urls = [
 
     path('organization_types/', OrganizationTypesListView.as_view(), name='organization_types'),
     path('organization_all_types/', OrganizationAllTypesListView.as_view(), name='organization_types'),
+    path('organizations/maps/types/', OrganizationMapsTypesListView.as_view(), name='organization_types'),
 
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
+    path('organizations/maps/', OrganizationsMapsListView.as_view(), name='organizations_maps'),
+    path('organizations/maps/new/', OrganizationsMapsCountryCityListView.as_view(), name='organizations_maps'),
     path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(),
          name='user_google_maps_organizations'),
     path('organizations/two_gis/create/', OrganizationsTwoGisCreateView.as_view(),

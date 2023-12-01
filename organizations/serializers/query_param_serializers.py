@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
 from common.models import Country, City
-from organizations.models import Organization, OrganizationCategory
+from organizations.models import Organization, OrganizationCategory, OrganizationType
 from shop.models import ItemSubcategory
+from transactions.models import Transaction, PayoutSystem
 from users.models import User
 
 
@@ -24,6 +25,11 @@ class OrganizationCoutrySerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
     subcategory = serializers.PrimaryKeyRelatedField(queryset=ItemSubcategory.objects.all(), default=None)
+    type = serializers.PrimaryKeyRelatedField(queryset=OrganizationType.objects.all(), default=None)
+
+
+class OrganizationMapsLocationSerializer(serializers.Serializer):
+    type = serializers.PrimaryKeyRelatedField(queryset=OrganizationType.objects.all(), default=None)
 
 
 class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
@@ -33,6 +39,9 @@ class OrganizationTransactionsQueryParamSerializer(serializers.Serializer):
     end = serializers.DateField(default=None)
     search = serializers.IntegerField(default=None)
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), default=None)
+    payout_system = serializers.PrimaryKeyRelatedField(queryset=PayoutSystem.objects.all(), default=None)
+    status = serializers.ChoiceField(choices=Transaction.STATUS, default=None)
+    withdrawal_type = serializers.ChoiceField(choices=Transaction.WITHDRAWAL_TYPES, default=None)
 
 
 class OrganizationQueryParamSerializer(serializers.Serializer):

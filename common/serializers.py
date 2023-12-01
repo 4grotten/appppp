@@ -37,6 +37,14 @@ class ImageSerializer(serializers.ModelSerializer):
         return obj.file.name.split("/")[-1]
 
 
+class FileSmallImageSerializer(serializers.ModelSerializer):
+    small = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = File
+        fields = ('file', 'small')
+
+
 class SmallImageSerializer(serializers.ModelSerializer):
     small = serializers.ImageField(read_only=True)
 

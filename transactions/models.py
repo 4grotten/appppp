@@ -1,10 +1,29 @@
+from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db import models
 
 from common.models import Currency, TimestampModel
-from common.utils import DecimalEncoder, DecimalDecoder
+from common.utils import DecimalEncoder, DecimalDecoder, upload_file_with_unique_name
 from organizations.models import Organization, DiscountCard
 from users.models import User
+
+
+class TransactionFile(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+    file = models.FileField(upload_to=upload_file_with_unique_name,
+                             help_text=_('File that you want to store'),
+                             null=True, blank=True)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(TransactionFile, self).save()
+
+    class Meta:
+        ordering = ('order',)
 
 
 class Transaction(TimestampModel):
@@ -50,13 +69,19 @@ class Transaction(TimestampModel):
 
     REJECTED = 'rejected'
     IN_PROGRESS = 'in_progress'
+    UNDER_REVIEW = 'under_review'
+    ACCEPTED_WITHDRAWAL = 'accepted_withdrawal'
     ACCEPTED = 'accepted'
     REFUNDED = 'refunded'
+    ERROR = 'error'
 
     STATUS = (
         (IN_PROGRESS, IN_PROGRESS),
+        (UNDER_REVIEW, UNDER_REVIEW),
+        (ACCEPTED_WITHDRAWAL, ACCEPTED_WITHDRAWAL),
         (ACCEPTED, ACCEPTED),
-        (REJECTED, REJECTED)
+        (REJECTED, REJECTED),
+        (ERROR, ERROR)
     )
 
     PAYMENT_STATUS = (
@@ -66,7 +91,7 @@ class Transaction(TimestampModel):
         (REFUNDED, REFUNDED),
     )
 
-    client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions')
+    client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions', null=True)
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
 
@@ -85,6 +110,7 @@ class Transaction(TimestampModel):
     from_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     to_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0)
     fixed_cart = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
+    payment_info = models.JSONField(null=True, encoder=DecimalEncoder, decoder=DecimalDecoder)
 
     withdrawal_type = models.CharField(choices=WITHDRAWAL_TYPES, max_length=20, default=BANKCARD)
 
@@ -97,6 +123,9 @@ class Transaction(TimestampModel):
     is_processed = models.BooleanField(default=False)
     status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
     purchase_id = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    files = models.ManyToManyField(TransactionFile, blank=True, related_name='transactions')
+    comment = models.TextField(null=True, blank=True)
 
     display_time = models.DateTimeField(null=True)
 
@@ -142,8 +171,14 @@ class Recipient(models.Model):
 
 
 class Balance(models.Model):
+    KGS = 'KGS'
+    TRC = 'TRC20'
+    CURRENCY = (
+        (KGS, KGS),
+        (TRC, TRC)
+    )
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='balances')
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default='KGS')
+    currency = models.CharField(max_length=20, choices=CURRENCY, default=KGS)
     balance_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0, editable=False)
     payout_systems = models.ManyToManyField(PayoutSystem)
 

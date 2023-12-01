@@ -2,6 +2,7 @@ from django.urls import path
 
 from transactions.views.stat_views import (
     PartnersTotalStatsView, OrganizationTotalsView, OrganizationTransactionCalendarView,
+    OrganizationAcceptedWithdrawalTotalsView,
 )
 from transactions.views.transaction_views import (
     TransactionCompleteView, TransactionPreprocessView, UserTransactionOrganizationView, UserTotalsView,
@@ -26,11 +27,14 @@ from transactions.views.transaction_views import (
     TransactionWithdrawalView, OrganizationBalanceRecipientListView, TransactionWithdrawalRetrieveView,
     TransactionWithdrawalSwiftView, SwiftPayoutSystemAPIView, InitPaymentSwiftView, PaySyWebhookView,
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
-    UserWithdrawalFundsTransactionCountView
+    UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
+    OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
+    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView
 )
 
 urlpatterns = [
     path('transactions/', OrganizationTransactionListView.as_view(), name='organization_transactions'),
+    path('transactions/files/', TransactionFilesCreateView.as_view(), name='transaction_files'),
     path('transactions/<int:pk>/', OrganizationTransactionRetrieveDestroyView.as_view(),
          name='organization_transaction_detail'),
     path('transactions/<int:pk>/booking/', OrganizationBookingTransactionRetrieveDestroyView.as_view(),
@@ -47,6 +51,14 @@ urlpatterns = [
     path('transactions/organizations/rental/<int:pk>/customers/', OrganizationRentalCustomerTransactionView.as_view(),
          name='transactions_organizations_rental_users'),
     path('onlineTransactions/complete/', OnlineTransactionCompleteView.as_view(), name='online_transaction_complete'),
+
+    path('transactions/withdrawal/under_review/', WithdrawalTransactionReviewView.as_view(),
+         name='transaction_withdrawal_under_review'),
+
+    path('transactions/withdrawal/complete/', WithdrawalTransactionCompleteView.as_view(),
+         name='transaction_withdrawal_complete'),
+    path('transactions/withdrawal/decline/', WithdrawalTransactionDeclineView.as_view(),
+         name='transaction_withdrawal_complete'),
 
     path('transactions/preprocess/booking/<int:pk>/', TransactionBookingPreprocessView.as_view(),
          name='transaction_booking_preprocess'),
@@ -125,6 +137,9 @@ urlpatterns = [
     path('statistics/<int:pk>/totals/', OrganizationTotalsView.as_view(), name='organization_totals'),
     path('orgTransactions/calendar/', OrganizationTransactionCalendarView.as_view(), name='org_client_calendar'),
 
+    path('statistics/<int:pk>/accepted_withdrawal/totals/', OrganizationAcceptedWithdrawalTotalsView.as_view(),
+         name='organization_accepted_withdrawal_totals'),
+
     # pay
     path('transactions/pay/<int:pk>/', InitPaymentView.as_view(), name='init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
@@ -135,13 +150,18 @@ urlpatterns = [
     path('transactions/result/paysy/', PaySyWebhookView.as_view(), name='paysy_webhook'),
 
     # balance
+    path('balances/', OrganizationBalanceListView.as_view(), name='organization_balance_transactions'),
     path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),
          name='organization_balance_transactions'),
+    path('balances/transactions/withdrawal/', OrganizationBalanceWithdrawalTransactionListView.as_view(),
+         name='organization_balance_withdrawal_transactions'),
     path('balances/transactions/<int:pk>/', TransactionWithdrawalRetrieveView.as_view(),
          name='organization_balance_transactions_detail'),
     path('transactions/recipients/', OrganizationBalanceRecipientListView.as_view(),
          name='organization_recipients'),
     path('statistics/balance/totals/', UserBalanceTotalsView.as_view(), name='user_balance_totals'),
+    path('statistics/balance/<int:pk>/totals/', UserBalanceDetailTotalsView.as_view(),
+         name='user_detail_balance_totals'),
     path('transactions/payout-system/', PayoutSystemListAPIView.as_view(), name='payout_systems_list'),
     path('transactions/payout-system/swift/', SwiftPayoutSystemAPIView.as_view(), name='payout_systems_swift_detail'),
     path('transactions/payout-system/<int:pk>/', PayoutSystemDetailAPIView.as_view(), name='payout_system_detail'),

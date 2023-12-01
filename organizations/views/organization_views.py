@@ -5,9 +5,10 @@ import traceback
 import json
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, Count
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -44,10 +45,12 @@ from organizations.serializers.organization_serializers import (
     InstagramIntegrationCreateUpdateSerializer, InstagramIntegrationLinkSerializer, DeliverySettingsUpdateSerializer,
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer
+    OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
+    OrganizationMapsListSerializer
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer
+    PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
+    OrganizationMapsLocationSerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
@@ -194,6 +197,44 @@ class OrganizationsListCreateView(ListCreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
+class OrganizationsMapsListView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationMapsListSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = OrganizationMapsLocationSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        data = OrganizationService.get_organizations_by_location_for_map(type=serializer.validated_data['type'])
+
+        return Response(data)
+
+
+class OrganizationsMapsCountryCityListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationMapsListSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
+
+    def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        country = serializer.validated_data['country']
+        city = serializer.validated_data['city']
+        type = serializer.validated_data['type']
+
+        return OrganizationService.get_organizations_by_country_city_for_map(country=country, city=city, type=type)
+
+
 class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationGoogleMapsCreateSerializer
@@ -243,6 +284,24 @@ class OrganizationAllTypesListView(ListAPIView):
     filter_fields = ['category']
     search_fields = ['title']
     queryset = OrganizationType.objects.all()
+
+
+class OrganizationMapsTypesListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationTypeSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ['category']
+    search_fields = ['title']
+
+    def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        return OrganizationService.get_organization_types_by_country(country=serializer.validated_data['country'])
 
 
 class OrganizationRetrieveUpdateView(RetrieveAPIView):

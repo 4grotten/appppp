@@ -43,6 +43,15 @@ SYSTEM_TYPE = 'system'
 ORGANIZATION_MESSAGE_TYPE = 'organization_message'
 ORGANIZATION_MESSAGE_SENDER_TYPE = 'sent_message'
 
+ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE = 'organization_withdrawal_under_review'
+WITHDRAWAL_UNDER_REVIEW_TYPE = 'withdrawal_under_review'
+
+ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE = 'organization_withdrawal_accepted'
+WITHDRAWAL_ACCEPTED_TYPE = 'withdrawal_accepted'
+
+ORGANIZATION_WITHDRAWAL_DECLINED_TYPE = 'organization_withdrawal_declined'
+WITHDRAWAL_DECLINED_TYPE = 'withdrawal_declined'
+
 ORGANIZATION_GAVE_TYPE = 'gave_organization'
 ORGANIZATION_OWN_TYPE = 'owned_organization'
 
@@ -165,6 +174,12 @@ NOTIFICATION_TYPES = (
     (NEW_DEVICE, NEW_DEVICE),
     (FOLLOWED_TO_ORGANIZATION_TYPE, FOLLOWED_TO_ORGANIZATION_TYPE),
     (ORGANIZATION_FOLLOWED_TYPE, ORGANIZATION_FOLLOWED_TYPE),
+    (ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE, ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE),
+    (WITHDRAWAL_UNDER_REVIEW_TYPE, WITHDRAWAL_UNDER_REVIEW_TYPE),
+    (ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE, ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE),
+    (WITHDRAWAL_ACCEPTED_TYPE, WITHDRAWAL_ACCEPTED_TYPE),
+    (ORGANIZATION_WITHDRAWAL_DECLINED_TYPE, ORGANIZATION_WITHDRAWAL_DECLINED_TYPE),
+    (WITHDRAWAL_DECLINED_TYPE, WITHDRAWAL_DECLINED_TYPE),
     (SYSTEM_TYPE, SYSTEM_TYPE),
     (NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE),
     (NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE),
@@ -305,6 +320,14 @@ ORGANIZATION_OWNER_MESSAGE_TITLE_RU = 'Вы отправили сообщени�
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU = 'Вы отправили сообщение партнерам'
 ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Вы отправили сообщение подписчикам партнеров'
 
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Ваш вывод на рассмотрении #{transaction_id}'
+UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Вы передали вывод на рассмотрение #{transaction_id}'
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU = 'Поздравляем Ваш вывод завершен #{transaction_id}'
+ACCEPTED_WITHDRAWAL_TITLE_RU = 'Поздравляем вы завершили вывод #{transaction_id}'
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU = 'Ваш вывод отменен #{transaction_id}'
+DECLINED_WITHDRAWAL_TITLE_RU = 'Вы отменили рассмотрения вывода #{transaction_id}'
+WITHDRAWAL_DESCRIPTION_RU = 'Сумма вывода: {total_withdrawal} {currency}'
+
 ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника'
 ORGANIZATION_GAVE_DESCRIPTION_RU = ' '
 
@@ -400,6 +423,14 @@ ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to'
 DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
 DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount: {final_amount} {currency}'
 DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
+
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'Your withdrawal is under review #{transaction_id}'
+UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'You submitted a withdrawal for review #{transaction_id}'
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN = 'Congratulations, your withdrawal is complete #{transaction_id}'
+ACCEPTED_WITHDRAWAL_TITLE_EN = 'Congratulations, you have completed the withdrawal #{transaction_id}'
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN = 'Your withdrawal has been canceled #{transaction_id}'
+DECLINED_WITHDRAWAL_TITLE_EN = 'You have canceled the review of withdrawal #{transaction_id}'
+WITHDRAWAL_DESCRIPTION_EN = 'Withdrawal amount: {total_withdrawal} {currency}'
 
 NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
 NEW_CASHBACK_TITLE = 'New cashback available {percent} %'
@@ -964,6 +995,63 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
+
+
+    elif notification_type == ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE:
+        notification_str = dict(
+            title=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == WITHDRAWAL_UNDER_REVIEW_TYPE:
+        notification_str = dict(
+            title=UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE:
+        notification_str = dict(
+            title=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == WITHDRAWAL_ACCEPTED_TYPE:
+        notification_str = dict(
+            title=ACCEPTED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
+
+    elif notification_type == ORGANIZATION_WITHDRAWAL_DECLINED_TYPE:
+        notification_str = dict(
+            title=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == WITHDRAWAL_DECLINED_TYPE:
+        notification_str = dict(
+            title=DECLINED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                       currency=extra_data.get('currency')))
+
 
     elif notification_type == ACCEPTED_ONLINE_ORDER_CLIENT_TYPE:
         notification_str = dict(

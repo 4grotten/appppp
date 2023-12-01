@@ -5,12 +5,13 @@ from typing import Optional
 from datetime import timedelta
 from django.utils import timezone
 
+from django.contrib.gis.geos import Point
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
-from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
+from common.serializers import ImageSerializer, CountrySerializer, CitySerializer, FileSmallImageSerializer
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
@@ -207,6 +208,29 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         read_only_fields = ['verification_status']
 
 
+class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+    latest_transaction_time = serializers.SerializerMethodField()
+    unprocessed_transaction_count = serializers.SerializerMethodField()
+
+    def get_latest_transaction_time(self, organization: Organization):
+        return organization.latest_transaction_time
+
+    def get_unprocessed_transaction_count(self, organization: Organization):
+        withdrawal_type = self.context['request'].GET.get('withdrawal_type', None)
+        transactions = Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False)
+        if withdrawal_type is not None:
+            transactions = transactions.filter(withdrawal_type=withdrawal_type)
+        return transactions.count()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
+            'partners', 'verification_status')
+        read_only_fields = ['verification_status']
+
+
 class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()
@@ -393,6 +417,38 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'is_deleted', 'is_private', 'is_banned', 'verification_status', 'image', 'role', 'is_delivery_service', 'verification_status', 'avg_check')
         read_only_fields = ['verification_status']
+
+
+class OrganizationMapsListSerializer(serializers.ModelSerializer):
+    image = FileSmallImageSerializer(many=False)
+    is_show_on_map = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'country', 'city',
+            'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
+            'paysy_activated', 'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed',
+            'paysy_confirmed', 'is_active', 'is_deleted', 'is_banned', 'is_under_review', 'is_private', 'show_contacts',
+            'is_wholesale', 'can_update_is_wholesale', 'is_delivery_service', 'is_bank', 'show_followers',
+            'is_show_on_map')
+        read_only_fields = ['verification_status']
+
+    def get_is_show_on_map(self, organization: Organization):
+        if organization.is_banned:
+            return False
+        if organization.is_deleted:
+            return False
+        if not organization.is_active:
+            return False
+        if not organization.location:
+            return False
+        if not organization.location.x:
+            return False
+        if not organization.location.y:
+            return False
+        return True
+
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):

@@ -4,6 +4,9 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
+from django.conf import settings
+
+from common.models import Currency
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, \
@@ -29,7 +32,9 @@ from notifications.constants import (
     DECLINE_ACCEPTED_RENTAL_TYPE, DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE, ACTIVATE_RENTAL_CLIENT_TYPE,
     ACTIVATE_RENTAL_TYPE, ACCEPTED_ONLINE_ORDER_CLIENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE,
     ACCEPT_ORDER_PAYMENT_CLIENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
-    REQUEST_ONLINE_ORDER_TYPE
+    REQUEST_ONLINE_ORDER_TYPE, NOTIFICATION_MODE_PERSONAL, WITHDRAWAL_UNDER_REVIEW_TYPE,
+    ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE, WITHDRAWAL_ACCEPTED_TYPE, ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE,
+    WITHDRAWAL_DECLINED_TYPE, ORGANIZATION_WITHDRAWAL_DECLINED_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -43,8 +48,9 @@ from shop.models import Cart, ShopItem, Booking, Ticket
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from stock.models import ShopItemSizeCount
-from transactions.models import Transaction, Recipient, Balance
-from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer
+from transactions.models import Transaction, Recipient, Balance, PayoutSystem
+from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer, \
+    BalanceInTransactionSerializer
 from transactions.services.stats_services import StatisticsService
 from users.models import User
 from users.services import UserService
@@ -64,21 +70,16 @@ class TransactionService:
                                       processed_by: User, utc_offset_minutes) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
-        try:
-            balance = Balance.objects.get(id=balance.id)
-            fee_percent = recipient.payout_system.fee_percent
-            currency = balance.currency
-        except Balance.DoesNotExist:
-            raise ObjectNotFoundException("Organization does not have a balance")
+        fee_percent = recipient.payout_system.fee_percent
+        currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         original_amount = recipient.transfer_amount
+
         fee_amount = (original_amount * fee_percent) / 100
-        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
-                                              employee_name=processed_by.full_name, employee_role=role,
-                                              employee_avatar=processed_by.avatar, currency=currency,
+        instance = Transaction.objects.create(organization=organization, currency=currency,
                                               original_amount=original_amount, fee_percent=fee_percent,
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL)
         instance.fixed_cart = RecipientSerializer(recipient, context={'request': request}).data
+        instance.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
         instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
         instance.save()
 
@@ -86,26 +87,20 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient, balance: Balance,
-                                      processed_by: User, utc_offset_minutes) -> Transaction:
+    def create_withdrawal_swift_transaction(cls, request, organization: Organization, recipient: Recipient,
+                                            balance: Balance, processed_by: User, utc_offset_minutes) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
-        try:
-            balance = Balance.objects.get(id=balance.id)
-            fee_percent = recipient.payout_system.fee_percent
-            currency = balance.currency
-        except Balance.DoesNotExist:
-            raise ObjectNotFoundException("Organization does not have a balance")
+        fee_percent = recipient.payout_system.fee_percent
+        currency = Currency.objects.get(code=settings.APP_BASE_CURRENCY)
         original_amount = recipient.transfer_amount
         fee_amount = (original_amount * fee_percent) / 100
-        instance = Transaction.objects.create(client=processed_by, organization=organization, processed_by=processed_by,
-                                              employee_name=processed_by.full_name, employee_role=role,
-                                              employee_avatar=processed_by.avatar, currency=currency,
+        instance = Transaction.objects.create(organization=organization, currency=currency,
                                               original_amount=original_amount, fee_percent=fee_percent,
                                               fee_amount=fee_amount, type=Transaction.WITHDRAWAL,
                                               withdrawal_type=Transaction.SWIFT)
         instance.fixed_cart = RecipientSwiftSerializer(recipient, context={'request': request}).data
+        instance.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
         instance.display_time = now() + timedelta(minutes=utc_offset_minutes)
         instance.save()
 
@@ -633,15 +628,194 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def complete_transaction_online(cls, transaction_id: int) -> Transaction:
+    def complete_freedompay_transaction_online(cls, transaction_id: int) -> Transaction:
         current_transaction = cls.get(id=transaction_id, is_processed=False, type='offline')
         organization = current_transaction.organization
 
         cashback_percent = 0
+        balance, created = Balance.objects.get_or_create(organization=organization, currency=Balance.KGS)
         if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
             cashback_percent = current_transaction.discount_percent
 
         try:
+            current_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
+            current_transaction.type = Transaction.ONLINE
+            current_transaction.is_processed = True
+            current_transaction.payment_status = Transaction.ACCEPTED
+            current_transaction.delivery_type = Transaction.ONLINE_PAYMENT
+            current_transaction.save()
+
+            if current_transaction.source_card is None or current_transaction.source_card.type != DiscountCard.CASHBACK:
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    sender_id=current_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=current_transaction.discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+                # sent_notification.delay(
+                #     recipient_id=current_transaction.processed_by_id,
+                #     sender_id=current_transaction.client_id,
+                #     mode=NOTIFICATION_MODE_PRODUCT,
+                #     notification_type=ACCEPT_ORDER_TYPE,
+                #     organization_id=current_transaction.organization_id,
+                #     extra_data=dict(transaction_id=current_transaction.id,
+                #                     total_price=current_transaction.final_amount,
+                #                     discount_percent=discount_percent,
+                #                     currency=current_transaction.currency.code)
+                # )
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_edit_organization=True),
+                    notification_type=ACCEPT_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(transaction_id=current_transaction.id,
+                                    total_price=current_transaction.final_amount,
+                                    discount_percent=current_transaction.discount_percent,
+                                    currency=current_transaction.currency.code)
+                )
+
+        except IntegrityError:
+            raise IntegrityException(_('Could not complete transaction'))
+
+        client_status = OrganizationClientFinancialStatusService.get_or_create(
+            user=current_transaction.client,
+            organization=organization
+        )
+        OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+
+        if current_transaction.from_cashback > 0:
+            to_subtract = min(client_status.accrued_cashback, current_transaction.from_cashback)
+
+            client_status.accrued_cashback = F('accrued_cashback') - to_subtract
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            if to_subtract < current_transaction.from_cashback:
+                remaining_amount = current_transaction.from_cashback - to_subtract
+                OrganizationClientFinancialStatusService.use_corporate_cashback(
+                    client=current_transaction.client, organization=organization,
+                    amount=remaining_amount
+                )
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=WITHDRAW_CASHBACK_CLIENT,
+                title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=str(current_transaction.from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=WITHDRAW_CASHBACK_SELLER,
+            #     title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(from_cashback),
+            #                                                 currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(from_cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_edit_organization=True),
+                notification_type=WITHDRAW_CASHBACK_SELLER,
+                title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=str(current_transaction.from_cashback),
+                                                            currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(current_transaction.from_cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
+            cashback = current_transaction.final_amount * cashback_percent / 100
+            client_status.accrued_cashback = F('accrued_cashback') + cashback
+            client_status.save(update_fields=('accrued_cashback',))
+            client_status.refresh_from_db()
+
+            current_transaction.to_cashback = cashback
+            current_transaction.save(update_fields=('to_cashback',))
+
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                notification_type=CHARGE_CASHBACK_CLIENT,
+                title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+            # sent_notification.delay(
+            #     recipient_id=current_transaction.processed_by_id,
+            #     sender_id=current_transaction.client_id,
+            #     mode=NOTIFICATION_MODE_DISCOUNT,
+            #     notification_type=CHARGE_CASHBACK_SELLER,
+            #     title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+            #                                               currency=current_transaction.currency.code),
+            #     description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+            #                                                      currency=current_transaction.currency.code),
+            #     organization_id=current_transaction.organization_id,
+            #     extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+            #                     currency=current_transaction.currency.code,
+            #                     final_amount=str(current_transaction.final_amount))
+            # )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=NOTIFICATION_MODE_DISCOUNT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_edit_organization=True),
+                notification_type=CHARGE_CASHBACK_SELLER,
+                title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=str(cashback),
+                                                          currency=current_transaction.currency.code),
+                description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=str(current_transaction.final_amount),
+                                                                 currency=current_transaction.currency.code),
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(transaction_id=current_transaction.id, amount=str(cashback),
+                                currency=current_transaction.currency.code,
+                                final_amount=str(current_transaction.final_amount))
+            )
+
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_paysy_transaction_online(cls, transaction_id: int) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type='offline')
+        organization = current_transaction.organization
+
+        cashback_percent = 0
+        balance, created = Balance.objects.get_or_create(organization=organization, currency=Balance.TRC)
+        if current_transaction.source_card is not None and current_transaction.source_card.type == DiscountCard.CASHBACK:
+            cashback_percent = current_transaction.discount_percent
+
+        try:
+            current_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
             current_transaction.type = Transaction.ONLINE
             current_transaction.is_processed = True
             current_transaction.payment_status = Transaction.ACCEPTED
@@ -1107,6 +1281,157 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
+    def review_withdrawal_transaction(cls, transaction_id: int, utc_offset_minutes: int,
+                                    processed_by: User) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.WITHDRAWAL,
+                                      status=Transaction.IN_PROGRESS)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        try:
+            current_transaction.processed_by = processed_by
+            current_transaction.employee_role = role
+            current_transaction.employee_name = processed_by.full_name
+            current_transaction.employee_avatar = processed_by.avatar
+            current_transaction.status = Transaction.UNDER_REVIEW
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not review transaction'))
+
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=WITHDRAWAL_UNDER_REVIEW_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        return current_transaction
+
+    @classmethod
+    @transaction.atomic
+    def complete_review_withdrawal_transaction(cls, transaction_id: int, utc_offset_minutes: int, processed_by: User,
+                                               files=None, comment=None) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.WITHDRAWAL,
+                                      status=Transaction.UNDER_REVIEW, payment_info__isnull=False)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        if processed_by != current_transaction.processed_by:
+            raise NotAcceptableException(_('No rights to edit the transaction'))
+
+        try:
+            for index, file in enumerate(files):
+                file.order = index
+                file.save(update_fields=('order',))
+                current_transaction.files.add(file)
+            current_transaction.status = Transaction.ACCEPTED_WITHDRAWAL
+            current_transaction.comment = comment
+            current_transaction.is_processed = True
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not review transaction'))
+
+        if current_transaction.type == Transaction.WITHDRAWAL:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=current_transaction.id) & (
+                        Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=WITHDRAWAL_ACCEPTED_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        return current_transaction
+
+
+    @classmethod
+    @transaction.atomic
+    def decline_review_withdrawal_transaction(cls, transaction_id: int, utc_offset_minutes: int, processed_by: User,
+                                               files=None, comment=None) -> Transaction:
+        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.WITHDRAWAL,
+                                      status=Transaction.UNDER_REVIEW, payment_info__isnull=False)
+        organization = current_transaction.organization
+        if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to sell in this organization'))
+        if processed_by != current_transaction.processed_by:
+            raise NotAcceptableException(_('No rights to edit the transaction'))
+
+        try:
+            for index, file in enumerate(files):
+                file.order = index
+                file.save(update_fields=('order',))
+                current_transaction.files.add(file)
+            current_transaction.status = Transaction.ERROR
+            current_transaction.comment = comment
+            current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+
+            current_transaction.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not review transaction'))
+
+        if current_transaction.type == Transaction.WITHDRAWAL:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=current_transaction.id) & (
+                        Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=current_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            notification_type=WITHDRAWAL_DECLINED_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=current_transaction.organization_id,
+            mode=NOTIFICATION_MODE_PERSONAL,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ORGANIZATION_WITHDRAWAL_DECLINED_TYPE,
+            organization_id=current_transaction.organization_id,
+            extra_data=dict(transaction_id=current_transaction.id,
+                            total_withdrawal=current_transaction.final_amount,
+                            currency=current_transaction.currency.code)
+        )
+        return current_transaction
+
+
+    @classmethod
+    @transaction.atomic
     def complete_online_payment_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
                                     processed_by: User) -> Transaction:
         current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
@@ -1409,8 +1734,8 @@ class TransactionService:
         return organizations
 
     @classmethod
-    def get_user_withdrawal_transaction_organizations(cls, user: User):
-        transactions = cls.get_user_withdrawal_transactions(user=user)
+    def get_user_withdrawal_transaction_organizations(cls, user: User, withdrawal_type: str):
+        transactions = cls.get_user_withdrawal_transactions(user=user, withdrawal_type=withdrawal_type)
 
         organizations = Organization.objects.filter(id__in=transactions.values('organization_id')).annotate(
             latest_transaction_time=Subquery(
@@ -1418,13 +1743,15 @@ class TransactionService:
                     Q(organization=OuterRef('pk')) & (
                             (Q(processed_by=user) | Q(status=Transaction.IN_PROGRESS)) & ~Q(
                         Q(status=Transaction.IN_PROGRESS) & Q(type=Transaction.OFFLINE)
-                    ) & Q(type=Transaction.WITHDRAWAL)
+                    ) & Q(type=Transaction.WITHDRAWAL) & Q(payment_info__isnull=False) &
+                            Q(withdrawal_type=withdrawal_type)
                     )
                 ).order_by('-updated_at').values('updated_at')[:1]
             ),
             unprocessed_transaction_count=Count(
                 Transaction.objects.filter(organization_id=OuterRef('pk'), type=Transaction.WITHDRAWAL,
-                                           status=Transaction.IN_PROGRESS).values('id')[:1])
+                                           status=Transaction.IN_PROGRESS, payment_info__isnull=False,
+                                           withdrawal_type=withdrawal_type).values('id')[:1])
         )
 
         organizations = organizations.order_by('-unprocessed_transaction_count',
@@ -1557,25 +1884,30 @@ class TransactionService:
 
 
     @classmethod
-    def get_user_balance_totals(cls, currency: str, organization: Organization = None,
+    def get_user_balance_totals(cls, currency: str, balance_currency: str, organization: Organization = None,
                                 start_date=None, end_date=None):
+        if balance_currency == Balance.TRC:
+            currency = "USD"
         transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
-                                                  delivery_type=Transaction.ONLINE_PAYMENT)
+                                                  delivery_type=Transaction.ONLINE_PAYMENT,
+                                                  payment_info__currency=balance_currency)
 
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
-
         transactions = transactions.order_by().values('currency').annotate(
             total_balance=Coalesce(Sum('final_amount'), 0)
         )
         return StatisticsService.get_transaction_balance_in_one_currency(totals=transactions, currency=currency)
 
     @classmethod
-    def get_organization_processed_withdrawals(cls, currency: str, organization: Organization = None,
-                                               start_date=None, end_date=None):
+    def get_organization_processed_withdrawals(cls, currency: str, balance_currency: str,
+                                               organization: Organization = None, start_date=None, end_date=None):
+        if balance_currency == Balance.TRC:
+            currency = "USD"
         transactions = Transaction.objects.filter(organization=organization, is_processed=True,
-                                                  type=Transaction.WITHDRAWAL, currency=currency)
+                                                  type=Transaction.WITHDRAWAL, currency=currency,
+                                                  payment_info__currency=balance_currency)
         if start_date is not None and end_date is not None:
             end_date = end_date + timedelta(days=1)
             transactions = transactions.filter(updated_at__range=[start_date, end_date])
@@ -1831,13 +2163,16 @@ class TransactionService:
         return transactions
 
     @classmethod
-    def get_organization_balance_transactions(cls, organization: Organization, start_date=None, end_date=None,
-                                              search_id: int = None):
+    def get_organization_balance_all_transactions(cls, organization: Organization, start_date=None, end_date=None,
+                                                  search_id: int = None):
 
-        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True, type=Transaction.ONLINE,
-                                                  delivery_type=Transaction.ONLINE_PAYMENT).order_by('-updated_at')
+        simple_transactions = Transaction.objects.filter(organization=organization, is_processed=True,
+                                                         type=Transaction.ONLINE,
+                                                         delivery_type=Transaction.ONLINE_PAYMENT,
+                                                         payment_info__isnull=False).order_by('-updated_at')
 
-        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL)
+        withdrawal_transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL,
+                                                             payment_info__isnull=False)
 
         transactions = simple_transactions | withdrawal_transactions
 
@@ -1848,6 +2183,29 @@ class TransactionService:
             )
         if search_id is not None:
             transactions = transactions.filter(id__contains=search_id)
+
+        return transactions
+
+    @classmethod
+    def get_organization_balance_withdrawal_transactions(cls, organization: Organization,
+                                                         payout_system: PayoutSystem = None, start_date=None,
+                                                         end_date=None, search_id: int = None, status=None):
+        transactions = Transaction.objects.filter(organization=organization, type=Transaction.WITHDRAWAL,
+                                                  payment_info__isnull=False)
+
+        if payout_system is not None:
+            transactions = transactions.filter(fixed_cart__payout_system__id=payout_system.id)
+
+        if start_date is not None and end_date is not None:
+            end_date = end_date + timedelta(days=1)
+            transactions = transactions.filter(
+                Q(updated_at__range=[start_date, end_date])
+            )
+        if search_id is not None:
+            transactions = transactions.filter(id__contains=search_id)
+
+        if status is not None:
+            transactions = transactions.filter(status=status)
 
         return transactions
 
@@ -2071,11 +2429,13 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def accept_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
+    def accept_freedompay_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        balance, created = Balance.objects.get_or_create(organization=old_transaction.organization, currency=Balance.KGS)
         if old_transaction.client != user:
             raise PermissionDeniedException(_('Permission denied'))
         try:
+            old_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
             old_transaction.save()
@@ -2134,11 +2494,146 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def accept_order_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
+    def accept_paysy_booking_transaction_by_user(cls, request, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        balance, created = Balance.objects.get_or_create(organization=old_transaction.organization,
+                                                         currency=Balance.KGS)
         if old_transaction.client != user:
             raise PermissionDeniedException(_('Permission denied'))
         try:
+            old_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
+            old_transaction.payment_status = Transaction.ACCEPTED
+            old_transaction.is_processed = True
+            old_transaction.save()
+            booking = old_transaction.booking
+            booking.is_open = False
+            booking.save()
+        except:
+            raise IntegrityException()
+
+        old_start_time = old_transaction.booking.start_time
+        old_end_time = old_transaction.booking.end_time
+
+        bookings = Booking.objects.filter(
+            organization=old_transaction.booking.organization,
+            start_time__lt=old_end_time,
+            end_time__gt=old_start_time,
+            is_open=True
+        ).exclude(id=old_transaction.booking.id)
+
+        if bookings.exists():
+            for booking in bookings:
+                if booking.transaction and booking.transaction.type == Transaction.ONLINE:
+                    TransactionService.refund_booking_transaction(old_transaction=booking.transaction,
+                                                                  user=booking.organization.owner,
+                                                                  request=request)
+
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=old_transaction.processed_by_id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACCEPT_RENTAL_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+
+    @classmethod
+    @transaction.atomic
+    def accept_freedompay_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
+        old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+
+        balance, created = Balance.objects.get_or_create(organization=old_transaction.organization,
+                                                         currency=Balance.KGS)
+        if old_transaction.client != user:
+            raise PermissionDeniedException(_('Permission denied'))
+        try:
+            old_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
+            old_transaction.payment_status = Transaction.ACCEPTED
+            old_transaction.is_processed = True
+            old_transaction.save()
+        except:
+            raise IntegrityException()
+        if old_transaction.type == Transaction.ONLINE:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) & (
+                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+
+        discount_percent = old_transaction.discount_percent
+
+        sent_notification.delay(
+            recipient_id=old_transaction.processed_by_id,
+            sender_id=old_transaction.client_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        sent_notification.delay(
+            recipient_id=old_transaction.client_id,
+            sender_id=old_transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_PRODUCT,
+            notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+            organization_id=old_transaction.organization_id,
+            extra_data=dict(transaction_id=old_transaction.id,
+                            total_price=old_transaction.final_amount,
+                            discount_percent=discount_percent,
+                            currency=old_transaction.currency.code)
+        )
+        organization = old_transaction.organization
+        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+            is_delivery_service=True, country=organization.country).exists()
+        if org:
+            try:
+                send_delivery_notitication_to_organization_or_client(old_transaction.cart.organization.owner,
+                                                                     old_transaction.cart.id,
+                                                                     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                     mode=NOTIFICATION_MODE_SYSTEM)
+
+                organization_members = list(old_transaction.cart.organization.memberships.filter(
+                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+                for member in organization_members:
+                    send_delivery_notitication_to_organization_or_client(member.user,
+                                                                         old_transaction.cart.id,
+                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                                         mode=NOTIFICATION_MODE_SYSTEM)
+            except Exception as e:
+                logging.exception(e)
+
+    @classmethod
+    @transaction.atomic
+    def accept_paysy_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
+        old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+
+        balance, created = Balance.objects.get_or_create(organization=old_transaction.organization,
+                                                         currency=Balance.TRC)
+        if old_transaction.client != user:
+            raise PermissionDeniedException(_('Permission denied'))
+        try:
+            old_transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
             old_transaction.payment_status = Transaction.ACCEPTED
             old_transaction.is_processed = True
             old_transaction.save()
@@ -2288,8 +2783,8 @@ class TransactionService:
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
-        return Transaction.objects.filter(organization__in=organization,
-                                          status=Transaction.IN_PROGRESS, type=Transaction.WITHDRAWAL).count()
+        return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
+                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False).count()
 
     @classmethod
     def get_payment_system_withdrawal_unprocessed_transactions_count(cls, user: User):
@@ -2297,7 +2792,8 @@ class TransactionService:
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
         return Transaction.objects.filter(organization__in=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD).count()
+                                          type=Transaction.WITHDRAWAL, withdrawal_type=Transaction.BANKCARD,
+                                          payment_info__isnull=False).count()
 
     @classmethod
     def get_swift_withdrawal_unprocessed_transactions_count(cls, user: User):
@@ -2349,7 +2845,7 @@ class TransactionService:
         return transactions
 
     @classmethod
-    def get_user_withdrawal_transactions(cls, user: User):
+    def get_user_withdrawal_transactions(cls, user: User, withdrawal_type: str):
         memberships = Membership.objects.filter(
             Q(user=user) & (Q(role__can_sale=True) | Q(role__can_see_stats=True) | Q(role__can_edit_organization=True)))
         organization = Organization.objects.filter(Q(memberships__in=memberships) | Q(owner=user))
@@ -2362,6 +2858,8 @@ class TransactionService:
                     | Q(status=Transaction.ACCEPTED)
             )
             & Q(type=Transaction.WITHDRAWAL)
+            & Q(payment_info__isnull=False)
+            & Q(withdrawal_type=withdrawal_type)
         ).annotate(
             in_progress_first=Case(
                 When(status=Transaction.IN_PROGRESS, then=0),

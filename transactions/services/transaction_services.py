@@ -2259,7 +2259,6 @@ class TransactionService:
                     else:
                         cls.change_back_count_service(size=None, cart_item=cart_item)
             except Cart.DoesNotExist:
-                print("PASSED")
                 pass
 
 

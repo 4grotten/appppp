@@ -1800,7 +1800,6 @@ class PaySyWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
         payload = request.data
-        print(payload)
         event_type = payload.get("event")
         order = payload.get("order")
         any_key = order.get('any_key')
@@ -1865,12 +1864,10 @@ class ResultURLView(APIView):
             pg_description = validated_data.get('pg_description', '')
             user_id = validated_data.get('user_id')
             purchase_type = validated_data.get('purchase_type')
-            print(validated_data)
             user_id = int(user_id)
             user = UserService.get(id=user_id)
 
             if pg_result == 0:
-                print("REJECTED")
                 response_data = {
                     'pg_status': 'rejected',
                     'pg_description': pg_description,
@@ -1878,11 +1875,9 @@ class ResultURLView(APIView):
                     'pg_sig': validated_data.get('pg_sig', '')
                 }
             else:
-                print("ACCEPTED")
                 if purchase_type == 'product':
                     TransactionService.accept_freedompay_order_transaction_by_user(transaction_id=pg_order_id,
                                                                                    user=user)
-                    print("AFTER TransactionService")
                     response_data = {
                         'pg_status': 'ok',
                         'pg_description': 'Заказ оплачен',
@@ -1891,7 +1886,6 @@ class ResultURLView(APIView):
                     }
                 elif purchase_type == 'deal':
                     TransactionService.complete_freedompay_transaction_online(transaction_id=pg_order_id)
-                    print("TransactionService.complete_transaction_online")
 
                     response_data = {
                         'pg_status': 'ok',
@@ -1903,7 +1897,6 @@ class ResultURLView(APIView):
                     TransactionService.accept_freedompay_booking_transaction_by_user(transaction_id=pg_order_id,
                                                                                      user=user,
                                                                                      request=self.request)
-                    print("AFTER TransactionService.accept_order_transaction_by_user")
                     response_data = {
                         'pg_status': 'ok',
                         'pg_description': 'Заказ оплачен',
@@ -1925,8 +1918,6 @@ class PaymentSuccessView(APIView):
             pg_payment_id = validated_data.get('pg_payment_id')
             pg_error_code = validated_data.get('pg_error_code')
             pg_error_description = validated_data.get('pg_error_description')
-            print("pg_order_id-", pg_order_id, "pg_payment_id-", pg_payment_id, "pg_error_code-", pg_error_code,
-                  "pg_error_description-", pg_error_description)
 
             return Response({'message': 'Payment successful', **validated_data})
 

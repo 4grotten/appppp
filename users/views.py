@@ -69,20 +69,15 @@ class RegisterAuthAPIView(APIView):
             temporary_code_enabled = TemporaryCodeSwitcher.objects.last().is_enable
         except:
             temporary_code_enabled = True
-        print("1")
         if not UserService.filter(phone_number=phone_number).exists():
-            print("2")
             ip = request.META.get('REMOTE_ADDR', '')
             user = UserService.create(phone_number=phone_number)
 
             if temporary_code_enabled:
-                print("3")
                 TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
             elif str(phone_number).startswith("+996"):
-                print("4")
                 TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
             else:
-                print("5")
                 token = MyOwnTokenService.get_or_create_token(user=user, request=request)
 
             return Response(data={

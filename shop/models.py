@@ -14,9 +14,20 @@ from utils.translator import GoogleTranslator
 
 
 class ItemCategory(models.Model):
+    PRODUCT = 'product'
+    RENTAL = 'rent'
+    TICKET = 'ticket'
+    RESUME = 'resume'
+    TYPE_CHOICES = (
+        (PRODUCT, PRODUCT),
+        (RENTAL, RENTAL),
+        (TICKET, TICKET),
+        (RESUME, RESUME)
+    )
     name = models.CharField(max_length=64)
     icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
     is_adult = models.BooleanField(default=False)
+    purchase_type = models.CharField(max_length=55, choices=TYPE_CHOICES, default='product', null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'

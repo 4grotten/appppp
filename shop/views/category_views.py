@@ -45,6 +45,16 @@ class ItemCategoryListView(ListAPIView):
     serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        purchase_type = self.request.query_params.get('purchase_type', None)
+
+        if purchase_type:
+            queryset = queryset.filter(purchase_type=purchase_type)
+
+        return queryset
+
 
 class ItemRentalCategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)

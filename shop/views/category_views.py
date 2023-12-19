@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from organizations.models import Organization
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
 from shop.forms import ItemSubcategoryAdminForm

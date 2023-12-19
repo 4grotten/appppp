@@ -23,7 +23,7 @@ from shop.views.item_views import (
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
     AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView,
-    ItemTicketCreateView, TicketPeriodCreateView
+    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView
 )
 
 urlpatterns = [
@@ -63,6 +63,8 @@ urlpatterns = [
     path('shop/tickets/', ItemTicketCreateView.as_view(), name='ticket_create'),
     path('shop/tickets/categories/', ItemTicketCategoryListView.as_view(), name='rent_categories'),
     path('shop/tickets/<int:pk>/ticket_period/', TicketPeriodCreateView.as_view(), name='add_ticket_period'),
+
+    path('shop/resumes/', ItemResumeCreateView.as_view(), name='resume_create'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

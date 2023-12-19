@@ -9,7 +9,7 @@ from rest_framework import serializers
 
 from users.models import User
 from common.exceptions import NotAcceptableException
-from common.models import File, FileVideo
+from common.models import File, FileVideo, Currency
 from common.serializers import ImageSerializer, VideoSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
@@ -263,7 +263,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
-            'longitude', 'latitude', 'minimum_purchase'
+            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'current_locations', 'preferred_locations', 'links'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

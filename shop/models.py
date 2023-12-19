@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.db.models import PointField
 
-from common.models import TimestampModel, File, FileVideo
+from common.models import TimestampModel, File, FileVideo, Currency, Country
 from organizations.models import Organization
 from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
@@ -73,10 +73,12 @@ class ShopItem(models.Model):
     PRODUCT = 'product'
     RENTAL = 'rent'
     TICKET = 'ticket'
+    RESUME = 'resume'
     TYPE_CHOICES = (
         (PRODUCT, PRODUCT),
         (RENTAL, RENTAL),
-        (TICKET, TICKET)
+        (TICKET, TICKET),
+        (RESUME, RESUME)
     )
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
@@ -111,6 +113,15 @@ class ShopItem(models.Model):
 
     rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
     ticket_period = models.ForeignKey(TicketPeriod, on_delete=models.SET_NULL, null=True, blank=True)
+
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='shop_items', null=True, blank=True)
+    salary_from = models.PositiveIntegerField(null=True, blank=True)
+    salary_to = models.PositiveIntegerField(null=True, blank=True)
+    citizenship = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='shop_items', null=True, blank=True)
+    current_locations = models.JSONField(null=True, blank=True)
+    preferred_locations = models.JSONField(null=True, blank=True)
+    links = models.JSONField(null=True, blank=True)
+
 
     @property
     def full_location(self):

@@ -128,7 +128,7 @@ class ShopItem(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='shop_items', null=True, blank=True)
     salary_from = models.PositiveIntegerField(null=True, blank=True)
     salary_to = models.PositiveIntegerField(null=True, blank=True)
-    citizenship = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='shop_items', null=True, blank=True)
+    citizenship = models.ManyToManyField(Country, related_name='shop_items', blank=True)
     current_locations = models.JSONField(null=True, blank=True)
     preferred_locations = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)

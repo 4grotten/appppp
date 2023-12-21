@@ -14,7 +14,7 @@ from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSe
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -76,6 +76,22 @@ class TicketPeriodSerializer(serializers.ModelSerializer):
         )
 
 
+class ResumeInfoCreateSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+
+    class Meta:
+        model = ResumeInfo
+        fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages')
+
+
+class ResumeInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResumeInfo
+        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages')
+
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -96,6 +112,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     citizenship = CountryResumeSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
+    resume_info = ResumeInfoSerializer(read_only=True)
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -200,7 +217,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
             'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links'
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'resume_info'
         )
 
 

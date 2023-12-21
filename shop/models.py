@@ -9,6 +9,7 @@ from common.models import TimestampModel, File, FileVideo, Currency, Country
 from organizations.models import Organization
 from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
+from users.constants import GENDER_CHOICES
 from users.models import User
 from utils.translator import GoogleTranslator
 
@@ -168,6 +169,17 @@ class ShopItem(models.Model):
         else:
             self.is_hidden = False
         super().save(*args, **kwargs)
+
+
+class ResumeInfo(TimestampModel):
+    item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='resume_info')
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
+    full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    languages = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return f"ResumeInfo of {self.item}"
 
 
 class ItemInstagramData(TimestampModel):

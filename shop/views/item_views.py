@@ -18,7 +18,7 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -26,8 +26,9 @@ from shop.serializers.item_serializers import (
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
-    ItemRentalMinuteSerializer, TicketPeriodSerializer
+    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoCreateSerializer
 )
+from shop.services.resume_services import ResumeInfoService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -82,6 +83,27 @@ class ItemResumeCreateView(CreateAPIView):
         serializer.save(purchase_type=ShopItem.RESUME)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ResumeInfoCreateView(APIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ResumeInfoCreateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeInfoService.create_resume(item=serializer.validated_data['item'],
+                                        gender=serializer.validated_data.get('gender'),
+                                        full_name=serializer.validated_data.get('full_name'),
+                                        date_of_birth=serializer.validated_data.get('date_of_birth'),
+                                        languages=serializer.validated_data.get('languages'))
+
+        return Response(data={'message': _('Successfully updated resume info')})
 
 
 class TicketPeriodCreateView(APIView):

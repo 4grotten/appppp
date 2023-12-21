@@ -15,7 +15,7 @@ class ResumeInfoService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
-    def create_resume(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None):
+    def create_resume(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None, files=None):
         languages_list = []
         if languages:
             for language_code in languages:
@@ -33,6 +33,10 @@ class ResumeInfoService:
             resume_info.full_name = full_name
             resume_info.date_of_birth = date_of_birth
             resume_info.languages = languages_list
+            for index, file in enumerate(files):
+                file.order = index
+                file.save(update_fields=('order',))
+                resume_info.files.add(file)
             resume_info.save()
 
         return resume_info

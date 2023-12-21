@@ -23,7 +23,7 @@ from shop.views.item_views import (
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
     AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView,
-    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoCreateView
+    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoCreateView, ResumeInfoFileCreateView
 )
 
 urlpatterns = [
@@ -66,6 +66,8 @@ urlpatterns = [
 
     path('shop/resumes/', ItemResumeCreateView.as_view(), name='resume_create'),
     path('shop/resumes/info/', ResumeInfoCreateView.as_view(), name='resume_info_create'),
+    path('shop/resumes/files/', ResumeInfoFileCreateView.as_view(), name='resume_info_file_create'),
+
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

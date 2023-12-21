@@ -10,6 +10,7 @@ from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, \
     RetrieveAPIView, ListCreateAPIView
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,7 +19,7 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo, ResumeInfoFile
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -26,7 +27,7 @@ from shop.serializers.item_serializers import (
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
-    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoCreateSerializer
+    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoCreateSerializer, ResumeInfoFileSerializer
 )
 from shop.services.resume_services import ResumeInfoService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
@@ -85,6 +86,13 @@ class ItemResumeCreateView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class ResumeInfoFileCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
+    serializer_class = ResumeInfoFileSerializer
+    queryset = ResumeInfoFile.objects.all()
+
+
 class ResumeInfoCreateView(APIView):
     permissions = (IsAuthenticated,)
     serializer_class = ResumeInfoCreateSerializer
@@ -101,7 +109,8 @@ class ResumeInfoCreateView(APIView):
                                         gender=serializer.validated_data.get('gender'),
                                         full_name=serializer.validated_data.get('full_name'),
                                         date_of_birth=serializer.validated_data.get('date_of_birth'),
-                                        languages=serializer.validated_data.get('languages'))
+                                        languages=serializer.validated_data.get('languages'),
+                                        files=serializer.validated_data.get('files', []))
 
         return Response(data={'message': _('Successfully updated resume info')})
 

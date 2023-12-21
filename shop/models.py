@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.db.models import PointField
 
 from common.models import TimestampModel, File, FileVideo, Currency, Country
+from common.utils import upload_file_with_unique_name
 from organizations.models import Organization
 from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
@@ -171,12 +172,31 @@ class ShopItem(models.Model):
         super().save(*args, **kwargs)
 
 
+class ResumeInfoFile(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+    file = models.FileField(upload_to=upload_file_with_unique_name,
+                             help_text=_('File that you want to store'),
+                             null=True, blank=True)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(ResumeInfoFile, self).save()
+
+    class Meta:
+        ordering = ('order',)
+
+
 class ResumeInfo(TimestampModel):
     item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='resume_info')
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
     full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     languages = models.JSONField(null=True, blank=True)
+    files = models.ManyToManyField(ResumeInfoFile, blank=True, related_name='resume_info')
 
     def __str__(self):
         return f"ResumeInfo of {self.item}"

@@ -14,7 +14,8 @@ from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSe
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
+    ResumeInfoFile
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -81,7 +82,7 @@ class ResumeInfoCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeInfo
-        fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages')
+        fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
 
 
 class ResumeInfoSerializer(serializers.ModelSerializer):
@@ -90,6 +91,17 @@ class ResumeInfoSerializer(serializers.ModelSerializer):
         model = ResumeInfo
         fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages')
 
+
+class ResumeInfoFileSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeInfoFile
+        fields = ('id', 'file', 'name')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):

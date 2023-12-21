@@ -202,6 +202,14 @@ class ResumeInfo(TimestampModel):
         return f"ResumeInfo of {self.item}"
 
 
+class ResumePhoneNumber(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_phone_numbers')
+    phone_number = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.phone_number
+
+
 class ItemInstagramData(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
     thumbnail_url = models.URLField(max_length=5000)

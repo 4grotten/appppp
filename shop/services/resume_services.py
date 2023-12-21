@@ -1,9 +1,11 @@
+from django.db import transaction
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
-from shop.models import ResumeInfo, ShopItem
+from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber
 
 
 class ResumeInfoService:
@@ -15,7 +17,7 @@ class ResumeInfoService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
-    def create_resume(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None, files=None):
+    def update_resume_info(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None, files=None):
         languages_list = []
         if languages:
             for language_code in languages:
@@ -40,3 +42,19 @@ class ResumeInfoService:
             resume_info.save()
 
         return resume_info
+
+
+class ResumePhoneNumberService:
+    model = ResumePhoneNumber
+
+    @classmethod
+    def get_numbers_of_resume(cls, item: ShopItem) -> QuerySet:
+        return ResumePhoneNumber.objects.filter(item=item)
+
+    @classmethod
+    def update_resume_phone_numbers(cls, item: ShopItem, numbers: list):
+        with transaction.atomic():
+            ResumePhoneNumber.objects.filter(item=item).delete()
+            numbers = [ResumePhoneNumber(item=item, phone_number=number) for number in numbers]
+            ResumePhoneNumber.objects.bulk_create(numbers)
+            return numbers

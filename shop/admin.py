@@ -2,7 +2,8 @@ from django.contrib import admin
 
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
-    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket, ResumeInfo, ResumeInfoFile
+    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket, ResumeInfo, ResumeInfoFile,
+    ResumePhoneNumber
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -90,9 +91,13 @@ class ResumeInfoAdmin(admin.ModelAdmin):
     list_display = ('item', 'gender', 'full_name', 'date_of_birth', 'languages')
 
 
-@admin.register(ResumeInfoFile)
-class FileAdmin(admin.ModelAdmin):
+class ResumeInfoFileAdmin(admin.ModelAdmin):
     list_display = ('id', 'file', 'created_at')
+
+
+class ResumePhoneNumberAdmin(admin.ModelAdmin):
+    list_display = ('item', 'phone_number')
+
 
 
 admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)
@@ -111,3 +116,5 @@ admin.site.register(CommentComplaint, CommentComplaintAdmin)
 admin.site.register(Booking, BookingAdmin)
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(ResumeInfo, ResumeInfoAdmin)
+admin.site.register(ResumeInfoFile, ResumeInfoFileAdmin)
+admin.site.register(ResumePhoneNumber, ResumePhoneNumberAdmin)

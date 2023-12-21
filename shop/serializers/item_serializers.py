@@ -15,7 +15,7 @@ from organizations.models import HotlinkCollectionItem, Organization, BlockedUse
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
-    ResumeInfoFile
+    ResumeInfoFile, ResumePhoneNumber
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -77,12 +77,23 @@ class TicketPeriodSerializer(serializers.ModelSerializer):
         )
 
 
-class ResumeInfoCreateSerializer(serializers.ModelSerializer):
+class ResumeInfoUpdateSerializer(serializers.ModelSerializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
 
     class Meta:
         model = ResumeInfo
         fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
+
+
+class ResumePhoneNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumePhoneNumber
+        fields = ('id', 'phone_number')
+
+
+class ResumePhoneNumberUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    phone_numbers = serializers.ListSerializer(child=serializers.CharField())
 
 
 class ResumeInfoSerializer(serializers.ModelSerializer):

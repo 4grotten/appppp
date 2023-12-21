@@ -23,7 +23,8 @@ from shop.views.item_views import (
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
     AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView,
-    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoCreateView, ResumeInfoFileCreateView
+    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoUpdateView, ResumeInfoFileCreateView,
+    ResumePhoneNumberUpdateView, ResumePhonesListAPIView
 )
 
 urlpatterns = [
@@ -65,8 +66,10 @@ urlpatterns = [
     path('shop/tickets/<int:pk>/ticket_period/', TicketPeriodCreateView.as_view(), name='add_ticket_period'),
 
     path('shop/resumes/', ItemResumeCreateView.as_view(), name='resume_create'),
-    path('shop/resumes/info/', ResumeInfoCreateView.as_view(), name='resume_info_create'),
     path('shop/resumes/files/', ResumeInfoFileCreateView.as_view(), name='resume_info_file_create'),
+    path('shop/resumes/info/', ResumeInfoUpdateView.as_view(), name='resume_info_create'),
+    path('shop/resumes/phone_numbers/', ResumePhoneNumberUpdateView.as_view(), name='resume_phone_numbers_create'),
+    path('shop/resumes/<int:pk>/phone_numbers/', ResumePhonesListAPIView.as_view(), name='resume_phone_numbers_list'),
 
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),

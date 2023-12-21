@@ -27,9 +27,10 @@ from shop.serializers.item_serializers import (
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
-    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoCreateSerializer, ResumeInfoFileSerializer
+    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
+    ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer
 )
-from shop.services.resume_services import ResumeInfoService
+from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -93,9 +94,9 @@ class ResumeInfoFileCreateView(CreateAPIView):
     queryset = ResumeInfoFile.objects.all()
 
 
-class ResumeInfoCreateView(APIView):
+class ResumeInfoUpdateView(APIView):
     permissions = (IsAuthenticated,)
-    serializer_class = ResumeInfoCreateSerializer
+    serializer_class = ResumeInfoUpdateSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -105,14 +106,41 @@ class ResumeInfoCreateView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        ResumeInfoService.create_resume(item=serializer.validated_data['item'],
-                                        gender=serializer.validated_data.get('gender'),
-                                        full_name=serializer.validated_data.get('full_name'),
-                                        date_of_birth=serializer.validated_data.get('date_of_birth'),
-                                        languages=serializer.validated_data.get('languages'),
-                                        files=serializer.validated_data.get('files', []))
+        ResumeInfoService.update_resume_info(item=serializer.validated_data['item'],
+                                             gender=serializer.validated_data.get('gender'),
+                                             full_name=serializer.validated_data.get('full_name'),
+                                             date_of_birth=serializer.validated_data.get('date_of_birth'),
+                                             languages=serializer.validated_data.get('languages'),
+                                             files=serializer.validated_data.get('files', []))
 
         return Response(data={'message': _('Successfully updated resume info')})
+
+
+class ResumePhonesListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        numbers = ResumePhoneNumberService.get_numbers_of_resume(item=kwargs['pk'])
+        data = ResumePhoneNumberSerializer(numbers, many=True).data
+        return Response(data)
+
+
+class ResumePhoneNumberUpdateView(APIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ResumePhoneNumberUpdateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumePhoneNumberService.update_resume_phone_numbers(item=serializer.validated_data['item'],
+                                                             numbers=serializer.validated_data['phone_numbers'])
+
+        return Response(data={'message': _('Successfully updated phone numbers')})
 
 
 class TicketPeriodCreateView(APIView):

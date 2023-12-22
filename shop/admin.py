@@ -3,7 +3,7 @@ from django.contrib import admin
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
     ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket, ResumeInfo, ResumeInfoFile,
-    ResumePhoneNumber, ResumeSocialNetwork
+    ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -103,6 +103,10 @@ class ResumeSocialNetworkAdmin(admin.ModelAdmin):
     list_display = ('item', 'url')
 
 
+class ResumeDetailInfoAdmin(admin.ModelAdmin):
+    list_display = ('item', 'text')
+
+
 
 admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)
 admin.site.register(ItemCategory, MainCategoryAdmin)
@@ -123,3 +127,4 @@ admin.site.register(ResumeInfo, ResumeInfoAdmin)
 admin.site.register(ResumeInfoFile, ResumeInfoFileAdmin)
 admin.site.register(ResumePhoneNumber, ResumePhoneNumberAdmin)
 admin.site.register(ResumeSocialNetwork, ResumeSocialNetworkAdmin)
+admin.site.register(ResumeDetailInfo, ResumeDetailInfoAdmin)

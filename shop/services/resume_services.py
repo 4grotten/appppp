@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
-from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork
+from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo
 
 
 class ResumeInfoService:
@@ -74,3 +74,24 @@ class ResumeSocialNetworkService:
             contacts = [ResumeSocialNetwork(item=item, url=url) for url in urls]
             ResumeSocialNetwork.objects.bulk_create(contacts)
             return contacts
+
+
+class ResumeDetailInfoService:
+    model = ResumeDetailInfo
+
+    @classmethod
+    def get_detail_info_of_resume(cls, item: ShopItem):
+        try:
+            return ResumeDetailInfo.objects.get(item=item)
+        except ResumeDetailInfo.DoesNotExist:
+            return None
+
+    @classmethod
+    def update_resume_detail_info(cls, item: ShopItem, text: str):
+        detail_info, created = ResumeDetailInfo.objects.get_or_create(item=item)
+        detail_info.text = text
+        detail_info.save()
+
+        return detail_info
+
+

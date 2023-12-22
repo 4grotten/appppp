@@ -29,9 +29,10 @@ from shop.serializers.item_serializers import (
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
     ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
     ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
-    ResumeSocialNetworkSerializer
+    ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer
 )
-from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService
+from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
+    ResumeDetailInfoService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -169,6 +170,33 @@ class ResumeSocialNetworksUpdateView(APIView):
                                                                  urls=serializer.validated_data['urls'])
 
         return Response(data={'message': _('Successfully updated social networks')})
+
+
+class ResumeDetailInfoRetrieveAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        detail_info = ResumeDetailInfoService.get_detail_info_of_resume(item=kwargs['pk'])
+        data = ResumeDetailInfoSerializer(detail_info).data
+        return Response(data)
+
+
+class ResumeDetailInfoUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeDetailInfoUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeDetailInfoService.update_resume_detail_info(item=serializer.validated_data['item'],
+                                                          text=serializer.validated_data['text'])
+
+        return Response(data={'message': _('Successfully updated detail info')})
 
 
 class TicketPeriodCreateView(APIView):

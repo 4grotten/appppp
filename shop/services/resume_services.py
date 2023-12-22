@@ -5,7 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
-from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo
+from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
+    ResumeWorkExperience
 
 
 class ResumeInfoService:
@@ -93,5 +94,34 @@ class ResumeDetailInfoService:
         detail_info.save()
 
         return detail_info
+
+
+class ResumeWorkExperienceService:
+    model = ResumeWorkExperience
+
+    @classmethod
+    def get_work_experiences_of_resume(cls, item: ShopItem) -> QuerySet:
+        return ResumeWorkExperience.objects.filter(item=item)
+
+    @classmethod
+    def create_resume_work_experience(cls, item: ShopItem, work_experiences: list):
+        with transaction.atomic():
+            ResumeWorkExperience.objects.filter(item=item).delete()
+
+            experiences = [
+                ResumeWorkExperience(
+                    item=item,
+                    company_name=experience.get('company_name'),
+                    position=experience.get('position'),
+                    text=experience.get('text'),
+                    start_of_work=experience.get('start_of_work'),
+                    end_of_work=experience.get('end_of_work'),
+                    up_to_now=experience.get('up_to_now', False)
+                )
+                for experience in work_experiences
+            ]
+
+            ResumeWorkExperience.objects.bulk_create(experiences)
+            return experiences
 
 

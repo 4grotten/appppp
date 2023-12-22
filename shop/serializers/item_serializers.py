@@ -15,7 +15,7 @@ from organizations.models import HotlinkCollectionItem, Organization, BlockedUse
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
-    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo
+    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -117,6 +117,18 @@ class ResumeDetailInfoUpdateSerializer(serializers.Serializer):
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
     text = serializers.CharField()
 
+
+class ResumeWorkExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeWorkExperience
+        fields = ('id', 'company_name', 'position', 'text', 'start_of_work', 'end_of_work', 'up_to_now')
+
+
+class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    work_experiences = serializers.ListSerializer(
+        child=ResumeWorkExperienceSerializer()
+    )
 
 class ResumeInfoSerializer(serializers.ModelSerializer):
 

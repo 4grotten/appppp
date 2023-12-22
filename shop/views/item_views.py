@@ -29,10 +29,11 @@ from shop.serializers.item_serializers import (
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
     ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
     ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
-    ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer
+    ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
+    ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
-    ResumeDetailInfoService
+    ResumeDetailInfoService, ResumeWorkExperienceService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -197,6 +198,33 @@ class ResumeDetailInfoUpdateView(APIView):
                                                           text=serializer.validated_data['text'])
 
         return Response(data={'message': _('Successfully updated detail info')})
+
+
+class ResumeWorkExperienceListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        work_experiences = ResumeWorkExperienceService.get_work_experiences_of_resume(item=kwargs['pk'])
+        data = ResumeWorkExperienceSerializer(work_experiences, many=True).data
+        return Response(data)
+
+
+class ResumeWorkExperienceUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeWorkExperienceUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeWorkExperienceService.create_resume_work_experience(
+            item=serializer.validated_data['item'], work_experiences=serializer.validated_data['work_experiences'])
+
+        return Response(data={'message': _('Successfully updated work experiences')})
 
 
 class TicketPeriodCreateView(APIView):

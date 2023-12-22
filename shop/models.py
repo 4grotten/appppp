@@ -210,6 +210,14 @@ class ResumePhoneNumber(TimestampModel):
         return self.phone_number
 
 
+class ResumeSocialNetwork(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_social_networks')
+    url = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.url
+
+
 class ItemInstagramData(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
     thumbnail_url = models.URLField(max_length=5000)

@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
-from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber
+from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork
 
 
 class ResumeInfoService:
@@ -58,3 +58,19 @@ class ResumePhoneNumberService:
             numbers = [ResumePhoneNumber(item=item, phone_number=number) for number in numbers]
             ResumePhoneNumber.objects.bulk_create(numbers)
             return numbers
+
+
+class ResumeSocialNetworkService:
+    model = ResumeSocialNetwork
+
+    @classmethod
+    def get_networks_of_resume(cls, item: ShopItem) -> QuerySet:
+        return ResumeSocialNetwork.objects.filter(item=item)
+
+    @classmethod
+    def update_resume_social_networks(cls, item: ShopItem, urls: list):
+        with transaction.atomic():
+            ResumeSocialNetwork.objects.filter(item=item).delete()
+            contacts = [ResumeSocialNetwork(item=item, url=url) for url in urls]
+            ResumeSocialNetwork.objects.bulk_create(contacts)
+            return contacts

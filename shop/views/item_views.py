@@ -28,9 +28,10 @@ from shop.serializers.item_serializers import (
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
     ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
-    ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer
+    ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
+    ResumeSocialNetworkSerializer
 )
-from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService
+from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -141,6 +142,33 @@ class ResumePhoneNumberUpdateView(APIView):
                                                              numbers=serializer.validated_data['phone_numbers'])
 
         return Response(data={'message': _('Successfully updated phone numbers')})
+
+
+class ResumeSocialNetworksListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        networks = ResumeSocialNetworkService.get_networks_of_resume(item=kwargs['pk'])
+        data = ResumeSocialNetworkSerializer(networks, many=True).data
+        return Response(data)
+
+
+class ResumeSocialNetworksUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeSocialNetworkUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeSocialNetworkService.update_resume_social_networks(item=serializer.validated_data['item'],
+                                                                 urls=serializer.validated_data['urls'])
+
+        return Response(data={'message': _('Successfully updated social networks')})
 
 
 class TicketPeriodCreateView(APIView):

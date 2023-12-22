@@ -218,6 +218,14 @@ class ResumeSocialNetwork(TimestampModel):
         return self.url
 
 
+class ResumeDetailInfo(TimestampModel):
+    item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='resume_detail_info')
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+
+
 class ItemInstagramData(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
     thumbnail_url = models.URLField(max_length=5000)

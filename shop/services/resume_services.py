@@ -18,6 +18,13 @@ class ResumeInfoService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
+    def get_info_of_resume(cls, item: ShopItem):
+        try:
+            return ResumeInfo.objects.get(item=item)
+        except ResumeInfo.DoesNotExist:
+            return None
+
+    @classmethod
     def update_resume_info(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None, files=None):
         languages_list = []
         if languages:

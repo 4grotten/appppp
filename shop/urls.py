@@ -26,7 +26,7 @@ from shop.views.item_views import (
     ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoUpdateView, ResumeInfoFileCreateView,
     ResumePhoneNumberUpdateView, ResumePhonesListAPIView, ResumeSocialNetworksUpdateView,
     ResumeSocialNetworksListAPIView, ResumeDetailInfoUpdateView, ResumeDetailInfoRetrieveAPIView,
-    ResumeWorkExperienceListView, ResumeWorkExperienceUpdateView
+    ResumeWorkExperienceListView, ResumeWorkExperienceUpdateView, ResumeInfoRetrieveAPIView
 )
 
 urlpatterns = [
@@ -70,6 +70,7 @@ urlpatterns = [
     path('shop/resumes/', ItemResumeCreateView.as_view(), name='resume_create'),
     path('shop/resumes/files/', ResumeInfoFileCreateView.as_view(), name='resume_info_file_create'),
     path('shop/resumes/info/', ResumeInfoUpdateView.as_view(), name='resume_info_create'),
+    path('shop/resumes/<int:pk>/info/', ResumeInfoRetrieveAPIView.as_view(), name='resume_info_retrieve'),
     path('shop/resumes/phone_numbers/', ResumePhoneNumberUpdateView.as_view(), name='resume_phone_numbers_create'),
     path('shop/resumes/<int:pk>/phone_numbers/', ResumePhonesListAPIView.as_view(), name='resume_phone_numbers_list'),
     path('shop/resumes/social_networks/', ResumeSocialNetworksUpdateView.as_view(),

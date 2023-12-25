@@ -130,13 +130,6 @@ class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
         child=ResumeWorkExperienceSerializer()
     )
 
-class ResumeInfoSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ResumeInfo
-        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages')
-
-
 class ResumeInfoFileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
 
@@ -147,6 +140,14 @@ class ResumeInfoFileSerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
+
+
+class ResumeInfoSerializer(serializers.ModelSerializer):
+    files = ResumeInfoFileSerializer(many=True)
+
+    class Meta:
+        model = ResumeInfo
+        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):
@@ -169,7 +170,6 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     citizenship = CountryResumeSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
-    resume_info = ResumeInfoSerializer(read_only=True)
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -274,7 +274,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
             'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'resume_info'
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links'
         )
 
 

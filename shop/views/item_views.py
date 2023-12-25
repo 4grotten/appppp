@@ -30,7 +30,7 @@ from shop.serializers.item_serializers import (
     ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
     ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
     ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
-    ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer
+    ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService
@@ -95,6 +95,15 @@ class ResumeInfoFileCreateView(CreateAPIView):
     parser_classes = (MultiPartParser,)
     serializer_class = ResumeInfoFileSerializer
     queryset = ResumeInfoFile.objects.all()
+
+
+class ResumeDetailInfoRetrieveAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        detail_info = ResumeDetailInfoService.get_detail_info_of_resume(item=kwargs['pk'])
+        data = ResumeDetailInfoSerializer(detail_info).data
+        return Response(data)
 
 
 class ResumeInfoUpdateView(APIView):
@@ -173,12 +182,12 @@ class ResumeSocialNetworksUpdateView(APIView):
         return Response(data={'message': _('Successfully updated social networks')})
 
 
-class ResumeDetailInfoRetrieveAPIView(APIView):
+class ResumeInfoRetrieveAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, **kwargs):
-        detail_info = ResumeDetailInfoService.get_detail_info_of_resume(item=kwargs['pk'])
-        data = ResumeDetailInfoSerializer(detail_info).data
+        detail_info = ResumeInfoService.get_info_of_resume(item=kwargs['pk'])
+        data = ResumeInfoSerializer(detail_info).data
         return Response(data)
 
 

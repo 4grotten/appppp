@@ -48,7 +48,7 @@ class SubscriptionService:
             subscription, created = Subscription.objects.get_or_create(organization=organization, user=user)
             if created:
                 PromoSubscriberService.use_promo_for_new_subscriber(organization=organization, follower=user)
-
+                from users.serializers import UserInfoSerializer
                 sent_notification.delay(
                     recipient_id=organization.owner_id,
                     sender_id=user.id,
@@ -59,7 +59,8 @@ class SubscriptionService:
                     organization_id=organization.id,
                     extra_data=dict(address=organization.address,
                                     bg_description=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION,
-                                    bg_description_ru=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU)
+                                    bg_description_ru=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU,
+                                    sender=UserInfoSerializer(user).data)
                 )
                 sent_notification.delay(
                     recipient_id=user.id,

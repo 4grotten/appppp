@@ -131,6 +131,7 @@ class ShopItem(models.Model):
     salary_from = models.PositiveIntegerField(null=True, blank=True)
     salary_to = models.PositiveIntegerField(null=True, blank=True)
     citizenship = models.ManyToManyField(Country, related_name='shop_items', blank=True)
+    education = models.ManyToManyField("shop.Education", related_name='shop_items', blank=True)
     current_locations = models.JSONField(null=True, blank=True)
     preferred_locations = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)
@@ -224,6 +225,13 @@ class ResumeDetailInfo(TimestampModel):
 
     def __str__(self):
         return self.text
+
+
+class Education(TimestampModel):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
 
 class ResumeWorkExperience(TimestampModel):

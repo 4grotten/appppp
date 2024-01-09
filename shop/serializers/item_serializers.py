@@ -15,7 +15,7 @@ from organizations.models import HotlinkCollectionItem, Organization, BlockedUse
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
-    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience
+    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -150,6 +150,13 @@ class ResumeInfoSerializer(serializers.ModelSerializer):
         fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
 
 
+class EducationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Education
+        fields = ('id', 'name')
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -168,6 +175,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     rental_period = RentItemsPeriodSerializer()
     ticket_period = TicketPeriodSerializer()
     citizenship = CountryResumeSerializer(many=True)
+    education = EducationSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
 
@@ -274,7 +282,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
             'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links'
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education'
         )
 
 
@@ -371,6 +379,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     rental_period = RentItemsPeriodSerializer(required=False)
     ticket_period = TicketPeriodSerializer(required=False)
     citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
+    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
 
     class Meta:
         model = ShopItem
@@ -381,7 +390,7 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
             'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
-            'current_locations', 'preferred_locations', 'links'
+            'current_locations', 'preferred_locations', 'links', 'education'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

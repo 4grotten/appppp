@@ -6,7 +6,7 @@ from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
 from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
-    ResumeWorkExperience
+    ResumeWorkExperience, ResumeEducation
 
 
 class ResumeInfoService:
@@ -130,5 +130,35 @@ class ResumeWorkExperienceService:
 
             ResumeWorkExperience.objects.bulk_create(experiences)
             return experiences
+
+
+class ResumeEducationService:
+    model = ResumeEducation
+
+    @classmethod
+    def get_educations_of_resume(cls, item: ShopItem) -> QuerySet:
+        return ResumeEducation.objects.filter(item=item)
+
+    @classmethod
+    def create_resume_education(cls, item: ShopItem, educations: list):
+        with transaction.atomic():
+            ResumeEducation.objects.filter(item=item).delete()
+
+            final_educations = [
+                ResumeEducation(
+                    item=item,
+                    school_name=education.get('school_name'),
+                    category=education.get('category'),
+                    text=education.get('text'),
+                    start_of_study=education.get('start_of_study'),
+                    end_of_study=education.get('end_of_study'),
+                    up_to_now=education.get('up_to_now', False)
+                )
+                for education in educations
+            ]
+
+            ResumeEducation.objects.bulk_create(final_educations)
+            return final_educations
+
 
 

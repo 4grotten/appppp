@@ -247,6 +247,19 @@ class ResumeWorkExperience(TimestampModel):
         return self.company_name
 
 
+class ResumeEducation(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_education')
+    school_name = models.CharField(max_length=255)
+    category = models.CharField(max_length=255)
+    text = models.TextField()
+    start_of_study = models.DateField(null=True)
+    end_of_study = models.DateField(null=True)
+    up_to_now = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.school_name
+
+
 class ItemInstagramData(TimestampModel):
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='instagram_data')
     thumbnail_url = models.URLField(max_length=5000)

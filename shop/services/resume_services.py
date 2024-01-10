@@ -43,6 +43,7 @@ class ResumeInfoService:
             resume_info.full_name = full_name
             resume_info.date_of_birth = date_of_birth
             resume_info.languages = languages_list
+            resume_info.files.clear()
             for index, file in enumerate(files):
                 file.order = index
                 file.save(update_fields=('order',))

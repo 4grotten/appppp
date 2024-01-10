@@ -15,7 +15,8 @@ from organizations.models import HotlinkCollectionItem, Organization, BlockedUse
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
-    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education
+    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
+    ResumeEducation
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -130,6 +131,20 @@ class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
         child=ResumeWorkExperienceSerializer()
     )
 
+
+class ResumeEducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeEducation
+        fields = ('id', 'school_name', 'category', 'text', 'start_of_study', 'end_of_study', 'up_to_now')
+
+
+class ResumeEducationUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    educations = serializers.ListSerializer(
+        child=ResumeEducationSerializer()
+    )
+
+
 class ResumeInfoFileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
 
@@ -144,10 +159,32 @@ class ResumeInfoFileSerializer(serializers.ModelSerializer):
 
 class ResumeInfoSerializer(serializers.ModelSerializer):
     files = ResumeInfoFileSerializer(many=True)
+    contact_filled = serializers.SerializerMethodField()
+    social_network_filled = serializers.SerializerMethodField()
+    detail_info_filled = serializers.SerializerMethodField()
+    work_experience_filled = serializers.SerializerMethodField()
+    education_filled = serializers.SerializerMethodField()
 
     class Meta:
         model = ResumeInfo
-        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
+        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files', 'contact_filled',
+                  'social_network_filled', 'detail_info_filled', 'work_experience_filled', 'education_filled')
+
+
+    def get_contact_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_phone_numbers.exists()
+
+    def get_social_network_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_social_networks.exists()
+
+    def get_detail_info_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_detail_info is not None
+
+    def get_work_experience_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_work_experience.exists()
+
+    def get_education_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_education.exists()
 
 
 class EducationSerializer(serializers.ModelSerializer):

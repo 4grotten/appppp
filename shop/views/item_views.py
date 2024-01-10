@@ -32,10 +32,10 @@ from shop.serializers.item_serializers import (
     ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
     ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
     ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
-    EducationSerializer
+    EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
-    ResumeDetailInfoService, ResumeWorkExperienceService
+    ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -236,6 +236,35 @@ class ResumeWorkExperienceUpdateView(APIView):
             item=serializer.validated_data['item'], work_experiences=serializer.validated_data['work_experiences'])
 
         return Response(data={'message': _('Successfully updated work experiences')})
+
+
+class ResumeEducationListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        educations = ResumeEducationService.get_educations_of_resume(item=kwargs['pk'])
+        data = ResumeEducationSerializer(educations, many=True).data
+        return Response(data)
+
+
+class ResumeEducationUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeEducationUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeEducationService.create_resume_education(
+            item=serializer.validated_data['item'], educations=serializer.validated_data['educations'])
+
+        return Response(data={'message': _('Successfully updated educations')})
+
+
 
 
 class EducationListView(ListAPIView):

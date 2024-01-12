@@ -1,12 +1,18 @@
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
+from notifications.constants import NOTIFICATION_MODE_RESUME, REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_TYPE
+from notifications.models import Notification
+from notifications.tasks import sent_notification, send_notifications_organization_members
+from organizations.models import Organization
 from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
-    ResumeWorkExperience, ResumeEducation
+    ResumeWorkExperience, ResumeEducation, ResumeRequest
+from users.models import User
+from users.services import PhoneNumberService, SocialNetworkContactService
 
 
 class ResumeInfoService:
@@ -161,5 +167,66 @@ class ResumeEducationService:
             ResumeEducation.objects.bulk_create(final_educations)
             return final_educations
 
+
+class ResumeRequestService:
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return ResumeRequest.objects.get(**filters)
+        except ResumeRequest.DoesNotExist:
+            raise ObjectNotFoundException(_('ResumeRequest not found'))
+
+
+    @classmethod
+    def process_user_resume_request(cls, sender_user: User, organization: Organization, item: ShopItem,
+                                    user_contacts: bool, phone_numbers=None, links=None):
+        if user_contacts:
+            user_phone_numbers_list = []
+            user_phone_numbers = PhoneNumberService.get_numbers_of_user(user_id=sender_user.id)
+            for user_phone_number in user_phone_numbers:
+                user_phone_numbers_list.append(user_phone_number.phone_number)
+
+            user_links_list = []
+            user_links = SocialNetworkContactService.get_networks_of_user(user_id=sender_user.id)
+            for user_link in user_links:
+                user_links_list.append(user_link.url)
+            resume_request = ResumeRequest.objects.create(sender_user=sender_user, organization=organization,
+                                                          item=item, phone_numbers=user_phone_numbers_list,
+                                                          links=user_links_list)
+        else:
+            resume_request = ResumeRequest.objects.create(sender_user=sender_user, organization=organization,
+                                                          item=item, user_contacts=user_contacts,
+                                                          phone_numbers=phone_numbers, links=links)
+
+        Notification.objects.filter(
+            Q(extra_data__item_id=resume_request.item.id) &
+            Q(extra_data__user_id=resume_request.sender_user.id) &
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=resume_request.sender_user.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            notification_type=REQUEST_RESUME_CLIENT_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=resume_request.organization.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            sender_id=resume_request.sender_user.id,
+            with_permissions=dict(can_see_stats=True),
+            notification_type=REQUEST_RESUME_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id)
+        )
 
 

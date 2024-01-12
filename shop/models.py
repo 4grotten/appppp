@@ -365,6 +365,32 @@ class Ticket(TimestampModel):
         return f'Ticket of {self.user} in {self.organization}'
 
 
+class ResumeRequest(TimestampModel):
+    REJECTED = 'rejected'
+    IN_PROGRESS = 'in_progress'
+    ACCEPTED = 'accepted'
+
+    STATUS = (
+        (IN_PROGRESS, IN_PROGRESS),
+        (ACCEPTED, ACCEPTED),
+        (REJECTED, REJECTED),
+    )
+    sender_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender_user_resume',
+                                    null=True, blank=True)
+    sender_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
+                                           related_name='sender_organization_resume')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_resume')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='item_resumes', null=True, blank=True)
+    user_contacts = models.BooleanField(default=True)
+    phone_numbers = models.JSONField(null=True, blank=True)
+    links = models.JSONField(null=True, blank=True)
+    status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
+
+    def __str__(self):
+        if self.sender_user:
+            return f'Resume Request of {self.sender_user} in {self.organization}'
+        return f'Resume Request of {self.sender_organization} in {self.organization}'
+
 
 class Complaint(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='complaints')

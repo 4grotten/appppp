@@ -8,7 +8,8 @@ from users.views import (
     UserPhoneNumbersUpdateAPIView, UserSocialNetworksListAPIView, UserSocialNetworksUpdateAPIView,
     ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView,
     MyOwnTokenListView, MyOwnTokenRetrieveDestroyView, DestroyAllTokens, AuthorisationHistoryListView,
-    MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView
+    MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView,
+    UserHasOwnOrganizationOrCanEdit
 )
 
 urlpatterns = [
@@ -38,4 +39,5 @@ urlpatterns = [
     path('users/change_token_expired_time/<int:pk>/', MyOwnTokenChangeExpiredTimeView.as_view(), name='change_token_expired_time'),
 
     path('users/deactivate/', DeactivateUserProfile.as_view(), name='deactivate_user_profile'),
+    path('users/has_organizations/', UserHasOwnOrganizationOrCanEdit.as_view(), name='user_has_organizations'),
 ]

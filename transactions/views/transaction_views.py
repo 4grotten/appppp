@@ -1655,7 +1655,7 @@ class InitPaymentView(GenericAPIView):
                 currency = "USDT"
                 chain_id = 56
                 url = 'https://api.paysy.net/orders/create_order'
-                redirect_url = f'https://api.paysy.net/en/orders/'
+                redirect_url = f'https://paysy.net/en/orders/'
             else:
                 currency = "USDT"
                 chain_id = 5

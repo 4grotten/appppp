@@ -375,6 +375,8 @@ class ResumeRequest(TimestampModel):
         (ACCEPTED, ACCEPTED),
         (REJECTED, REJECTED),
     )
+    processed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='processed_resume',
+                                     null=True, blank=True)
     sender_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender_user_resume',
                                     null=True, blank=True)
     sender_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,

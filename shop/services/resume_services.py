@@ -2,13 +2,16 @@ from django.db import transaction
 from django.db.models import QuerySet, Q
 from django.utils.translation import gettext_lazy as _
 
-from common.exceptions import ObjectNotFoundException
+from django.db import IntegrityError
+from common.exceptions import ObjectNotFoundException, NotAcceptableException, IntegrityException
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
-from notifications.constants import NOTIFICATION_MODE_RESUME, REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_TYPE
+from notifications.constants import NOTIFICATION_MODE_RESUME, REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_TYPE, \
+    ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_TYPE
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
+from organizations.services.organization_services import OrganizationService
 from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
     ResumeWorkExperience, ResumeEducation, ResumeRequest
 from users.models import User
@@ -213,7 +216,8 @@ class ResumeRequestService:
                             resume_name=resume_request.item.name,
                             salary_from=str(resume_request.item.salary_from),
                             currency=resume_request.item.currency.code,
-                            user_id=resume_request.sender_user.id)
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
         )
         send_notifications_organization_members.delay(
             members_organization_id=resume_request.organization.id,
@@ -226,7 +230,54 @@ class ResumeRequestService:
                             resume_name=resume_request.item.name,
                             salary_from=str(resume_request.item.salary_from),
                             currency=resume_request.item.currency.code,
-                            user_id=resume_request.sender_user.id)
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
+        )
+
+    @classmethod
+    def accept_user_resume_request(cls, resume_request_id: int, processed_by: User):
+        resume_request = cls.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        organization = resume_request.organization
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        try:
+            resume_request.status = ResumeRequest.ACCEPTED
+            resume_request.processed_by = processed_by
+            resume_request.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not accept resume request'))
+
+        Notification.objects.filter(
+            Q(extra_data__resume_request_id=resume_request.id) &
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=resume_request.sender_user.id,
+            sender_id=resume_request.processed_by.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            notification_type=ACCEPT_RESUME_CLIENT_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
+        )
+        send_notifications_organization_members.delay(
+            members_organization_id=resume_request.organization.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            sender_id=resume_request.sender_user.id,
+            with_permissions=dict(can_edit_organization=True),
+            notification_type=ACCEPT_RESUME_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
         )
 
 

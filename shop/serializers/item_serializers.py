@@ -1266,6 +1266,10 @@ class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
                   'links')
 
 
+class AcceptUserResumeRequestSerializer(serializers.Serializer):
+    resume_request_id = serializers.IntegerField(required=True)
+
+
 class BookInfoWithClientSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 

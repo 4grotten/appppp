@@ -16,7 +16,7 @@ from organizations.serializers.organization_serializers import ItemFeedOrganizat
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
     ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
-    ResumeEducation
+    ResumeEducation, ResumeRequest
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
@@ -1256,6 +1256,14 @@ class BookInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ('id', 'organization', 'start_time', 'end_time', )
+
+
+class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'item', 'user_contacts', 'phone_numbers',
+                  'links')
 
 
 class BookInfoWithClientSerializer(serializers.ModelSerializer):

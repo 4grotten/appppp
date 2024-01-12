@@ -32,10 +32,10 @@ from shop.serializers.item_serializers import (
     ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
     ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
     ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
-    EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer
+    EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
-    ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService
+    ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -969,3 +969,27 @@ class BookingAnonymousCheckoutView(GenericAPIView):
         )
         data = self.serializer_class(transaction, context={'request': request}).data
         return Response(data)
+
+
+class SubmitResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SubmitUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        sender_user = serializer.validated_data['sender_user']
+        organization = serializer.validated_data['organization']
+        item = serializer.validated_data['item']
+        user_contacts = serializer.validated_data['user_contacts']
+        phone_numbers = serializer.validated_data['phone_numbers']
+        links = serializer.validated_data['links']
+        ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
+                                                         item=item, user_contacts=user_contacts,
+                                                         phone_numbers=phone_numbers, links=links)
+
+        return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)

@@ -1266,7 +1266,7 @@ class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
                   'links')
 
 
-class AcceptUserResumeRequestSerializer(serializers.Serializer):
+class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
     resume_request_id = serializers.IntegerField(required=True)
 
 

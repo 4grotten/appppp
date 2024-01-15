@@ -3091,8 +3091,12 @@ class TransactionService:
             try:
                 purchase_type = 'product'
                 cart_items = transaction.cart.items.all()
-                descriptions_list = [cart_item.item.description or cart_item.item.name for cart_item in cart_items]
-                pg_description = ' * '.join(descriptions_list)
+                # descriptions_list = [cart_item.item.description or cart_item.item.name for cart_item in cart_items]
+                # pg_description = ' * '.join(descriptions_list)
+                if cart_items.exists():
+                    pg_description = cart_items.first().item.description or cart_items.first().item.name
+                else:
+                    pg_description = 'Продукт'
             except Cart.DoesNotExist:
                 purchase_type = 'deal'
                 pg_description = 'Касса'

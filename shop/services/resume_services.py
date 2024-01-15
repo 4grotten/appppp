@@ -7,7 +7,7 @@ from common.exceptions import ObjectNotFoundException, NotAcceptableException, I
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
 from notifications.constants import NOTIFICATION_MODE_RESUME, REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_TYPE, \
-    ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_TYPE
+    ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_TYPE, DECLINE_RESUME_CLIENT_TYPE, DECLINE_RESUME_TYPE
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
@@ -280,4 +280,49 @@ class ResumeRequestService:
                             resume_request_id=resume_request.id)
         )
 
+
+    @classmethod
+    def decline_user_resume_request(cls, resume_request_id: int, processed_by: User):
+        resume_request = cls.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        organization = resume_request.organization
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=processed_by):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        try:
+            resume_request.status = ResumeRequest.REJECTED
+            resume_request.processed_by = processed_by
+            resume_request.save()
+        except IntegrityError:
+            raise IntegrityException(_('Could not reject resume request'))
+
+        Notification.objects.filter(
+            Q(extra_data__resume_request_id=resume_request.id) &
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=resume_request.sender_user.id,
+            sender_id=resume_request.processed_by.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            notification_type=DECLINE_RESUME_CLIENT_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
+        )
+        sent_notification.delay(
+            recipient_id=resume_request.processed_by.id,
+            sender_id=resume_request.sender_user.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            notification_type=DECLINE_RESUME_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=resume_request.sender_user.id,
+                            resume_request_id=resume_request.id)
+        )
 

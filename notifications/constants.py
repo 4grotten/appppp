@@ -87,6 +87,7 @@ DECLINE_RENTAL_TYPE = 'declined_rental'
 REQUEST_RENTAL_TYPE = 'requested_rental'
 
 ACCEPT_RESUME_TYPE = 'accepted_resume'
+DECLINE_RESUME_TYPE = 'declined_resume'
 REQUEST_RESUME_TYPE = 'requested_resume'
 
 ACCEPT_ORDER_PAYMENT_TYPE = 'accepted_order_payment'
@@ -120,6 +121,7 @@ ACTIVATE_RENTAL_CLIENT_TYPE = 'activated_rental_client'
 ACTIVATE_TICKET_TYPE = 'activated_ticket'
 ACTIVATE_TICKET_CLIENT_TYPE = 'activated_ticket_client'
 
+DECLINE_RESUME_CLIENT_TYPE = 'declined_resume_client'
 ACCEPT_RESUME_CLIENT_TYPE = 'accepted_resume_client'
 REQUEST_RESUME_CLIENT_TYPE = 'requested_resume_client'
 
@@ -144,6 +146,7 @@ NOTIFICATION_TYPES = (
     (ACCEPT_RENTAL_CLIENT_TYPE, ACCEPT_RENTAL_CLIENT_TYPE),
     (DECLINE_ORDER_CLIENT_TYPE, DECLINE_ORDER_CLIENT_TYPE),
     (DECLINE_RENTAL_CLIENT_TYPE, DECLINE_RENTAL_CLIENT_TYPE),
+    (DECLINE_RESUME_CLIENT_TYPE, DECLINE_RESUME_CLIENT_TYPE),
     (REQUEST_ORDER_CLIENT_TYPE, REQUEST_ORDER_CLIENT_TYPE),
     (REQUEST_RENTAL_CLIENT_TYPE, REQUEST_RENTAL_CLIENT_TYPE),
     (ACTIVATE_RENTAL_TYPE, ACTIVATE_RENTAL_TYPE),
@@ -170,6 +173,7 @@ NOTIFICATION_TYPES = (
     (REQUEST_ORDER_TYPE, REQUEST_ORDER_TYPE),
     (REQUEST_RENTAL_TYPE, REQUEST_RENTAL_TYPE),
     (ACCEPT_RESUME_TYPE, ACCEPT_RESUME_TYPE),
+    (DECLINE_RESUME_TYPE, DECLINE_RESUME_TYPE),
     (REQUEST_RESUME_TYPE, REQUEST_RESUME_TYPE),
     (NEW_CASHBACK, NEW_CASHBACK),
     (WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_CLIENT),
@@ -242,6 +246,7 @@ DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ аренды #{trans
 REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transaction_id}'
 
 ACCEPT_RESUME_TITLE_RU = 'Вы приняли запрос на Вакансию: {resume_name}'
+DECLINE_RESUME_TITLE_RU = 'Вы отклонили запрос на Вакансию: {resume_name}'
 REQUEST_RESUME_TITLE_RU = 'У вас новый запрос на Вакансию: {resume_name}'
 
 DECLINE_ORDER_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
@@ -272,6 +277,7 @@ DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ аренд�
 REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ #{transaction_id} !!! Ждём подтверждения к оплате аренды.'
 
 ACCEPT_RESUME_CLIENT_TITLE_RU = 'Ваш  запрос приняли на Вакансию: {resume_name}'
+DECLINE_RESUME_CLIENT_TITLE_RU = 'Ваш запрос отклонили на Вакансию: {resume_name}'
 REQUEST_RESUME_CLIENT_TITLE_RU = 'Спасибо Вам за запрос ! Кандидат  свяжется с Вами по вакансии: {resume_name}'
 RESUME_DESCRIPTION_RU = 'Оплата от: {salary_from} {currency}'
 
@@ -399,6 +405,7 @@ DECLINE_RENTAL_TITLE_EN = 'You canceled rental order #{transaction_id}'
 REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
 
 ACCEPT_RESUME_TITLE_EN = 'You accepted request for the position: {resume_name}'
+DECLINE_RESUME_TITLE_EN = 'You have declined request for the position: {resume_name}'
 REQUEST_RESUME_TITLE_EN = 'You have vacancy request for the position: {resume_name}'
 
 DECLINE_ORDER_PAYMENT_TITLE_EN = 'Customer canceled payment #{transaction_id}'
@@ -431,6 +438,7 @@ REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order #{transaction_id} !!!
 RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
 
 ACCEPT_RESUME_CLIENT_TITLE_EN = 'Your request have accepted for position: {resume_name}'
+DECLINE_RESUME_CLIENT_TITLE_EN = 'Your request declined  for the position: {resume_name}'
 REQUEST_RESUME_CLIENT_TITLE_EN = 'Thank you for your request ! The candidate will contact you for position: {resume_name}'
 RESUME_DESCRIPTION_EN = 'Salary from: {salary_from} {currency}'
 
@@ -1034,6 +1042,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
+    elif notification_type == DECLINE_RESUME_TYPE:
+        notification_str = dict(
+            title=DECLINE_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
+            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
+                                                     currency=extra_data.get('currency')),
+            title_ru=DECLINE_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
+            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')))
+
     elif notification_type == ACCEPT_ORDER_CLIENT_TYPE:
         notification_str = dict(
             title=ACCEPT_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
@@ -1134,6 +1151,15 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
+
+    elif notification_type == DECLINE_RESUME_CLIENT_TYPE:
+        notification_str = dict(
+            title=DECLINE_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
+            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
+            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_CLIENT_TYPE:

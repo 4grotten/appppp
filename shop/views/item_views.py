@@ -20,7 +20,7 @@ from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
 from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo, ResumeInfoFile, \
-    Education
+    Education, ResumeRequest
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -33,7 +33,7 @@ from shop.serializers.item_serializers import (
     ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
     ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
-    AcceptDeclineUserResumeRequestSerializer
+    AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -970,6 +970,22 @@ class BookingAnonymousCheckoutView(GenericAPIView):
         )
         data = self.serializer_class(transaction, context={'request': request}).data
         return Response(data)
+
+
+class UserResumeRequestRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return ResumeRequestService.get(id=self.kwargs['pk'])
+
+    def get_serializer_class(self):
+        status = self.get_object().status
+
+        if status in [ResumeRequest.IN_PROGRESS, ResumeRequest.REJECTED]:
+            return UserResumeRequestSerializer
+        elif status == ResumeRequest.ACCEPTED:
+            return UserResumeRequestAcceptedSerializer
+        return UserResumeRequestSerializer
 
 
 class SubmitResumeRequestView(GenericAPIView):

@@ -12,7 +12,8 @@ from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
-from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
+from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
+    OrganizationTitleImageSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
     ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
@@ -23,7 +24,7 @@ from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
 from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer, SubcategorySerializer
 from transactions.models import Transaction
-from users.serializers import UserInfoSerializer
+from users.serializers import UserInfoSerializer, ProfileSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -1264,6 +1265,53 @@ class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
         model = ResumeRequest
         fields = ('id', 'sender_user', 'organization', 'item', 'user_contacts', 'phone_numbers',
                   'links')
+
+
+class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'salary_from', 'salary_to', 'is_published', 'updated_at', 'images'
+        )
+
+
+class UserResumeRequestSerializer(serializers.ModelSerializer):
+    sender_user = ProfileSerializer(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
+    sender_user = ProfileSerializer(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                      organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
 
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):

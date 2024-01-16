@@ -197,6 +197,17 @@ class OrganizationsListCreateView(ListCreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
+class MyOrganizationsWithCanEditListCreateView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Organization.objects.filter(Q(owner=user, is_deleted=False) |
+                                           Q(memberships__user=user, is_deleted=False,
+                                             memberships__role__can_edit_organization=True))
+
+
 class OrganizationsMapsListView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationMapsListSerializer

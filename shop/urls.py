@@ -28,7 +28,7 @@ from shop.views.item_views import (
     ResumeSocialNetworksListAPIView, ResumeDetailInfoUpdateView, ResumeDetailInfoRetrieveAPIView,
     ResumeWorkExperienceListView, ResumeWorkExperienceUpdateView, ResumeInfoRetrieveAPIView, EducationListView,
     ResumeEducationListView, ResumeEducationUpdateView, SubmitResumeRequestView, AcceptResumeRequestView,
-    DeclineResumeRequestView, UserResumeRequestRetrieveView
+    DeclineResumeRequestView, UserResumeRequestRetrieveView, OrganizationSubmitResumeRequestView
 )
 
 urlpatterns = [
@@ -98,6 +98,9 @@ urlpatterns = [
          name='resume_user_request_retrieve'),
     path('shop/resume/user/accept/', AcceptResumeRequestView.as_view(), name='resume_user_accept'),
     path('shop/resume/user/decline/', DeclineResumeRequestView.as_view(), name='resume_user_decline'),
+
+    path('shop/resume/organization/request/', OrganizationSubmitResumeRequestView.as_view(),
+         name='organization_resume_user_request'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

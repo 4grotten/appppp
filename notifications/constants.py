@@ -90,6 +90,8 @@ ACCEPT_RESUME_TYPE = 'accepted_resume'
 DECLINE_RESUME_TYPE = 'declined_resume'
 REQUEST_RESUME_TYPE = 'requested_resume'
 
+ORGANIZATION_REQUEST_RESUME_TYPE = 'organization_requested_resume'
+
 ACCEPT_ORDER_PAYMENT_TYPE = 'accepted_order_payment'
 DECLINE_ORDER_PAYMENT_TYPE = 'declined_order_payment'
 
@@ -125,6 +127,8 @@ DECLINE_RESUME_CLIENT_TYPE = 'declined_resume_client'
 ACCEPT_RESUME_CLIENT_TYPE = 'accepted_resume_client'
 REQUEST_RESUME_CLIENT_TYPE = 'requested_resume_client'
 
+ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE = 'organization_requested_resume_client'
+
 NEW_COMMENT_TYPE = 'new_comment'
 
 NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
@@ -155,6 +159,7 @@ NOTIFICATION_TYPES = (
     (ACTIVATE_TICKET_CLIENT_TYPE, ACTIVATE_TICKET_CLIENT_TYPE),
     (ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_CLIENT_TYPE),
     (REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_CLIENT_TYPE),
+    (ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE, ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE),
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
     (ACCEPT_ORDER_PAYMENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE),
@@ -175,6 +180,7 @@ NOTIFICATION_TYPES = (
     (ACCEPT_RESUME_TYPE, ACCEPT_RESUME_TYPE),
     (DECLINE_RESUME_TYPE, DECLINE_RESUME_TYPE),
     (REQUEST_RESUME_TYPE, REQUEST_RESUME_TYPE),
+    (ORGANIZATION_REQUEST_RESUME_TYPE, ORGANIZATION_REQUEST_RESUME_TYPE),
     (NEW_CASHBACK, NEW_CASHBACK),
     (WITHDRAW_CASHBACK_CLIENT, WITHDRAW_CASHBACK_CLIENT),
     (CHARGE_CASHBACK_CLIENT, CHARGE_CASHBACK_CLIENT),
@@ -1033,6 +1039,16 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
+
+    elif notification_type == ORGANIZATION_REQUEST_RESUME_TYPE:
+        notification_str = dict(
+            title=REQUEST_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
+            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
+                                                     currency=extra_data.get('currency')),
+            title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
+            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')))
+
     elif notification_type == ACCEPT_RESUME_TYPE:
         notification_str = dict(
             title=ACCEPT_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
@@ -1188,6 +1204,16 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
+
+    elif notification_type == ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE:
+        notification_str = dict(
+            title=REQUEST_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
+            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
+                                                     currency=extra_data.get('currency')),
+            title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
+            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')))
+
     elif notification_type == ACCEPT_RESUME_CLIENT_TYPE:
         notification_str = dict(
             title=ACCEPT_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),

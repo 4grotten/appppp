@@ -7,11 +7,13 @@ from common.exceptions import ObjectNotFoundException, NotAcceptableException, I
 from common.models import Languages
 from common.serializers import LanguagesListSerializer
 from notifications.constants import NOTIFICATION_MODE_RESUME, REQUEST_RESUME_CLIENT_TYPE, REQUEST_RESUME_TYPE, \
-    ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_TYPE, DECLINE_RESUME_CLIENT_TYPE, DECLINE_RESUME_TYPE
+    ACCEPT_RESUME_CLIENT_TYPE, ACCEPT_RESUME_TYPE, DECLINE_RESUME_CLIENT_TYPE, DECLINE_RESUME_TYPE, \
+    ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE, ORGANIZATION_REQUEST_RESUME_TYPE
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_notifications_organization_members
 from organizations.models import Organization
-from organizations.services.organization_services import OrganizationService
+from organizations.services.organization_services import OrganizationService, OrgPhoneNumberService, \
+    OrgSocialNetworkContactService
 from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
     ResumeWorkExperience, ResumeEducation, ResumeRequest
 from users.models import User
@@ -183,8 +185,8 @@ class ResumeRequestService:
 
     @classmethod
     def process_user_resume_request(cls, sender_user: User, organization: Organization, item: ShopItem,
-                                    user_contacts: bool, phone_numbers=None, links=None):
-        if user_contacts:
+                                    show_contacts: bool, phone_numbers=None, links=None):
+        if show_contacts:
             user_phone_numbers_list = []
             user_phone_numbers = PhoneNumberService.get_numbers_of_user(user_id=sender_user.id)
             for user_phone_number in user_phone_numbers:
@@ -199,7 +201,7 @@ class ResumeRequestService:
                                                           links=user_links_list)
         else:
             resume_request = ResumeRequest.objects.create(sender_user=sender_user, organization=organization,
-                                                          item=item, user_contacts=user_contacts,
+                                                          item=item, show_contacts=show_contacts,
                                                           phone_numbers=phone_numbers, links=links)
 
         Notification.objects.filter(
@@ -232,6 +234,67 @@ class ResumeRequestService:
                             currency=resume_request.item.currency.code,
                             user_id=resume_request.sender_user.id,
                             resume_request_id=resume_request.id)
+        )
+
+    @classmethod
+    def process_organization_resume_request(cls, user: User, sender_organization: Organization, organization: Organization,
+                                            item: ShopItem, show_contacts: bool, phone_numbers=None, links=None):
+        if show_contacts:
+            org_phone_numbers_list = []
+            org_phone_numbers = OrgPhoneNumberService.get_numbers_of_organization(
+                organization_id=sender_organization.id
+            )
+            for org_phone_number in org_phone_numbers:
+                org_phone_numbers_list.append(org_phone_number.phone_number)
+
+            org_links_list = []
+            org_links = OrgSocialNetworkContactService.get_networks_of_organization(
+                organization_id=sender_organization.id
+            )
+            for org_link in org_links:
+                org_links_list.append(org_link.url)
+            resume_request = ResumeRequest.objects.create(sender_organization=sender_organization,
+                                                          organization=organization, item=item,
+                                                          phone_numbers=org_phone_numbers_list,
+                                                          links=org_links_list)
+        else:
+            resume_request = ResumeRequest.objects.create(sender_organization=sender_organization,
+                                                          organization=organization, item=item,
+                                                          show_contacts=show_contacts, phone_numbers=phone_numbers,
+                                                          links=links)
+
+        Notification.objects.filter(
+            Q(extra_data__item_id=resume_request.item.id) &
+            Q(extra_data__user_id=user.id) &
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+
+        sent_notification.delay(
+            recipient_id=user.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            notification_type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=user.id,
+                            resume_request_id=resume_request.id)
+        )
+        from organizations.serializers.organization_serializers import OrganizationNotificationInfo
+        send_notifications_organization_members.delay(
+            members_organization_id=resume_request.organization.id,
+            mode=NOTIFICATION_MODE_RESUME,
+            sender_id=user.id,
+            with_permissions=dict(can_see_stats=True),
+            notification_type=ORGANIZATION_REQUEST_RESUME_TYPE,
+            organization_id=resume_request.organization.id,
+            extra_data=dict(item_id=resume_request.item.id,
+                            resume_name=resume_request.item.name,
+                            salary_from=str(resume_request.item.salary_from),
+                            currency=resume_request.item.currency.code,
+                            user_id=user.id,
+                            resume_request_id=resume_request.id,
+                            sender_organization=OrganizationNotificationInfo(resume_request.organization).data)
         )
 
     @classmethod

@@ -117,7 +117,7 @@ class ResumeEducationAdmin(admin.ModelAdmin):
 
 
 class ResumeRequestAdmin(admin.ModelAdmin):
-    list_display = ('sender_user', 'sender_organization', 'organization', 'item', 'user_contacts', 'phone_numbers',
+    list_display = ('sender_user', 'sender_organization', 'organization', 'item', 'show_contacts', 'phone_numbers',
                     'links', 'status')
 
 

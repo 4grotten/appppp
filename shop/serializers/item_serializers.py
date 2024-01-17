@@ -1263,9 +1263,16 @@ class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_user', 'organization', 'item', 'user_contacts', 'phone_numbers',
+        fields = ('id', 'sender_user', 'organization', 'item', 'show_contacts', 'phone_numbers',
                   'links')
 
+
+class SubmitOrganizationResumeRequestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'item', 'show_contacts', 'phone_numbers',
+                  'links')
 
 class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)

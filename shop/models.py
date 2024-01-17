@@ -383,7 +383,7 @@ class ResumeRequest(TimestampModel):
                                            related_name='sender_organization_resume')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_resume')
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='item_resumes', null=True, blank=True)
-    user_contacts = models.BooleanField(default=True)
+    show_contacts = models.BooleanField(default=True)
     phone_numbers = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)
     status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)

@@ -33,7 +33,8 @@ from shop.serializers.item_serializers import (
     ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
     ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
-    AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer
+    AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
+    SubmitOrganizationResumeRequestSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -1002,12 +1003,39 @@ class SubmitResumeRequestView(GenericAPIView):
         sender_user = serializer.validated_data['sender_user']
         organization = serializer.validated_data['organization']
         item = serializer.validated_data['item']
-        user_contacts = serializer.validated_data['user_contacts']
+        show_contacts = serializer.validated_data['show_contacts']
         phone_numbers = serializer.validated_data['phone_numbers']
         links = serializer.validated_data['links']
         ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
-                                                         item=item, user_contacts=user_contacts,
+                                                         item=item, show_contacts=show_contacts,
                                                          phone_numbers=phone_numbers, links=links)
+
+        return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
+
+
+class OrganizationSubmitResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SubmitOrganizationResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        sender_organization = serializer.validated_data['sender_organization']
+        organization = serializer.validated_data['organization']
+        item = serializer.validated_data['item']
+        show_contacts = serializer.validated_data['show_contacts']
+        phone_numbers = serializer.validated_data['phone_numbers']
+        links = serializer.validated_data['links']
+        ResumeRequestService.process_organization_resume_request(user=request.user,
+                                                                 sender_organization=sender_organization,
+                                                                 organization=organization, item=item,
+                                                                 show_contacts=show_contacts,
+                                                                 phone_numbers=phone_numbers,
+                                                                 links=links)
 
         return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
 

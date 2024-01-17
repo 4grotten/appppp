@@ -34,7 +34,8 @@ from shop.serializers.item_serializers import (
     ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
-    SubmitOrganizationResumeRequestSerializer
+    SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
+    OrganizationResumeRequestAcceptedSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -987,6 +988,22 @@ class UserResumeRequestRetrieveView(RetrieveAPIView):
         elif status == ResumeRequest.ACCEPTED:
             return UserResumeRequestAcceptedSerializer
         return UserResumeRequestSerializer
+
+
+class OrganizationResumeRequestRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return ResumeRequestService.get(id=self.kwargs['pk'])
+
+    def get_serializer_class(self):
+        status = self.get_object().status
+
+        if status in [ResumeRequest.IN_PROGRESS, ResumeRequest.REJECTED]:
+            return OrganizationResumeRequestSerializer
+        elif status == ResumeRequest.ACCEPTED:
+            return OrganizationResumeRequestAcceptedSerializer
+        return OrganizationResumeRequestSerializer
 
 
 class SubmitResumeRequestView(GenericAPIView):

@@ -13,7 +13,7 @@ from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
-    OrganizationTitleImageSerializer
+    OrganizationTitleImageSerializer, OrganizationNotificationInfo
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
     ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
@@ -1319,6 +1319,39 @@ class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
         return resume_request.processed_by.id
 
 
+class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
+    sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
+    sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
+                  'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                      organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
 
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):

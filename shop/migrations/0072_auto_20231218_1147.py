@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('common', '0052_countryandcity'),
+        # ('common', '0052_countryandcity'),
         ('shop', '0071_shopitem_minimum_purchase'),
     ]
 
@@ -32,11 +32,11 @@ class Migration(migrations.Migration):
             name='links',
             field=models.JSONField(blank=True, null=True),
         ),
-        migrations.AddField(
-            model_name='shopitem',
-            name='preferred_locations',
-            field=models.ManyToManyField(blank=True, related_name='shop_items_preferred', to='common.CountryAndCity'),
-        ),
+        # migrations.AddField(
+        #     model_name='shopitem',
+        #     name='preferred_locations',
+        #     field=models.ManyToManyField(blank=True, related_name='shop_items_preferred', to='common.CountryAndCity'),
+        # ),
         migrations.AddField(
             model_name='shopitem',
             name='salary_from',

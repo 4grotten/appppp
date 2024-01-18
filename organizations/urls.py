@@ -32,7 +32,7 @@ from .views.organization_views import (
     OrganizationsGoogleMapsCreateView, OrganizationsTwoGisCreateView, OrganizationPaymentSystemListView,
     PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
     OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
-    OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView
+    OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView, MyOrganizationsWithCanEditListCreateView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -58,6 +58,7 @@ organization_urls = [
 
     path('organizations/user_limits/', OrganizationCreationLimitView.as_view(), name='creation_limits'),
     path('organizations/', OrganizationsListCreateView.as_view(), name='user_organizations'),
+    path('organizations/my/', MyOrganizationsWithCanEditListCreateView.as_view(), name='user_organizations'),
     path('organizations/maps/', OrganizationsMapsListView.as_view(), name='organizations_maps'),
     path('organizations/maps/new/', OrganizationsMapsCountryCityListView.as_view(), name='organizations_maps'),
     path('organizations/google_maps/create/', OrganizationsGoogleMapsCreateView.as_view(),

@@ -23,7 +23,13 @@ from shop.views.item_views import (
     PartnerShopItemsListView, RentItemPeriodCreateView, RentalPeriodRetrieveView, GetYearsView, BookRentalView,
     BookingAnonymousCheckoutView, GetMonthsView, GetDaysView, GetHoursView, GetMinutesView, CollectionsListCreateView,
     AddRemoveListItemCollectionView, CollectionRetrieveUpdateDestroyView, ItemBookmarkBulkDeleteView,
-    ItemTicketCreateView, TicketPeriodCreateView
+    ItemTicketCreateView, TicketPeriodCreateView, ItemResumeCreateView, ResumeInfoUpdateView, ResumeInfoFileCreateView,
+    ResumePhoneNumberUpdateView, ResumePhonesListAPIView, ResumeSocialNetworksUpdateView,
+    ResumeSocialNetworksListAPIView, ResumeDetailInfoUpdateView, ResumeDetailInfoRetrieveAPIView,
+    ResumeWorkExperienceListView, ResumeWorkExperienceUpdateView, ResumeInfoRetrieveAPIView, EducationListView,
+    ResumeEducationListView, ResumeEducationUpdateView, SubmitResumeRequestView, AcceptResumeRequestView,
+    DeclineResumeRequestView, UserResumeRequestRetrieveView, OrganizationSubmitResumeRequestView,
+    OrganizationResumeRequestRetrieveView
 )
 
 urlpatterns = [
@@ -63,6 +69,41 @@ urlpatterns = [
     path('shop/tickets/', ItemTicketCreateView.as_view(), name='ticket_create'),
     path('shop/tickets/categories/', ItemTicketCategoryListView.as_view(), name='rent_categories'),
     path('shop/tickets/<int:pk>/ticket_period/', TicketPeriodCreateView.as_view(), name='add_ticket_period'),
+
+    # resume API
+    path('shop/resumes/', ItemResumeCreateView.as_view(), name='resume_create'),
+    path('shop/resumes/files/', ResumeInfoFileCreateView.as_view(), name='resume_info_file_create'),
+    path('shop/resumes/info/', ResumeInfoUpdateView.as_view(), name='resume_info_create'),
+    path('shop/resumes/<int:pk>/info/', ResumeInfoRetrieveAPIView.as_view(), name='resume_info_retrieve'),
+    path('shop/resumes/phone_numbers/', ResumePhoneNumberUpdateView.as_view(), name='resume_phone_numbers_create'),
+    path('shop/resumes/<int:pk>/phone_numbers/', ResumePhonesListAPIView.as_view(), name='resume_phone_numbers_list'),
+    path('shop/resumes/social_networks/', ResumeSocialNetworksUpdateView.as_view(),
+         name='resume_social_networks_create'),
+    path('shop/resumes/<int:pk>/social_networks/', ResumeSocialNetworksListAPIView.as_view(),
+         name='resume_social_networks_list'),
+    path('shop/resumes/detail_info/', ResumeDetailInfoUpdateView.as_view(),
+         name='resume_detail_info_create'),
+    path('shop/resumes/<int:pk>/detail_info/', ResumeDetailInfoRetrieveAPIView.as_view(),
+         name='resume_detail_info_retrieve'),
+    path('shop/resumes/work_experiences/', ResumeWorkExperienceUpdateView.as_view(),
+         name='resume_work_experiences_list'),
+    path('shop/resumes/<int:pk>/work_experiences/', ResumeWorkExperienceListView.as_view(),
+         name='resume_work_experiences_list'),
+    path('shop/resumes/educations/', ResumeEducationUpdateView.as_view(),
+         name='resume_educations_list'),
+    path('shop/resumes/<int:pk>/educations/', ResumeEducationListView.as_view(),
+         name='resume_educations_list'),
+    path('shop/educations/', EducationListView.as_view(), name='education_list'),
+    path('shop/resume/user/request/', SubmitResumeRequestView.as_view(), name='resume_user_request'),
+    path('shop/resume/user/request/<int:pk>/', UserResumeRequestRetrieveView.as_view(),
+         name='resume_user_request_retrieve'),
+    path('shop/resume/user/accept/', AcceptResumeRequestView.as_view(), name='resume_user_accept'),
+    path('shop/resume/user/decline/', DeclineResumeRequestView.as_view(), name='resume_user_decline'),
+
+    path('shop/resume/organization/request/', OrganizationSubmitResumeRequestView.as_view(),
+         name='organization_resume_user_request'),
+    path('shop/resume/organization/request/<int:pk>/', OrganizationResumeRequestRetrieveView.as_view(),
+         name='resume_user_request_retrieve'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),

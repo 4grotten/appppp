@@ -2,7 +2,9 @@ from django.contrib import admin
 
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
-    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket
+    ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket, ResumeInfo, ResumeInfoFile,
+    ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, ResumeEducation,
+    ResumeRequest
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -77,12 +79,52 @@ class ComplaintAdmin(admin.ModelAdmin):
 class CommentComplaintAdmin(admin.ModelAdmin):
     list_display = ('user', 'comment',)
 
+
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('user', 'organization', 'item', 'is_open', 'transaction', 'start_time', 'end_time')
+
 
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('user', 'organization', 'item', 'is_active', 'transaction')
 
+
+class ResumeInfoAdmin(admin.ModelAdmin):
+    list_display = ('item', 'gender', 'full_name', 'date_of_birth', 'languages')
+
+
+class ResumeInfoFileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'file', 'created_at')
+
+
+class ResumePhoneNumberAdmin(admin.ModelAdmin):
+    list_display = ('item', 'phone_number')
+
+
+class ResumeSocialNetworkAdmin(admin.ModelAdmin):
+    list_display = ('item', 'url')
+
+
+class ResumeDetailInfoAdmin(admin.ModelAdmin):
+    list_display = ('item', 'text')
+
+
+class ResumeWorkExperienceAdmin(admin.ModelAdmin):
+    list_display = ('item', 'company_name', 'position', 'start_of_work', 'end_of_work', 'up_to_now')
+
+
+class ResumeEducationAdmin(admin.ModelAdmin):
+    list_display = ('item', 'school_name', 'category', 'start_of_study', 'end_of_study', 'up_to_now')
+
+
+class ResumeRequestAdmin(admin.ModelAdmin):
+    list_display = ('sender_user', 'sender_organization', 'organization', 'item', 'show_contacts', 'phone_numbers',
+                    'links', 'status')
+
+
+@admin.register(Education)
+class EducationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'name_en', 'name_ru', 'name_tr',)
+    search_fields = ('name', 'name_en', 'name_ru', 'name_tr',)
 
 admin.site.register(ItemInstagramData, ItemInstagramDataAdmin)
 admin.site.register(ItemCategory, MainCategoryAdmin)
@@ -99,3 +141,11 @@ admin.site.register(Complaint, ComplaintAdmin)
 admin.site.register(CommentComplaint, CommentComplaintAdmin)
 admin.site.register(Booking, BookingAdmin)
 admin.site.register(Ticket, TicketAdmin)
+admin.site.register(ResumeInfo, ResumeInfoAdmin)
+admin.site.register(ResumeInfoFile, ResumeInfoFileAdmin)
+admin.site.register(ResumePhoneNumber, ResumePhoneNumberAdmin)
+admin.site.register(ResumeSocialNetwork, ResumeSocialNetworkAdmin)
+admin.site.register(ResumeDetailInfo, ResumeDetailInfoAdmin)
+admin.site.register(ResumeWorkExperience, ResumeWorkExperienceAdmin)
+admin.site.register(ResumeEducation, ResumeEducationAdmin)
+admin.site.register(ResumeRequest, ResumeRequestAdmin)

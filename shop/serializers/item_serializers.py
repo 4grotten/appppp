@@ -9,19 +9,22 @@ from rest_framework import serializers
 
 from users.models import User
 from common.exceptions import NotAcceptableException
-from common.models import File, FileVideo
-from common.serializers import ImageSerializer, VideoSerializer
+from common.models import File, FileVideo, Currency, Country, City
+from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
-from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
+from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
+    OrganizationTitleImageSerializer, OrganizationNotificationInfo
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket
+from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
+    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
+    ResumeEducation, ResumeRequest
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
 from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer, SubcategorySerializer
 from transactions.models import Transaction
-from users.serializers import UserInfoSerializer
+from users.serializers import UserInfoSerializer, ProfileSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
@@ -76,6 +79,122 @@ class TicketPeriodSerializer(serializers.ModelSerializer):
         )
 
 
+class ResumeInfoUpdateSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+
+    class Meta:
+        model = ResumeInfo
+        fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
+
+
+class ResumePhoneNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumePhoneNumber
+        fields = ('id', 'phone_number')
+
+
+class ResumePhoneNumberUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    phone_numbers = serializers.ListSerializer(child=serializers.CharField())
+
+
+class ResumeSocialNetworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeSocialNetwork
+        fields = ('id', 'url')
+
+
+class ResumeSocialNetworkUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    urls = serializers.ListSerializer(child=serializers.CharField())
+
+
+class ResumeDetailInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeDetailInfo
+        fields = ('id', 'text')
+
+
+class ResumeDetailInfoUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    text = serializers.CharField()
+
+
+class ResumeWorkExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeWorkExperience
+        fields = ('id', 'company_name', 'position', 'text', 'start_of_work', 'end_of_work', 'up_to_now')
+
+
+class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    work_experiences = serializers.ListSerializer(
+        child=ResumeWorkExperienceSerializer()
+    )
+
+
+class ResumeEducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeEducation
+        fields = ('id', 'school_name', 'category', 'text', 'start_of_study', 'end_of_study', 'up_to_now')
+
+
+class ResumeEducationUpdateSerializer(serializers.Serializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    educations = serializers.ListSerializer(
+        child=ResumeEducationSerializer()
+    )
+
+
+class ResumeInfoFileSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeInfoFile
+        fields = ('id', 'file', 'name')
+        read_only_fields = ('name',)
+
+    def get_name(self, obj):
+        return obj.file.name.split("/")[-1]
+
+
+class ResumeInfoSerializer(serializers.ModelSerializer):
+    files = ResumeInfoFileSerializer(many=True)
+    contact_filled = serializers.SerializerMethodField()
+    social_network_filled = serializers.SerializerMethodField()
+    detail_info_filled = serializers.SerializerMethodField()
+    work_experience_filled = serializers.SerializerMethodField()
+    education_filled = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeInfo
+        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files', 'contact_filled',
+                  'social_network_filled', 'detail_info_filled', 'work_experience_filled', 'education_filled')
+
+
+    def get_contact_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_phone_numbers.exists()
+
+    def get_social_network_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_social_networks.exists()
+
+    def get_detail_info_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_detail_info is not None
+
+    def get_work_experience_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_work_experience.exists()
+
+    def get_education_filled(self, resume_info: ResumeInfo):
+        return resume_info.item.resume_education.exists()
+
+
+class EducationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Education
+        fields = ('id', 'name')
+
+
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer()
     subcategory = ItemSubcategoryBriefSerializer()
@@ -93,6 +212,10 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     has_in_stock = serializers.SerializerMethodField()
     rental_period = RentItemsPeriodSerializer()
     ticket_period = TicketPeriodSerializer()
+    citizenship = CountryResumeSerializer(many=True)
+    education = EducationSerializer(many=True)
+    current_locations = serializers.SerializerMethodField()
+    preferred_locations = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -148,6 +271,44 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
+    def get_current_locations(self, item: ShopItem):
+        current_locations_list = []
+        current_locations = item.current_locations
+        if current_locations and isinstance(current_locations, list):
+            for location_code in current_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    current_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        current_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return current_locations_list
+
+    def get_preferred_locations(self, item: ShopItem):
+        preferred_locations_list = []
+        preferred_locations = item.preferred_locations
+        if preferred_locations and isinstance(preferred_locations, list):
+            for location_code in preferred_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    preferred_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        preferred_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return preferred_locations_list
+
 
     class Meta:
         model = ShopItem
@@ -158,7 +319,8 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'can_comment', 'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
-            'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase'
+            'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education'
         )
 
 
@@ -254,6 +416,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
     ticket_period = TicketPeriodSerializer(required=False)
+    citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
+    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
 
     class Meta:
         model = ShopItem
@@ -263,7 +427,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             'price', 'discount', 'article',
             'instagram_link', 'images', 'videos', 'youtube_links',
             'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
-            'longitude', 'latitude', 'minimum_purchase'
+            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'current_locations', 'preferred_locations', 'links', 'education'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -1092,6 +1257,105 @@ class BookInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ('id', 'organization', 'start_time', 'end_time', )
+
+
+class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'item', 'show_contacts', 'phone_numbers',
+                  'links')
+
+
+class SubmitOrganizationResumeRequestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'item', 'show_contacts', 'phone_numbers',
+                  'links')
+
+class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'salary_from', 'salary_to', 'is_published', 'updated_at', 'images'
+        )
+
+
+class UserResumeRequestSerializer(serializers.ModelSerializer):
+    sender_user = ProfileSerializer(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
+    sender_user = ProfileSerializer(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                      organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
+    sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
+    sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
+    organization = OrganizationTitleImageSerializer(allow_null=True)
+    item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
+    processed_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeRequest
+        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
+                  'status')
+
+    def get_processed_by(self, resume_request: ResumeRequest):
+        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
+                                                                                      organization=resume_request.organization):
+            return self.context['request'].user.id
+        return resume_request.processed_by.id
+
+
+class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
+    resume_request_id = serializers.IntegerField(required=True)
 
 
 class BookInfoWithClientSerializer(serializers.ModelSerializer):

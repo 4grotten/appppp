@@ -123,6 +123,21 @@ class CitySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'country_code', 'postal',)
 
 
+class CountryResumeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Country
+        fields = ('code', 'name', 'name_ru', 'name_tr',)
+        read_only_fields = ['name_ru', 'name_tr']
+
+class CityResumeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = City
+        fields = ('id', 'name', 'name_ru', 'name_tr')
+        read_only_fields = ['name_ru', 'name_tr']
+
+
 class CountryCityQueryParamSerializer(serializers.Serializer):
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)

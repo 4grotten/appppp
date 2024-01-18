@@ -5,18 +5,31 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.db.models import PointField
 
-from common.models import TimestampModel, File, FileVideo
+from common.models import TimestampModel, File, FileVideo, Currency, Country
+from common.utils import upload_file_with_unique_name
 from organizations.models import Organization
 from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
+from users.constants import GENDER_CHOICES
 from users.models import User
 from utils.translator import GoogleTranslator
 
 
 class ItemCategory(models.Model):
+    PRODUCT = 'product'
+    RENTAL = 'rent'
+    TICKET = 'ticket'
+    RESUME = 'resume'
+    TYPE_CHOICES = (
+        (PRODUCT, PRODUCT),
+        (RENTAL, RENTAL),
+        (TICKET, TICKET),
+        (RESUME, RESUME)
+    )
     name = models.CharField(max_length=64)
     icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
     is_adult = models.BooleanField(default=False)
+    purchase_type = models.CharField(max_length=55, choices=TYPE_CHOICES, default='product', null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -73,10 +86,12 @@ class ShopItem(models.Model):
     PRODUCT = 'product'
     RENTAL = 'rent'
     TICKET = 'ticket'
+    RESUME = 'resume'
     TYPE_CHOICES = (
         (PRODUCT, PRODUCT),
         (RENTAL, RENTAL),
-        (TICKET, TICKET)
+        (TICKET, TICKET),
+        (RESUME, RESUME)
     )
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
@@ -112,6 +127,16 @@ class ShopItem(models.Model):
     rental_period = models.ForeignKey(RentalPeriod, on_delete=models.SET_NULL, null=True, blank=True)
     ticket_period = models.ForeignKey(TicketPeriod, on_delete=models.SET_NULL, null=True, blank=True)
 
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='shop_items', null=True, blank=True)
+    salary_from = models.PositiveIntegerField(null=True, blank=True)
+    salary_to = models.PositiveIntegerField(null=True, blank=True)
+    citizenship = models.ManyToManyField(Country, related_name='shop_items', blank=True)
+    education = models.ManyToManyField("shop.Education", related_name='shop_items', blank=True)
+    current_locations = models.JSONField(null=True, blank=True)
+    preferred_locations = models.JSONField(null=True, blank=True)
+    links = models.JSONField(null=True, blank=True)
+
+
     @property
     def full_location(self):
         full_location = dict(
@@ -146,6 +171,93 @@ class ShopItem(models.Model):
         else:
             self.is_hidden = False
         super().save(*args, **kwargs)
+
+
+class ResumeInfoFile(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+    file = models.FileField(upload_to=upload_file_with_unique_name,
+                             help_text=_('File that you want to store'),
+                             null=True, blank=True)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(ResumeInfoFile, self).save()
+
+    class Meta:
+        ordering = ('order',)
+
+
+class ResumeInfo(TimestampModel):
+    item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='resume_info')
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
+    full_name = models.CharField(max_length=255, verbose_name='Full Name', null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    languages = models.JSONField(null=True, blank=True)
+    files = models.ManyToManyField(ResumeInfoFile, blank=True, related_name='resume_info')
+
+    def __str__(self):
+        return f"ResumeInfo of {self.item}"
+
+
+class ResumePhoneNumber(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_phone_numbers')
+    phone_number = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.phone_number
+
+
+class ResumeSocialNetwork(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_social_networks')
+    url = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.url
+
+
+class ResumeDetailInfo(TimestampModel):
+    item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='resume_detail_info')
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+
+
+class Education(TimestampModel):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class ResumeWorkExperience(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_work_experience')
+    company_name = models.CharField(max_length=255)
+    position = models.CharField(max_length=255)
+    text = models.TextField()
+    start_of_work = models.DateField(null=True)
+    end_of_work = models.DateField(null=True)
+    up_to_now = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.company_name
+
+
+class ResumeEducation(TimestampModel):
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='resume_education')
+    school_name = models.CharField(max_length=255)
+    category = models.CharField(max_length=255)
+    text = models.TextField()
+    start_of_study = models.DateField(null=True)
+    end_of_study = models.DateField(null=True)
+    up_to_now = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.school_name
 
 
 class ItemInstagramData(TimestampModel):
@@ -252,6 +364,34 @@ class Ticket(TimestampModel):
     def __str__(self):
         return f'Ticket of {self.user} in {self.organization}'
 
+
+class ResumeRequest(TimestampModel):
+    REJECTED = 'rejected'
+    IN_PROGRESS = 'in_progress'
+    ACCEPTED = 'accepted'
+
+    STATUS = (
+        (IN_PROGRESS, IN_PROGRESS),
+        (ACCEPTED, ACCEPTED),
+        (REJECTED, REJECTED),
+    )
+    processed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='processed_resume',
+                                     null=True, blank=True)
+    sender_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender_user_resume',
+                                    null=True, blank=True)
+    sender_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
+                                           related_name='sender_organization_resume')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_resume')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='item_resumes', null=True, blank=True)
+    show_contacts = models.BooleanField(default=True)
+    phone_numbers = models.JSONField(null=True, blank=True)
+    links = models.JSONField(null=True, blank=True)
+    status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
+
+    def __str__(self):
+        if self.sender_user:
+            return f'Resume Request of {self.sender_user} in {self.organization}'
+        return f'Resume Request of {self.sender_organization} in {self.organization}'
 
 
 class Complaint(TimestampModel):

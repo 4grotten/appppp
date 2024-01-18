@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.db.models import Q
 from django.utils.translation import gettext_lazy
 
 from django.db import transaction
@@ -615,6 +616,30 @@ class DeactivateUserProfile(APIView):
             return Response(
                 data={
                     "Success": True,
+                }, status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                data={
+                    "Error": _("User does not exists"),
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class UserHasOwnOrganizationOrCanEdit(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.request.user
+            has_organizations = Organization.objects.filter(
+                Q(owner=user, is_deleted=False) | Q(memberships__user=user, is_deleted=False,
+                                                    memberships__role__can_edit_organization=True)
+            ).exists()
+
+            return Response(
+                data={
+                    "has_organizations": has_organizations,
                 }, status=status.HTTP_200_OK
             )
         except User.DoesNotExist:

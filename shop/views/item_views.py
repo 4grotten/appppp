@@ -10,6 +10,7 @@ from rest_framework import status, permissions
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, \
     RetrieveAPIView, ListCreateAPIView
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,7 +19,8 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo, ResumeInfoFile, \
+    Education, ResumeRequest
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -26,8 +28,17 @@ from shop.serializers.item_serializers import (
     ItemFeedSerializer, StartDateTimeSerializer, RentItemsPeriodSerializer, ItemRentalYearSerializer,
     BookInfoSerializer,
     BookInfoWithUTCSerializer, ItemRentalMonthSerializer, ItemRentalDaySerializer, ItemRentalHourSerializer,
-    ItemRentalMinuteSerializer, TicketPeriodSerializer
+    ItemRentalMinuteSerializer, TicketPeriodSerializer, ResumeInfoUpdateSerializer, ResumeInfoFileSerializer,
+    ResumePhoneNumberUpdateSerializer, ResumePhoneNumberSerializer, ResumeSocialNetworkUpdateSerializer,
+    ResumeSocialNetworkSerializer, ResumeDetailInfoUpdateSerializer, ResumeDetailInfoSerializer,
+    ResumeWorkExperienceSerializer, ResumeWorkExperienceUpdateSerializer, ResumeInfoSerializer,
+    EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
+    AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
+    SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
+    OrganizationResumeRequestAcceptedSerializer
 )
+from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
+    ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
 from transactions.serializers.transaction_serializers import BookingTransactionWithClientSerializer
 from shop.serializers.like_bookmark_serializers import LikeSerializer, BookmarkSerializer, ItemCollectionSerializer, \
     ItemCollectionCreateSerializer, AddRemoveItemCollectionSerializer, ItemCollectionDetailUpdateSerializer, \
@@ -69,6 +80,200 @@ class ItemTicketCreateView(CreateAPIView):
         serializer.save(purchase_type=ShopItem.TICKET)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ItemResumeCreateView(CreateAPIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ItemCreateUpdateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(purchase_type=ShopItem.RESUME)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ResumeInfoFileCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
+    serializer_class = ResumeInfoFileSerializer
+    queryset = ResumeInfoFile.objects.all()
+
+
+class ResumeDetailInfoRetrieveAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        detail_info = ResumeDetailInfoService.get_detail_info_of_resume(item=kwargs['pk'])
+        data = ResumeDetailInfoSerializer(detail_info).data
+        return Response(data)
+
+
+class ResumeInfoUpdateView(APIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ResumeInfoUpdateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeInfoService.update_resume_info(item=serializer.validated_data['item'],
+                                             gender=serializer.validated_data.get('gender'),
+                                             full_name=serializer.validated_data.get('full_name'),
+                                             date_of_birth=serializer.validated_data.get('date_of_birth'),
+                                             languages=serializer.validated_data.get('languages'),
+                                             files=serializer.validated_data.get('files', []))
+
+        return Response(data={'message': _('Successfully updated resume info')})
+
+
+class ResumePhonesListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        numbers = ResumePhoneNumberService.get_numbers_of_resume(item=kwargs['pk'])
+        data = ResumePhoneNumberSerializer(numbers, many=True).data
+        return Response(data)
+
+
+class ResumePhoneNumberUpdateView(APIView):
+    permissions = (IsAuthenticated,)
+    serializer_class = ResumePhoneNumberUpdateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumePhoneNumberService.update_resume_phone_numbers(item=serializer.validated_data['item'],
+                                                             numbers=serializer.validated_data['phone_numbers'])
+
+        return Response(data={'message': _('Successfully updated phone numbers')})
+
+
+class ResumeSocialNetworksListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        networks = ResumeSocialNetworkService.get_networks_of_resume(item=kwargs['pk'])
+        data = ResumeSocialNetworkSerializer(networks, many=True).data
+        return Response(data)
+
+
+class ResumeSocialNetworksUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeSocialNetworkUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeSocialNetworkService.update_resume_social_networks(item=serializer.validated_data['item'],
+                                                                 urls=serializer.validated_data['urls'])
+
+        return Response(data={'message': _('Successfully updated social networks')})
+
+
+class ResumeInfoRetrieveAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        detail_info = ResumeInfoService.get_info_of_resume(item=kwargs['pk'])
+        data = ResumeInfoSerializer(detail_info).data
+        return Response(data)
+
+
+class ResumeDetailInfoUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeDetailInfoUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeDetailInfoService.update_resume_detail_info(item=serializer.validated_data['item'],
+                                                          text=serializer.validated_data['text'])
+
+        return Response(data={'message': _('Successfully updated detail info')})
+
+
+class ResumeWorkExperienceListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        work_experiences = ResumeWorkExperienceService.get_work_experiences_of_resume(item=kwargs['pk'])
+        data = ResumeWorkExperienceSerializer(work_experiences, many=True).data
+        return Response(data)
+
+
+class ResumeWorkExperienceUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeWorkExperienceUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeWorkExperienceService.create_resume_work_experience(
+            item=serializer.validated_data['item'], work_experiences=serializer.validated_data['work_experiences'])
+
+        return Response(data={'message': _('Successfully updated work experiences')})
+
+
+class ResumeEducationListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        educations = ResumeEducationService.get_educations_of_resume(item=kwargs['pk'])
+        data = ResumeEducationSerializer(educations, many=True).data
+        return Response(data)
+
+
+class ResumeEducationUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ResumeEducationUpdateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ResumeEducationService.create_resume_education(
+            item=serializer.validated_data['item'], educations=serializer.validated_data['educations'])
+
+        return Response(data={'message': _('Successfully updated educations')})
+
+
+
+
+class EducationListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = EducationSerializer
+    queryset = Education.objects.all()
 
 
 class TicketPeriodCreateView(APIView):
@@ -767,3 +972,122 @@ class BookingAnonymousCheckoutView(GenericAPIView):
         )
         data = self.serializer_class(transaction, context={'request': request}).data
         return Response(data)
+
+
+class UserResumeRequestRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return ResumeRequestService.get(id=self.kwargs['pk'])
+
+    def get_serializer_class(self):
+        status = self.get_object().status
+
+        if status in [ResumeRequest.IN_PROGRESS, ResumeRequest.REJECTED]:
+            return UserResumeRequestSerializer
+        elif status == ResumeRequest.ACCEPTED:
+            return UserResumeRequestAcceptedSerializer
+        return UserResumeRequestSerializer
+
+
+class OrganizationResumeRequestRetrieveView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return ResumeRequestService.get(id=self.kwargs['pk'])
+
+    def get_serializer_class(self):
+        status = self.get_object().status
+
+        if status in [ResumeRequest.IN_PROGRESS, ResumeRequest.REJECTED]:
+            return OrganizationResumeRequestSerializer
+        elif status == ResumeRequest.ACCEPTED:
+            return OrganizationResumeRequestAcceptedSerializer
+        return OrganizationResumeRequestSerializer
+
+
+class SubmitResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SubmitUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        sender_user = serializer.validated_data['sender_user']
+        organization = serializer.validated_data['organization']
+        item = serializer.validated_data['item']
+        show_contacts = serializer.validated_data['show_contacts']
+        phone_numbers = serializer.validated_data['phone_numbers']
+        links = serializer.validated_data['links']
+        ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
+                                                         item=item, show_contacts=show_contacts,
+                                                         phone_numbers=phone_numbers, links=links)
+
+        return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
+
+
+class OrganizationSubmitResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = SubmitOrganizationResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        sender_organization = serializer.validated_data['sender_organization']
+        organization = serializer.validated_data['organization']
+        item = serializer.validated_data['item']
+        show_contacts = serializer.validated_data['show_contacts']
+        phone_numbers = serializer.validated_data['phone_numbers']
+        links = serializer.validated_data['links']
+        ResumeRequestService.process_organization_resume_request(user=request.user,
+                                                                 sender_organization=sender_organization,
+                                                                 organization=organization, item=item,
+                                                                 show_contacts=show_contacts,
+                                                                 phone_numbers=phone_numbers,
+                                                                 links=links)
+
+        return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
+
+
+class AcceptResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AcceptDeclineUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        resume_request_id = serializer.validated_data['resume_request_id']
+
+        ResumeRequestService.accept_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+
+        return Response(data={'message': _('Successfully accepted resume request')}, status=status.HTTP_200_OK)
+
+
+class DeclineResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AcceptDeclineUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        resume_request_id = serializer.validated_data['resume_request_id']
+
+        ResumeRequestService.decline_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+
+        return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)

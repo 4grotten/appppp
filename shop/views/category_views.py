@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from organizations.models import Organization
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import OptionalOrganizationQueryParamSerializer
 from shop.forms import ItemSubcategoryAdminForm
@@ -44,6 +44,16 @@ class ItemCategoryListView(ListAPIView):
     pagination_class = None
     serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        purchase_type = self.request.query_params.get('purchase_type', None)
+
+        if purchase_type:
+            queryset = queryset.filter(purchase_type=purchase_type)
+
+        return queryset
 
 
 class ItemRentalCategoryListView(ListAPIView):

@@ -150,12 +150,14 @@ LANGUAGES = (
     ('ru', _('Russian')),
     ('en', _('English')),
     ('tr', _('Turkish')),
+    ('de', _('German')),
+    ('zh', _('Chinese')),
 )
 
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'ru'
-MODELTRANSLATION_LANGUAGES = ('ru', 'en', 'tr',)
-MODELTRANSLATION_AVAILABLE_LANGUAGES = ('ru', 'en', 'tr',)
-MODELTRANSLATION_FALLBACK_LANGUAGES = ('ru', 'en', 'tr',)
+MODELTRANSLATION_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
+MODELTRANSLATION_AVAILABLE_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
 
 TIME_ZONE = 'UTC'
 

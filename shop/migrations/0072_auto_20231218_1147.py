@@ -22,11 +22,11 @@ class Migration(migrations.Migration):
             name='currency',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='shop_items', to='common.currency'),
         ),
-        migrations.AddField(
-            model_name='shopitem',
-            name='current_locations',
-            field=models.ManyToManyField(blank=True, related_name='shop_items_current', to='common.CountryAndCity'),
-        ),
+        # migrations.AddField(
+        #     model_name='shopitem',
+        #     name='current_locations',
+        #     field=models.ManyToManyField(blank=True, related_name='shop_items_current', to='common.CountryAndCity'),
+        # ),
         migrations.AddField(
             model_name='shopitem',
             name='links',

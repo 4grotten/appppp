@@ -18,6 +18,8 @@ class ItemSubcategoryAdminForm(forms.ModelForm):
             "name_ru",
             "name_en",
             "name_tr",
+            "name_de",
+            "name_zh",
             "organization",
             "csv_field",
             "criteria_subcategory",
@@ -30,12 +32,14 @@ class ItemSubcategoryAdminForm(forms.ModelForm):
         if csv_data:
             splited_data = csv_data.splitlines()
             for line in splited_data:
-                (category_ru, category_en, category_tr) = line.split(";")
+                (category_ru, category_en, category_tr, category_de, category_zh) = line.split(";")
                 _, _ = ItemSubcategory.objects.update_or_create(
                     category_id=category_id,
                     name_ru=category_ru,
                     name_en=category_en,
-                    name_tr=category_tr
+                    name_tr=category_tr,
+                    name_de=category_de,
+                    name_zh=category_zh
                 )
 
         if commit:

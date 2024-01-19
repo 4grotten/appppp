@@ -1,5 +1,5 @@
 import calendar
-
+from django.utils.translation import activate
 from django.db import IntegrityError
 from datetime import datetime
 from django.db import models
@@ -20,7 +20,7 @@ from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
 from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo, ResumeInfoFile, \
-    Education, ResumeRequest
+    Education, ResumeRequest, ItemCategory
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -1091,3 +1091,67 @@ class DeclineResumeRequestView(GenericAPIView):
         ResumeRequestService.decline_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
+
+
+class TranslateNamesOfItemCategory(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        name_translations = {
+            'Концерт': {'de': 'Konzert', 'zh': '音乐会'},
+            'Абонемент': {'de': 'Abonnement', 'zh': '订阅'},
+            'Авто аренда': {'de': 'Autovermietung', 'zh': '汽车租赁'},
+            'Обучение': {'de': 'Unterricht', 'zh': '培训'},
+            'Инвестиционные активы': {'de': 'Investitionsgüter', 'zh': '投资资产'},
+            'Недвижимость Купить': {'de': 'Immobilienkauf', 'zh': '购房'},
+            'Недвижимость Аренда': {'de': 'Immobilienmiete', 'zh': '租房'},
+            'Ткани и текстиль': {'de': 'Stoffe und Textilien', 'zh': '面料和纺织品'},
+            'Путешествия': {'de': 'Reisen', 'zh': '旅行'},
+            'Цветы и Подарки': {'de': 'Blumen und Geschenke', 'zh': '鲜花和礼物'},
+            'Гостиница': {'de': 'Hotel', 'zh': '酒店'},
+            'Одежда для мальчиков': {'de': 'Jungenbekleidung', 'zh': '男童服装'},
+            'Еда меню': {'de': 'Speisekarte', 'zh': '菜单'},
+            'Игрушки': {'de': 'Spielzeug', 'zh': '玩具'},
+            'Красота': {'de': 'Schönheit', 'zh': '美容'},
+            'Спорт': {'de': 'Sport', 'zh': '运动'},
+            'Книги': {'de': 'Bücher', 'zh': '书籍'},
+            'Бытовая техника': {'de': 'Haushaltsgeräte', 'zh': '家用电器'},
+            'Электроника': {'de': 'Elektronik', 'zh': '电子产品'},
+            'Аксессуары': {'de': 'Accessoires', 'zh': '配饰'},
+            'Товары для взрослых': {'de': 'Erwachsenenprodukte', 'zh': '成人用品'},
+            'Ювелирные изделия': {'de': 'Schmuck', 'zh': '珠宝'},
+            'Автотовары': {'de': 'Autozubehör', 'zh': '汽车用品'},
+            'Дом': {'de': 'Haus', 'zh': '家'},
+            'Для ремонта': {'de': 'Für Reparatur', 'zh': '维修用品'},
+            'Здоровье': {'de': 'Gesundheit', 'zh': '健康'},
+            'Канцтовары': {'de': 'Bürobedarf', 'zh': '文具'},
+            'Зоотовары': {'de': 'Tierprodukte', 'zh': '宠物用品'},
+            'Продукты': {'de': 'Lebensmittel', 'zh': '食品'},
+            'Детская обувь': {'de': 'Kinderschuhe', 'zh': '儿童鞋'},
+            'Мужская обувь': {'de': 'Herrenschuhe', 'zh': '男鞋'},
+            'Женская обувь': {'de': 'Damenschuhe', 'zh': '女鞋'},
+            'Для детей': {'de': 'Für Kinder', 'zh': '儿童用品'},
+            'Школьные товары': {'de': 'Schulbedarf', 'zh': '学校用品'},
+            'Товары для малышей': {'de': 'Babyprodukte', 'zh': '婴儿用品'},
+            'Одежда для девочек': {'de': 'Mädchenbekleidung', 'zh': '女童服装'},
+            'Мужская одежда': {'de': 'Herrenbekleidung', 'zh': '男装'},
+            'Женская одежда': {'de': 'Damenbekleidung', 'zh': '女装'},
+        }
+        for original_name, translations in name_translations.items():
+            try:
+                item = ItemCategory.objects.get(name_ru=original_name)
+            except ItemCategory.DoesNotExist:
+                print(f"ItemCategory with name '{item.id}' does not exist.")
+                continue
+
+            activate('de')
+            item.name = translations.get('de', original_name)
+            item.save()
+
+            activate('zh')
+            item.name = translations.get('zh', original_name)
+            item.save()
+
+            activate('en')
+
+        return Response(data={'message': _('Translations added successfully')}, status=status.HTTP_200_OK)

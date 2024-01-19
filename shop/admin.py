@@ -21,7 +21,7 @@ class InstagramDataInline(admin.TabularInline):
 
 
 class ItemSubcategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'id', 'category', 'name_ru', 'organization',)
+    list_display = ('name', 'id', 'category', 'name_ru', 'organization', 'name_de', 'name_zh')
     list_filter = ('category', 'organization',)
     search_fields = ('name',)
     raw_id_fields = ('category', 'organization',)

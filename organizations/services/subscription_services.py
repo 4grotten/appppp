@@ -8,7 +8,8 @@ from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
     ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, NOTIFICATION_MODE_PERSONAL,
     BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION, BG_ORGANIZATION_FOLLOWED_DESCRIPTION,
-    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU
+    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU,
+    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE
 )
 from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
@@ -60,6 +61,7 @@ class SubscriptionService:
                     extra_data=dict(address=organization.address,
                                     bg_description=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION,
                                     bg_description_ru=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU,
+                                    bg_description_de=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE,
                                     sender=UserInfoSerializer(user).data)
                 )
                 sent_notification.delay(
@@ -72,7 +74,8 @@ class SubscriptionService:
                     extra_data=dict(org_title=organization.title,
                                     address=organization.address,
                                     bg_description_client=BG_ORGANIZATION_FOLLOWED_DESCRIPTION,
-                                    bg_description_client_ru=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU)
+                                    bg_description_client_ru=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU,
+                                    bg_description_client_de=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE)
                 )
                 subscription.status = 'subscribed'
                 subscription.save()

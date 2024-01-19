@@ -10,7 +10,7 @@ from .forms import ItemSubcategoryAdminForm
 
 
 class MainCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'name_ru', 'is_adult',)
+    list_display = ('name', 'name_ru', 'is_adult', 'name_de', 'name_zh')
     search_fields = ('name',)
     raw_id_fields = ('icon',)
 

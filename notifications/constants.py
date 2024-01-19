@@ -558,6 +558,175 @@ NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN = ''
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_EN = 'Your order delivered'
 NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_EN = ''
 
+# _______________________ GERMAN _______________________#
+NEW_COMMENT_TITLE_DE = 'Es gibt einen neuen Kommentar'
+NEW_COMMENT_DESCRIPTION_DE = 'comment_text'
+
+ACCEPT_ORDER_TITLE_DE = 'Sie haben die Bestellung #{transaction_id} akzeptiert'
+DECLINE_ORDER_TITLE_DE = 'Sie haben die Bestellung #{transaction_id} storniert'
+REQUEST_ORDER_TITLE_DE = 'Sie haben eine neue Bestellung #{transaction_id}'
+
+ACCEPT_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung #{transaction_id} akzeptiert'
+DECLINE_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung #{transaction_id} storniert'
+REQUEST_RENTAL_TITLE_DE = 'Sie haben eine neue Mietbestellung #{transaction_id}'
+
+ACCEPT_RESUME_TITLE_DE = 'Sie haben die Bewerbung für die Stelle: {resume_name} akzeptiert'
+DECLINE_RESUME_TITLE_DE = 'Sie haben die Bewerbung für die Stelle: {resume_name} abgelehnt'
+REQUEST_RESUME_TITLE_DE = 'Sie haben eine neue Bewerbung für die Stelle: {resume_name}'
+
+DECLINE_ORDER_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung #{transaction_id} abgelehnt'
+
+ACCEPT_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung #{transaction_id} getätigt, bitte schließen Sie die Transaktion ab'
+DECLINE_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
+
+ACCEPT_RENTAL_SALE_TITLE_DE = 'Sie haben eine neue Vermietung #{transaction_id}'
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Miete! Wir erwarten Sie mit diesem Beleg.'
+
+DECLINE_ACCEPTED_RENTAL_TITLE_DE = 'Sie haben die Vermietungstransaktion storniert, Rückerstattung #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE = 'Ihre Vermietungstransaktion wurde storniert, Rückerstattung #{transaction_id}'
+
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Ihre Bestellung wurde bezahlt! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen. #{transaction_id}'
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Bestellung #{transaction_id} abgelehnt'
+
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Ihre Mietbestellung wurde bezahlt! Nutzen Sie die Miete, indem Sie diesen Beleg vorzeigen. #{transaction_id}'
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
+
+ACCEPT_ORDER_CLIENT_TITLE_DE = 'Ihre Bestellung wurde angenommen #{transaction_id}'
+DECLINE_ORDER_CLIENT_TITLE_DE = 'Ihre Bestellung #{transaction_id} wurde storniert'
+REQUEST_ORDER_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Bestellung! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen.'
+
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE = 'Ihre Online-Bestellung kann bezahlt werden #{transaction_id}'
+
+ACCEPT_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung kann bezahlt werden #{transaction_id}'
+DECLINE_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung #{transaction_id} wurde storniert'
+REQUEST_RENTAL_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Mietbestellung #{transaction_id}! Wir warten auf die Bestätigung der Mietzahlung.'
+
+ACCEPT_RESUME_CLIENT_TITLE_DE = 'Ihre Bewerbung für die Stelle: {resume_name} wurde akzeptiert'
+DECLINE_RESUME_CLIENT_TITLE_DE = 'Ihre Bewerbung für die Stelle: {resume_name} wurde abgelehnt'
+REQUEST_RESUME_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Bewerbung! Der Bewerber wird sich bezüglich der Stelle: {resume_name} mit Ihnen in Verbindung setzen.'
+RESUME_DESCRIPTION_DE = 'Zahlung ab: {salary_from} {currency}'
+
+ACTIVATE_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung wurde aktiviert #{transaction_id}'
+ACTIVATE_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung aktiviert #{transaction_id}'
+
+ACTIVATE_TICKET_CLIENT_TITLE_DE = 'Ihr Ticket wurde aktiviert #{transaction_id}'
+ACTIVATE_TICKET_TITLE_DE = 'Sie haben das Ticket aktiviert #{transaction_id}'
+
+ORDER_DESCRIPTION_DE = 'Bestellsumme: {total_price} {currency}'
+RENTAL_DESCRIPTION_DE = 'Bestellsumme: {total_price} {currency}'
+
+ATTENDANCE_IN_TITLE_DE = 'Eingang {organization}'
+ATTENDANCE_OUT_TITLE_DE = 'Ausgang {organization}'
+CHECK_ATTENDANCE_IN_TITLE_DE = 'Zutritt {organization}'
+CHECK_ATTENDANCE_OUT_TITLE_DE = 'Zutritt {organization}'
+
+ATTENDANCE_DESCRIPTION_DE = ''
+
+FOLLOWED_TO_ORGANIZATION_TITLE_DE = 'Jemand hat Ihr Unternehmen abonniert'
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE = 'Jemand hat Ihr Unternehmen abonniert'
+ORGANIZATION_FOLLOWED_TITLE_DE = 'Sie haben ein Unternehmen abonniert'
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE = 'Sie haben ein Unternehmen abonniert'
+DISCOUNT_COMPLETE_USER_TITLE_DE = 'Sie haben einen Rabatt erhalten {discount_percent} %'
+DISCOUNT_COMPLETE_DESCRIPTION_DE = 'Gesamtsumme mit Rabatt: {final_amount} {currency}'
+DISCOUNT_COMPLETE_TITLE_DE = 'Sie haben einen Rabatt gewährt {discount_percent} %'
+
+NEW_DISCOUNT_TITLE_DE = 'Ein neuer Rabatt ist verfügbar {percent} %'
+NEW_CASHBACK_TITLE_DE = 'Ein neues Cashback-Angebot ist verfügbar {percent} %'
+
+NEW_DISCOUNT_DESCRIPTION_DE = '{address}'
+
+PARTNERSHIP_REQUEST_TITLE_DE = '{sender_organization} beantragt eine Partnerschaft mit {recipient_organization}'
+PARTNERSHIP_REQUEST_DESCRIPTION_DE = '{address}'
+
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE = '{address}'
+
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_DE = 'Die Transaktion wurde abgelehnt'
+YOU_DECLINED_NOTIFICATION_TITLE_DE = 'Sie haben die Transaktion abgelehnt'
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE = 'Rabatt {savings} {currency}'
+
+NEW_ORGANIZATION_TITLE_DE = 'Ein neues Unternehmen steht Ihnen zur Verfügung'
+NEW_ORGANIZATION_DESCRIPTION_DE = '{organization_title}'
+
+NEW_DEVICE_TITLE_DE = 'Neue Benutzeraktivierung'
+NEW_DEVICE_DESCRIPTION_DE = '{device_title}'
+
+RECRUIT_JOB_TITLE_DE = 'Sie haben den Job angenommen'
+RECRUIT_JOB_DESCRIPTION_DE = '{position}'
+
+GET_JOB_TITLE_DE = 'Sie wurden eingestellt'
+GET_JOB_DESCRIPTION_DE = '{position}'
+
+CHANGE_JOB_POSITION_TITLE_DE = 'Sie wurden auf eine neue Position versetzt'
+CHANGE_JOB_POSITION_DESCRIPTION_DE = 'Von {old_position} auf {new_position}'
+
+CHANGE_JOB_POSITION_OWNER_TITLE_DE = 'Sie haben jemanden auf eine neue Position versetzt'
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE = 'Von {old_position} auf {new_position}'
+
+QUIT_JOB_TITLE_DE = 'Sie wurden entlassen'
+QUIT_JOB_DESCRIPTION_DE = '{position}'
+
+DISMISS_JOB_TITLE_DE = 'Sie haben jemanden entlassen'
+DISMISS_JOB_DESCRIPTION_DE = '{position}'
+
+ORGANIZATION_MESSAGE_TITLE_DE = 'Nachricht von {organization}'
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_DE = 'Nachricht an Partner von {organization}'
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = 'Nachricht an Follower von Partnerunternehmen von {organization}'
+ORGANIZATION_MESSAGE_DESCRIPTION_DE = '{content}'
+ORGANIZATION_OWNER_MESSAGE_TITLE_DE = 'Sie haben eine Nachricht gesendet'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_DE = 'Sie haben eine Nachricht an Partner gesendet'
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = 'Sie haben eine Nachricht an Follower von Partnerunternehmen gesendet'
+
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_DE = 'Ihre Auszahlungsanfrage wird überprüft #{transaction_id}'
+UNDER_REVIEW_WITHDRAWAL_TITLE_DE = 'Sie haben die Auszahlung zur Überprüfung übergeben #{transaction_id}'
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE = 'Herzlichen Glückwunsch, Ihre Auszahlung wurde abgeschlossen #{transaction_id}'
+ACCEPTED_WITHDRAWAL_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben die Auszahlung abgeschlossen #{transaction_id}'
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE = 'Ihre Auszahlung wurde storniert #{transaction_id}'
+DECLINED_WITHDRAWAL_TITLE_DE = 'Sie haben die Auszahlung zur Überprüfung storniert #{transaction_id}'
+WITHDRAWAL_DESCRIPTION_DE = 'Auszahlungsbetrag: {total_withdrawal} {currency}'
+
+ORGANIZATION_GAVE_TITLE_DE = 'Sie haben die Eigentumsrechte übertragen'
+ORGANIZATION_GAVE_DESCRIPTION_DE = ''
+
+ORGANIZATION_OWN_TITLE_DE = 'Herzlichen Glückwunsch, Sie sind jetzt Eigentümer'
+ORGANIZATION_OWN_DESCRIPTION_DE = ''
+
+WITHDRAW_CASHBACK_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben {amount} {currency} von Ihrem Cashback abgehoben'
+CHARGE_CASHBACK_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Ihnen wurde Cashback in Höhe von {amount} {currency} gutgeschrieben'
+
+WITHDRAW_CASHBACK_SELLER_TITLE_DE = 'Sie haben {amount} {currency} von Ihrem Cashback abgehoben'
+CHARGE_CASHBACK_SELLER_TITLE_DE = 'Sie haben Cashback in Höhe von {amount} {currency} gutgeschrieben'
+
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_DE = 'Neue Lieferung verfügbar!!!'
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_DE = ''
+
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_DE = 'Der Lieferservice kann Ihre Bestellung liefern'
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_DE = ''
+
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_DE = 'Sie haben die Lieferung übernommen'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ''
+
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung wurde an den Lieferservice gesendet. Sie werden kontaktiert'
+
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung ist unterwegs'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = 'Ihre Bestellung wurde zur Lieferung übernommen'
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ''
+
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_DE = 'Sie haben Ihre Bestellung storniert'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = 'Die Lieferung Ihrer Bestellung wurde storniert'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = 'Die Lieferung Ihrer Bestellung wurde storniert'
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_DELIVERED_TITLE_DE = ''
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung wurde zugestellt'
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_DE = 'Ihre Bestellung wurde zugestellt'
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_DE = ''
+
+
 
 def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -> dict:
     if not extra_data:
@@ -571,6 +740,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     organization_title=extra_data.get('organization_title')),
                                 title_ru=NEW_ORGANIZATION_TITLE_RU,
                                 description_ru=NEW_ORGANIZATION_DESCRIPTION_RU.format(
+                                    organization_title=extra_data.get('organization_title')),
+                                title_de=NEW_ORGANIZATION_TITLE_DE,
+                                description_de=NEW_ORGANIZATION_DESCRIPTION_DE.format(
                                     organization_title=extra_data.get('organization_title')))
 
     elif notification_type == NEW_DEVICE:
@@ -581,67 +753,92 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 description_ru=NEW_DEVICE_DESCRIPTION_RU.format(
                                     device_title=extra_data.get('device_title'),
                                     location=extra_data.get('location')),
-                                    created_at=extra_data.get('created_at'))
+                                title_de=NEW_DEVICE_TITLE_DE,
+                                description_de=NEW_DEVICE_DESCRIPTION_DE.format(
+                                    device_title=extra_data.get('device_title'),
+                                    location=extra_data.get('location')))
 
     elif notification_type == ORGANIZATION_OWN_TYPE:
         notification_str = dict(title=ORGANIZATION_OWN_TITLE,
                                 description=ORGANIZATION_OWN_DESCRIPTION,
                                 title_ru=ORGANIZATION_OWN_TITLE_RU,
-                                description_ru=ORGANIZATION_OWN_DESCRIPTION)
+                                description_ru=ORGANIZATION_OWN_DESCRIPTION,
+                                title_de=ORGANIZATION_OWN_TITLE_DE,
+                                description_de=ORGANIZATION_OWN_DESCRIPTION_DE)
 
     elif notification_type == ORGANIZATION_GAVE_TYPE:
         notification_str = dict(title=ORGANIZATION_GAVE_TITLE,
                                 description=ORGANIZATION_GAVE_DESCRIPTION,
                                 title_ru=ORGANIZATION_GAVE_TITLE_RU,
-                                description_ru=ORGANIZATION_GAVE_DESCRIPTION)
+                                description_ru=ORGANIZATION_GAVE_DESCRIPTION,
+                                title_de=ORGANIZATION_GAVE_TITLE_DE,
+                                description_de=ORGANIZATION_GAVE_DESCRIPTION_DE)
 
     elif notification_type == ORGANIZATION_MESSAGE_TYPE:
         title_ru = ''
         title = ''
+        title_de = ''
         if extra_data.get('message_to') == 'organization_followers':
             title = ORGANIZATION_MESSAGE_TITLE
             title_ru = ORGANIZATION_MESSAGE_TITLE_RU
+            title_de = ORGANIZATION_MESSAGE_TITLE_DE
         elif extra_data.get('message_to') == 'partners_followers':
             title = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             title_ru = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
+            title_de = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE
         elif extra_data.get('message_to') == 'partners_members':
             title = ORGANIZATION_MESSAGE_PARTNERS_TITLE
             title_ru = ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU
+            title_de = ORGANIZATION_MESSAGE_PARTNERS_TITLE_DE
         notification_str = dict(title=title,
                                 description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=extra_data.get('content')),
                                 title_ru=title_ru,
                                 description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
-                                    content=extra_data.get('content')))
+                                    content=extra_data.get('content')),
+                                title_de=title_de,
+                                description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(content=extra_data.get('content'))
+                                )
     elif notification_type == ORGANIZATION_MESSAGE_SENDER_TYPE:
         title_ru = ''
         title = ''
+        title_de = ''
         if extra_data.get('message_to') == 'organization_followers':
             title = ORGANIZATION_OWNER_MESSAGE_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_TITLE_RU
+            title_de = ORGANIZATION_OWNER_MESSAGE_TITLE_DE
         elif extra_data.get('message_to') == 'partners_followers':
             title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
+            title_de = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE
         elif extra_data.get('message_to') == 'partners_members':
             title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU
+            title_de = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_DE
         notification_str = dict(title=title,
                                 description=ORGANIZATION_MESSAGE_DESCRIPTION.format(content=extra_data.get('content')),
                                 title_ru=title_ru,
                                 description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
+                                    content=extra_data.get('content')),
+                                title_de=title_de,
+                                description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(
                                     content=extra_data.get('content')))
 
     elif notification_type == NEW_CASHBACK:
         notification_str = dict(title=NEW_CASHBACK_TITLE.format(percent=extra_data.get('cashback')),
                                 description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data.get('address')),
                                 title_ru=NEW_CASHBACK_TITLE_RU.format(percent=extra_data.get('cashback')),
-                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')))
+                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')),
+                                title_de=NEW_CASHBACK_TITLE_DE.format(percent=extra_data.get('cashback')),
+                                description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NEW_DISCOUNT_TYPE:
         notification_str = dict(
             title=NEW_DISCOUNT_TITLE.format(percent=extra_data.get('percent')),
             title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data.get('percent')),
+            title_de=NEW_DISCOUNT_TITLE_DE.format(percent=extra_data.get('percent')),
             description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data.get('address')),
-            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == WITHDRAW_CASHBACK_CLIENT:
         notification_str = dict(
@@ -652,6 +849,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=WITHDRAW_CASHBACK_CLIENT_TITLE_RU.format(amount=extra_data.get('amount'),
                                                               currency=extra_data.get('currency')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=WITHDRAW_CASHBACK_CLIENT_TITLE_DE.format(amount=extra_data.get('amount'),
+                                                              currency=extra_data.get('currency')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
     elif notification_type == CHARGE_CASHBACK_CLIENT:
         notification_str = dict(
@@ -662,6 +863,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=CHARGE_CASHBACK_CLIENT_TITLE_RU.format(amount=extra_data.get('amount'),
                                                             currency=extra_data.get('currency')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=CHARGE_CASHBACK_CLIENT_TITLE_DE.format(amount=extra_data.get('amount'),
+                                                            currency=extra_data.get('currency')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
     elif notification_type == WITHDRAW_CASHBACK_SELLER:
         notification_str = dict(
@@ -672,6 +877,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=WITHDRAW_CASHBACK_SELLER_TITLE_RU.format(amount=extra_data.get('amount'),
                                                               currency=extra_data.get('currency')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=WITHDRAW_CASHBACK_SELLER_TITLE_DE.format(amount=extra_data.get('amount'),
+                                                              currency=extra_data.get('currency')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
     elif notification_type == CHARGE_CASHBACK_SELLER:
         notification_str = dict(
@@ -682,32 +891,46 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=CHARGE_CASHBACK_SELLER_TITLE_RU.format(amount=extra_data.get('amount'),
                                                             currency=extra_data.get('currency')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=CHARGE_CASHBACK_SELLER_TITLE_DE.format(amount=extra_data.get('amount'),
+                                                            currency=extra_data.get('currency')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
     elif notification_type == CHECK_ATTENDANCE_IN:
         notification_str = dict(title=CHECK_ATTENDANCE_IN_TITLE.format(organization=extra_data.get('organization')),
                                 description=ATTENDANCE_DESCRIPTION,
                                 title_ru=CHECK_ATTENDANCE_IN_TITLE_RU.format(
                                     organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU)
+                                description_ru=ATTENDANCE_DESCRIPTION_RU,
+                                title_de=CHECK_ATTENDANCE_IN_TITLE_DE.format(
+                                    organization=extra_data.get('organization')),
+                                description_de=ATTENDANCE_DESCRIPTION_DE)
 
     elif notification_type == CHECK_ATTENDANCE_OUT:
         notification_str = dict(title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=extra_data.get('organization')),
                                 description=ATTENDANCE_DESCRIPTION,
                                 title_ru=CHECK_ATTENDANCE_OUT_TITLE_RU.format(
                                     organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU)
+                                description_ru=ATTENDANCE_DESCRIPTION_RU,
+                                title_de=CHECK_ATTENDANCE_OUT_TITLE_DE.format(
+                                    organization=extra_data.get('organization')),
+                                description_de=ATTENDANCE_DESCRIPTION_DE)
 
     elif notification_type == ATTENDANCE_IN:
         notification_str = dict(title=ATTENDANCE_IN_TITLE.format(organization=extra_data.get('organization')),
                                 description=ATTENDANCE_DESCRIPTION,
                                 title_ru=ATTENDANCE_IN_TITLE_RU.format(organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU)
+                                description_ru=ATTENDANCE_DESCRIPTION_RU,
+                                title_de=ATTENDANCE_IN_TITLE_DE.format(organization=extra_data.get('organization')),
+                                description_de=ATTENDANCE_DESCRIPTION_DE)
 
     elif notification_type == ATTENDANCE_OUT:
         notification_str = dict(title=ATTENDANCE_OUT_TITLE.format(organization=extra_data.get('organization')),
                                 description=ATTENDANCE_DESCRIPTION,
                                 title_ru=ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU)
+                                description_ru=ATTENDANCE_DESCRIPTION_RU,
+                                title_de=ATTENDANCE_OUT_TITLE_DE.format(organization=extra_data.get('organization')),
+                                description_de=ATTENDANCE_DESCRIPTION_DE)
 
     elif notification_type == ACCEPT_DISCOUNT_TYPE:
         notification_str = dict(
@@ -716,6 +939,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              currency=extra_data.get('currency')),
             title_ru=DISCOUNT_COMPLETE_USER_TITLE_RU.format(discount_percent=extra_data.get('discount_percent')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=DISCOUNT_COMPLETE_USER_TITLE_DE.format(discount_percent=extra_data.get('discount_percent')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
 
 
@@ -726,6 +952,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                              currency=extra_data.get('currency')),
             title_ru=DISCOUNT_COMPLETE_TITLE_RU.format(discount_percent=extra_data.get('discount_percent')),
             description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
+                                                                   currency=extra_data.get('currency')),
+            title_de=DISCOUNT_COMPLETE_TITLE_DE.format(discount_percent=extra_data.get('discount_percent')),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
                                                                    currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_DISCOUNT_TYPE:
@@ -737,6 +966,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 title_ru=TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU,
                 description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
                                                                                     currency=extra_data.get(
+                                                                                        'currency')),
+                title_de=TRANSACTION_DECLINED_NOTIFICATION_TITLE_DE,
+                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(savings=extra_data.get('savings'),
+                                                                                    currency=extra_data.get(
                                                                                         'currency')))
         else:
             notification_str = dict(
@@ -746,6 +979,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 title_ru=YOU_DECLINED_NOTIFICATION_TITLE_RU,
                 description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
                                                                                     currency=extra_data.get(
+                                                                                        'currency')),
+                title_de=YOU_DECLINED_NOTIFICATION_TITLE_DE,
+                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(savings=extra_data.get('savings'),
+                                                                                    currency=extra_data.get(
                                                                                         'currency')))
 
     elif notification_type == FOLLOWED_TO_ORGANIZATION_TYPE:
@@ -754,6 +991,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     address=extra_data.get('address')),
                                 title_ru=FOLLOWED_TO_ORGANIZATION_TITLE_RU,
                                 description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                                    address=extra_data.get('address')),
+                                title_de=FOLLOWED_TO_ORGANIZATION_TITLE_DE,
+                                description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
                                     address=extra_data.get('address')))
 
     elif notification_type == ORGANIZATION_FOLLOWED_TYPE:
@@ -762,6 +1002,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                     address=extra_data.get('address')),
                                 title_ru=ORGANIZATION_FOLLOWED_TITLE_RU,
                                 description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                                    address=extra_data.get('address')),
+                                title_de=ORGANIZATION_FOLLOWED_TITLE_DE,
+                                description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
                                     address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE:
@@ -772,7 +1015,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE:
         notification_str = dict(
@@ -782,7 +1029,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE:
         notification_str = dict(
@@ -792,19 +1043,27 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_RECRUIT_JOB_TYPE:
         notification_str = dict(title=RECRUIT_JOB_TITLE,
                                 description=RECRUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=RECRUIT_JOB_TITLE_RU,
-                                description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')))
+                                description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
+                                title_de=RECRUIT_JOB_TITLE_DE,
+                                description_de=RECRUIT_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')))
 
     elif notification_type == NOTIFICATION_TYPE_GET_JOB_TYPE:
         notification_str = dict(title=GET_JOB_TITLE,
                                 description=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=GET_JOB_TITLE_RU,
-                                description_ru=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')))
+                                description_ru=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
+                                title_de=GET_JOB_TITLE_DE,
+                                description_de=GET_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')))
 
     elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION:
         notification_str = dict(title=CHANGE_JOB_POSITION_TITLE,
@@ -814,21 +1073,27 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 title_ru=CHANGE_JOB_POSITION_TITLE_RU,
                                 description_ru=CHANGE_JOB_POSITION_DESCRIPTION_RU.format(
                                     old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position'))
-                                )
+                                    new_position=extra_data.get('new_position')),
+                                title_de=CHANGE_JOB_POSITION_TITLE_DE,
+                                description_de=CHANGE_JOB_POSITION_DESCRIPTION_DE.format(
+                                    old_position=extra_data.get('old_position'),
+                                    new_position=extra_data.get('new_position')))
+
     elif notification_type == NOTIFICATION_TYPE_DISMISS_JOB:
         notification_str = dict(title=DISMISS_JOB_TITLE,
                                 description=DISMISS_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=DISMISS_JOB_TITLE_RU,
                                 description_ru=DISMISS_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
-                                )
+                                title_de=DISMISS_JOB_TITLE_DE,
+                                description_de=DISMISS_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')))
 
     elif notification_type == NOTIFICATION_TYPE_QUIT_JOB:
         notification_str = dict(title=QUIT_JOB_TITLE,
                                 description=QUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
                                 title_ru=QUIT_JOB_TITLE_RU,
                                 description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
-                                )
+                                title_de=QUIT_JOB_TITLE_DE,
+                                description_de=QUIT_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')))
 
     elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER:
         notification_str = dict(title=CHANGE_JOB_POSITION_OWNER_TITLE,
@@ -839,7 +1104,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 description_ru=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU.format(
                                     old_position=extra_data.get('old_position'),
                                     new_position=extra_data.get('new_position')),
-                                )
+                                title_de=CHANGE_JOB_POSITION_OWNER_TITLE_DE,
+                                description_de=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE.format(
+                                    old_position=extra_data.get('old_position'),
+                                    new_position=extra_data.get('new_position')))
     elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
             title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
@@ -848,7 +1116,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
@@ -858,7 +1130,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
@@ -868,7 +1144,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
                                                          recipient_organization=extra_data.get(
                                                              'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')))
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
+                                                         recipient_organization=extra_data.get(
+                                                             'recipient_organization')),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')))
 
     elif notification_type == ACCEPT_ORDER_TYPE:
         notification_str = dict(
@@ -878,7 +1158,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=ACCEPT_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')),
-            currency=extra_data.get('currency'))
+            title_de=ACCEPT_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RENTAL_TYPE:
         notification_str = dict(
@@ -888,7 +1170,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             title_ru=ACCEPT_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')),
-            currency=extra_data.get('currency'))
+            title_de=ACCEPT_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ORDER_TYPE:
         notification_str = dict(
@@ -897,6 +1181,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RENTAL_TYPE:
@@ -906,7 +1193,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_ORDER_PAYMENT_TYPE:
         notification_str = dict(
@@ -915,7 +1205,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RENTAL_PAYMENT_TYPE:
         notification_str = dict(
@@ -924,7 +1217,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_ORDER_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
@@ -933,7 +1229,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
@@ -942,7 +1241,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ORDER_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
@@ -951,7 +1253,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RENTAL_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
@@ -960,7 +1265,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ORDER_PAYMENT_TYPE:
         notification_str = dict(
@@ -969,7 +1277,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ORDER_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ORDER_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RENTAL_PAYMENT_TYPE:
         notification_str = dict(
@@ -978,7 +1289,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ACCEPTED_RENTAL_TYPE:
         notification_str = dict(
@@ -987,7 +1301,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ACCEPTED_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ACCEPTED_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE:
         notification_str = dict(
@@ -996,14 +1313,19 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == NEW_COMMENT_TYPE:
         notification_str = dict(
             title=NEW_COMMENT_TITLE_EN,
             description=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
             title_ru=NEW_COMMENT_TITLE_RU,
-            description_ru=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')))
+            description_ru=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
+            title_de=NEW_COMMENT_TITLE_DE,
+            description_de=NEW_COMMENT_DESCRIPTION_DE.format(comment_text=extra_data.get('comment_text')))
 
     elif notification_type == REQUEST_ONLINE_ORDER_TYPE:
         notification_str = dict(
@@ -1012,6 +1334,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=REQUEST_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_TYPE:
@@ -1021,6 +1346,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=REQUEST_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_RENTAL_TYPE:
@@ -1030,7 +1358,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=REQUEST_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
+
     elif notification_type == REQUEST_RESUME_TYPE:
         notification_str = dict(
             title=REQUEST_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
@@ -1038,6 +1370,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=REQUEST_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ORGANIZATION_REQUEST_RESUME_TYPE:
@@ -1047,6 +1382,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=REQUEST_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RESUME_TYPE:
@@ -1056,6 +1394,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=ACCEPT_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=ACCEPT_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RESUME_TYPE:
@@ -1065,6 +1406,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=DECLINE_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=DECLINE_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_ORDER_CLIENT_TYPE:
@@ -1074,6 +1418,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
 
@@ -1084,7 +1431,11 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
     elif notification_type == WITHDRAWAL_UNDER_REVIEW_TYPE:
         notification_str = dict(
@@ -1093,7 +1444,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=UNDER_REVIEW_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
     elif notification_type == ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE:
         notification_str = dict(
@@ -1102,7 +1456,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
     elif notification_type == WITHDRAWAL_ACCEPTED_TYPE:
         notification_str = dict(
@@ -1111,7 +1468,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPTED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
 
     elif notification_type == ORGANIZATION_WITHDRAWAL_DECLINED_TYPE:
@@ -1121,7 +1481,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
     elif notification_type == WITHDRAWAL_DECLINED_TYPE:
         notification_str = dict(
@@ -1130,7 +1493,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
+                                                            currency=extra_data.get('currency')))
 
 
     elif notification_type == ACCEPTED_ONLINE_ORDER_CLIENT_TYPE:
@@ -1140,6 +1506,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RENTAL_CLIENT_TYPE:
@@ -1149,7 +1518,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACCEPT_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_ORDER_CLIENT_TYPE:
         notification_str = dict(
@@ -1158,6 +1530,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RENTAL_CLIENT_TYPE:
@@ -1167,7 +1542,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == DECLINE_RESUME_CLIENT_TYPE:
         notification_str = dict(
@@ -1176,7 +1554,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=DECLINE_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_ORDER_CLIENT_TYPE:
         notification_str = dict(
@@ -1185,6 +1566,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_ORDER_CLIENT_TITLE_RU,
             description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=REQUEST_ORDER_CLIENT_TITLE_DE,
+            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_RENTAL_CLIENT_TYPE:
@@ -1194,7 +1578,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=REQUEST_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=REQUEST_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == REQUEST_RESUME_CLIENT_TYPE:
         notification_str = dict(
@@ -1203,6 +1590,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE:
@@ -1212,6 +1602,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ACCEPT_RESUME_CLIENT_TYPE:
@@ -1221,6 +1614,9 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                      currency=extra_data.get('currency')),
             title_ru=ACCEPT_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
             description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
+                                                        currency=extra_data.get('currency')),
+            title_de=ACCEPT_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
+            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
                                                         currency=extra_data.get('currency')))
 
     elif notification_type == ACTIVATE_RENTAL_TYPE:
@@ -1230,7 +1626,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACTIVATE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACTIVATE_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACTIVATE_RENTAL_CLIENT_TYPE:
         notification_str = dict(
@@ -1239,7 +1638,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACTIVATE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACTIVATE_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACTIVATE_TICKET_TYPE:
         notification_str = dict(
@@ -1248,7 +1650,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACTIVATE_TICKET_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACTIVATE_TICKET_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == ACTIVATE_TICKET_CLIENT_TYPE:
         notification_str = dict(
@@ -1257,7 +1662,10 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                     currency=extra_data.get('currency')),
             title_ru=ACTIVATE_TICKET_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
             description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')))
+                                                       currency=extra_data.get('currency')),
+            title_de=ACTIVATE_TICKET_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')))
 
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY:
         notification_str = dict(
@@ -1270,6 +1678,13 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU,
             description_ru=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU.format(
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_DELIVERY_AVAILABLE_TITLE_DE,
+            description_de=NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_DE.format(
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
@@ -1287,6 +1702,13 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU.format(
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_DE.format(
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
@@ -1311,6 +1733,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT:
@@ -1325,6 +1755,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_RU.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_DE.format(
                 # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),
@@ -1350,6 +1788,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION:
@@ -1364,6 +1810,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE.format(
                 # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),
@@ -1388,6 +1842,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
@@ -1402,6 +1864,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE.format(
                 # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),
@@ -1426,6 +1896,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT:
@@ -1445,6 +1923,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_DE.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
             )
         )
     elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION:
@@ -1459,6 +1945,14 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             ),
             title_ru=NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_RU.format(
+                # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
+                # organization=extra_data.get('organization'),
+                # total_price=extra_data.get('total_price'),
+                # currency=extra_data.get('currency'),
+                # transaction_id=extra_data.get('transaction_id')
+            ),
+            title_de=NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_DE,
+            description_de=NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_DE.format(
                 # delivery_orgnanization=extra_data.get('delivery_orgnanization'),
                 # organization=extra_data.get('organization'),
                 # total_price=extra_data.get('total_price'),

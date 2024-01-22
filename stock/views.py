@@ -1,8 +1,9 @@
 from django.db.models import Q, Case, When, Value, IntegerField
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, RetrieveAPIView, GenericAPIView
 from io import BytesIO
 
+from django.utils.translation import activate
 import pandas as pd
 from django.http import HttpResponse
 from rest_framework.generics import ListAPIView
@@ -16,7 +17,7 @@ from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemRetrieveSerializer
 from shop.services.category_services import ItemSubcategoryService
 from shop.services.item_services import ShopItemService
-from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount
+from stock.models import SizeFormat, ShopItemSetStock, ShopItemLinksSetStock, ShopItemSizeCount, FormatCriteria
 from stock.serializers import FormatCriteriaSerializer, SizeFormatSerializer, CriteriaSubcategorySerializer, \
     CreateAvailableSizesSerializer, ShopItemsAvailableSizesSerializer, ShopItemsSetSerializer, \
     ShopItemShortSerializer, LinkStockSerializer, ShopItemSetSerializer, ShopItemLinkSetSerializer, \
@@ -526,3 +527,47 @@ class DownloadOrgDeliveryRentalInfoAPIView(APIView):
             )
             response['Content-Disposition'] = 'attachment; filename=%s' % filename
             return response
+
+
+class TranslateNamesOfFormatCriteria(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        name_translations = {
+            'Великобритания': {'de': 'Großbritannien', 'zh': '英国'},
+            'США': {'de': 'USA', 'zh': '美国'},
+            'Китай': {'de': 'China', 'zh': '中国'},
+            'Количество комнат': {'de': 'Zimmeranzahl', 'zh': '房间数量'},
+            'Италия': {'de': 'Italien', 'zh': '意大利'},
+            'ВЕЛИКОБРИТАНИЯ': {'de': 'Großbritannien', 'zh': '英国'},
+            'Япония': {'de': 'Japan', 'zh': '日本'},
+            'Россия': {'de': 'Russland', 'zh': '俄罗斯'},
+            'Дания': {'de': 'Dänemark', 'zh': '丹麦'},
+            'Европа': {'de': 'Europa', 'zh': '欧洲'},
+            'Международный': {'de': 'International', 'zh': '国际'},
+            'ЕВРО': {'de': 'Euro', 'zh': '欧元'},
+            'Рост См': {'de': 'Wachstum in cm', 'zh': '身高增长（厘米）'}
+        }
+
+        for original_name, translations in name_translations.items():
+            try:
+                # Use filter() instead of get() to handle potential multiple results
+                items = FormatCriteria.objects.filter(name_ru=original_name)
+
+                for item in items:
+                    activate('de')
+                    item.name = translations.get('de', original_name)
+                    item.save()
+
+                    activate('zh')
+                    item.name = translations.get('zh', original_name)
+                    item.save()
+
+                    # Switch back to the default language
+                    activate('en')
+
+            except FormatCriteria.DoesNotExist:
+                print(f"FormatCriteria with name '{original_name}' does not exist.")
+                continue
+
+        return Response(data={'message': _('Translations added successfully')}, status=status.HTTP_200_OK)

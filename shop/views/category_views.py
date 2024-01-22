@@ -165,12 +165,16 @@ class ItemSubcategoryCreateView(CreateAPIView):
         name_ru = GoogleTranslator().translate(serializer.validated_data['name'], 'RU').text
         name_en = GoogleTranslator().translate(serializer.validated_data['name'], 'EN').text
         name_tr = GoogleTranslator().translate(serializer.validated_data['name'], 'TR').text
+        name_de = GoogleTranslator().translate(serializer.validated_data['name'], 'DE').text
+        name_zh = GoogleTranslator().translate(serializer.validated_data['name'], 'zh-CN').text
         subcategory = ItemSubcategory.objects.create(organization=serializer.validated_data['organization'],
-                                       name=serializer.validated_data['name'],
-                                       category=serializer.validated_data['category'],
-                                       name_ru=name_ru,
-                                       name_en=name_en,
-                                       name_tr=name_tr)
+                                                     name=serializer.validated_data['name'],
+                                                     category=serializer.validated_data['category'],
+                                                     name_ru=name_ru,
+                                                     name_en=name_en,
+                                                     name_tr=name_tr,
+                                                     name_de=name_de,
+                                                     name_zh=name_zh)
         subcategory.save()
         return Response(self.serializer_class(subcategory).data, status=status.HTTP_201_CREATED)
 

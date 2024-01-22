@@ -1,8 +1,7 @@
 import calendar
-from django.utils.translation import activate
+
 from django.db import IntegrityError
 from datetime import datetime
-from django.db import models
 from django.db.models.query_utils import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -19,8 +18,8 @@ from common.exceptions import IntegrityException, NotAcceptableException, Object
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
 from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
-from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfo, ResumeInfoFile, \
-    Education, ResumeRequest, ItemCategory, ItemSubcategory
+from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfoFile, \
+    Education, ResumeRequest
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
 from shop.serializers.item_serializers import (
     ItemCreateUpdateSerializer, ItemRetrieveSerializer, ItemRentalRetrieveSerializer, ItemChangePublishedSerializer,
@@ -1092,34 +1091,3 @@ class DeclineResumeRequestView(GenericAPIView):
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
 
-
-class TranslateNamesOfItemSubategoryV1(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request, *args, **kwargs):
-        name_translations = {
-
-        }
-
-        for original_name, translations in name_translations.items():
-            try:
-                # Use filter() instead of get() to handle potential multiple results
-                items = ItemSubcategory.objects.filter(name_ru=original_name)
-
-                for item in items:
-                    activate('de')
-                    item.name = translations.get('de', original_name)
-                    item.save()
-
-                    activate('zh')
-                    item.name = translations.get('zh', original_name)
-                    item.save()
-
-                    # Switch back to the default language
-                    activate('en')
-
-            except ItemSubcategory.DoesNotExist:
-                print(f"ItemSubcategory with name '{original_name}' does not exist.")
-                continue
-
-        return Response(data={'message': _('Translations added successfully')}, status=status.HTTP_200_OK)

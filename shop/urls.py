@@ -29,7 +29,7 @@ from shop.views.item_views import (
     ResumeWorkExperienceListView, ResumeWorkExperienceUpdateView, ResumeInfoRetrieveAPIView, EducationListView,
     ResumeEducationListView, ResumeEducationUpdateView, SubmitResumeRequestView, AcceptResumeRequestView,
     DeclineResumeRequestView, UserResumeRequestRetrieveView, OrganizationSubmitResumeRequestView,
-    OrganizationResumeRequestRetrieveView, TranslateNamesOfItemSubategoryV1
+    OrganizationResumeRequestRetrieveView
 )
 
 urlpatterns = [
@@ -140,7 +140,5 @@ urlpatterns = [
     path('comments/like/', CommentLike.as_view(), name='comment_like'),
     path('comments/complaints/', CommentComplaintCreateView.as_view(), name='comment_complaint_create'),
 
-    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items'),
-    path('translate_item_subcategory_names/', TranslateNamesOfItemSubategoryV1.as_view(),
-         name='translate_item_subcategory_names')
+    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items')
 ]

@@ -190,7 +190,7 @@ class ResumeInfoRetrieveAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, **kwargs):
-        detail_info = ResumeInfoService.get_info_of_resume(item=kwargs['pk'])
+        detail_info = ResumeInfoService.get_info_of_resume(item_id=kwargs['pk'])
         data = ResumeInfoSerializer(detail_info).data
         return Response(data)
 

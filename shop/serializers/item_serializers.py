@@ -179,7 +179,7 @@ class ResumeInfoSerializer(serializers.ModelSerializer):
         return resume_info.item.resume_social_networks.exists()
 
     def get_detail_info_filled(self, resume_info: ResumeInfo):
-        return resume_info.item.resume_detail_info is not None
+        return hasattr(resume_info.item, 'resume_detail_info') and resume_info.item.resume_detail_info is not None
 
     def get_work_experience_filled(self, resume_info: ResumeInfo):
         return resume_info.item.resume_work_experience.exists()

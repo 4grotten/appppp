@@ -17,6 +17,7 @@ from organizations.services.organization_services import OrganizationService, Or
     OrgSocialNetworkContactService
 from shop.models import ResumeInfo, ShopItem, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, \
     ResumeWorkExperience, ResumeEducation, ResumeRequest
+from shop.services.item_services import ShopItemService
 from users.models import User
 from users.services import PhoneNumberService, SocialNetworkContactService
 
@@ -30,11 +31,13 @@ class ResumeInfoService:
             raise ObjectNotFoundException(_('ShopItem not found'))
 
     @classmethod
-    def get_info_of_resume(cls, item: ShopItem):
+    def get_info_of_resume(cls, item_id: int):
         try:
-            return ResumeInfo.objects.get(item=item)
-        except ResumeInfo.DoesNotExist:
-            return None
+            resume = ShopItemService.get(id=item_id)
+            resume_info, created = ResumeInfo.objects.get_or_create(item=resume, defaults={})
+            return resume_info
+        except IntegrityError:
+            raise IntegrityException(_('Resume not found'))
 
     @classmethod
     def update_resume_info(cls, item: ShopItem, gender=None, full_name=None, date_of_birth=None, languages=None, files=None):

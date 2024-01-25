@@ -377,8 +377,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     def get_has_online_payment(self, organization: Organization):
         freedompay_confirmed = organization.freedompay_confirmed
         paysy_confirmed = organization.paysy_confirmed
+        libersave_confirmed = organization.libersave_confirmed
 
-        return freedompay_confirmed or paysy_confirmed
+        return freedompay_confirmed or paysy_confirmed or libersave_confirmed
 
     def get_online_payment_activated(self, organization: Organization):
         payment_systems_activated = organization.payment_systems_activated
@@ -386,8 +387,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             return False
         freedompay_activated = organization.freedompay_activated
         paysy_activated = organization.paysy_activated
+        libersave_activated = organization.libersave_activated
 
-        return freedompay_activated or paysy_activated
+        return freedompay_activated or paysy_activated or libersave_activated
 
     class Meta:
         model = Organization
@@ -428,10 +430,10 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'country', 'city',
             'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
-            'paysy_activated', 'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed',
-            'paysy_confirmed', 'is_active', 'is_deleted', 'is_banned', 'is_under_review', 'is_private', 'show_contacts',
-            'is_wholesale', 'can_update_is_wholesale', 'is_delivery_service', 'is_bank', 'show_followers',
-            'is_show_on_map')
+            'paysy_activated', 'libersave_activated', 'payment_systems_activated', 'payment_with_confirmation',
+            'freedompay_confirmed', 'paysy_confirmed', 'libersave_confirmed', 'is_active', 'is_deleted', 'is_banned',
+            'is_under_review', 'is_private', 'show_contacts', 'is_wholesale', 'can_update_is_wholesale',
+            'is_delivery_service', 'is_bank', 'show_followers', 'is_show_on_map')
         read_only_fields = ['verification_status']
 
     def get_is_show_on_map(self, organization: Organization):
@@ -624,8 +626,9 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
             return False
         freedompay_activated = organization.freedompay_activated
         paysy_activated = organization.paysy_activated
+        libersave_activated = organization.libersave_activated
 
-        return freedompay_activated or paysy_activated
+        return freedompay_activated or paysy_activated or libersave_activated
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -652,8 +655,9 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
             return False
         freedompay_activated = organization.freedompay_activated
         paysy_activated = organization.paysy_activated
+        libersave_activated = organization.libersave_activated
 
-        return freedompay_activated or paysy_activated
+        return freedompay_activated or paysy_activated or libersave_activated
 
     class Meta:
         model = Organization

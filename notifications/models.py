@@ -56,6 +56,10 @@ class Notification(TimestampModel):
             self.description_ru = notification_str['description_ru']
             self.title_de = notification_str['title_de']
             self.description_de = notification_str['description_de']
+            self.title_tr = notification_str['title_tr']
+            self.description_tr = notification_str['description_tr']
+            self.title_zh = notification_str['title_zh']
+            self.description_zh = notification_str['description_zh']
         super().save(*args, **kwargs)
 
         self.send_notification(
@@ -64,9 +68,13 @@ class Notification(TimestampModel):
             title=self.title,
             title_ru=self.title_ru,
             title_de=self.title_de,
+            title_tr=self.title_tr,
+            title_zh=self.title_zh,
             description=self.description,
             description_ru=self.description_ru,
             description_de=self.description_de,
+            description_tr=self.description_tr,
+            description_zh=self.description_zh,
             mode=self.mode,
             notification_id=self.id,
             organization=self.organization,
@@ -75,8 +83,9 @@ class Notification(TimestampModel):
         )
 
     @classmethod
-    def send_notification(cls, user: User, title: str, title_ru: str, title_de: str, description: str,
-                          description_ru: str, description_de: str, notification_id: int, mode: str, type: str,
+    def send_notification(cls, user: User, title: str, title_ru: str, title_de: str, title_tr: str, title_zh: str,
+                          description: str, description_ru: str, description_de: str, description_tr: str,
+                          description_zh: str, notification_id: int, mode: str, type: str,
                           organization=None, extra_data=None, item=None):
         organization_image = cls.get_organization_small_image(organization=organization) if organization else None,
         image = cls.get_item_small_image(item=item) if type == 'new_comment' else organization_image
@@ -146,6 +155,56 @@ class Notification(TimestampModel):
         notification_payload_de = {
             'title': title_de,
             'body': description_de,
+            'click_action': type,
+            'sound': 'default',
+            'data': {
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
+        }
+
+        notification_payload_tr = {
+            'title': title_tr,
+            'body': description_tr,
+            'click_action': type,
+            'sound': 'default',
+            'data': {
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type
+            },
+            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
+        }
+
+        notification_payload_zh = {
+            'title': title_zh,
+            'body': description_zh,
             'click_action': type,
             'sound': 'default',
             'data': {
@@ -246,6 +305,58 @@ class Notification(TimestampModel):
             },
         }
 
+        notification_payload_web_tr = {
+            'data': {
+                'title': title_tr,
+                'body': description_tr,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type,
+                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            },
+
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
+        }
+
+        notification_payload_web_zh = {
+            'data': {
+                'title': title_zh,
+                'body': description_zh,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type,
+                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
+            },
+
+            'extra_kwargs': {
+                'mutable_content': True,
+            },
+        }
+
         notification_payload_android = {
             'data': {
                 'title': title,
@@ -309,12 +420,58 @@ class Notification(TimestampModel):
             }
         }
 
+        notification_payload_tr_android = {
+            'data': {
+                'title': title_tr,
+                'body': description_tr,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type
+            }
+        }
+
+        notification_payload_zh_android = {
+            'data': {
+                'title': title_zh,
+                'body': description_zh,
+                'click_action': type,
+                'sound': 'default',
+                'notification_id': notification_id,
+                'organization': {
+                    'id': organization.id,
+                    'title': organization.title
+                } if organization else None,
+                'item': {
+                    'id': item.id,
+                    'name': item.name,
+                } if item else None,
+                'image': image,
+                'extra_data': extra_data,
+                'type': type
+            }
+        }
+
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='ios')
         fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en', type='ios')
         fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de = notification_setting.fcm_device.filter(settingstotoken__language='de', type='ios')
         fcm_devices_de.send_message(**notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='ios')
+        fcm_devices_tr.send_message(**notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='ios')
+        fcm_devices_zh.send_message(**notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
         fcm_devices_ru_web = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='web')
         fcm_devices_ru_web.send_message(**notification_payload_web_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
@@ -322,6 +479,10 @@ class Notification(TimestampModel):
         fcm_devices_en_web.send_message(**notification_payload_web, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de_web = notification_setting.fcm_device.filter(settingstotoken__language='de', type='web')
         fcm_devices_de_web.send_message(**notification_payload_web_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr_web = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='web')
+        fcm_devices_tr_web.send_message(**notification_payload_web_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh_web = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='web')
+        fcm_devices_zh_web.send_message(**notification_payload_web_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
 
         fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')
@@ -330,6 +491,10 @@ class Notification(TimestampModel):
         fcm_devices_en_android.send_message(**notification_payload_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de_android = notification_setting.fcm_device.filter(settingstotoken__language='de', type='android')
         fcm_devices_de_android.send_message(**notification_payload_de_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr_android = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='android')
+        fcm_devices_tr_android.send_message(**notification_payload_tr_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh_android = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='android')
+        fcm_devices_zh_android.send_message(**notification_payload_zh_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
 
     @staticmethod
@@ -363,11 +528,13 @@ class SettingsToToken(TimestampModel):
     RUSSIAN = 'ru'
     TURKISH = 'tr'
     GERMAN = 'de'
+    CHINESE = 'zh'
     LANGUAGES = (
         (ENGLISH, ENGLISH),
         (RUSSIAN, RUSSIAN),
         (TURKISH, TURKISH),
-        (GERMAN, GERMAN)
+        (GERMAN, GERMAN),
+        (CHINESE, CHINESE)
     )
     notification_settings = models.ForeignKey(NotificationSetting, on_delete=models.CASCADE)
     fcm_device = models.ForeignKey(FCMDevice, on_delete=models.CASCADE)

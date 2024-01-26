@@ -1727,9 +1727,11 @@ class InitPaymentView(GenericAPIView):
                 'x-api-key': LIBERSAVE_API_KEY,
                 'Content-Type': 'application/json',
             }
+            print(data)
+            print(headers)
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
-
+            print(response_json)
             redirect_url = response_json.get('pay_url')
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)

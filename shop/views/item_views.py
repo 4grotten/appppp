@@ -190,7 +190,7 @@ class ResumeInfoRetrieveAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, **kwargs):
-        detail_info = ResumeInfoService.get_info_of_resume(item=kwargs['pk'])
+        detail_info = ResumeInfoService.get_info_of_resume(item_id=kwargs['pk'])
         data = ResumeInfoSerializer(detail_info).data
         return Response(data)
 
@@ -1088,6 +1088,42 @@ class DeclineResumeRequestView(GenericAPIView):
         resume_request_id = serializer.validated_data['resume_request_id']
 
         ResumeRequestService.decline_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+
+        return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
+
+
+class OrganizationAcceptResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AcceptDeclineUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        resume_request_id = serializer.validated_data['resume_request_id']
+
+        ResumeRequestService.accept_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+
+        return Response(data={'message': _('Successfully accepted resume request')}, status=status.HTTP_200_OK)
+
+
+class OrganizationDeclineResumeRequestView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = AcceptDeclineUserResumeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        resume_request_id = serializer.validated_data['resume_request_id']
+
+        ResumeRequestService.decline_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
 

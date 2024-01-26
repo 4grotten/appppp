@@ -9,7 +9,9 @@ from notifications.constants import (
     ORGANIZATION_FOLLOWED_TITLE, SUBSCRIPTION_NOTIFICATION_DESCRIPTION, NOTIFICATION_MODE_PERSONAL,
     BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION, BG_ORGANIZATION_FOLLOWED_DESCRIPTION,
     BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU,
-    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE
+    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE,
+    BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_TR, BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_ZH,
+    BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH
 )
 from notifications.tasks import sent_notification
 from organizations.models import Organization, Subscription
@@ -62,6 +64,8 @@ class SubscriptionService:
                                     bg_description=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION,
                                     bg_description_ru=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU,
                                     bg_description_de=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE,
+                                    bg_description_tr=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_TR,
+                                    bg_description_zh=BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_ZH,
                                     sender=UserInfoSerializer(user).data)
                 )
                 sent_notification.delay(
@@ -75,7 +79,9 @@ class SubscriptionService:
                                     address=organization.address,
                                     bg_description_client=BG_ORGANIZATION_FOLLOWED_DESCRIPTION,
                                     bg_description_client_ru=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU,
-                                    bg_description_client_de=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE)
+                                    bg_description_client_de=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE,
+                                    bg_description_client_tr=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR,
+                                    bg_description_client_zh=BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH)
                 )
                 subscription.status = 'subscribed'
                 subscription.save()

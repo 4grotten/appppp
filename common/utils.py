@@ -3,6 +3,7 @@ import posixpath
 import hashlib
 import datetime
 import decimal
+import re
 import uuid
 import os
 from pathlib import Path
@@ -124,3 +125,14 @@ class DecimalDecoder(json.JSONDecoder):
             if obj["__type__"] == "decimal":
                 return decimal.Decimal(obj["__value__"])
         return obj
+
+
+def generate_new_order_id(old_order_id):
+    # Ensure the old order ID matches the specified regular expression
+    old_order_id = re.sub(r'[^a-zA-Z0-9]', '', old_order_id)
+
+    # Generate a new order ID using a combination of the old order ID and a unique identifier
+    unique_suffix = str(uuid.uuid4().hex)[:170 - len(old_order_id)]
+    new_order_id = old_order_id + unique_suffix
+
+    return new_order_id

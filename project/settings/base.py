@@ -157,7 +157,7 @@ LANGUAGES = (
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'ru'
 MODELTRANSLATION_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
 MODELTRANSLATION_AVAILABLE_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
-MODELTRANSLATION_FALLBACK_LANGUAGES = ('ru', 'en', 'tr', 'de', 'zh',)
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('en', 'tr', 'de', 'zh',)
 
 TIME_ZONE = 'UTC'
 
@@ -419,3 +419,5 @@ FREEDOMPAY_RECEIVE_SECRET = config('FREEDOMPAY_RECEIVE_SECRET', default='notasec
 FREEDOMPAY_PAYOUT_SECRET = config('FREEDOMPAY_PAYOUT_SECRET', default='notasecret')
 
 PAYSY_API_KEY = config('PAYSY_API_KEY', default='notasecret')
+
+LIBERSAVE_API_KEY = config('LIBERSAVE_API_KEY', default='notasecret')

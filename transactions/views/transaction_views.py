@@ -19,8 +19,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.services.currency import CurrencyConverterService
+from common.utils import generate_new_order_id
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
-    PAYSY_API_KEY
+    PAYSY_API_KEY, LIBERSAVE_API_KEY
 from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -1593,6 +1594,7 @@ class InitPaymentView(GenericAPIView):
     """
     1 - FreedomPay
     2 - PaySy
+    3 - Libersave
     """
 
     def post(self, request, *args, **kwargs):
@@ -1700,6 +1702,39 @@ class InitPaymentView(GenericAPIView):
             if order_id:
                 redirect_url = redirect_url + order_id
                 return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
+        elif kwargs['pk'] == 3:
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="EUR", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.01')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            success_url = TransactionService.get_success_url(request=request)
+            currency = "EUR"
+            url = "https://api.libersave.com/api/mc/payment"
+            # order_id = generate_new_order_id(str(transaction_id))
+            amount_float = float(converted_amount)
+            if amount_float < 1:
+                amount_float = 1
+            data = {
+                'amount': amount_float,
+                'order_id': str(transaction_id),
+                'currency': currency,
+                'redirect_url': success_url
+            }
+            headers = {
+                'accept': 'application/json',
+                'x-api-key': LIBERSAVE_API_KEY,
+                'Content-Type': 'application/json',
+            }
+
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+            redirect_url = response_json.get('pay_url')
+            response_data = {"redirect_url": redirect_url}
+            return Response(data=response_data, status=status.HTTP_200_OK)
         else:
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 

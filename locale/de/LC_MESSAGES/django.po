@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-25 12:23+0000\n"
+"POT-Creation-Date: 2024-01-26 07:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,9 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
-"%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: common/exceptions.py:5 organizations/services/organization_services.py:249
 msgid "Something went wrong"
@@ -320,9 +318,9 @@ msgstr ""
 #: transactions/views/transaction_views.py:1564
 #: transactions/views/transaction_views.py:1582
 #: transactions/views/transaction_views.py:1604
-#: transactions/views/transaction_views.py:1774
-#: transactions/views/transaction_views.py:1967
-#: transactions/views/transaction_views.py:2003 users/views.py:60
+#: transactions/views/transaction_views.py:1776
+#: transactions/views/transaction_views.py:1969
+#: transactions/views/transaction_views.py:2005 users/views.py:60
 #: users/views.py:126 users/views.py:165 users/views.py:210 users/views.py:252
 #: users/views.py:273 users/views.py:328 users/views.py:350 users/views.py:398
 #: users/views.py:428 users/views.py:465 users/views.py:512 users/views.py:533
@@ -455,10 +453,8 @@ msgid "Not your delivery"
 msgstr ""
 
 #: delivery/views.py:147 delivery/views.py:235
-#, fuzzy
-#| msgid "This field is required"
 msgid "This order is already delivered"
-msgstr "Это поле обязательное"
+msgstr ""
 
 #: instagram_parsers/models.py:8 instagram_parsers/models.py:9
 #: instagram_parsers/models.py:24 instagram_parsers/models.py:25
@@ -576,7 +572,7 @@ msgstr ""
 
 #: organizations/models.py:330 organizations/models.py:332
 msgid "This field is required"
-msgstr "Это поле обязательное"
+msgstr ""
 
 #: organizations/models.py:357
 msgid "Organization client financial statuses"
@@ -763,11 +759,11 @@ msgstr ""
 #: organizations/services/organization_services.py:92
 #: organizations/services/organization_services.py:100
 msgid "Owner"
-msgstr "Собственник"
+msgstr "Eigentümer"
 
 #: organizations/services/organization_services.py:105
 msgid "Client"
-msgstr "Клиент"
+msgstr ""
 
 #: organizations/services/organization_services.py:259
 #, python-brace-format
@@ -1048,15 +1044,15 @@ msgstr ""
 
 #: project/settings/base.py:150
 msgid "Russian"
-msgstr "Русский"
+msgstr ""
 
 #: project/settings/base.py:151
 msgid "English"
-msgstr "Английский"
+msgstr ""
 
 #: project/settings/base.py:152
 msgid "Turkish"
-msgstr "Турецкий"
+msgstr ""
 
 #: project/settings/base.py:153
 msgid "German"
@@ -1214,10 +1210,8 @@ msgid "Could not reject resume request"
 msgstr ""
 
 #: shop/services/ticket_services.py:22
-#, fuzzy
-#| msgid "This field is required"
 msgid "This ticket already was activated"
-msgstr "Это поле обязательное"
+msgstr ""
 
 #: shop/views/cart_views.py:182
 msgid "Already delivered"
@@ -1574,10 +1568,8 @@ msgid "This transaction already was rejected"
 msgstr ""
 
 #: transactions/services/transaction_services.py:3043
-#, fuzzy
-#| msgid "This field is required"
 msgid "This rental already was activated"
-msgstr "Это поле обязательное"
+msgstr ""
 
 #: transactions/views/transaction_views.py:200
 #: transactions/views/transaction_views.py:229
@@ -1603,21 +1595,21 @@ msgstr ""
 
 #: transactions/views/transaction_views.py:1473
 msgid "Users don't match"
-msgstr "Пользователи не совпадают"
+msgstr ""
 
-#: transactions/views/transaction_views.py:1781
+#: transactions/views/transaction_views.py:1783
 msgid "Failed to retrieve company information from PaySy"
 msgstr ""
 
-#: transactions/views/transaction_views.py:1782
+#: transactions/views/transaction_views.py:1784
 msgid "Company information retrieval failed"
 msgstr ""
 
-#: transactions/views/transaction_views.py:1826
+#: transactions/views/transaction_views.py:1828
 msgid "Failed to retrieve order ID from PaySy response"
 msgstr ""
 
-#: transactions/views/transaction_views.py:1827
+#: transactions/views/transaction_views.py:1829
 msgid "Order ID retrieval failed"
 msgstr ""
 
@@ -1812,8 +1804,3 @@ msgstr ""
 #: users/views.py:624 users/views.py:648
 msgid "User does not exists"
 msgstr ""
-
-#, fuzzy
-#~| msgid "This field is required"
-#~ msgid "This field is required."
-#~ msgstr "Это поле обязательное"

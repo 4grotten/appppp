@@ -1170,6 +1170,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                 description_zh=ORGANIZATION_MESSAGE_DESCRIPTION_ZH.format(
                                     content=extra_data.get('content'))
                                 )
+
     elif notification_type == ORGANIZATION_MESSAGE_SENDER_TYPE:
         title_ru = ''
         title = ''

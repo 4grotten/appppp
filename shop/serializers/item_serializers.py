@@ -1353,7 +1353,8 @@ class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status')
+        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status',
+                  'text')
 
     def get_processed_by(self, resume_request: ResumeRequest):
         if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
@@ -1388,7 +1389,7 @@ class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
-                  'status')
+                  'status', 'text')
 
     def get_processed_by(self, resume_request: ResumeRequest):
         if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,

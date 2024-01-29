@@ -386,6 +386,7 @@ class ResumeRequest(TimestampModel):
     show_contacts = models.BooleanField(default=True)
     phone_numbers = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)
+    text = models.TextField(null=True, blank=True)
     status = models.CharField(choices=STATUS, max_length=20, default=IN_PROGRESS)
 
     def __str__(self):

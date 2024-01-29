@@ -189,7 +189,7 @@ class ResumeRequestService:
 
     @classmethod
     def process_user_resume_request(cls, sender_user: User, organization: Organization, item: ShopItem,
-                                    show_contacts: bool, phone_numbers=None, links=None):
+                                    show_contacts: bool, phone_numbers=None, links=None, text=None):
         if show_contacts:
             user_phone_numbers_list = []
             user_phone_numbers = PhoneNumberService.get_numbers_of_user(user_id=sender_user.id)
@@ -202,11 +202,11 @@ class ResumeRequestService:
                 user_links_list.append(user_link.url)
             resume_request = ResumeRequest.objects.create(sender_user=sender_user, organization=organization,
                                                           item=item, phone_numbers=user_phone_numbers_list,
-                                                          links=user_links_list)
+                                                          links=user_links_list, text=text)
         else:
             resume_request = ResumeRequest.objects.create(sender_user=sender_user, organization=organization,
                                                           item=item, show_contacts=show_contacts,
-                                                          phone_numbers=phone_numbers, links=links)
+                                                          phone_numbers=phone_numbers, links=links, text=text)
 
         Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &
@@ -242,7 +242,8 @@ class ResumeRequestService:
 
     @classmethod
     def process_organization_resume_request(cls, user: User, sender_organization: Organization, organization: Organization,
-                                            item: ShopItem, show_contacts: bool, phone_numbers=None, links=None):
+                                            item: ShopItem, show_contacts: bool, phone_numbers=None, links=None,
+                                            text=None):
         if show_contacts:
             org_phone_numbers_list = []
             org_phone_numbers = OrgPhoneNumberService.get_numbers_of_organization(
@@ -260,12 +261,12 @@ class ResumeRequestService:
             resume_request = ResumeRequest.objects.create(sender_organization=sender_organization, sender_user=user,
                                                           organization=organization, item=item,
                                                           phone_numbers=org_phone_numbers_list,
-                                                          links=org_links_list)
+                                                          links=org_links_list, text=text)
         else:
             resume_request = ResumeRequest.objects.create(sender_organization=sender_organization, sender_user=user,
                                                           organization=organization, item=item,
                                                           show_contacts=show_contacts, phone_numbers=phone_numbers,
-                                                          links=links)
+                                                          links=links, text=text)
 
         Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &

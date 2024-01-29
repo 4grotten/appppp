@@ -1022,9 +1022,10 @@ class SubmitResumeRequestView(GenericAPIView):
         show_contacts = serializer.validated_data['show_contacts']
         phone_numbers = serializer.validated_data['phone_numbers']
         links = serializer.validated_data['links']
+        text = serializer.validated_data.get('text')
         ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
                                                          item=item, show_contacts=show_contacts,
-                                                         phone_numbers=phone_numbers, links=links)
+                                                         phone_numbers=phone_numbers, links=links, text=text)
 
         return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
 
@@ -1046,12 +1047,13 @@ class OrganizationSubmitResumeRequestView(GenericAPIView):
         show_contacts = serializer.validated_data['show_contacts']
         phone_numbers = serializer.validated_data['phone_numbers']
         links = serializer.validated_data['links']
+        text = serializer.validated_data.get('text')
         ResumeRequestService.process_organization_resume_request(user=request.user,
                                                                  sender_organization=sender_organization,
                                                                  organization=organization, item=item,
                                                                  show_contacts=show_contacts,
                                                                  phone_numbers=phone_numbers,
-                                                                 links=links)
+                                                                 links=links, text=text)
 
         return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
 

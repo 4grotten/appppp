@@ -421,3 +421,5 @@ FREEDOMPAY_PAYOUT_SECRET = config('FREEDOMPAY_PAYOUT_SECRET', default='notasecre
 PAYSY_API_KEY = config('PAYSY_API_KEY', default='notasecret')
 
 LIBERSAVE_API_KEY = config('LIBERSAVE_API_KEY', default='notasecret')
+
+BETAPAY_API_TOKEN = config('BETAPAY_API_TOKEN', default='notasecret')

@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 from common.services.currency import CurrencyConverterService
 from common.utils import generate_new_order_id
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
-    PAYSY_API_KEY, LIBERSAVE_API_KEY
+    PAYSY_API_KEY, LIBERSAVE_API_KEY, BETAPAY_API_TOKEN
 from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -1595,6 +1595,7 @@ class InitPaymentView(GenericAPIView):
     1 - FreedomPay
     2 - PaySy
     3 - Libersave
+    4 - Betapay
     """
 
     def post(self, request, *args, **kwargs):
@@ -1733,6 +1734,44 @@ class InitPaymentView(GenericAPIView):
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
             redirect_url = response_json.get('pay_url')
+            response_data = {"redirect_url": redirect_url}
+            return Response(data=response_data, status=status.HTTP_200_OK)
+        elif kwargs['pk'] == 4:
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="EUR", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.01')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            webhook = TransactionService.get_webhook_betapay(request=request)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction)
+            currency = "EUR"
+            url = 'https://api.betapay.online/api/v3/openbanking-payment'
+            amount_float = float(converted_amount)
+            data = {
+                    "merchant_id": 591,
+                    "terminal_id": 619,
+                    "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                    "amount": amount_float,
+                    "currency_code": currency,
+                    "callback_url": webhook,
+                    "success_url": success_url,
+                    "fail_url": failure_url
+            }
+            headers = {
+                "token": BETAPAY_API_TOKEN
+            }
+            print(BETAPAY_API_TOKEN)
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+            print(response_json)
+
+            redirect_url = response_json.get('data', {}).get('"iframe_url":')
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
         else:
@@ -1885,6 +1924,43 @@ class PaySyWebhookView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
 
         return Response({"message": "Received an unknown event type"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BetaPayWebhookView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        order_id = payload.get('order_id')
+        user_id, transaction_id, purchase_type = order_id.split("|")
+        status = payload.get("status")
+        error_code = payload.get("error_code")
+        error_message = payload.get("error_message")
+
+        user_id = int(user_id)
+        user = UserService.get(id=user_id)
+        transaction_id = int(transaction_id)
+        transaction = TransactionService.get(id=transaction_id)
+        if error_code == "":
+            if status == "approved":
+                if purchase_type == 'product':
+                    TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
+                                                                                   user=user)
+
+                elif purchase_type == 'deal':
+                    TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
+
+                else:
+                    TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
+                                                                                     user=user,
+                                                                                     request=self.request)
+                response_data = {
+                    'status': 'ok',
+                }
+                return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

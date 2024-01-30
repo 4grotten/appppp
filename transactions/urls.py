@@ -29,7 +29,7 @@ from transactions.views.transaction_views import (
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
     OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
-    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView
+    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView, BetaPayWebhookView
 )
 
 urlpatterns = [
@@ -149,6 +149,8 @@ urlpatterns = [
     # path('transactions/pay/paysy/', InitPaymentSwiftView.as_view(), name='create_order_paysy'),
     path('transactions/result/paysy/', PaySyWebhookView.as_view(), name='paysy_webhook'),
 
+    # BetaPay BetaPayWebhookView
+    path('transactions/result/betapay/', BetaPayWebhookView.as_view(), name='betapay_webhook'),
     # balance
     path('balances/', OrganizationBalanceListView.as_view(), name='organization_balance_transactions'),
     path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),

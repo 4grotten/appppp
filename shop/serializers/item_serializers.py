@@ -1324,7 +1324,7 @@ class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
         model = ShopItem
         fields = (
             'id', 'name', 'name_lang', 'description', 'description_lang',
-            'salary_from', 'salary_to', 'is_published', 'updated_at', 'images'
+            'salary_from', 'salary_to', 'is_published', 'updated_at', 'images', 'currency'
         )
 
 

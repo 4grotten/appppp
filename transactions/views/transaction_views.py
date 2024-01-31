@@ -1972,7 +1972,7 @@ class BetaPayPaymentTestView(APIView):
         transaction_id = payload.get("transaction_id")
         case = payload.get("payload")
 
-        url = 'https://api.betapay.online/api/v3/openbanking-payment'
+        url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
         data = {
                 "merchant_id": merchant_id,
                 "terminal_id": terminal_id,

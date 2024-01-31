@@ -1769,11 +1769,37 @@ class InitPaymentView(GenericAPIView):
             print(BETAPAY_API_TOKEN)
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
-            print(response_json)
+            print("response_json1", response_json)
 
-            redirect_url = response_json.get('data', {}).get('"iframe_url":')
-            response_data = {"redirect_url": redirect_url}
-            return Response(data=response_data, status=status.HTTP_200_OK)
+            # redirect_url = response_json.get('data', {}).get('"iframe_url":')
+            status_code = response_json.get('status', {}).get('code')
+            status_type = response_json.get('status', {}).get('type')
+            data_transaction_id = response_json.json('data', {}).get('transaction_id')
+            if status_code == 200 and status_type == "success":
+
+                url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
+                data = {
+                    "merchant_id": 591,
+                    "terminal_id": 619,
+                    "transaction_id": data_transaction_id,
+                    "case": "approved"
+                }
+                headers = {
+                    "token": BETAPAY_API_TOKEN
+                }
+                response = requests.post(url, headers=headers, json=data)
+                response_json2 = response.json()
+                print("response_json2", response_json2)
+                status_code2 = response_json2.get('status', {}).get('code')
+                data_status = response_json2.get('data', {}).get('status')
+                if status_code2 == 200 and data_status == "OK":
+                    redirect_url = success_url
+                    response_data = {"redirect_url": redirect_url}
+                    return Response(data=response_data, status=status.HTTP_200_OK)
+                else:
+                    redirect_url = failure_url
+                    response_data = {"redirect_url": redirect_url}
+                    return Response(data=response_data, status=status.HTTP_200_OK)
         else:
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 

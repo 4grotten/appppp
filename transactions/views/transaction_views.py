@@ -1774,7 +1774,7 @@ class InitPaymentView(GenericAPIView):
             # redirect_url = response_json.get('data', {}).get('"iframe_url":')
             status_code = response_json.get('status', {}).get('code')
             status_type = response_json.get('status', {}).get('type')
-            data_transaction_id = response_json.json('data', {}).get('transaction_id')
+            data_transaction_id = response_json.get('data', {}).get('transaction_id')
             if status_code == 200 and status_type == "success":
 
                 url = 'https://api.betapay.online/api/v3/openbanking-payment-test'

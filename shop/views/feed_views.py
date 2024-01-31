@@ -39,10 +39,13 @@ class FeedView(ListAPIView):
         if search and search[0] == '#':  # Search among posts if hashtag is used
             qs = qs.filter(is_published=True)
         elif search:
-            qs = qs.filter(is_published=True, price__isnull=False)
+            qs = qs.filter(is_published=True)
             qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
         else:
-            qs = qs.filter(is_published=True, price__isnull=False).order_by('-updated_at')
+            qs = qs.filter(is_published=True).order_by('-updated_at')
+
+        price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
+        qs = qs.filter(price_filter)
 
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)

@@ -192,11 +192,17 @@ class ResumeRequestService:
                                     show_contacts: bool, phone_numbers=None, links=None, text=None):
         if show_contacts:
             user_phone_numbers_list = []
+            if phone_numbers:
+                for phone_number in phone_numbers:
+                    user_phone_numbers_list.append(phone_number)
             user_phone_numbers = PhoneNumberService.get_numbers_of_user(user_id=sender_user.id)
             for user_phone_number in user_phone_numbers:
                 user_phone_numbers_list.append(user_phone_number.phone_number)
 
             user_links_list = []
+            if links:
+                for link in links:
+                    user_links_list.append(link)
             user_links = SocialNetworkContactService.get_networks_of_user(user_id=sender_user.id)
             for user_link in user_links:
                 user_links_list.append(user_link.url)
@@ -246,6 +252,9 @@ class ResumeRequestService:
                                             text=None):
         if show_contacts:
             org_phone_numbers_list = []
+            if phone_numbers:
+                for phone_number in phone_numbers:
+                    org_phone_numbers_list.append(phone_number)
             org_phone_numbers = OrgPhoneNumberService.get_numbers_of_organization(
                 organization_id=sender_organization.id
             )
@@ -253,6 +262,9 @@ class ResumeRequestService:
                 org_phone_numbers_list.append(org_phone_number.phone_number)
 
             org_links_list = []
+            if links:
+                for link in links:
+                    org_links_list.append(link)
             org_links = OrgSocialNetworkContactService.get_networks_of_organization(
                 organization_id=sender_organization.id
             )

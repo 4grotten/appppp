@@ -1963,6 +1963,31 @@ class BetaPayWebhookView(APIView):
         return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class BetaPayPaymentTestView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        merchant_id = payload.get("merchant_id")
+        terminal_id = payload.get("terminal_id")
+        transaction_id = payload.get("transaction_id")
+        case = payload.get("payload")
+
+        url = 'https://api.betapay.online/api/v3/openbanking-payment'
+        data = {
+                "merchant_id": merchant_id,
+                "terminal_id": terminal_id,
+                "transaction_id": transaction_id,
+                "case": case
+                }
+        headers = {
+            "token": BETAPAY_API_TOKEN
+        }
+        response = requests.post(url, headers=headers, json=data)
+        response_json = response.json()
+
+        return Response(response_json)
+
+
 
 class ResultURLView(APIView):
     def post(self, request, *args, **kwargs):

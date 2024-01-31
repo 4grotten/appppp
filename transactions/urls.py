@@ -29,7 +29,8 @@ from transactions.views.transaction_views import (
     UserWithdrawalTransactionOrganizationView, UserWithdrawalTransactionCountView,
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
     OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
-    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView, BetaPayWebhookView
+    WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView, BetaPayWebhookView,
+    BetaPayPaymentTestView
 )
 
 urlpatterns = [
@@ -151,6 +152,7 @@ urlpatterns = [
 
     # BetaPay BetaPayWebhookView
     path('transactions/result/betapay/', BetaPayWebhookView.as_view(), name='betapay_webhook'),
+    path('transactions/result/betapay/payment/test/', BetaPayPaymentTestView.as_view(), name='betapay_webhook'),
     # balance
     path('balances/', OrganizationBalanceListView.as_view(), name='organization_balance_transactions'),
     path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),

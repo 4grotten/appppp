@@ -405,6 +405,9 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 3:
             organization.libersave_activated = is_active
             organization.save()
+        elif id == 4:
+            organization.betapay_activated = is_active
+            organization.save()
         else:
             raise NotAcceptableException(_('Unknown Payment System'))
 
@@ -919,6 +922,9 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         if organization.libersave_confirmed:
             confirmed_payment_systems.append({'id': 3, 'name': 'Libersave в EUR',
                                               'is_active': organization.libersave_activated})
+        if organization.betapay_confirmed:
+            confirmed_payment_systems.append({'id': 4, 'name': 'Betapay в EUR',
+                                              'is_active': organization.betapay_activated})
 
         return confirmed_payment_systems
 
@@ -946,6 +952,8 @@ class PaymentSystemListView(generics.ListAPIView):
             available_payment_systems.append({'id': 2, 'name': 'PaySy в TRC', 'is_available': False})
         if not organization.libersave_confirmed:
             available_payment_systems.append({'id': 3, 'name': 'Libersave в EUR', 'is_available': False})
+        if not organization.betapay_confirmed:
+            available_payment_systems.append({'id': 4, 'name': 'Betapay в EUR', 'is_available': False})
 
         return available_payment_systems
 

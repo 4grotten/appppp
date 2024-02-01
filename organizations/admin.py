@@ -123,8 +123,9 @@ class OrganizationAdmin(admin.ModelAdmin):
             'fields': ('has_delivery', 'has_self_pick_up')
         }),
         ('Payment Systems', {
-            'fields': ('freedompay_activated', 'paysy_activated', 'libersave_activated', 'payment_systems_activated',
-                       'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed', 'libersave_confirmed')
+            'fields': ('freedompay_activated', 'paysy_activated', 'libersave_activated', 'betapay_activated',
+                       'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed',
+                       'paysy_confirmed', 'libersave_confirmed', 'betapay_confirmed')
         }),
         ('Status of Organization', {
             'fields': ('is_active', 'is_deleted', 'is_banned', 'is_private', 'is_under_review', 'is_delivery_service',
@@ -170,11 +171,13 @@ class OrganizationAdmin(admin.ModelAdmin):
                     organization_data['freedompay_activated'] = obj.freedompay_activated
                     organization_data['paysy_activated'] = obj.paysy_activated
                     organization_data['libersave_activated'] = obj.libersave_activated
+                    organization_data['betapay_activated'] = obj.betapay_activated
                     organization_data['payment_systems_activated'] = obj.payment_systems_activated
                     organization_data['payment_with_confirmation'] = obj.payment_with_confirmation
                     organization_data['freedompay_confirmed'] = obj.freedompay_confirmed
                     organization_data['paysy_confirmed'] = obj.paysy_confirmed
                     organization_data['libersave_confirmed'] = obj.libersave_confirmed
+                    organization_data['betapay_confirmed'] = obj.betapay_confirmed
                     organization_data['is_active'] = obj.is_active
                     organization_data['is_deleted'] = obj.is_deleted
                     organization_data['is_banned'] = obj.is_banned

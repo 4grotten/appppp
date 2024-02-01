@@ -200,7 +200,7 @@ class MyOrganizationsWithCanEditListCreateView(ListAPIView):
         user = self.request.user
         return Organization.objects.filter(Q(owner=user, is_deleted=False) |
                                            Q(memberships__user=user, is_deleted=False,
-                                             memberships__role__can_edit_organization=True))
+                                             memberships__role__can_edit_organization=True)).distinct()
 
 
 class OrganizationsMapsListView(APIView):

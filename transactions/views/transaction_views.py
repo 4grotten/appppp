@@ -1958,7 +1958,7 @@ class BetaPayWebhookView(APIView):
         payload = request.data
         order_id = payload.get('order_id')
         user_id, transaction_id, purchase_type = order_id.split("|")
-        status = payload.get("status")
+        status_value = payload.get("status")
         error_code = payload.get("error_code")
         error_message = payload.get("error_message")
 
@@ -1967,7 +1967,7 @@ class BetaPayWebhookView(APIView):
         transaction_id = int(transaction_id)
         transaction = TransactionService.get(id=transaction_id)
         if error_code == "":
-            if status == "approved":
+            if status_value == "approved":
                 if purchase_type == 'product':
                     TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
                                                                                    user=user)

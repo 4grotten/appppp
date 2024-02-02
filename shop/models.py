@@ -95,7 +95,9 @@ class ShopItem(models.Model):
     )
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items',
+                                     null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_shop_items', null=True, blank=True)
     subcategory = models.ForeignKey(ItemSubcategory, on_delete=models.SET_NULL, related_name='items_in_category',
                                     null=True, blank=True)
     name = models.CharField(max_length=255)

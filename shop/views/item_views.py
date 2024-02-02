@@ -34,7 +34,7 @@ from shop.serializers.item_serializers import (
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
     SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
-    OrganizationResumeRequestAcceptedSerializer
+    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -83,10 +83,14 @@ class ItemTicketCreateView(CreateAPIView):
 
 class ItemResumeCreateView(CreateAPIView):
     permissions = (IsAuthenticated,)
-    serializer_class = ItemCreateUpdateSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        if 'organization' in request.data:
+            serializer = ItemCreateUpdateSerializer(data=request.data, context={'request': request})
+        elif 'user' in request.data:
+            serializer = UserItemCreateUpdateSerializer(data=request.data, context={'request': request})
+        else:
+            return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)
         serializer.is_valid(raise_exception=True)
 
         serializer.save(purchase_type=ShopItem.RESUME)

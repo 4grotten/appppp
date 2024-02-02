@@ -8,11 +8,12 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
+from organizations.services.membership_services import MembershipService
 from users.models import User
 from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
-from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
+from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
     OrganizationTitleImageSerializer, OrganizationNotificationInfo
 from organizations.services.organization_services import OrganizationService
@@ -580,6 +581,24 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
             if organization:
                 instance.organization = organization
                 instance.save(update_fields=('organization',))
+
+                role, created = Role.objects.get_or_create(
+                    title='Vacancy Publisher',
+                    organization=organization,
+                    defaults={
+                        'can_sale': False,
+                        'can_check_attendance': False,
+                        'can_see_stats': False,
+                        'can_edit_organization': False,
+                        'can_send_message': True,
+                        'can_edit_partner': False,
+                        'can_deliver': False,
+                        'can_edit_own_resume': True
+                    }
+                )
+
+                MembershipService.add_employee(organization=organization, employee=user, role=role,
+                                               added_by=organization.owner)
         instance.location = point
         instance.save()
 
@@ -751,6 +770,7 @@ class ItemFeedSerializer(ItemListSerializer):
     education = EducationSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -821,6 +841,12 @@ class ItemFeedSerializer(ItemListSerializer):
 
         return preferred_locations_list
 
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
+
     class Meta:
         model = ShopItem
         fields = (
@@ -828,11 +854,11 @@ class ItemFeedSerializer(ItemListSerializer):
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
             'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address',
             'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship', 'education', 'current_locations',
-            'preferred_locations', 'links'
+            'preferred_locations', 'links', 'own_resume'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

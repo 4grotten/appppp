@@ -2,6 +2,7 @@ import calendar
 import datetime
 import ast
 
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.geos import Point
@@ -502,6 +503,93 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
         organization_data = self.validated_data.get('organization')
         Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('latitude', None)
+        representation.pop('longitude', None)
+        return representation
+
+
+class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
+    longitude = serializers.FloatField(allow_null=True, required=False)
+    latitude = serializers.FloatField(allow_null=True, required=False)
+    rental_period = RentItemsPeriodSerializer(required=False)
+    ticket_period = TicketPeriodSerializer(required=False)
+    citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
+    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'user', 'organization', 'subcategory',
+            'name', 'name_lang', 'description', 'description_lang',
+            'price', 'discount', 'article',
+            'instagram_link', 'images', 'videos', 'youtube_links',
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
+            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'current_locations', 'preferred_locations', 'links', 'education'
+        )
+        read_only_fields = ['name_lang', 'description_lang']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        max_items_for_user = 3
+
+        existing_items_count = ShopItem.objects.filter(user=user, purchase_type=ShopItem.RESUME).count()
+        if existing_items_count >= max_items_for_user:
+            raise NotAcceptableException(_('Maximum allowed resumes for user reached'))
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+        instance.location = point
+        instance.save()
+
+        return super().update(instance, validated_data)
+
+    def save(self, **kwargs):
+        images = self.validated_data.get('images', [])
+        for index, image in enumerate(images):
+            image.order = index
+            image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
+
+        longitude = self.validated_data.pop('longitude', None)
+        latitude = self.validated_data.pop('latitude', None)
+
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+
+        instance = super().save(**kwargs)
+        user = self.validated_data.get('user', None)
+        if user:
+            organization = Organization.objects.filter(types__is_resume=True).first()
+            if organization:
+                instance.organization = organization
+                instance.save(update_fields=('organization',))
+        instance.location = point
+        instance.save()
+
+        if instance.article == '' or instance.article is None:
+            instance.article = f"ART{instance.id}"
+            instance.save(update_fields=('article',))
+
+        if self.validated_data.get('price') == 0.00:
+            instance.price = None
+            instance.save()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

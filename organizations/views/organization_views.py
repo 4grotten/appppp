@@ -279,7 +279,7 @@ class OrganizationTypesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
     serializer_class = OrganizationCategorySerializer
-    queryset = OrganizationCategory.objects.all()
+    queryset = OrganizationCategory.objects.all().exclude(types__is_resume=True)
 
 
 class OrganizationAllTypesListView(ListAPIView):
@@ -289,7 +289,7 @@ class OrganizationAllTypesListView(ListAPIView):
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ['category']
     search_fields = ['title']
-    queryset = OrganizationType.objects.all()
+    queryset = OrganizationType.objects.all().exclude(is_resume=True)
 
 
 class OrganizationMapsTypesListView(ListAPIView):

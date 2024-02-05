@@ -909,9 +909,6 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
 
         organization = OrganizationService.get(id=organization_id)
 
-        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
-            raise NotAcceptableException(_('No rights to edit organization'))
-
         confirmed_payment_systems = []
         if organization.freedompay_confirmed:
             confirmed_payment_systems.append({'id': 1, 'name': 'FreedomPay оплата в KGS',

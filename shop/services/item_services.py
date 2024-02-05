@@ -259,3 +259,8 @@ class ShopItemService:
         )).order_by('name_order', '-updated_at', )
 
         return queryset
+
+
+    @classmethod
+    def get_user_resumes(cls, user: User):
+        return ShopItem.objects.filter(user=user)

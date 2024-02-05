@@ -34,7 +34,7 @@ from shop.serializers.item_serializers import (
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
     SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
-    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer
+    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer, ResumeItemRetrieveSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -47,6 +47,7 @@ from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService, CollectionService
 from shop.services.booking_services import BookingService
+from users.services import UserService
 from utils.translator import GoogleTranslator
 
 
@@ -1132,4 +1133,13 @@ class OrganizationDeclineResumeRequestView(GenericAPIView):
         ResumeRequestService.decline_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
+
+
+class UserResumesView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        items = ShopItemService.get_user_resumes(user=request.user)
+        data = ResumeItemRetrieveSerializer(items, many=True).data
+        return Response(data)
 

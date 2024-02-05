@@ -379,19 +379,21 @@ class ResumeRequestService:
             Q(extra_data__resume_request_id=resume_request.id) &
             (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete()
 
+        from organizations.serializers.organization_serializers import OrganizationNotificationInfo
         send_notifications_organization_members.delay(
-            members_organization_id=resume_request.sender_organization.id,
+            members_organization_id=resume_request.organization.id,
             mode=NOTIFICATION_MODE_RESUME,
             sender_id=processed_by.id,
             with_permissions=dict(can_edit_organization=True),
             notification_type=ORGANIZATION_ACCEPT_RESUME_TYPE,
-            organization_id=resume_request.sender_organization.id,
+            organization_id=resume_request.organization.id,
             extra_data=dict(item_id=resume_request.item.id,
                             resume_name=resume_request.item.name,
                             salary_from=str(resume_request.item.salary_from),
                             currency=resume_request.item.currency.code,
                             user_id=processed_by.id,
-                            resume_request_id=resume_request.id)
+                            resume_request_id=resume_request.id,
+                            sender_organization=OrganizationNotificationInfo(resume_request.sender_organization).data)
         )
 
         sent_notification.delay(

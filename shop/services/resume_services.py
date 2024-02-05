@@ -304,14 +304,14 @@ class ResumeRequestService:
             sender_id=user.id,
             with_permissions=dict(can_see_stats=True),
             notification_type=ORGANIZATION_REQUEST_RESUME_TYPE,
-            organization_id=resume_request.sender_organization.id,
+            organization_id=resume_request.organization.id,
             extra_data=dict(item_id=resume_request.item.id,
                             resume_name=resume_request.item.name,
                             salary_from=str(resume_request.item.salary_from),
                             currency=resume_request.item.currency.code,
                             user_id=user.id,
                             resume_request_id=resume_request.id,
-                            sender_organization=OrganizationNotificationInfo(resume_request.organization).data)
+                            sender_organization=OrganizationNotificationInfo(resume_request.sender_organization).data)
         )
 
     @classmethod

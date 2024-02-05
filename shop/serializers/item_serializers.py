@@ -1469,35 +1469,23 @@ class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
     sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'status')
-
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
 
 
 class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
     sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
                   'status', 'text')
-
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                      organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
 
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):

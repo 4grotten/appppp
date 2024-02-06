@@ -34,7 +34,8 @@ from shop.serializers.item_serializers import (
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
     SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
-    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer, ResumeItemRetrieveSerializer
+    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer, ResumeItemRetrieveSerializer,
+    ResumeFilterQuaryParamsSerializer, ResumeFeedSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -82,8 +83,60 @@ class ItemTicketCreateView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ItemResumeCreateView(CreateAPIView):
+class ItemResumeCreateView(ListCreateAPIView):
     permissions = (IsAuthenticated,)
+    serializer_class = ResumeFeedSerializer
+
+    def get_queryset(self):
+        queryset = ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+        serializer = ResumeFilterQuaryParamsSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Valid quary params are required'))
+        validated_data = serializer.validated_data
+
+        category = validated_data.get('category', None)
+        if category:
+            queryset = queryset.filter(subcategory__category_id=category)
+        subcategory = validated_data.get('subcategory', None)
+        if subcategory:
+            queryset = queryset.filter(subcategory_id=subcategory)
+
+        country = validated_data.get('country', None)
+        if country:
+            queryset = queryset.filter(preferred_locations__contains=country)
+        city = validated_data.get('city', None)
+        if city:
+            queryset = queryset.filter(preferred_locations__contains=city)
+
+        salary_from = validated_data.get('salary_from', None)
+        salary_to = validated_data.get('salary_to', None)
+        currency = validated_data.get('currency', None)
+        if salary_from:
+            queryset = queryset.filter(salary_from__gte=salary_from)
+        if salary_to:
+            queryset = queryset.filter(salary_to__lte=salary_to)
+        if currency:
+            queryset = queryset.filter(currency__code=currency)
+        has_work_experience = validated_data.get('has_work_experience')
+        if has_work_experience:
+            queryset = queryset.filter(resume_work_experience__isnull=False)
+        has_education = validated_data.get('has_education')
+        if has_education:
+            queryset = queryset.filter(resume_education__isnull=False)
+
+        gender = validated_data.get('gender')
+        if gender:
+            queryset = queryset.filter(resume_info__gender=gender)
+
+        return queryset
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True, context={'request': self.request})
+        return Response(serializer.data)
+
+
 
     def create(self, request, *args, **kwargs):
         if 'organization' in request.data:

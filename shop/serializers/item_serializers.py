@@ -863,6 +863,97 @@ class ItemFeedSerializer(ItemListSerializer):
         read_only_fields = ['name_lang', 'description_lang']
 
 
+class ResumeFeedSerializer(ItemListSerializer):
+    organization = ItemFeedOrganizationSerializer()
+    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    videos = VideoSerializer(many=True)
+    subcategory = ItemSubcategoryBriefSerializer()
+    is_liked = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    citizenship = CountryResumeSerializer(many=True)
+    education = EducationSerializer(many=True)
+    current_locations = serializers.SerializerMethodField()
+    preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
+
+    def get_is_liked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return LikeService.is_item_liked_by_user(item=item, user=user)
+
+    def get_is_bookmarked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
+
+    def get_can_comment(self, item: ShopItem) -> bool:
+        if self.context['request'].user:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
+    def get_current_locations(self, item: ShopItem):
+        current_locations_list = []
+        current_locations = item.current_locations
+        if current_locations and isinstance(current_locations, list):
+            for location_code in current_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    current_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        current_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return current_locations_list
+
+    def get_preferred_locations(self, item: ShopItem):
+        preferred_locations_list = []
+        preferred_locations = item.preferred_locations
+        if preferred_locations and isinstance(preferred_locations, list):
+            for location_code in preferred_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    preferred_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        preferred_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return preferred_locations_list
+
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
+            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
+            'created_at', 'updated_at', 'removed_at',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
+            'instagram_data', 'is_updated', 'comment_count', 'can_comment',
+            'purchase_type', 'full_location', 'address', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'education', 'current_locations', 'preferred_locations', 'links', 'own_resume'
+        )
+        read_only_fields = ['name_lang', 'description_lang']
+
+
 class StartDateTimeSerializer(serializers.Serializer):
     start_time = serializers.DateTimeField(required=False, default=None)
 
@@ -1490,6 +1581,19 @@ class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
     resume_request_id = serializers.IntegerField(required=True)
+
+
+class ResumeFilterQuaryParamsSerializer(serializers.Serializer):
+    category = serializers.IntegerField(required=False)
+    subcategory = serializers.IntegerField(required=False)
+    country = serializers.CharField(required=False)
+    city = serializers.IntegerField(required=False)
+    salary_from = serializers.IntegerField(required=False)
+    salary_to = serializers.IntegerField(required=False)
+    currency = serializers.CharField(required=False, allow_blank=True)
+    gender = serializers.CharField(required=False, allow_blank=True)
+    has_work_experience = serializers.BooleanField(required=False, allow_null=True)
+    has_education = serializers.BooleanField(required=False, allow_null=True)
 
 
 class BookInfoWithClientSerializer(serializers.ModelSerializer):

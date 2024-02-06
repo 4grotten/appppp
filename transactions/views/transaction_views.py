@@ -1753,8 +1753,8 @@ class InitPaymentView(GenericAPIView):
             currency = "EUR"
             url = 'https://api.betapay.online/api/v3/openbanking-payment'
             amount_float = float(converted_amount)
-            if amount_float < 6:
-                amount_float = 6
+            if amount_float < 8:
+                amount_float = 8
             data = {
                     "merchant_id": 591,
                     "terminal_id": 619,

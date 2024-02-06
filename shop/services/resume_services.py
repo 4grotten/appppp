@@ -289,7 +289,7 @@ class ResumeRequestService:
             recipient_id=user.id,
             mode=NOTIFICATION_MODE_RESUME,
             notification_type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE,
-            organization_id=resume_request.sender_organization.id,
+            organization_id=resume_request.organization.id,
             extra_data=dict(item_id=resume_request.item.id,
                             resume_name=resume_request.item.name,
                             salary_from=str(resume_request.item.salary_from),

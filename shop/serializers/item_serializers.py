@@ -13,7 +13,7 @@ from users.models import User
 from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
-from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role
+from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role, Membership
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
     OrganizationTitleImageSerializer, OrganizationNotificationInfo
 from organizations.services.organization_services import OrganizationService
@@ -596,9 +596,10 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
                         'can_edit_own_resume': True
                     }
                 )
-                if role:
+                is_employee = Membership.objects.filter(organization=organization, user=user, role=role).exists()
+                if not is_employee and user != organization.owner:
                     MembershipService.add_employee_to_resume_org(organization=organization, employee=user, role=role,
-                                                   added_by=organization.owner)
+                                                             added_by=organization.owner)
         instance.location = point
         instance.save()
 

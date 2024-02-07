@@ -1193,6 +1193,6 @@ class UserResumesView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         items = ShopItemService.get_user_resumes(user=request.user)
-        data = ResumeItemRetrieveSerializer(items, many=True).data
+        data = ResumeItemRetrieveSerializer(items, many=True, context={'request': request}).data
         return Response(data)
 

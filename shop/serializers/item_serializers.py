@@ -1523,12 +1523,13 @@ class SubmitOrganizationResumeRequestSerializer(serializers.ModelSerializer):
                   'links', 'text')
 
 class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
+    organization = ItemFeedOrganizationSerializer(allow_null=True)
     images = ImageSerializer(many=True)
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'organization',
             'salary_from', 'salary_to', 'is_published', 'updated_at', 'images', 'currency'
         )
 

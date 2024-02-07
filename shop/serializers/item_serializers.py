@@ -597,7 +597,7 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
                     }
                 )
 
-                MembershipService.add_employee(organization=organization, employee=user, role=role,
+                MembershipService.add_employee_to_resume_org(organization=organization, employee=user, role=role,
                                                added_by=organization.owner)
         instance.location = point
         instance.save()

@@ -1723,7 +1723,7 @@ class InitPaymentView(GenericAPIView):
                 'amount': amount_float,
                 'order_id': str(transaction_id),
                 'currency': currency,
-                'redirect_url': success_url
+                'redirect_url': success_url + f"/?transaction_id={transaction_id}"
             }
             headers = {
                 'accept': 'application/json',

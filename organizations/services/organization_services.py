@@ -151,6 +151,11 @@ class OrganizationService:
         return membership.role.can_edit_partner
 
     @classmethod
+    def user_can_edit_own_resume(cls, organization: Organization, user: User) -> bool:
+        permissions = cls.get_user_permissions_dict(organization=organization, user=user)
+        return permissions['can_edit_own_resume']
+
+    @classmethod
     def get_user_permissions_dict(cls, organization: Organization, user: User) -> dict:
         if organization.owner == user:
             permissions_dict = {
@@ -162,6 +167,7 @@ class OrganizationService:
                 'can_send_message': True,
                 'can_edit_partner': True,
                 'can_deliver': True if organization.is_delivery_service else False,
+                'can_edit_own_resume': True,
             }
             return permissions_dict
 
@@ -175,7 +181,8 @@ class OrganizationService:
                 'can_edit_organization': role.can_edit_organization,
                 'can_send_message': role.can_send_message,
                 'can_edit_partner': role.can_edit_partner,
-                'can_deliver': role.can_deliver
+                'can_deliver': role.can_deliver,
+                'can_edit_own_resume': role.can_edit_own_resume
             }
             return permissions_dict
         except ObjectNotFoundException:
@@ -220,6 +227,7 @@ class OrganizationService:
             'can_send_message': False,
             'can_edit_partner': False,
             'can_deliver': False,
+            'can_edit_own_resume': False,
         }
 
     @classmethod

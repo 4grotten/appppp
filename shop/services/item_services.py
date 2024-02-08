@@ -25,7 +25,8 @@ class ShopItemService:
 
     @classmethod
     def update_published_status(cls, user: User, item: ShopItem, is_published: bool):
-        if not OrganizationService.user_can_edit_organization(user=user, organization=item.organization):
+        if not OrganizationService.user_can_edit_organization(user=user, organization=item.organization) or \
+                OrganizationService.user_can_edit_own_resume(user=user, organization=item.organization):
             raise NotAcceptableException(_('No rights to edit this item'))
         if not is_published:
             CartItemService.delete_item_from_all_carts(item=item)
@@ -259,3 +260,8 @@ class ShopItemService:
         )).order_by('name_order', '-updated_at', )
 
         return queryset
+
+
+    @classmethod
+    def get_user_resumes(cls, user: User):
+        return ShopItem.objects.filter(user=user)

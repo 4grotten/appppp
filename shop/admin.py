@@ -30,7 +30,7 @@ class ItemSubcategoryAdmin(admin.ModelAdmin):
 
 
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'subcategory', 'price', 'discount', 'is_published', 'is_hidden',)
+    list_display = ('name', 'organization', 'user', 'subcategory', 'price', 'discount', 'is_published', 'is_hidden',)
     list_filter = ('is_published', 'is_hidden', 'subcategory', 'organization',)
     search_fields = ('name',)
     raw_id_fields = ('organization', 'subcategory', 'images', 'videos')

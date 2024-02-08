@@ -2,16 +2,18 @@ import calendar
 import datetime
 import ast
 
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 
+from organizations.services.membership_services import MembershipService
 from users.models import User
 from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
-from organizations.models import HotlinkCollectionItem, Organization, BlockedUser
+from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role, Membership
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
     OrganizationTitleImageSerializer, OrganizationNotificationInfo
 from organizations.services.organization_services import OrganizationService
@@ -510,6 +512,112 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         return representation
 
 
+class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
+    longitude = serializers.FloatField(allow_null=True, required=False)
+    latitude = serializers.FloatField(allow_null=True, required=False)
+    rental_period = RentItemsPeriodSerializer(required=False)
+    ticket_period = TicketPeriodSerializer(required=False)
+    citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
+    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'user', 'organization', 'subcategory',
+            'name', 'name_lang', 'description', 'description_lang',
+            'price', 'discount', 'article',
+            'instagram_link', 'images', 'videos', 'youtube_links',
+            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
+            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'current_locations', 'preferred_locations', 'links', 'education'
+        )
+        read_only_fields = ['name_lang', 'description_lang']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        max_items_for_user = 3
+
+        existing_items_count = ShopItem.objects.filter(user=user, purchase_type=ShopItem.RESUME).count()
+        if existing_items_count >= max_items_for_user:
+            raise NotAcceptableException(_('Maximum allowed resumes for user reached'))
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+        instance.location = point
+        instance.save()
+
+        return super().update(instance, validated_data)
+
+    def save(self, **kwargs):
+        images = self.validated_data.get('images', [])
+        for index, image in enumerate(images):
+            image.order = index
+            image.save(update_fields=('order',))
+
+        videos = self.validated_data.get('videos', [])
+        for index, video in enumerate(videos):
+            video.order = index
+            video.save(update_fields=('order',))
+
+        longitude = self.validated_data.pop('longitude', None)
+        latitude = self.validated_data.pop('latitude', None)
+
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+
+        instance = super().save(**kwargs)
+        user = self.validated_data.get('user', None)
+        if user:
+            organization = Organization.objects.filter(types__is_resume=True).first()
+            if organization:
+                instance.organization = organization
+                instance.save(update_fields=('organization',))
+
+                role, created = Role.objects.get_or_create(
+                    title='Vacancy Publisher',
+                    organization=organization,
+                    defaults={
+                        'can_sale': False,
+                        'can_check_attendance': False,
+                        'can_see_stats': False,
+                        'can_edit_organization': False,
+                        'can_send_message': True,
+                        'can_edit_partner': False,
+                        'can_deliver': False,
+                        'can_edit_own_resume': True
+                    }
+                )
+                is_employee = Membership.objects.filter(organization=organization, user=user, role=role).exists()
+                if not is_employee and user != organization.owner:
+                    MembershipService.add_employee_to_resume_org(organization=organization, employee=user, role=role,
+                                                             added_by=organization.owner)
+        instance.location = point
+        instance.save()
+
+        if instance.article == '' or instance.article is None:
+            instance.article = f"ART{instance.id}"
+            instance.save(update_fields=('article',))
+
+        if self.validated_data.get('price') == 0.00:
+            instance.price = None
+            instance.save()
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('latitude', None)
+        representation.pop('longitude', None)
+        return representation
+
+
 class ItemChangePublishedSerializer(serializers.Serializer):
     is_published = serializers.BooleanField()
     item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
@@ -663,6 +771,7 @@ class ItemFeedSerializer(ItemListSerializer):
     education = EducationSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -733,6 +842,12 @@ class ItemFeedSerializer(ItemListSerializer):
 
         return preferred_locations_list
 
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
+
     class Meta:
         model = ShopItem
         fields = (
@@ -740,11 +855,102 @@ class ItemFeedSerializer(ItemListSerializer):
             'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
             'is_liked', 'is_bookmarked', 'like_count',
             'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
             'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address',
             'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship', 'education', 'current_locations',
-            'preferred_locations', 'links'
+            'preferred_locations', 'links', 'own_resume'
+        )
+        read_only_fields = ['name_lang', 'description_lang']
+
+
+class ResumeFeedSerializer(ItemListSerializer):
+    organization = ItemFeedOrganizationSerializer()
+    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    videos = VideoSerializer(many=True)
+    subcategory = ItemSubcategoryBriefSerializer()
+    is_liked = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    citizenship = CountryResumeSerializer(many=True)
+    education = EducationSerializer(many=True)
+    current_locations = serializers.SerializerMethodField()
+    preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
+
+    def get_is_liked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return LikeService.is_item_liked_by_user(item=item, user=user)
+
+    def get_is_bookmarked(self, item: ShopItem) -> bool:
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
+
+    def get_can_comment(self, item: ShopItem) -> bool:
+        if self.context['request'].user:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
+    def get_current_locations(self, item: ShopItem):
+        current_locations_list = []
+        current_locations = item.current_locations
+        if current_locations and isinstance(current_locations, list):
+            for location_code in current_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    current_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        current_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return current_locations_list
+
+    def get_preferred_locations(self, item: ShopItem):
+        preferred_locations_list = []
+        preferred_locations = item.preferred_locations
+        if preferred_locations and isinstance(preferred_locations, list):
+            for location_code in preferred_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    preferred_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        preferred_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return preferred_locations_list
+
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
+            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
+            'created_at', 'updated_at', 'removed_at',
+            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
+            'instagram_data', 'is_updated', 'comment_count', 'can_comment',
+            'purchase_type', 'full_location', 'address', 'currency', 'salary_from', 'salary_to', 'citizenship',
+            'education', 'current_locations', 'preferred_locations', 'links', 'own_resume'
         )
         read_only_fields = ['name_lang', 'description_lang']
 
@@ -1318,12 +1524,13 @@ class SubmitOrganizationResumeRequestSerializer(serializers.ModelSerializer):
                   'links', 'text')
 
 class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
+    organization = ItemFeedOrganizationSerializer(allow_null=True)
     images = ImageSerializer(many=True)
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang',
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'organization',
             'salary_from', 'salary_to', 'is_published', 'updated_at', 'images', 'currency'
         )
 
@@ -1332,74 +1539,63 @@ class UserResumeRequestSerializer(serializers.ModelSerializer):
     sender_user = ProfileSerializer(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'status')
-
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
 
 
 class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
     sender_user = ProfileSerializer(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status',
                   'text')
 
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                      organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
-
 
 class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
     sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'status')
-
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
 
 
 class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
     sender_organization = OrganizationNotificationInfo(many=False, allow_null=True)
     organization = OrganizationTitleImageSerializer(allow_null=True)
     item = ResumeItemRetrieveSerializer(many=False, allow_null=True)
-    processed_by = serializers.SerializerMethodField()
+    processed_by = ProfileSerializer(many=False, allow_null=True)
 
     class Meta:
         model = ResumeRequest
         fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
                   'status', 'text')
 
-    def get_processed_by(self, resume_request: ResumeRequest):
-        if not resume_request.processed_by and OrganizationService.user_can_see_stats(user=self.context['request'].user,
-                                                                                      organization=resume_request.organization):
-            return self.context['request'].user.id
-        return resume_request.processed_by.id
-
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
     resume_request_id = serializers.IntegerField(required=True)
+
+
+class ResumeFilterQuaryParamsSerializer(serializers.Serializer):
+    category = serializers.IntegerField(required=False)
+    subcategory = serializers.IntegerField(required=False)
+    country = serializers.CharField(required=False)
+    city = serializers.IntegerField(required=False)
+    salary_from = serializers.IntegerField(required=False)
+    salary_to = serializers.IntegerField(required=False)
+    currency = serializers.CharField(required=False, allow_blank=True)
+    gender = serializers.CharField(required=False, allow_blank=True)
+    has_work_experience = serializers.BooleanField(required=False, allow_null=True)
+    has_education = serializers.BooleanField(required=False, allow_null=True)
 
 
 class BookInfoWithClientSerializer(serializers.ModelSerializer):

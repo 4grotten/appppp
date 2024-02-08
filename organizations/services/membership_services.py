@@ -103,6 +103,18 @@ class MembershipService:
         return cls.create(organization=organization, user=employee, role=role, added_by=added_by)
 
     @classmethod
+    def add_employee_to_resume_org(cls, organization: Organization, employee: User, role: Role, added_by: User) -> Membership:
+        from organizations.services.organization_services import OrganizationService
+
+        if not role.organization == organization:
+            raise NotAcceptableException(_('No such role in organization'))
+
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=added_by):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        return cls.create(organization=organization, user=employee, role=role, added_by=added_by)
+
+    @classmethod
     def update_role(cls, membership: Membership, new_role: Role) -> Membership:
         if not new_role.organization == membership.organization:
             raise NotAcceptableException(_('No such role in organization'))

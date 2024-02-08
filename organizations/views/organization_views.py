@@ -200,7 +200,7 @@ class MyOrganizationsWithCanEditListCreateView(ListAPIView):
         user = self.request.user
         return Organization.objects.filter(Q(owner=user, is_deleted=False) |
                                            Q(memberships__user=user, is_deleted=False,
-                                             memberships__role__can_edit_organization=True))
+                                             memberships__role__can_edit_organization=True)).distinct()
 
 
 class OrganizationsMapsListView(APIView):
@@ -279,7 +279,7 @@ class OrganizationTypesListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
     serializer_class = OrganizationCategorySerializer
-    queryset = OrganizationCategory.objects.all()
+    queryset = OrganizationCategory.objects.all().exclude(types__is_resume=True)
 
 
 class OrganizationAllTypesListView(ListAPIView):
@@ -289,7 +289,7 @@ class OrganizationAllTypesListView(ListAPIView):
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ['category']
     search_fields = ['title']
-    queryset = OrganizationType.objects.all()
+    queryset = OrganizationType.objects.all().exclude(is_resume=True)
 
 
 class OrganizationMapsTypesListView(ListAPIView):
@@ -908,9 +908,6 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         organization_id = self.kwargs.get('pk')
 
         organization = OrganizationService.get(id=organization_id)
-
-        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
-            raise NotAcceptableException(_('No rights to edit organization'))
 
         confirmed_payment_systems = []
         if organization.freedompay_confirmed:

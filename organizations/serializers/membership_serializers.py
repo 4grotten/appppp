@@ -22,11 +22,12 @@ class RoleSerializer(serializers.ModelSerializer):
     can_send_message = serializers.BooleanField()
     can_edit_partner = serializers.BooleanField()
     can_deliver = serializers.BooleanField()
+    can_edit_own_resume = serializers.BooleanField()
     class Meta:
         model = Role
         fields = (
             'id', 'title', 'can_sale', 'can_check_attendance', 'can_see_stats',
-            'can_edit_organization', 'can_send_message', 'can_edit_partner', 'can_deliver'
+            'can_edit_organization', 'can_send_message', 'can_edit_partner', 'can_deliver', 'can_edit_own_resume'
         )
 
 

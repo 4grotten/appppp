@@ -34,7 +34,8 @@ from shop.serializers.item_serializers import (
     EducationSerializer, ResumeEducationSerializer, ResumeEducationUpdateSerializer, SubmitUserResumeRequestSerializer,
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
     SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
-    OrganizationResumeRequestAcceptedSerializer
+    OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer, ResumeItemRetrieveSerializer,
+    ResumeFilterQuaryParamsSerializer, ResumeFeedSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -47,6 +48,7 @@ from shop.services.cart_services import CartItemService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService, CollectionService
 from shop.services.booking_services import BookingService
+from users.services import UserService
 from utils.translator import GoogleTranslator
 
 
@@ -81,12 +83,68 @@ class ItemTicketCreateView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ItemResumeCreateView(CreateAPIView):
+class ItemResumeCreateView(ListCreateAPIView):
     permissions = (IsAuthenticated,)
-    serializer_class = ItemCreateUpdateSerializer
+    serializer_class = ResumeFeedSerializer
+
+    def get_queryset(self):
+        queryset = ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+        serializer = ResumeFilterQuaryParamsSerializer(data=self.request.GET)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Valid quary params are required'))
+        validated_data = serializer.validated_data
+
+        category = validated_data.get('category', None)
+        if category:
+            queryset = queryset.filter(subcategory__category_id=category)
+        subcategory = validated_data.get('subcategory', None)
+        if subcategory:
+            queryset = queryset.filter(subcategory_id=subcategory)
+
+        country = validated_data.get('country', None)
+        if country:
+            queryset = queryset.filter(preferred_locations__contains=country)
+        city = validated_data.get('city', None)
+        if city:
+            queryset = queryset.filter(preferred_locations__contains=city)
+
+        salary_from = validated_data.get('salary_from', None)
+        salary_to = validated_data.get('salary_to', None)
+        currency = validated_data.get('currency', None)
+        if salary_from:
+            queryset = queryset.filter(salary_from__gte=salary_from)
+        if salary_to:
+            queryset = queryset.filter(salary_to__lte=salary_to)
+        if currency:
+            queryset = queryset.filter(currency__code=currency)
+        has_work_experience = validated_data.get('has_work_experience')
+        if has_work_experience:
+            queryset = queryset.filter(resume_work_experience__isnull=False)
+        has_education = validated_data.get('has_education')
+        if has_education:
+            queryset = queryset.filter(resume_education__isnull=False)
+
+        gender = validated_data.get('gender')
+        if gender:
+            queryset = queryset.filter(resume_info__gender=gender)
+
+        return queryset
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True, context={'request': self.request})
+        return Response(serializer.data)
+
+
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        if 'organization' in request.data:
+            serializer = ItemCreateUpdateSerializer(data=request.data, context={'request': request})
+        elif 'user' in request.data:
+            serializer = UserItemCreateUpdateSerializer(data=request.data, context={'request': request})
+        else:
+            return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)
         serializer.is_valid(raise_exception=True)
 
         serializer.save(purchase_type=ShopItem.RESUME)
@@ -1128,4 +1186,13 @@ class OrganizationDeclineResumeRequestView(GenericAPIView):
         ResumeRequestService.decline_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
+
+
+class UserResumesView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        items = ShopItemService.get_user_resumes(user=request.user)
+        data = ResumeItemRetrieveSerializer(items, many=True, context={'request': request}).data
+        return Response(data)
 

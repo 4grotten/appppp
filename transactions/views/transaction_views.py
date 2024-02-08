@@ -1708,14 +1708,15 @@ class InitPaymentView(GenericAPIView):
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
             converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                                 to_currency="EUR", amount=transaction.final_amount)
-            converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.01')
-            converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            if transaction.currency.code != "EUR":
+                converted_amount = Decimal(str(converted_amount))
+                increase = converted_amount * Decimal('0.01')
+                converted_amount += increase
+                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
             success_url = TransactionService.get_success_url(request=request)
             currency = "EUR"
             url = "https://api.libersave.com/api/mc/payment"
-            # order_id = generate_new_order_id(str(transaction_id))
+                # order_id = generate_new_order_id(str(transaction_id))
             amount_float = float(converted_amount)
             if amount_float < 1:
                 amount_float = 1
@@ -1741,10 +1742,11 @@ class InitPaymentView(GenericAPIView):
             transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
             converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
                                                                 to_currency="EUR", amount=transaction.final_amount)
-            converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.01')
-            converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            if transaction.currency.code != "EUR":
+                converted_amount = Decimal(str(converted_amount))
+                increase = converted_amount * Decimal('0.01')
+                converted_amount += increase
+                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             webhook = TransactionService.get_webhook_betapay(request=request)

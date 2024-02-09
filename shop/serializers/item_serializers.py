@@ -1586,13 +1586,10 @@ class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
 
 
 class ResumeFilterQuaryParamsSerializer(serializers.Serializer):
-    category = serializers.IntegerField(required=False)
-    subcategory = serializers.IntegerField(required=False)
     country = serializers.CharField(required=False)
     city = serializers.IntegerField(required=False)
     salary_from = serializers.IntegerField(required=False)
     salary_to = serializers.IntegerField(required=False)
-    currency = serializers.CharField(required=False, allow_blank=True)
     gender = serializers.CharField(required=False, allow_blank=True)
     has_work_experience = serializers.BooleanField(required=False, allow_null=True)
     has_education = serializers.BooleanField(required=False, allow_null=True)

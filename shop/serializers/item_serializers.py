@@ -443,7 +443,8 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         if subcategory_organization is not None and not subcategory_organization == organization:
             raise NotAcceptableException(_('Organization does not have this subcategory'))
 
-        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
+        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']) or \
+                OrganizationService.user_can_edit_own_resume(user=user, organization=attrs['organization']):
             raise NotAcceptableException(_('No rights to edit organization'))
 
         return attrs

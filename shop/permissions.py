@@ -22,4 +22,5 @@ class CanViewUnpublishedItem(permissions.BasePermission):
             return True
         elif not request.user.is_authenticated:
             return False
-        return OrganizationService.user_can_edit_organization(user=request.user, organization=obj.organization)
+        return OrganizationService.user_can_edit_organization(user=request.user, organization=obj.organization) or \
+               OrganizationService.user_can_edit_own_resume(user=request.user, organization=obj.organization)

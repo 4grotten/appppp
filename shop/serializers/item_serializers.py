@@ -715,6 +715,11 @@ class SubscriptionItemSerializer(ItemListSerializer):
     has_in_stock = serializers.SerializerMethodField()
     rental_period = RentItemsPeriodSerializer()
     ticket_period = TicketPeriodSerializer()
+    citizenship = CountryResumeSerializer(many=True)
+    education = EducationSerializer(many=True)
+    current_locations = serializers.SerializerMethodField()
+    preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -741,6 +746,50 @@ class SubscriptionItemSerializer(ItemListSerializer):
         return SizeFormatByItemSerializer(sizes, many=True,
                                           context={'shop_item': item, 'request': self.context['request']}).data
 
+    def get_current_locations(self, item: ShopItem):
+        current_locations_list = []
+        current_locations = item.current_locations
+        if current_locations and isinstance(current_locations, list):
+            for location_code in current_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    current_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        current_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return current_locations_list
+
+    def get_preferred_locations(self, item: ShopItem):
+        preferred_locations_list = []
+        preferred_locations = item.preferred_locations
+        if preferred_locations and isinstance(preferred_locations, list):
+            for location_code in preferred_locations:
+                try:
+                    country = Country.objects.get(code=location_code)
+                    country_serializer = CountryResumeSerializer(country)
+                    preferred_locations_list.append(country_serializer.data)
+                except Country.DoesNotExist:
+                    try:
+                        city = City.objects.get(id=location_code)
+                        city_serializer = CityResumeSerializer(city)
+                        preferred_locations_list.append(city_serializer.data)
+                    except City.DoesNotExist:
+                        pass
+
+        return preferred_locations_list
+
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
+
     class Meta:
         model = ShopItem
         fields = (
@@ -750,7 +799,8 @@ class SubscriptionItemSerializer(ItemListSerializer):
             'created_at', 'updated_at', 'removed_at',
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
-            'ticket_period', 'full_location', 'purchase_type', 'address', 'minimum_purchase'
+            'ticket_period', 'full_location', 'purchase_type', 'address', 'minimum_purchase', 'currency', 'salary_from',
+            'salary_to', 'citizenship', 'education', 'current_locations', 'preferred_locations', 'links', 'own_resume'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

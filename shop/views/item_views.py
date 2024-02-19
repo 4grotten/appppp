@@ -767,6 +767,39 @@ class SuggestSearchItem(ListAPIView):
         return response
 
 
+class SuggestSearchResume(ListAPIView):
+    serializer_class = SuggestItemSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter,)
+    filterset_fields = ('organization__country',)
+    search_fields = ('^name',)
+    filter_class = SuggestItemFilter
+
+    def get_queryset(self):
+        qs = ShopItem.objects.filter(
+            Q(purchase_type=ShopItem.RESUME) &
+            Q(is_published=True) &
+            Q(organization__is_private=False) &
+            Q(salary_from__isnull=False) &
+            Q(organization__is_banned=False) &
+            Q(organization__is_deleted=False)
+        )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+
+        search = self.request.GET['suggest_items']
+        mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        request.GET['search'] = search
+        del request.GET['suggest_items']
+        request.query_params._mutable = mutable
+
+        response = super().list(request, args, kwargs)
+        response = ShopItemService.get_suggest_items(response)
+
+        return response
+
+
 class GetYearsView(ListAPIView):
     serializer_class = ItemRentalYearSerializer
 

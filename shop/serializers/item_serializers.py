@@ -443,10 +443,13 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         if subcategory_organization is not None and not subcategory_organization == organization:
             raise NotAcceptableException(_('Organization does not have this subcategory'))
 
-        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
+        if OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']) or \
+                OrganizationService.user_can_edit_own_resume(user=user, organization=attrs['organization']):
+            return attrs
+        else:
             raise NotAcceptableException(_('No rights to edit organization'))
 
-        return attrs
+
 
     def update(self, instance, validated_data):
         rental_period_data = validated_data.pop('rental_period', None)

@@ -34,7 +34,7 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
         if city is not None:
             organizations = organizations.filter(city=city)
         queryset = Service.objects.filter(Q(subcategory__organizations__in=organizations) & Q(is_active=True) |
-                                          Q(is_entertainment=True)).distinct()
+                                          Q(is_entertainment=True) | Q(is_resume=True)).distinct()
         return queryset.order_by('-is_discounts', 'ordering')
 
 

@@ -613,6 +613,7 @@ class Service(models.Model):
     is_discounts = models.BooleanField(default=False)
     is_entertainment = models.BooleanField(default=False)
     is_map = models.BooleanField(default=False)
+    is_resume = models.BooleanField(default=False)
     has_delivery = models.BooleanField(default=False)
     has_self_pick_up = models.BooleanField(default=False)
     has_license = models.BooleanField(default=False)

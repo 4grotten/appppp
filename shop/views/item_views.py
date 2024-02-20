@@ -17,7 +17,8 @@ from rest_framework.views import APIView
 from common.exceptions import IntegrityException, NotAcceptableException, ObjectNotFoundException
 from organizations.models import Organization
 from organizations.services.organization_services import OrganizationService
-from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter
+from shop.filters import SuggestItemFilter, FeedItemOrderingFilter, FeedItemFilter, ResumeItemFilter, \
+    ResumeItemOrderingFilter
 from shop.models import ShopItem, Complaint, Booking, ItemCollection, ItemBookmark, ResumeInfoFile, \
     Education, ResumeRequest
 from shop.permissions import CanEditItem, CanViewUnpublishedItem
@@ -84,57 +85,70 @@ class ItemTicketCreateView(CreateAPIView):
 
 
 class ItemResumeCreateView(ListCreateAPIView):
+    filter_backends = (DjangoFilterBackend, ResumeItemOrderingFilter, SearchFilter,)
+    filterset_fields = ('subcategory', 'subcategory__category')
+    ordering_fields = ['updated_at', 'salary_to']
+    search_fields = ('article', 'id', 'name', 'description',)
+    filter_class = ResumeItemFilter
     permissions = (IsAuthenticated,)
     serializer_class = ResumeFeedSerializer
 
     def get_queryset(self):
-        queryset = ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
         serializer = ResumeFilterQuaryParamsSerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(_('Valid quary params are required'))
         validated_data = serializer.validated_data
 
-        category = validated_data.get('category', None)
-        if category:
-            queryset = queryset.filter(subcategory__category_id=category)
-        subcategory = validated_data.get('subcategory', None)
-        if subcategory:
-            queryset = queryset.filter(subcategory_id=subcategory)
+        search = validated_data.get('search', None)
+        qs = ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+        qs = qs.exclude(
+            Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
 
         country = validated_data.get('country', None)
         if country:
-            queryset = queryset.filter(preferred_locations__contains=country)
+            qs = qs.filter(preferred_locations__contains=country)
         city = validated_data.get('city', None)
         if city:
-            queryset = queryset.filter(preferred_locations__contains=city)
+            qs = qs.filter(preferred_locations__contains=city)
 
         salary_from = validated_data.get('salary_from', None)
         salary_to = validated_data.get('salary_to', None)
-        currency = validated_data.get('currency', None)
         if salary_from:
-            queryset = queryset.filter(salary_from__gte=salary_from)
+            qs = qs.filter(salary_from__gte=salary_from)
         if salary_to:
-            queryset = queryset.filter(salary_to__lte=salary_to)
-        if currency:
-            queryset = queryset.filter(currency__code=currency)
+            qs = qs.filter(salary_to__lte=salary_to)
+
         has_work_experience = validated_data.get('has_work_experience')
         if has_work_experience:
-            queryset = queryset.filter(resume_work_experience__isnull=False)
+            qs = qs.filter(resume_work_experience__isnull=False)
         has_education = validated_data.get('has_education')
         if has_education:
-            queryset = queryset.filter(resume_education__isnull=False)
+            qs = qs.filter(education__isnull=False)
 
         gender = validated_data.get('gender')
         if gender:
-            queryset = queryset.filter(resume_info__gender=gender)
+            qs = qs.filter(resume_info__gender=gender)
 
-        return queryset
-
+        if search and search[0] == '#':  # Search among posts if hashtag is used
+            qs = qs.filter(is_published=True)
+        elif search:
+            qs = qs.filter(is_published=True)
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+        else:
+            qs = qs.filter(is_published=True).order_by('-updated_at')
+        price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
+        qs = qs.filter(price_filter)
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.serializer_class(queryset, many=True, context={'request': self.request})
-        return Response(serializer.data)
+        self.serializer_class(context={'request': self.request})
+        response = super().list(request, args, kwargs)
+        start_time = self.request.GET.get('start_time', None)
+        if start_time:
+            response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)
+        else:
+            response.data['has_new'] = False
+        return response
 
 
 
@@ -733,6 +747,39 @@ class SuggestSearchItem(ListAPIView):
             Q(is_published=True) &
             Q(organization__is_private=False) &
             Q(price__isnull=False) &
+            Q(organization__is_banned=False) &
+            Q(organization__is_deleted=False)
+        )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+
+        search = self.request.GET['suggest_items']
+        mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        request.GET['search'] = search
+        del request.GET['suggest_items']
+        request.query_params._mutable = mutable
+
+        response = super().list(request, args, kwargs)
+        response = ShopItemService.get_suggest_items(response)
+
+        return response
+
+
+class SuggestSearchResume(ListAPIView):
+    serializer_class = SuggestItemSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter,)
+    filterset_fields = ('organization__country',)
+    search_fields = ('^name',)
+    filter_class = SuggestItemFilter
+
+    def get_queryset(self):
+        qs = ShopItem.objects.filter(
+            Q(purchase_type=ShopItem.RESUME) &
+            Q(is_published=True) &
+            Q(organization__is_private=False) &
+            Q(salary_from__isnull=False) &
             Q(organization__is_banned=False) &
             Q(organization__is_deleted=False)
         )

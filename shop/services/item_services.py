@@ -25,13 +25,14 @@ class ShopItemService:
 
     @classmethod
     def update_published_status(cls, user: User, item: ShopItem, is_published: bool):
-        if not OrganizationService.user_can_edit_organization(user=user, organization=item.organization) or \
+        if OrganizationService.user_can_edit_organization(user=user, organization=item.organization) or \
                 OrganizationService.user_can_edit_own_resume(user=user, organization=item.organization):
+            if not is_published:
+                CartItemService.delete_item_from_all_carts(item=item)
+            item.is_published = is_published
+            item.save(update_fields=('is_published',))
+        else:
             raise NotAcceptableException(_('No rights to edit this item'))
-        if not is_published:
-            CartItemService.delete_item_from_all_carts(item=item)
-        item.is_published = is_published
-        item.save(update_fields=('is_published',))
 
     @classmethod
     def subscription_has_new_items(cls, timestamp: str, user: User) -> bool:

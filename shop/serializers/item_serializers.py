@@ -1583,7 +1583,7 @@ class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'organization',
+            'id', 'name', 'name_lang', 'description', 'description_lang', 'organization', 'purchase_type',
             'salary_from', 'salary_to', 'is_published', 'updated_at', 'images', 'currency'
         )
 

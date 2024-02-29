@@ -41,7 +41,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
-    OrganizationMapsListSerializer
+    OrganizationMapsListSerializer, OrganizationNameListSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
@@ -61,6 +61,7 @@ from organizations.tasks import (
 )
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.services import UserService
 
 
 class OrgVerifications(CreateAPIView):
@@ -198,6 +199,18 @@ class MyOrganizationsWithCanEditListCreateView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        return Organization.objects.filter(Q(owner=user, is_deleted=False) |
+                                           Q(memberships__user=user, is_deleted=False,
+                                             memberships__role__can_edit_organization=True)).distinct()
+
+
+class MyOrganizationsListCreateView(ListAPIView):
+    serializer_class = OrganizationNameListSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('user_id', None)
+        user = UserService.get(id=int(user_id))
         return Organization.objects.filter(Q(owner=user, is_deleted=False) |
                                            Q(memberships__user=user, is_deleted=False,
                                              memberships__role__can_edit_organization=True)).distinct()

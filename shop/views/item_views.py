@@ -1128,9 +1128,15 @@ class SubmitResumeRequestView(GenericAPIView):
         phone_numbers = serializer.validated_data['phone_numbers']
         links = serializer.validated_data['links']
         text = serializer.validated_data.get('text')
-        ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
-                                                         item=item, show_contacts=show_contacts,
-                                                         phone_numbers=phone_numbers, links=links, text=text)
+        if item.user:
+            ResumeRequestService.process_user_resume_request_to_user(sender_user=sender_user, organization=organization,
+                                                                     item=item, show_contacts=show_contacts,
+                                                                     phone_numbers=phone_numbers, links=links,
+                                                                     text=text)
+        else:
+            ResumeRequestService.process_user_resume_request(sender_user=sender_user, organization=organization,
+                                                             item=item, show_contacts=show_contacts,
+                                                             phone_numbers=phone_numbers, links=links, text=text)
 
         return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
 
@@ -1153,12 +1159,20 @@ class OrganizationSubmitResumeRequestView(GenericAPIView):
         phone_numbers = serializer.validated_data['phone_numbers']
         links = serializer.validated_data['links']
         text = serializer.validated_data.get('text')
-        ResumeRequestService.process_organization_resume_request(user=request.user,
-                                                                 sender_organization=sender_organization,
-                                                                 organization=organization, item=item,
-                                                                 show_contacts=show_contacts,
-                                                                 phone_numbers=phone_numbers,
-                                                                 links=links, text=text)
+        if item.user:
+            ResumeRequestService.process_organization_resume_request_to_user(user=request.user,
+                                                                             sender_organization=sender_organization,
+                                                                             organization=organization, item=item,
+                                                                             show_contacts=show_contacts,
+                                                                             phone_numbers=phone_numbers,
+                                                                             links=links, text=text)
+        else:
+            ResumeRequestService.process_organization_resume_request(user=request.user,
+                                                                     sender_organization=sender_organization,
+                                                                     organization=organization, item=item,
+                                                                     show_contacts=show_contacts,
+                                                                     phone_numbers=phone_numbers,
+                                                                     links=links, text=text)
 
         return Response(data={'message': _('Successfully submit resume request')}, status=status.HTTP_200_OK)
 
@@ -1175,8 +1189,13 @@ class AcceptResumeRequestView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         resume_request_id = serializer.validated_data['resume_request_id']
-
-        ResumeRequestService.accept_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+        resume_request = ResumeRequestService.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        if resume_request.item.user:
+            ResumeRequestService.accept_user_resume_request_to_user(resume_request_id=resume_request_id,
+                                                                    processed_by=request.user)
+        else:
+            ResumeRequestService.accept_user_resume_request(resume_request_id=resume_request_id,
+                                                            processed_by=request.user)
 
         return Response(data={'message': _('Successfully accepted resume request')}, status=status.HTTP_200_OK)
 
@@ -1193,8 +1212,13 @@ class DeclineResumeRequestView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         resume_request_id = serializer.validated_data['resume_request_id']
-
-        ResumeRequestService.decline_user_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+        resume_request = ResumeRequestService.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        if resume_request.item.user:
+            ResumeRequestService.decline_user_resume_request_to_user(resume_request_id=resume_request_id,
+                                                             processed_by=request.user)
+        else:
+            ResumeRequestService.decline_user_resume_request(resume_request_id=resume_request_id,
+                                                             processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
 
@@ -1211,8 +1235,13 @@ class OrganizationAcceptResumeRequestView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         resume_request_id = serializer.validated_data['resume_request_id']
-
-        ResumeRequestService.accept_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+        resume_request = ResumeRequestService.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        if resume_request.item.user:
+            ResumeRequestService.accept_organization_resume_request_to_user(resume_request_id=resume_request_id,
+                                                                    processed_by=request.user)
+        else:
+            ResumeRequestService.accept_organization_resume_request(resume_request_id=resume_request_id,
+                                                                    processed_by=request.user)
 
         return Response(data={'message': _('Successfully accepted resume request')}, status=status.HTTP_200_OK)
 
@@ -1229,8 +1258,13 @@ class OrganizationDeclineResumeRequestView(GenericAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         resume_request_id = serializer.validated_data['resume_request_id']
-
-        ResumeRequestService.decline_organization_resume_request(resume_request_id=resume_request_id, processed_by=request.user)
+        resume_request = ResumeRequestService.get(id=resume_request_id, status=ResumeRequest.IN_PROGRESS)
+        if resume_request.item.user:
+            ResumeRequestService.decline_organization_resume_request_to_user(resume_request_id=resume_request_id,
+                                                                     processed_by=request.user)
+        else:
+            ResumeRequestService.decline_organization_resume_request(resume_request_id=resume_request_id,
+                                                                     processed_by=request.user)
 
         return Response(data={'message': _('Successfully declined resume request')}, status=status.HTTP_200_OK)
 

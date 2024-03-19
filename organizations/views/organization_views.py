@@ -2,6 +2,7 @@ import datetime
 import random
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Case, When, IntegerField
@@ -25,13 +26,14 @@ from common.services import slack
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
-    OrganizationComplaint, OrganizationBlacklist, BlockedUser
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
     OrganizationTypeSerializer
 )
-from organizations.serializers.misc_serializers import LocationSerializer
+
+from organizations.serializers.misc_serializers import LocationSerializer, SubscriptionSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer, OrganizationDetailedSerializer,
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,
@@ -41,7 +43,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
-    OrganizationMapsListSerializer
+    OrganizationMapsListSerializer, OrganizationNameListSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
@@ -61,6 +63,9 @@ from organizations.tasks import (
 )
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.services import UserService
+
+User = get_user_model()
 
 
 class OrgVerifications(CreateAPIView):
@@ -198,6 +203,18 @@ class MyOrganizationsWithCanEditListCreateView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        return Organization.objects.filter(Q(owner=user, is_deleted=False) |
+                                           Q(memberships__user=user, is_deleted=False,
+                                             memberships__role__can_edit_organization=True)).distinct()
+
+
+class MyOrganizationsListCreateView(ListAPIView):
+    serializer_class = OrganizationNameListSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('user_id', None)
+        user = UserService.get(id=int(user_id))
         return Organization.objects.filter(Q(owner=user, is_deleted=False) |
                                            Q(memberships__user=user, is_deleted=False,
                                              memberships__role__can_edit_organization=True)).distinct()
@@ -960,3 +977,22 @@ class PaymentSystemListView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
+class OrganizationSubscriptionToGlobalAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        organization_id = 2180
+        phone_numbers_to_exclude = ['+996']
+
+        organization = OrganizationService.get(id=organization_id)
+
+        users_to_subscribe = User.objects.all().exclude(phone_number__in=phone_numbers_to_exclude)
+
+        for user in users_to_subscribe:
+            if Subscription.objects.filter(organization=organization, user=user).exists():
+                continue
+
+            Subscription.objects.create(organization=organization, user=user, status='subscribed')
+
+        return Response({"message": "Subscriptions created successfully."}, status=status.HTTP_201_CREATED)

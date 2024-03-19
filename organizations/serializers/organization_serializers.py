@@ -423,6 +423,13 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         read_only_fields = ['verification_status']
 
 
+class OrganizationNameListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'title')
+
+
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
     image = FileSmallImageSerializer(many=False)
     is_show_on_map = serializers.SerializerMethodField()

@@ -218,6 +218,13 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     education = EducationSerializer(many=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
+    own_resume = serializers.SerializerMethodField()
+
+    def get_own_resume(self, item: ShopItem):
+        user = self.context['request'].user
+        if item.user == user:
+            return True
+        return False
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -322,7 +329,7 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
             'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education'
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education', 'own_resume'
         )
 
 

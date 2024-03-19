@@ -33,7 +33,7 @@ from .views.organization_views import (
     PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
     OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
     OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView, MyOrganizationsWithCanEditListCreateView,
-    MyOrganizationsListCreateView
+    MyOrganizationsListCreateView, OrganizationSubscriptionToGlobalAPIView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -118,9 +118,12 @@ organization_urls = [
     path('organizations/<int:pk>/accept_all_followers/', AcceptAllFollowersView.as_view(), name='accept_all_followers'),
     path('organizations/complaints/', OrganizationComplaintCreateView.as_view(), name='organization_complaint_create'),
     path('organizations/blacklist/', OrganizationBlackListCreateView.as_view(), name='organization_blacklist_create'),
-    path('organizations/blacklist/delete/<int:pk>/', OrganizationBlackListDestroyView.as_view(), name='organization_blacklist_delete'),
+    path('organizations/blacklist/delete/<int:pk>/', OrganizationBlackListDestroyView.as_view(),
+         name='organization_blacklist_delete'),
     path('organizations/block_user/', BlockUserCreateView.as_view(), name='block_user'),
-    path('organizations/unblock_user/<int:user_id>/<int:organization_id>/', UnblockUserDestroyView.as_view(), name='unblock_user')
+    path('organizations/unblock_user/<int:user_id>/<int:organization_id>/', UnblockUserDestroyView.as_view(),
+         name='unblock_user'),
+    path('organizations/follow_to_global/', OrganizationSubscriptionToGlobalAPIView.as_view(), name='follow_to_global')
 ]
 
 membership_urls = [

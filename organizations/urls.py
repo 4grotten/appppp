@@ -33,7 +33,7 @@ from .views.organization_views import (
     PaymentSystemListView, OrgPaymentSystemConfirmation, OrganizationPaymentSystemsActivationView,
     OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
     OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView, MyOrganizationsWithCanEditListCreateView,
-    MyOrganizationsListCreateView, OrganizationSubscriptionToGlobalAPIView
+    MyOrganizationsListCreateView, OrganizationSubscriptionToGlobalAPIView, DeleteSubscriptionsAPIView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -123,7 +123,9 @@ organization_urls = [
     path('organizations/block_user/', BlockUserCreateView.as_view(), name='block_user'),
     path('organizations/unblock_user/<int:user_id>/<int:organization_id>/', UnblockUserDestroyView.as_view(),
          name='unblock_user'),
-    path('organizations/follow_to_global/', OrganizationSubscriptionToGlobalAPIView.as_view(), name='follow_to_global')
+    path('organizations/follow_to_global/', OrganizationSubscriptionToGlobalAPIView.as_view(), name='follow_to_global'),
+    path('organizations/delete_followers/', DeleteSubscriptionsAPIView.as_view(), name='delete_followers'),
+
 ]
 
 membership_urls = [

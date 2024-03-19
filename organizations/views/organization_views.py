@@ -983,11 +983,10 @@ class OrganizationSubscriptionToGlobalAPIView(APIView):
 
     def post(self, request):
         organization_id = 2180
-        phone_numbers_to_exclude = ['+996']
 
         organization = OrganizationService.get(id=organization_id)
 
-        users_to_subscribe = User.objects.all().exclude(phone_number__in=phone_numbers_to_exclude)
+        users_to_subscribe = User.objects.all().exclude(phone_number__startswith='+996')
 
         for user in users_to_subscribe:
             if Subscription.objects.filter(organization=organization, user=user).exists():
@@ -996,3 +995,18 @@ class OrganizationSubscriptionToGlobalAPIView(APIView):
             Subscription.objects.create(organization=organization, user=user, status='subscribed')
 
         return Response({"message": "Subscriptions created successfully."}, status=status.HTTP_201_CREATED)
+
+
+class DeleteSubscriptionsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request):
+        organization_id = 2180
+        organization = OrganizationService.get(id=organization_id)
+        try:
+            subscriptions = Subscription.objects.filter(organization=organization)
+            for sub in subscriptions:
+                sub.delete()
+            return Response({"message": "Subscriptions deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except Subscription.DoesNotExist:
+            return Response({"message": "Subscriptions not found."}, status=status.HTTP_404_NOT_FOUND)

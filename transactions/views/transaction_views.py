@@ -1770,10 +1770,8 @@ class InitPaymentView(GenericAPIView):
             headers = {
                 "token": BETAPAY_API_TOKEN
             }
-            print(BETAPAY_API_TOKEN)
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
-            print("response_json1", response_json)
 
             # redirect_url = response_json.get('data', {}).get('"iframe_url":')
             status_code = response_json.get('status', {}).get('code')
@@ -1793,7 +1791,6 @@ class InitPaymentView(GenericAPIView):
                 }
                 response = requests.post(url, headers=headers, json=data)
                 response_json2 = response.json()
-                print("response_json2", response_json2)
                 status_code2 = response_json2.get('status', {}).get('code')
                 data_status = response_json2.get('data', {}).get('status')
                 if status_code2 == 200 and data_status == "OK":

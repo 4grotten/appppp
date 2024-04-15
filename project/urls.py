@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from common.views import AssetLinksRetrieveView
 from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
 
 v1 = ([
@@ -26,7 +25,6 @@ urlpatterns = [
     path('rest-auth/', include('rest_auth.urls')),
     path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
     path('api/v1/devicesSettings/', FCMDeviceSettingsAPIView.as_view(), name='device_settings'),
-    # path('.well-known/assetlinks.json/', AssetLinksRetrieveView.as_view(), name='assetlinks_retrieve')
 ]
 
 if settings.DEBUG:

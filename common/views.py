@@ -5,6 +5,7 @@ import requests
 import base64
 from pathlib import Path
 from django.conf import settings
+from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
@@ -261,8 +262,8 @@ class AssetLinksRetrieveView(APIView):
     def get(self, request, format=None):
         file_path = Path('assetlinks.json')
         if os.path.exists(file_path):
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-            return Response(data)
+            with open(file_path, 'r') as f:
+                file_content = json.load(f)
+            return JsonResponse(data=file_content, safe=False)
         else:
             return Response(status=404)

@@ -1,5 +1,9 @@
+import json
+import os
+
 import requests
 import base64
+from pathlib import Path
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -251,3 +255,14 @@ class FileToBase64View(APIView):
             return Response({'base64_image': base64_string}, status=200)
         except requests.exceptions.RequestException as e:
             return Response({'message': str(e)}, status=400)
+
+
+class AssetLinksRetrieveView(APIView):
+    def get(self, request, format=None):
+        file_path = Path('assetlinks.json')
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            return Response(data)
+        else:
+            return Response(status=404)

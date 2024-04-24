@@ -618,21 +618,22 @@ class OrganizationService:
             queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
                                                    has_self_pick_up=service.has_self_pick_up,
                                                    verification_status=VERIFIED,
-                                                   has_license=service.has_license,
-                                                   is_wholesale=service.is_wholesale,
                                                    types__in=service.subcategory.all(),
                                                    shop_items__isnull=False, shop_items__price__isnull=False
                                                    ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
         else:
             queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
                                                    has_self_pick_up=service.has_self_pick_up,
-                                                   has_license=service.has_license,
-                                                   is_wholesale=service.is_wholesale,
                                                    types__in=service.subcategory.all(),
                                                    shop_items__isnull=False, shop_items__price__isnull=False
                                                    ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
 
-        queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+        if service.is_wholesale:
+            queryset = queryset.filter(is_wholesale=True)
+        else:
+            queryset = queryset.filter(has_license=service.has_license)
+            queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+
         if subcategory is not None:
             queryset = queryset.filter(shop_items__subcategory=subcategory)
         try:

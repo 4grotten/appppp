@@ -2,7 +2,7 @@ import binascii
 import datetime
 import os
 from decouple import config
-
+from django.contrib.gis.db.models import PointField
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -102,6 +102,32 @@ class SocialNetworkContact(TimestampModel):
 
     def __str__(self):
         return self.url
+
+
+class DeliveryAddress(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='delivery_addresses')
+    address = models.CharField(max_length=225)
+    apartment = models.CharField(max_length=36, null=True, blank=True)
+    intercom = models.CharField(max_length=36, null=True, blank=True)
+    entrance = models.CharField(max_length=36, null=True, blank=True)
+    floor = models.CharField(max_length=36, null=True, blank=True)
+    phone = models.CharField(max_length=36)
+    comment = models.CharField(max_length=150, null=True, blank=True)
+    location = PointField(help_text=_("Delivery location coordinates"), null=True, blank=True)
+    by_default = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return self.address
+
+    @property
+    def full_location(self):
+        if self.location and self.location.y and self.location.x:
+            return dict(
+                latitude=self.location.y,
+                longitude=self.location.x
+            )
+        return None
 
 
 class MyOwnToken(TimestampModel):

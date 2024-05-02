@@ -9,7 +9,8 @@ from users.views import (
     ValidateOldNumberAPIView, ChangeAndVerifyNewNumber, SendCodeToNewNumberAPIView, GetEmailUserAPIView,
     MyOwnTokenListView, MyOwnTokenRetrieveDestroyView, DestroyAllTokens, AuthorisationHistoryListView,
     MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView,
-    UserHasOwnOrganizationOrCanEdit
+    UserHasOwnOrganizationOrCanEdit, UserDeliveryAddressesListAPIView, UserDeliveryAddressDetailAPIView,
+    SetDefaultDeliveryAddressAPIView
 )
 
 urlpatterns = [
@@ -27,6 +28,10 @@ urlpatterns = [
     path('users/phone_numbers/', UserPhoneNumbersUpdateAPIView.as_view(), name='set_user_phones'),
     path('users/<int:pk>/social_networks/', UserSocialNetworksListAPIView.as_view(), name='user_networks'),
     path('users/social_networks/', UserSocialNetworksUpdateAPIView.as_view(), name='set_user_networks'),
+    path('users/delivery_addresses/', UserDeliveryAddressesListAPIView.as_view(), name='user_addresses'),
+    path('users/delivery_addresses/<int:pk>/', UserDeliveryAddressDetailAPIView.as_view(), name='user_address_detail'),
+    path('users/delivery_addresses/default/', SetDefaultDeliveryAddressAPIView.as_view(),
+         name='user_address_default'),
     path('users/doValidateOldNumber/', ValidateOldNumberAPIView.as_view(), name='validate_old_number'),
     path('users/doSendCode/', SendCodeToNewNumberAPIView.as_view(), name='send_code_to_new_number'),
     path('users/check_sms_service/', TemporaryCodeSwitcherStatusView.as_view(), name='nikita_service_status'),

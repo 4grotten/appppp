@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import Point
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
@@ -9,7 +10,7 @@ from organizations.services.organization_promo_services import PromoSubscriberSe
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from .constants import RESEND_CODE_CHOICES, GENDER_CHOICES
-from .models import PhoneNumber, SocialNetworkContact, MyOwnToken
+from .models import PhoneNumber, SocialNetworkContact, MyOwnToken, DeliveryAddress
 
 User = get_user_model()
 
@@ -20,10 +21,6 @@ class RegisterAuthSerializer(serializers.Serializer):
     device = serializers.CharField(allow_null=True, required=False)
     version_app = serializers.CharField(allow_null=True, required=False)
     operating_system = serializers.CharField(allow_null=True, required=False)
-
-
-class PhoneNumberSerializer(serializers.Serializer):
-    phone_number = serializers.CharField(allow_null=True)
 
 
 class TemporaryCodeSerializer(serializers.Serializer):
@@ -221,6 +218,33 @@ class SocialNetworkContactSerializer(serializers.ModelSerializer):
 
 class SocialNetworkEditSerializer(serializers.Serializer):
     networks = serializers.ListSerializer(child=serializers.CharField())
+
+
+class DeliveryAddressesSerializer(serializers.ModelSerializer):
+    by_default = serializers.BooleanField(read_only=True)
+    longitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
+    latitude = serializers.FloatField(allow_null=True, default=None, write_only=True)
+
+    class Meta:
+        model = DeliveryAddress
+        fields = ('id', 'address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'full_location',
+                  'longitude', 'latitude', 'by_default')
+
+    def update(self, instance, validated_data):
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
+        if longitude and latitude:
+            point = Point(longitude, latitude)
+        else:
+            point = None
+        instance.location = point
+        instance.save()
+
+        return super().update(instance, validated_data)
+
+
+class SetDefaultDeliveryAddressSerializer(serializers.Serializer):
+    address_id = serializers.IntegerField()
 
 
 class ChangeAndValidateNewNumberSerializer(serializers.Serializer):

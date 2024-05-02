@@ -5,7 +5,8 @@ from django.utils.translation import gettext_lazy
 from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import Throttled
-from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, DestroyAPIView, ListCreateAPIView, \
+    RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,19 +21,19 @@ from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DE
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
-from .models import MyOwnToken, User
+from .models import MyOwnToken, User, DeliveryAddress
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
     SetPasswordSerializer, UserChangePasswordSerializer, ForgotPasswordSerializer,
     SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
-    MyOwnTokenExpiredTimeSerializer,
+    MyOwnTokenExpiredTimeSerializer, DeliveryAddressesSerializer, SetDefaultDeliveryAddressSerializer,
 )
 from notifications.tasks import sent_notification
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService,
-    MyOwnTokenService
+    MyOwnTokenService, DeliveryAddressesService
 )
 from .throttle.throttle import UserLoginRateThrottle
 
@@ -436,6 +437,55 @@ class UserSocialNetworksUpdateAPIView(APIView):
             'message': gettext_lazy('Successfully updated'),
             'networks': data
         }, status=status.HTTP_200_OK)
+
+
+class UserDeliveryAddressesListAPIView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = DeliveryAddressesSerializer
+
+    def get(self, request, **kwargs):
+        addresses = DeliveryAddressesService.get_addresses_of_user(user=request.user)
+        data = self.serializer_class(addresses, many=True).data
+        return Response(data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = DeliveryAddressesSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        DeliveryAddressesService.create(user=request.user, **serializer.validated_data)
+
+        return Response(data={'message': _('Successfully created delivery address')}, status=status.HTTP_201_CREATED)
+
+
+class UserDeliveryAddressDetailAPIView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = DeliveryAddressesSerializer
+
+    def get_queryset(self):
+        return DeliveryAddress.objects.filter(user=self.request.user)
+
+
+class SetDefaultDeliveryAddressAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SetDefaultDeliveryAddressSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        address_id = serializer.validated_data['address_id']
+
+        DeliveryAddressesService.set_default_delivery_address(address_id=address_id, user=request.user)
+
+        return Response(data={'message': _('Default delivery address updated successfully')}, status=status.HTTP_200_OK)
 
 
 class ValidateOldNumberAPIView(APIView):

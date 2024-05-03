@@ -307,7 +307,7 @@ class DeliveryAddressesService:
 
     @classmethod
     def get_addresses_of_user(cls, user: User) -> QuerySet:
-        return DeliveryAddress.objects.filter(user=user)
+        return DeliveryAddress.objects.filter(user=user).order_by('-by_default', 'id')
 
     @classmethod
     def create(cls, user:User, longitude, latitude, **kwargs):

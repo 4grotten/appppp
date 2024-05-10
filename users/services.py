@@ -310,7 +310,11 @@ class DeliveryAddressesService:
         return DeliveryAddress.objects.filter(user=user).order_by('-by_default', 'id')
 
     @classmethod
-    def create(cls, user:User, longitude, latitude, **kwargs):
+    def check_user_have_addresses(cls, user: User) -> bool:
+        return DeliveryAddress.objects.filter(user=user).exists()
+
+    @classmethod
+    def create(cls, user: User, longitude, latitude, **kwargs):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -319,6 +323,13 @@ class DeliveryAddressesService:
 
             kwargs['location'] = point
             kwargs['user'] = user
+
+            has_addresses = cls.check_user_have_addresses(user=user)
+
+            if not has_addresses:
+                kwargs['by_default'] = True
+            else:
+                kwargs.setdefault('by_default', False)
 
             created = cls.model.objects.create(**kwargs)
             return created

@@ -1,18 +1,19 @@
 from typing import Union
 
+from django.contrib.gis.geos import Point
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException
+from common.exceptions import ObjectNotFoundException, IntegrityException, ValidationException, BadRequestException
 from common.services import slack
 from mailer.services import MailerService
 from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService, \
     MessageServiceMessageBird
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken, DeliveryAddress
 from user_agents import parse
 
 User = get_user_model()
@@ -292,6 +293,57 @@ class SocialNetworkContactService:
             contacts = [SocialNetworkContact(user=user, url=url) for url in urls]
             SocialNetworkContact.objects.bulk_create(contacts)
             return contacts
+
+
+class DeliveryAddressesService:
+    model = DeliveryAddress
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return cls.model.objects.get(**filters)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('DeliveryAddress not found'))
+
+    @classmethod
+    def get_addresses_of_user(cls, user: User) -> QuerySet:
+        return DeliveryAddress.objects.filter(user=user).order_by('-by_default', 'id')
+
+    @classmethod
+    def check_user_have_addresses(cls, user: User) -> bool:
+        return DeliveryAddress.objects.filter(user=user).exists()
+
+    @classmethod
+    def create(cls, user: User, longitude, latitude, **kwargs):
+        try:
+            if longitude and latitude:
+                point = Point(longitude, latitude)
+            else:
+                point = None
+
+            kwargs['location'] = point
+            kwargs['user'] = user
+
+            has_addresses = cls.check_user_have_addresses(user=user)
+
+            if not has_addresses:
+                kwargs['by_default'] = True
+            else:
+                kwargs.setdefault('by_default', False)
+
+            created = cls.model.objects.create(**kwargs)
+            return created
+        except Exception as e:
+            raise BadRequestException(_(f'Could not add delivery address , {e}'))
+
+    @classmethod
+    def set_default_delivery_address(cls, address_id: int, user: User):
+        address = cls.get(id=address_id, user=user)
+
+        DeliveryAddress.objects.filter(user=user).exclude(id=address.id).update(by_default=False)
+
+        address.by_default = True
+        address.save()
 
 
 class TemporaryPhoneNumberService:

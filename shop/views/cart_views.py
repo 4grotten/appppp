@@ -23,6 +23,7 @@ from shop.services.cart_services import CartItemService, CartService
 from transactions.models import Transaction
 from transactions.serializers.transaction_serializers import TransactionWithClientSerializer, OffsetUTCSerializer
 from transactions.services.transaction_services import TransactionService
+from users.services import DeliveryAddressesService
 
 
 class UserCartListView(ListAPIView):
@@ -115,6 +116,9 @@ class OrderDeliveryView(GenericAPIView):
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.CASH_COURIER)
         DeliveryInfoService.create(**serializer.validated_data, transaction=cart.transaction, )
 
+        if not DeliveryAddressesService.check_user_have_addresses(user=request.user):
+            DeliveryAddressesService.create(user=request.user, **serializer.validated_data)
+
         return Response(
             {
                 "message": _("Success"),
@@ -146,6 +150,9 @@ class OnlinePaymentOrderDeliveryView(GenericAPIView):
                 processed_by=organization.owner,
                 request=request
             )
+
+        if not DeliveryAddressesService.check_user_have_addresses(user=request.user):
+            DeliveryAddressesService.create(user=request.user, **serializer.validated_data)
 
         return Response(
             {

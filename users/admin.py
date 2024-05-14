@@ -1,6 +1,7 @@
 from io import BytesIO
 
 import pandas as pd
+from django.contrib.gis.db import models
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
@@ -9,10 +10,12 @@ from django.http import HttpResponse
 from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from mapwidgets import GooglePointFieldWidget
 from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
 
-from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken
+from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken, \
+    DeliveryAddress
 
 User = get_user_model()
 
@@ -157,6 +160,14 @@ class PhoneNumberAdmin(admin.ModelAdmin):
 @admin.register(SocialNetworkContact)
 class SocialNetworkContactAdmin(admin.ModelAdmin):
     list_display = ('user', 'url')
+
+
+@admin.register(DeliveryAddress)
+class DeliveryAddressAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
+    list_display = ('user', 'address')
 
 
 @admin.register(TemporaryPhoneNumber)

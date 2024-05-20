@@ -24,38 +24,34 @@ class ItemCategoryService:
         ).filter(items_count__gt=0).values_list('category__id', flat=True)
 
     @classmethod
-    def get_general_nonempty_service_subcategory_ids(cls, service: Union[Service, None], country: Union[Country, None],
-                                                     city: Union[City, None]) -> list:
-        item_filters = Q(items_in_category__is_published=True) & Q(items_in_category__price__isnull=False) & Q(
-            items_in_category__organization__is_banned=False) & Q(items_in_category__organization__is_deleted=False)
+    def get_general_nonempty_service_subcategory_ids(cls, service: Union[Service, None], country: Union[Country, None], city: Union[City, None]) -> list:
+        item_filters = Q(items_in_category__is_published=True) & \
+                       Q(items_in_category__price__isnull=False) & \
+                       Q(items_in_category__organization__is_banned=False) & \
+                       Q(items_in_category__organization__is_deleted=False)
 
-        if city is not None:
-            item_filters = item_filters & Q(items_in_category__organization__city=city)
-        elif country is not None:
-            item_filters = item_filters & Q(items_in_category__organization__country=country)
+        if city:
+            item_filters &= Q(items_in_category__organization__city=city)
+        elif country:
+            item_filters &= Q(items_in_category__organization__country=country)
 
-        org = Organization.objects.filter(types__services=service).values_list('id', flat=True)
-        # for i in org:
-        #     print(i)
-        # print(org, 'orggg')
-        org_cat = ItemSubcategory.objects.filter(items_in_category__organization__id__in=org,
-                                                 organization__isnull=True).values_list(
-            'id', flat=True).distinct()
-        #
-        # print(org_cat, 'org_cat')
+        org_ids = Organization.objects.filter(types__services=service).values_list('id', flat=True)
 
-        item_cat = ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
-            items_count=Count('items_in_category', item_filters)) \
-            .filter(items_count__gt=0).values_list('id', flat=True)
+        org_subcategories = ItemSubcategory.objects.filter(
+            items_in_category__organization__id__in=org_ids,
+            organization__isnull=True
+        ).values_list('id', flat=True).distinct()
 
-        # print(item_cat, 'item_cat')
-        # # org_cat = ItemSubcategory.objects.filter(category__services=service, organization__isnull=True).annotate(
-        # #     items_count=Count('items_in_category', item_filters)) \
-        # #     .filter(items_count__gt=0).values_list('id', flat=True)
-        #
-        # # Service shop_item categories
-        # print(list(set(org_cat) & set(item_cat)))
-        return list(set(org_cat) & set(item_cat))
+        service_subcategories = ItemSubcategory.objects.filter(
+            category__services=service,
+            organization__isnull=True
+        ).annotate(
+            items_count=Count('items_in_category', filter=item_filters)
+        ).filter(
+            items_count__gt=0
+        ).values_list('id', flat=True)
+
+        return list(set(org_subcategories) & set(service_subcategories))
 
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:

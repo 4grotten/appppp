@@ -613,20 +613,26 @@ class OrganizationService:
                                      subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
 
         timestamp = request.META.get('HTTP_DEVICE_TIMESTAMP', timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
-        locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+        try:
+            locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").time()
+        except ValueError:
+            raise NotAcceptableException(_('Valid time is required in headers'))
+
+        base_filters = (
+                Q(is_active=True) &
+                Q(has_delivery=service.has_delivery) &
+                Q(has_self_pick_up=service.has_self_pick_up) &
+                Q(types__in=service.subcategory.all()) &
+                Q(shop_items__isnull=False) &
+                Q(shop_items__price__isnull=False) &
+                ~Q(is_banned=True) &
+                ~Q(is_deleted=True)
+        )
+
         if service.is_verified:
-            queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
-                                                   has_self_pick_up=service.has_self_pick_up,
-                                                   verification_status=VERIFIED,
-                                                   types__in=service.subcategory.all(),
-                                                   shop_items__isnull=False, shop_items__price__isnull=False
-                                                   ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
-        else:
-            queryset = Organization.objects.filter(is_active=True, has_delivery=service.has_delivery,
-                                                   has_self_pick_up=service.has_self_pick_up,
-                                                   types__in=service.subcategory.all(),
-                                                   shop_items__isnull=False, shop_items__price__isnull=False
-                                                   ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+            base_filters &= Q(verification_status=VERIFIED)
+
+        queryset = Organization.objects.filter(base_filters).distinct()
 
         if service.is_wholesale:
             queryset = queryset.filter(is_wholesale=True)
@@ -634,29 +640,21 @@ class OrganizationService:
             queryset = queryset.filter(has_license=service.has_license)
             queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
-        if subcategory is not None:
+        if subcategory:
             queryset = queryset.filter(shop_items__subcategory=subcategory)
-        try:
-            queryset = queryset.annotate(time_now=ExpressionWrapper(Value(locale_time.time()),
-                                                                    output_field=TimeField()))
-        except AttributeError:
-            raise NotAcceptableException(
-                _('Valid time are required in headers'))
 
-        queryset = queryset.annotate(time_working=Case(
-            When(opens_at=F('closes_at'), then=1),
-            When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=2),
-            When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'),
-                 time_now__range=([F('opens_at'), '23:59:59']), then=2),
-            When(opens_at__gte=F('closes_at'), time_now__lte=F('closes_at'),
-                 time_now__range=(['00:00:00', F('closes_at')]), then=2),
-            default=Value(3),
-            output_field=IntegerField(),
-        )).order_by('-verification_status', 'time_working')
-
-        # print(locale_time)
-        # for i in queryset:
-        #     print(i.id, i.time_now, i.opens_at, i.closes_at, i.time_working)
+        queryset = queryset.annotate(
+            time_now=ExpressionWrapper(Value(locale_time), output_field=TimeField())
+        ).annotate(
+            time_working=Case(
+                When(opens_at=F('closes_at'), then=Value(1)),
+                When(opens_at__lte=F('time_now'), closes_at__gte=F('time_now'), then=Value(2)),
+                When(opens_at__gte=F('closes_at'), time_now__gte=F('opens_at'), then=Value(2)),
+                When(opens_at__gte=F('closes_at'), time_now__lte=F('closes_at'), then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField()
+            )
+        ).order_by('-verification_status', 'time_working')
 
         return queryset
 

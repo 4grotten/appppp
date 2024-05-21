@@ -425,6 +425,9 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 4:
             organization.betapay_activated = is_active
             organization.save()
+        elif id == 5:
+            organization.cryptocloud_activated = is_active
+            organization.save()
         else:
             raise NotAcceptableException(_('Unknown Payment System'))
 
@@ -939,6 +942,9 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         if organization.betapay_confirmed:
             confirmed_payment_systems.append({'id': 4, 'name': 'Betapay в EUR',
                                               'is_active': organization.betapay_activated})
+        if organization.cryptocloud_confirmed:
+            confirmed_payment_systems.append({'id': 4, 'name': 'CryptoCloud в USD',
+                                              'is_active': organization.cryptocloud_activated})
 
         return confirmed_payment_systems
 

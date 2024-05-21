@@ -96,6 +96,7 @@ class Organization(TimestampModel):
     paysy_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
     libersave_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
     betapay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    cryptocloud_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
 
     payment_systems_activated = models.BooleanField(default=False, help_text=_('All payment systems are activated'))
     payment_with_confirmation = models.BooleanField(default=True, help_text=_('Payments with confirmation'))
@@ -104,6 +105,7 @@ class Organization(TimestampModel):
     paysy_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
     libersave_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
     betapay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    cryptocloud_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)

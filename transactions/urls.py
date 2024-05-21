@@ -30,7 +30,7 @@ from transactions.views.transaction_views import (
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
     OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
     WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView, BetaPayWebhookView,
-    BetaPayPaymentTestView
+    BetaPayPaymentTestView, CryptoCloudPostbackView
 )
 
 urlpatterns = [
@@ -153,6 +153,10 @@ urlpatterns = [
     # BetaPay BetaPayWebhookView
     path('transactions/result/betapay/', BetaPayWebhookView.as_view(), name='betapay_webhook'),
     path('transactions/result/betapay/payment/test/', BetaPayPaymentTestView.as_view(), name='betapay_webhook'),
+
+    # CryptoCloud
+    path('transactions/result/cryptocloud/', CryptoCloudPostbackView.as_view(), name='cryptocloud_postback'),
+
     # balance
     path('balances/', OrganizationBalanceListView.as_view(), name='organization_balance_transactions'),
     path('balances/transactions/', OrganizationBalanceTransactionListView.as_view(),

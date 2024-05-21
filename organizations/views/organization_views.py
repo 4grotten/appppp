@@ -943,7 +943,7 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
             confirmed_payment_systems.append({'id': 4, 'name': 'Betapay в EUR',
                                               'is_active': organization.betapay_activated})
         if organization.cryptocloud_confirmed:
-            confirmed_payment_systems.append({'id': 4, 'name': 'CryptoCloud в USD',
+            confirmed_payment_systems.append({'id': 5, 'name': 'CryptoCloud в USD',
                                               'is_active': organization.cryptocloud_activated})
 
         return confirmed_payment_systems

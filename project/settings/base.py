@@ -423,3 +423,6 @@ PAYSY_API_KEY = config('PAYSY_API_KEY', default='notasecret')
 LIBERSAVE_API_KEY = config('LIBERSAVE_API_KEY', default='notasecret')
 
 BETAPAY_API_TOKEN = config('BETAPAY_API_TOKEN', default='notasecret')
+
+CRYPTOCLOUD_API_KEY = config('CRYPTOCLOUD_API_KEY', default='notasecret')
+CRYPTOCLOUD_SHOP_ID = config('CRYPTOCLOUD_SHOP_ID', default='notasecret')

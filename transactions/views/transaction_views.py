@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 from common.services.currency import CurrencyConverterService
 from common.utils import generate_new_order_id
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
-    PAYSY_API_KEY, LIBERSAVE_API_KEY, BETAPAY_API_TOKEN
+    PAYSY_API_KEY, LIBERSAVE_API_KEY, BETAPAY_API_TOKEN, CRYPTOCLOUD_SHOP_ID, CRYPTOCLOUD_API_KEY
 from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
@@ -1596,6 +1596,7 @@ class InitPaymentView(GenericAPIView):
     2 - PaySy
     3 - Libersave
     4 - Betapay
+    5 - CryptoCloud
     """
 
     def post(self, request, *args, **kwargs):
@@ -1801,6 +1802,40 @@ class InitPaymentView(GenericAPIView):
                     redirect_url = failure_url
                     response_data = {"redirect_url": redirect_url}
                     return Response(data=response_data, status=status.HTTP_200_OK)
+        elif kwargs['pk'] == 5:
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="USD", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.01')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction)
+            currency = "USD"
+            url = 'https://api.cryptocloud.plus/v2/invoice/create'
+            amount_float = float(converted_amount)
+            if amount_float < 10:
+                amount_float = 10
+            data = {
+                "shop_id": CRYPTOCLOUD_SHOP_ID,
+                "amount": amount_float,
+                "currency": currency,
+                "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                "email": self.request.user.email,
+            }
+            headers = {
+                "Authorization": f"Token {CRYPTOCLOUD_API_KEY}"
+            }
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+            if response.status_code == 200:
+                redirect_url = response_json.get('result', {}).get('link')
+                response_data = {"redirect_url": redirect_url}
+                return Response(data=response_data, status=status.HTTP_200_OK)
+            else:
+                return Response(data={'error': "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1988,6 +2023,37 @@ class BetaPayWebhookView(APIView):
             return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CryptoCloudPostbackView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        order_id = payload.get('order_id')
+        user_id, transaction_id, purchase_type = order_id.split("|")
+        status_value = payload.get("status")
+
+        user_id = int(user_id)
+        user = UserService.get(id=user_id)
+        transaction_id = int(transaction_id)
+        transaction = TransactionService.get(id=transaction_id)
+        if status_value == "success":
+            if purchase_type == 'product':
+                TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
+                                                                               user=user)
+
+            elif purchase_type == 'deal':
+                TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
+
+            else:
+                TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
+                                                                                 user=user,
+                                                                                 request=self.request)
+
+            response_data = {'message': 'Postback received'}
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BetaPayPaymentTestView(APIView):

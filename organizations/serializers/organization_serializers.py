@@ -390,8 +390,10 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         paysy_activated = organization.paysy_activated
         libersave_activated = organization.libersave_activated
         betapay_actiavated = organization.betapay_activated
+        cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_actiavated
+        return freedompay_activated or paysy_activated or libersave_activated or betapay_actiavated or \
+               cryptocloud_activated
 
     class Meta:
         model = Organization
@@ -439,11 +441,11 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'country', 'city',
             'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
-            'paysy_activated', 'libersave_activated', 'betapay_activated', 'payment_systems_activated',
-            'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed', 'libersave_confirmed',
-            'betapay_confirmed', 'is_active', 'is_deleted', 'is_banned', 'is_under_review', 'is_private',
-            'show_contacts', 'is_wholesale', 'can_update_is_wholesale', 'is_delivery_service', 'is_bank',
-            'show_followers', 'is_show_on_map')
+            'paysy_activated', 'libersave_activated', 'betapay_activated', 'cryptocloud_activated',
+            'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed',
+            'libersave_confirmed', 'betapay_confirmed', 'cryptocloud_confirmed', 'is_active', 'is_deleted', 'is_banned',
+            'is_under_review', 'is_private', 'show_contacts', 'is_wholesale', 'can_update_is_wholesale',
+            'is_delivery_service', 'is_bank', 'show_followers', 'is_show_on_map')
         read_only_fields = ['verification_status']
 
     def get_is_show_on_map(self, organization: Organization):
@@ -638,8 +640,10 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
         paysy_activated = organization.paysy_activated
         libersave_activated = organization.libersave_activated
         betapay_activated = organization.betapay_activated
+        cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated
+        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated or \
+               cryptocloud_activated
 
     def get_permissions(self, organization: Organization):
         if self.context['request'].user.is_anonymous:
@@ -668,8 +672,10 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         paysy_activated = organization.paysy_activated
         libersave_activated = organization.libersave_activated
         betapay_activated = organization.betapay_activated
+        cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated
+        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated or \
+               cryptocloud_activated
 
     class Meta:
         model = Organization

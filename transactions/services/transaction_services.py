@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import time
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
@@ -1446,22 +1447,47 @@ class TransactionService:
     @transaction.atomic
     def complete_online_payment_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
                                             processed_by: User) -> Transaction:
+        start_time = time.time()
+
+        t1 = time.time()
         current_transaction = Transaction.objects.select_related('organization', 'cart', 'client').prefetch_related(
             'cart__items', 'cart__items__item', 'cart__items__item__available_sizes').get(
             id=transaction_id, is_processed=False, type=Transaction.ONLINE, status=Transaction.IN_PROGRESS)
+        t2 = time.time()
+        print(f"Time to get transaction: {t2 - t1} seconds")
+
+        t1 = time.time()
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
+        t2 = time.time()
+        print(f"Time to check permissions: {t2 - t1} seconds")
 
+        t1 = time.time()
         totals = cls.calculate_cart_totals(cart=current_transaction.cart)
-        cls.update_stock(cart_items=current_transaction.cart.items.all())
+        t2 = time.time()
+        print(f"Time to calculate cart totals: {t2 - t1} seconds")
 
+        t1 = time.time()
+        cls.update_stock(cart_items=current_transaction.cart.items.all())
+        t2 = time.time()
+        print(f"Time to update stock: {t2 - t1} seconds")
+
+        t1 = time.time()
         original_price, discounted_price = totals['original_price'], totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        t2 = time.time()
+        print(f"Time to get totals and role: {t2 - t1} seconds")
+
         from shop.serializers.cart_serializers import CartSerializer
         try:
+            t1 = time.time()
             current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
                 'request': request}).data if current_transaction.cart else None
+            t2 = time.time()
+            print(f"Time to serialize cart: {t2 - t1} seconds")
+
+            t1 = time.time()
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -1471,21 +1497,46 @@ class TransactionService:
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+            t2 = time.time()
+            print(f"Time to update transaction fields: {t2 - t1} seconds")
 
+            t1 = time.time()
             current_transaction.save()
+            t2 = time.time()
+            print(f"Time to save transaction: {t2 - t1} seconds")
 
+            t1 = time.time()
             OrganizationService.increment_running_purchase_id(organization=organization)
+            t2 = time.time()
+            print(f"Time to increment purchase ID: {t2 - t1} seconds")
         except IntegrityError:
             raise IntegrityException(_('Could not complete transaction'))
+
+        t1 = time.time()
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
+        t2 = time.time()
+        print(f"Time to update client status: {t2 - t1} seconds")
+
+        t1 = time.time()
+        # Optimize deletion with batch processing
+        notifications_to_delete = Notification.objects.filter(
+            Q(extra_data__transaction_id=current_transaction.id) & (
+                    Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))
+        )
+        t2 = time.time()
+        print(f"Time to filter notifications: {t2 - t1} seconds")
+        t1 = time.time()
         Notification.objects.filter(
             Q(extra_data__transaction_id=current_transaction.id) & (
                     Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+        t2 = time.time()
+        print(f"Time to delete notifications with filtering: {t2 - t1} seconds")
 
+        t1 = time.time()
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
             sender_id=current_transaction.processed_by_id,
@@ -1497,6 +1548,10 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+        t2 = time.time()
+        print(f"Time to send client notification: {t2 - t1} seconds")
+
+        t1 = time.time()
         send_notifications_organization_members.delay(
             members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,
@@ -1509,6 +1564,12 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+        t2 = time.time()
+        print(f"Time to send organization member notification: {t2 - t1} seconds")
+
+        end_time = time.time()
+        print(f"Total time: {end_time - start_time} seconds")
+
         return current_transaction
 
     @classmethod

@@ -1452,12 +1452,12 @@ class TransactionService:
         organization = current_transaction.organization
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
-
         totals = cls.calculate_cart_totals(cart=current_transaction.cart)
         cls.update_stock(cart_items=current_transaction.cart.items.all())
 
         original_price, discounted_price = totals['original_price'], totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+
         from shop.serializers.cart_serializers import CartSerializer
         try:
             current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
@@ -1471,20 +1471,22 @@ class TransactionService:
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
-
             current_transaction.save()
 
             OrganizationService.increment_running_purchase_id(organization=organization)
         except IntegrityError:
             raise IntegrityException(_('Could not complete transaction'))
+
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-        Notification.objects.filter(
-            Q(extra_data__transaction_id=current_transaction.id) & (
-                    Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+
+        if current_transaction.organization.payment_with_confirmation:
+            Notification.objects.filter(
+                Q(extra_data__transaction_id=current_transaction.id) & (
+                        Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
 
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
@@ -1497,6 +1499,7 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+
         send_notifications_organization_members.delay(
             members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,
@@ -1509,6 +1512,7 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+
         return current_transaction
 
     @classmethod

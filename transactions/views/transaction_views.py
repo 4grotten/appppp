@@ -1816,8 +1816,6 @@ class InitPaymentView(GenericAPIView):
             currency = "USD"
             url = 'https://api.cryptocloud.plus/v2/invoice/create'
             amount_float = float(converted_amount)
-            if amount_float < 10:
-                amount_float = 10
             data = {
                 "shop_id": CRYPTOCLOUD_SHOP_ID,
                 "amount": amount_float,

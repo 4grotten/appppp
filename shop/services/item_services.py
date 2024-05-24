@@ -1,15 +1,10 @@
-import json
-
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import QuerySet, Case, When, BooleanField, Value, Max, Q, IntegerField, TextField
 from django.db.models.expressions import RawSQL
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from django.contrib.gis.geos import Point
-from pathlib import Path
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.utils import DecimalDecoder, DecimalEncoder
 from organizations.models import Organization, Hotlink
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
@@ -270,21 +265,3 @@ class ShopItemService:
     @classmethod
     def get_user_resumes(cls, user: User):
         return ShopItem.objects.filter(user=user)
-
-    @classmethod
-    def get_shop_items_and_subcategories(cls) -> QuerySet:
-        json_file_path = Path("shop_item_data.json")
-        if json_file_path.is_file():
-            with open(json_file_path, 'r') as file:
-                data = json.load(file, cls=DecimalDecoder)
-            return data
-
-        queryset = ShopItem.objects.all()
-
-        from shop.serializers.item_serializers import ShopItemSubcategoryListSerializer
-        serializer = ShopItemSubcategoryListSerializer(queryset, many=True)
-        serialized_data = serializer.data
-        with open(json_file_path, 'w') as file:
-            json.dump(serialized_data, file, cls=DecimalEncoder)
-
-        return serialized_data

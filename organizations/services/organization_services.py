@@ -636,19 +636,16 @@ class OrganizationService:
         if service.is_verified:
             base_filters &= Q(verification_status=VERIFIED)
 
-        queryset = Organization.objects.filter(base_filters).distinct()
-
         if service.is_wholesale:
-            queryset = queryset.filter(is_wholesale=True)
+            base_filters &= Q(is_wholesale=True)
         else:
-            queryset = queryset.filter(has_license=service.has_license)
-            queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
+            base_filters &= Q(has_license=service.has_license)
+            base_filters = cls._filter_by_country_and_city(queryset=base_filters, country=country, city=city)
 
         if subcategory:
-            shop_item_data = cls.load_json_data('shop_item_data.json')
-            org_ids_with_subcategory = {item['organization']['id'] for item in shop_item_data if
-                                        item.get('subcategory') and item['subcategory'].get('id') == subcategory.id}
-            queryset = queryset.filter(id__in=org_ids_with_subcategory)
+            base_filters &= Q(shop_items__subcategory=subcategory)
+
+        queryset = Organization.objects.filter(base_filters).distinct()
 
         queryset = queryset.annotate(
             time_now=ExpressionWrapper(Value(locale_time), output_field=TimeField())

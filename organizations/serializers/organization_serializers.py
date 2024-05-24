@@ -445,7 +445,7 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
             'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed',
             'libersave_confirmed', 'betapay_confirmed', 'cryptocloud_confirmed', 'is_active', 'is_deleted', 'is_banned',
             'is_under_review', 'is_private', 'show_contacts', 'is_wholesale', 'can_update_is_wholesale',
-            'is_delivery_service', 'is_bank', 'show_followers', 'is_show_on_map')
+            'is_delivery_service', 'is_bank', 'show_followers', 'is_show_on_map', 'opens_at', 'closes_at')
         read_only_fields = ['verification_status']
 
     def get_is_show_on_map(self, organization: Organization):
@@ -800,3 +800,10 @@ class PaymentSystemSerializer(serializers.Serializer):
     name = serializers.CharField()
     is_available = serializers.BooleanField(required=False)
     is_active = serializers.BooleanField(required=False)
+
+
+class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Organization
+        fields = ('id', )

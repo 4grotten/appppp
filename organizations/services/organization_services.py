@@ -606,6 +606,10 @@ class OrganizationService:
 
         return queryset
 
+    @classmethod
+    def load_json_data(cls, file_path: str) -> list:
+        with open(file_path, 'r') as file:
+            return json.load(file)
 
     @classmethod
     def get_organizations_in_service(cls, request, service: Service, country: Union[Country, None] = None,
@@ -641,7 +645,10 @@ class OrganizationService:
             queryset = cls._filter_by_country_and_city(queryset=queryset, country=country, city=city)
 
         if subcategory:
-            queryset = queryset.filter(shop_items__subcategory=subcategory)
+            shop_item_data = cls.load_json_data('shop_item_data.json')
+            org_ids_with_subcategory = {item['organization']['id'] for item in shop_item_data if
+                                        item.get('subcategory') and item['subcategory'].get('id') == subcategory.id}
+            queryset = queryset.filter(id__in=org_ids_with_subcategory)
 
         queryset = queryset.annotate(
             time_now=ExpressionWrapper(Value(locale_time), output_field=TimeField())

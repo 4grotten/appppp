@@ -104,3 +104,11 @@ class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerialize
     class Meta:
         model = ItemCategory
         fields = ('id', 'icon', 'name', 'subcategories')
+
+
+class ShopItemSubcategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', )
+

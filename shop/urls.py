@@ -30,7 +30,7 @@ from shop.views.item_views import (
     ResumeEducationListView, ResumeEducationUpdateView, SubmitResumeRequestView, AcceptResumeRequestView,
     DeclineResumeRequestView, UserResumeRequestRetrieveView, OrganizationSubmitResumeRequestView,
     OrganizationResumeRequestRetrieveView, OrganizationAcceptResumeRequestView, OrganizationDeclineResumeRequestView,
-    UserResumesView, SuggestSearchResume, ShopItemSubcategoryFileCreateView
+    UserResumesView, SuggestSearchResume
 )
 
 urlpatterns = [
@@ -146,7 +146,5 @@ urlpatterns = [
     path('comments/like/', CommentLike.as_view(), name='comment_like'),
     path('comments/complaints/', CommentComplaintCreateView.as_view(), name='comment_complaint_create'),
 
-    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items'),
-
-    path('shop/create/json/', ShopItemSubcategoryFileCreateView.as_view(), name='shop_item_subcategories_file_create')
+    path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items')
 ]

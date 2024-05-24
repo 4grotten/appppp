@@ -235,3 +235,4 @@ beat.db
 celerybeat.pid
 internal-static
 organization_maps.json
+shop_item_data.json

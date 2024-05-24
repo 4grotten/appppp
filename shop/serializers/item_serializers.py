@@ -15,12 +15,12 @@ from common.models import File, FileVideo, Currency, Country, City
 from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
 from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role, Membership
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
-    OrganizationTitleImageSerializer, OrganizationNotificationInfo
+    OrganizationTitleImageSerializer, OrganizationNotificationInfo, ShopItemSubcategoryOrganizationSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
     ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
     ResumeEducation, ResumeRequest
-from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
+from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer, ShopItemSubcategorySerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
@@ -1719,3 +1719,12 @@ class RentalTicketListSerializer(ItemListSerializer):
             'is_updated', 'purchase_type', 'ticket_period'
         )
         read_only_fields = ['name_lang', 'description_lang']
+
+
+class ShopItemSubcategoryListSerializer(serializers.ModelSerializer):
+    organization = ShopItemSubcategoryOrganizationSerializer()
+    subcategory = ShopItemSubcategorySerializer()
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'organization', 'subcategory', 'price')

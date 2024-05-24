@@ -36,7 +36,7 @@ from shop.serializers.item_serializers import (
     AcceptDeclineUserResumeRequestSerializer, UserResumeRequestSerializer, UserResumeRequestAcceptedSerializer,
     SubmitOrganizationResumeRequestSerializer, OrganizationResumeRequestSerializer,
     OrganizationResumeRequestAcceptedSerializer, UserItemCreateUpdateSerializer, ResumeItemRetrieveSerializer,
-    ResumeFilterQuaryParamsSerializer, ResumeFeedSerializer
+    ResumeFilterQuaryParamsSerializer, ResumeFeedSerializer, ShopItemSubcategoryListSerializer
 )
 from shop.services.resume_services import ResumeInfoService, ResumePhoneNumberService, ResumeSocialNetworkService, \
     ResumeDetailInfoService, ResumeWorkExperienceService, ResumeEducationService, ResumeRequestService
@@ -1275,4 +1275,14 @@ class UserResumesView(ListAPIView):
     def get(self, request, *args, **kwargs):
         items = ShopItemService.get_user_resumes(user=request.user)
         data = ResumeItemRetrieveSerializer(items, many=True, context={'request': request}).data
+        return Response(data)
+
+
+class ShopItemSubcategoryFileCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ShopItemSubcategoryListSerializer
+
+    def get(self, request, *args, **kwargs):
+        data = ShopItemService.get_shop_items_and_subcategories()
+
         return Response(data)

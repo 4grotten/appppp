@@ -90,27 +90,46 @@ class CartService:
         return accepted_offline_transaction
 
     @classmethod
-    def process_cart(cls, user: User, cart_id: int, delivery_type: str):
-        cart = cls.get(id=cart_id)
+    def get_cart(cls, cart_id):
+        return Cart.objects.select_related('user', 'organization').get(id=cart_id)
+
+    @classmethod
+    def check_cart_permissions(cls, cart, user):
         if cart.user != user:
             raise PermissionDeniedException(_('No rights to change this cart'))
+
+    @classmethod
+    def check_cart_status(cls, cart, delivery_type):
         if not cart.is_open:
             raise BadRequestException(_('Cart is already closed'))
-        if delivery_type == Transaction.CASH_COURIER or delivery_type == Transaction.ONLINE_PAYMENT:
-            if not cart.organization.has_delivery:
-                raise BadRequestException(_('Organization does not have courier delivery'))
-        elif delivery_type == Transaction.SELF_PICKUP:
-            if not cart.organization.has_self_pick_up:
-                raise BadRequestException(_('Organization does not have self pick up option'))
+        if delivery_type in [Transaction.CASH_COURIER,
+                             Transaction.ONLINE_PAYMENT] and not cart.organization.has_delivery:
+            raise BadRequestException(_('Organization does not have courier delivery'))
+        if delivery_type == Transaction.SELF_PICKUP and not cart.organization.has_self_pick_up:
+            raise BadRequestException(_('Organization does not have self pick up option'))
 
-        # ToDo: try to get transaction from cart
-        current_transaction = cls.create_transaction(cart)
-        cart.is_open = False
-        for cart_item in current_transaction.cart.items.all():
+    @classmethod
+    def create_tickets(cls, user, transaction, cart_item):
+        Ticket.objects.bulk_create([
+            Ticket(user=user, organization=transaction.organization, item=cart_item.item, transaction=transaction)
+            for _ in range(cart_item.count)
+        ])
+
+    @classmethod
+    def handle_cart_items(cls, cart, transaction, user):
+        cart_items = cart.items.select_related('item')
+        for cart_item in cart_items:
             if cart_item.item.purchase_type == ShopItem.TICKET:
-                for i in range(cart_item.count):
-                    Ticket.objects.create(user=user, organization=current_transaction.organization, item=cart_item.item,
-                                          transaction=current_transaction)
+                cls.create_tickets(user, transaction, cart_item)
+
+    @classmethod
+    def process_cart(cls, user: User, cart_id: int, delivery_type: str):
+        cart = cls.get_cart(cart_id=cart_id)
+        cls.check_cart_permissions(cart=cart, user=user)
+        cls.check_cart_status(cart=cart, delivery_type=delivery_type)
+        current_transaction = cls.create_transaction(cart=cart)
+        cls.handle_cart_items(cart, current_transaction, user)
+        cart.is_open = False
         try:
             cart.save()
         except IntegrityError:

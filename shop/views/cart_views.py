@@ -139,9 +139,11 @@ class OnlinePaymentOrderDeliveryView(GenericAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         cart = CartService.process_cart(user=request.user, cart_id=pk, delivery_type=Transaction.ONLINE_PAYMENT)
-        DeliveryInfoService.create_for_online_payment(**serializer.validated_data, transaction=cart.transaction, )
+        print("heree")
+        DeliveryInfoService.create_for_online_payment(**serializer.validated_data, transaction=cart.transaction)
+        print('ZDES')
         organization = cart.transaction.organization
-
+        print("CHO TITTTTT")
         if not organization.payment_with_confirmation:
             utc_offset_minutes = int(request.query_params.get('utc_offset_minutes'))
             TransactionService.complete_online_payment_transaction(
@@ -150,10 +152,12 @@ class OnlinePaymentOrderDeliveryView(GenericAPIView):
                 processed_by=organization.owner,
                 request=request
             )
+        print("CONFIRMATION")
 
         if not DeliveryAddressesService.check_user_have_addresses(user=request.user):
             DeliveryAddressesService.create(user=request.user, **serializer.validated_data)
 
+        print("CHE TAM")
         return Response(
             {
                 "message": _("Success"),

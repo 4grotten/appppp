@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import time
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
@@ -38,7 +39,7 @@ from notifications.constants import (
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
-    send_notifications_organization_members
+    send_notifications_organization_members, send_delivery_notifications
 from organizations.models import Organization, DiscountCard, Subscription, Membership
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -1187,28 +1188,51 @@ class TransactionService:
     @transaction.atomic
     def complete_online_transaction(cls, request, transaction_id: int, utc_offset_minutes: int,
                                     processed_by: User) -> Transaction:
-        current_transaction = cls.get(id=transaction_id, is_processed=False, type=Transaction.ONLINE,
-                                      status=Transaction.IN_PROGRESS)
+        t_start = time.time()
+
+        t1 = time.time()
+        current_transaction = Transaction.objects.select_related('organization', 'cart', 'client').prefetch_related(
+            'cart__items', 'cart__items__item', 'cart__items__item__available_sizes').get(
+            id=transaction_id, is_processed=False, type=Transaction.ONLINE, status=Transaction.IN_PROGRESS)
+        t2 = time.time()
+        print(f"Time to get transaction: {t2 - t1} seconds")
+
         organization = current_transaction.organization
+
+        t1 = time.time()
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
+        t2 = time.time()
+        print(f"Time to check permissions: {t2 - t1} seconds")
 
+        t1 = time.time()
         totals = current_transaction.cart.items.aggregate(
             original_price=Coalesce(Sum(F('count') * F('item__price'), output_field=DecimalField()), 0),
             discounted_price=Coalesce(Sum(F('count') * F('item__discounted_price'), output_field=DecimalField()), 0)
         )
+        t2 = time.time()
+        print(f"Time to calculate totals: {t2 - t1} seconds")
+
+        t1 = time.time()
         for cart_item in current_transaction.cart.items.all():
             if cart_item.size is not None and cart_item.size in cart_item.item.available_sizes.all():
                 cls.change_count_service(size=cart_item.size, cart_item=cart_item)
             else:
                 cls.change_count_service(size=None, cart_item=cart_item)
+        t2 = time.time()
+        print(f"Time to update stock: {t2 - t1} seconds")
 
+        t1 = time.time()
         original_price = totals['original_price']
         discounted_price = totals['discounted_price']
         role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+        t2 = time.time()
+        print(f"Time to get totals and role: {t2 - t1} seconds")
         from shop.serializers.cart_serializers import CartSerializer
         try:
+            t1 = time.time()
             current_transaction.is_processed = True
+
             current_transaction.fixed_cart = CartSerializer(current_transaction.cart, context={
                 'request': request}).data if current_transaction.cart else None
             current_transaction.processed_by = processed_by
@@ -1221,21 +1245,42 @@ class TransactionService:
             current_transaction.savings = original_price - discounted_price
             current_transaction.purchase_id = organization.running_purchase_id
             current_transaction.display_time = now() + timedelta(minutes=utc_offset_minutes)
+            t2 = time.time()
+            print(f"Time to update transaction fields: {t2 - t1} seconds")
 
+            t1 = time.time()
             current_transaction.save()
+            t2 = time.time()
+            print(f"Time to save transaction: {t2 - t1} seconds")
 
+            t1 = time.time()
             OrganizationService.increment_running_purchase_id(organization=organization)
+            t2 = time.time()
+            print(f"Time to increment purchase ID: {t2 - t1} seconds")
         except IntegrityError:
             raise IntegrityException(_('Could not complete transaction'))
+
+        t1 = time.time()
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-        Notification.objects.filter(
-            Q(extra_data__transaction_id=current_transaction.id) & (
-                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+        t2 = time.time()
+        print(f"Time to update client status: {t2 - t1} seconds")
 
+        t1 = time.time()
+        notification_ids = Notification.objects.filter(
+            Q(extra_data__transaction_id=current_transaction.id) & (
+                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))
+        ).values_list('id', flat=True)
+
+        Notification.objects.filter(id__in=notification_ids).delete()
+
+        t2 = time.time()
+        print(f"Time to delete notifications: {t2 - t1} seconds")
+
+        t1 = time.time()
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
             sender_id=current_transaction.processed_by_id,
@@ -1247,6 +1292,10 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+        t2 = time.time()
+        print(f"Time to send client notification: {t2 - t1} seconds")
+
+        t1 = time.time()
         send_notifications_organization_members.delay(
             members_organization_id=current_transaction.organization_id,
             mode=NOTIFICATION_MODE_PRODUCT,
@@ -1259,24 +1308,24 @@ class TransactionService:
                             discount_percent=0,
                             currency=current_transaction.currency.code)
         )
+        t2 = time.time()
+        print(f"Time to send organization member notification: {t2 - t1} seconds")
+
+        t1 = time.time()
         org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
             is_delivery_service=True, country=organization.country).exists()
-        if org:
-            try:
-                send_delivery_notitication_to_organization_or_client(current_transaction.cart.organization.owner,
-                                                                     current_transaction.cart.id,
-                                                                     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                                     mode=NOTIFICATION_MODE_SYSTEM)
+        t2 = time.time()
+        print(f"Time to check delivery service organization existence: {t2 - t1} seconds")
 
-                organization_members = list(current_transaction.cart.organization.memberships.filter(
-                    Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
-                for member in organization_members:
-                    send_delivery_notitication_to_organization_or_client(member.user,
-                                                                         current_transaction.cart.id,
-                                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                                                         mode=NOTIFICATION_MODE_SYSTEM)
-            except Exception as e:
-                logging.exception(e)
+        if org:
+            t1 = time.time()
+            send_delivery_notifications.delay(current_transaction.id)
+            t2 = time.time()
+            print(f"Time to trigger delivery notifications: {t2 - t1} seconds")
+
+        t_end = time.time()
+        print(f"Total time: {t_end - t_start} seconds")
+
         return current_transaction
 
     @classmethod

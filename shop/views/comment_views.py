@@ -11,7 +11,7 @@ from common.pagination import GeneralPagination
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
-    CommentComplaintSerializer
+    CommentComplaintSerializer, CommentUpdateSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -52,6 +52,24 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        comment = self.get_object()
+        serializer = CommentUpdateSerializer(comment, data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = OrganizationService.get(id=comment.item.organization.id)
+        if OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user) or \
+                self.request.user == comment.user:
+            serializer.save()
+            return Response(data={
+                'message': _('Successfully updated comment'),
+            }, status=status.HTTP_200_OK)
+        raise NotAcceptableException(_('No rights to edit comment'))
 
     def delete(self, request, *args, **kwargs):
         try:

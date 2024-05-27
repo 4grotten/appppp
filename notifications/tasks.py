@@ -5,9 +5,11 @@ from django.db.models import Q
 
 from common.exceptions import ObjectNotFoundException
 from notifications import constants
+from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription, Membership
 from shop.models import Cart, ShopItem
+from transactions.models import Transaction
 from users.models import User
 
 
@@ -241,6 +243,23 @@ def send_delivery_notitication_to_organization_or_client(recipient, cart_id, not
         organization=organization,
         extra_data=extra_data
     )
+
+
+@shared_task
+def send_delivery_notifications(transaction_id):
+    transaction = Transaction.objects.get(id=transaction_id)
+    send_delivery_notitication_to_organization_or_client(transaction.cart.organization.owner,
+                                                         transaction.cart.id,
+                                                         NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                         mode=NOTIFICATION_MODE_SYSTEM)
+
+    organization_members = list(transaction.cart.organization.memberships.filter(
+        Q(role__can_edit_organization=True) | Q(role__can_see_stats=True) | Q(role__can_deliver=True)))
+    for member in organization_members:
+        send_delivery_notitication_to_organization_or_client(member.user,
+                                                             transaction.cart.id,
+                                                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                                             mode=NOTIFICATION_MODE_SYSTEM)
 
 
 @shared_task

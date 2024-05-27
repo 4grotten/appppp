@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from rest_framework import serializers
 
 from organizations.models import Membership, BlockedUser
@@ -42,6 +44,15 @@ class CommentSerializer(serializers.ModelSerializer):
     can_delete = serializers.SerializerMethodField()
     parent = ParentCommentSerializer()
     is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
+    is_updated = serializers.SerializerMethodField()
+
+    def get_is_updated(self, comment: Comment):
+        created_at = comment.created_at
+        updated_at = comment.updated_at
+
+        update_threshold = timedelta(seconds=1)
+        is_updated = updated_at - created_at > update_threshold
+        return is_updated
 
     def get_can_delete(self, obj) -> bool:
         user = self.context['request'].user
@@ -85,8 +96,14 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete'
-            , 'created_at')
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at')
+
+
+class CommentUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = ('text', )
 
 
 class CommentLikeSerializer(serializers.ModelSerializer):

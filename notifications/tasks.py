@@ -6,6 +6,7 @@ from django.db.models import Q
 from common.exceptions import ObjectNotFoundException
 from notifications import constants
 from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_MODE_SYSTEM
+from notifications.models import Notification
 from notifications.services import NotificationService
 from organizations.models import Organization, Subscription, Membership
 from shop.models import Cart, ShopItem
@@ -260,6 +261,15 @@ def send_delivery_notifications(transaction_id):
                                                              transaction.cart.id,
                                                              NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                                                              mode=NOTIFICATION_MODE_SYSTEM)
+
+
+@shared_task
+def delete_notifications(transaction_id, notification_org_type, notification_client_type):
+
+    Notification.objects.filter(
+        Q(extra_data__transaction_id=transaction_id) & (
+                Q(type=notification_org_type) | Q(type=notification_client_type))
+    ).delete()
 
 
 @shared_task

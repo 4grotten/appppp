@@ -4,7 +4,7 @@ from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from organizations.models import Organization
+from organizations.models import Organization, BlockedUser, Subscription
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
@@ -264,10 +264,11 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 class FollowerListSerializer(UserShortInfoSerializer):
     has_promo_cashback = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed')
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed', 'is_blocked')
 
     def get_has_promo_cashback(self, user: User) -> bool:
         if not self.context['can_edit']:
@@ -278,6 +279,34 @@ class FollowerListSerializer(UserShortInfoSerializer):
         if not self.context['can_edit']:
             return 'subscribed'
         return SubscriptionService.is_subscribed(organization=self.context['organization'], user=user)
+
+    def get_is_blocked(self, user: User) -> bool:
+        blocked_users = BlockedUser.objects.filter(organization=self.context['organization'], user=user).values_list('user_id', flat=True).distinct()
+        return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
+
+
+class BlockedUsersListSerializer(UserShortInfoSerializer):
+    has_promo_cashback = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed', 'is_blocked')
+
+    def get_has_promo_cashback(self, user: User) -> bool:
+        if not self.context['can_edit']:
+            return False
+        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
+
+    def get_is_subscribed(self, user: User) -> str:
+        if not self.context['can_edit']:
+            return 'subscribed'
+        return SubscriptionService.is_subscribed(organization=self.context['organization'], user=user)
+
+    def get_is_blocked(self, user: User) -> bool:
+        blocked_users = BlockedUser.objects.filter(organization=self.context['organization'], user=user).values_list('user_id', flat=True).distinct()
+        return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
 class FollowerOrClientSerializer(FollowerListSerializer):
@@ -300,6 +329,13 @@ class FollowerOrClientSerializer(FollowerListSerializer):
     def get_is_subscribed(self, user: User) -> str:
         organization = OrganizationService.get(id=self.context['organization_id'])
         return SubscriptionService.is_subscribed(organization=organization, user=user)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        is_subscribed = self.get_is_subscribed(instance)
+        if is_subscribed == Subscription.UNSUBSCRIBE:
+            representation['phone_number'] = None
+        return representation
 
 
 class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):

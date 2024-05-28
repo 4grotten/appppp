@@ -20,7 +20,7 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.partnership_services import PartnershipService
 from organizations.services.subscription_services import SubscriptionService
 from users.models import MyOwnToken
-from users.serializers import FollowerOrClientSerializer, FollowerListSerializer
+from users.serializers import FollowerOrClientSerializer, FollowerListSerializer, BlockedUsersListSerializer
 from notifications.tasks import sent_notification
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
@@ -70,6 +70,28 @@ class OrgFollowersListAPIView(ListAPIView):
 
     def get_queryset(self, *args, **kwargs):
         return SubscriptionService.get_organization_followers(organization_id=self.kwargs['pk'], user=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            context['can_edit'] = False
+        else:
+            context['can_edit'] = True
+            context['organization'] = organization
+        return context
+
+
+class OrgBlockedUsersListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BlockedUsersListSerializer
+    search_fields = ['full_name', 'username']
+    filter_backends = [filters.SearchFilter]
+
+    def get_queryset(self, *args, **kwargs):
+        return SubscriptionService.get_organization_blocked_users(organization_id=self.kwargs['pk'],
+                                                                  user=self.request.user)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -135,6 +157,19 @@ class OrgFollowersDetailsAPIView(APIView):
     def get(self, request, **kwargs):
         user = SubscriptionService.get_follower(organization_id=kwargs['organization_id'],
                                                 requested_by=self.request.user, user_id=kwargs['user_id'])
+        data = FollowerOrClientSerializer(
+            user,
+            context={'request': request, 'organization_id': kwargs['organization_id']}
+        ).data
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class OrgBlockedDetailsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, **kwargs):
+        user = SubscriptionService.get_blocked_user(organization_id=kwargs['organization_id'],
+                                                    requested_by=self.request.user, user_id=kwargs['user_id'])
         data = FollowerOrClientSerializer(
             user,
             context={'request': request, 'organization_id': kwargs['organization_id']}

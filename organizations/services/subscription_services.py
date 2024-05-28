@@ -14,11 +14,12 @@ from notifications.constants import (
     BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH
 )
 from notifications.tasks import sent_notification
-from organizations.models import Organization, Subscription
+from organizations.models import Organization, Subscription, BlockedUser
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
+from users.services import UserService
 
 
 class SubscriptionService:
@@ -144,6 +145,14 @@ class SubscriptionService:
             raise PermissionDeniedException(_('No rights to get followers'))
 
     @classmethod
+    def get_organization_blocked_users(cls, organization_id: int, user: User) -> QuerySet:
+        organization = Organization.objects.get(id=organization_id)
+        if OrganizationService.user_can_edit_organization(organization=organization, user=user):
+            return User.objects.filter(blocked_user__organization_id=organization_id).order_by('-blocked_user__id')
+
+        raise PermissionDeniedException(_('No rights to get blocked users'))
+
+    @classmethod
     def get_follower(cls, user_id: int, organization_id: int, requested_by: User) -> User:
         organization = OrganizationService.get(id=organization_id)
         user = User.objects.get(id=user_id)
@@ -152,6 +161,17 @@ class SubscriptionService:
 
         if not Subscription.objects.filter(user=user, organization=organization).exists():
             raise ObjectNotFoundException(_('Follower not found'))
+        return user
+
+    @classmethod
+    def get_blocked_user(cls, user_id: int, organization_id: int, requested_by: User) -> User:
+        organization = OrganizationService.get(id=organization_id)
+        user = UserService.get(id=user_id)
+        if not OrganizationService.user_can_edit_organization(user=requested_by, organization=organization):
+            raise PermissionDeniedException(_('Permission denied'))
+
+        if not BlockedUser.objects.filter(user=user, organization=organization).exists():
+            raise ObjectNotFoundException(_('Blocked user not found'))
         return user
 
     @classmethod

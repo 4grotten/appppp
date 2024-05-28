@@ -43,7 +43,8 @@ from .views.seo_views import org_detail
 from .views.service import ServiceReadOnlySet, NonEmptyServiceCategoryItemListView
 from .views.subscription_views import (
     SubscriptionsView, OrgFollowersListAPIView, OrgFollowersDetailsAPIView,
-    MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView, AcceptFollowerView, AcceptAllFollowersView
+    MassPartnershipSubscriptionView, OrgDownloadFollowersAPIView, AcceptFollowerView, AcceptAllFollowersView,
+    OrgBlockedUsersListAPIView, OrgBlockedDetailsAPIView
 )
 
 router = DefaultRouter()
@@ -82,6 +83,9 @@ organization_urls = [
     path('organizations/<int:pk>/getOrganizationTitle/', OrganizationTitleRetrieveAPIView.as_view(), name='org_title'),
     path('organizations/<int:pk>/followers/', OrgFollowersListAPIView.as_view(), name='org_followers'),
     path('organizations/<int:pk>/download_followers/', OrgDownloadFollowersAPIView.as_view(), name='org_followers'),
+    path('organizations/<int:pk>/blocked_users/', OrgBlockedUsersListAPIView.as_view(), name='org_blocked_users'),
+    path('organizations/<int:organization_id>/blocked_users/<int:user_id>/', OrgBlockedDetailsAPIView.as_view(),
+         name='org_blocked_user_detail'),
     path('organizations/<int:pk>/payment_systems/', OrganizationPaymentSystemListView.as_view(),
          name='organization_payment_systems_list'),
     path('organizations/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),

@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
@@ -37,7 +38,7 @@ from notifications.constants import (
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
-    send_notifications_organization_members, send_delivery_notifications, delete_notifications
+    send_notifications_organization_members, send_delivery_notifications
 from organizations.models import Organization, DiscountCard, Subscription, Membership
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
@@ -1239,9 +1240,9 @@ class TransactionService:
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
-        delete_notifications.delay(transaction_id=current_transaction.id,
-                                   notification_org_type=REQUEST_ORDER_TYPE,
-                                   notification_client_type=REQUEST_ORDER_CLIENT_TYPE)
+        transaction.on_commit(lambda: Notification.objects.filter(
+            Q(extra_data__transaction_id=current_transaction.id) & (
+                    Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
@@ -1268,11 +1269,12 @@ class TransactionService:
                             currency=current_transaction.currency.code)
         )
 
-        org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
-            is_delivery_service=True, country=organization.country).exists()
+        if current_transaction.delivery_type != Transaction.SELF_PICKUP:
+            org = Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True)).filter(
+                is_delivery_service=True, country=organization.country).exists()
 
-        if org:
-            send_delivery_notifications.delay(current_transaction.id)
+            if org:
+                send_delivery_notifications.delay(current_transaction.id)
 
         return current_transaction
 
@@ -1347,10 +1349,10 @@ class TransactionService:
             raise IntegrityException(_('Could not review transaction'))
 
         if current_transaction.type == Transaction.WITHDRAWAL:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=current_transaction.id) & (
                         Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
-                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,
@@ -1400,10 +1402,10 @@ class TransactionService:
             raise IntegrityException(_('Could not review transaction'))
 
         if current_transaction.type == Transaction.WITHDRAWAL:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=current_transaction.id) & (
                         Q(type=WITHDRAWAL_UNDER_REVIEW_TYPE) |
-                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete()
+                        Q(type=ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=current_transaction.processed_by_id,
@@ -1481,9 +1483,9 @@ class TransactionService:
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
 
         if current_transaction.organization.payment_with_confirmation:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=current_transaction.id) & (
-                        Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+                        Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
@@ -1591,9 +1593,9 @@ class TransactionService:
             organization=current_transaction.organization
         )
         OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__transaction_id=current_transaction.id) & (
-                    Q(type=REQUEST_RENTAL_TYPE) | Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
+                    Q(type=REQUEST_RENTAL_TYPE) | Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete())
         sent_notification.delay(
             recipient_id=current_transaction.client_id,
             sender_id=current_transaction.processed_by_id,
@@ -2297,14 +2299,18 @@ class TransactionService:
                 old_transaction.delivery_type == Transaction.CASH_COURIER) or (
                 old_transaction.type == Transaction.ONLINE and
                 old_transaction.delivery_type == Transaction.SELF_PICKUP):
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+            transaction.on_commit(
+                lambda: Notification.objects.filter(
+                    Q(extra_data__transaction_id=old_transaction.id) & (
+                            Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))
+                ).delete())
 
         if old_transaction.type == Transaction.ONLINE and old_transaction.delivery_type == Transaction.ONLINE_PAYMENT:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))).delete()
+                        Q(type=REQUEST_ONLINE_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE)
+                )
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2369,17 +2375,20 @@ class TransactionService:
             )
             OrganizationClientFinancialStatusService.update_client_cumulative_card(client_status=client_status)
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE) |
-                        Q(type=REQUEST_RENTAL_TYPE) |Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete()
+                        Q(type=ACCEPT_RENTAL_TYPE) |
+                        Q(type=ACCEPT_RENTAL_CLIENT_TYPE) |
+                        Q(type=REQUEST_RENTAL_TYPE) |
+                        Q(type=REQUEST_RENTAL_CLIENT_TYPE))).delete())
 
         discount_percent = old_transaction.discount_percent
         if old_transaction.status == Transaction.REJECTED and old_transaction.payment_status == Transaction.ACCEPTED:
             if old_transaction.type == Transaction.ONLINE:
-                Notification.objects.filter(
+                transaction.on_commit(lambda: Notification.objects.filter(
                     Q(extra_data__transaction_id=old_transaction.id) & (
-                            Q(type=ACCEPT_RENTAL_PAYMENT_TYPE) | Q(type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE))).delete()
+                            Q(type=ACCEPT_RENTAL_PAYMENT_TYPE) |
+                            Q(type=ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE))).delete())
 
             try:
                 old_transaction.payment_status = Transaction.REFUNDED
@@ -2468,9 +2477,10 @@ class TransactionService:
                                                                   request=request)
 
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
+            transaction.on_commit(lambda: Notification.objects.filter(
                 Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete()
+                        Q(type=ACCEPT_RENTAL_TYPE) |
+                        Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2534,9 +2544,10 @@ class TransactionService:
                                                                   request=request)
 
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete()
+            transaction.on_commit(lambda: Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) &
+                (Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2580,9 +2591,10 @@ class TransactionService:
         except:
             raise IntegrityException()
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+            transaction.on_commit(lambda: Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) &
+                (Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2645,9 +2657,10 @@ class TransactionService:
         except:
             raise IntegrityException()
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+            transaction.on_commit(lambda: Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) &
+                (Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2704,9 +2717,10 @@ class TransactionService:
         except:
             raise IntegrityException()
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))).delete()
+            transaction.on_commit(lambda: Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) &
+                (Q(type=ACCEPT_ORDER_TYPE) | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE))
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 
@@ -2745,9 +2759,10 @@ class TransactionService:
         except:
             raise IntegrityException()
         if old_transaction.type == Transaction.ONLINE:
-            Notification.objects.filter(
-                Q(extra_data__transaction_id=old_transaction.id) & (
-                        Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))).delete()
+            transaction.on_commit(lambda: Notification.objects.filter(
+                Q(extra_data__transaction_id=old_transaction.id) &
+                (Q(type=ACCEPT_RENTAL_TYPE) | Q(type=ACCEPT_RENTAL_CLIENT_TYPE))
+            ).delete())
 
         discount_percent = old_transaction.discount_percent
 

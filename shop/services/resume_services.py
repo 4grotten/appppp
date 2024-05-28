@@ -214,10 +214,10 @@ class ResumeRequestService:
                                                           item=item, show_contacts=show_contacts,
                                                           phone_numbers=phone_numbers, links=links, text=text)
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &
             Q(extra_data__user_id=resume_request.sender_user.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -274,10 +274,10 @@ class ResumeRequestService:
                                                           item=item, show_contacts=show_contacts,
                                                           phone_numbers=phone_numbers, links=links, text=text)
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &
             Q(extra_data__user_id=resume_request.sender_user.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -339,10 +339,10 @@ class ResumeRequestService:
                                                           show_contacts=show_contacts, phone_numbers=phone_numbers,
                                                           links=links, text=text)
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &
             Q(extra_data__user_id=user.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=user.id,
@@ -407,10 +407,10 @@ class ResumeRequestService:
                                                           show_contacts=show_contacts, phone_numbers=phone_numbers,
                                                           links=links, text=text)
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__item_id=resume_request.item.id) &
             Q(extra_data__user_id=user.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=user.id,
@@ -454,9 +454,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not accept resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -500,9 +500,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not accept resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -546,9 +546,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not accept resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         from organizations.serializers.organization_serializers import OrganizationNotificationInfo
         send_notifications_organization_members.delay(
@@ -595,9 +595,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not accept resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         from organizations.serializers.organization_serializers import OrganizationNotificationInfo
         sent_notification.delay(
@@ -644,9 +644,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not reject resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -689,9 +689,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not reject resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=REQUEST_RESUME_TYPE) | Q(type=REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         sent_notification.delay(
             recipient_id=resume_request.sender_user.id,
@@ -735,9 +735,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not reject resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         from organizations.serializers.organization_serializers import OrganizationNotificationInfo
         send_notifications_organization_members.delay(
@@ -784,9 +784,9 @@ class ResumeRequestService:
         except IntegrityError:
             raise IntegrityException(_('Could not reject resume request'))
 
-        Notification.objects.filter(
+        transaction.on_commit(lambda: Notification.objects.filter(
             Q(extra_data__resume_request_id=resume_request.id) &
-            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete()
+            (Q(type=ORGANIZATION_REQUEST_RESUME_TYPE) | Q(type=ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE))).delete())
 
         from organizations.serializers.organization_serializers import OrganizationNotificationInfo
         sent_notification.delay(

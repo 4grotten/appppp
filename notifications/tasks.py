@@ -262,16 +262,6 @@ def send_delivery_notifications(transaction_id):
                                                              NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                                                              mode=NOTIFICATION_MODE_SYSTEM)
 
-
-@shared_task
-def delete_notifications(transaction_id, notification_org_type, notification_client_type):
-
-    Notification.objects.filter(
-        Q(extra_data__transaction_id=transaction_id) & (
-                Q(type=notification_org_type) | Q(type=notification_client_type))
-    ).delete()
-
-
 @shared_task
 def sent_notification(recipient_id: int, sender_id=None, mode='system', notification_type='system', extra_data=None,
                       title='Title was not sent', description='Description was not sent', organization_id=None,

@@ -321,7 +321,8 @@ class FollowerOrClientSerializer(FollowerListSerializer):
             'is_blocked')
 
     def get_is_blocked(self, user: User) -> bool:
-        blocked_users = BlockedUser.objects.filter(organization=self.context['organization'], user=user).values_list('user_id', flat=True).distinct()
+        blocked_users = BlockedUser.objects.filter(organization_id=self.context['organization_id'],
+                                                   user=user).values_list('user_id', flat=True).distinct()
         return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_has_promo_cashback(self, user: User) -> bool:

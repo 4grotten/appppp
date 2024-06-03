@@ -9,9 +9,11 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
+from common.utils import upload_file_with_unique_name
 from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS, \
     VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
+from users.constants import GENDER_CHOICES
 from users.models import User
 
 
@@ -639,3 +641,72 @@ class Service(models.Model):
         verbose_name = _('Service')
         verbose_name_plural = _('Services')
         ordering = ('ordering',)
+
+
+class Assistant(TimestampModel):
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='assistant')
+    name = models.CharField(max_length=255)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
+    position = models.CharField(max_length=255)
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='assistants')
+
+    def __str__(self):
+        return f"Assistant {self.name} of {self.organization} organization"
+
+
+class Question(TimestampModel):
+    text = models.CharField(max_length=5000, null=True, blank=True)
+    ordering = models.SmallIntegerField(verbose_name='Question ordering',
+                                        validators=[MinValueValidator(0)],
+                                        null=True,
+                                        blank=True,
+                                        help_text='Не заполнять при создании!')
+
+
+    def __str__(self):
+        if self.text:
+            return f"{self.ordering} - {self.text}"
+        return str(self.ordering)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            has_obj = Question.objects.order_by('ordering').last()
+            if has_obj:
+                self.ordering = has_obj.ordering + 1
+            else:
+                self.ordering = 0
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Question')
+        verbose_name_plural = _('Questions')
+        ordering = ('ordering',)
+
+
+class AnswerFile(TimestampModel):
+    order = models.PositiveSmallIntegerField(default=0, editable=False)
+    file = models.FileField(upload_to=upload_file_with_unique_name,
+                             help_text=_('File that you want to store'),
+                             null=True, blank=True)
+
+    @property
+    def name(self):
+        return self.file.name.split("/")[-1]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super(AnswerFile, self).save()
+
+    class Meta:
+        ordering = ('order',)
+
+
+class Answer(TimestampModel):
+    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
+    text = models.CharField(max_length=5000)
+    files = models.ManyToManyField(AnswerFile, blank=True, related_name='answers')
+
+    def __str__(self):
+        return f'{self.assistant.name}'

@@ -13,8 +13,9 @@ from .models import (
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
-    BlockedUser, OrganizationPaymentSystemUsers
+    BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile
 )
+from .serializers.assistant_serializers import AnswerFileSerializer
 
 
 @admin.register(CashbackGroup)
@@ -421,3 +422,24 @@ class OrganizationAdmin(admin.ModelAdmin):
                 return mark_safe(f'<img src="{obj.icon.small.url}">')
         except AttributeError:
             pass
+
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'text', 'ordering')
+    list_editable = ('ordering', )
+    search_fields = ('text', )
+
+@admin.register(Assistant)
+class AssistantAdmin(admin.ModelAdmin):
+    list_display = ('id', 'organization', 'name')
+    search_fields = ('name', )
+
+@admin.register(Answer)
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'assistant', 'question')
+    search_fields = ('assistant', 'question', )
+
+@admin.register(AnswerFile)
+class AnswerFileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'file')

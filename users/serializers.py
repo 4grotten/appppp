@@ -312,11 +312,18 @@ class BlockedUsersListSerializer(UserShortInfoSerializer):
 class FollowerOrClientSerializer(FollowerListSerializer):
     role = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role', 'is_subscribed')
+            'id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role', 'is_subscribed',
+            'is_blocked')
+
+    def get_is_blocked(self, user: User) -> bool:
+        blocked_users = BlockedUser.objects.filter(organization_id=self.context['organization_id'],
+                                                   user=user).values_list('user_id', flat=True).distinct()
+        return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_has_promo_cashback(self, user: User) -> bool:
         organization = OrganizationService.get(id=self.context['organization_id'])

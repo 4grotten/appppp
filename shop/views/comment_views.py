@@ -2,7 +2,8 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView, \
+    GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -11,7 +12,7 @@ from common.pagination import GeneralPagination
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
-    CommentComplaintSerializer, CommentUpdateSerializer
+    CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -46,6 +47,23 @@ class CommentItemListCreateView(ListCreateAPIView):
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ItemChangeCommentsDisabledView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ItemChangeCommentsDisabledSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ShopItemService.update_comments_disabled_status(user=request.user, item=serializer.validated_data['item'],
+                                                        is_disabled=serializer.validated_data['is_disabled'])
+
+        return Response(data={'message': _('Successfully updated comments disabled status')})
 
 
 class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):

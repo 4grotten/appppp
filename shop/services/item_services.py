@@ -34,6 +34,15 @@ class ShopItemService:
             raise NotAcceptableException(_('No rights to edit this item'))
 
     @classmethod
+    def update_comments_disabled_status(cls, user: User, item: ShopItem, is_disabled: bool):
+        if OrganizationService.user_can_edit_organization(user=user, organization=item.organization) or \
+                OrganizationService.user_can_edit_own_resume(user=user, organization=item.organization):
+            item.comments_disabled = is_disabled
+            item.save(update_fields=('comments_disabled',))
+        else:
+            raise NotAcceptableException(_('No rights to edit this item'))
+
+    @classmethod
     def subscription_has_new_items(cls, timestamp: str, user: User) -> bool:
         organizations = SubscriptionService.get_user_subscriptions(user=user)
         queryset = ShopItem.objects.filter(organization__in=organizations, is_published=True,

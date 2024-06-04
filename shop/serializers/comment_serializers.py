@@ -5,7 +5,7 @@ from rest_framework import serializers
 from organizations.models import Membership, BlockedUser
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import Comment, CommentLike, CommentComplaint
+from shop.models import Comment, CommentLike, CommentComplaint, ShopItem
 from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
 from users.serializers import UserShortInfoSerializer
@@ -132,3 +132,8 @@ class CommentComplaintSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         return attrs
+
+
+class ItemChangeCommentsDisabledSerializer(serializers.Serializer):
+    is_disabled = serializers.BooleanField()
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())

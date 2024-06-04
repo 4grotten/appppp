@@ -219,6 +219,10 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
     own_resume = serializers.SerializerMethodField()
+    is_comments_disabled = serializers.SerializerMethodField()
+
+    def get_is_comments_disabled(self, item: ShopItem) -> bool:
+        return item.comments_disabled
 
     def get_own_resume(self, item: ShopItem):
         user = self.context['request'].user
@@ -329,7 +333,8 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
             'youtube_links', 'subcategory', 'images', 'videos', 'organization',
             'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
             'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education', 'own_resume'
+            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education', 'own_resume',
+            'is_comments_disabled'
         )
 
 

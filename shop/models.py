@@ -117,6 +117,7 @@ class ShopItem(models.Model):
 
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)
+    comments_disabled = models.BooleanField(default=False)
 
     minimum_purchase = models.PositiveIntegerField(null=True, blank=True)
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)

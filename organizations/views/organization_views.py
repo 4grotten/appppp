@@ -33,7 +33,7 @@ from organizations.serializers.categories_serializers import (
     OrganizationTypeSerializer
 )
 
-from organizations.serializers.misc_serializers import LocationSerializer, SubscriptionSerializer
+from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     OrganizationListSerializer, OrganizationCreateSerializer, OrganizationDetailedSerializer,
     OrganizationUpdateSerializer, OrgPhoneNumberSerializer, OrgPhoneNumberEditSerializer,

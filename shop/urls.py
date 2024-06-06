@@ -13,7 +13,7 @@ from shop.views.category_views import (
 )
 from shop.views.comment_views import CommentItemListCreateView, \
     CommentDestroyUpdateRetrievtView, CommentedItemsListView, CommentLike, CommentComplaintCreateView, \
-    ItemChangeCommentsDisabledView
+    ItemChangeCommentsDisabledView, UploadUserThemeImageView
 from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView,
     OrganizationRentalListView, OrganizationTicketListView, OrganizationOwnTicketListView
@@ -149,6 +149,8 @@ urlpatterns = [
     path('comments//item/<int:pk>/', CommentItemListCreateView.as_view(), name='comment_item_list'),
     path('comments/change/comments_disabled/', ItemChangeCommentsDisabledView.as_view(),
          name='comment_change_comments_disabled'),
+    path('comments/change/upload_theme_image/', UploadUserThemeImageView.as_view(),
+         name='comment_upload_theme_image'),
 
     path('partner_shop_items/<int:pk>/', PartnerShopItemsListView.as_view(), name='partner_shop_items')
 ]

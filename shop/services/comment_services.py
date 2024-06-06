@@ -99,10 +99,11 @@ class CommentService:
         else:
 
             if default_theme:
+                user_theme, created = UserCommentTheme.objects.get_or_create(user=user)
                 return {
                     "theme_type": default_theme.theme_type,
                     "theme_id": None,
-                    "image": None,
+                    "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
                     "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
                     "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
                 }

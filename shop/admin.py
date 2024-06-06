@@ -1,10 +1,11 @@
 from django.contrib import admin
 
+from common.models import CommentsWallpaper
 from shop.models import (
     ItemCategory, ItemSubcategory, ShopItem, ItemBookmark, ItemLike, Complaint, Cart, CartItem,
     ItemInstagramData, Comment, CommentComplaint, Booking, ItemCollection, Ticket, ResumeInfo, ResumeInfoFile,
     ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, ResumeEducation,
-    ResumeRequest
+    ResumeRequest, CommentTheme, UserCommentTheme
 )
 from .forms import ItemSubcategoryAdminForm
 
@@ -121,6 +122,25 @@ class ResumeRequestAdmin(admin.ModelAdmin):
                     'links', 'status')
 
 
+class CommentThemeAdmin(admin.ModelAdmin):
+    list_display = ('theme_type', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('theme_type',)
+    readonly_fields = ('theme_type',)
+
+    def save_model(self, request, obj, form, change):
+        if obj.is_active:
+            CommentsWallpaper.objects.exclude(id=obj.id).update(is_active=False)
+        super().save_model(request, obj, form, change)
+
+
+class UserCommentThemeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'theme_type', 'theme_id')
+    list_filter = ('theme_type',)
+    search_fields = ('user__username',)
+    readonly_fields = ('user',)
+
+
 @admin.register(Education)
 class EducationAdmin(admin.ModelAdmin):
     list_display = ('name', 'name_en', 'name_ru', 'name_tr',)
@@ -149,3 +169,5 @@ admin.site.register(ResumeDetailInfo, ResumeDetailInfoAdmin)
 admin.site.register(ResumeWorkExperience, ResumeWorkExperienceAdmin)
 admin.site.register(ResumeEducation, ResumeEducationAdmin)
 admin.site.register(ResumeRequest, ResumeRequestAdmin)
+admin.site.register(CommentTheme, CommentThemeAdmin)
+admin.site.register(UserCommentTheme, UserCommentThemeAdmin)

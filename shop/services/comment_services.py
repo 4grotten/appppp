@@ -3,11 +3,12 @@ from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
-from common.models import CommentsWallpaper
+from common.models import CommentsWallpaper, File
+from common.serializers import ImageSerializer
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.models import Membership
-from shop.models import Comment, ShopItem
+from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
 from notifications.tasks import sent_notification
 
@@ -81,3 +82,68 @@ class CommentService:
                     'mobile': 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(wallpaper.mobile)}
         else:
             return None
+
+    @classmethod
+    def get_user_theme_or_default(cls, user: User):
+        user_theme = UserCommentTheme.objects.filter(user=user).first()
+        default_theme = CommentTheme.objects.filter(is_active=True).first()
+
+        if user_theme:
+            return {
+                "theme_type": user_theme.theme_type,
+                "theme_id": user_theme.theme_id,
+                "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
+                "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
+                "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
+            }
+        else:
+
+            if default_theme:
+                return {
+                    "theme_type": default_theme.theme_type,
+                    "theme_id": None,
+                    "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
+                    "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
+                    "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
+                }
+            else:
+                return None
+
+    @classmethod
+    def update_user_theme(cls, user, theme_type, theme_id=None, image_id=None):
+        user_theme, created = UserCommentTheme.objects.get_or_create(user=user)
+        user_theme.theme_type = theme_type
+
+        default_theme = CommentTheme.objects.filter(is_active=True).first()
+
+        if theme_type == 'custom' and image_id:
+            user_theme.image = File.objects.get(id=image_id)
+            user_theme.theme_id = None
+
+        elif theme_type == 'predefined' and theme_id:
+            user_theme.theme_id = theme_id
+
+        elif theme_type == 'default':
+            if default_theme:
+                user_theme.theme_id = None
+                return {
+                    "theme_type": default_theme.theme_type,
+                    "theme_id": None,
+                    "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
+                    "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
+                    "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
+                }
+            else:
+                return None
+
+        user_theme.save()
+
+        return {
+            "theme_type": user_theme.theme_type,
+            "theme_id": user_theme.theme_id,
+            "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
+            "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
+            "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
+        }
+
+

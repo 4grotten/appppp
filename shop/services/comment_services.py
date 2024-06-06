@@ -102,7 +102,7 @@ class CommentService:
                 return {
                     "theme_type": default_theme.theme_type,
                     "theme_id": None,
-                    "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
+                    "image": None,
                     "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
                     "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
                 }

@@ -128,13 +128,6 @@ class CommentService:
         elif theme_type == 'default':
             if default_theme:
                 user_theme.theme_id = None
-                return {
-                    "theme_type": default_theme.theme_type,
-                    "theme_id": None,
-                    "image": ImageSerializer(user_theme.image).data if user_theme.image else None,
-                    "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
-                    "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
-                }
             else:
                 return None
 

@@ -2,10 +2,11 @@ from datetime import timedelta
 
 from rest_framework import serializers
 
+from common.models import File
 from organizations.models import Membership, BlockedUser
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
-from shop.models import Comment, CommentLike, CommentComplaint
+from shop.models import Comment, CommentLike, CommentComplaint, ShopItem, UserCommentTheme
 from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
 from users.serializers import UserShortInfoSerializer
@@ -132,3 +133,23 @@ class CommentComplaintSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         return attrs
+
+
+class ItemChangeCommentsDisabledSerializer(serializers.Serializer):
+    is_disabled = serializers.BooleanField()
+    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.all())
+
+
+class UserCommentThemeSerializer(serializers.ModelSerializer):
+    THEME_TYPE_CHOICES = (
+        ('default', 'Default'),
+        ('predefined', 'Predefined'),
+        ('custom', 'Custom'),
+    )
+    image_id = serializers.IntegerField(required=False, allow_null=True)
+    theme_id = serializers.IntegerField(required=False, allow_null=True)
+    theme_type = serializers.ChoiceField(choices=THEME_TYPE_CHOICES)
+
+    class Meta:
+        model = UserCommentTheme
+        fields = ('theme_type', 'image_id', 'theme_id', )

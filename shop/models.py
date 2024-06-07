@@ -117,6 +117,7 @@ class ShopItem(models.Model):
 
     is_published = models.BooleanField(default=True)
     is_hidden = models.BooleanField(default=False)
+    comments_disabled = models.BooleanField(default=False)
 
     minimum_purchase = models.PositiveIntegerField(null=True, blank=True)
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
@@ -421,6 +422,35 @@ class Comment(TimestampModel):
 
     def __str__(self):
         return f'Comment of {self.user} about {self.item.name}'
+
+
+class CommentTheme(TimestampModel):
+    theme_type = models.CharField(max_length=20, default='default')
+    svg_background = models.FileField(upload_to=upload_file_with_unique_name, null=True, blank=True,
+                                      help_text=_('Background SVG file for default theme'))
+    svg_pattern = models.FileField(upload_to=upload_file_with_unique_name, null=True, blank=True,
+                                   help_text=_('Pattern SVG file for default theme'))
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.theme_type
+
+
+class UserCommentTheme(TimestampModel):
+    THEME_TYPE_CHOICES = (
+        ('predefined', _('Predefined')),
+        ('custom', _('Custom')),
+    )
+
+    theme_type = models.CharField(max_length=20, choices=THEME_TYPE_CHOICES)
+    theme_id = models.PositiveIntegerField(null=True, blank=True, help_text=_('ID of the predefined theme'))
+    image = models.OneToOneField(File, null=True, blank=True, on_delete=models.SET_NULL,
+                                 help_text=_('User uploaded image for custom theme'))
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_theme',
+                                help_text=_('User who uploaded the custom theme or selected the theme'))
+
+    def __str__(self):
+        return f"Theme {self.id} - {self.user} - {self.theme_type}"
 
 
 class CommentLike(TimestampModel):

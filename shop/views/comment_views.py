@@ -2,16 +2,19 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView, \
+    GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
 from organizations.services.organization_services import OrganizationService
-from shop.models import Comment, CommentComplaint
+from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
-    CommentComplaintSerializer, CommentUpdateSerializer
+    CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
+    UserCommentThemeSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -32,7 +35,7 @@ class CommentItemListCreateView(ListCreateAPIView):
         item = ShopItemService.get(id=self.kwargs['pk'])
         response = super().list(request, args, kwargs)
         response.data['my_role'] = CommentService.get_my_role(user=self.request.user, item=item)
-        response.data['wallpapers'] = CommentService.get_wallpapers()
+        response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
         return response
 
     def create(self, request, *args, **kwargs):
@@ -46,6 +49,23 @@ class CommentItemListCreateView(ListCreateAPIView):
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ItemChangeCommentsDisabledView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = ItemChangeCommentsDisabledSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ShopItemService.update_comments_disabled_status(user=request.user, item=serializer.validated_data['item'],
+                                                        is_disabled=serializer.validated_data['is_disabled'])
+
+        return Response(data={'message': _('Successfully updated comments disabled status')})
 
 
 class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
@@ -133,3 +153,25 @@ class CommentComplaintCreateView(CreateAPIView):
             super().perform_create(serializer)
         except IntegrityError:
             raise IntegrityException(_('You have already complained about this comment'))
+
+
+class UploadUserThemeImageView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        serializer = UserCommentThemeSerializer(data=request.data)
+
+        if serializer.is_valid():
+            theme_type = serializer.validated_data['theme_type']
+            theme_id = serializer.validated_data.get('theme_id')
+            image_id = serializer.validated_data.get('image_id')
+
+            response_data = CommentService.update_user_theme(user, theme_type, theme_id, image_id)
+
+            if "error" in response_data:
+                return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

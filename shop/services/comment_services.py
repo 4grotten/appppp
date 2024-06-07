@@ -99,7 +99,8 @@ class CommentService:
         else:
 
             if default_theme:
-                user_theme, created = UserCommentTheme.objects.get_or_create(user=user)
+                user_theme, created = UserCommentTheme.objects.get_or_create(user=user,
+                                                                             defaults={'theme_type': 'default'})
                 return {
                     "theme_type": default_theme.theme_type,
                     "theme_id": None,

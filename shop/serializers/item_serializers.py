@@ -837,6 +837,7 @@ class ItemFeedSerializer(ItemListSerializer):
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
     own_resume = serializers.SerializerMethodField()
+    is_comments_disabled = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -913,6 +914,9 @@ class ItemFeedSerializer(ItemListSerializer):
             return True
         return False
 
+    def get_is_comments_disabled(self, item: ShopItem) -> bool:
+        return item.comments_disabled
+
     class Meta:
         model = ShopItem
         fields = (
@@ -924,7 +928,7 @@ class ItemFeedSerializer(ItemListSerializer):
             'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
             'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address',
             'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship', 'education', 'current_locations',
-            'preferred_locations', 'links', 'own_resume'
+            'preferred_locations', 'links', 'own_resume', 'is_comments_disabled'
         )
         read_only_fields = ['name_lang', 'description_lang']
 

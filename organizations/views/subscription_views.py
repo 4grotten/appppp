@@ -77,6 +77,7 @@ class OrgFollowersListAPIView(ListAPIView):
         organization = OrganizationService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
             context['can_edit'] = False
+            context['organization'] = organization
         else:
             context['can_edit'] = True
             context['organization'] = organization
@@ -98,6 +99,7 @@ class OrgBlockedUsersListAPIView(ListAPIView):
 
         organization = OrganizationService.get(id=self.kwargs['pk'])
         if not OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user):
+            context['organization'] = organization
             context['can_edit'] = False
         else:
             context['can_edit'] = True

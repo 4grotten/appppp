@@ -77,11 +77,19 @@ class QuestionListQueryParamSerializer(serializers.Serializer):
 
 
 class QuestionListSerializer(serializers.ModelSerializer):
+    answer = serializers.SerializerMethodField()
     is_filled = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'ordering', 'created_at', 'updated_at', 'is_filled']
+        fields = ['id', 'text', 'ordering', 'created_at', 'updated_at', 'is_filled', 'answer']
+
+    def get_answer(self, question: Question):
+        assistant = self.context.get('assistant')
+        answer = Answer.objects.filter(question=question, assistant=assistant).last()
+        if answer:
+            return OrganizationAssistantAnswerRetrieveSerializer(answer).data
+        return None
 
     def get_is_filled(self, question: Question):
         assistant = self.context.get('assistant')

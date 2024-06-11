@@ -35,7 +35,7 @@ class OrganizationAssistantCreateView(APIView):
 
         serializer.save()
 
-        return Response(data={"message": "Assistant successfully created"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class OrganizationAssistantAnswerCreateView(APIView):
@@ -94,8 +94,6 @@ class AnswerFileCreateView(generics.CreateAPIView):
     parser_classes = (MultiPartParser,)
     serializer_class = AnswerFileSerializer
     queryset = AnswerFile.objects.all()
-
-
 
 
 class QuestionListView(generics.ListAPIView):

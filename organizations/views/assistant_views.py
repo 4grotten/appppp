@@ -8,10 +8,11 @@ from rest_framework.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Question
+from organizations.models import Answer, AnswerFile, Question, Assistant
 from organizations.serializers.assistant_serializers import AssistantCreateSerializer, \
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
-    QuestionListSerializer, QuestionListQueryParamSerializer
+    QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
+    OrganizationAssistantUpdateSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService
 from organizations.services.organization_services import OrganizationService
 
@@ -58,6 +59,20 @@ class OrganizationAssistantAnswerCreateView(APIView):
         serializer.save()
 
         return Response(data={"message": "Answer successfully created"}, status=status.HTTP_201_CREATED)
+
+
+class OrganizationAssistantRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Assistant.objects.all()
+    serializer_class = OrganizationAssistantSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return AssistantService.get(id=self.kwargs['pk'])
+
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return OrganizationAssistantUpdateSerializer
+        return self.serializer_class
 
 
 class OrganizationAssistantAnswerRetrieveUpdateView(generics.RetrieveUpdateAPIView):

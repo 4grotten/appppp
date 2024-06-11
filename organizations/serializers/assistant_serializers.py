@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 
 from common.models import File
+from common.serializers import ImageSerializer
 from organizations.models import Assistant, Organization, Answer, AnswerFile, Question
 from organizations.services.assistant_services import AssistantService
 
@@ -43,6 +44,23 @@ class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
         answer = Answer.objects.create(**validated_data)
         answer.files.set(files)
         return answer
+
+
+class OrganizationAssistantSerializer(serializers.ModelSerializer):
+    image = ImageSerializer(read_only=True)
+
+    class Meta:
+        model = Assistant
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image')
+        read_only_fields = ('organization', )
+
+
+class OrganizationAssistantUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Assistant
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image')
+        read_only_fields = ('organization', )
 
 
 class OrganizationAssistantAnswerRetrieveSerializer(serializers.ModelSerializer):

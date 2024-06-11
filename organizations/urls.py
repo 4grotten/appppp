@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.assistant_views import OrganizationAssistantCreateView, OrganizationAssistantAnswerCreateView, \
-    OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView
+    OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView, \
+    OrganizationAssistantRetrieveUpdateView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -134,6 +135,8 @@ organization_urls = [
 
     # assistant urls
     path('organizations/assistant/', OrganizationAssistantCreateView.as_view(), name='org_assistant_create'),
+    path('organizations/assistant/<int:pk>/', OrganizationAssistantRetrieveUpdateView.as_view(),
+         name='org_assistant_retrieve_update'),
     path('organizations/assistant/questions/', QuestionListView.as_view(), name='org_assistant_questions'),
     path('organizations/assistant/questions/answer/', OrganizationAssistantAnswerCreateView.as_view(),
          name='org_assistant_question_answer'),

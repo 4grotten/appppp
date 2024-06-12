@@ -13,7 +13,7 @@ from .models import (
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
-    BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile
+    BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -433,6 +433,11 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(Assistant)
 class AssistantAdmin(admin.ModelAdmin):
     list_display = ('id', 'organization', 'name')
+    search_fields = ('name', )
+
+@admin.register(Plan)
+class AssistantAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
     search_fields = ('name', )
 
 @admin.register(Answer)

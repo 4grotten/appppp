@@ -17,6 +17,7 @@ from organizations.models import (
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
     OrganizationPaymentSystemUsers
 )
+from organizations.serializers.assistant_serializers import AssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -276,6 +277,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
+    assistant = AssistantSerializer(allow_null=True)
     image = ImageSerializer()
     permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
@@ -405,7 +407,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request'
+            'is_wholesale_in_request', 'assistant'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

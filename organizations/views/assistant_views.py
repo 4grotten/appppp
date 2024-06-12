@@ -8,11 +8,11 @@ from rest_framework.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Question, Assistant
+from organizations.models import Answer, AnswerFile, Question, Assistant, Plan
 from organizations.serializers.assistant_serializers import AssistantCreateSerializer, \
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
-    OrganizationAssistantUpdateSerializer
+    PlanSerializer, AssistantSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService
 from organizations.services.organization_services import OrganizationService
 
@@ -34,9 +34,9 @@ class OrganizationAssistantCreateView(APIView):
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': _('No rights to edit organization')})
 
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        instance = serializer.save()
+        data = OrganizationAssistantSerializer(instance, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class OrganizationAssistantAnswerCreateView(APIView):
@@ -68,11 +68,6 @@ class OrganizationAssistantRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return AssistantService.get(id=self.kwargs['pk'])
-
-    def get_serializer_class(self):
-        if self.request.method == 'PUT':
-            return OrganizationAssistantUpdateSerializer
-        return self.serializer_class
 
 
 class OrganizationAssistantAnswerRetrieveUpdateView(generics.RetrieveUpdateAPIView):
@@ -127,5 +122,22 @@ class QuestionListView(generics.ListAPIView):
         context['assistant'] = assistant
         return context
 
+
+class AssistantPlansListView(generics.ListAPIView):
+    queryset = Plan.objects.all()
+    serializer_class = PlanSerializer
+
+
+    def list(self, request, *args, **kwargs):
+        assistant = AssistantService.get(id=self.kwargs['pk'])
+        assistant_data = AssistantSerializer(assistant).data
+        plans = self.get_queryset()
+        plan_data = PlanSerializer(plans, many=True).data
+
+        response_data = {
+            'assistant': assistant_data,
+            'plans': plan_data
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
 

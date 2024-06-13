@@ -1,5 +1,7 @@
+import time
+
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException
@@ -44,11 +46,11 @@ class CommentService:
 
     @classmethod
     def delete_comment(cls, comment: Comment):
-        transaction.on_commit(
-            lambda: Notification.objects.filter(
-                extra_data__comment_id=comment.id,
-                type__in=[NEW_COMMENT_TYPE, ]
-            ).delete())
+        # transaction.on_commit(
+        #     lambda: Notification.objects.filter(
+        #         Q(extra_data__comment_id=comment.id) & Q(type=NEW_COMMENT_TYPE)
+        #     ).delete()
+        # )
         comment.delete()
 
     @classmethod

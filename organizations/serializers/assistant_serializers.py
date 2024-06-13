@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 
 from common.models import File
-from organizations.models import Assistant, Organization, Answer, AnswerFile, Question
+from common.serializers import ImageSerializer
+from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan
 from organizations.services.assistant_services import AssistantService
 
 
@@ -45,6 +46,29 @@ class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
         return answer
 
 
+class OrganizationAssistantSerializer(serializers.ModelSerializer):
+    image = ImageSerializer(read_only=True)
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), source='image', write_only=True, required=False
+    )
+
+    class Meta:
+        model = Assistant
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id')
+        read_only_fields = ('organization', )
+
+
+class OrganizationAssistantUpdateSerializer(serializers.ModelSerializer):
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), source='image', write_only=True, required=False
+    )
+
+    class Meta:
+        model = Assistant
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image_id')
+        read_only_fields = ('organization', )
+
+
 class OrganizationAssistantAnswerRetrieveSerializer(serializers.ModelSerializer):
     files = AnswerFileSerializer(many=True)
 
@@ -77,15 +101,38 @@ class QuestionListQueryParamSerializer(serializers.Serializer):
 
 
 class QuestionListSerializer(serializers.ModelSerializer):
+    answer = serializers.SerializerMethodField()
     is_filled = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'ordering', 'created_at', 'updated_at', 'is_filled']
+        fields = ['id', 'text', 'ordering', 'created_at', 'updated_at', 'is_filled', 'answer']
+
+    def get_answer(self, question: Question):
+        assistant = self.context.get('assistant')
+        answer = Answer.objects.filter(question=question, assistant=assistant).last()
+        if answer:
+            return OrganizationAssistantAnswerRetrieveSerializer(answer).data
+        return None
 
     def get_is_filled(self, question: Question):
         assistant = self.context.get('assistant')
         return Answer.objects.filter(question=question, assistant=assistant).exists()
+
+
+class PlanSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Plan
+        fields = ('id', 'name', 'description', 'additional_name', 'price', 'currency', 'is_best_choice')
+
+
+class AssistantSerializer(serializers.ModelSerializer):
+    plans = PlanSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Assistant
+        fields = ('id', 'name', 'gender', 'position', 'image', 'plans')
 
 
 

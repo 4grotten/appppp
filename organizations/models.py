@@ -15,6 +15,7 @@ from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
 from users.models import User
+from utils.translator import GoogleTranslator
 
 
 class CashbackGroup(TimestampModel):
@@ -643,6 +644,26 @@ class Service(models.Model):
         ordering = ('ordering',)
 
 
+class Plan(TimestampModel):
+    name = models.CharField(max_length=255)
+    name_lang = models.CharField(max_length=5, null=True, blank=True)
+    additional_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    description_lang = models.CharField(max_length=5, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='plans', null=True, blank=True)
+    is_best_choice = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.name_lang = GoogleTranslator().get_lang(self.name)
+        if self.description:
+            self.description_lang = GoogleTranslator().get_lang(self.description)
+        super().save(*args, **kwargs)
+
+
 class Assistant(TimestampModel):
     organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='assistant')
     name = models.CharField(max_length=255)
@@ -650,6 +671,7 @@ class Assistant(TimestampModel):
     position = models.CharField(max_length=255)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='assistants')
+    plans = models.ManyToManyField(Plan, blank=True, related_name='assistants')
 
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"

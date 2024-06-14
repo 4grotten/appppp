@@ -34,7 +34,8 @@ from notifications.constants import (
     ACCEPT_ORDER_PAYMENT_CLIENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_CLIENT_TYPE,
     REQUEST_ONLINE_ORDER_TYPE, NOTIFICATION_MODE_PERSONAL, WITHDRAWAL_UNDER_REVIEW_TYPE,
     ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE, WITHDRAWAL_ACCEPTED_TYPE, ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE,
-    WITHDRAWAL_DECLINED_TYPE, ORGANIZATION_WITHDRAWAL_DECLINED_TYPE
+    WITHDRAWAL_DECLINED_TYPE, ORGANIZATION_WITHDRAWAL_DECLINED_TYPE, ACCEPT_ASSISTANT_PAYMENT_TYPE,
+    NOTIFICATION_MODE_ASSISTANT, ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE
 )
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
@@ -2642,6 +2643,52 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
+    def accept_assistant_transaction(cls, transaction_id: Transaction):
+        transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+
+        balance, created = Balance.objects.get_or_create(organization=transaction.organization,
+                                                         currency=Balance.KGS)
+        try:
+            transaction.payment_info = BalanceInTransactionSerializer(balance).data if balance else None
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.is_processed = True
+            transaction.save()
+        except:
+            raise IntegrityException()
+
+        user_assistant = transaction.user_assistants
+        user_assistant.is_active = True
+        user_assistant.save()
+
+        assistant = user_assistant.assistant
+
+        sent_notification.delay(
+            recipient_id=transaction.processed_by_id,
+            sender_id=transaction.client_id,
+            mode=NOTIFICATION_MODE_ASSISTANT,
+            notification_type=ACCEPT_ASSISTANT_PAYMENT_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=dict(transaction_id=transaction.id,
+                            total_price=transaction.final_amount,
+                            currency=transaction.currency.code,
+                            assistant_position=assistant.position,
+                            assistant_name=assistant.name)
+        )
+        sent_notification.delay(
+            recipient_id=transaction.client_id,
+            sender_id=transaction.processed_by_id,
+            mode=NOTIFICATION_MODE_ASSISTANT,
+            notification_type=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=dict(transaction_id=transaction.id,
+                            total_price=transaction.final_amount,
+                            currency=transaction.currency.code,
+                            assistant_position=assistant.position,
+                            assistant_name=assistant.name)
+        )
+
+    @classmethod
+    @transaction.atomic
     def accept_paysy_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
 
@@ -3104,6 +3151,11 @@ class TransactionService:
 
     @classmethod
     def get_pg_description_and_purchase_type(cls, transaction: Transaction):
+        if transaction.type == Transaction.ASSISTANT:
+            purchase_type = 'assistant'
+            pg_description = 'AI Ассистент'
+
+            return pg_description, purchase_type
         try:
             booking = transaction.booking
             purchase_type = 'rent'

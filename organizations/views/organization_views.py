@@ -26,7 +26,7 @@ from common.services import slack
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
-    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -337,12 +337,19 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
-        if (datetime.datetime.now() - instance.add_item_date.replace(
-                tzinfo=None)).days > 6 and instance.owner == self.request.user:
+        is_assistant_active = OrganizationService.is_assistant_active(organization=instance, user=request.user)
+
+        context = {
+            'request': request,
+            'is_assistant_active': is_assistant_active
+        }
+
+        if (datetime.datetime.now() - instance.add_item_date.replace(tzinfo=None)).days > 6 and \
+                instance.owner == request.user:
             OrganizationService.update_add_item_date(instance=instance, user=request.user)
-            serializer = self.serializer_class(instance, context={'need_add_item': True, 'request': request})
-            return Response(serializer.data)
-        serializer = self.serializer_class(instance, context={'request': request})
+            context['need_add_item'] = True
+
+        serializer = self.serializer_class(instance, context=context)
         return Response(serializer.data)
 
     @method_permission_classes((IsAuthenticated,))

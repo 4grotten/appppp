@@ -7,6 +7,7 @@ NOTIFICATION_MODE_PRODUCT = 'product'
 NOTIFICATION_MODE_RENTAL = 'rental'
 NOTIFICATION_MODE_TICKET = 'ticket'
 NOTIFICATION_MODE_RESUME = 'resume'
+NOTIFICATION_MODE_ASSISTANT = 'assistant'
 
 
 NOTIFICATION_MODES = (
@@ -19,6 +20,7 @@ NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_RENTAL, NOTIFICATION_MODE_RENTAL.capitalize()),
     (NOTIFICATION_MODE_TICKET, NOTIFICATION_MODE_TICKET.capitalize()),
     (NOTIFICATION_MODE_RESUME, NOTIFICATION_MODE_RESUME.capitalize()),
+    (NOTIFICATION_MODE_ASSISTANT, NOTIFICATION_MODE_ASSISTANT.capitalize(),)
 )
 
 NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
@@ -97,6 +99,8 @@ ORGANIZATION_REQUEST_RESUME_TYPE = 'organization_requested_resume'
 ACCEPT_ORDER_PAYMENT_TYPE = 'accepted_order_payment'
 DECLINE_ORDER_PAYMENT_TYPE = 'declined_order_payment'
 
+ACCEPT_ASSISTANT_PAYMENT_TYPE = 'accepted_assistant_payment'
+
 ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
 DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
 
@@ -105,6 +109,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE = 'declined_accepted_rental_client'
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TYPE = 'accepted_order_payment_client'
 DECLINE_ORDER_PAYMENT_CLIENT_TYPE = 'declined_order_payment_client'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE = 'accepted_assistant_payment_client'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE = 'accepted_rental_payment_client'
 DECLINE_RENTAL_PAYMENT_CLIENT_TYPE = 'declined_rental_payment_client'
@@ -169,6 +175,8 @@ NOTIFICATION_TYPES = (
     (ACCEPT_ORDER_TYPE, ACCEPT_ORDER_TYPE),
     (ACCEPT_RENTAL_TYPE, ACCEPT_RENTAL_TYPE),
     (ACCEPT_ORDER_PAYMENT_TYPE, ACCEPT_ORDER_PAYMENT_TYPE),
+    (ACCEPT_ASSISTANT_PAYMENT_TYPE, ACCEPT_ASSISTANT_PAYMENT_TYPE),
+    (ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE, ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE),
     (ACCEPT_RENTAL_PAYMENT_TYPE, ACCEPT_RENTAL_PAYMENT_TYPE),
     (DECLINE_ORDER_PAYMENT_TYPE, DECLINE_ORDER_PAYMENT_TYPE),
     (DECLINE_RENTAL_PAYMENT_TYPE, DECLINE_RENTAL_PAYMENT_TYPE),
@@ -268,6 +276,8 @@ DECLINE_ORDER_PAYMENT_TITLE_RU = 'Клиент отклонил оплату з�
 ACCEPT_RENTAL_PAYMENT_TITLE_RU = 'Клиент оплатил заказ, завершите сделку #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
 
+ACCEPT_ASSISTANT_PAYMENT_TITLE_RU = 'Клиент оплатил за {assistant_position} {assistant_name} на 33 дня #{transaction_id}'
+
 ACCEPT_RENTAL_SALE_TITLE_RU = 'У вас новая аренда #{transaction_id}'
 ACCEPT_RENTAL_SALE_CLIENT_TITLE_RU = 'Спасибо Вам за аренду !!! Ждём вас по этому чеку.'
 
@@ -276,6 +286,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU = 'Вам отменили сделку 
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU = 'Ваш заказ оплачен !!! Наши сотрудники свяжутся с Вами. #{transaction_id}'
 DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату за заказ #{transaction_id}'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU = 'Поздравляем, вы наняли на работу {assistant_position} {assistant_name} на 33 дня #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Поздравляем, Ваш заказ оплачен! Воспользуйтесь арендой, показав данный чек. #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату за аренду #{transaction_id}'
@@ -427,6 +439,8 @@ DECLINE_ORDER_PAYMENT_TITLE_EN = 'Customer canceled payment #{transaction_id}'
 ACCEPT_RENTAL_PAYMENT_TITLE_EN = 'Customer has paid for the order, complete deal #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_EN = 'Customer canceled rent payment #{transaction_id}'
 
+ACCEPT_ASSISTANT_PAYMENT_TITLE_EN = 'Customer paid for {assistant_position} {assistant_name} for 33 days #{transaction_id}'
+
 ACCEPT_RENTAL_SALE_TITLE_EN = 'You have a new rent #{transaction_id}'
 ACCEPT_RENTAL_SALE_CLIENT_TITLE_EN = 'Thank you for the rental !!! Looking forward to seeing you on this check.'
 
@@ -435,6 +449,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN = 'Your rent order canceled, payment ref
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_EN = 'Your order paid !!! We will contact you. #{transaction_id}'
 DECLINE_ORDER_PAYMENT_CLIENT_TITLE_EN = 'You canceled payment #{transaction_id}'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN = 'Congratulations, you have hired {assistant_position} {assistant_name} for 33 days #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'Congratulations, your order paid! Use this receipt to get rental. #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'You canceled rent payment #{transaction_id}'
@@ -587,6 +603,8 @@ DECLINE_ORDER_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung 
 ACCEPT_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung #{transaction_id} getätigt, bitte schließen Sie die Transaktion ab'
 DECLINE_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
 
+ACCEPT_ASSISTANT_PAYMENT_TITLE_DE = 'Ein Kunde hat für {assistant_position} {assistant_name} für 33 Tage #{transaction_id}'
+
 ACCEPT_RENTAL_SALE_TITLE_DE = 'Sie haben eine neue Vermietung #{transaction_id}'
 ACCEPT_RENTAL_SALE_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Miete! Wir erwarten Sie mit diesem Beleg.'
 
@@ -595,6 +613,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE = 'Ihre Vermietungstransaktion wurde sto
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Ihre Bestellung wurde bezahlt! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen. #{transaction_id}'
 DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Bestellung #{transaction_id} abgelehnt'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben {assistant_position} eingestellt {assistant_name} für 33 Tage eingestellt #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Ihre Mietbestellung wurde bezahlt! Nutzen Sie die Miete, indem Sie diesen Beleg vorzeigen. #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
@@ -755,6 +775,8 @@ DECLINE_ORDER_PAYMENT_TITLE_TR = 'Müşteri sipariş ödemesini reddetti #{trans
 ACCEPT_RENTAL_PAYMENT_TITLE_TR = 'Müşteri siparişi ödedi, işlemi tamamlayın #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_TR = 'Müşteri sipariş ödemesini reddetti #{transaction_id}'
 
+ACCEPT_ASSISTANT_PAYMENT_TITLE_TR = 'Bir müşteri {assistant_position} için ödeme yaptı {assistant_name} 33 gün boyunca #{transaction_id}'
+
 ACCEPT_RENTAL_SALE_TITLE_TR = 'Yeni bir kiralama var #{transaction_id}'
 ACCEPT_RENTAL_SALE_CLIENT_TITLE_TR = 'Kiralama için teşekkür ederiz! Bu makbuzu göstererek gelin.'
 
@@ -763,6 +785,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_TR = 'Kiralama işleminiz iptal edildi, öd
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_TR = 'Siparişiniz ödendi! Çalışanlarımız sizinle iletişime geçecek. #{transaction_id}'
 DECLINE_ORDER_PAYMENT_CLIENT_TITLE_TR = 'Sipariş ödemesini reddettiniz #{transaction_id}'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR = 'Tebrikler, {assistant_position} işe aldınız 33 gün boyunca {assistant_name} #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_TR = 'Tebrikler, siparişiniz ödendi! Bu makbuzu göstererek kiralama hizmetinden faydalanabilirsiniz. #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_TR = 'Kiralama ödemesini reddettiniz #{transaction_id}'
@@ -916,6 +940,8 @@ DECLINE_ORDER_PAYMENT_TITLE_ZH = '客户拒绝支付订单 #{transaction_id}'
 ACCEPT_RENTAL_PAYMENT_TITLE_ZH = '客户已支付订单，请完成交易 #{transaction_id}'
 DECLINE_RENTAL_PAYMENT_TITLE_ZH = '客户拒绝支付订单 #{transaction_id}'
 
+ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH = '一位客户为 {assistant_position} {assistant_name} 支付了 33 天的费用 #{transaction_id}'
+
 ACCEPT_RENTAL_SALE_TITLE_ZH = '您有新的租赁订单 #{transaction_id}'
 ACCEPT_RENTAL_SALE_CLIENT_TITLE_ZH = '感谢您租赁！期待您出示此凭证。'
 
@@ -924,6 +950,8 @@ DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_ZH = '您的租赁交易已取消，返还�
 
 ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH = '您的订单已支付！我们的员工将与您联系。#{transaction_id}'
 DECLINE_ORDER_PAYMENT_CLIENT_TITLE_ZH = '您拒绝支付订单 #{transaction_id}'
+
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH = '恭喜您，您聘用了 {assistant_position}。{assistant_name}，为期 33 天 #{transaction_id}'
 
 ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_ZH = '恭喜您，订单已支付！请出示此凭证使用租赁。#{transaction_id}'
 DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_ZH = '您拒绝支付租赁订单 #{transaction_id}'
@@ -1844,6 +1872,35 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                                                         currency=extra_data.get('currency'))
         )
 
+    elif notification_type == ACCEPT_ASSISTANT_PAYMENT_TYPE:
+        notification_str = dict(
+            title=ACCEPT_ASSISTANT_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id'),
+                                                           assistant_position=extra_data.get('assistant_position'),
+                                                           assistant_name=extra_data.get('assistant_name')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price',),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPT_ASSISTANT_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id'),
+                                                           assistant_position=extra_data.get('assistant_position'),
+                                                           assistant_name=extra_data.get('assistant_name')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_ASSISTANT_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id'),
+                                                           assistant_position=extra_data.get('assistant_position'),
+                                                           assistant_name=extra_data.get('assistant_name')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')),
+            title_tr=ACCEPT_ASSISTANT_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id'),
+                                                           assistant_position=extra_data.get('assistant_position'),
+                                                           assistant_name=extra_data.get('assistant_name')),
+            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')),
+            title_zh=ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id'),
+                                                           assistant_position=extra_data.get('assistant_position'),
+                                                           assistant_name=extra_data.get('assistant_name')),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency'))
+        )
+
     elif notification_type == ACCEPT_RENTAL_PAYMENT_TYPE:
         notification_str = dict(
             title=ACCEPT_RENTAL_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
@@ -1878,6 +1935,35 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
             description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
                                                         currency=extra_data.get('currency')),
             title_zh=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency'))
+        )
+
+    elif notification_type == ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE:
+        notification_str = dict(
+            title=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id'),
+                                                                  assistant_position=extra_data.get('assistant_position'),
+                                                                  assistant_name=extra_data.get('assistant_name')),
+            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
+                                                    currency=extra_data.get('currency')),
+            title_ru=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id'),
+                                                                     assistant_position=extra_data.get('assistant_position'),
+                                                                     assistant_name=extra_data.get('assistant_name')),
+            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
+                                                       currency=extra_data.get('currency')),
+            title_de=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id'),
+                                                                     assistant_position=extra_data.get('assistant_position'),
+                                                                     assistant_name=extra_data.get('assistant_name')),
+            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')),
+            title_tr=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id'),
+                                                                     assistant_position=extra_data.get('assistant_position'),
+                                                                     assistant_name=extra_data.get('assistant_name')),
+            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
+                                                        currency=extra_data.get('currency')),
+            title_zh=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id'),
+                                                                     assistant_position=extra_data.get('assistant_position'),
+                                                                     assistant_name=extra_data.get('assistant_name')),
             description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
                                                         currency=extra_data.get('currency'))
         )

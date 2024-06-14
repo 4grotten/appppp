@@ -36,7 +36,7 @@ from organizations.constants import (
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership, InstagramIntegration, Service, OrganizationType
+    Partnership, InstagramIntegration, Service, OrganizationType, UserAssistant
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
@@ -81,6 +81,18 @@ class OrganizationService:
                                                    Q(role__can_edit_organization=True)
                                                ))
         return bool(queryset.count())
+
+    @staticmethod
+    def is_assistant_active(organization: Organization, user: User):
+        user_assistants = UserAssistant.objects.filter(assistant__organization=organization, user=user, is_active=True)
+
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
+
+            is_assistant_active = longest_active_user_assistant.active_until and longest_active_user_assistant.active_until > timezone.now()
+            return is_assistant_active
+        return False
 
     @classmethod
     def get_first_organization_of_user(cls, user: User):

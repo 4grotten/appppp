@@ -671,7 +671,6 @@ class Assistant(TimestampModel):
     position = models.CharField(max_length=255)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='assistants')
-    plans = models.ManyToManyField(Plan, blank=True, related_name='assistants')
 
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"
@@ -732,3 +731,18 @@ class Answer(TimestampModel):
 
     def __str__(self):
         return f'{self.assistant.name}'
+
+
+class UserAssistant(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_assistants')
+    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='user_assistants',
+                                  null=True, blank=True)
+    plans = models.ManyToManyField(Plan, blank=True, related_name='user_assistants')
+    is_active = models.BooleanField(default=False)
+    active_until = models.DateTimeField(null=True, blank=True)
+    transaction = models.OneToOneField("transactions.Transaction", on_delete=models.SET_NULL,
+                                       related_name='user_assistants', null=True)
+
+
+    def __str__(self):
+        return f'Assistant {self.assistant} of {self.user}'

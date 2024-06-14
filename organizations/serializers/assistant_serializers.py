@@ -128,11 +128,17 @@ class PlanSerializer(serializers.ModelSerializer):
 
 
 class AssistantSerializer(serializers.ModelSerializer):
-    plans = PlanSerializer(many=True, read_only=True)
 
     class Meta:
         model = Assistant
-        fields = ('id', 'name', 'gender', 'position', 'image', 'plans')
+        fields = ('id', 'name', 'gender', 'position', 'image')
+
+
+class PurchaseAssistantSerializer(serializers.Serializer):
+    assistant = serializers.PrimaryKeyRelatedField(queryset=Assistant.objects.all())
+    plans = serializers.PrimaryKeyRelatedField(queryset=Plan.objects.all(), many=True)
+    duration_days = serializers.IntegerField()
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
 
 

@@ -1823,6 +1823,7 @@ class InitPaymentView(GenericAPIView):
                 "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
                 "email": self.request.user.email,
             }
+            print(data)
             headers = {
                 "Authorization": f"Token {CRYPTOCLOUD_API_KEY}"
             }
@@ -1953,6 +1954,8 @@ class PaySyWebhookView(APIView):
 
             elif purchase_type == 'deal':
                 TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
+            elif purchase_type == 'assistant':
+                TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
 
             else:
                 TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
@@ -2008,7 +2011,8 @@ class BetaPayWebhookView(APIView):
 
                 elif purchase_type == 'deal':
                     TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
-
+                elif purchase_type == 'assistant':
+                    TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
                 else:
                     TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
                                                                                      user=user,
@@ -2042,6 +2046,8 @@ class CryptoCloudPostbackView(APIView):
 
             elif purchase_type == 'deal':
                 TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
+            elif purchase_type == 'assistant':
+                TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
 
             else:
                 TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
@@ -2113,6 +2119,15 @@ class ResultURLView(APIView):
                     }
                 elif purchase_type == 'deal':
                     TransactionService.complete_freedompay_transaction_online(transaction_id=pg_order_id)
+
+                    response_data = {
+                        'pg_status': 'ok',
+                        'pg_description': 'Заказ оплачен',
+                        'pg_salt': validated_data.get('pg_salt', ''),
+                        'pg_sig': validated_data.get('pg_sig', '')
+                    }
+                elif purchase_type == 'assistant':
+                    TransactionService.accept_assistant_transaction(transaction_id=pg_order_id)
 
                     response_data = {
                         'pg_status': 'ok',

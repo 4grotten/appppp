@@ -12,7 +12,7 @@ from organizations.models import Answer, AnswerFile, Question, Assistant, Plan
 from organizations.serializers.assistant_serializers import AssistantCreateSerializer, \
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
-    PlanSerializer, AssistantSerializer
+    PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService
 from organizations.services.organization_services import OrganizationService
 
@@ -141,3 +141,32 @@ class AssistantPlansListView(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
+class PurchaseAssistantView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PurchaseAssistantSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        assistant = serializer.validated_data['assistant']
+        plans = serializer.validated_data['plans']
+        duration_days = serializer.validated_data['duration_days']
+        utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
+
+        user_assistant = AssistantService.create_user_assistant(user=request.user,
+                                                                processed_by=assistant.organization.owner,
+                                                                assistant=assistant, plans=plans,
+                                                                duration_days=duration_days,
+                                                                utc_offset_minutes=utc_offset_minutes)
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": user_assistant.transaction_id
+            }
+        )

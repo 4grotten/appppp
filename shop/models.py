@@ -119,7 +119,7 @@ class ShopItem(models.Model):
     is_hidden = models.BooleanField(default=False)
     comments_disabled = models.BooleanField(default=False)
 
-    minimum_purchase = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
+    minimum_purchase = models.PositiveIntegerField(null=True, blank=True)
     available_sizes = models.ManyToManyField(SizeFormat, related_name='shop_items', blank=True)
 
     purchase_type = models.CharField(max_length=55, choices=TYPE_CHOICES, default='product', null=True, blank=True)
@@ -173,6 +173,8 @@ class ShopItem(models.Model):
             self.is_hidden = True
         else:
             self.is_hidden = False
+        if self.minimum_purchase == 0:
+            self.minimum_purchase = None
         super().save(*args, **kwargs)
 
 

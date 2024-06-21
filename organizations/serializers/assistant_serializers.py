@@ -3,8 +3,11 @@ from django.utils.translation import gettext_lazy as _
 
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan
+from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan, ChatMessage, Chat
 from organizations.services.assistant_services import AssistantService
+from organizations.services.organization_services import OrganizationService
+from users.models import User
+from users.serializers import UserShortInfoSerializer
 
 
 class AnswerFileSerializer(serializers.ModelSerializer):
@@ -139,6 +142,62 @@ class PurchaseAssistantSerializer(serializers.Serializer):
     plans = serializers.PrimaryKeyRelatedField(queryset=Plan.objects.all(), many=True)
     duration_days = serializers.IntegerField()
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+
+class ChatSerializerQueryParam(serializers.Serializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    assistant = serializers.PrimaryKeyRelatedField(queryset=Assistant.objects.all())
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+
+    def get_organization(self, chat: Chat):
+        user = self.context['request'].user
+        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=chat.user):
+                from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
+                return OrganizationWithTypeImageSerializer(chat.assistant.organization).data
+        return None
+
+    class Meta:
+        model = ChatMessage
+        fields = ('id', 'chat', 'parent', 'sender', 'text')
+
+class ChatUserInfoSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar', 'username')
+
+class ChatSerializer(serializers.ModelSerializer):
+    user = UserShortInfoSerializer()
+    organization = serializers.SerializerMethodField()
+    assistant = OrganizationAssistantSerializer()
+    user_role = serializers.SerializerMethodField()
+
+    def get_organization(self, chat: Chat):
+        user = self.context['request'].user
+        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=chat.user):
+                from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
+                return OrganizationWithTypeImageSerializer(chat.assistant.organization).data
+        return None
+
+    def get_user_role(self, chat: Chat):
+        return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
+
+    class Meta:
+        model = Chat
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role')
+
+
+class MessageCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatMessage
+        fields = ('chat', 'text')
 
 
 

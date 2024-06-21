@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from openai import OpenAI
 from django.utils import timezone
 from django.utils.timezone import now
 
@@ -6,8 +8,9 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException
 from common.models import Currency
-from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan
+from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan, Membership
 from organizations.services.organization_services import OrganizationService
+from project.settings.base import OPENAI_API_KEY
 from transactions.models import Transaction
 from users.models import User
 
@@ -74,6 +77,34 @@ class AssistantService:
         user_assistant.save()
 
         return user_assistant
+
+
+    @classmethod
+    def ask_openai(cls, message: str):
+        client = OpenAI(
+            # This is the default and can be omitted
+            api_key=OPENAI_API_KEY,
+        )
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an helpful assistant."},
+                {"role": "user", "content": message},
+            ]
+        )
+
+        answer = response.choices[0].message.content.strip()
+        return answer
+
+    @classmethod
+    def get_my_role(cls, user: User, assistant: Assistant):
+        try:
+            membership = Membership.objects.get(organization=assistant.organization, user=user)
+            return membership.role.title
+        except Membership.DoesNotExist:
+            if assistant.organization.owner == user:
+                return 'is_owner'
+            return None
 
 
 class AnswerService:

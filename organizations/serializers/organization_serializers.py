@@ -17,7 +17,7 @@ from organizations.models import (
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
     OrganizationPaymentSystemUsers
 )
-from organizations.serializers.assistant_serializers import AssistantSerializer, OrganizationAssistantSerializer
+from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService

@@ -410,6 +410,8 @@ MAP_WIDGETS = {
 
 GOOGLE_MAP_API_KEY = "AIzaSyA0bvvniHRGe7tLKYupkWSf1_b31mdMlFA"
 
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='notasecret')
+
 # FreedomPay settings
 # Project_id
 FREEDOMPAY_PROJECT_ID = config('FREEDOMPAY_PROJECT_ID', default='notasecret')

@@ -746,3 +746,38 @@ class UserAssistant(TimestampModel):
 
     def __str__(self):
         return f'Assistant {self.assistant} of {self.user}'
+
+
+class Chat(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
+    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='chats')
+
+    def __str__(self):
+        return f"Chat between {self.user} and {self.assistant}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('user', 'assistant'), name='one_chat_between_user_and_assistant')
+        ]
+
+
+class ChatMessage(TimestampModel):
+    USER = 'user'
+    ASSISTANT = 'assistant'
+    ORGANIZATION = 'organization'
+
+    SENDER_TYPE = (
+        (USER, USER),
+        (ASSISTANT, ASSISTANT),
+        (ORGANIZATION, ORGANIZATION)
+    )
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_messages')
+    parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True
+    )
+    sender = models.CharField(max_length=25, default=USER, choices=SENDER_TYPE)
+    text = models.TextField()
+
+    def __str__(self):
+        return f"Message from {self.sender} in {self.chat}"
+

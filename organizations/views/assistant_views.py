@@ -8,13 +8,16 @@ from rest_framework.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Question, Assistant, Plan
+from common.pagination import GeneralPagination
+from organizations.models import Answer, AnswerFile, Question, Assistant, Plan, Chat, ChatMessage
 from organizations.serializers.assistant_serializers import AssistantCreateSerializer, \
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
-    PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer
+    PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer, MessageCreateSerializer, ChatSerializerQueryParam, \
+    ChatSerializer, ChatMessageSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService
 from organizations.services.organization_services import OrganizationService
+from shop.services.comment_services import CommentService
 
 
 class OrganizationAssistantCreateView(APIView):
@@ -170,3 +173,65 @@ class PurchaseAssistantView(generics.CreateAPIView):
                 "transaction_id": user_assistant.transaction_id
             }
         )
+
+class GetChatView(generics.RetrieveAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ChatSerializer
+    queryset = Chat.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        serializer = ChatSerializerQueryParam(data=self.request.GET)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user = serializer.validated_data['user']
+        assistant = serializer.validated_data['assistant']
+
+        chat, created = Chat.objects.get_or_create(user=user, assistant=assistant)
+
+        serializer = self.serializer_class(chat, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MessageToOpenAIView(generics.CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = MessageCreateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user_message = ChatMessage.objects.create(chat=serializer.validated_data['chat'], sender=ChatMessage.USER,
+                                             text=serializer.validated_data['text'])
+        response = AssistantService.ask_openai(message=user_message.text)
+        openai_message = ChatMessage.objects.create(chat=serializer.validated_data['chat'], sender=ChatMessage.ASSISTANT,
+                                             text=response)
+
+        return Response(data={'message': user_message.text, 'response': openai_message.text})
+
+
+class ChatMessageListView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    pagination_class = GeneralPagination
+    serializer_class = ChatMessageSerializer
+
+    def get_object(self):
+        return Chat.objects.get(id=self.kwargs['pk'])
+
+    def get_queryset(self):
+        chat = self.get_object()
+        return ChatMessage.objects.filter(chat=chat).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        chat = self.get_object()
+        response = super().list(request, args, kwargs)
+        response.data['my_role'] = AssistantService.get_my_role(user=self.request.user, assistant=chat.assistant)
+        response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
+        return response

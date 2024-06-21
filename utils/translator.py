@@ -1,7 +1,6 @@
 import datetime
 
 from googletrans import Translator
-from httpx import URLLib3Transport, Proxy
 
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService

@@ -83,14 +83,13 @@ class AssistantService:
 
     @classmethod
     def ask_openai(cls, message: str):
-        proxy = ProxyService.get_random_proxy_for_requests()
-        if not proxy:
-            proxy = []
-        print(proxy)
+        # proxy = ProxyService.get_random_proxy_for_requests()
+        # if not proxy:
+        #     proxy = []
         client = OpenAI(
             # This is the default and can be omitted
             api_key=OPENAI_API_KEY,
-            http_client=httpx.Client(proxies=proxy[0])
+            # http_client=httpx.Client(proxies=proxy[0])
         )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -127,6 +126,14 @@ class ChatService:
     @classmethod
     def filter(cls, **filters):
         return cls.model.objects.filter(**filters)
+
+
+    @classmethod
+    def change_chat_by_org_user_status(cls, chat: Chat, chat_by_org_user: bool):
+        chat.chat_by_org_user = chat_by_org_user
+        chat.save()
+
+        return chat
 
 
 class ChatMessageService:

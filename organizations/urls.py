@@ -5,7 +5,7 @@ from transactions.views.transaction_views import OrgFollowersTransactionsListAPI
 from .views.assistant_views import OrganizationAssistantCreateView, OrganizationAssistantAnswerCreateView, \
     OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView, \
     OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView, MessageToOpenAIView, \
-    GetChatView, ChatMessageListView
+    GetChatView, ChatMessageListView, AssistantChatsListView, AssistantChatReadMessages
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -152,10 +152,12 @@ organization_urls = [
     path('organizations/assistant/chat/', GetChatView.as_view(),
          name='org_assistant_chat'),
     path('organizations/assistant/chat/<int:pk>/messages/', ChatMessageListView.as_view(),
-         name='org_assistant_chat'),
+         name='org_assistant_chat_messages'),
+    path('organizations/assistant/chat/<int:pk>/read_messages/', AssistantChatReadMessages.as_view(),
+         name='org_assistant_chat_read_messages'),
     path('organizations/assistant/chat/message/', MessageToOpenAIView.as_view(),
-         name='org_assistant_chat')
-
+         name='org_assistant_chat_send_message'),
+    path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats')
 ]
 
 membership_urls = [

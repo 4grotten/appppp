@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import httpx
 from openai import OpenAI
 from django.utils import timezone
 from django.utils.timezone import now
@@ -8,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException
 from common.models import Currency
-from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan, Membership
+from instagram_parsers.services.proxy_services import ProxyService
+from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan, Membership, Chat, ChatMessage
 from organizations.services.organization_services import OrganizationService
 from project.settings.base import OPENAI_API_KEY
 from transactions.models import Transaction
@@ -81,9 +83,14 @@ class AssistantService:
 
     @classmethod
     def ask_openai(cls, message: str):
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        print(proxy)
         client = OpenAI(
             # This is the default and can be omitted
             api_key=OPENAI_API_KEY,
+            http_client=httpx.Client(proxies=proxy[0])
         )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -105,6 +112,42 @@ class AssistantService:
             if assistant.organization.owner == user:
                 return 'is_owner'
             return None
+
+
+class ChatService:
+    model = Chat
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> Chat:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('Chat not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+
+class ChatMessageService:
+    model = ChatMessage
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> ChatMessage:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('ChatMessage not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def do_read_messages(cls, chat: Chat):
+        return cls.filter(is_read=False, chat=chat).update(is_read=True)
+
+
 
 
 class AnswerService:

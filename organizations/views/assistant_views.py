@@ -1,3 +1,4 @@
+from django.db.models import Max
 from rest_framework import status, generics
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -14,8 +15,8 @@ from organizations.serializers.assistant_serializers import AssistantCreateSeria
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
     PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer, MessageCreateSerializer, ChatSerializerQueryParam, \
-    ChatSerializer, ChatMessageSerializer
-from organizations.services.assistant_services import AssistantService, AnswerService
+    ChatSerializer, ChatMessageSerializer, ChatListSerializer
+from organizations.services.assistant_services import AssistantService, AnswerService, ChatService, ChatMessageService
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
 
@@ -223,7 +224,7 @@ class ChatMessageListView(generics.ListAPIView):
     serializer_class = ChatMessageSerializer
 
     def get_object(self):
-        return Chat.objects.get(id=self.kwargs['pk'])
+        return ChatService.get(id=self.kwargs['pk'])
 
     def get_queryset(self):
         chat = self.get_object()
@@ -235,3 +236,29 @@ class ChatMessageListView(generics.ListAPIView):
         response.data['my_role'] = AssistantService.get_my_role(user=self.request.user, assistant=chat.assistant)
         response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
         return response
+
+
+class AssistantChatsListView(generics.ListAPIView):
+    serializer_class = ChatListSerializer
+
+    def get_object(self):
+        return AssistantService.get(id=self.kwargs['pk'])
+
+    def get_queryset(self):
+        assistant = self.get_object()
+        return Chat.objects.filter(assistant=assistant).annotate(
+            last_message_created_at=Max('chat_messages__created_at')
+        ).order_by('-last_message_created_at')
+
+
+
+class AssistantChatReadMessages(APIView):
+
+    def post(self, request, *args, **kwargs):
+        chat = ChatService.get(id=self.kwargs['pk'])
+
+        ChatMessageService.do_read_messages(chat=chat)
+
+        return Response(data={
+            'message': _('Success')
+        })

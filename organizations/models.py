@@ -751,6 +751,8 @@ class UserAssistant(TimestampModel):
 class Chat(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
     assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='chats')
+    assistant_enabled = models.BooleanField(default=True)
+    chat_by_org_user = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Chat between {self.user} and {self.assistant}"
@@ -764,12 +766,12 @@ class Chat(TimestampModel):
 class ChatMessage(TimestampModel):
     USER = 'user'
     ASSISTANT = 'assistant'
-    ORGANIZATION = 'organization'
+    ORG_USER = 'org_user'
 
     SENDER_TYPE = (
         (USER, USER),
         (ASSISTANT, ASSISTANT),
-        (ORGANIZATION, ORGANIZATION)
+        (ORG_USER, ORG_USER)
     )
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_messages')
     parent = models.ForeignKey(
@@ -777,6 +779,9 @@ class ChatMessage(TimestampModel):
     )
     sender = models.CharField(max_length=25, default=USER, choices=SENDER_TYPE)
     text = models.TextField()
+    is_read = models.BooleanField(default=False)
+    organization_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
+                                          related_name='org_user_messages')
 
     def __str__(self):
         return f"Message from {self.sender} in {self.chat}"

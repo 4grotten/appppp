@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan, ChatMessage, Chat
+from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan, ChatMessage, Chat, \
+    UserAssistant
 from organizations.services.assistant_services import AssistantService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -54,11 +56,24 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all(), source='image', write_only=True, required=False
     )
+    is_assistant_active = serializers.SerializerMethodField()
 
     class Meta:
         model = Assistant
-        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id')
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active')
         read_only_fields = ('organization', )
+
+    def get_is_assistant_active(self, assistant: Assistant):
+        user = self.context['request'].user
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
+
+            is_assistant_active = longest_active_user_assistant.active_until and longest_active_user_assistant.active_until > timezone.now()
+            return is_assistant_active
+        return False
 
 
 class OrganizationAssistantUpdateSerializer(serializers.ModelSerializer):
@@ -198,6 +213,30 @@ class MessageCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ('chat', 'text')
+
+
+class ChatListSerializer(serializers.ModelSerializer):
+    user = UserShortInfoSerializer()
+    assistant = OrganizationAssistantSerializer()
+    last_message = serializers.SerializerMethodField()
+    last_message_created_at = serializers.SerializerMethodField()
+    unread_messages_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Chat
+        fields = ('id', 'user', 'assistant', 'assistant_enabled', 'chat_by_org_user', 'last_message',
+                  'last_message_created_at', 'unread_messages_count')
+
+    def get_last_message(self, chat: Chat):
+        last_message = chat.chat_messages.order_by('-created_at').first()
+        return last_message.text if last_message else None
+
+    def get_last_message_created_at(self, chat: Chat):
+        last_message = chat.chat_messages.order_by('-created_at').first()
+        return last_message.created_at if last_message else None
+
+    def get_unread_messages_count(self, chat: Chat):
+        return chat.chat_messages.filter(is_read=False).count()
 
 
 

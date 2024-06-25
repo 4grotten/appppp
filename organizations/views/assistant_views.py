@@ -15,7 +15,7 @@ from organizations.serializers.assistant_serializers import AssistantCreateSeria
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
     PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer, MessageCreateSerializer, ChatSerializerQueryParam, \
-    ChatSerializer, ChatMessageSerializer, ChatListSerializer
+    ChatSerializer, ChatMessageSerializer, ChatListSerializer, ChatByOrgUserSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService, ChatService, ChatMessageService
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
@@ -175,7 +175,7 @@ class PurchaseAssistantView(generics.CreateAPIView):
             }
         )
 
-class GetChatView(generics.RetrieveAPIView):
+class GetOrCreateChatView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     serializer_class = ChatSerializer
     queryset = Chat.objects.all()
@@ -195,6 +195,47 @@ class GetChatView(generics.RetrieveAPIView):
 
         serializer = self.serializer_class(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ChatDetailRetrieveView(generics.RetrieveAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ChatSerializer
+    queryset = Chat.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        chat = ChatService.get(id=self.kwargs['pk'])
+        serializer = self.serializer_class(chat, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AutoChatOrByOrgUserView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChatByOrgUserSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        chat = serializer.validated_data['chat']
+        chat_by_org_user = serializer.validated_data['chat_by_org_user']
+
+        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization,
+                                                              user=request.user):
+            raise PermissionDenied({'message': _('No rights to edit organization')})
+
+        ChatService.change_chat_by_org_user_status(chat=chat, chat_by_org_user=chat_by_org_user)
+
+        return Response(data={
+            'message': _('Success')
+        })
+
+
+
+
+
 
 
 class MessageToOpenAIView(generics.CreateAPIView):

@@ -205,7 +205,12 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role')
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'assistant_enabled', 'chat_by_org_user')
+
+
+class ChatByOrgUserSerializer(serializers.Serializer):
+    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
+    chat_by_org_user = serializers.BooleanField()
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):

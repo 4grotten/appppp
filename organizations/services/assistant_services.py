@@ -135,6 +135,13 @@ class ChatService:
 
         return chat
 
+    @classmethod
+    def change_chat_assistant_enabled_status(cls, chat: Chat, assistant_enabled: bool):
+        chat.assistant_enabled = assistant_enabled
+        chat.save()
+
+        return chat
+
 
 class ChatMessageService:
     model = ChatMessage

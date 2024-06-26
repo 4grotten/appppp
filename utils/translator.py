@@ -1,6 +1,7 @@
 import datetime
 
 from googletrans import Translator
+from httpx import HTTPTransport, Proxy
 
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
@@ -13,7 +14,7 @@ class GoogleTranslator:
     def get_translator(cls, text=None):
         random_proxy = ProxyService.get_random_formed_proxy()  #.replace("https://", '')
         try:
-            proxies = {'https': URLLib3Transport(proxy=Proxy(random_proxy))}
+            proxies = {'https': HTTPTransport(proxy=Proxy(random_proxy))}
             translator = Translator(proxies=proxies)
             return translator
         except Exception as e:

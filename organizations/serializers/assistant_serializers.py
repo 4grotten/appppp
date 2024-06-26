@@ -58,11 +58,12 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
     )
     is_assistant_active = serializers.SerializerMethodField()
     active_until = serializers.SerializerMethodField()
+    is_enabled = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Assistant
         fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active',
-                  'active_until')
+                  'active_until', 'is_enabled')
         read_only_fields = ('organization', )
 
     def get_active_until(self, assistant: Assistant):
@@ -220,16 +221,16 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'assistant_enabled', 'chat_by_org_user')
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user')
 
 
 class ChatByOrgUserSerializer(serializers.Serializer):
     chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
     chat_by_org_user = serializers.BooleanField()
 
-class ToggleAssistantInChatSerializer(serializers.Serializer):
-    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
-    assistant_enabled = serializers.BooleanField()
+class ToggleAssistantSerializer(serializers.Serializer):
+    assistant = serializers.PrimaryKeyRelatedField(queryset=Assistant.objects.all())
+    is_enabled = serializers.BooleanField()
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):
@@ -248,7 +249,7 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'assistant_enabled', 'chat_by_org_user', 'last_message',
+        fields = ('id', 'user', 'assistant', 'chat_by_org_user', 'last_message',
                   'last_message_created_at', 'unread_messages_count')
 
     def get_last_message(self, chat: Chat):
@@ -267,7 +268,7 @@ class ChatSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'assistant_enabled', 'chat_by_org_user')
+        fields = ('id', 'chat_by_org_user')
 
 
 

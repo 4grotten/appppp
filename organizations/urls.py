@@ -6,7 +6,7 @@ from .views.assistant_views import OrganizationAssistantCreateView, Organization
     OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView, \
     OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView, MessageToOpenAIView, \
     GetOrCreateChatView, ChatMessageListView, AssistantChatsListView, AssistantChatReadMessages, ChatDetailRetrieveView, \
-    AutoChatOrByOrgUserView, ToggleAssistantInChatView
+    AutoChatOrByOrgUserView, ToggleAssistantEnableView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -160,7 +160,7 @@ organization_urls = [
          name='org_assistant_chat_send_message'),
     path('organizations/assistant/chat/by_org_user/', AutoChatOrByOrgUserView.as_view(),
          name='org_assistant_chat_by_org_user'),
-    path('organizations/assistant/chat/toggle_assistant/', ToggleAssistantInChatView.as_view(),
+    path('organizations/assistant/toggle_assistant/', ToggleAssistantEnableView.as_view(),
          name='org_assistant_chat_by_org_user'),
     path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats')
 ]

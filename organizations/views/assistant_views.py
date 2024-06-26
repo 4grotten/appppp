@@ -15,7 +15,7 @@ from organizations.serializers.assistant_serializers import AssistantCreateSeria
     OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
     QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
     PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer, MessageCreateSerializer, ChatSerializerQueryParam, \
-    ChatSerializer, ChatMessageSerializer, ChatListSerializer, ChatByOrgUserSerializer, ToggleAssistantInChatSerializer
+    ChatSerializer, ChatMessageSerializer, ChatListSerializer, ChatByOrgUserSerializer, ToggleAssistantSerializer
 from organizations.services.assistant_services import AssistantService, AnswerService, ChatService, ChatMessageService
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
@@ -233,25 +233,25 @@ class AutoChatOrByOrgUserView(APIView):
         })
 
 
-class ToggleAssistantInChatView(APIView):
+class ToggleAssistantEnableView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        serializer = ToggleAssistantInChatSerializer(data=request.data)
+        serializer = ToggleAssistantSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        chat = serializer.validated_data['chat']
-        assistant_enabled = serializer.validated_data['assistant_enabled']
+        assistant = serializer.validated_data['assistant']
+        is_enabled = serializer.validated_data['is_enabled']
 
-        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization,
+        if not OrganizationService.user_can_edit_organization(organization=assistant.organization,
                                                               user=request.user):
             raise PermissionDenied({'message': _('No rights to edit organization')})
 
-        ChatService.change_chat_assistant_enabled_status(chat=chat, assistant_enabled=assistant_enabled)
+        AssistantService.change_assistant_enabled_status(assistant=assistant, is_enabled=is_enabled)
 
         return Response(data={
             'message': _('Success')

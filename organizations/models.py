@@ -671,6 +671,7 @@ class Assistant(TimestampModel):
     position = models.CharField(max_length=255)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='assistants')
+    is_enabled = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"
@@ -751,7 +752,6 @@ class UserAssistant(TimestampModel):
 class Chat(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
     assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='chats')
-    assistant_enabled = models.BooleanField(default=True)
     chat_by_org_user = models.BooleanField(default=False)
 
     def __str__(self):

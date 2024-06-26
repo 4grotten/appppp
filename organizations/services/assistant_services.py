@@ -112,6 +112,13 @@ class AssistantService:
                 return 'is_owner'
             return None
 
+    @classmethod
+    def change_assistant_enabled_status(cls, assistant: Assistant, is_enabled: bool):
+        assistant.is_enabled = is_enabled
+        assistant.save()
+
+        return assistant
+
 
 class ChatService:
     model = Chat
@@ -131,13 +138,6 @@ class ChatService:
     @classmethod
     def change_chat_by_org_user_status(cls, chat: Chat, chat_by_org_user: bool):
         chat.chat_by_org_user = chat_by_org_user
-        chat.save()
-
-        return chat
-
-    @classmethod
-    def change_chat_assistant_enabled_status(cls, chat: Chat, assistant_enabled: bool):
-        chat.assistant_enabled = assistant_enabled
         chat.save()
 
         return chat

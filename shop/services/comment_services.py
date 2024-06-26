@@ -9,7 +9,8 @@ from common.models import CommentsWallpaper, File
 from common.serializers import ImageSerializer
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership
+from organizations.models import Membership, Chat
+from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
 from notifications.tasks import sent_notification
@@ -24,6 +25,10 @@ class CommentService:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
             raise ObjectNotFoundException(_('Comment not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
 
     @classmethod
     def create_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None):
@@ -41,6 +46,20 @@ class CommentService:
                     comment_id=comment.id,
                     comment_text=text)
             )
+
+        return comment
+
+    @classmethod
+    def create_chat_comment_without_assistant_response(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
+    def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+
+        # send request to another server
 
         return comment
 
@@ -73,6 +92,16 @@ class CommentService:
             return membership.role.title
         except Membership.DoesNotExist:
             if item.organization.owner == user:
+                return 'is_owner'
+            return None
+
+    @classmethod
+    def get_my_role_for_chat(cls, user: User, chat: Chat):
+        try:
+            membership = Membership.objects.get(organization=chat.assistant.organization, user=user)
+            return membership.role.title
+        except Membership.DoesNotExist:
+            if chat.assistant.organization.owner == user:
                 return 'is_owner'
             return None
 
@@ -142,5 +171,9 @@ class CommentService:
             "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
             "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
         }
+
+    @classmethod
+    def do_read_messages(cls, chat: Chat):
+        return cls.filter(is_read=False, chat=chat).update(is_read=True)
 
 

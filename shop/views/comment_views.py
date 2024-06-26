@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
+from organizations.serializers.assistant_serializers import ChatSettingsSerializer
+from organizations.services.assistant_services import ChatService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
@@ -47,6 +49,42 @@ class CommentItemListCreateView(ListCreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         item = ShopItemService.get(id=self.kwargs['pk'])
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
+        data = self.serializer_class(comment, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class CommentChatListCreateView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = GeneralPagination
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        chat = ChatService.get(id=self.kwargs['pk'])
+        comment_complaints_ids = CommentComplaint.objects.filter(user=self.request.user).values_list('comment_id', flat=True).distinct()
+        return Comment.objects.filter(chat=chat).exclude(id__in=comment_complaints_ids).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        chat = ChatService.get(id=self.kwargs['pk'])
+        response = super().list(request, args, kwargs)
+        response.data['my_role'] = CommentService.get_my_role_for_chat(user=self.request.user, chat=chat)
+        response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
+        response.data['chat'] = ChatSettingsSerializer(chat).data
+        return response
+
+    def create(self, request, *args, **kwargs):
+        serializer = CommentCreateSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        chat = ChatService.get(id=self.kwargs['pk'])
+        if chat.chat_by_org_user:
+            comment = CommentService.create_chat_comment_without_assistant_response(**serializer.validated_data,
+                                                                                    chat=chat)
+        else:
+            comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
+                                                                                 chat=chat)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

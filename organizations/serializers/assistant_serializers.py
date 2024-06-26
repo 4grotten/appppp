@@ -57,13 +57,28 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
         queryset=File.objects.all(), source='image', write_only=True, required=False
     )
     is_assistant_active = serializers.SerializerMethodField()
+    active_until = serializers.SerializerMethodField()
 
     class Meta:
         model = Assistant
-        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active')
+        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active',
+                  'active_until')
         read_only_fields = ('organization', )
 
+    def get_active_until(self, assistant: Assistant):
+        if self.context['request'].user.is_anonymous:
+            return None
+        user = self.context['request'].user
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            return longest_active_user_assistant.active_until
+        return None
+
+
     def get_is_assistant_active(self, assistant: Assistant):
+        if self.context['request'].user.is_anonymous:
+            return None
         user = self.context['request'].user
         user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
 
@@ -212,6 +227,10 @@ class ChatByOrgUserSerializer(serializers.Serializer):
     chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
     chat_by_org_user = serializers.BooleanField()
 
+class ToggleAssistantInChatSerializer(serializers.Serializer):
+    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
+    assistant_enabled = serializers.BooleanField()
+
 
 class MessageCreateSerializer(serializers.ModelSerializer):
 
@@ -242,6 +261,13 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     def get_unread_messages_count(self, chat: Chat):
         return chat.chat_messages.filter(is_read=False).count()
+
+
+class ChatSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Chat
+        fields = ('id', 'assistant_enabled', 'chat_by_org_user')
 
 
 

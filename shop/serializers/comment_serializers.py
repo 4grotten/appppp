@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from common.models import File
 from organizations.models import Membership, BlockedUser
+from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentLike, CommentComplaint, ShopItem, UserCommentTheme
@@ -37,6 +38,7 @@ class ParentCommentSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    assistant = OrganizationAssistantSerializer()
     is_comment_liked = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     organization = serializers.SerializerMethodField()
@@ -51,7 +53,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at'
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant'
         )
 
     def get_is_updated(self, comment: Comment) -> bool:
@@ -72,6 +74,9 @@ class CommentSerializer(serializers.ModelSerializer):
         return None
 
     def get_user(self, obj):
+        if obj.user is None:
+            return None
+
         user = self.context['request'].user
         organization = obj.item.organization if obj.item else obj.chat.assistant.organization
 

@@ -1,5 +1,6 @@
 import time
 
+import requests
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
@@ -7,9 +8,10 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException
 from common.models import CommentsWallpaper, File
 from common.serializers import ImageSerializer
+from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership, Chat
+from organizations.models import Membership, Chat, Assistant
 from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
@@ -50,16 +52,36 @@ class CommentService:
         return comment
 
     @classmethod
-    def create_chat_comment_without_assistant_response(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None):
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
 
         return comment
 
     @classmethod
-    def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+    def create_chat_assistant_comment(cls, text: str, chat: Chat, assistant: Assistant, parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, assistant=assistant, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
+    def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, request,
+                                                    parent: Comment = None):
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
 
-        # send request to another server
+
+        host = request.META['HTTP_HOST']
+
+        ask_bot_url = 'http://0.0.0.0:8080/bot/'
+
+        data = {
+            "assistant_id": chat.assistant.id,
+            "parent_id": comment.id,
+            "chat_id": chat.id,
+            "message": comment.text,
+            "host": host
+        }
+
+        requests.post(ask_bot_url, data=data)
 
         return comment
 

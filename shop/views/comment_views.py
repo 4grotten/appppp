@@ -17,7 +17,7 @@ from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
     CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
-    UserCommentThemeSerializer
+    UserCommentThemeSerializer, AssistantCommentCreateSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -83,13 +83,30 @@ class CommentChatListCreateView(ListCreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         chat = ChatService.get(id=self.kwargs['pk'])
         if chat.chat_by_org_user:
-            comment = CommentService.create_chat_comment_without_assistant_response(**serializer.validated_data,
-                                                                                    chat=chat)
+            comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
         else:
             comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
-                                                                                 chat=chat)
+                                                                                 chat=chat, request=request)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class AssistantCommentChatCreateView(CreateAPIView):
+    serializer_class = CommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = AssistantCommentCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        chat = ChatService.get(id=self.kwargs['pk'])
+        CommentService.create_chat_assistant_comment(**serializer.validated_data, chat=chat)
+
+        return Response(data={'message': _('Successfully created assistant comment')})
+
 
 
 class ItemChangeCommentsDisabledView(GenericAPIView):

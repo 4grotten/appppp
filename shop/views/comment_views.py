@@ -123,7 +123,11 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        organization = OrganizationService.get(id=comment.item.organization.id)
+        organization = None
+        if comment.item:
+            organization = OrganizationService.get(id=comment.item.organization.id)
+        elif comment.chat:
+            organization = OrganizationService.get(id=comment.chat.assistant.organization.id)
         if OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user) or \
                 self.request.user == comment.user:
             serializer.save()
@@ -138,7 +142,11 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
         except Comment.DoesNotExist:
             raise ObjectNotFoundException(_('Comment not found'))
 
-        organization = OrganizationService.get(id=comment.item.organization.id)
+        organization = None
+        if comment.item:
+            organization = OrganizationService.get(id=comment.item.organization.id)
+        elif comment.chat:
+            organization = OrganizationService.get(id=comment.chat.assistant.organization.id)
         if OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user) or \
                 self.request.user == comment.user:
             CommentService.delete_comment(comment=comment)

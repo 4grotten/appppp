@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
 from organizations.serializers.assistant_serializers import ChatSettingsSerializer
+from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.assistant_services import ChatService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint, UserCommentTheme
@@ -69,6 +70,8 @@ class CommentChatListCreateView(ListCreateAPIView):
         response.data['my_role'] = CommentService.get_my_role_for_chat(user=self.request.user, chat=chat)
         response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
         response.data['chat'] = ChatSettingsSerializer(chat).data
+        response.data['organization'] = ItemFeedOrganizationSerializer(chat.assistant.organization,
+                                                                       context={'request': request}).data
         return response
 
     def create(self, request, *args, **kwargs):

@@ -71,6 +71,16 @@ class CommentService:
 
         host = request.META['HTTP_HOST']
 
+        request_headers = {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "ru-RU",
+            "Connection": "keep-alive",
+            "Content-Type": "application/json;charset=UTF-8",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                          " Chrome/95.0.4638.54 Safari/537.36"
+        }
+
         ask_bot_url = 'http://161.35.153.151:8080/bot/'
 
         data = {
@@ -81,7 +91,7 @@ class CommentService:
             "host": host
         }
 
-        requests.post(ask_bot_url, data=data)
+        requests.post(ask_bot_url, data=data, headers=request_headers)
 
         return comment
 

@@ -19,15 +19,17 @@ class ParentCommentSerializer(serializers.ModelSerializer):
 
     def get_organization(self, obj):
         user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
-            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
-                return OrganizationWithTypeImageSerializer(obj.item.organization).data
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+        if not OrganizationService.user_can_edit_organization(organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization, user=obj.user):
+                return OrganizationWithTypeImageSerializer(organization).data
         return None
 
     def get_user(self, obj):
         user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=user):
-            if OrganizationService.user_can_edit_organization(organization=obj.item.organization, user=obj.user):
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=organization, user=obj.user):
                 return None
             return UserShortInfoSerializer(obj.user).data
         return UserShortInfoSerializer(obj.user).data
@@ -130,6 +132,12 @@ class CommentCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         return attrs
+
+
+class AssistantCommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('parent', 'text', 'assistant')
 
 
 class CommentComplaintSerializer(serializers.ModelSerializer):

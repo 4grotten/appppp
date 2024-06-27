@@ -71,7 +71,7 @@ class CommentService:
 
         host = request.META['HTTP_HOST']
 
-        ask_bot_url = 'http://0.0.0.0:8080/bot/'
+        ask_bot_url = 'http://161.35.153.151:8080/bot/'
 
         data = {
             "assistant_id": chat.assistant.id,

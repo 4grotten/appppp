@@ -72,10 +72,11 @@ class CommentService:
         host = request.META['HTTP_HOST']
 
         request_headers = {
-            'Accept': 'application/json',
-            'Authorization': 'Token b70a33874f678d9aac67f03005a6c3a187961ebc',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Content-Type": "application/json",
+            "User-Agent": "My User Agent 1.0",
+            "Connection": "keep-alive"
         }
 
         ask_bot_url = 'http://161.35.153.151:8080/bot/'

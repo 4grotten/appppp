@@ -1,7 +1,5 @@
 from datetime import timedelta
 
-import httpx
-from openai import OpenAI
 from django.utils import timezone
 from django.utils.timezone import now
 
@@ -79,28 +77,6 @@ class AssistantService:
         user_assistant.save()
 
         return user_assistant
-
-
-    @classmethod
-    def ask_openai(cls, message: str):
-        # proxy = ProxyService.get_random_proxy_for_requests()
-        # if not proxy:
-        #     proxy = []
-        client = OpenAI(
-            # This is the default and can be omitted
-            api_key=OPENAI_API_KEY,
-            # http_client=httpx.Client(proxies=proxy[0])
-        )
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are an helpful assistant."},
-                {"role": "user", "content": message},
-            ]
-        )
-
-        answer = response.choices[0].message.content.strip()
-        return answer
 
     @classmethod
     def get_my_role(cls, user: User, assistant: Assistant):

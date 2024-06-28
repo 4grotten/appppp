@@ -4,8 +4,8 @@ from rest_framework.routers import DefaultRouter
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.assistant_views import OrganizationAssistantCreateView, OrganizationAssistantAnswerCreateView, \
     OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView, \
-    OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView, MessageToOpenAIView, \
-    GetOrCreateChatView, ChatMessageListView, AssistantChatsListView, AssistantChatReadMessages, ChatDetailRetrieveView, \
+    OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView, \
+    GetOrCreateChatView, AssistantChatsListView, AssistantChatReadMessages, ChatDetailRetrieveView, \
     AutoChatOrByOrgUserView, ToggleAssistantEnableView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
@@ -152,12 +152,8 @@ organization_urls = [
          name='org_assistant_purchase'),
     path('organizations/assistant/chat/', GetOrCreateChatView.as_view(), name='org_assistant_chat'),
     path('organizations/assistant/chat/<int:pk>/', ChatDetailRetrieveView.as_view(), name='org_assistant_chat_detail'),
-    path('organizations/assistant/chat/<int:pk>/messages/', ChatMessageListView.as_view(),
-         name='org_assistant_chat_messages'),
     path('organizations/assistant/chat/<int:pk>/read_messages/', AssistantChatReadMessages.as_view(),
          name='org_assistant_chat_read_messages'),
-    path('organizations/assistant/chat/message/', MessageToOpenAIView.as_view(),
-         name='org_assistant_chat_send_message'),
     path('organizations/assistant/chat/by_org_user/', AutoChatOrByOrgUserView.as_view(),
          name='org_assistant_chat_by_org_user'),
     path('organizations/assistant/toggle_assistant/', ToggleAssistantEnableView.as_view(),

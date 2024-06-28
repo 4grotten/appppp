@@ -1,5 +1,5 @@
 import time
-
+import logging
 import requests
 from django.db import transaction
 from django.db.models import Max, Q
@@ -16,6 +16,8 @@ from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
 from notifications.tasks import sent_notification
+
+logger = logging.getLogger(__name__)
 
 
 class CommentService:
@@ -89,7 +91,12 @@ class CommentService:
             "host": host
         }
 
-        requests.post(ask_bot_url, json=data, headers=request_headers)
+        sess = requests.Session()
+        try:
+            response = sess.post(ask_bot_url, json=data, headers=request_headers)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to communicate with AI assistant: {e}")
 
         return comment
 

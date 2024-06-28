@@ -207,6 +207,14 @@ class ChatSerializer(serializers.ModelSerializer):
     organization = serializers.SerializerMethodField()
     assistant = OrganizationAssistantSerializer()
     user_role = serializers.SerializerMethodField()
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+
+    def get_can_comment(self, chat: Chat) -> bool:
+        if self.context['request'].user:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=chat.assistant.organization.id,
+                                                       user=user.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_organization(self, chat: Chat):
         user = self.context['request'].user
@@ -221,7 +229,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user')
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment')
 
 
 class ChatByOrgUserSerializer(serializers.Serializer):

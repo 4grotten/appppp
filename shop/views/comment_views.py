@@ -69,7 +69,7 @@ class CommentChatListCreateView(ListCreateAPIView):
         response = super().list(request, args, kwargs)
         response.data['my_role'] = CommentService.get_my_role_for_chat(user=self.request.user, chat=chat)
         response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
-        response.data['chat'] = ChatSettingsSerializer(chat).data
+        response.data['chat'] = ChatSettingsSerializer(chat, context={'request': request}).data
         response.data['organization'] = ItemFeedOrganizationSerializer(chat.assistant.organization,
                                                                        context={'request': request}).data
         return response

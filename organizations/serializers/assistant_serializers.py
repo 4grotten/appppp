@@ -5,7 +5,7 @@ from django.utils import timezone
 from common.models import File
 from common.serializers import ImageSerializer
 from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan, ChatMessage, Chat, \
-    UserAssistant
+    UserAssistant, BlockedUser
 from organizations.services.assistant_services import AssistantService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -265,10 +265,18 @@ class ChatListSerializer(serializers.ModelSerializer):
 
 
 class ChatSettingsSerializer(serializers.ModelSerializer):
+    can_comment = serializers.SerializerMethodField(default=True, read_only=True)
 
     class Meta:
         model = Chat
-        fields = ('id', 'chat_by_org_user')
+        fields = ('id', 'chat_by_org_user', 'can_comment')
+
+    def get_can_comment(self, chat: Chat) -> bool:
+        if self.context['request'].user:
+            user = self.context['request'].user
+            blocked_users = BlockedUser.objects.filter(organization_id=chat.assistant.organization.id,
+                                                       user=user.id).values_list('user_id', flat=True).distinct()
+            return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
 

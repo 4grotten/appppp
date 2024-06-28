@@ -30,7 +30,6 @@ python-json-logger = "^2.0.2"
 django-prometheus = "^2.2.0"
 sentry-sdk = "^1.5.7"
 django-phonenumber-field = "^6.1.0"
-googletrans = "4.0.0rc1"
 twilio = "7.5.0"
 transliterate = "1.10.2"
 django-ipware = "^4.0.2"
@@ -57,6 +56,8 @@ django-resized = "^1.0.2"
 beautifulsoup4 = "^4.12.2"
 googlemaps = "^4.10.0"
 xmltodict = "^0.13.0"
+googletrans-py39 = "^4.0.2"
+openai = "^1.35.3"
 
 [tool.poetry.dev-dependencies]
 

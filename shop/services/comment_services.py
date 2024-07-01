@@ -11,7 +11,7 @@ from common.serializers import ImageSerializer
 from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership, Chat, Assistant
+from organizations.models import Membership, Chat, Assistant, Answer
 from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
@@ -66,10 +66,22 @@ class CommentService:
         return comment
 
     @classmethod
+    def get_training_data(cls, assistant: Assistant):
+        answers = Answer.objects.filter(assistant=assistant)
+        training_data = []
+        for answer in answers:
+            training_data.append({
+                "question": answer.question.text,
+                "answer": answer.text,
+                "files": [file.file.url for file in answer.files.all()]
+            })
+
+        return training_data
+
+    @classmethod
     def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, request,
                                                     parent: Comment = None):
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
-
 
         host = request.META['HTTP_HOST']
 
@@ -88,7 +100,8 @@ class CommentService:
             "parent_id": comment.id,
             "chat_id": chat.id,
             "message": comment.text,
-            "host": host
+            "host": host,
+            "training_data": cls.get_training_data(assistant=chat.assistant)
         }
 
         sess = requests.Session()

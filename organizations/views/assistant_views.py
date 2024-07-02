@@ -162,11 +162,11 @@ class PurchaseAssistantView(generics.CreateAPIView):
         duration_days = serializer.validated_data['duration_days']
         utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
 
-        user_assistant = AssistantService.create_user_assistant(user=request.user,
-                                                                processed_by=assistant.organization.owner,
-                                                                assistant=assistant, plans=plans,
-                                                                duration_days=duration_days,
-                                                                utc_offset_minutes=utc_offset_minutes)
+        user_assistant = AssistantService.create_or_renew_user_assistant(user=request.user,
+                                                                         processed_by=assistant.organization.owner,
+                                                                         assistant=assistant, plans=plans,
+                                                                         duration_days=duration_days,
+                                                                         utc_offset_minutes=utc_offset_minutes)
 
         return Response(
             {

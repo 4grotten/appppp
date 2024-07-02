@@ -59,11 +59,12 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
     is_assistant_active = serializers.SerializerMethodField()
     active_until = serializers.SerializerMethodField()
     is_enabled = serializers.BooleanField(read_only=True)
+    plans = serializers.SerializerMethodField()
 
     class Meta:
         model = Assistant
         fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active',
-                  'active_until', 'is_enabled')
+                  'active_until', 'is_enabled', 'plans')
         read_only_fields = ('organization', )
 
     def get_active_until(self, assistant: Assistant):
@@ -90,6 +91,21 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             is_assistant_active = longest_active_user_assistant.active_until and longest_active_user_assistant.active_until > timezone.now()
             return is_assistant_active
         return False
+
+    def get_plans(self, assistant: Assistant):
+        if self.context['request'].user.is_anonymous:
+            return None
+        user = self.context['request'].user
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+
+            plans = longest_active_user_assistant.plans
+            return PlanSerializer(plans, many=True).data
+        return None
+
+
 
 
 class OrganizationAssistantUpdateSerializer(serializers.ModelSerializer):

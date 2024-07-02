@@ -102,7 +102,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
 
             plans = longest_active_user_assistant.plans
-            return PlanSerializer(plans, many=True).data
+            return plans.values_list('id', flat=True)
         return None
 
 

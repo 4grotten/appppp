@@ -62,19 +62,37 @@ class AssistantService:
         return transaction
 
     @classmethod
-    def create_user_assistant(cls, user: User, processed_by: User, assistant: Assistant, plans: Plan,
-                              duration_days: int, utc_offset_minutes: int):
-        transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
-                                                       plans=plans, utc_offset_minutes=utc_offset_minutes)
+    def create_or_renew_user_assistant(cls, user: User, processed_by: User, assistant: Assistant, plans: Plan,
+                                       duration_days: int, utc_offset_minutes: int):
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
 
-        user_assistant = UserAssistant.objects.create(
-            user=user,
-            assistant=assistant,
-            transaction=transaction,
-            active_until=timezone.now() + timedelta(days=duration_days)
-        )
-        user_assistant.plans.set(plans)
-        user_assistant.save()
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            old_active_until = longest_active_user_assistant.active_until
+
+            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
+                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+
+            user_assistant = UserAssistant.objects.create(
+                user=user,
+                assistant=assistant,
+                transaction=transaction,
+                active_until=old_active_until + timedelta(days=duration_days)
+            )
+            user_assistant.plans.set(plans)
+            user_assistant.save()
+        else:
+            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
+                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+
+            user_assistant = UserAssistant.objects.create(
+                user=user,
+                assistant=assistant,
+                transaction=transaction,
+                active_until=timezone.now() + timedelta(days=duration_days)
+            )
+            user_assistant.plans.set(plans)
+            user_assistant.save()
 
         return user_assistant
 

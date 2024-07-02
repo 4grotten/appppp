@@ -337,11 +337,11 @@ class OrganizationRetrieveUpdateView(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
-        is_assistant_active = OrganizationService.is_assistant_active(organization=instance, user=request.user)
+        # is_assistant_active = OrganizationService.is_assistant_active(organization=instance, user=request.user)
 
         context = {
             'request': request,
-            'is_assistant_active': is_assistant_active
+            # 'is_assistant_active': is_assistant_active
         }
 
         if (datetime.datetime.now() - instance.add_item_date.replace(tzinfo=None)).days > 6 and \

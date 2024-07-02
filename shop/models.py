@@ -7,7 +7,7 @@ from django.contrib.gis.db.models import PointField
 
 from common.models import TimestampModel, File, FileVideo, Currency, Country
 from common.utils import upload_file_with_unique_name
-from organizations.models import Organization
+from organizations.models import Organization, Chat, Assistant
 from stock.models import CriteriaSubcategory, SizeFormat
 from transactions.models import Transaction
 from users.constants import GENDER_CHOICES
@@ -415,15 +415,20 @@ class Complaint(TimestampModel):
 
 
 class Comment(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
     parent = models.ForeignKey(
         'self', on_delete=models.SET_NULL, blank=True, null=True
     )
+    is_read = models.BooleanField(default=False)
     text = models.TextField(max_length=2000)
 
     def __str__(self):
-        return f'Comment of {self.user} about {self.item.name}'
+        if self.item:
+            return f'Comment of {self.user} about {self.item.name}'
+        return f'Comment by {self.user or self.assistant}'
 
 
 class CommentTheme(TimestampModel):

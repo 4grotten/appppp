@@ -1,4 +1,5 @@
 from datetime import timedelta
+
 from django.utils import timezone
 from django.utils.timezone import now
 
@@ -6,8 +7,10 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import ObjectNotFoundException, NotAcceptableException
 from common.models import Currency
-from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan
+from instagram_parsers.services.proxy_services import ProxyService
+from organizations.models import Assistant, Organization, Answer, UserAssistant, Plan, Membership, Chat, ChatMessage
 from organizations.services.organization_services import OrganizationService
+from project.settings.base import OPENAI_API_KEY
 from transactions.models import Transaction
 from users.models import User
 
@@ -59,21 +62,100 @@ class AssistantService:
         return transaction
 
     @classmethod
-    def create_user_assistant(cls, user: User, processed_by: User, assistant: Assistant, plans: Plan,
-                              duration_days: int, utc_offset_minutes: int):
-        transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
-                                                       plans=plans, utc_offset_minutes=utc_offset_minutes)
+    def create_or_renew_user_assistant(cls, user: User, processed_by: User, assistant: Assistant, plans: Plan,
+                                       duration_days: int, utc_offset_minutes: int):
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
 
-        user_assistant = UserAssistant.objects.create(
-            user=user,
-            assistant=assistant,
-            transaction=transaction,
-            active_until=timezone.now() + timedelta(days=duration_days)
-        )
-        user_assistant.plans.set(plans)
-        user_assistant.save()
+        if user_assistants.exists():
+            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            old_active_until = longest_active_user_assistant.active_until
+
+            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
+                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+
+            user_assistant = UserAssistant.objects.create(
+                user=user,
+                assistant=assistant,
+                transaction=transaction,
+                active_until=old_active_until + timedelta(days=duration_days)
+            )
+            user_assistant.plans.set(plans)
+            user_assistant.save()
+        else:
+            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
+                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+
+            user_assistant = UserAssistant.objects.create(
+                user=user,
+                assistant=assistant,
+                transaction=transaction,
+                active_until=timezone.now() + timedelta(days=duration_days)
+            )
+            user_assistant.plans.set(plans)
+            user_assistant.save()
 
         return user_assistant
+
+    @classmethod
+    def get_my_role(cls, user: User, assistant: Assistant):
+        try:
+            membership = Membership.objects.get(organization=assistant.organization, user=user)
+            return membership.role.title
+        except Membership.DoesNotExist:
+            if assistant.organization.owner == user:
+                return 'is_owner'
+            return None
+
+    @classmethod
+    def change_assistant_enabled_status(cls, assistant: Assistant, is_enabled: bool):
+        assistant.is_enabled = is_enabled
+        assistant.save()
+
+        return assistant
+
+
+class ChatService:
+    model = Chat
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> Chat:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('Chat not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+
+    @classmethod
+    def change_chat_by_org_user_status(cls, chat: Chat, chat_by_org_user: bool):
+        chat.chat_by_org_user = chat_by_org_user
+        chat.save()
+
+        return chat
+
+
+class ChatMessageService:
+    model = ChatMessage
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> ChatMessage:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('ChatMessage not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def do_read_messages(cls, chat: Chat):
+        return cls.filter(is_read=False, chat=chat).update(is_read=True)
+
+
 
 
 class AnswerService:

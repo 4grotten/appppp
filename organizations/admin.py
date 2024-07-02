@@ -13,7 +13,8 @@ from .models import (
     CardBackground, Partnership, Banner, Message, Attendance, CashbackGroup, CumulativeGroup, InstagramIntegration,
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
-    BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan, UserAssistant
+    BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan, UserAssistant, Chat,
+    ChatMessage
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -453,3 +454,14 @@ class AnswerAdmin(admin.ModelAdmin):
 @admin.register(AnswerFile)
 class AnswerFileAdmin(admin.ModelAdmin):
     list_display = ('id', 'file')
+
+@admin.register(Chat)
+class ChatAdmin(admin.ModelAdmin):
+    list_display = ('id', 'assistant', 'user')
+    search_fields = ('assistant', 'user', )
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'chat', 'sender', 'text')
+    search_fields = ('chat', 'sender', 'text')

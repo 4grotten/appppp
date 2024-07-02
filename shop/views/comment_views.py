@@ -10,11 +10,14 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
+from organizations.serializers.assistant_serializers import ChatSettingsSerializer
+from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
+from organizations.services.assistant_services import ChatService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
     CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
-    UserCommentThemeSerializer
+    UserCommentThemeSerializer, AssistantCommentCreateSerializer
 from shop.serializers.item_serializers import SubscriptionItemSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -51,6 +54,61 @@ class CommentItemListCreateView(ListCreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
+class CommentChatListCreateView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = GeneralPagination
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        chat = ChatService.get(id=self.kwargs['pk'])
+        comment_complaints_ids = CommentComplaint.objects.filter(user=self.request.user).values_list('comment_id', flat=True).distinct()
+        return Comment.objects.filter(chat=chat).exclude(id__in=comment_complaints_ids).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        chat = ChatService.get(id=self.kwargs['pk'])
+        response = super().list(request, args, kwargs)
+        response.data['my_role'] = CommentService.get_my_role_for_chat(user=self.request.user, chat=chat)
+        response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
+        response.data['chat'] = ChatSettingsSerializer(chat, context={'request': request}).data
+        response.data['organization'] = ItemFeedOrganizationSerializer(chat.assistant.organization,
+                                                                       context={'request': request}).data
+        return response
+
+    def create(self, request, *args, **kwargs):
+        serializer = CommentCreateSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        chat = ChatService.get(id=self.kwargs['pk'])
+        if chat.chat_by_org_user:
+            comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
+        else:
+            comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
+                                                                                 chat=chat, request=request)
+        data = self.serializer_class(comment, context={'request': request}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class AssistantCommentChatCreateView(CreateAPIView):
+    serializer_class = CommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = AssistantCommentCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        chat = ChatService.get(id=self.kwargs['pk'])
+        CommentService.create_chat_assistant_comment(**serializer.validated_data, chat=chat)
+
+        return Response(data={'message': _('Successfully created assistant comment')})
+
+
+
 class ItemChangeCommentsDisabledView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
@@ -82,7 +140,11 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        organization = OrganizationService.get(id=comment.item.organization.id)
+        organization = None
+        if comment.item:
+            organization = OrganizationService.get(id=comment.item.organization.id)
+        elif comment.chat:
+            organization = OrganizationService.get(id=comment.chat.assistant.organization.id)
         if OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user) or \
                 self.request.user == comment.user:
             serializer.save()
@@ -97,7 +159,11 @@ class CommentDestroyUpdateRetrievtView(RetrieveUpdateDestroyAPIView):
         except Comment.DoesNotExist:
             raise ObjectNotFoundException(_('Comment not found'))
 
-        organization = OrganizationService.get(id=comment.item.organization.id)
+        organization = None
+        if comment.item:
+            organization = OrganizationService.get(id=comment.item.organization.id)
+        elif comment.chat:
+            organization = OrganizationService.get(id=comment.chat.assistant.organization.id)
         if OrganizationService.user_can_edit_organization(organization=organization, user=self.request.user) or \
                 self.request.user == comment.user:
             CommentService.delete_comment(comment=comment)

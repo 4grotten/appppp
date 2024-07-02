@@ -4,7 +4,9 @@ from rest_framework.routers import DefaultRouter
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 from .views.assistant_views import OrganizationAssistantCreateView, OrganizationAssistantAnswerCreateView, \
     OrganizationAssistantAnswerRetrieveUpdateView, AnswerFileCreateView, QuestionListView, \
-    OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView
+    OrganizationAssistantRetrieveUpdateView, AssistantPlansListView, PurchaseAssistantView, \
+    GetOrCreateChatView, AssistantChatsListView, AssistantChatReadMessages, ChatDetailRetrieveView, \
+    AutoChatOrByOrgUserView, ToggleAssistantEnableView
 from .views.attendance_views import AttendanceUserInfoView, AttendanceView, AttendanceStatsView, GlobalAttendanceView
 from .views.banner_views import BannerView, BannerDetailsView
 from .views.card_views import DiscountsListBulkCreateAPIView, OrganizationDiscountsDeleteUpdateView, BackgroundListView
@@ -147,7 +149,16 @@ organization_urls = [
     path('organizations/assistant/<int:pk>/plans/', AssistantPlansListView.as_view(),
          name='org_assistant_plans'),
     path('organizations/assistant/purchase/', PurchaseAssistantView.as_view(),
-         name='org_assistant_purchase')
+         name='org_assistant_purchase'),
+    path('organizations/assistant/chat/', GetOrCreateChatView.as_view(), name='org_assistant_chat'),
+    path('organizations/assistant/chat/<int:pk>/', ChatDetailRetrieveView.as_view(), name='org_assistant_chat_detail'),
+    path('organizations/assistant/chat/<int:pk>/read_messages/', AssistantChatReadMessages.as_view(),
+         name='org_assistant_chat_read_messages'),
+    path('organizations/assistant/chat/by_org_user/', AutoChatOrByOrgUserView.as_view(),
+         name='org_assistant_chat_by_org_user'),
+    path('organizations/assistant/toggle_assistant/', ToggleAssistantEnableView.as_view(),
+         name='org_assistant_chat_by_org_user'),
+    path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats')
 ]
 
 membership_urls = [

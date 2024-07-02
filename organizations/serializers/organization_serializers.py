@@ -15,9 +15,9 @@ from common.serializers import ImageSerializer, CountrySerializer, CitySerialize
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers
+    OrganizationPaymentSystemUsers, ChatMessage
 )
-from organizations.serializers.assistant_serializers import AssistantSerializer, OrganizationAssistantSerializer
+from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -301,7 +301,14 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     has_online_payment = serializers.SerializerMethodField()
     online_payment_activated = serializers.SerializerMethodField()
     is_wholesale_in_request = serializers.SerializerMethodField()
-    is_assistant_active = serializers.SerializerMethodField()
+    all_unread_messages_count = serializers.SerializerMethodField(allow_null=True)
+
+    def get_all_unread_messages_count(self, organization: Organization):
+        try:
+            assistant = organization.assistant
+            return ChatMessage.objects.filter(chat__assistant=assistant, is_read=False).count()
+        except Organization.assistant.RelatedObjectDoesNotExist:
+            return None
 
     def get_is_wholesale_in_request(self, organization: Organization):
         request_timestamp = organization.is_wholesale_request_timestamp
@@ -376,12 +383,6 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
             return OrganizationBlacklist.objects.filter(organization_id=organization.id, user_id=user.id).exists()
 
-    def get_is_assistant_active(self, obj):
-        if self.context.get("is_assistant_active"):
-            return True
-        return False
-
-
     def get_has_online_payment(self, organization: Organization):
         freedompay_confirmed = organization.freedompay_confirmed
         paysy_confirmed = organization.paysy_confirmed
@@ -413,7 +414,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'is_assistant_active'
+            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

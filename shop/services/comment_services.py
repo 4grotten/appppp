@@ -1,5 +1,6 @@
 import time
-
+import logging
+import requests
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
@@ -7,12 +8,16 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import ObjectNotFoundException
 from common.models import CommentsWallpaper, File
 from common.serializers import ImageSerializer
+from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership
+from organizations.models import Membership, Chat, Assistant, Answer
+from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
 from notifications.tasks import sent_notification
+
+logger = logging.getLogger(__name__)
 
 
 class CommentService:
@@ -24,6 +29,10 @@ class CommentService:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
             raise ObjectNotFoundException(_('Comment not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
 
     @classmethod
     def create_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None):
@@ -41,6 +50,66 @@ class CommentService:
                     comment_id=comment.id,
                     comment_text=text)
             )
+
+        return comment
+
+    @classmethod
+    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
+    def create_chat_assistant_comment(cls, text: str, chat: Chat, assistant: Assistant, parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, assistant=assistant, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
+    def get_training_data(cls, assistant: Assistant):
+        answers = Answer.objects.filter(assistant=assistant)
+        training_data = []
+        for answer in answers:
+            training_data.append({
+                "question": answer.question.text,
+                "answer": answer.text,
+                "files": [file.file.url for file in answer.files.all()]
+            })
+
+        return training_data
+
+    @classmethod
+    def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, request,
+                                                    parent: Comment = None):
+        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+
+        host = request.META['HTTP_HOST']
+
+        request_headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Content-Type": "application/json",
+            "User-Agent": "My User Agent 1.0",
+            "Connection": "keep-alive"
+        }
+
+        ask_bot_url = 'http://161.35.153.151:8080/bot/'
+
+        data = {
+            "assistant_id": chat.assistant.id,
+            "parent_id": comment.id,
+            "chat_id": chat.id,
+            "message": comment.text,
+            "host": host,
+            "training_data": cls.get_training_data(assistant=chat.assistant)
+        }
+
+        sess = requests.Session()
+        try:
+            response = sess.post(ask_bot_url, json=data, headers=request_headers)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to communicate with AI assistant: {e}")
 
         return comment
 
@@ -73,6 +142,16 @@ class CommentService:
             return membership.role.title
         except Membership.DoesNotExist:
             if item.organization.owner == user:
+                return 'is_owner'
+            return None
+
+    @classmethod
+    def get_my_role_for_chat(cls, user: User, chat: Chat):
+        try:
+            membership = Membership.objects.get(organization=chat.assistant.organization, user=user)
+            return membership.role.title
+        except Membership.DoesNotExist:
+            if chat.assistant.organization.owner == user:
                 return 'is_owner'
             return None
 
@@ -142,5 +221,9 @@ class CommentService:
             "svg_background": default_theme.svg_background.url if default_theme.svg_background else "",
             "svg_pattern": default_theme.svg_pattern.url if default_theme.svg_pattern else ""
         }
+
+    @classmethod
+    def do_read_messages(cls, chat: Chat):
+        return cls.filter(is_read=False, chat=chat).update(is_read=True)
 
 

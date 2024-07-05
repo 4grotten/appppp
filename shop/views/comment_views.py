@@ -85,8 +85,12 @@ class CommentChatListCreateView(ListCreateAPIView):
         if chat.chat_by_org_user:
             comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
         else:
-            comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
+            if chat.assistant.is_enabled:
+                comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
                                                                                  chat=chat, request=request)
+            else:
+                comment = CommentService.create_chat_comment_with_assistant_default_response(**serializer.validated_data,
+                                                                                     chat=chat)
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

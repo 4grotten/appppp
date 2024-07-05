@@ -66,6 +66,13 @@ class CommentService:
         return comment
 
     @classmethod
+    def create_chat_assistant_default_comment(cls, chat: Chat, assistant: Assistant):
+        text = _("Good afternoon! Nice to meet you, how can I help you?")
+        comment = cls.model.objects.create(chat=chat, assistant=assistant, text=text)
+
+        return comment
+
+    @classmethod
     def get_training_data(cls, assistant: Assistant):
         answers = Answer.objects.filter(assistant=assistant)
         training_data = []
@@ -112,6 +119,17 @@ class CommentService:
             logger.error(f"Failed to communicate with AI assistant: {e}")
 
         return comment
+
+    @classmethod
+    def create_chat_comment_with_assistant_default_response(cls, text: str, chat: Chat, user: User,
+                                                            parent: Comment = None):
+        user_comment = cls.create_chat_comment(chat=chat, user=user, text=text, parent=parent)
+
+        assistant_text = _("Sorry, I'm on vacation!")
+
+        cls.model.objects.create(chat=chat, assistant=chat.assistant, parent=user_comment, text=assistant_text)
+
+        return user_comment
 
     @classmethod
     def delete_comment(cls, comment: Comment):

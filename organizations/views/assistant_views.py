@@ -192,6 +192,8 @@ class GetOrCreateChatView(generics.RetrieveAPIView):
         assistant = serializer.validated_data['assistant']
 
         chat, created = Chat.objects.get_or_create(user=user, assistant=assistant)
+        if created:
+            CommentService.create_chat_assistant_default_comment(chat=chat, assistant=chat.assistant)
 
         serializer = self.serializer_class(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -75,9 +75,19 @@ class CommentService:
     @classmethod
     def get_training_data(cls, assistant: Assistant):
         answers = Answer.objects.filter(assistant=assistant)
-        training_data = []
+        training_data = {
+            "assistant_info": {
+                "organization": assistant.organization.title,
+                "name": assistant.name,
+                "gender": assistant.gender,
+                "position": assistant.position,
+                "is_enabled": assistant.is_enabled
+            },
+            "answers": []
+        }
+
         for answer in answers:
-            training_data.append({
+            training_data["answers"].append({
                 "question": answer.question.text,
                 "answer": answer.text,
                 "files": [file.file.url for file in answer.files.all()]

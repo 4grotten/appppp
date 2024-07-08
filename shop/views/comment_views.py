@@ -10,9 +10,10 @@ from rest_framework.views import APIView
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, BadRequestException, IntegrityException
 from common.pagination import GeneralPagination
+from organizations.models import UserAssistant
 from organizations.serializers.assistant_serializers import ChatSettingsSerializer
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
-from organizations.services.assistant_services import ChatService
+from organizations.services.assistant_services import ChatService, UserAssistantService
 from organizations.services.organization_services import OrganizationService
 from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
@@ -86,8 +87,11 @@ class CommentChatListCreateView(ListCreateAPIView):
             if chat.chat_by_org_user:
                 comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
             else:
-                comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
-                                                                                 chat=chat, request=request)
+                if UserAssistantService.user_has_active_assistant(assistant=chat.assistant):
+                    comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
+                                                                                     chat=chat, request=request)
+                else:
+                    comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
         else:
             comment = CommentService.create_chat_comment_with_assistant_default_response(**serializer.validated_data,
                                                                                          chat=chat)

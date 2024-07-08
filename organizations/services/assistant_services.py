@@ -172,3 +172,10 @@ class AnswerService:
     def filter(cls, **filters):
         return cls.model.objects.filter(**filters)
 
+class UserAssistantService:
+    model = UserAssistant
+
+    @classmethod
+    def user_has_active_assistant(cls, assistant: Assistant):
+        return UserAssistant.objects.filter(assistant=assistant, is_active=True).exists()
+

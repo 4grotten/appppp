@@ -68,10 +68,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
         read_only_fields = ('organization', )
 
     def get_active_until(self, assistant: Assistant):
-        if self.context['request'].user.is_anonymous:
-            return None
-        user = self.context['request'].user
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
             return longest_active_user_assistant.active_until
@@ -79,10 +76,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
 
 
     def get_is_assistant_active(self, assistant: Assistant):
-        if self.context['request'].user.is_anonymous:
-            return None
-        user = self.context['request'].user
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
 
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
@@ -93,10 +87,7 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
         return False
 
     def get_plans(self, assistant: Assistant):
-        if self.context['request'].user.is_anonymous:
-            return None
-        user = self.context['request'].user
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
+        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
 
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()

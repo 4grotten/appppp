@@ -16,10 +16,12 @@ services:
       - postgres:postgres
       - rabbitmq:rabbitmq
       - memcached:memcached
+      - redis:redis
     depends_on:
       - rabbitmq
       - postgres
       - memcached
+      - redis
     env_file: ./env/production.env
     volumes:
       - .:/app
@@ -27,6 +29,12 @@ services:
       - ./media:/app/media
     command: /gunicorn.sh
     restart: always
+
+  daphne:
+    <<: *django
+    command: daphne -b 0.0.0.0 -p 8001 project.asgi:application
+    ports:
+      - "8001:8001"
 
   celery_worker_backend:
     <<: *django
@@ -90,3 +98,8 @@ services:
     image: memcached:1.6-alpine
     env_file: ./env/development.env
     restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"

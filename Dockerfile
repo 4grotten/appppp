@@ -23,7 +23,6 @@ COPY ./poetry.lock /app
 #RUN pipenv install --system --deploy
 
 RUN pip install --upgrade pip
-RUN poetry self update
 RUN poetry config virtualenvs.create false && \
     poetry install
 

@@ -67,17 +67,15 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
                   'active_until', 'is_enabled', 'plans')
         read_only_fields = ('organization', )
 
-    def get_active_until(self, assistant: Assistant):
+    def get_active_until(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-            return longest_active_user_assistant.active_until
+            return longest_active_user_assistant.active_until.isoformat() if longest_active_user_assistant.active_until else None
         return None
 
-
-    def get_is_assistant_active(self, assistant: Assistant):
+    def get_is_assistant_active(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
-
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
             user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
@@ -86,15 +84,13 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             return is_assistant_active
         return False
 
-    def get_plans(self, assistant: Assistant):
+    def get_plans(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
-
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-
             plans = longest_active_user_assistant.plans
-            return plans.values_list('id', flat=True)
-        return None
+            return list(plans.values_list('id', flat=True)) if plans else []
+        return []
 
 
 

@@ -755,7 +755,7 @@ class Chat(TimestampModel):
     chat_by_org_user = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Chat between {self.user} and {self.assistant}"
+        return f"Chat with ID {self.id}"
 
     class Meta:
         constraints = [

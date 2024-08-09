@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from channels.db import database_sync_to_async
 from rest_framework import serializers
 
 from common.models import File
@@ -38,6 +39,100 @@ class ParentCommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'user', 'organization', 'text')
 
+
+class WSParentCommentSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
+
+    def get_organization(self, obj):
+        user = self.context.get('user')
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+        if not OrganizationService.user_can_edit_organization(organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization, user=obj.user):
+                return OrganizationWithTypeImageSerializer(organization).data
+        return None
+
+    def get_user(self, obj):
+        user = self.context.get('user')
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+        if not OrganizationService.user_can_edit_organization(organization=organization, user=user):
+            if OrganizationService.user_can_edit_organization(organization=organization, user=obj.user):
+                return None
+            return UserShortInfoSerializer(obj.user).data
+        return UserShortInfoSerializer(obj.user).data
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'user', 'organization', 'text')
+
+class WSCommentSerializer(serializers.ModelSerializer):
+    assistant = OrganizationAssistantSerializer()
+    is_comment_liked = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
+    comment_like_count = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+    parent = WSParentCommentSerializer()
+    is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
+    is_updated = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant'
+        )
+
+    def get_is_updated(self, comment: Comment) -> bool:
+        return (comment.updated_at - comment.created_at) > timedelta(seconds=1)
+
+    def get_can_delete(self, obj) -> bool:
+        user = self.context.get('user')
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+        return user == obj.user or OrganizationService.user_can_edit_organization(organization, user)
+
+    def get_organization(self, obj):
+        user = self.context.get('user')
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+
+        if not OrganizationService.user_can_edit_organization(organization, user) and \
+                OrganizationService.user_can_edit_organization(organization, obj.user):
+            return OrganizationWithTypeImageSerializer(organization).data
+        return None
+
+    def get_user(self, obj):
+        if obj.user is None:
+            return None
+
+        user = self.context.get('user')
+        organization = obj.item.organization if obj.item else obj.chat.assistant.organization
+
+        if not OrganizationService.user_can_edit_organization(organization, user):
+            if OrganizationService.user_can_edit_organization(organization, obj.user):
+                return None
+            return UserShortInfoSerializer(obj.user).data
+        return UserShortInfoSerializer(obj.user).data
+
+    def get_user_role(self, obj):
+        if obj.chat:
+            return CommentService.get_my_role_for_chat(chat=obj.chat, user=obj.user)
+        return CommentService.get_my_role(item=obj.item, user=obj.user)
+
+    def get_is_comment_liked(self, comment: Comment) -> bool:
+        user = self.context.get('user')
+        if not user.is_authenticated:
+            return False
+        return LikeService.is_comment_liked_by_user(comment=comment, user=user)
+
+    def get_comment_like_count(self, comment: Comment) -> int:
+        return comment.liked_comments.count()
+
+    def get_is_blocked(self, comment: Comment) -> bool:
+        organization_id = comment.item.organization.id if comment.item else comment.chat.assistant.organization.id
+        blocked_users = BlockedUser.objects.filter(organization_id=organization_id, user=comment.user).values_list(
+            'user_id', flat=True).distinct()
+        return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 class CommentSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer()

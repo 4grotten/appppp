@@ -426,9 +426,7 @@ class Comment(TimestampModel):
     text = models.TextField(max_length=2000)
 
     def __str__(self):
-        if self.item:
-            return f'Comment of {self.user} about {self.item.name}'
-        return f'Comment by {self.user or self.assistant}'
+        return f"Comment with ID {self.id}"
 
 
 class CommentTheme(TimestampModel):

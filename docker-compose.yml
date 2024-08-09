@@ -16,21 +16,30 @@ services:
       - postgres:postgres
       - rabbitmq:rabbitmq
       - memcached:memcached
+      - redis:redis
     depends_on:
       - rabbitmq
       - postgres
       - memcached
+      - redis
     env_file: ./env/development.env
     volumes:
       - .:/app
       - ./static:/app/static
       - ./media:/app/media
     command: /runserver.sh
+
   woker:
     <<: *django
     ports: [ ]
     command: /celery_worker.sh
     env_file: ./env/development.env
+
+  daphne:
+    <<: *django
+    command: daphne -b 0.0.0.0 -p 8001 project.asgi:application
+    ports:
+      - "8001:8001"
 
   postgres:
     image: mdillon/postgis:10
@@ -54,3 +63,8 @@ services:
     ports: [ ]
     command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
     env_file: ./env/development.env
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"

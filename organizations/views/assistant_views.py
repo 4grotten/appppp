@@ -1,4 +1,4 @@
-from django.db.models import Max
+from django.db.models import Max, Case, When, Value, BooleanField
 from rest_framework import status, generics
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -262,15 +262,29 @@ class ToggleAssistantEnableView(APIView):
 
 class AssistantChatsListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_object(self):
         return AssistantService.get(id=self.kwargs['pk'])
 
     def get_queryset(self):
         assistant = self.get_object()
-        return Chat.objects.filter(assistant=assistant).annotate(
+        if not OrganizationService.user_can_edit_organization(organization=assistant.organization,
+                                                              user=self.request.user):
+            raise PermissionDenied({'message': _('No rights to edit organization')})
+        chat, created = Chat.objects.get_or_create(user=self.request.user, assistant=assistant)
+        if created:
+            CommentService.create_chat_assistant_default_comment(chat=chat, assistant=chat.assistant)
+        queryset = Chat.objects.filter(assistant=assistant).annotate(
+            is_target_chat=Case(
+                When(id=chat.id, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
             last_message_created_at=Max('chat_messages__created_at')
-        ).order_by('-last_message_created_at')
+        ).order_by('-is_target_chat', '-last_message_created_at')
+
+        return queryset
 
 
 

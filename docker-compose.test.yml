@@ -3,7 +3,6 @@ volumes:
   postgres_data_dev: { }
   postgres_backup_dev: { }
 
-
 services:
   django: &django
     build:
@@ -37,10 +36,13 @@ services:
     env_file: ./env/test.env
 
   daphne:
-    <<: *django
+    build: .
     command: daphne -b 0.0.0.0 -p 8001 project.asgi:application
     ports:
       - "8001:8001"
+    env_file: ./env/test.env
+    depends_on:
+      - django
 
   postgres:
     image: mdillon/postgis:10

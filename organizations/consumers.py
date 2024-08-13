@@ -50,29 +50,58 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         try:
+            logger.debug("Received text data: %s", text_data)
             data = json.loads(text_data)
-            assistant_id = data.get('assistant_id', None)
-            user = self.scope['user']
-            chat = self.chat
-            user_has_active_assistant = await self.user_has_active_assistant(assistant_id=assistant_id)
-            is_enalbed = await self.get_chat_assistant_is_enabled_flag(chat=chat)
-            chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
+            logger.debug("Parsed JSON data: %s", data)
 
-            if is_enalbed:
+            assistant_id = data.get('assistant_id', None)
+            logger.debug("Extracted assistant_id: %s", assistant_id)
+
+            user = self.scope['user']
+            logger.debug("Retrieved user from scope: %s", user)
+
+            chat = self.chat
+            logger.debug("Current chat: %s", chat)
+
+            user_has_active_assistant = await self.user_has_active_assistant(assistant_id=assistant_id)
+            logger.debug("User has active assistant: %s", user_has_active_assistant)
+
+            is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
+            logger.debug("Chat assistant is enabled: %s", is_enabled)
+
+            chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
+            logger.debug("Chat is by org user: %s", chat_by_org_user)
+
+            if is_enabled:
+                print("SALAAM")
+                logger.debug("Chat assistant is enabled.")
                 if chat_by_org_user:
+                    logger.debug("Chat is by organization user.")
                     await self.handle_user_response(data, user)
                 else:
+                    logger.debug("Chat is not by organization user.")
                     if user_has_active_assistant:
+                        logger.debug("User has an active assistant.")
                         if assistant_id is None:
+                            logger.debug("Assistant ID is None.")
                             comment = await self.handle_user_response(data, user)
+                            logger.debug("Handled user response, comment: %s", comment)
                             await self.send_message_to_ai(comment)
+                            logger.debug("Sent message to AI.")
                         else:
+                            logger.debug("Assistant ID is provided.")
                             await self.handle_ai_response(data, user)
+                            logger.debug("Handled AI response.")
                     else:
+                        logger.debug("User does not have an active assistant.")
                         await self.handle_user_response(data, user)
+                        logger.debug("Handled user response.")
             else:
+                logger.debug("Chat assistant is not enabled.")
                 comment = await self.handle_user_response(data, user)
+                logger.debug("Handled user response, comment: %s", comment)
                 await self.handle_ai_default_response(parent=comment, user=user)
+                logger.debug("Handled AI default response.")
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -204,7 +233,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def connect_to_ai(self):
         try:
-            ai_socket = await websockets.connect('ws://161.35.153.151:8081/ws/bot/', timeout=5)
+            ai_socket = await websockets.connect('ws://10.0.1.4:8080/ws/bot/', timeout=5)
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")

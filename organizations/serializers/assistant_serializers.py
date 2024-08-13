@@ -211,6 +211,7 @@ class ChatSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer()
     user_role = serializers.SerializerMethodField()
     can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    is_my_chat = serializers.SerializerMethodField()
 
     def get_can_comment(self, chat: Chat) -> bool:
         if self.context['request'].user:
@@ -230,9 +231,14 @@ class ChatSerializer(serializers.ModelSerializer):
     def get_user_role(self, chat: Chat):
         return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
 
+    def get_is_my_chat(self, chat: Chat):
+        user = self.context['request'].user
+        return chat.user == user
+
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment')
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment',
+                  'is_my_chat')
 
 
 class ChatByOrgUserSerializer(serializers.Serializer):

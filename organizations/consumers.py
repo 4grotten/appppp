@@ -6,7 +6,8 @@ import websockets
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from organizations.services.assistant_services import ChatService, AssistantService
+from organizations.models import UserAssistant
+from organizations.services.assistant_services import ChatService, AssistantService, UserAssistantService
 from shop.serializers.comment_serializers import CommentSerializer, WSCommentSerializer
 from shop.services.comment_services import CommentService
 
@@ -52,12 +53,26 @@ class CommentConsumer(AsyncWebsocketConsumer):
             data = json.loads(text_data)
             assistant_id = data.get('assistant_id', None)
             user = self.scope['user']
+            chat = self.chat
+            user_has_active_assistant = await self.user_has_active_assistant(assistant_id=assistant_id)
+            is_enalbed = await self.get_chat_assistant_is_enabled_flag(chat=chat)
+            chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
 
-            if assistant_id is None:
-                comment = await self.handle_user_response(data, user)
-                await self.send_message_to_ai(comment)
+            if is_enalbed:
+                if chat_by_org_user:
+                    await self.handle_user_response(data, user)
+                else:
+                    if user_has_active_assistant:
+                        if assistant_id is None:
+                            comment = await self.handle_user_response(data, user)
+                            await self.send_message_to_ai(comment)
+                        else:
+                            await self.handle_ai_response(data, user)
+                    else:
+                        await self.handle_user_response(data, user)
             else:
-                await self.handle_ai_response(data, user)
+                comment = await self.handle_user_response(data, user)
+                await self.handle_ai_default_response(parent=comment, user=user)
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -75,6 +90,18 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return parent.chat
 
     @database_sync_to_async
+    def get_chat_assistant_is_enabled_flag(self, chat):
+        return chat.assistant.is_enabled
+
+    @database_sync_to_async
+    def get_chat_chat_org_by_user(self, chat):
+        return chat.chat_by_org_user
+
+    @database_sync_to_async
+    def user_has_active_assistant(cls, assistant_id):
+        return UserAssistant.objects.filter(assistant=assistant_id, is_active=True).exists()
+
+    @database_sync_to_async
     def get_assistant(self, assistant_id):
         assistant = AssistantService.get(pk=assistant_id)
         return assistant
@@ -86,6 +113,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_user_comment(self, text, chat, user, parent=None):
         return CommentService.create_chat_comment(text=text, chat=chat, user=user, parent=parent)
+
+    @database_sync_to_async
+    def create_ai_defualt_comment(self, chat, parent=None):
+        return CommentService.create_ws_chat_comment_with_assistant_default_response(chat=chat, parent=parent)
 
     @database_sync_to_async
     def create_comment_with_ai_response(self, text, chat, assistant, parent=None):
@@ -156,9 +187,24 @@ class CommentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
 
+    async def handle_ai_default_response(self, parent, user):
+        try:
+            chat = await self.get_chat_with_parent(parent)
+            comment = await self.create_ai_defualt_comment(chat, parent)
+            serialized_data = await self.serialize_assistant_data(comment=comment, user=user)
+            await self.channel_layer.group_send(
+                self.chat_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': serialized_data
+                }
+            )
+        except Exception as e:
+            logger.error(f"Error handling AI response: {e}")
+
     async def connect_to_ai(self):
         try:
-            ai_socket = await websockets.connect('ws://161.35.153.151:8081/ws/bot/', timeout=5)
+            ai_socket = await websockets.connect('ws://10.0.1.4:8081/ws/bot/', timeout=5)
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")

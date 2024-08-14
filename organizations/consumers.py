@@ -18,15 +18,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
             self.chat_id = self.scope['url_route']['kwargs']['chat_id']
-            self.chat = await self.get_chat(self.chat_id)
             self.chat_group_name = f'chat_{self.chat_id}'
             self.headers = self.scope['headers']
             self.host = self.extract_host()
-
-            if not self.chat:
-                logger.warning(f"Chat not found for ID {self.chat_id}")
-                await self.close()
-                return
 
             await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
 
@@ -50,6 +44,11 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         try:
+            self.chat = await self.get_chat(self.chat_id)
+            if not self.chat:
+                logger.warning(f"Chat not found for ID {self.chat_id}")
+                await self.close()
+                return
             logger.info("Received text data: %s", text_data)
             data = json.loads(text_data)
             logger.info("Parsed JSON data: %s", data)

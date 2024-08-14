@@ -50,57 +50,57 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         try:
-            logger.debug("Received text data: %s", text_data)
+            logger.info("Received text data: %s", text_data)
             data = json.loads(text_data)
-            logger.debug("Parsed JSON data: %s", data)
+            logger.info("Parsed JSON data: %s", data)
 
             assistant_id = data.get('assistant_id', None)
-            logger.debug("Extracted assistant_id: %s", assistant_id)
+            logger.info("Extracted assistant_id: %s", assistant_id)
 
             user = self.scope['user']
-            logger.debug("Retrieved user from scope: %s", user)
+            logger.info("Retrieved user from scope: %s", user)
 
             chat = self.chat
-            logger.debug("Current chat: %s", chat)
+            logger.info("Current chat: %s", chat)
             assistant = await self.get_assistant_by_chat(chat=chat)
             user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
-            logger.debug("User has active assistant: %s", user_has_active_assistant)
+            logger.info("User has active assistant: %s", user_has_active_assistant)
 
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
-            logger.debug("Chat assistant is enabled: %s", is_enabled)
+            logger.info("Chat assistant is enabled: %s", is_enabled)
 
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
-            logger.debug("Chat is by org user: %s", chat_by_org_user)
+            logger.info("Chat is by org user: %s", chat_by_org_user)
 
             if is_enabled:
-                logger.debug("Chat assistant is enabled.")
+                logger.info("Chat assistant is enabled.")
                 if chat_by_org_user:
-                    logger.debug("Chat is by organization user.")
+                    logger.info("Chat is by organization user.")
                     await self.handle_user_response(data, user)
                 else:
-                    logger.debug("Chat is not by organization user.")
+                    logger.info("Chat is not by organization user.")
                     if user_has_active_assistant:
-                        logger.debug("User has an active assistant.")
+                        logger.info("User has an active assistant.")
                         if assistant_id is None:
-                            logger.debug("Assistant ID is None.")
+                            logger.info("Assistant ID is None.")
                             comment = await self.handle_user_response(data, user)
-                            logger.debug("Handled user response, comment: %s", comment)
+                            logger.info("Handled user response, comment: %s", comment)
                             await self.send_message_to_ai(comment)
-                            logger.debug("Sent message to AI.")
+                            logger.info("Sent message to AI.")
                         else:
-                            logger.debug("Assistant ID is provided.")
+                            logger.info("Assistant ID is provided.")
                             await self.handle_ai_response(data, user)
-                            logger.debug("Handled AI response.")
+                            logger.info("Handled AI response.")
                     else:
-                        logger.debug("User does not have an active assistant.")
+                        logger.info("User does not have an active assistant.")
                         await self.handle_user_response(data, user)
-                        logger.debug("Handled user response.")
+                        logger.info("Handled user response.")
             else:
-                logger.debug("Chat assistant is not enabled.")
+                logger.info("Chat assistant is not enabled.")
                 comment = await self.handle_user_response(data, user)
-                logger.debug("Handled user response, comment: %s", comment)
+                logger.info("Handled user response, comment: %s", comment)
                 await self.handle_ai_default_response(parent=comment, user=user)
-                logger.debug("Handled AI default response.")
+                logger.info("Handled AI default response.")
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 

@@ -236,7 +236,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def connect_to_ai(self):
         try:
-            ai_socket = await websockets.connect('ws://10.0.1.4:8080/ws/bot/', timeout=5)
+            ai_socket = await websockets.connect('ws://161.35.153.151:8081/ws/bot/', timeout=5)
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")

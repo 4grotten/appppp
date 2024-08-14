@@ -62,8 +62,8 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
             chat = self.chat
             logger.debug("Current chat: %s", chat)
-
-            user_has_active_assistant = await self.user_has_active_assistant(assistant_id=assistant_id)
+            assistant = await self.get_assistant_by_chat(chat=chat)
+            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
             logger.debug("User has active assistant: %s", user_has_active_assistant)
 
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
@@ -73,7 +73,6 @@ class CommentConsumer(AsyncWebsocketConsumer):
             logger.debug("Chat is by org user: %s", chat_by_org_user)
 
             if is_enabled:
-                print("SALAAM")
                 logger.debug("Chat assistant is enabled.")
                 if chat_by_org_user:
                     logger.debug("Chat is by organization user.")
@@ -127,8 +126,12 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return chat.chat_by_org_user
 
     @database_sync_to_async
-    def user_has_active_assistant(cls, assistant_id):
-        return UserAssistant.objects.filter(assistant=assistant_id, is_active=True).exists()
+    def get_assistant_by_chat(self, chat):
+        return chat.assistant
+
+    @database_sync_to_async
+    def user_has_active_assistant(cls, assistant):
+        return UserAssistant.objects.filter(assistant=assistant, is_active=True).exists()
 
     @database_sync_to_async
     def get_assistant(self, assistant_id):
@@ -233,7 +236,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def connect_to_ai(self):
         try:
-            ai_socket = await websockets.connect('ws://161.35.153.151:8081/ws/bot/', timeout=5)
+            ai_socket = await websockets.connect('ws://10.0.1.4:8080/ws/bot/', timeout=5)
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")

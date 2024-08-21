@@ -67,17 +67,15 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
                   'active_until', 'is_enabled', 'plans')
         read_only_fields = ('organization', )
 
-    def get_active_until(self, assistant: Assistant):
+    def get_active_until(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-            return longest_active_user_assistant.active_until
+            return longest_active_user_assistant.active_until.isoformat() if longest_active_user_assistant.active_until else None
         return None
 
-
-    def get_is_assistant_active(self, assistant: Assistant):
+    def get_is_assistant_active(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
-
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
             user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
@@ -86,15 +84,13 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             return is_assistant_active
         return False
 
-    def get_plans(self, assistant: Assistant):
+    def get_plans(self, assistant):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
-
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-
             plans = longest_active_user_assistant.plans
-            return plans.values_list('id', flat=True)
-        return None
+            return list(plans.values_list('id', flat=True)) if plans else []
+        return []
 
 
 
@@ -215,6 +211,7 @@ class ChatSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer()
     user_role = serializers.SerializerMethodField()
     can_comment = serializers.SerializerMethodField(default=True, read_only=True)
+    is_my_chat = serializers.SerializerMethodField()
 
     def get_can_comment(self, chat: Chat) -> bool:
         if self.context['request'].user:
@@ -234,9 +231,14 @@ class ChatSerializer(serializers.ModelSerializer):
     def get_user_role(self, chat: Chat):
         return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
 
+    def get_is_my_chat(self, chat: Chat):
+        user = self.context['request'].user
+        return chat.user == user
+
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment')
+        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment',
+                  'is_my_chat')
 
 
 class ChatByOrgUserSerializer(serializers.Serializer):

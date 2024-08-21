@@ -142,6 +142,14 @@ class CommentService:
         return user_comment
 
     @classmethod
+    def create_ws_chat_comment_with_assistant_default_response(cls, chat: Chat, parent: Comment = None):
+        assistant_text = _("Sorry, I'm on vacation!")
+
+        ai_assistant = cls.model.objects.create(chat=chat, assistant=chat.assistant, parent=parent, text=assistant_text)
+
+        return ai_assistant
+
+    @classmethod
     def delete_comment(cls, comment: Comment):
         # transaction.on_commit(
         #     lambda: Notification.objects.filter(

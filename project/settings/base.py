@@ -64,7 +64,10 @@ INSTALLED_APPS = [
     'delivery',
     'imports',
     'cors',
+    'channels',
+    'daphne',
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -105,6 +108,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
+ASGI_APPLICATION = 'project.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(config('REDIS_HOST', 'redis'), int(config('REDIS_PORT', 6379)))],
+        },
+    },
+}
+
+
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases

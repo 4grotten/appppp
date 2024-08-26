@@ -103,6 +103,6 @@ services:
     restart: always
 
   redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
+    image: redis:6.2.6
+    env_file: ./env/production.env
+    restart: always

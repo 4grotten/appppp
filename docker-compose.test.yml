@@ -68,7 +68,6 @@ services:
     env_file: ./env/test.env
 
   redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    privileged: true
+    image: redis:6.2.6
+    env_file: ./env/test.env
+    restart: always

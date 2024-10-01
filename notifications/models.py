@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from fcm_django.models import FCMDevice
+from firebase_admin.messaging import Message
 
 from common.models import TimestampModel
 from organizations.models import Organization
@@ -104,400 +105,104 @@ class Notification(TimestampModel):
                 (mode == NOTIFICATION_MODE_RESUME and notification_setting.resume_notifications)
         ):
             return
-        notification_payload = {
-            'title': title,
-            'body': description,
-            'click_action': type,
-            'sound': 'default',
-            'data': {
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
 
-        notification_payload_ru = {
-            'title': title_ru,
-            'body': description_ru,
-            'click_action': type,
-            'sound': 'default',
-            'data': {
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_de = {
-            'title': title_de,
-            'body': description_de,
-            'click_action': type,
-            'sound': 'default',
-            'data': {
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_tr = {
-            'title': title_tr,
-            'body': description_tr,
-            'click_action': type,
-            'sound': 'default',
-            'data': {
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_zh = {
-            'title': title_zh,
-            'body': description_zh,
-            'click_action': type,
-            'sound': 'default',
-            'data': {
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            },
-            'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_web = {
-            'data': {
-                'title': title,
-                'body': description,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type,
-                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            },
-
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_web_ru = {
-            'data': {
-                'title': title_ru,
-                'body': description_ru,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type,
-                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            },
-
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_web_de = {
-            'data': {
-                'title': title_de,
-                'body': description_de,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type,
-                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            },
-
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_web_tr = {
-            'data': {
-                'title': title_tr,
-                'body': description_tr,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type,
-                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            },
-
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_web_zh = {
-            'data': {
-                'title': title_zh,
-                'body': description_zh,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type,
-                'icon': cls.get_organization_small_image(organization=organization) if organization else None,
-            },
-
-            'extra_kwargs': {
-                'mutable_content': True,
-            },
-        }
-
-        notification_payload_android = {
-            'data': {
-                'title': title,
-                'body': description,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
+        data = {
+                "notification_id": str(notification_id),
+                "organization_id": str(organization.id) if organization else "",
+                "organization_title": str(organization.title) if organization else "",
+                "item_id": str(item.id) if item else "",
+                "item_name": str(item.name) if item else "",
+                "image": str(image),
+                "type": str(type),
+                "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+                **{str(k): str(v) for k, v in (extra_data or {}).items()}
             }
-        }
 
-        notification_payload_ru_android = {
-            'data': {
-                'title': title_ru,
-                'body': description_ru,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            }
-        }
+        from firebase_admin.messaging import Notification
+        notification_payload = Message(
+            notification=Notification(
+                title=title,
+                body=description,
+                image=str(image)
+            ),
+            data=data
+        )
 
-        notification_payload_de_android = {
-            'data': {
-                'title': title_de,
-                'body': description_de,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            }
-        }
+        notification_payload_ru = Message(
+            notification=Notification(
+                title=title_ru,
+                body=description_ru,
+                image=str(image)
+            ),
+            data=data
+        )
 
-        notification_payload_tr_android = {
-            'data': {
-                'title': title_tr,
-                'body': description_tr,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            }
-        }
+        notification_payload_de = Message(
+            notification=Notification(
+                title=title_de,
+                body=description_de,
+                image=str(image)
+            ),
+            data=data
+        )
 
-        notification_payload_zh_android = {
-            'data': {
-                'title': title_zh,
-                'body': description_zh,
-                'click_action': type,
-                'sound': 'default',
-                'notification_id': notification_id,
-                'organization': {
-                    'id': organization.id,
-                    'title': organization.title
-                } if organization else None,
-                'item': {
-                    'id': item.id,
-                    'name': item.name,
-                } if item else None,
-                'image': image,
-                'extra_data': extra_data,
-                'type': type
-            }
-        }
+        notification_payload_zh = Message(
+            notification=Notification(
+                title=title_zh,
+                body=description_zh,
+                image=str(image)
+            ),
+            data=data
+        )
+
+        notification_payload_tr = Message(
+            notification=Notification(
+                title=title_tr,
+                body=description_tr,
+                image=str(image)
+            ),
+            data=data
+        )
 
         fcm_devices_ru = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='ios')
-        fcm_devices_ru.send_message(**notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru.send_message(notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en = notification_setting.fcm_device.filter(settingstotoken__language='en', type='ios')
-        fcm_devices_en.send_message(**notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_en.send_message(notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de = notification_setting.fcm_device.filter(settingstotoken__language='de', type='ios')
-        fcm_devices_de.send_message(**notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_de.send_message(notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_tr = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='ios')
-        fcm_devices_tr.send_message(**notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr.send_message(notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_zh = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='ios')
-        fcm_devices_zh.send_message(**notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh.send_message(notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
         fcm_devices_ru_web = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='web')
-        fcm_devices_ru_web.send_message(**notification_payload_web_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru_web.send_message(notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en_web = notification_setting.fcm_device.filter(settingstotoken__language='en', type='web')
-        fcm_devices_en_web.send_message(**notification_payload_web, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_en_web.send_message(notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de_web = notification_setting.fcm_device.filter(settingstotoken__language='de', type='web')
-        fcm_devices_de_web.send_message(**notification_payload_web_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_de_web.send_message(notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_tr_web = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='web')
-        fcm_devices_tr_web.send_message(**notification_payload_web_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr_web.send_message(notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_zh_web = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='web')
-        fcm_devices_zh_web.send_message(**notification_payload_web_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh_web.send_message(notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
 
         fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')
-        fcm_devices_ru_android.send_message(**notification_payload_ru_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru_android.send_message(notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en_android = notification_setting.fcm_device.filter(settingstotoken__language='en', type='android')
-        fcm_devices_en_android.send_message(**notification_payload_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_en_android.send_message(notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de_android = notification_setting.fcm_device.filter(settingstotoken__language='de', type='android')
-        fcm_devices_de_android.send_message(**notification_payload_de_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_de_android.send_message(notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_tr_android = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='android')
-        fcm_devices_tr_android.send_message(**notification_payload_tr_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr_android.send_message(notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_zh_android = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='android')
-        fcm_devices_zh_android.send_message(**notification_payload_zh_android, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh_android.send_message(notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
+    @staticmethod
+    def convert_to_string_dict(data):
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items()}
+        return ""
 
     @staticmethod
     def get_organization_small_image(organization: Organization):

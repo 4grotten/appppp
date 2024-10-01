@@ -2,9 +2,11 @@ import json
 import os
 from distutils.util import strtobool
 
+import firebase_admin
 from corsheaders.defaults import default_headers
 from decouple import config, Csv
 from django.utils.translation import gettext_lazy as _
+from firebase_admin import credentials
 from kombu.serialization import registry
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -332,6 +334,11 @@ FCM_DJANGO_SETTINGS = {
     # default: False
     "DELETE_INACTIVE_DEVICES": False,
 }
+
+GOOGLE_APPLICATION_CREDENTIALS = config("GOOGLE_APPLICATION_CREDENTIALS", default="notasecret")
+
+cred = credentials.Certificate(GOOGLE_APPLICATION_CREDENTIALS)
+firebase_admin.initialize_app(cred)
 
 FCM_DRY_RUN_ENABLE = config('FCM_DRY_RUN_ENABLE', default=True, cast=bool)
 

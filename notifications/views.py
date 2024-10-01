@@ -1,6 +1,8 @@
+from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from fcm_django.api.rest_framework import AuthorizedMixin, FCMDeviceViewSet
+from fcm_django.models import FCMDevice
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -88,3 +90,44 @@ class FCMDeviceSettingsAPIView(APIView):
         return Response(data={
             'message': _('Success')
         })
+
+
+class DeleteFCMDeviceDuplicatesAPIView(APIView):
+    """
+    APIView to delete duplicates in FCMDevice model based on registration_id.
+    """
+
+    def post(self, request):
+        try:
+            # Step 1: Group FCMDevices by registration_id and find duplicates
+            devices = FCMDevice.objects.values('registration_id').annotate(duplicate_count=Count('id')).filter(
+                duplicate_count__gt=1)
+
+            deleted_count = 0
+
+            for device_group in devices:
+                reg_id = device_group['registration_id']
+
+                # Step 2: Find all devices with the same registration_id
+                duplicates = FCMDevice.objects.filter(registration_id=reg_id)
+
+                # Step 3: Keep the first device and delete the others
+                if duplicates.count() > 1:
+                    primary_device = duplicates.first()  # The device to keep
+                    other_devices = duplicates[1:]  # The devices to delete
+
+                    # Delete all other duplicate devices
+                    for other_device in other_devices:
+                        other_device.delete()
+                        deleted_count += 1
+
+            return Response(
+                {"message": f"Successfully deleted {deleted_count} duplicate FCMDevice entries."},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

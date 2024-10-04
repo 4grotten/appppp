@@ -107,6 +107,20 @@ class Notification(TimestampModel):
             return
 
         data = {
+            "notification_id": str(notification_id),
+            "organization_id": str(organization.id) if organization else "",
+            "organization_title": str(organization.title) if organization else "",
+            "item_id": str(item.id) if item else "",
+            "item_name": str(item.name) if item else "",
+            "image": str(image),
+            "type": str(type),
+            "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+            **{str(k): str(v) for k, v in (extra_data or {}).items()}
+        }
+
+        data_en = {
+                "title": title,
+                "body": description,
                 "notification_id": str(notification_id),
                 "organization_id": str(organization.id) if organization else "",
                 "organization_title": str(organization.title) if organization else "",
@@ -117,6 +131,67 @@ class Notification(TimestampModel):
                 "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
                 **{str(k): str(v) for k, v in (extra_data or {}).items()}
             }
+
+        data_ru = {
+            "title": title_ru,
+            "body": description_ru,
+            "notification_id": str(notification_id),
+            "organization_id": str(organization.id) if organization else "",
+            "organization_title": str(organization.title) if organization else "",
+            "item_id": str(item.id) if item else "",
+            "item_name": str(item.name) if item else "",
+            "image": str(image),
+            "type": str(type),
+            "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+            **{str(k): str(v) for k, v in (extra_data or {}).items()}
+        }
+
+        data_de = {
+            "title": title_de,
+            "body": description_de,
+            "notification_id": str(notification_id),
+            "organization_id": str(organization.id) if organization else "",
+            "organization_title": str(organization.title) if organization else "",
+            "item_id": str(item.id) if item else "",
+            "item_name": str(item.name) if item else "",
+            "image": str(image),
+            "type": str(type),
+            "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+            **{str(k): str(v) for k, v in (extra_data or {}).items()}
+        }
+
+        data_zh = {
+            "title": title_zh,
+            "body": description_zh,
+            "notification_id": str(notification_id),
+            "organization_id": str(organization.id) if organization else "",
+            "organization_title": str(organization.title) if organization else "",
+            "item_id": str(item.id) if item else "",
+            "item_name": str(item.name) if item else "",
+            "image": str(image),
+            "type": str(type),
+            "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+            **{str(k): str(v) for k, v in (extra_data or {}).items()}
+        }
+        data_tr = {
+            "title": title_tr,
+            "body": description_tr,
+            "notification_id": str(notification_id),
+            "organization_id": str(organization.id) if organization else "",
+            "organization_title": str(organization.title) if organization else "",
+            "item_id": str(item.id) if item else "",
+            "item_name": str(item.name) if item else "",
+            "image": str(image),
+            "type": str(type),
+            "icon": str(cls.get_organization_small_image(organization=organization)) if organization else "",
+            **{str(k): str(v) for k, v in (extra_data or {}).items()}
+        }
+
+        notification_payload_web = Message(data=data_en)
+        notification_payload_web_ru = Message(data=data_ru)
+        notification_payload_web_de = Message(data=data_de)
+        notification_payload_web_zh = Message(data=data_zh)
+        notification_payload_web_tr = Message(data=data_tr)
 
         from firebase_admin.messaging import Notification
         notification_payload = Message(
@@ -176,15 +251,15 @@ class Notification(TimestampModel):
         fcm_devices_zh.send_message(notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
         fcm_devices_ru_web = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='web')
-        fcm_devices_ru_web.send_message(notification_payload_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_ru_web.send_message(notification_payload_web_ru, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_en_web = notification_setting.fcm_device.filter(settingstotoken__language='en', type='web')
-        fcm_devices_en_web.send_message(notification_payload, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_en_web.send_message(notification_payload_web, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_de_web = notification_setting.fcm_device.filter(settingstotoken__language='de', type='web')
-        fcm_devices_de_web.send_message(notification_payload_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_de_web.send_message(notification_payload_web_de, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_tr_web = notification_setting.fcm_device.filter(settingstotoken__language='tr', type='web')
-        fcm_devices_tr_web.send_message(notification_payload_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_tr_web.send_message(notification_payload_web_tr, dry_run=settings.FCM_DRY_RUN_ENABLE)
         fcm_devices_zh_web = notification_setting.fcm_device.filter(settingstotoken__language='zh', type='web')
-        fcm_devices_zh_web.send_message(notification_payload_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
+        fcm_devices_zh_web.send_message(notification_payload_web_zh, dry_run=settings.FCM_DRY_RUN_ENABLE)
 
 
         fcm_devices_ru_android = notification_setting.fcm_device.filter(settingstotoken__language='ru', type='android')

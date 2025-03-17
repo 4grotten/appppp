@@ -652,12 +652,13 @@ class OrganizationService:
             base_filters &= Q(is_wholesale=True)
         else:
             base_filters &= Q(has_license=service.has_license)
-            base_filters = cls._filter_by_country_and_city(queryset=base_filters, country=country, city=city)
-
-        if subcategory:
-            base_filters &= Q(shop_items__subcategory=subcategory)
 
         queryset = Organization.objects.filter(base_filters).distinct()
+
+        queryset = cls._filter_by_country_and_city(queryset, country, city)
+
+        if subcategory:
+            queryset = queryset.filter(shop_items__subcategory=subcategory)
 
         queryset = queryset.annotate(
             time_now=ExpressionWrapper(Value(locale_time), output_field=TimeField())

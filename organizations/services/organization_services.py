@@ -640,7 +640,6 @@ class OrganizationService:
                 Q(has_self_pick_up=service.has_self_pick_up) &
                 Q(types__in=service.subcategory.all()) &
                 Q(shop_items__isnull=False) &
-                Q(shop_items__price__isnull=False) &
                 ~Q(is_banned=True) &
                 ~Q(is_deleted=True)
         )

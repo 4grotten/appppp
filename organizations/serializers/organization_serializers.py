@@ -502,9 +502,7 @@ class OrganizationGoogleMapsCreateSerializer(serializers.Serializer):
     google_maps_url = serializers.URLField()
 
     def validate_google_maps_url(self, value):
-        pattern = r'^(https:\/\/goo\.gl\/maps\/[a-zA-Z0-9]+)|(https:\/\/maps\.app\.goo\.gl\/[a-zA-Z0-9\?=_-]+)$'
-
-        if not re.match(pattern, value):
+        if not any(pattern in value.lower() for pattern in ['maps.google.com', 'google.com/maps', 'maps.app.goo.gl']):
             raise serializers.ValidationError(_("Invalid Google Maps URL"))
 
         return value

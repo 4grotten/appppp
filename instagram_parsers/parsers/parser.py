@@ -84,5 +84,5 @@ def get_settings_login_device(username, password, proxy, wait=60, max_retry=0):
     if not result:
         max_retry += 1
         wait = wait + 60
-        result = get_settings_login_device(username, password, wait=wait, max_retry=max_retry)
+        result = get_settings_login_device(username, password, wait=wait, max_retry=max_retry, proxy=proxy)
     return result

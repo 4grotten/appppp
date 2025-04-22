@@ -243,10 +243,32 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def send_message_to_ai(self, comment):
         try:
+            if not hasattr(self, 'ai_socket') or self.ai_socket is None or not self.ai_socket.open:
+                logger.warning("AI socket not connected. Attempting to reconnect...")
+                self.ai_socket = await self.connect_to_ai()
+                if not self.ai_socket or not self.ai_socket.open:
+                    logger.error("Failed to reconnect to AI socket")
+                    return
+
             data = await self.prepare_data(comment)
+            logger.debug(f"Sending message to AI: {data}")
             await self.ai_socket.send(json.dumps(data))
+            logger.info("Message sent to AI successfully")
+        except websockets.exceptions.ConnectionClosedError as e:
+            logger.error(f"Connection to AI closed unexpectedly: {e}")
+            await self.reconnect_ai_socket()
         except Exception as e:
             logger.error(f"Error sending message to AI: {e}")
+            await self.reconnect_ai_socket()
+
+    async def reconnect_ai_socket(self):
+        try:
+            logger.info("Attempting to reconnect to AI socket...")
+            if hasattr(self, 'ai_socket') and self.ai_socket.open:
+                await self.ai_socket.close()
+            self.ai_socket = await self.connect_to_ai()
+        except Exception as e:
+            logger.error(f"Failed to reconnect to AI socket: {e}")
 
     def extract_host(self):
         for header in self.scope['headers']:

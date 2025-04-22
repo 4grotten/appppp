@@ -59,20 +59,54 @@ class GoogleMapsService:
         if not proxy:
             proxy = []
         try:
+            # Handle both short URLs (maps.app.goo.gl) and full URLs
+            print("TRYYYYY")
             response = requests.get(gMaps_URL, proxies=proxy[0])
-            text = response.url
-            pattern = r'(?::|tid=)(0x[a-z0-9]+)(?:!|&hl=|\?utm_source=)'
-            match = re.search(pattern, text)
-            if match:
-                cid_hexadecimal = match.group(1)
-                cid = str(int(cid_hexadecimal, 16))
-                return cid
+            print("RESPONSE", response)
+            final_url = response.url
+
+            # First, try to extract CID from ftid parameter (common in shared URLs)
+            ftid_pattern = r'ftid=([0-9a-z]+:[0-9a-z]+)'
+            ftid_match = re.search(ftid_pattern, final_url)
+            if ftid_match:
+                cid_parts = ftid_match.group(1).split(':')
+                if len(cid_parts) == 2:
+                    # Return the second part of the CID without '0x' prefix
+                    cid_hex = cid_parts[1].replace('0x', '')
+                    return str(int(cid_hex, 16))
+
+            # Try other common CID patterns
+            patterns = [
+                r'(?:maps\?cid=|maps/place/[^/]+/\@[^/]+/data=!4m[^!]+!1s)(\d+)',  # Numeric CID format
+                r'(?:!1s|:)(0x[a-f0-9]+)(?:!|&|\?|$)',  # Hex format
+                r'place_id=([^&]+)',  # place_id format
+                r'data=!3m1!1e3!4m5!3m4!1s(0x[a-f0-9]+:[a-f0-9]+)!8m2'  # Another common format
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, final_url)
+                if match:
+                    cid_value = match.group(1)
+                    # If it's a hex value, convert to decimal
+                    if cid_value.startswith('0x'):
+                        cid_value = str(int(cid_value, 16))
+                    return cid_value
+
+            # If we can't find the CID in the URL, try to extract it from the page content
+            if 'maps.google.com' in final_url or 'google.com/maps' in final_url:
+                # Look for CID in the HTML response
+                cid_in_html = re.search(r'"CID":(\d+)', response.text)
+                if cid_in_html:
+                    return cid_in_html.group(1)
+
+            raise ValueError("Could not extract CID from Google Maps URL")
+
         except Exception as e:
             error_data = {
-                "message": "Invalid input",
+                "message": "Invalid Google Maps URL",
                 "errors": {
                     "google_maps_url": [
-                        "Enter a valid URL."
+                        f"Unable to extract place CID: {str(e)}"
                     ]
                 }
             }

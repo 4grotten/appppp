@@ -1,4 +1,3 @@
-import logging
 import random
 import time
 from typing import Tuple
@@ -9,7 +8,6 @@ from instagrapi import Client
 from instagram_parsers.services.proxy_services import InstagramClientService
 
 
-logger = logging.getLogger(__name__)
 def get_data_from_post(dict_list):
     data_s = list()
     if dict_list['resources']:
@@ -35,16 +33,11 @@ def get_data_from_post(dict_list):
 
 def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
     try:
-        # if anonymous:
-        #     cl = InstagramClientService.get_anon_client()
-        # else:
-        cl, login_device = InstagramClientService.get_client()
-        try:
-            media_list = cl.user_medias(user_id=user_id, amount=posts_count)
-        except KeyError as e:
-            # This helps you debug the actual content of the broken response
-            logger.exception("Instagram user_medias failed — likely due to unexpected response structure")
-            raise e
+        if anonymous:
+            cl = InstagramClientService.get_anon_client()
+        else:
+            cl, login_device = InstagramClientService.get_client()
+        media_list = cl.user_medias(user_id=user_id, amount=posts_count)
         post = list()
         for media in media_list:
             dict_list = media.dict()

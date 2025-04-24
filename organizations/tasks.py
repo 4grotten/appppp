@@ -1,4 +1,3 @@
-import logging
 import time
 import random
 
@@ -18,76 +17,47 @@ from organizations.models import InstagramIntegration, Organization
 from shop.models import ShopItem, ItemInstagramData
 from users.models import User
 
-logger = logging.getLogger(__name__)
+
 @shared_task
 def parse_instagram_to_shop_items(organization_id: int, posts_count: int = INSTAGRAM_POSTS_TO_PARSE,
                                   anonymous: bool = False):
-    logger.info(
-        f"Starting Instagram parsing for organization_id={organization_id}, posts_count={posts_count}, anonymous={anonymous}")
-
     video_expired_time = now() + timedelta(days=settings.INSTAGRAM_VIDEO_EXPIRE_DAYS)
     mix_content_expired_time = now() + timedelta(days=settings.INSTAGRAM_IMG_EXPIRE_DAYS)
 
-    try:
-        organization = Organization.objects.get(id=organization_id)
-        logger.info(f"Found organization: {organization}")
-    except Organization.DoesNotExist:
-        logger.error(f"Organization with id={organization_id} does not exist.")
-        return
+    organization = Organization.objects.get(id=organization_id)
+    instagram_integration = InstagramIntegration.objects.get(organization=organization)
+    instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count, anonymous=anonymous)
+    for instagram in instagram_posts:
+        if not ShopItem.objects.filter(
+                created_at=instagram.get('created_at'),
+                organization=organization):
+            description = instagram.pop('description')
+            created_at = instagram.pop('created_at')
+            post_url = instagram.pop('post_url')
+            shop_item = ShopItem.objects.create(name="Instagram", organization=organization, created_at=created_at,
+                                                updated_at=created_at, description=description, instagram_link=post_url,
+                                                )
+            for data in instagram.get('data'):
+                # if data.get('video_url'):
+                #     thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
+                #     video = FileVideo.objects.create(video_url=data.get('video_url'),
+                #                                      thumbnail=thumbnail)
+                #     ItemInstagramData.objects.create(item=shop_item,
+                #                                      thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                #                                          thumbnail),
+                #                                      video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                #                                          video))
+                # else:
+                ItemInstagramData.objects.create(item=shop_item,
+                                                 thumbnail_url=data.get('thumbnail_url'),
+                                                 video_url=data.get('video_url'))
 
-    try:
-        instagram_integration = InstagramIntegration.objects.get(organization=organization)
-        logger.info(f"Found Instagram integration for organization: {instagram_integration}")
-    except InstagramIntegration.DoesNotExist:
-        logger.error(f"Instagram integration for organization id={organization_id} not found.")
-        return
-
-    try:
-        instagram_posts = parser.get_posts(instagram_integration.account_user_id, posts_count=posts_count,
-                                           anonymous=anonymous)
-        logger.info(f"Fetched {len(instagram_posts)} posts from Instagram.")
-    except Exception as e:
-        logger.exception("Failed to fetch posts from Instagram.")
-        return
-
-    for index, instagram in enumerate(instagram_posts):
-        logger.debug(f"Processing post #{index + 1}: {instagram}")
-        try:
-            if not ShopItem.objects.filter(created_at=instagram.get('created_at'), organization=organization).exists():
-                description = instagram.pop('description')
-                created_at = instagram.pop('created_at')
-                post_url = instagram.pop('post_url')
-
-                shop_item = ShopItem.objects.create(
-                    name="Instagram",
-                    organization=organization,
-                    created_at=created_at,
-                    updated_at=created_at,
-                    description=description,
-                    instagram_link=post_url,
-                )
-                logger.info(f"Created ShopItem id={shop_item.id} for post_url={post_url}")
-
-                for data in instagram.get('data', []):
-                    ItemInstagramData.objects.create(
-                        item=shop_item,
-                        thumbnail_url=data.get('thumbnail_url'),
-                        video_url=data.get('video_url')
-                    )
-                    logger.debug(f"Added ItemInstagramData for ShopItem id={shop_item.id}: {data}")
-
-                if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None).exists():
-                    shop_item.removed_at = mix_content_expired_time
-                    logger.debug(f"Set removed_at (IMG) for ShopItem id={shop_item.id}")
-                else:
-                    shop_item.removed_at = video_expired_time
-                    logger.debug(f"Set removed_at (VIDEO) for ShopItem id={shop_item.id}")
-
+            if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
+                shop_item.removed_at = mix_content_expired_time
                 shop_item.save()
-        except Exception as e:
-            logger.exception(f"Error processing Instagram post: {instagram}")
-
-    logger.info(f"Completed parsing Instagram posts for organization_id={organization_id}")
+            else:
+                shop_item.removed_at = video_expired_time
+                shop_item.save()
 
 
 @shared_task

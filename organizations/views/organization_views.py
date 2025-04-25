@@ -1,6 +1,7 @@
 import datetime
 import random
 
+import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,6 +24,7 @@ from rest_framework.views import APIView
 from common.exceptions import NotAcceptableException, ObjectNotFoundException, IntegrityException
 from common.utils import method_permission_classes
 from common.services import slack
+from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
@@ -258,6 +260,23 @@ class OrganizationsMapsCountryCityListView(ListAPIView):
         return OrganizationService.get_organizations_by_country_city_for_map(country=country, city=city, type=type)
 
 
+# class OrganizationsGoogleMapsCreateView(CreateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = OrganizationGoogleMapsCreateSerializer
+#
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.serializer_class(data=request.data)
+#
+#         if not serializer.is_valid():
+#             return Response(data={
+#                 'message': _('Invalid input'),
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+#         google_maps_url = serializer.validated_data['google_maps_url']
+#         parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
+#         return Response(parsed_data)
+
+
 class OrganizationsGoogleMapsCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationGoogleMapsCreateSerializer
@@ -270,9 +289,35 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         google_maps_url = serializer.validated_data['google_maps_url']
-        parsed_data = GoogleMapsService.add_organization(google_maps_url, request)
-        return Response(parsed_data)
+
+
+        remote_service_url = 'http://161.35.153.151:8080/bot/google-maps/'
+        print("CHEE TAM")
+        # remote_service_url = 'http://localhost:8080/bot/google-maps/'
+        proxy = ProxyService.get_random_proxy_for_requests()
+        if not proxy:
+            proxy = []
+        try:
+            response = requests.post(
+                remote_service_url,
+                json={'google_maps_url': google_maps_url,
+                      'proxy': proxy[0]
+                      },
+                headers={'Authorization': request.headers.get('Authorization')},
+            )
+
+            if response.status_code != 200:
+                return Response(data=response.json(), status=response.status_code)
+
+            return Response(response.json())
+
+        except requests.RequestException as e:
+            return Response(data={
+                'message': _('Error connecting to Google Maps service'),
+                'errors': str(e)
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class OrganizationsTwoGisCreateView(CreateAPIView):

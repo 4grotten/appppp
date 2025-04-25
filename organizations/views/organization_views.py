@@ -295,7 +295,6 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
 
         remote_service_url = 'http://161.35.153.151:8080/bot/google-maps/'
         print("CHEE TAM")
-        # remote_service_url = 'http://localhost:8080/bot/google-maps/'
         proxy = ProxyService.get_random_proxy_for_requests()
         if not proxy:
             proxy = []
@@ -303,7 +302,8 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
             response = requests.post(
                 remote_service_url,
                 json={'google_maps_url': google_maps_url,
-                      'proxy': proxy[0]
+                      'proxy': proxy[0],
+                      'host': request.META.get('HTTP_HOST', 'test.apofiz.com')
                       },
                 headers={'Authorization': request.headers.get('Authorization')},
             )

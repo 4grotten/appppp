@@ -25,21 +25,25 @@ class CorsView(View):
                     "Error": _("Media url is not provided"),
                     }, status=status.HTTP_400_BAD_REQUEST
                 )
-        proxy = ProxyService.get_random_proxy_for_requests()
-        if not proxy:
-            proxy = []
+        proxy_list = ProxyService.get_random_proxy_for_requests()
+        proxy = proxy_list[0] if proxy_list else {}
         try:
-            response = requests.get(insta_url, stream=True, proxies=proxy[0])
-            response.headers.pop('cross-origin-resource-policy', None)
+            # Send the URL and Proxy to the second server
+            params = {
+                "url": insta_url,
+                "proxy": json.dumps(proxy)
+            }
+            second_server_url = "http://161.35.153.151:8080/bot/shlyuzer"
+            response = requests.get(second_server_url, params=params, stream=True)
+
             answer = HttpResponse(response.content)
             answer.status_code = response.status_code
             for key, value in response.headers.items():
-                if key in hop_by_hop:
-                    continue
                 answer[key] = value
             return answer
+
         except Exception as e:
-            return Response(data={f"Error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IpLocation(APIView):

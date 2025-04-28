@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -22,6 +23,7 @@ from common.models import Country, City, File, Currency
 from common.utils import zoom_to_radius, DecimalEncoder, DecimalDecoder
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
+from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import (
     NOTIFICATION_MODE_SYSTEM, NEW_ORGANIZATION, NEW_ORGANIZATION_TITLE, ORGANIZATION_MESSAGE_TYPE,
     NOTIFICATION_MODE_PERSONAL,
@@ -44,7 +46,7 @@ from shop.models import ItemSubcategory
 from transactions.models import Transaction
 from users.models import User
 from utils.translator import GoogleTranslator
-
+logger = logging.getLogger(__name__)
 
 class OrganizationService:
     model = Organization
@@ -805,11 +807,13 @@ class OrganizationInstagramIntegrationService:
         except:
             raise ObjectNotFoundException(_('Instagram user not found'))
 
+
     @classmethod
-    def create(cls, organization: Organization, url: str) -> InstagramIntegration:
+    def create(cls, organization: Organization, url: str, host) -> InstagramIntegration:
         try:
             username = get_username_from_instagram_url(url)
-            user_info = get_instagram_user_info(username)
+            user_info = get_instagram_user_info(username, host)
+            logger.debug(f"Proxy: {user_info}")
         except Exception as e:
             raise BadRequestException(_('{e}').format(e=str(e)))
         try:

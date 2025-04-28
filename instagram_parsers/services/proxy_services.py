@@ -10,6 +10,11 @@ from instagram_parsers.models import Proxy, LoginDevice
 
 class InstagramClientService:
     @classmethod
+    def get_login_device(cls, for_getting_username: bool = False):
+        login_device = LoginDeviceService.get_random_login_settings()
+        return login_device
+
+    @classmethod
     def get_client(cls, for_getting_username: bool = False):
         login_device = LoginDeviceService.get_random_login_settings()
         # proxy = ProxyService.get_random_formed_proxy(for_getting_username=for_getting_username)
@@ -20,6 +25,11 @@ class InstagramClientService:
     def get_anon_client(cls, for_getting_username: bool = False) -> Client:
         proxy = ProxyService.get_random_formed_proxy(for_getting_username=for_getting_username)
         return Client(proxy=proxy)
+
+    @classmethod
+    def get_random_proxy(cls, for_getting_username: bool = False):
+        proxy = ProxyService.get_random_formed_proxy(for_getting_username=for_getting_username)
+        return proxy
 
 class ProxyService:
     @classmethod

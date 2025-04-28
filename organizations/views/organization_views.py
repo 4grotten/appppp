@@ -294,7 +294,7 @@ class OrganizationsGoogleMapsCreateView(CreateAPIView):
 
 
         remote_service_url = 'http://161.35.153.151:8080/bot/google-maps/'
-        print("CHEE TAM")
+
         proxy = ProxyService.get_random_proxy_for_requests()
         if not proxy:
             proxy = []
@@ -852,8 +852,10 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
 
         if not OrganizationService.user_can_edit_organization(organization=organization, user=request.user):
             raise PermissionDenied({'message': _('No rights to edit organization')})
+        host = request.META.get('HTTP_HOST', 'test.apofiz.com')
         instance = OrganizationInstagramIntegrationService.create(organization=organization,
-                                                                  url=serializer.validated_data.get('url'))
+                                                                  url=serializer.validated_data.get('url'),
+                                                                  host=host)
         data = InstagramIntegrationLinkSerializer(instance, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

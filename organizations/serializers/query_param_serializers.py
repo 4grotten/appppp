@@ -48,6 +48,11 @@ class OrganizationQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
 
 
+class OrganizationNumSubsQueryParamSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    number_of_subs = serializers.IntegerField()
+
+
 class OptionalOrganizationQueryParamSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True),
                                                       default=None)

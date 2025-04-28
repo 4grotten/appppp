@@ -49,7 +49,7 @@ from organizations.serializers.organization_serializers import (
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
-    OrganizationMapsLocationSerializer
+    OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
@@ -197,6 +197,23 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
         data = OrganizationDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class OrganizationMakeSubsCreateView(CreateAPIView):
+    # permission_classes = (IsAuthenticated,)
+    serializer_class = OrganizationListSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = OrganizationNumSubsQueryParamSerializer(data=request.data)
+        if not serializer.is_valid():
+            raise NotAcceptableException(_('Valid organization is required in query parameters'))
+
+        organization = serializer.validated_data['organization']
+        number_of_subs = serializer.validated_data['number_of_subs']
+
+        transaction.on_commit(lambda: add_subscribers_to_organization.delay(organization.id, number_of_subs))
+
+        return Response({"message": "Success"}, status=status.HTTP_200_OK)
 
 
 class MyOrganizationsWithCanEditListCreateView(ListAPIView):

@@ -38,7 +38,11 @@ class AssistantService:
     def create_assistant_transaction(cls, user: User, processed_by: User, assistant: Assistant, utc_offset_minutes: int,
                                      plans):
         currency = Currency.objects.get(code='USD')
-        total_price = sum(plan.price for plan in plans)
+        best_choice_plan = next((plan for plan in plans if plan.is_best_choice), None)
+        if best_choice_plan:
+            total_price = best_choice_plan.price
+        else:
+            total_price = sum(plan.price for plan in plans)
 
         role = OrganizationService.get_user_role_in_organization(organization=assistant.organization, user=processed_by)
 

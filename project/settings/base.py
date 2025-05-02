@@ -356,7 +356,8 @@ CELERY_TASK_ROUTES = {
     'organizations.tasks.update_login_device_settings': {'queue': 'update_login_device'},
     'organizations.tasks.delete_expired_video_url': {'queue': 'delete_expired_video'},
     'organizations.tasks.delete_expired_photo_and_posts': {'queue': 'delete_expired_posts'},
-    'organizations.tasks.add_subscribers_to_organization': {'queue': 'org_subscribers'}
+    'organizations.tasks.add_subscribers_to_organization': {'queue': 'org_subscribers'},
+    'organizations.tasks.process_comment_with_assistant': {'queue': 'default'}
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config('INSTAGRAM_VIDEO_EXPIRE_DAYS', default=1, cast=int)

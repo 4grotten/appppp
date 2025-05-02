@@ -3,6 +3,7 @@ import random
 
 from datetime import timedelta
 
+import requests
 from celery import shared_task
 from django.conf import settings
 from django.db import transaction
@@ -13,7 +14,7 @@ from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
-from organizations.models import InstagramIntegration, Organization
+from organizations.models import InstagramIntegration, Organization, Assistant
 from shop.models import ShopItem, ItemInstagramData
 from users.models import User
 
@@ -172,4 +173,45 @@ def add_subscribers_to_organization(organization_id, num_members):
         SubscriptionService.toggle_subscription_status(
             organization=organization, user=subscription
         )
+
+
+@shared_task
+def process_comment_with_assistant(item_info, comment_id, assistant_id):
+    from shop.models import Comment
+    from shop.services.comment_services import CommentService
+
+    comment = Comment.objects.get(id=comment_id)
+    assistant = Assistant.objects.get(id=assistant_id)
+
+    try:
+        response = requests.post(
+            'http://161.35.153.151:8080/bot/comments/',
+            json={
+                "question": comment.text,
+                "training_data": {
+                    "assistant_info": {
+                        "organization": assistant.organization.title,
+                        "name": assistant.name,
+                        "gender": assistant.gender,
+                        "position": assistant.position,
+                        "is_enabled": assistant.is_enabled
+                    },
+                    "item_info": item_info
+                }
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+        result = response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+    item = ShopItem.objects.get(id=item_info["id"])
+
+    return CommentService.create_assistant_comment(
+        text=result["answer"],
+        item=item,
+        parent=comment,
+        assistant=assistant
+    )
 

@@ -15,11 +15,12 @@ from organizations.serializers.assistant_serializers import ChatSettingsSerializ
 from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer
 from organizations.services.assistant_services import ChatService, UserAssistantService
 from organizations.services.organization_services import OrganizationService
+from organizations.tasks import process_comment_with_assistant
 from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
     CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
     UserCommentThemeSerializer, AssistantCommentCreateSerializer
-from shop.serializers.item_serializers import SubscriptionItemSerializer
+from shop.serializers.item_serializers import SubscriptionItemSerializer, ItemRetrieveSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService
@@ -50,7 +51,14 @@ class CommentItemListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         item = ShopItemService.get(id=self.kwargs['pk'])
+        organization = OrganizationService.get(id=item.organization.id)
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
+        item_info = ItemRetrieveSerializer(item, context={'request': request}).data
+        process_comment_with_assistant.delay(
+            item_info=item_info,
+            comment_id=comment.id,
+            assistant_id=organization.assistant.id
+        )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

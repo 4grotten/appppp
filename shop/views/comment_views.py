@@ -2,6 +2,7 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
+from django.utils import timezone
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView, \
     GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -51,14 +52,33 @@ class CommentItemListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         item = ShopItemService.get(id=self.kwargs['pk'])
-        organization = OrganizationService.get(id=item.organization.id)
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
         item_info = ItemRetrieveSerializer(item, context={'request': request}).data
-        process_comment_with_assistant.delay(
-            item_info=item_info,
-            comment_id=comment.id,
-            assistant_id=organization.assistant.id
-        )
+        if hasattr(item, 'organization') and item.organization:
+            organization = OrganizationService.get(id=item.organization.id)
+
+            if hasattr(organization, 'assistant'):
+                user_assistants = UserAssistant.objects.filter(
+                    assistant__organization=organization,
+                    user=request.user,
+                    is_active=True
+                )
+
+                if user_assistants.exists():
+                    longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+                    user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
+
+                    is_assistant_active = (
+                            longest_active_user_assistant.active_until and
+                            longest_active_user_assistant.active_until > timezone.now()
+                    )
+
+                    if is_assistant_active:
+                        process_comment_with_assistant.delay(
+                            item_info=item_info,
+                            comment_id=comment.id,
+                            assistant_id=organization.assistant.id
+                        )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

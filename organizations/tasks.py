@@ -176,7 +176,7 @@ def add_subscribers_to_organization(organization_id, num_members):
 
 
 @shared_task
-def process_comment_with_assistant(item_info, comment_id, assistant_id):
+def process_comment_with_assistant(item_info, organization_info, comment_id, assistant_id):
     from shop.models import Comment
     from shop.services.comment_services import CommentService
 
@@ -196,7 +196,8 @@ def process_comment_with_assistant(item_info, comment_id, assistant_id):
                         "position": assistant.position,
                         "is_enabled": assistant.is_enabled
                     },
-                    "item_info": item_info
+                    "item_info": item_info,
+                    "organization_info": organization_info
                 }
             },
             timeout=10

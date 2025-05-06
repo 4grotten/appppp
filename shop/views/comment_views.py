@@ -61,7 +61,6 @@ class CommentItemListCreateView(ListCreateAPIView):
                 organization_info = CommentService.get_training_data(assistant=organization.assistant)
                 user_assistants = UserAssistant.objects.filter(
                     assistant__organization=organization,
-                    user=request.user,
                     is_active=True
                 )
 

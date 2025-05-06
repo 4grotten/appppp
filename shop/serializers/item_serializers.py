@@ -1728,3 +1728,12 @@ class RentalTicketListSerializer(ItemListSerializer):
             'is_updated', 'purchase_type', 'ticket_period'
         )
         read_only_fields = ['name_lang', 'description_lang']
+
+
+class ItemInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            'id', 'name', 'description', 'price'
+        )

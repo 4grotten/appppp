@@ -21,7 +21,7 @@ from shop.models import Comment, CommentComplaint, UserCommentTheme
 from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
     CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
     UserCommentThemeSerializer, AssistantCommentCreateSerializer
-from shop.serializers.item_serializers import SubscriptionItemSerializer, ItemRetrieveSerializer
+from shop.serializers.item_serializers import SubscriptionItemSerializer, ItemRetrieveSerializer, ItemInfoSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService
@@ -53,11 +53,12 @@ class CommentItemListCreateView(ListCreateAPIView):
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
         item = ShopItemService.get(id=self.kwargs['pk'])
         comment = CommentService.create_comment(**serializer.validated_data, item=item)
-        item_info = ItemRetrieveSerializer(item, context={'request': request}).data
+        item_info = ItemInfoSerializer(item).data
         if hasattr(item, 'organization') and item.organization:
             organization = OrganizationService.get(id=item.organization.id)
 
             if hasattr(organization, 'assistant'):
+                organization_info = CommentService.get_training_data(assistant=organization.assistant)
                 user_assistants = UserAssistant.objects.filter(
                     assistant__organization=organization,
                     user=request.user,
@@ -76,6 +77,7 @@ class CommentItemListCreateView(ListCreateAPIView):
                     if is_assistant_active:
                         process_comment_with_assistant.delay(
                             item_info=item_info,
+                            organization_info=organization_info,
                             comment_id=comment.id,
                             assistant_id=organization.assistant.id
                         )

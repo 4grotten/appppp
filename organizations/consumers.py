@@ -332,39 +332,34 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             logger.info("Received text data: %s", text_data)
             data = json.loads(text_data)
             logger.info("Parsed JSON data: %s", data)
-
-            organization_id = data.get('organization_id', None)
-            logger.info("Extracted organization_id: %s", organization_id)
-
-            assistant_id = data.get('assistant_id', None)
-
             user = self.scope['user']
             logger.info("Retrieved user from scope: %s", user)
-
             chat = self.chat
             logger.info("Current chat: %s", chat)
-            organization = await self.get_organization(organization_id=organization_id)
-            logger.info("Current organization: %s", organization)
-            assistant = await self.get_assistant_by_organization(organization=organization)
-            logger.info("Current assistant: %s", assistant)
-            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
-            logger.info("User has active assistant: %s", user_has_active_assistant)
-
-            is_enabled = await self.get_assistant_is_enabled_flag(assistant=assistant)
-            logger.info("Chat assistant is enabled: %s", is_enabled)
             comment = await self.handle_item_user_response(data, user)
 
-            if is_enabled:
-                logger.info("Chat assistant is enabled.")
-                if user_has_active_assistant:
-                    if assistant_id is None:
-                        logger.info("Assistant ID is None.")
+            organization_id = data.get('organization_id', None)
+            if organization_id is not None:
+                logger.info("Extracted organization_id: %s", organization_id)
+                organization = await self.get_organization(organization_id=organization_id)
+                logger.info("Current organization: %s", organization)
+                assistant = await self.get_assistant_by_organization(organization=organization)
+                logger.info("Current assistant: %s", assistant)
+                user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
+                logger.info("User has active assistant: %s", user_has_active_assistant)
+                is_enabled = await self.get_assistant_is_enabled_flag(assistant=assistant)
+                logger.info("Chat assistant is enabled: %s", is_enabled)
+                if is_enabled:
+                    logger.info("Chat assistant is enabled.")
+                    if user_has_active_assistant:
                         await self.send_message_to_item_ai(comment)
                         logger.info("Sent message to AI.")
-                    else:
-                        logger.info("Assistant ID is provided.")
-                        await self.handle_item_ai_response(data, user)
-                        logger.info("Handled AI response.")
+
+            assistant_id = data.get('assistant_id', None)
+            if assistant_id is not None:
+                logger.info("Assistant ID is provided.")
+                await self.handle_item_ai_response(data, user)
+                logger.info("Handled AI response.")
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 

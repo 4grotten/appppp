@@ -15,7 +15,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
 
-from organizations.consumers import CommentConsumer
+from organizations.consumers import CommentConsumer, CommentItemConsumer
 from organizations.middleware import TokenAuthMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
@@ -25,6 +25,7 @@ application = ProtocolTypeRouter({
     "websocket": TokenAuthMiddleware(
         URLRouter([
             re_path(r'ws/chat/(?P<chat_id>\d+)/$', CommentConsumer.as_asgi()),
+            re_path(r'ws/assistant-response/(?P<chat_id>\d+)/$', CommentItemConsumer.as_asgi()),
         ])
     ),
 })

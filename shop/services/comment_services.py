@@ -54,6 +54,12 @@ class CommentService:
         return comment
 
     @classmethod
+    def create_item_comment(cls, text: str, item: ShopItem, user: User, parent: Comment = None):
+        comment = cls.model.objects.create(item=item, user=user, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
     def create_assistant_comment(cls, text: str, item: ShopItem, assistant: Assistant, parent: Comment = None):
         comment = cls.model.objects.create(item=item, assistant=assistant, parent=parent, text=text)
 

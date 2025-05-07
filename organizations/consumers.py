@@ -336,6 +336,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             organization_id = data.get('organization_id', None)
             logger.info("Extracted organization_id: %s", organization_id)
 
+            assistant_id = data.get('assistant_id', None)
+
             user = self.scope['user']
             logger.info("Retrieved user from scope: %s", user)
 
@@ -350,32 +352,19 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
 
             is_enabled = await self.get_assistant_is_enabled_flag(assistant=assistant)
             logger.info("Chat assistant is enabled: %s", is_enabled)
-
+            comment = await self.handle_item_user_response(data, user)
 
             if is_enabled:
                 logger.info("Chat assistant is enabled.")
-                comment = await self.handle_item_user_response(data, user)
-                logger.info("Chat is not by organization user.")
                 if user_has_active_assistant:
-                    logger.info("User has an active assistant.")
-                    # comment = await self.handle_item_user_response(data, user)
-                    logger.info("Handled user response, comment: %s", comment)
-                    await self.send_message_to_item_ai(comment)
-                    logger.info("Sent message to AI.")
-                        # else:
-                        #     logger.info("Assistant ID is provided.")
-                        #     await self.handle_ai_response(data, user)
-                        #     logger.info("Handled AI response.")
-                    # else:
-                    #     logger.info("User does not have an active assistant.")
-                    #     await self.handle_item_user_response(data, user)
-                    #     logger.info("Handled user response.")
-            else:
-                logger.info("Chat assistant is not enabled.")
-                comment = await self.handle_item_user_response(data, user)
-                logger.info("Handled user response, comment: %s", comment)
-                # await self.handle_ai_default_response(parent=comment, user=user)
-                # logger.info("Handled AI default response.")
+                    if assistant_id is None:
+                        logger.info("Assistant ID is None.")
+                        await self.send_message_to_item_ai(comment)
+                        logger.info("Sent message to AI.")
+                    else:
+                        logger.info("Assistant ID is provided.")
+                        await self.handle_item_ai_response(data, user)
+                        logger.info("Handled AI response.")
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -389,8 +378,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         return ShopItemService.get(pk=chat_id)
 
     @database_sync_to_async
-    def get_chat_with_parent(self, parent):
-        return parent.chat
+    def get_item_with_parent(self, parent):
+        return parent.item
 
     @database_sync_to_async
     def get_assistant_is_enabled_flag(self, assistant):
@@ -430,6 +419,10 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_comment_with_ai_response(self, text, chat, assistant, parent=None):
         return CommentService.create_chat_assistant_comment(text=text, chat=chat, assistant=assistant, parent=parent)
+
+    @database_sync_to_async
+    def create_item_comment_with_ai_response(self, text, item, assistant, parent=None):
+        return CommentService.create_item_assistant_comment(text=text, item=item, assistant=assistant, parent=parent)
 
     @database_sync_to_async
     def serialize_data(self, comment, user):
@@ -491,15 +484,15 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error handling user response: {e}")
 
-    async def handle_ai_response(self, data, user):
+    async def handle_item_ai_response(self, data, user):
         try:
             text = data.get('message', '')
             parent_id = data.get('parent', None)
             assistant_id = data.get('assistant_id', None)
             assistant = await self.get_assistant(assistant_id)
             parent = await self.get_comment(parent_id)
-            chat = await self.get_chat_with_parent(parent)
-            comment = await self.create_comment_with_ai_response(text, chat, assistant, parent)
+            item = await self.get_item_with_parent(parent)
+            comment = await self.create_item_comment_with_ai_response(text, item, assistant, parent)
             serialized_data = await self.serialize_assistant_data(comment=comment, user=user)
             await self.channel_layer.group_send(
                 self.chat_group_name,
@@ -511,20 +504,20 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
 
-    async def handle_ai_default_response(self, parent, user):
-        try:
-            chat = await self.get_chat_with_parent(parent)
-            comment = await self.create_ai_defualt_comment(chat, parent)
-            serialized_data = await self.serialize_assistant_data(comment=comment, user=user)
-            await self.channel_layer.group_send(
-                self.chat_group_name,
-                {
-                    'type': 'chat_message',
-                    'message': serialized_data
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error handling AI response: {e}")
+    # async def handle_ai_default_response(self, parent, user):
+    #     try:
+    #         chat = await self.get_chat_with_parent(parent)
+    #         comment = await self.create_ai_defualt_comment(chat, parent)
+    #         serialized_data = await self.serialize_assistant_data(comment=comment, user=user)
+    #         await self.channel_layer.group_send(
+    #             self.chat_group_name,
+    #             {
+    #                 'type': 'chat_message',
+    #                 'message': serialized_data
+    #             }
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"Error handling AI response: {e}")
 
     async def connect_to_item_ai(self):
         try:

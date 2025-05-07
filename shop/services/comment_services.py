@@ -78,6 +78,12 @@ class CommentService:
         return comment
 
     @classmethod
+    def create_item_assistant_comment(cls, text: str, item: ShopItem, assistant: Assistant, parent: Comment = None):
+        comment = cls.model.objects.create(item=item, assistant=assistant, parent=parent, text=text)
+
+        return comment
+
+    @classmethod
     def create_chat_assistant_default_comment(cls, chat: Chat, assistant: Assistant):
         text = _("Good afternoon! Nice to meet you, how can I help you?")
         comment = cls.model.objects.create(chat=chat, assistant=assistant, text=text)

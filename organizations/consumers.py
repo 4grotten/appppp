@@ -336,10 +336,11 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             logger.info("Retrieved user from scope: %s", user)
             chat = self.chat
             logger.info("Current chat: %s", chat)
-            comment = await self.handle_item_user_response(data, user)
+
 
             organization_id = data.get('organization_id', None)
             if organization_id is not None:
+                comment = await self.handle_item_user_response(data, user)
                 logger.info("Extracted organization_id: %s", organization_id)
                 organization = await self.get_organization(organization_id=organization_id)
                 logger.info("Current organization: %s", organization)

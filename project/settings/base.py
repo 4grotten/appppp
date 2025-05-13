@@ -357,6 +357,7 @@ CELERY_TASK_ROUTES = {
     'organizations.tasks.delete_expired_video_url': {'queue': 'delete_expired_video'},
     'organizations.tasks.delete_expired_photo_and_posts': {'queue': 'delete_expired_posts'},
     'organizations.tasks.add_subscribers_to_organization': {'queue': 'org_subscribers'},
+    'organizations.tasks.subscribe_user_to_organization': {'queue': 'org_subscribers'},
     'organizations.tasks.process_comment_with_assistant': {'queue': 'default'}
 }
 

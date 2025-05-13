@@ -153,6 +153,22 @@ def update_login_device_settings():
             device.settings = parser.get_settings_login_device(device.username, device.password, proxy=proxy)
             device.save()
 
+@shared_task
+def subscribe_user_to_organization(organization_id, user_id):
+    from organizations.services.subscription_services import SubscriptionService
+    from organizations.services.organization_services import OrganizationService
+    from users.models import User
+
+    organization = OrganizationService.get(pk=organization_id)
+    user = User.objects.get(pk=user_id)
+
+    # 1 minute and 3 minutes
+    time.sleep(random.randint(60, 180))
+
+    SubscriptionService.toggle_subscription_status(
+        organization=organization,
+        user=user
+    )
 
 @shared_task
 def add_subscribers_to_organization(organization_id, num_members):
@@ -164,15 +180,10 @@ def add_subscribers_to_organization(organization_id, num_members):
         .exclude(phone_number__icontains='+996')
     if users.count() < num_members:
         num_members = users.count()
-    random_users = random.sample(list(users), num_members)
+    selected_users = random.sample(list(users), num_members)
 
-    organization = OrganizationService.get(pk=organization_id)
-
-    for subscription in random_users:
-        time.sleep(random.randint(60, 3600))
-        SubscriptionService.toggle_subscription_status(
-            organization=organization, user=subscription
-        )
+    for user in selected_users:
+        subscribe_user_to_organization.delay(organization_id, user.id)
 
 
 @shared_task

@@ -162,8 +162,8 @@ def subscribe_user_to_organization(organization_id, user_id):
     organization = OrganizationService.get(pk=organization_id)
     user = User.objects.get(pk=user_id)
 
-    # 1 minute and 3 minutes
-    time.sleep(random.randint(60, 180))
+    # 1 minute and 15 minutes
+    time.sleep(random.randint(60, 900))
 
     SubscriptionService.toggle_subscription_status(
         organization=organization,

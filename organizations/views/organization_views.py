@@ -26,7 +26,7 @@ from common.utils import method_permission_classes
 from common.services import slack
 from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
-from organizations.constants import UNDER_REVIEW
+from organizations.constants import UNDER_REVIEW, TEST
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
     OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
@@ -743,12 +743,11 @@ class HomepageSearchView(ListAPIView):
     def get_queryset(self):
         serializer = PartnerQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
-
         partner = serializer.validated_data['partner']
         if partner is None:
-            return Organization.active_organizations.filter(is_active=True)
+            return Organization.active_organizations.filter(is_active=True).exclude(subscription_status=TEST)
 
-        return OrganizationService.get_organization_partners(organization=partner)
+        return OrganizationService.get_organization_partners(organization=partner).exclude(subscription_status=TEST)
 
 
 class SubscriptionsMessageListAPIView(ListAPIView):

@@ -6,7 +6,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 
 from common.exceptions import NotAcceptableException
-from organizations.constants import HOTLINK_COLLECTION
+from organizations.constants import HOTLINK_COLLECTION, TEST
 from organizations.models import OrganizationBlacklist, Organization
 from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
 from organizations.services.hotlink_services import HotlinkService
@@ -28,15 +28,29 @@ class FeedView(ListAPIView):
     def get_queryset(self):
         search = self.request.GET.get('search', None)
         user = self.request.user
+
+        base_exclude_filter = Q(
+            organization__is_banned=True
+        ) | Q(
+            organization__is_deleted=True
+        ) | Q(
+            organization__is_private=True
+        ) | Q(
+            organization__subscription_status=TEST
+        )
+
         if user.is_authenticated:
             organizations = Organization.objects.all()
-            blacklist = OrganizationBlacklist.objects.filter(user=self.request.user, organization__in=organizations).values_list('organization_id', flat=True).distinct()
-            qs = ShopItem.objects.exclude(
-                Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True) | Q(organization_id__in=blacklist))
-        else:
-            qs = ShopItem.objects.exclude(
-                Q(organization__is_banned=True) | Q(organization__is_deleted=True) | Q(organization__is_private=True))
-        if search and search[0] == '#':  # Search among posts if hashtag is used
+            blacklist = OrganizationBlacklist.objects.filter(
+                user=self.request.user,
+                organization__in=organizations
+            ).values_list('organization_id', flat=True).distinct()
+
+            base_exclude_filter |= Q(organization_id__in=blacklist)
+
+        qs = ShopItem.objects.exclude(base_exclude_filter)
+
+        if search and search[0] == '#':
             qs = qs.filter(is_published=True)
         elif search:
             qs = qs.filter(is_published=True)
@@ -46,7 +60,6 @@ class FeedView(ListAPIView):
 
         price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
         qs = qs.filter(price_filter)
-
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

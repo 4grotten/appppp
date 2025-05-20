@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.contrib import admin
 from django.contrib.gis.db import models
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
@@ -14,7 +15,7 @@ from .models import (
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
     BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan, UserAssistant, Chat,
-    ChatMessage
+    ChatMessage, RegionalTariff
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -465,3 +466,14 @@ class ChatAdmin(admin.ModelAdmin):
 class ChatMessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'chat', 'sender', 'text')
     search_fields = ('chat', 'sender', 'text')
+
+
+@admin.register(RegionalTariff)
+class RegionalTariffAdmin(admin.ModelAdmin):
+    list_display = ('country', 'tariff_type', 'original_price', 'discount', 'duration_months', 'total_price_display')
+    list_filter = ('country', 'tariff_type')
+    search_fields = ('country__name',)
+
+    def total_price_display(self, obj):
+        return format_html('<b>{}</b>', obj.total_price)
+    total_price_display.short_description = 'Total Price'

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from urllib.parse import urlparse
 
 from django.contrib.gis.db.models import PointField
@@ -155,6 +156,44 @@ class Organization(TimestampModel):
             longitude=None if not self.location or not self.location.x else self.location.x
         )
         return full_location
+
+
+class PaymentSystemMethod(TimestampModel):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class TariffType(models.TextChoices):
+    STARTER = 'starter', _('Стартовый')
+    STANDARD = 'standard', _('Стандартный')
+    PROFITABLE = 'profitable', _('Выгодный')
+
+
+class RegionalTariff(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='tariffs',
+                                limit_choices_to={'is_paid_subscription': True}, verbose_name='Страна')
+    tariff_type = models.CharField(max_length=20, choices=TariffType.choices)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_months = models.PositiveIntegerField(help_text="Срок действия тарифа в месяцах", null=True, blank=True)
+    discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    class Meta:
+        unique_together = ('country', 'tariff_type')
+        verbose_name = _('Regional Tariff')
+        verbose_name_plural = _('Regional Tariffs')
+
+    def __str__(self):
+        return f'{self.country.name} - {self.get_tariff_type_display()}'
+
+    @property
+    def total_price(self):
+        return self.original_price * (Decimal('1') - Decimal(self.discount) / Decimal('100'))
+
+    @property
+    def price_per_month(self):
+        return self.total_price / self.duration_months
 
 class OrganizationBlacklist(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_blacklist')

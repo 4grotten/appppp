@@ -28,7 +28,7 @@ from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW, TEST
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
-    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant, RegionalTariff
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -45,11 +45,12 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
-    OrganizationMapsListSerializer, OrganizationNameListSerializer
+    OrganizationMapsListSerializer, OrganizationNameListSerializer, RegionalTariffSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
-    OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer
+    OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer,
+    CountryQueryParamSerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
@@ -1084,3 +1085,15 @@ class DeleteSubscriptionsAPIView(APIView):
             return Response({"message": "Subscriptions deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except Subscription.DoesNotExist:
             return Response({"message": "Subscriptions not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RegionalTariffListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RegionalTariffSerializer
+
+    def get_queryset(self):
+        serializer = CountryQueryParamSerializer(data=self.request.GET)
+        serializer.is_valid(raise_exception=True)
+        country = serializer.validated_data["country"]
+
+        return RegionalTariff.objects.filter(country=country)

@@ -11,7 +11,7 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
 from common.utils import upload_file_with_unique_name
 from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS, \
-    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB
+    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB, SUBSCRIPTION_STATUS, ACTIVE
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
 from users.models import User
@@ -90,6 +90,7 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
     verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
+    subscription_status = models.CharField(max_length=255, choices=SUBSCRIPTION_STATUS, default=ACTIVE)
     avg_check = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))

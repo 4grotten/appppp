@@ -207,6 +207,7 @@ class Country(models.Model):
 
     is_priority = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_paid_subscription = models.BooleanField(default=False, verbose_name="Платная подписка")
 
     def __str__(self):  # pragma: no cover
         return f'{self.name}'

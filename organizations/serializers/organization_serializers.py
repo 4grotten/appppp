@@ -15,7 +15,7 @@ from common.serializers import ImageSerializer, CountrySerializer, CitySerialize
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers, ChatMessage
+    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff
 )
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -815,3 +815,26 @@ class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', )
+
+
+class RegionalTariffSerializer(serializers.ModelSerializer):
+    tariff_type_display = serializers.CharField(source='get_tariff_type_display', read_only=True)
+    currency = serializers.CharField(source='country.currency.code', read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    price_per_month = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RegionalTariff
+        fields = (
+            'tariff_type',
+            'tariff_type_display',
+            'original_price',
+            'discount',
+            'total_price',
+            'price_per_month',
+            'duration_months',
+            'currency'
+        )
+
+    def get_price_per_month(self, obj):
+        return round(obj.price_per_month, 2)

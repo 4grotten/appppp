@@ -34,7 +34,7 @@ from notifications.tasks import (
 )
 from organizations.constants import (
     HOMEPAGE_BANNERS_COUNT, HOMEPAGE_MIN_PARTNERS_THRESHOLD, HOMEPAGE_PARTNERS_COUNT,
-    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD, MAX_ORGANIZATIONS_PER_USER, VERIFIED, TEST
+    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD, MAX_ORGANIZATIONS_PER_USER, VERIFIED, TEST, ACTIVE
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
@@ -294,11 +294,13 @@ class OrganizationService:
         else:
             description_lang = None
 
+        subscription_status = TEST if country.is_paid_subscription else ACTIVE
+
         organization = Organization.objects.create(owner=owner, title=title, title_lang=title_lang, opens_at=opens_at,
                                                    closes_at=closes_at, description_lang=description_lang,
                                                    description=description, image=image_id, address=address,
                                                    location=point, currency=currency, country=country, city=city,
-                                                   avg_check=avg_check, subscription_status=TEST)
+                                                   avg_check=avg_check, subscription_status=subscription_status)
         if types is not None:
             organization.types.set(types)
         for number in numbers:

@@ -69,3 +69,7 @@ class GlobalAttendanceQueryParamSerializer(serializers.Serializer):
 
 class MonthYearQueryParamSerializer(serializers.Serializer):
     month_year = serializers.DateField(default=None, input_formats=["%Y-%m"])
+
+
+class CountryQueryParamSerializer(serializers.Serializer):
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all())

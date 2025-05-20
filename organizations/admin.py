@@ -15,7 +15,7 @@ from .models import (
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
     BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan, UserAssistant, Chat,
-    ChatMessage, RegionalTariff
+    ChatMessage, RegionalTariff, PaymentSystemMethod
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -477,3 +477,10 @@ class RegionalTariffAdmin(admin.ModelAdmin):
     def total_price_display(self, obj):
         return format_html('<b>{}</b>', obj.total_price)
     total_price_display.short_description = 'Total Price'
+
+
+@admin.register(PaymentSystemMethod)
+class RegionalTariffAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'code')
+    list_filter = ('name', 'is_active', 'code')
+    search_fields = ('name', 'code')

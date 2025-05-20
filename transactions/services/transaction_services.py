@@ -40,7 +40,7 @@ from notifications.constants import (
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
     send_notifications_organization_members, send_delivery_notifications
-from organizations.models import Organization, DiscountCard, Subscription, Membership
+from organizations.models import Organization, DiscountCard, Subscription, Membership, PaymentSystemMethod
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
@@ -3220,3 +3220,18 @@ class TransactionService:
                 continue
             arr_flat_params[name] = str(val)
         return arr_flat_params
+
+
+class PaymentSystemMethodService:
+    model = PaymentSystemMethod
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> PaymentSystemMethod:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('PaymentSystemMethod not found'))

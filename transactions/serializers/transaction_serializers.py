@@ -4,7 +4,7 @@ from rest_framework import serializers
 from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.models import Organization, DiscountCard
+from organizations.models import Organization, DiscountCard, PaymentSystemMethod
 from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
@@ -245,6 +245,19 @@ class OnlineOfflinePaymentCompleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('transaction_id',)
+
+
+class NewInitPaymentSerializer(serializers.Serializer):
+    transaction_id = serializers.IntegerField(required=True)
+    payment_method_code = serializers.CharField(max_length=50, required=True)
+
+class PaymentSystemMethodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PaymentSystemMethod
+        fields = ('id', 'name', 'code', 'is_active')
+
+
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):

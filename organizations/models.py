@@ -1,4 +1,6 @@
 from decimal import Decimal
+from django.utils import timezone
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from django.contrib.gis.db.models import PointField
@@ -160,6 +162,8 @@ class Organization(TimestampModel):
 
 class PaymentSystemMethod(TimestampModel):
     name = models.CharField(max_length=255)
+    code = models.SlugField(max_length=50, unique=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -787,6 +791,25 @@ class UserAssistant(TimestampModel):
 
     def __str__(self):
         return f'Assistant {self.assistant} of {self.user}'
+
+
+class UserOrgSubscription(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_org_subscription')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_subscription',
+                                  null=True, blank=True)
+    tariff = models.ForeignKey(RegionalTariff, on_delete=models.CASCADE, related_name='org_subscription')
+    is_active = models.BooleanField(default=False)
+    active_until = models.DateTimeField(null=True, blank=True)
+    transaction = models.OneToOneField("transactions.Transaction", on_delete=models.SET_NULL,
+                                       related_name='org_subscription', null=True)
+
+    def save(self, *args, **kwargs):
+        if self.tariff and not self.active_until:
+            self.active_until = timezone.now() + timedelta(days=30 * self.tariff.duration_months)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Subscription of {self.user} to {self.organization}'
 
 
 class Chat(TimestampModel):

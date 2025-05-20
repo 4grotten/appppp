@@ -28,7 +28,8 @@ from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW, TEST
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
-    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant, RegionalTariff
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant, RegionalTariff, \
+    PaymentSystemMethod
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -45,7 +46,8 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
-    OrganizationMapsListSerializer, OrganizationNameListSerializer, RegionalTariffSerializer
+    OrganizationMapsListSerializer, OrganizationNameListSerializer, RegionalTariffSerializer,
+    PurchaseOrgSubscriptionSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
@@ -59,7 +61,7 @@ from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
     OrganizationInstagramIntegrationService
 )
-from organizations.services.subscription_services import SubscriptionService
+from organizations.services.subscription_services import SubscriptionService, UserOrgSubscriptionService
 from organizations.services.verifications_service import VerificationService, PaymentSystemConfirmationService
 from organizations.tasks import (
     parse_instagram_to_shop_items, add_subscribers_to_organization
@@ -1097,3 +1099,39 @@ class RegionalTariffListView(ListAPIView):
         country = serializer.validated_data["country"]
 
         return RegionalTariff.objects.filter(country=country)
+
+
+
+
+class PurchaseOrgSubscriptionView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PurchaseOrgSubscriptionSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        tariff = serializer.validated_data['tariff']
+        promocode = serializer.validated_data.get('promocode')
+        utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
+
+        user_subscription = UserOrgSubscriptionService.create_user_org_subscription(
+            user=request.user,
+            processed_by=organization.owner,
+            organization=organization,
+            tariff=tariff,
+            promocode=promocode,
+            utc_offset_minutes=utc_offset_minutes
+        )
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": user_subscription.transaction_id
+            }
+        )

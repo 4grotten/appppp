@@ -30,7 +30,7 @@ from transactions.views.transaction_views import (
     UserWithdrawalFundsTransactionCountView, OrganizationBalanceListView,
     OrganizationBalanceWithdrawalTransactionListView, WithdrawalTransactionReviewView, UserBalanceDetailTotalsView,
     WithdrawalTransactionCompleteView, TransactionFilesCreateView, WithdrawalTransactionDeclineView, BetaPayWebhookView,
-    BetaPayPaymentTestView, CryptoCloudPostbackView
+    BetaPayPaymentTestView, CryptoCloudPostbackView, NewInitPaymentView, PaymentSystemMethodListView
 )
 
 urlpatterns = [
@@ -142,7 +142,9 @@ urlpatterns = [
          name='organization_accepted_withdrawal_totals'),
 
     # pay
+    path('transactions/payment-systems/', PaymentSystemMethodListView.as_view(), name='payment-systems'),
     path('transactions/pay/<int:pk>/', InitPaymentView.as_view(), name='init_payment'),
+    path('transactions/new-pay/', NewInitPaymentView.as_view(), name='new_init_payment'),
     path('transactions/result/', ResultURLView.as_view(), name='result_url'),
     path('transactions/success/', PaymentSuccessView.as_view(), name='success_url'),
 

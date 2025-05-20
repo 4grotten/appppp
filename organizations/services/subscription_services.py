@@ -1,8 +1,14 @@
+from decimal import Decimal
+
 from django.db.models import QuerySet, F, Q
 from django.db.models import Subquery, OuterRef
 from django.utils.translation import gettext_lazy as _
+from datetime import timedelta
+
+from django.utils.timezone import now
 
 from common.exceptions import PermissionDeniedException, ObjectNotFoundException, NotAcceptableException
+from common.models import Currency
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
@@ -14,10 +20,11 @@ from notifications.constants import (
     BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR, BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH
 )
 from notifications.tasks import sent_notification
-from organizations.models import Organization, Subscription, BlockedUser
+from organizations.models import Organization, Subscription, BlockedUser, RegionalTariff, UserOrgSubscription
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
+from transactions.models import Transaction
 from users.models import User
 from users.services import UserService
 
@@ -219,3 +226,56 @@ class SubscriptionService:
             )
 
             cls.accept_follower(organization=organization, user=i.user)
+
+
+class UserOrgSubscriptionService:
+
+    @classmethod
+    def create_user_org_subscription(cls, user: User, processed_by: User, organization: Organization,
+                                     tariff: RegionalTariff, promocode: str, utc_offset_minutes: int):
+        total_price = tariff.total_price
+
+        promocode_discount = 0
+        if promocode:
+            promocode_discount = 10
+        final_price = total_price * (Decimal('1') - Decimal(promocode_discount)/Decimal('100'))
+
+        transaction = cls.create_user_org_subscription_transaction(user=user, processed_by=processed_by,
+                                                                   organization=organization, tariff=tariff,
+                                                                   utc_offset_minutes=utc_offset_minutes,
+                                                                   final_price=final_price)
+
+        user_subscription = UserOrgSubscription.objects.create(
+            user=user,
+            organization=organization,
+            transaction=transaction,
+            tariff=tariff,
+        )
+
+        return user_subscription
+
+    @classmethod
+    def create_user_org_subscription_transaction(cls, user: User, processed_by: User, tariff: RegionalTariff,
+                                                 organization: Organization, utc_offset_minutes: int,
+                                                 final_price):
+        currency = tariff.country.currency
+        role = OrganizationService.get_user_role_in_organization(organization=organization, user=processed_by)
+
+        transaction = Transaction.objects.create(
+            client=user,
+            processed_by=processed_by,
+            employee_role=role,
+            employee_name=processed_by.full_name,
+            employee_avatar=processed_by.avatar,
+            organization=organization,
+            type=Transaction.ORG_SUBSCRIPTION,
+            delivery_type=Transaction.ONLINE_PAYMENT,
+            original_amount=final_price,
+            currency=currency,
+            status=Transaction.ACCEPTED,
+            payment_status=Transaction.IN_PROGRESS,
+            display_time=now() + timedelta(minutes=utc_offset_minutes)
+        )
+        transaction.save()
+
+        return transaction

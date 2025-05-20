@@ -42,11 +42,13 @@ class Transaction(TimestampModel):
     OFFLINE = 'offline'
     WITHDRAWAL = 'withdrawal'
     ASSISTANT = 'assistant'
+    ORG_SUBSCRIPTION = 'org_subscription'
     TYPE = (
         (ONLINE, ONLINE),
         (OFFLINE, OFFLINE),
         (WITHDRAWAL, WITHDRAWAL),
-        (ASSISTANT, ASSISTANT)
+        (ASSISTANT, ASSISTANT),
+        (ORG_SUBSCRIPTION, ORG_SUBSCRIPTION)
     )
 
     BANKCARD = 'bankcard'

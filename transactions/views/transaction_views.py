@@ -54,13 +54,14 @@ from transactions.serializers.transaction_serializers import (
     TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
     BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer, WithdrawalTypeTransactionSerializer,
     TransactionsWithdrawalSerializer, PayoutSystemWithUnprocessedTransactionCountSerializer,
-    TransactionWithdrawalCompleteSerializer, TransactionFilesSerializer
+    TransactionWithdrawalCompleteSerializer, TransactionFilesSerializer, NewInitPaymentSerializer,
+    PaymentSystemMethodSerializer
 )
 from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
 from shop.models import ShopItem, Booking, Ticket
 from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
 from transactions.services.recipient_services import RecipientService, BalanceService
-from transactions.services.transaction_services import TransactionService
+from transactions.services.transaction_services import TransactionService, PaymentSystemMethodService
 from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
 from users.services import UserService
 
@@ -1839,6 +1840,262 @@ class InitPaymentView(GenericAPIView):
             return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
 
+class NewInitPaymentView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = NewInitPaymentSerializer
+
+    """
+    1 - FreedomPay
+    2 - PaySy
+    3 - Libersave
+    4 - Betapay
+    5 - CryptoCloud
+    """
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        base_url = 'https://test.apofiz.com/api/v1/'
+
+        if 'localhost' in request.META['HTTP_HOST']:
+            base_url = 'http://localhost:8000/api/v1/'
+        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://test.apofiz.com/api/v1/'
+        elif 'apofiz.com' in request.META['HTTP_HOST']:
+            base_url = 'https://apofiz.com/api/v1/'
+        transaction_id = serializer.validated_data['transaction_id']
+        payment_method_code = serializer.validated_data['payment_method_code']
+        payment_method = PaymentSystemMethodService.get(code=payment_method_code, is_active=True)
+
+        if payment_method.code == 'freedom_pay':
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                            to_currency="KGS", amount=transaction.final_amount)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            pg_result_url = TransactionService.get_pg_result_url(request=request)
+            pg_success_url = TransactionService.get_success_url(request=request)
+            pg_failure_url = TransactionService.get_failure_url(request=request)
+
+            payment_data = {
+                'pg_order_id': str(transaction_id),
+                'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
+                'pg_amount': str(converted_amount),
+                'pg_description': pg_description,
+                'pg_salt': 'apofiz',
+                'pg_currency': "KGS",
+                # 'pg_testing_mode': '1',
+                'pg_result_url': pg_result_url,
+                'pg_success_url': pg_success_url,
+                'pg_failure_url': pg_failure_url,
+                'pg_timeout_after_payment': '5',
+                'user_id': str(self.request.user.id),
+                'purchase_type': purchase_type
+            }
+
+
+            request_for_signature = TransactionService.make_flat_params_array(payment_data)
+            sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
+            signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
+            signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
+            payment_data['pg_sig'] = signature
+            response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+            xml_data = response.text
+            response_dict = xmltodict.parse(xml_data)
+            json_string = json.dumps(response_dict)
+            json_data = json.loads(json_string)
+            redirect_url = json_data["response"]["pg_redirect_url"]
+            response_data = {"redirect_url": redirect_url}
+            return Response(data=response_data, status=status.HTTP_200_OK)
+        elif payment_method.code == 'paysy':
+            if base_url == 'https://apofiz.com/api/v1/':
+                currency = "USDT"
+                chain_id = 56
+                url = 'https://api.paysy.net/orders/create_order'
+                redirect_url = f'https://paysy.net/en/orders/'
+            else:
+                currency = "USDT"
+                chain_id = 5
+                url = 'https://devnet-api.paysy.net/orders/create_order'
+                redirect_url = f'https://devnet.paysy.net/en/orders/'
+            # currency, chain_id = self.get_company_info(base_url=base_url)
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="USD", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.02')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            webhook = TransactionService.get_webhook_paysy(request=request)
+            params = {
+                'currency': currency,
+                'chain_id': chain_id,
+                'amount': str(converted_amount),
+                'is_validation': False,
+                'any_key': str(self.request.user.id) + "|" + str(transaction_id),
+                'description': purchase_type,
+                'success_url': success_url,
+                'failure_url': failure_url,
+                'webhook': webhook,
+                'lang': 'en'
+                # 'is_redirect': True
+            }
+            headers = {
+                'accept': 'application/json',
+                'X-API-Key': PAYSY_API_KEY,
+                'Content-Type': 'application/json',
+            }
+            response = requests.post(url, headers=headers, params=params)
+            response_json = response.json()
+
+            order_id = response_json.get('result', {}).get('id')
+            if order_id:
+                redirect_url = redirect_url + order_id
+                return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
+        elif payment_method.code == 'libersave':
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="EUR", amount=transaction.final_amount)
+            if transaction.currency.code != "EUR":
+                converted_amount = Decimal(str(converted_amount))
+                increase = converted_amount * Decimal('0.01')
+                converted_amount += increase
+                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            success_url = TransactionService.get_success_url(request=request)
+            currency = "EUR"
+            url = "https://api.libersave.com/api/mc/payment"
+                # order_id = generate_new_order_id(str(transaction_id))
+            amount_float = float(converted_amount)
+            if amount_float < 1:
+                amount_float = 1
+            data = {
+                'amount': amount_float,
+                'order_id': str(transaction_id),
+                'currency': currency,
+                'redirect_url': success_url + f"/?transaction_id={transaction_id}"
+            }
+            headers = {
+                'accept': 'application/json',
+                'x-api-key': LIBERSAVE_API_KEY,
+                'Content-Type': 'application/json',
+            }
+
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+            redirect_url = response_json.get('pay_url')
+            response_data = {"redirect_url": redirect_url}
+            return Response(data=response_data, status=status.HTTP_200_OK)
+        elif payment_method.code == 'betapay':
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="EUR", amount=transaction.final_amount)
+            if transaction.currency.code != "EUR":
+                converted_amount = Decimal(str(converted_amount))
+                increase = converted_amount * Decimal('0.01')
+                converted_amount += increase
+                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            webhook = TransactionService.get_webhook_betapay(request=request)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction)
+            currency = "EUR"
+            url = 'https://api.betapay.online/api/v3/openbanking-payment'
+            amount_float = float(converted_amount)
+            if amount_float < 10:
+                amount_float = 10
+            data = {
+                    "merchant_id": 591,
+                    "terminal_id": 619,
+                    "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                    "amount": amount_float,
+                    "currency_code": currency,
+                    "callback_url": webhook,
+                    "success_url": success_url,
+                    "fail_url": failure_url
+            }
+            headers = {
+                "token": BETAPAY_API_TOKEN
+            }
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+
+            # redirect_url = response_json.get('data', {}).get('"iframe_url":')
+            status_code = response_json.get('status', {}).get('code')
+            status_type = response_json.get('status', {}).get('type')
+            data_transaction_id = response_json.get('data', {}).get('transaction_id')
+            if status_code == 200 and status_type == "success":
+
+                url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
+                data = {
+                    "merchant_id": 591,
+                    "terminal_id": 619,
+                    "transaction_id": data_transaction_id,
+                    "case": "approved"
+                }
+                headers = {
+                    "token": BETAPAY_API_TOKEN
+                }
+                response = requests.post(url, headers=headers, json=data)
+                response_json2 = response.json()
+                status_code2 = response_json2.get('status', {}).get('code')
+                data_status = response_json2.get('data', {}).get('status')
+                if status_code2 == 200 and data_status == "OK":
+                    redirect_url = success_url
+                    response_data = {"redirect_url": redirect_url}
+                    return Response(data=response_data, status=status.HTTP_200_OK)
+                else:
+                    redirect_url = failure_url
+                    response_data = {"redirect_url": redirect_url}
+                    return Response(data=response_data, status=status.HTTP_200_OK)
+        elif payment_method.code == 'cryptocloud':
+            transaction_id = serializer.validated_data['transaction_id']
+            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                to_currency="USD", amount=transaction.final_amount)
+            converted_amount = Decimal(str(converted_amount))
+            increase = converted_amount * Decimal('0.01')
+            converted_amount += increase
+            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction)
+            currency = "USD"
+            url = 'https://api.cryptocloud.plus/v2/invoice/create'
+            amount_float = float(converted_amount)
+            data = {
+                "shop_id": CRYPTOCLOUD_SHOP_ID,
+                "amount": amount_float,
+                "currency": currency,
+                "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                "email": self.request.user.email,
+            }
+            print(data)
+            headers = {
+                "Authorization": f"Token {CRYPTOCLOUD_API_KEY}"
+            }
+            response = requests.post(url, headers=headers, json=data)
+            response_json = response.json()
+            if response.status_code == 200:
+                redirect_url = response_json.get('result', {}).get('link')
+                response_data = {"redirect_url": redirect_url}
+                return Response(data=response_data, status=status.HTTP_200_OK)
+            else:
+                return Response(data={'error': "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+
 class InitPaymentSwiftView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OnlineOfflinePaymentCompleteSerializer
@@ -2242,3 +2499,13 @@ class TransactionWithdrawalSwiftView(GenericAPIView):
 
         transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
         return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
+class PaymentSystemMethodListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PaymentSystemMethodSerializer
+
+    def get_queryset(self):
+        return PaymentSystemMethodService.filter(is_active=True)

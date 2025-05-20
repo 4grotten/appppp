@@ -826,6 +826,7 @@ class RegionalTariffSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegionalTariff
         fields = (
+            'id',
             'tariff_type',
             'tariff_type_display',
             'original_price',
@@ -838,3 +839,31 @@ class RegionalTariffSerializer(serializers.ModelSerializer):
 
     def get_price_per_month(self, obj):
         return round(obj.price_per_month, 2)
+
+
+class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    tariff = serializers.PrimaryKeyRelatedField(queryset=RegionalTariff.objects.all())
+    promocode = serializers.CharField(required=False, allow_null=True)
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        organization = attrs['organization']
+        tariff = attrs['tariff']
+
+        if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
+            raise serializers.ValidationError(_('No rights to edit organization'))
+
+        if tariff.country != organization.country:
+            raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
+
+        # promocode check
+
+        return attrs
+
+
+
+
+

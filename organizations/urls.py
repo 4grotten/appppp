@@ -39,7 +39,7 @@ from .views.organization_views import (
     OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
     OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView, MyOrganizationsWithCanEditListCreateView,
     MyOrganizationsListCreateView, OrganizationSubscriptionToGlobalAPIView, DeleteSubscriptionsAPIView,
-    OrganizationMakeSubsCreateView, RegionalTariffListView
+    OrganizationMakeSubsCreateView, RegionalTariffListView, PurchaseOrgSubscriptionView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -161,7 +161,9 @@ organization_urls = [
     path('organizations/assistant/toggle_assistant/', ToggleAssistantEnableView.as_view(),
          name='org_assistant_chat_by_org_user'),
     path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats'),
-    path('organizations/tariffs/', RegionalTariffListView.as_view(), name='regional-tariffs-by-country')
+    path('organizations/tariffs/', RegionalTariffListView.as_view(), name='regional-tariffs-by-country'),
+    path('organizations/subscription/purchase/', PurchaseOrgSubscriptionView.as_view(),
+         name='org_subscription_purchase')
 ]
 
 membership_urls = [

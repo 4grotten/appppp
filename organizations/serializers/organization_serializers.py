@@ -414,7 +414,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count'
+            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 

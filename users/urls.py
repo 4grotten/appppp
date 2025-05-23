@@ -11,7 +11,7 @@ from users.views import (
     MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView,
     UserHasOwnOrganizationOrCanEdit, UserDeliveryAddressesListAPIView, UserDeliveryAddressDetailAPIView,
     SetDefaultDeliveryAddressAPIView, MyPromoCodeView, MyReferralBalanceView,
-    MyReferralHistoryView
+    MyReferralHistoryView, ReferralStatsAPIView
 )
 
 urlpatterns = [
@@ -49,4 +49,5 @@ urlpatterns = [
     path('users/promocode/', MyPromoCodeView.as_view(), name='promo_create'),
     path("users/referral-balance/", MyReferralBalanceView.as_view(), name="my-referral-balance"),
     path("users/referral-history/", MyReferralHistoryView.as_view(), name="my-referral-history"),
+    path("users/referral-stats/", ReferralStatsAPIView.as_view(), name="my-referral-stats"),
 ]

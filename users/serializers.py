@@ -405,3 +405,9 @@ class ReferralTransactionSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data["subscription"] = UserOrgSubscriptionSerializer(instance.subscription).data
         return data
+
+
+class ReferralStatsSerializer(serializers.Serializer):
+    total_referrals = serializers.IntegerField()
+    total_organizations = serializers.IntegerField()
+    total_profit_usdt = serializers.DecimalField(max_digits=12, decimal_places=2)

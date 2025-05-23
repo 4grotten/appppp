@@ -1,5 +1,7 @@
+from decimal import Decimal
+
 from django.contrib.auth import authenticate
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy
 
 from django.db import transaction
@@ -30,6 +32,7 @@ from .serializers import (
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
     MyOwnTokenExpiredTimeSerializer, DeliveryAddressesSerializer, SetDefaultDeliveryAddressSerializer,
     PromoCodeValidationSerializer, PromoCodeSerializer, ReferralBalanceSerializer, ReferralTransactionSerializer,
+    ReferralStatsSerializer,
 )
 from notifications.tasks import sent_notification
 from .services import (
@@ -745,3 +748,28 @@ class MyReferralHistoryView(APIView):
         referral_data = ReferralTransactionSerializer(referral_transactions, many=True).data
 
         return Response(referral_data)
+
+
+
+class ReferralStatsAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        user = request.user
+
+        promocode = PromoCodeService.get(owner=user)
+
+        transactions = ReferralTransaction.objects.filter(promocode=promocode)
+
+        total_referrals = transactions.values("referred_user").distinct().count()
+        total_organizations = transactions.values("subscription__organization").distinct().count()
+        total_profit_usdt = transactions.aggregate(total=Sum("profit_amount_usdt"))["total"] or Decimal("0.00")
+
+        data = {
+            "total_referrals": total_referrals,
+            "total_organizations": total_organizations,
+            "total_profit_usdt": total_profit_usdt,
+        }
+
+        serializer = ReferralStatsSerializer(data)
+        return Response(serializer.data)

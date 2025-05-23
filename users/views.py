@@ -732,6 +732,7 @@ class MyPromoCodeView(APIView):
 
         return Response({
             "is_valid": True,
+            "discount_percent": discount_percent,
             "final_price": final_price
         }, status=status.HTTP_200_OK)
 

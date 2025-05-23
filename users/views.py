@@ -21,7 +21,7 @@ from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DE
 from organizations.models import Subscription, Organization
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
-from .models import MyOwnToken, User, DeliveryAddress
+from .models import MyOwnToken, User, DeliveryAddress, PromoCode, ReferralBalance, ReferralTransaction
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
@@ -29,11 +29,12 @@ from .serializers import (
     SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
     MyOwnTokenExpiredTimeSerializer, DeliveryAddressesSerializer, SetDefaultDeliveryAddressSerializer,
+    PromoCodeValidationSerializer, PromoCodeSerializer, ReferralBalanceSerializer, ReferralTransactionSerializer,
 )
 from notifications.tasks import sent_notification
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService,
-    MyOwnTokenService, DeliveryAddressesService
+    MyOwnTokenService, DeliveryAddressesService, PromoCodeService
 )
 from .throttle.throttle import UserLoginRateThrottle
 
@@ -698,3 +699,49 @@ class UserHasOwnOrganizationOrCanEdit(APIView):
                     "Error": _("User does not exists"),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class MyPromoCodeView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        promo_code, created = PromoCode.objects.get_or_create(owner=request.user)
+        serializer = PromoCodeSerializer(promo_code)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = PromoCodeValidationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        code = serializer.validated_data['promocode']
+        user = request.user
+
+        promo = PromoCodeService.get(code=code)
+
+        if promo.owner == user:
+            return Response({"detail": "You can not use your own promocode."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "is_valid": True,
+            "discount_percent": promo.discount_percent
+        }, status=status.HTTP_200_OK)
+
+
+class MyReferralBalanceView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        balance, created = ReferralBalance.objects.get_or_create(user=request.user)
+        serializer = ReferralBalanceSerializer(balance)
+        return Response(serializer.data)
+
+
+class MyReferralHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        referral_transactions = ReferralTransaction.objects.filter(owner=request.user)
+
+        referral_data = ReferralTransactionSerializer(referral_transactions, many=True).data
+
+        return Response(referral_data)

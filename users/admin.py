@@ -15,7 +15,7 @@ from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
 
 from users.models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken, \
-    DeliveryAddress
+    DeliveryAddress, PromoCode, ReferralTransaction, ReferralBalance
 
 User = get_user_model()
 
@@ -190,3 +190,28 @@ admin.site.register(TokenProxy, ApofizTokenAdmin)
 class MyOwnTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'is_active', 'location', 'device', 'expired_time', 'log_time', 'last_active',
                     'user_agent', 'operating_system', 'expired_time_choice')
+
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = ("code", "owner", "discount_percent", "profit_percent")
+    search_fields = ("code", "owner__username")
+    readonly_fields = ("code",)
+    list_filter = ("discount_percent", "profit_percent")
+
+
+@admin.register(ReferralTransaction)
+class ReferralTransactionAdmin(admin.ModelAdmin):
+    list_display = ("promocode", "owner", "referred_user", "profit_amount_usdt", "original_currency", "created_at")
+    search_fields = ("owner__username", "referred_user__username", "promocode__code")
+    list_filter = ("original_currency",)
+    date_hierarchy = "created_at"
+    readonly_fields = ("promocode", "owner", "referred_user", "subscription", "profit_amount_usdt", "original_currency",
+                       "original_amount")
+
+
+@admin.register(ReferralBalance)
+class ReferralBalanceAdmin(admin.ModelAdmin):
+    list_display = ("user", "total_earned", "current_balance", "currency")
+    search_fields = ("user__username",)
+    readonly_fields = ("user", "total_earned", "current_balance", "currency")

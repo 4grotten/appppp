@@ -15,7 +15,7 @@ from common.serializers import ImageSerializer, CountrySerializer, CitySerialize
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff
+    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff, UserOrgSubscription
 )
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -27,6 +27,7 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
+from users.models import PromoCode
 from users.serializers import UserShortInfoSerializer
 
 
@@ -844,7 +845,12 @@ class RegionalTariffSerializer(serializers.ModelSerializer):
 class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
     tariff = serializers.PrimaryKeyRelatedField(queryset=RegionalTariff.objects.all())
-    promocode = serializers.CharField(required=False, allow_null=True)
+    promocode = serializers.SlugRelatedField(
+        queryset=PromoCode.objects.all(),
+        slug_field='code',
+        required=False,
+        allow_null=True
+    )
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
 
@@ -859,9 +865,16 @@ class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
         if tariff.country != organization.country:
             raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
 
-        # promocode check
-
         return attrs
+
+
+class UserOrgSubscriptionSerializer(serializers.ModelSerializer):
+    organization = OrganizationWithTypeImageSerializer()
+    tariff = RegionalTariffSerializer()
+
+    class Meta:
+        model = UserOrgSubscription
+        fields = ("id", "organization", "tariff")
 
 
 

@@ -1,5 +1,6 @@
 from decimal import Decimal
-
+from typing import Optional
+from django.db import transaction as db_transaction
 from django.db.models import QuerySet, F, Q
 from django.db.models import Subquery, OuterRef
 from django.utils.translation import gettext_lazy as _
@@ -9,6 +10,7 @@ from django.utils.timezone import now
 
 from common.exceptions import PermissionDeniedException, ObjectNotFoundException, NotAcceptableException
 from common.models import Currency
+from common.services.currency import CurrencyConverterService
 from notifications.constants import (
     FOLLOWED_TO_ORGANIZATION_TYPE,
     FOLLOWED_TO_ORGANIZATION_TITLE, ORGANIZATION_FOLLOWED_TYPE,
@@ -25,7 +27,7 @@ from organizations.services.membership_services import MembershipService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from transactions.models import Transaction
-from users.models import User
+from users.models import User, PromoCode, ReferralTransaction, ReferralBalance
 from users.services import UserService
 
 
@@ -232,27 +234,54 @@ class UserOrgSubscriptionService:
 
     @classmethod
     def create_user_org_subscription(cls, user: User, processed_by: User, organization: Organization,
-                                     tariff: RegionalTariff, promocode: str, utc_offset_minutes: int):
+                                     tariff: RegionalTariff, utc_offset_minutes: int,
+                                     promocode: Optional[PromoCode] = None):
         total_price = tariff.total_price
+        discount_percent = Decimal(promocode.discount_percent) if promocode else Decimal('0')
+        profit_percent = Decimal(promocode.profit_percent) if promocode else Decimal('0')
+        final_price = total_price * (Decimal('1') - discount_percent / Decimal('100'))
 
-        promocode_discount = 0
-        if promocode:
-            promocode_discount = 10
-        final_price = total_price * (Decimal('1') - Decimal(promocode_discount)/Decimal('100'))
+        with db_transaction.atomic():
+            transaction = cls.create_user_org_subscription_transaction(
+                user=user,
+                processed_by=processed_by,
+                organization=organization,
+                tariff=tariff,
+                utc_offset_minutes=utc_offset_minutes,
+                final_price=final_price
+            )
 
-        transaction = cls.create_user_org_subscription_transaction(user=user, processed_by=processed_by,
-                                                                   organization=organization, tariff=tariff,
-                                                                   utc_offset_minutes=utc_offset_minutes,
-                                                                   final_price=final_price)
+            subscription = UserOrgSubscription.objects.create(
+                user=user,
+                organization=organization,
+                transaction=transaction,
+                tariff=tariff,
+            )
 
-        user_subscription = UserOrgSubscription.objects.create(
-            user=user,
-            organization=organization,
-            transaction=transaction,
-            tariff=tariff,
-        )
+            if promocode:
+                profit_amount = total_price * (profit_percent / Decimal('100'))
+                currency = tariff.country.currency
 
-        return user_subscription
+                profit_usdt = CurrencyConverterService.convert(from_currency=transaction.currency.code,
+                                                                    to_currency="USD", amount=profit_amount)
+                # Создание записи в истории
+                ReferralTransaction.objects.create(
+                    promocode=promocode,
+                    owner=promocode.owner,
+                    referred_user=user,
+                    subscription=subscription,
+                    profit_amount_usdt=profit_usdt,
+                    original_currency=currency,
+                    original_amount=profit_amount
+                )
+
+                # Обновление баланса
+                balance, _ = ReferralBalance.objects.get_or_create(user=promocode.owner)
+                balance.total_earned += profit_usdt
+                balance.current_balance += profit_usdt
+                balance.save(update_fields=["total_earned", "current_balance"])
+
+        return subscription
 
     @classmethod
     def create_user_org_subscription_transaction(cls, user: User, processed_by: User, tariff: RegionalTariff,

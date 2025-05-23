@@ -10,7 +10,8 @@ from organizations.services.organization_promo_services import PromoSubscriberSe
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from .constants import RESEND_CODE_CHOICES, GENDER_CHOICES
-from .models import PhoneNumber, SocialNetworkContact, MyOwnToken, DeliveryAddress
+from .models import PhoneNumber, SocialNetworkContact, MyOwnToken, DeliveryAddress, PromoCode, ReferralBalance, \
+    ReferralTransaction
 
 User = get_user_model()
 
@@ -368,3 +369,39 @@ class MyOwnTokenExpiredTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
         fields = ('expired_time_choice', )
+
+
+class PromoCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromoCode
+        fields = ('id', 'code', 'discount_percent', 'profit_percent')
+
+
+class ReferralBalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReferralBalance
+        fields = ("id", "total_earned", "current_balance", "currency")
+
+
+class PromoCodeValidationSerializer(serializers.Serializer):
+    promocode = serializers.CharField(max_length=255)
+
+
+class ReferralTransactionSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    referred_user = UserInfoSerializer()
+
+    class Meta:
+        model = ReferralTransaction
+        fields = ("id", "profit_amount_usdt", "original_currency", "original_amount", "type", "referred_user",
+                  "subscription", "created_at",)
+
+    def get_type(self, obj):
+        return "referral_income"
+
+    def to_representation(self, instance):
+        from organizations.serializers.organization_serializers import UserOrgSubscriptionSerializer
+
+        data = super().to_representation(instance)
+        data["subscription"] = UserOrgSubscriptionSerializer(instance.subscription).data
+        return data

@@ -51,6 +51,14 @@ class OrgSocialNetworkEditSerializer(serializers.Serializer):
     networks = serializers.ListSerializer(child=serializers.CharField())
 
 
+class OrganizationBannerSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = OrganizationBanner
+        fields = ('id', 'image', 'is_default')
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
     image = ImageSerializer(many=False)
     role = serializers.SerializerMethodField()
@@ -280,6 +288,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer(allow_null=True)
     image = ImageSerializer()
+    banners = OrganizationBannerSerializer(many=True)
     permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
@@ -415,7 +424,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status'
+            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status', 'banners'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -866,14 +875,6 @@ class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
 
         return attrs
-
-
-class OrganizationBannerSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
-
-    class Meta:
-        model = OrganizationBanner
-        fields = ('id', 'image', 'is_default')
 
 
 class OrganizationBannerCreateSerializer(serializers.ModelSerializer):

@@ -13,7 +13,8 @@ from mailer.services import MailerService
 from sms_sender.services import MessageServiceNIKITA, MessageServiceTwilio, AzamatMessageService, \
     MessageServiceMessageBird
 from .constants import SMS_CODE_MESSAGE
-from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken, DeliveryAddress
+from .models import TemporaryCode, PhoneNumber, SocialNetworkContact, TemporaryPhoneNumber, MyOwnToken, DeliveryAddress, \
+    PromoCode
 from user_agents import parse
 
 User = get_user_model()
@@ -399,4 +400,19 @@ class TemporaryPhoneNumberService:
             cls.model.objects.filter(user__phone_number=phone_number).delete()
         except cls.model.DoesNotExist:
             raise ValidationException(_('Wrong phone number'))
+
+
+class PromoCodeService:
+    model = PromoCode
+
+    @classmethod
+    def get(cls, **filters):
+        try:
+            return cls.model.objects.get(**filters)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('PromoCode not found'))
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
 

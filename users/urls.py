@@ -11,7 +11,7 @@ from users.views import (
     MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView,
     UserHasOwnOrganizationOrCanEdit, UserDeliveryAddressesListAPIView, UserDeliveryAddressDetailAPIView,
     SetDefaultDeliveryAddressAPIView, MyPromoCodeView, MyReferralBalanceView,
-    MyReferralHistoryView, ReferralStatsAPIView
+    MyReferralHistoryView, ReferralStatsAPIView, ReferralUsersListAPIView, ReferralOrganizationsListAPIView
 )
 
 urlpatterns = [
@@ -50,4 +50,6 @@ urlpatterns = [
     path("users/referral-balance/", MyReferralBalanceView.as_view(), name="my-referral-balance"),
     path("users/referral-history/", MyReferralHistoryView.as_view(), name="my-referral-history"),
     path("users/referral-stats/", ReferralStatsAPIView.as_view(), name="my-referral-stats"),
+    path("users/referrals/", ReferralUsersListAPIView.as_view(), name="referrals"),
+    path("users/referrals/organizations/", ReferralOrganizationsListAPIView.as_view(), name="referral-organizations"),
 ]

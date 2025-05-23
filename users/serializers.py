@@ -4,7 +4,7 @@ from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from organizations.models import Organization, BlockedUser, Subscription
+from organizations.models import Organization, BlockedUser, Subscription, UserOrgSubscription
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
@@ -411,3 +411,17 @@ class ReferralStatsSerializer(serializers.Serializer):
     total_referrals = serializers.IntegerField()
     total_organizations = serializers.IntegerField()
     total_profit_usdt = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+
+class ReferredUserWithOrganizationsSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer()
+    organizations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'username', 'avatar', 'organizations']
+
+    def get_organizations(self, user):
+        subscriptions = UserOrgSubscription.objects.filter(user=user, is_active=True)
+        from organizations.serializers.organization_serializers import ReferralOrganizationSerializer
+        return ReferralOrganizationSerializer(subscriptions, many=True).data

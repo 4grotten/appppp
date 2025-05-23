@@ -2689,6 +2689,48 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
+    def accept_org_subscription_transaction(cls, transaction_id: Transaction):
+        transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        try:
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.is_processed = True
+            transaction.save()
+        except:
+            raise IntegrityException()
+
+        org_subscription = transaction.org_subscription
+        org_subscription.is_active = True
+        org_subscription.save()
+
+        # organization = org_subscription.organization
+        #
+        # sent_notification.delay(
+        #     recipient_id=transaction.processed_by_id,
+        #     sender_id=transaction.client_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+        # sent_notification.delay(
+        #     recipient_id=transaction.client_id,
+        #     sender_id=transaction.processed_by_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+
+    @classmethod
+    @transaction.atomic
     def accept_paysy_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
 
@@ -3145,6 +3187,11 @@ class TransactionService:
         if transaction.type == Transaction.ASSISTANT:
             purchase_type = 'assistant'
             pg_description = 'AI Ассистент'
+
+            return pg_description, purchase_type
+        if transaction.type == Transaction.ORG_SUBSCRIPTION:
+            purchase_type = 'org_subscription'
+            pg_description = 'Платная подписка'
 
             return pg_description, purchase_type
         try:

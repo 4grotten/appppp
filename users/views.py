@@ -783,7 +783,7 @@ class ReferralUsersListAPIView(ListAPIView):
 
     def get_queryset(self):
         promocode = PromoCodeService.get(owner=self.request.user)
-        referred_users_ids = ReferralTransaction.objects.filter(promocode=promocode).values_list("referred_user",
+        referred_users_ids = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("referred_user",
                                                                                                  flat=True).distinct()
         queryset = User.objects.filter(id__in=referred_users_ids)
         return queryset
@@ -795,7 +795,7 @@ class ReferralOrganizationsListAPIView(ListAPIView):
 
     def get_queryset(self):
         promocode = PromoCodeService.get(owner=self.request.user)
-        transaction_subs = ReferralTransaction.objects.filter(promocode=promocode).values_list("subscription_id",
+        transaction_subs = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("subscription_id",
                                                                                                flat=True)
         org_ids = UserOrgSubscription.objects.filter(id__in=transaction_subs).values_list("organization_id", flat=True)
         queryset = Organization.objects.filter(id__in=org_ids).distinct()

@@ -893,6 +893,7 @@ class ReferralOrganizationSerializer(serializers.ModelSerializer):
 
 class OrganizationWithUsersSerializer(serializers.ModelSerializer):
     users = serializers.SerializerMethodField()
+    image = ImageSerializer()
 
     class Meta:
         model = Organization

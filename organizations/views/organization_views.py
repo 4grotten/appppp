@@ -29,7 +29,7 @@ from mailer.services import MailerService
 from organizations.constants import UNDER_REVIEW, TEST
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
     OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant, RegionalTariff, \
-    PaymentSystemMethod
+    PaymentSystemMethod, OrganizationBanner
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -47,7 +47,7 @@ from organizations.serializers.organization_serializers import (
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
     OrganizationMapsListSerializer, OrganizationNameListSerializer, RegionalTariffSerializer,
-    PurchaseOrgSubscriptionSerializer
+    PurchaseOrgSubscriptionSerializer, OrganizationBannerSerializer, OrganizationBannerCreateSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
@@ -59,7 +59,7 @@ from organizations.services.categories_services import OrganizationCategoryServi
 from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
-    OrganizationInstagramIntegrationService
+    OrganizationInstagramIntegrationService, OrganizationBannerService
 )
 from organizations.services.subscription_services import SubscriptionService, UserOrgSubscriptionService
 from organizations.services.verifications_service import VerificationService, PaymentSystemConfirmationService
@@ -1135,3 +1135,52 @@ class PurchaseOrgSubscriptionView(generics.CreateAPIView):
                 "transaction_id": user_subscription.transaction_id
             }
         )
+
+
+class OrganizationBannerListView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = OrganizationBannerSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return OrganizationService.get_organization_banners(organization=organization)
+
+
+class AddCustomBannerView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        serializer = OrganizationBannerCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        banner = serializer.save()
+        organization.banners.add(banner)
+        banner_serializer = OrganizationBannerSerializer(banner)
+        return Response(banner_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RemoveCustomBannerView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, *args, **kwargs):
+        banner = OrganizationBannerService.get(id=self.kwargs['pk'], is_default=False)
+
+        organization = banner.organizations.first()
+        if not organization:
+            return Response({'detail': 'Баннер не привязан ни к одной организации.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        organization.banners.remove(banner)
+
+        if banner.organizations.count() == 0:
+            banner.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

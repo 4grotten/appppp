@@ -15,7 +15,7 @@ from common.serializers import ImageSerializer, CountrySerializer, CitySerialize
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff, UserOrgSubscription
+    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff, UserOrgSubscription, OrganizationBanner
 )
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -866,6 +866,27 @@ class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
 
         return attrs
+
+
+class OrganizationBannerSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = OrganizationBanner
+        fields = ('id', 'image', 'is_default')
+
+
+class OrganizationBannerCreateSerializer(serializers.ModelSerializer):
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), source='image', write_only=True
+    )
+
+    class Meta:
+        model = OrganizationBanner
+        fields = ('image_id', )
+
+    def create(self, validated_data):
+        return OrganizationBanner.objects.create(image=validated_data['image'])
 
 
 class UserOrgSubscriptionSerializer(serializers.ModelSerializer):

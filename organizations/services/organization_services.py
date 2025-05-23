@@ -38,7 +38,7 @@ from organizations.constants import (
 )
 from organizations.models import (
     Organization, OrganizationCategory, PhoneNumber, SocialNetworkContact, Message, Subscription, Membership, Role,
-    Partnership, InstagramIntegration, Service, OrganizationType, UserAssistant
+    Partnership, InstagramIntegration, Service, OrganizationType, UserAssistant, OrganizationBanner
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
@@ -253,6 +253,18 @@ class OrganizationService:
     def get_organization_partners(cls, organization: Organization) -> QuerySet:
         return Organization.active_organizations.select_related('image').filter(
             id__in=organization.requested_partnerships.filter(is_accepted=True).values_list('accepted_by', flat=True))
+
+    @classmethod
+    def get_organization_banners(cls, organization: Organization) -> QuerySet:
+        return OrganizationBanner.objects.filter(
+            Q(is_default=True) | Q(organizations=organization)
+        ).annotate(
+            sort_order=Case(
+                When(is_default=False, then=Value(0)),
+                When(is_default=True, then=Value(1)),
+                output_field=IntegerField()
+            )
+        ).order_by('sort_order', '-created_at')
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):
@@ -908,3 +920,19 @@ class OrgMessageService:
             extra_data=dict(can_send_message=True, message_to=message_to, content=content)
         )
         return message
+
+
+class OrganizationBannerService:
+    model = OrganizationBanner
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> OrganizationBanner:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('OrganizationBanner not found'))
+

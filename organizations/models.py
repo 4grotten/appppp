@@ -193,10 +193,16 @@ class RegionalTariff(models.Model):
 
     @property
     def total_price(self):
-        return self.original_price * (Decimal('1') - Decimal(self.discount) / Decimal('100'))
+        if not self.duration_months:
+            return Decimal('0.00')
+        full_price = self.original_price * self.duration_months
+        discount_amount = full_price * Decimal(self.discount) / Decimal('100')
+        return full_price - discount_amount
 
     @property
     def price_per_month(self):
+        if not self.duration_months:
+            return Decimal('0.00')
         return self.total_price / self.duration_months
 
 class OrganizationBlacklist(TimestampModel):

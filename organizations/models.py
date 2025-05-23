@@ -66,6 +66,20 @@ class OrganizationType(models.Model):
         return f'{self.title}'
 
 
+
+
+class OrganizationBanner(TimestampModel):
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='organization_banners')
+    is_default = models.BooleanField(default=False, help_text='Системный баннер, удаляется только из админки')
+
+    class Meta:
+        verbose_name = 'Баннер организации'
+        verbose_name_plural = 'Баннеры организаций'
+
+    def __str__(self):
+        return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
+
+
 class Organization(TimestampModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
 
@@ -80,6 +94,7 @@ class Organization(TimestampModel):
     city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='organizations', null=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='organizations')
+    banners = models.ManyToManyField(OrganizationBanner, blank=True, related_name='organizations')
     show_contacts = models.BooleanField(default=False)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     address = models.CharField(max_length=255, null=True, blank=True)

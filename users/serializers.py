@@ -384,6 +384,7 @@ class ReferralBalanceSerializer(serializers.ModelSerializer):
 
 
 class PromoCodeValidationSerializer(serializers.Serializer):
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2)
     promocode = serializers.CharField(max_length=255)
 
 

@@ -20,7 +20,8 @@ from common.pagination import GeneralPagination
 from common.services import slack
 from common.services.umai import Umai
 from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DEVICE_TITLE
-from organizations.models import Subscription, Organization
+from organizations.models import Subscription, Organization, UserOrgSubscription
+from organizations.serializers.organization_serializers import OrganizationWithUsersSerializer
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
 from .models import MyOwnToken, User, DeliveryAddress, PromoCode, ReferralBalance, ReferralTransaction
@@ -32,7 +33,7 @@ from .serializers import (
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
     MyOwnTokenExpiredTimeSerializer, DeliveryAddressesSerializer, SetDefaultDeliveryAddressSerializer,
     PromoCodeValidationSerializer, PromoCodeSerializer, ReferralBalanceSerializer, ReferralTransactionSerializer,
-    ReferralStatsSerializer,
+    ReferralStatsSerializer, ReferredUserWithOrganizationsSerializer,
 )
 from notifications.tasks import sent_notification
 from .services import (
@@ -739,16 +740,12 @@ class MyReferralBalanceView(APIView):
         return Response(serializer.data)
 
 
-class MyReferralHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+class MyReferralHistoryView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ReferralTransactionSerializer
 
-    def get(self, request):
-        referral_transactions = ReferralTransaction.objects.filter(owner=request.user)
-
-        referral_data = ReferralTransactionSerializer(referral_transactions, many=True).data
-
-        return Response(referral_data)
-
+    def get_queryset(self):
+        return ReferralTransaction.objects.filter(owner=self.request.user)
 
 
 class ReferralStatsAPIView(APIView):
@@ -773,3 +770,29 @@ class ReferralStatsAPIView(APIView):
 
         serializer = ReferralStatsSerializer(data)
         return Response(serializer.data)
+
+
+class ReferralUsersListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ReferredUserWithOrganizationsSerializer
+
+    def get_queryset(self):
+        promocode = PromoCodeService.get(owner=self.request.user)
+        referred_users_ids = ReferralTransaction.objects.filter(promocode=promocode).values_list("referred_user",
+                                                                                                 flat=True).distinct()
+        queryset = User.objects.filter(id__in=referred_users_ids)
+        return queryset
+
+
+class ReferralOrganizationsListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = OrganizationWithUsersSerializer
+
+    def get_queryset(self):
+        promocode = PromoCodeService.get(owner=self.request.user)
+        transaction_subs = ReferralTransaction.objects.filter(promocode=promocode).values_list("subscription_id",
+                                                                                               flat=True)
+        org_ids = UserOrgSubscription.objects.filter(id__in=transaction_subs).values_list("organization_id", flat=True)
+        queryset = Organization.objects.filter(id__in=org_ids).distinct()
+
+        return queryset

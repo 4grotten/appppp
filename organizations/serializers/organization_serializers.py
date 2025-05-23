@@ -27,8 +27,8 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
-from users.models import PromoCode
-from users.serializers import UserShortInfoSerializer
+from users.models import PromoCode, User
+from users.serializers import UserShortInfoSerializer, UserInfoSerializer
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -875,6 +875,34 @@ class UserOrgSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserOrgSubscription
         fields = ("id", "organization", "tariff")
+
+
+class ReferralOrganizationSerializer(serializers.ModelSerializer):
+    organization = OrganizationWithTypeImageSerializer()
+    days_left = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserOrgSubscription
+        fields = ('id', 'organization', 'days_left')
+
+    def get_days_left(self, obj):
+        if obj.active_until:
+            return (obj.active_until.date() - timezone.now().date()).days
+        return None
+
+
+class OrganizationWithUsersSerializer(serializers.ModelSerializer):
+    users = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = ['id', 'title', 'image', 'users']
+
+    def get_users(self, org):
+        subscriptions = UserOrgSubscription.objects.filter(organization=org, is_active=True)
+        referred_user_ids = subscriptions.values_list("user_id", flat=True)
+        users = User.objects.filter(id__in=referred_user_ids).distinct()
+        return UserInfoSerializer(users, many=True).data
 
 
 

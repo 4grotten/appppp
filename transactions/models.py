@@ -42,11 +42,13 @@ class Transaction(TimestampModel):
     OFFLINE = 'offline'
     WITHDRAWAL = 'withdrawal'
     ASSISTANT = 'assistant'
+    ORG_SUBSCRIPTION = 'org_subscription'
     TYPE = (
         (ONLINE, ONLINE),
         (OFFLINE, OFFLINE),
         (WITHDRAWAL, WITHDRAWAL),
-        (ASSISTANT, ASSISTANT)
+        (ASSISTANT, ASSISTANT),
+        (ORG_SUBSCRIPTION, ORG_SUBSCRIPTION)
     )
 
     BANKCARD = 'bankcard'
@@ -127,6 +129,7 @@ class Transaction(TimestampModel):
     purchase_id = models.PositiveSmallIntegerField(null=True, blank=True)
 
     files = models.ManyToManyField(TransactionFile, blank=True, related_name='transactions')
+    order_comment = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
 
     display_time = models.DateTimeField(null=True)

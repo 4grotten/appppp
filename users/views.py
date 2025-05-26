@@ -1,5 +1,7 @@
+from decimal import Decimal
+
 from django.contrib.auth import authenticate
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy
 
 from django.db import transaction
@@ -18,10 +20,11 @@ from common.pagination import GeneralPagination
 from common.services import slack
 from common.services.umai import Umai
 from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DEVICE_TITLE
-from organizations.models import Subscription, Organization
+from organizations.models import Subscription, Organization, UserOrgSubscription
+from organizations.serializers.organization_serializers import OrganizationWithUsersSerializer
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
-from .models import MyOwnToken, User, DeliveryAddress
+from .models import MyOwnToken, User, DeliveryAddress, PromoCode, ReferralBalance, ReferralTransaction
 from .serializers import (
     RegisterAuthSerializer, TemporaryCodeSerializer, LoginSerializer,
     ResendTemporaryCodeSerializer, ProfileUpdateSerializer, ProfileSerializer,
@@ -29,11 +32,13 @@ from .serializers import (
     SendCodeToNewNumberSerializer, PhoneNumberEditSerializer, SocialNetworkEditSerializer,
     PhoneNumberSerializer, SocialNetworkContactSerializer, ChangeAndValidateNewNumberSerializer, MyOwnTokenSerializer,
     MyOwnTokenExpiredTimeSerializer, DeliveryAddressesSerializer, SetDefaultDeliveryAddressSerializer,
+    PromoCodeValidationSerializer, PromoCodeSerializer, ReferralBalanceSerializer, ReferralTransactionSerializer,
+    ReferralStatsSerializer, ReferredUserWithOrganizationsSerializer,
 )
 from notifications.tasks import sent_notification
 from .services import (
     UserService, TemporaryCodeService, PhoneNumberService, SocialNetworkContactService, TemporaryPhoneNumberService,
-    MyOwnTokenService, DeliveryAddressesService
+    MyOwnTokenService, DeliveryAddressesService, PromoCodeService
 )
 from .throttle.throttle import UserLoginRateThrottle
 
@@ -698,3 +703,102 @@ class UserHasOwnOrganizationOrCanEdit(APIView):
                     "Error": _("User does not exists"),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class MyPromoCodeView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        promo_code, created = PromoCode.objects.get_or_create(owner=request.user)
+        serializer = PromoCodeSerializer(promo_code)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = PromoCodeValidationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        code = serializer.validated_data['promocode']
+        total_price = serializer.validated_data['total_price']
+        user = request.user
+
+        promo = PromoCodeService.get(code=code)
+
+        if promo.owner == user:
+            return Response({"detail": "You can not use your own promocode."}, status=status.HTTP_400_BAD_REQUEST)
+
+        discount_percent = Decimal(promo.discount_percent)
+        final_price = total_price * (Decimal('1') - discount_percent / Decimal('100'))
+
+
+        return Response({
+            "is_valid": True,
+            "discount_percent": discount_percent,
+            "final_price": final_price
+        }, status=status.HTTP_200_OK)
+
+
+class MyReferralBalanceView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        balance, created = ReferralBalance.objects.get_or_create(user=request.user)
+        serializer = ReferralBalanceSerializer(balance)
+        return Response(serializer.data)
+
+
+class MyReferralHistoryView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ReferralTransactionSerializer
+
+    def get_queryset(self):
+        return ReferralTransaction.objects.filter(owner=self.request.user)
+
+
+class ReferralStatsAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        user = request.user
+
+        promocode = PromoCodeService.get(owner=user)
+
+        transactions = ReferralTransaction.objects.filter(promocode=promocode)
+
+        total_referrals = transactions.values("referred_user").distinct().count()
+        total_organizations = transactions.values("subscription__organization").distinct().count()
+        total_profit_usdt = transactions.aggregate(total=Sum("profit_amount_usdt"))["total"] or Decimal("0.00")
+
+        data = {
+            "total_referrals": total_referrals,
+            "total_organizations": total_organizations,
+            "total_profit_usdt": total_profit_usdt,
+        }
+
+        serializer = ReferralStatsSerializer(data)
+        return Response(serializer.data)
+
+
+class ReferralUsersListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ReferredUserWithOrganizationsSerializer
+
+    def get_queryset(self):
+        promocode = PromoCodeService.get(owner=self.request.user)
+        referred_users_ids = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("referred_user",
+                                                                                                 flat=True).distinct()
+        queryset = User.objects.filter(id__in=referred_users_ids)
+        return queryset
+
+
+class ReferralOrganizationsListAPIView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = OrganizationWithUsersSerializer
+
+    def get_queryset(self):
+        promocode = PromoCodeService.get(owner=self.request.user)
+        transaction_subs = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("subscription_id",
+                                                                                               flat=True)
+        org_ids = UserOrgSubscription.objects.filter(id__in=transaction_subs).values_list("organization_id", flat=True)
+        queryset = Organization.objects.filter(id__in=org_ids).distinct()
+
+        return queryset

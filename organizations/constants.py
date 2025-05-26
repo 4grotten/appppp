@@ -36,6 +36,15 @@ VERIFICATIONS_STATUS = (
     (UNDER_REVIEW, UNDER_REVIEW)
 )
 
+ACTIVE = "active"
+CANCELLED = "cancelled"
+TEST = "test"
+SUBSCRIPTION_STATUS = (
+    (ACTIVE, ACTIVE),
+    (CANCELLED, CANCELLED),
+    (TEST, TEST)
+)
+
 CARDS = "cards"
 WEB = "web"
 SWITCHER_TYPE = (

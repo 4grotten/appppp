@@ -15,7 +15,7 @@ from common.serializers import ImageSerializer, CountrySerializer, CitySerialize
 from organizations.models import (
     PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
     OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers, ChatMessage
+    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff, UserOrgSubscription, OrganizationBanner
 )
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
@@ -27,7 +27,8 @@ from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
-from users.serializers import UserShortInfoSerializer
+from users.models import PromoCode, User
+from users.serializers import UserShortInfoSerializer, UserInfoSerializer
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -48,6 +49,14 @@ class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
 
 class OrgSocialNetworkEditSerializer(serializers.Serializer):
     networks = serializers.ListSerializer(child=serializers.CharField())
+
+
+class OrganizationBannerSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = OrganizationBanner
+        fields = ('id', 'image', 'is_default')
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -144,7 +153,7 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
         model = Organization
         fields = (
             'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
-            'verification_status', 'is_private', 'is_wholesale'
+            'verification_status', 'is_private', 'is_wholesale', 'subscription_status'
         )
         read_only_fields = ['verification_status']
 
@@ -279,6 +288,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer(allow_null=True)
     image = ImageSerializer()
+    selected_banner = OrganizationBannerSerializer()
     permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
@@ -408,13 +418,13 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'title_lang', 'image', 'subscribers', 'description', 'description_lang', 'show_contacts',
-            'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
+            'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address', 'selected_banner',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count'
+            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -430,7 +440,8 @@ class OrganizationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'is_deleted', 'is_private', 'is_banned', 'verification_status', 'image', 'role', 'is_delivery_service', 'verification_status', 'avg_check')
+            'id', 'title', 'is_deleted', 'is_private', 'is_banned', 'verification_status', 'image', 'role',
+            'is_delivery_service', 'verification_status', 'avg_check', 'subscription_status')
         read_only_fields = ['verification_status']
 
 
@@ -478,6 +489,13 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all()
     )
+    banners_image_ids = serializers.ListField(
+        child=serializers.PrimaryKeyRelatedField(queryset=File.objects.all()),
+        required=False
+    )
+    selected_banner_file_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), required=False
+    )
     numbers = serializers.ListSerializer(child=serializers.CharField())
     accounts = serializers.ListSerializer(child=serializers.CharField())
     longitude = serializers.FloatField(allow_null=True)
@@ -487,7 +505,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'title', 'description', 'image_id', 'currency', 'country', 'city',
+            'title', 'description', 'image_id', 'banners_image_ids', 'selected_banner_file_id', 'currency', 'country', 'city',
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
             'types', 'numbers', 'accounts', 'cards', 'verification_status', 'avg_check'
         )
@@ -522,12 +540,13 @@ class OrganizationTwoGisCreateSerializer(serializers.Serializer):
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
+    selected_banner_id = serializers.IntegerField(required=False)
     longitude = serializers.FloatField(allow_null=True)
     latitude = serializers.FloatField(allow_null=True)
 
     class Meta:
         model = Organization
-        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
+        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types', 'selected_banner_id',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
                   'verification_status', 'avg_check', 'is_private', 'show_followers', 'switcher', 'is_wholesale')
         read_only_fields = ['verification_status']
@@ -814,3 +833,109 @@ class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', )
+
+
+class RegionalTariffSerializer(serializers.ModelSerializer):
+    tariff_type_display = serializers.CharField(source='get_tariff_type_display', read_only=True)
+    currency = serializers.CharField(source='country.currency.code', read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    price_per_month = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RegionalTariff
+        fields = (
+            'id',
+            'tariff_type',
+            'tariff_type_display',
+            'original_price',
+            'discount',
+            'total_price',
+            'price_per_month',
+            'duration_months',
+            'currency'
+        )
+
+    def get_price_per_month(self, obj):
+        return round(obj.price_per_month, 2)
+
+
+class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    tariff = serializers.PrimaryKeyRelatedField(queryset=RegionalTariff.objects.all())
+    promocode = serializers.SlugRelatedField(
+        queryset=PromoCode.objects.all(),
+        slug_field='code',
+        required=False,
+        allow_null=True
+    )
+    utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        organization = attrs['organization']
+        tariff = attrs['tariff']
+
+        if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
+            raise serializers.ValidationError(_('No rights to edit organization'))
+
+        if tariff.country != organization.country:
+            raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
+
+        return attrs
+
+
+class OrganizationBannerCreateSerializer(serializers.ModelSerializer):
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), source='image', write_only=True
+    )
+
+    class Meta:
+        model = OrganizationBanner
+        fields = ('image_id', )
+
+    def create(self, validated_data):
+        return OrganizationBanner.objects.create(image=validated_data['image'])
+
+
+class UserOrgSubscriptionSerializer(serializers.ModelSerializer):
+    organization = OrganizationWithTypeImageSerializer()
+    tariff = RegionalTariffSerializer()
+
+    class Meta:
+        model = UserOrgSubscription
+        fields = ("id", "organization", "tariff")
+
+
+class ReferralOrganizationSerializer(serializers.ModelSerializer):
+    organization = OrganizationWithTypeImageSerializer()
+    days_left = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserOrgSubscription
+        fields = ('id', 'organization', 'days_left')
+
+    def get_days_left(self, obj):
+        if obj.active_until:
+            return (obj.active_until.date() - timezone.now().date()).days
+        return None
+
+
+class OrganizationWithUsersSerializer(serializers.ModelSerializer):
+    users = serializers.SerializerMethodField()
+    image = ImageSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ['id', 'title', 'image', 'users']
+
+    def get_users(self, org):
+        subscriptions = UserOrgSubscription.objects.filter(organization=org, is_active=True)
+        referred_user_ids = subscriptions.values_list("user_id", flat=True)
+        users = User.objects.filter(id__in=referred_user_ids).distinct()
+        return UserInfoSerializer(users, many=True).data
+
+
+
+
+

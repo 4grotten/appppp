@@ -4,7 +4,7 @@ from rest_framework import serializers
 from common.exceptions import NotAcceptableException
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.models import Organization, DiscountCard
+from organizations.models import Organization, DiscountCard, PaymentSystemMethod
 from organizations.serializers.organization_serializers import (
     OrganizationUserTransactionSerializer, OrganizationShortInfoWithCurrencySerializer,
 )
@@ -23,6 +23,7 @@ from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+    order_comment = serializers.CharField(required=False, allow_null=True)
 
 
 class PreprocessSerializer(serializers.Serializer):
@@ -30,6 +31,7 @@ class PreprocessSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
     cart = serializers.PrimaryKeyRelatedField(
         queryset=Cart.objects.filter(is_open=True), allow_null=True, required=False)
+    order_comment = serializers.CharField(required=False, allow_null=True)
 
 
 class CompleteSerializer(serializers.ModelSerializer):
@@ -247,6 +249,19 @@ class OnlineOfflinePaymentCompleteSerializer(serializers.ModelSerializer):
         fields = ('transaction_id',)
 
 
+class NewInitPaymentSerializer(serializers.Serializer):
+    transaction_id = serializers.IntegerField(required=True)
+    payment_method_code = serializers.CharField(max_length=50, required=True)
+
+class PaymentSystemMethodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PaymentSystemMethod
+        fields = ('id', 'name', 'code', 'is_active')
+
+
+
+
 class TransactionDetailSerializer(serializers.ModelSerializer):
     organization = OrganizationUserTransactionSerializer()
     employee_avatar = ImageSerializer()
@@ -344,7 +359,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'display_time', 'client', 'delivery_type', 'type', 'cart', 'status',
-            'payment_status', 'current_user_can_see_stats', 'delivery_info', 'organization'
+            'payment_status', 'current_user_can_see_stats', 'delivery_info', 'organization', 'order_comment'
         )
 
 

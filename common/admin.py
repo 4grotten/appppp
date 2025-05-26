@@ -69,8 +69,20 @@ class FileVideo(admin.ModelAdmin):
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'flag', 'currency', 'is_priority', 'is_active', 'name_ru', 'name_tr',)
+    list_display = ('code', 'name', 'flag', 'currency', 'is_priority', 'is_active', 'is_paid_subscription',
+                    'name_ru', 'name_tr',)
+    list_filter = ('is_paid_subscription', 'is_active', 'currency')
     search_fields = ('code', 'name', 'currency__code', 'name_ru', 'name_tr',)
+
+    actions = ['mark_as_paid_subscription', 'mark_as_free']
+
+    def mark_as_paid_subscription(self, request, queryset):
+        queryset.update(is_paid_subscription=True)
+    mark_as_paid_subscription.short_description = "Сделать страну платной"
+
+    def mark_as_free(self, request, queryset):
+        queryset.update(is_paid_subscription=False)
+    mark_as_free.short_description = "Сделать страну бесплатной"
 
 
 @admin.register(City)

@@ -1,3 +1,6 @@
+from decimal import Decimal
+from django.utils import timezone
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from django.contrib.gis.db.models import PointField
@@ -11,7 +14,7 @@ from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
 from common.utils import upload_file_with_unique_name
 from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS, \
-    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB
+    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB, SUBSCRIPTION_STATUS, ACTIVE
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
 from users.models import User
@@ -63,6 +66,20 @@ class OrganizationType(models.Model):
         return f'{self.title}'
 
 
+
+
+class OrganizationBanner(TimestampModel):
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='organization_banners')
+    is_default = models.BooleanField(default=False, help_text='Системный баннер, удаляется только из админки')
+
+    class Meta:
+        verbose_name = 'Баннер организации'
+        verbose_name_plural = 'Баннеры организаций'
+
+    def __str__(self):
+        return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
+
+
 class Organization(TimestampModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
 
@@ -77,6 +94,11 @@ class Organization(TimestampModel):
     city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='organizations', null=True)
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='organizations')
+    banners = models.ManyToManyField(OrganizationBanner, blank=True, related_name='organizations')
+    selected_banner = models.ForeignKey(OrganizationBanner,null=True,blank=True,on_delete=models.SET_NULL,
+                                        related_name='selected_for_organizations',
+                                        help_text="The banner shown on the organization's detail page"
+    )
     show_contacts = models.BooleanField(default=False)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     address = models.CharField(max_length=255, null=True, blank=True)
@@ -90,6 +112,7 @@ class Organization(TimestampModel):
                                     related_name='organizations')
     running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
     verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
+    subscription_status = models.CharField(max_length=255, choices=SUBSCRIPTION_STATUS, default=ACTIVE)
     avg_check = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
     has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
@@ -154,6 +177,52 @@ class Organization(TimestampModel):
             longitude=None if not self.location or not self.location.x else self.location.x
         )
         return full_location
+
+
+class PaymentSystemMethod(TimestampModel):
+    name = models.CharField(max_length=255)
+    code = models.SlugField(max_length=50, unique=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class TariffType(models.TextChoices):
+    STARTER = 'starter', _('Стартовый')
+    STANDARD = 'standard', _('Стандартный')
+    PROFITABLE = 'profitable', _('Выгодный')
+
+
+class RegionalTariff(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='tariffs',
+                                limit_choices_to={'is_paid_subscription': True}, verbose_name='Страна')
+    tariff_type = models.CharField(max_length=20, choices=TariffType.choices)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_months = models.PositiveIntegerField(help_text="Срок действия тарифа в месяцах", null=True, blank=True)
+    discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    class Meta:
+        unique_together = ('country', 'tariff_type')
+        verbose_name = _('Regional Tariff')
+        verbose_name_plural = _('Regional Tariffs')
+
+    def __str__(self):
+        return f'{self.country.name} - {self.get_tariff_type_display()}'
+
+    @property
+    def total_price(self):
+        if not self.duration_months:
+            return Decimal('0.00')
+        full_price = self.original_price * self.duration_months
+        discount_amount = full_price * Decimal(self.discount) / Decimal('100')
+        return full_price - discount_amount
+
+    @property
+    def price_per_month(self):
+        if not self.duration_months:
+            return Decimal('0.00')
+        return self.total_price / self.duration_months
 
 class OrganizationBlacklist(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_blacklist')
@@ -747,6 +816,25 @@ class UserAssistant(TimestampModel):
 
     def __str__(self):
         return f'Assistant {self.assistant} of {self.user}'
+
+
+class UserOrgSubscription(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_org_subscription')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_subscription',
+                                  null=True, blank=True)
+    tariff = models.ForeignKey(RegionalTariff, on_delete=models.CASCADE, related_name='org_subscription')
+    is_active = models.BooleanField(default=False)
+    active_until = models.DateTimeField(null=True, blank=True)
+    transaction = models.OneToOneField("transactions.Transaction", on_delete=models.SET_NULL,
+                                       related_name='org_subscription', null=True)
+
+    def save(self, *args, **kwargs):
+        if self.tariff and not self.active_until:
+            self.active_until = timezone.now() + timedelta(days=30 * self.tariff.duration_months)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Subscription of {self.user} to {self.organization}'
 
 
 class Chat(TimestampModel):

@@ -39,7 +39,8 @@ from .views.organization_views import (
     OrganizationPaymentSystemsActivationDetailView, OrgWholesaleConfirmation, OrganizationsMapsListView,
     OrganizationMapsTypesListView, OrganizationsMapsCountryCityListView, MyOrganizationsWithCanEditListCreateView,
     MyOrganizationsListCreateView, OrganizationSubscriptionToGlobalAPIView, DeleteSubscriptionsAPIView,
-    OrganizationMakeSubsCreateView
+    OrganizationMakeSubsCreateView, RegionalTariffListView, PurchaseOrgSubscriptionView, OrganizationBannerListView,
+    AddCustomBannerView, RemoveCustomBannerView
 )
 from .views.partnerships_views import (
     PartnershipView, OrganizationPartnersView, OrgPartnershipsListView, PartnershipRetrieveUpdateDestroyView,
@@ -93,6 +94,11 @@ organization_urls = [
     path('organizations/<int:pk>/blocked_users/', OrgBlockedUsersListAPIView.as_view(), name='org_blocked_users'),
     path('organizations/<int:organization_id>/blocked_users/<int:user_id>/', OrgBlockedDetailsAPIView.as_view(),
          name='org_blocked_user_detail'),
+    path('organizations/<int:pk>/banners/', OrganizationBannerListView.as_view(),
+         name='organization-banners'),
+    path('organizations/banners/<int:pk>/', RemoveCustomBannerView.as_view(),
+         name='organization-banners-delete'),
+    path('organizations/<int:pk>/banners/custom/', AddCustomBannerView.as_view(), name='add_custom_banner'),
     path('organizations/<int:pk>/payment_systems/', OrganizationPaymentSystemListView.as_view(),
          name='organization_payment_systems_list'),
     path('organizations/<int:pk>/payment_systems/confirmation/', OrgPaymentSystemConfirmation.as_view(),
@@ -160,7 +166,10 @@ organization_urls = [
          name='org_assistant_chat_by_org_user'),
     path('organizations/assistant/toggle_assistant/', ToggleAssistantEnableView.as_view(),
          name='org_assistant_chat_by_org_user'),
-    path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats')
+    path('organizations/assistant/<int:pk>/chats/', AssistantChatsListView.as_view(), name='org_assistant_chats'),
+    path('organizations/tariffs/', RegionalTariffListView.as_view(), name='regional-tariffs-by-country'),
+    path('organizations/subscription/purchase/', PurchaseOrgSubscriptionView.as_view(),
+         name='org_subscription_purchase')
 ]
 
 membership_urls = [

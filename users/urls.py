@@ -10,7 +10,8 @@ from users.views import (
     MyOwnTokenListView, MyOwnTokenRetrieveDestroyView, DestroyAllTokens, AuthorisationHistoryListView,
     MyOwnTokenChangeExpiredTimeView, DeactivateUserProfile, TemporaryCodeSwitcherStatusView,
     UserHasOwnOrganizationOrCanEdit, UserDeliveryAddressesListAPIView, UserDeliveryAddressDetailAPIView,
-    SetDefaultDeliveryAddressAPIView
+    SetDefaultDeliveryAddressAPIView, MyPromoCodeView, MyReferralBalanceView,
+    MyReferralHistoryView, ReferralStatsAPIView, ReferralUsersListAPIView, ReferralOrganizationsListAPIView
 )
 
 urlpatterns = [
@@ -45,4 +46,10 @@ urlpatterns = [
 
     path('users/deactivate/', DeactivateUserProfile.as_view(), name='deactivate_user_profile'),
     path('users/has_organizations/', UserHasOwnOrganizationOrCanEdit.as_view(), name='user_has_organizations'),
+    path('users/promocode/', MyPromoCodeView.as_view(), name='promo_create'),
+    path("users/referral-balance/", MyReferralBalanceView.as_view(), name="my-referral-balance"),
+    path("users/referral-history/", MyReferralHistoryView.as_view(), name="my-referral-history"),
+    path("users/referral-stats/", ReferralStatsAPIView.as_view(), name="my-referral-stats"),
+    path("users/referrals/", ReferralUsersListAPIView.as_view(), name="referrals"),
+    path("users/referrals/organizations/", ReferralOrganizationsListAPIView.as_view(), name="referral-organizations"),
 ]

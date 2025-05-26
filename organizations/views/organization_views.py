@@ -26,9 +26,10 @@ from common.utils import method_permission_classes
 from common.services import slack
 from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
-from organizations.constants import UNDER_REVIEW
+from organizations.constants import UNDER_REVIEW, TEST
 from organizations.models import Organization, OrganizationCategory, OrganizationType, InstagramIntegration, Service, \
-    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant
+    OrganizationComplaint, OrganizationBlacklist, BlockedUser, Subscription, UserAssistant, RegionalTariff, \
+    PaymentSystemMethod, OrganizationBanner
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
     OrganizationCategorySerializer, HomepageOrganizationsSerializer, OrganizationWithDiscountsSerializer,
@@ -45,20 +46,22 @@ from organizations.serializers.organization_serializers import (
     OrganizationTitleSerializer, OrgVerificationsSerializer, OrganizationComplaintSerializer,
     OrganizationBlacklistSerializer, BlockedUserSerializer, OrganizationGoogleMapsCreateSerializer,
     OrganizationTwoGisCreateSerializer, PaymentSystemSerializer, OrgPaymentSystemConfirmationSerializer,
-    OrganizationMapsListSerializer, OrganizationNameListSerializer
+    OrganizationMapsListSerializer, OrganizationNameListSerializer, RegionalTariffSerializer,
+    PurchaseOrgSubscriptionSerializer, OrganizationBannerSerializer, OrganizationBannerCreateSerializer
 )
 from organizations.serializers.query_param_serializers import (
     PartnerQueryParamSerializer, OrganizationAndCategorySerializer, OrganizationCoutrySerializer,
-    OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer
+    OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer,
+    CountryQueryParamSerializer
 )
 from organizations.serializers.service_serializers import OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
 from organizations.services.organization_services import (
     OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
-    OrganizationInstagramIntegrationService
+    OrganizationInstagramIntegrationService, OrganizationBannerService
 )
-from organizations.services.subscription_services import SubscriptionService
+from organizations.services.subscription_services import SubscriptionService, UserOrgSubscriptionService
 from organizations.services.verifications_service import VerificationService, PaymentSystemConfirmationService
 from organizations.tasks import (
     parse_instagram_to_shop_items, add_subscribers_to_organization
@@ -743,12 +746,11 @@ class HomepageSearchView(ListAPIView):
     def get_queryset(self):
         serializer = PartnerQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
-
         partner = serializer.validated_data['partner']
         if partner is None:
-            return Organization.active_organizations.filter(is_active=True)
+            return Organization.active_organizations.filter(is_active=True).exclude(subscription_status=TEST)
 
-        return OrganizationService.get_organization_partners(organization=partner)
+        return OrganizationService.get_organization_partners(organization=partner).exclude(subscription_status=TEST)
 
 
 class SubscriptionsMessageListAPIView(ListAPIView):
@@ -1085,3 +1087,100 @@ class DeleteSubscriptionsAPIView(APIView):
             return Response({"message": "Subscriptions deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except Subscription.DoesNotExist:
             return Response({"message": "Subscriptions not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RegionalTariffListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RegionalTariffSerializer
+
+    def get_queryset(self):
+        serializer = CountryQueryParamSerializer(data=self.request.GET)
+        serializer.is_valid(raise_exception=True)
+        country = serializer.validated_data["country"]
+
+        return RegionalTariff.objects.filter(country=country)
+
+
+
+
+class PurchaseOrgSubscriptionView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PurchaseOrgSubscriptionSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        organization = serializer.validated_data['organization']
+        tariff = serializer.validated_data['tariff']
+        promocode = serializer.validated_data.get('promocode')
+        utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
+
+        user_subscription = UserOrgSubscriptionService.create_user_org_subscription(
+            user=request.user,
+            processed_by=organization.owner,
+            organization=organization,
+            tariff=tariff,
+            promocode=promocode,
+            utc_offset_minutes=utc_offset_minutes
+        )
+
+        return Response(
+            {
+                "message": _("Success"),
+                "transaction_id": user_subscription.transaction_id
+            }
+        )
+
+
+class OrganizationBannerListView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = OrganizationBannerSerializer
+
+    def get_queryset(self):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+        return OrganizationService.get_organization_banners(organization=organization)
+
+
+class AddCustomBannerView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        serializer = OrganizationBannerCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        banner = serializer.save()
+        organization.banners.add(banner)
+        banner_serializer = OrganizationBannerSerializer(banner)
+        return Response(banner_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RemoveCustomBannerView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, *args, **kwargs):
+        banner = OrganizationBannerService.get(id=self.kwargs['pk'], is_default=False)
+
+        organization = banner.organizations.first()
+        if not organization:
+            return Response({'detail': 'Баннер не привязан ни к одной организации.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not OrganizationService.user_can_edit_organization(user=self.request.user, organization=organization):
+            raise NotAcceptableException(_('No rights to edit organization'))
+
+        organization.banners.remove(banner)
+
+        if banner.organizations.count() == 0:
+            banner.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

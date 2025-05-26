@@ -40,7 +40,7 @@ from notifications.constants import (
 from notifications.models import Notification
 from notifications.tasks import sent_notification, send_delivery_notitication_to_organization_or_client, \
     send_notifications_organization_members, send_delivery_notifications
-from organizations.models import Organization, DiscountCard, Subscription, Membership
+from organizations.models import Organization, DiscountCard, Subscription, Membership, PaymentSystemMethod
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
@@ -110,7 +110,7 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def preprocess_transaction(cls, client: User, organization: Organization, cart: Union[Cart, None],
-                               processed_by: User) -> Transaction:
+                               processed_by: User, order_comment=None) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
 
@@ -122,6 +122,9 @@ class TransactionService:
         instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
                                               employee_name=processed_by.full_name, employee_role=role,
                                               employee_avatar=processed_by.avatar, currency=organization.currency)
+        if order_comment is not None:
+            instance.order_comment = order_comment
+            instance.save()
 
         if cart is not None:
             cart.transaction = instance
@@ -1641,7 +1644,8 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def create_offline_transaction_from_cart(cls, request, cart: Cart, utc_offset_minutes: int) -> Transaction:
+    def create_offline_transaction_from_cart(cls, request, cart: Cart, utc_offset_minutes: int,
+                                             order_comment=None) -> Transaction:
         organization = cart.organization
         processed_by = cart.user
         client = UserService.get_common_user()
@@ -1670,6 +1674,9 @@ class TransactionService:
             purchase_id=organization.running_purchase_id,
             display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
+        if order_comment is not None:
+            offline_transaction.order_comment = order_comment
+            offline_transaction.save()
         cart.transaction = offline_transaction
         cart.save()
 
@@ -2689,6 +2696,48 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
+    def accept_org_subscription_transaction(cls, transaction_id: Transaction):
+        transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        try:
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.is_processed = True
+            transaction.save()
+        except:
+            raise IntegrityException()
+
+        org_subscription = transaction.org_subscription
+        org_subscription.is_active = True
+        org_subscription.save()
+
+        # organization = org_subscription.organization
+        #
+        # sent_notification.delay(
+        #     recipient_id=transaction.processed_by_id,
+        #     sender_id=transaction.client_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+        # sent_notification.delay(
+        #     recipient_id=transaction.client_id,
+        #     sender_id=transaction.processed_by_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+
+    @classmethod
+    @transaction.atomic
     def accept_paysy_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
 
@@ -3156,6 +3205,11 @@ class TransactionService:
             pg_description = 'AI Ассистент'
 
             return pg_description, purchase_type
+        if transaction.type == Transaction.ORG_SUBSCRIPTION:
+            purchase_type = 'org_subscription'
+            pg_description = 'Платная подписка'
+
+            return pg_description, purchase_type
         try:
             booking = transaction.booking
             purchase_type = 'rent'
@@ -3229,3 +3283,18 @@ class TransactionService:
                 continue
             arr_flat_params[name] = str(val)
         return arr_flat_params
+
+
+class PaymentSystemMethodService:
+    model = PaymentSystemMethod
+
+    @classmethod
+    def filter(cls, **filters):
+        return cls.model.objects.filter(**filters)
+
+    @classmethod
+    def get(cls, *args, **kwargs) -> PaymentSystemMethod:
+        try:
+            return cls.model.objects.get(*args, **kwargs)
+        except cls.model.DoesNotExist:
+            raise ObjectNotFoundException(_('PaymentSystemMethod not found'))

@@ -110,7 +110,7 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def preprocess_transaction(cls, client: User, organization: Organization, cart: Union[Cart, None],
-                               processed_by: User) -> Transaction:
+                               processed_by: User, order_comment=None) -> Transaction:
         if not OrganizationService.user_can_sell(organization=organization, user=processed_by):
             raise NotAcceptableException(_('No rights to sell in this organization'))
 
@@ -122,6 +122,9 @@ class TransactionService:
         instance = Transaction.objects.create(client=client, organization=organization, processed_by=processed_by,
                                               employee_name=processed_by.full_name, employee_role=role,
                                               employee_avatar=processed_by.avatar, currency=organization.currency)
+        if order_comment is not None:
+            instance.order_comment = order_comment
+            instance.save()
 
         if cart is not None:
             cart.transaction = instance
@@ -1641,7 +1644,8 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
-    def create_offline_transaction_from_cart(cls, request, cart: Cart, utc_offset_minutes: int) -> Transaction:
+    def create_offline_transaction_from_cart(cls, request, cart: Cart, utc_offset_minutes: int,
+                                             order_comment=None) -> Transaction:
         organization = cart.organization
         processed_by = cart.user
         client = UserService.get_common_user()
@@ -1670,6 +1674,9 @@ class TransactionService:
             purchase_id=organization.running_purchase_id,
             display_time=now() + timedelta(minutes=utc_offset_minutes),
         )
+        if order_comment is not None:
+            offline_transaction.order_comment = order_comment
+            offline_transaction.save()
         cart.transaction = offline_transaction
         cart.save()
 

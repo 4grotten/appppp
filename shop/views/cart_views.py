@@ -246,7 +246,8 @@ class CartAnonymousCheckoutView(GenericAPIView):
 
         transaction = CartService.checkout_cart_for_anonymous_client(
             request=request, employee=request.user, cart_id=pk,
-            utc_offset_minutes=serializer.validated_data['utc_offset_minutes']
+            utc_offset_minutes=serializer.validated_data['utc_offset_minutes'],
+            order_comment=serializer.validated_data.get('order_comment')
         )
         data = self.serializer_class(transaction, context={'request': request}).data
         return Response(data)

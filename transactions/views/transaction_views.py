@@ -82,9 +82,10 @@ class TransactionPreprocessView(GenericAPIView):
         organization = serializer.validated_data['organization']
         client = serializer.validated_data['client']
         cart = serializer.validated_data.get('cart', None)
+        order_comment = serializer.validated_data.get('order_comment', None)
 
         new_transaction = TransactionService.preprocess_transaction(
-            client=client, organization=organization, cart=cart, processed_by=request.user
+            client=client, organization=organization, cart=cart, processed_by=request.user, order_comment=order_comment
         )
 
         cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,

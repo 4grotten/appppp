@@ -129,6 +129,7 @@ class Transaction(TimestampModel):
     purchase_id = models.PositiveSmallIntegerField(null=True, blank=True)
 
     files = models.ManyToManyField(TransactionFile, blank=True, related_name='transactions')
+    order_comment = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
 
     display_time = models.DateTimeField(null=True)

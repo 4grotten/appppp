@@ -23,6 +23,7 @@ from transactions.constants import DECLINED_RENTAL_OFFLINE_PAYMENT_TYPE, RENTAL_
 
 class OffsetUTCSerializer(serializers.Serializer):
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
+    order_comment = serializers.CharField(required=False, allow_null=True)
 
 
 class PreprocessSerializer(serializers.Serializer):
@@ -30,6 +31,7 @@ class PreprocessSerializer(serializers.Serializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
     cart = serializers.PrimaryKeyRelatedField(
         queryset=Cart.objects.filter(is_open=True), allow_null=True, required=False)
+    order_comment = serializers.CharField(required=False, allow_null=True)
 
 
 class CompleteSerializer(serializers.ModelSerializer):
@@ -357,7 +359,7 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             'id', 'purchase_id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback',
             'to_cashback', 'final_amount', 'processed_by', 'employee_name', 'employee_avatar', 'employee_role',
             'updated_at', 'created_at', 'display_time', 'client', 'delivery_type', 'type', 'cart', 'status',
-            'payment_status', 'current_user_can_see_stats', 'delivery_info', 'organization'
+            'payment_status', 'current_user_can_see_stats', 'delivery_info', 'organization', 'order_comment'
         )
 
 

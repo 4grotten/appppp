@@ -288,7 +288,7 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
     assistant = OrganizationAssistantSerializer(allow_null=True)
     image = ImageSerializer()
-    banners = OrganizationBannerSerializer(many=True)
+    selected_banner = OrganizationBannerSerializer()
     permissions = serializers.SerializerMethodField()
     types = OrganizationTypeSerializer(many=True)
     phone_numbers = OrgPhoneNumberSerializer(many=True)
@@ -418,13 +418,13 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         model = Organization
         fields = (
             'id', 'title', 'title_lang', 'image', 'subscribers', 'description', 'description_lang', 'show_contacts',
-            'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address',
+            'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address', 'selected_banner',
             'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
             'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
             'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
             'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
             'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status', 'banners'
+            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status'
         )
         read_only_fields = ['verification_status', 'need_add_item']
 
@@ -489,6 +489,13 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all()
     )
+    banners_image_ids = serializers.ListField(
+        child=serializers.PrimaryKeyRelatedField(queryset=File.objects.all()),
+        required=False
+    )
+    selected_banner_file_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), required=False
+    )
     numbers = serializers.ListSerializer(child=serializers.CharField())
     accounts = serializers.ListSerializer(child=serializers.CharField())
     longitude = serializers.FloatField(allow_null=True)
@@ -498,7 +505,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'title', 'description', 'image_id', 'currency', 'country', 'city',
+            'title', 'description', 'image_id', 'banners_image_ids', 'selected_banner_file_id', 'currency', 'country', 'city',
             'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
             'types', 'numbers', 'accounts', 'cards', 'verification_status', 'avg_check'
         )
@@ -533,12 +540,13 @@ class OrganizationTwoGisCreateSerializer(serializers.Serializer):
 
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.IntegerField()
+    selected_banner_id = serializers.IntegerField(required=False)
     longitude = serializers.FloatField(allow_null=True)
     latitude = serializers.FloatField(allow_null=True)
 
     class Meta:
         model = Organization
-        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types',
+        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types', 'selected_banner_id',
                   'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
                   'verification_status', 'avg_check', 'is_private', 'show_followers', 'switcher', 'is_wholesale')
         read_only_fields = ['verification_status']

@@ -95,6 +95,10 @@ class Organization(TimestampModel):
     image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='organizations')
     banners = models.ManyToManyField(OrganizationBanner, blank=True, related_name='organizations')
+    selected_banner = models.ForeignKey(OrganizationBanner,null=True,blank=True,on_delete=models.SET_NULL,
+                                        related_name='selected_for_organizations',
+                                        help_text="The banner shown on the organization's detail page"
+    )
     show_contacts = models.BooleanField(default=False)
     types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
     address = models.CharField(max_length=255, null=True, blank=True)

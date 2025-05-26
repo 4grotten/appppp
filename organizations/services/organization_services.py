@@ -286,7 +286,8 @@ class OrganizationService:
     @transaction.atomic
     def create_organization(cls, owner: User, title: str, image_id: File, longitude, latitude, numbers, accounts, cards,
                             avg_check=None, types=None, description=None, opens_at=None, closes_at=None,
-                            address=None, country=None, currency=None, city=None):
+                            address=None, country=None, currency=None, city=None, banners_image_ids=None,
+                            selected_banner_file_id=None):
         from organizations.services.card_services import DiscountCardService
 
         if not owner.is_staff and owner.owned_organizations.count() >= MAX_ORGANIZATIONS_PER_USER:
@@ -315,6 +316,14 @@ class OrganizationService:
                                                    avg_check=avg_check, subscription_status=subscription_status)
         if types is not None:
             organization.types.set(types)
+        if banners_image_ids is not None:
+            banners = OrganizationBannerService.create_banners(banners_image_ids)
+            organization.banners.set(banners)
+            selected_banner_file = selected_banner_file_id
+            selected_banner = next((b for b in banners if b.image == selected_banner_file), None)
+            if selected_banner:
+                organization.selected_banner = selected_banner
+                organization.save()
         for number in numbers:
             OrgPhoneNumberService.create(organization=organization, number=number)
         for link in accounts:
@@ -349,7 +358,7 @@ class OrganizationService:
     @transaction.atomic
     def update(cls, organization, image_id, longitude, latitude, types, title, opens_at, closes_at,
                address, currency, show_contacts, country, is_private, show_followers=None, is_wholesale=None,
-               switcher=None, avg_check=None, description=None, city=None):
+               switcher=None, avg_check=None, description=None, city=None, selected_banner_id=None):
         try:
             if longitude and latitude:
                 point = Point(longitude, latitude)
@@ -365,6 +374,7 @@ class OrganizationService:
             organization.title_lang = title_lang
             organization.description_lang = description_lang
             organization.image_id = image_id
+            organization.selected_banner_id = selected_banner_id
             organization.location = point
             organization.title = title
             organization.opens_at = opens_at
@@ -935,4 +945,12 @@ class OrganizationBannerService:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
             raise ObjectNotFoundException(_('OrganizationBanner not found'))
+
+    @classmethod
+    def create_banners(cls, image_ids: list[File]) -> list[OrganizationBanner]:
+        banners = [
+            OrganizationBanner.objects.create(image=image)
+            for image in image_ids
+        ]
+        return banners
 

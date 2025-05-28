@@ -15,7 +15,7 @@ from .models import (
     CommonItemsGroup, Hotlink, OrganizationPromo, PromoSubscriber, PromoEditLog, HotlinkCollectionItem,
     HotlinkCollectionSubcategory, HotlinkCollectionLink, Service, OrganizationVerificationUsers, OrganizationBlacklist,
     BlockedUser, OrganizationPaymentSystemUsers, Question, Assistant, Answer, AnswerFile, Plan, UserAssistant, Chat,
-    ChatMessage, RegionalTariff, PaymentSystemMethod, OrganizationBanner
+    ChatMessage, RegionalTariff, PaymentSystemMethod, OrganizationBanner, UserOrgSubscription
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -492,3 +492,14 @@ class OrganizationBannerAdmin(admin.ModelAdmin):
     list_filter = ('is_default', 'created_at')
     search_fields = ('id',)
     filter_horizontal = ('organizations',)
+
+
+@admin.register(UserOrgSubscription)
+class UserOrgSubscriptionAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'organization', 'tariff', 'is_active',
+        'active_until', 'transaction', 'created_at', 'updated_at'
+    )
+    list_filter = ('is_active', 'tariff', 'organization')
+    search_fields = ('user__phone_number', 'organization__name', 'tariff__name')
+    autocomplete_fields = ('user', 'organization', 'tariff', 'transaction')

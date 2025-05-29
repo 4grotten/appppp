@@ -719,12 +719,8 @@ class MyPromoCodeView(APIView):
 
         code = serializer.validated_data['promocode']
         total_price = serializer.validated_data['total_price']
-        user = request.user
 
         promo = PromoCodeService.get(code=code)
-
-        if promo.owner == user:
-            return Response({"detail": "You can not use your own promocode."}, status=status.HTTP_400_BAD_REQUEST)
 
         discount_percent = Decimal(promo.discount_percent)
         final_price = total_price * (Decimal('1') - discount_percent / Decimal('100'))

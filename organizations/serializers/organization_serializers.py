@@ -930,7 +930,13 @@ class OrganizationWithUsersSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'image', 'users']
 
     def get_users(self, org):
-        subscriptions = UserOrgSubscription.objects.filter(organization=org, is_active=True)
+        subscriptions = UserOrgSubscription.objects.filter(
+            organization=org,
+            transaction__isnull=False,
+            transaction__payment_status=Transaction.ACCEPTED,
+            transaction__is_processed=True
+        )
+
         referred_user_ids = subscriptions.values_list("user_id", flat=True)
         users = User.objects.filter(id__in=referred_user_ids).distinct()
         return UserInfoSerializer(users, many=True).data

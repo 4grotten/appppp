@@ -22,6 +22,7 @@ from common.services.umai import Umai
 from notifications.constants import NOTIFICATION_MODE_SYSTEM, NEW_DEVICE, NEW_DEVICE_TITLE
 from organizations.models import Subscription, Organization, UserOrgSubscription
 from organizations.serializers.organization_serializers import OrganizationWithUsersSerializer
+from transactions.models import Transaction
 from .constants import CHANGE_AUTH_NUMBER_TYPE, REGISTER_AUTH_TYPE, DEVICE_TYPES, WHATSAPP_AUTH_TYPE, VOICE_AUTH_TYPE, \
     EMAIL_AUTH_TYPE
 from .models import MyOwnToken, User, DeliveryAddress, PromoCode, ReferralBalance, ReferralTransaction
@@ -747,7 +748,12 @@ class MyReferralHistoryView(ListAPIView):
     serializer_class = ReferralTransactionSerializer
 
     def get_queryset(self):
-        return ReferralTransaction.objects.filter(owner=self.request.user)
+        return ReferralTransaction.objects.filter(
+            owner=self.request.user,
+            subscription__transaction__isnull=False,
+            subscription__transaction__payment_status=Transaction.ACCEPTED,
+            subscription__transaction__is_processed=True
+        )
 
 
 class ReferralStatsAPIView(APIView):
@@ -758,7 +764,12 @@ class ReferralStatsAPIView(APIView):
 
         promocode = PromoCodeService.get(owner=user)
 
-        transactions = ReferralTransaction.objects.filter(promocode=promocode)
+        transactions = ReferralTransaction.objects.filter(
+            promocode=promocode,
+            subscription__transaction__isnull=False,
+            subscription__transaction__payment_status=Transaction.ACCEPTED,
+            subscription__transaction__is_processed=True
+        )
 
         total_referrals = transactions.values("referred_user").distinct().count()
         total_organizations = transactions.values("subscription__organization").distinct().count()
@@ -780,8 +791,13 @@ class ReferralUsersListAPIView(ListAPIView):
 
     def get_queryset(self):
         promocode = PromoCodeService.get(owner=self.request.user)
-        referred_users_ids = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("referred_user",
-                                                                                                 flat=True).distinct()
+        referred_users_ids = ReferralTransaction.objects.filter(
+            promocode=promocode,
+            subscription__transaction__isnull=False,
+            subscription__transaction__payment_status=Transaction.ACCEPTED,
+            subscription__transaction__is_processed=True
+        ).values_list("referred_user", flat=True).distinct()
+
         queryset = User.objects.filter(id__in=referred_users_ids)
         return queryset
 
@@ -792,9 +808,16 @@ class ReferralOrganizationsListAPIView(ListAPIView):
 
     def get_queryset(self):
         promocode = PromoCodeService.get(owner=self.request.user)
-        transaction_subs = ReferralTransaction.objects.filter(promocode=promocode, subscription__is_active=True).values_list("subscription_id",
-                                                                                               flat=True)
-        org_ids = UserOrgSubscription.objects.filter(id__in=transaction_subs).values_list("organization_id", flat=True)
-        queryset = Organization.objects.filter(id__in=org_ids).distinct()
+        paid_subscription_ids = ReferralTransaction.objects.filter(
+            promocode=promocode,
+            subscription__transaction__isnull=False,
+            subscription__transaction__payment_status=Transaction.ACCEPTED,
+            subscription__transaction__is_processed=True
+        ).values_list("subscription_id", flat=True)
 
+        org_ids = UserOrgSubscription.objects.filter(
+            id__in=paid_subscription_ids
+        ).values_list("organization_id", flat=True)
+
+        queryset = Organization.objects.filter(id__in=org_ids).distinct()
         return queryset

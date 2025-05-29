@@ -7,6 +7,7 @@ from typing import Union
 from django.conf import settings
 
 from common.models import Currency
+from organizations.constants import ACTIVE
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalField, Case, When, IntegerField, Max, \
@@ -2708,6 +2709,10 @@ class TransactionService:
         org_subscription = transaction.org_subscription
         org_subscription.is_active = True
         org_subscription.save()
+
+        organization = org_subscription.organization
+        organization.subscription_status = ACTIVE
+        organization.save(update_fields=["subscription_status"])
 
         # ➕ Now apply referral profit after payment confirmation
         try:

@@ -53,7 +53,7 @@ from transactions.models import Transaction, Recipient, Balance, PayoutSystem
 from transactions.serializers.transaction_serializers import RecipientSerializer, RecipientSwiftSerializer, \
     BalanceInTransactionSerializer
 from transactions.services.stats_services import StatisticsService
-from users.models import User
+from users.models import User, ReferralTransaction, ReferralBalance
 from users.services import UserService
 
 
@@ -2708,6 +2708,16 @@ class TransactionService:
         org_subscription = transaction.org_subscription
         org_subscription.is_active = True
         org_subscription.save()
+
+        # ➕ Now apply referral profit after payment confirmation
+        try:
+            referral_tx = ReferralTransaction.objects.get(subscription=org_subscription)
+            balance, _ = ReferralBalance.objects.get_or_create(user=referral_tx.owner)
+            balance.total_earned += referral_tx.profit_amount_usdt
+            balance.current_balance += referral_tx.profit_amount_usdt
+            balance.save(update_fields=["total_earned", "current_balance"])
+        except ReferralTransaction.DoesNotExist:
+            pass  # No referral used
 
         # organization = org_subscription.organization
         #

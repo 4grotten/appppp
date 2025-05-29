@@ -9,6 +9,7 @@ from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
+from transactions.models import Transaction
 from .constants import RESEND_CODE_CHOICES, GENDER_CHOICES
 from .models import PhoneNumber, SocialNetworkContact, MyOwnToken, DeliveryAddress, PromoCode, ReferralBalance, \
     ReferralTransaction
@@ -423,6 +424,12 @@ class ReferredUserWithOrganizationsSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'username', 'avatar', 'organizations']
 
     def get_organizations(self, user):
-        subscriptions = UserOrgSubscription.objects.filter(user=user, is_active=True)
         from organizations.serializers.organization_serializers import ReferralOrganizationSerializer
+
+        subscriptions = UserOrgSubscription.objects.filter(
+            user=user,
+            transaction__isnull=False,
+            transaction__payment_status=Transaction.ACCEPTED,
+            transaction__is_processed=True
+        )
         return ReferralOrganizationSerializer(subscriptions, many=True).data

@@ -99,8 +99,9 @@ class OrganizationAdmin(admin.ModelAdmin):
     }
     list_display_links = ('id', 'title')
     list_display = (
-        'id', 'title', 'owner', 'currency', 'country', 'city', 'is_active', 'is_banned', 'is_private', 'cashback_group',
-        'cumulative_group', 'items_group', 'is_delivery_service', 'add_item_date', 'avg_check')
+        'id', 'title', 'owner', 'currency', 'country', 'city', 'subscription_status', 'is_active', 'is_banned',
+        'is_private', 'cashback_group', 'cumulative_group', 'items_group', 'is_delivery_service', 'add_item_date',
+        'avg_check')
     list_filter = ('is_active', 'types__category', 'country', 'cashback_group', 'cumulative_group', 'items_group',
                    'is_delivery_service')
     search_fields = ('title',)
@@ -134,7 +135,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('Status of Organization', {
             'fields': ('is_active', 'is_deleted', 'is_banned', 'is_private', 'is_under_review', 'is_delivery_service',
                        'is_bank', 'is_wholesale', 'can_update_is_wholesale', 'is_wholesale_request_timestamp',
-                       'has_license', 'verification_status')
+                       'has_license', 'verification_status', 'subscription_status')
         }),
         ('Other configurations', {
             'fields': (

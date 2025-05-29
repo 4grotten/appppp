@@ -275,12 +275,6 @@ class UserOrgSubscriptionService:
                     original_amount=profit_amount
                 )
 
-                # Обновление баланса
-                balance, _ = ReferralBalance.objects.get_or_create(user=promocode.owner)
-                balance.total_earned += profit_usdt
-                balance.current_balance += profit_usdt
-                balance.save(update_fields=["total_earned", "current_balance"])
-
         return subscription
 
     @classmethod

@@ -66,3 +66,13 @@ class UserApp(TimestampModel):
 
     def __str__(self):
         return self.title
+
+
+class AddedApp(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="apps")
+    user_app = models.ForeignKey(UserApp, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('user', 'user_app'), name='unique_user_app_added_by_user')
+        ]

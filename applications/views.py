@@ -3,7 +3,9 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
+from rest_framework.views import APIView
 
+from applications.models import AddedApp
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer
 from applications.services import UserAppService
 
@@ -24,3 +26,24 @@ class UserAppCreateView(CreateAPIView):
 
         data = UserAppDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ToggleUserAppView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        user_app = UserAppService.get(id=kwargs['pk'])
+
+        if user_app.owner == request.user:
+            return Response({"detail": "You cannot add your own app."}, status=status.HTTP_400_BAD_REQUEST)
+
+        added_app, created = AddedApp.objects.get_or_create(
+            user=request.user,
+            user_app=user_app
+        )
+
+        if not created:
+            added_app.delete()
+            return Response({"message": "Successfully deleted"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Successfully added"}, status=status.HTTP_201_CREATED)

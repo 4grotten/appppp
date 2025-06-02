@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp
+from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp
 
 
 @admin.register(UserAppCategory)
@@ -29,3 +29,12 @@ class UserAppAdmin(admin.ModelAdmin):
     list_filter = ('types',)
     search_fields = ('title', 'description', 'owner__email')
     filter_horizontal = ('types', 'banners', 'app_images')
+
+
+@admin.register(AddedApp)
+class AddedAppAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user_app', 'created_at')
+    list_filter = ('user',)
+    search_fields = ('user__email', 'user_app__title')
+    autocomplete_fields = ('user', 'user_app')
+    ordering = ('-created_at',)

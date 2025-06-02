@@ -8,6 +8,7 @@ from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSetti
 v1 = ([
           path('', include('users.urls')),
           path('', include('organizations.urls')),
+          path('', include('applications.urls')),
           path('', include('common.urls')),
           path('', include('transactions.urls')),
           path('', include('shop.urls')),

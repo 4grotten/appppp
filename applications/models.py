@@ -1,0 +1,68 @@
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from common.models import TimestampModel
+from users.models import User
+
+
+class UserAppCategory(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = _('UserApp categories')
+        ordering = ('name',)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
+class UserAppType(models.Model):
+    title = models.CharField(max_length=255)
+    category = models.ForeignKey(UserAppCategory, on_delete=models.CASCADE, related_name='types')
+    is_adult = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('title',)
+
+    def __str__(self):
+        return f'{self.title}'
+
+
+class UserAppBanner(TimestampModel):
+    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='user_app_banners')
+    is_default = models.BooleanField(default=False, help_text='Системный баннер, удаляется только из админки')
+
+    class Meta:
+        verbose_name = 'Баннер приложения'
+        verbose_name_plural = 'Баннеры приложений'
+
+    def __str__(self):
+        return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
+
+
+class UserApp(TimestampModel):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_user_apps')
+    title = models.CharField(max_length=255)
+    title_lang = models.CharField(max_length=8, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    description_lang = models.CharField(max_length=8, null=True, blank=True)
+    types = models.ManyToManyField(UserAppType, blank=True, related_name='user_apps')
+    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='user_apps')
+    banners = models.ManyToManyField(UserAppBanner, blank=True, related_name='user_apps')
+    selected_banner = models.ForeignKey(UserAppBanner, null=True, blank=True, on_delete=models.SET_NULL,
+                                        related_name='selected_for_user_apps',
+                                        help_text="The banner shown on the UserApp's detail page"
+                                        )
+    app_images = models.ManyToManyField('common.File', blank=True, related_name='user_app_images')
+    app_link = models.URLField()
+    # Optional fields
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    instagram_link = models.URLField(null=True, blank=True)
+    youtube_links = models.JSONField(null=True, blank=True)
+    support_link = models.URLField(null=True, blank=True)
+    company_link = models.URLField(null=True, blank=True)
+    terms_link = models.URLField(null=True, blank=True)
+
+
+    def __str__(self):
+        return self.title

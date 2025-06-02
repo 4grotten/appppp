@@ -1,0 +1,69 @@
+from rest_framework import serializers
+
+from applications.models import UserApp, UserAppBanner, UserAppCategory, UserAppType
+from common.models import File
+from common.serializers import ImageSerializer
+
+
+class UserAppCreateSerializer(serializers.ModelSerializer):
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all()
+    )
+    types = serializers.PrimaryKeyRelatedField(
+        queryset=UserAppType.objects.all(), many=True, required=True
+    )
+    banners_image_ids = serializers.ListField(
+        child=serializers.PrimaryKeyRelatedField(queryset=File.objects.all()),
+        required=True
+    )
+    selected_banner_file_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), required=True
+    )
+    description = serializers.CharField(required=True)
+
+    class Meta:
+        model = UserApp
+        fields = (
+            'title', 'description', 'types', 'image_id', 'banners_image_ids', 'selected_banner_file_id', 'app_images',
+            'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link'
+        )
+
+    def validate(self, attrs):
+        attrs['owner'] = self.context['request'].user
+        return attrs
+
+
+class UserAppBannerSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = UserAppBanner
+        fields = ('id', 'image', 'is_default')
+
+
+class UserAppTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAppType
+        fields = ('id', 'title',)
+
+
+class UserAppCategorySerializer(serializers.ModelSerializer):
+    types = UserAppTypeSerializer(many=True)
+
+    class Meta:
+        model = UserAppCategory
+        fields = ('id', 'name', 'types')
+
+
+class UserAppDetailedSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    app_images = ImageSerializer(many=True)
+    selected_banner = UserAppBannerSerializer()
+    types = UserAppTypeSerializer(many=True)
+
+    class Meta:
+        model = UserApp
+        fields = (
+            'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner', 'app_images',
+            'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link'
+        )

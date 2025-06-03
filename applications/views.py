@@ -164,6 +164,11 @@ class UserAppStoreListView(ListAPIView):
     filterset_fields = ['types__category']
     search_fields = ['title', 'description']
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
 
 class PurchaseUserAppView(CreateAPIView):
     permission_classes = (IsAuthenticated,)

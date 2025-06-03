@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 
 from applications.models import AddedApp, UserApp
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
-    UserAppUpdateSerializer
-from applications.services import UserAppService
+    UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer
+from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
 
@@ -75,6 +75,55 @@ class UserAppRetrieveUpdateView(RetrieveUpdateAPIView):
         updated_application = UserAppService.update(application=application, image_id=image_id,
                                                     validated_data=validated_data)
         return Response(self.serializer_class(updated_application, context={'request': request}).data)
+
+
+class UserAppBannerListView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = UserAppBannerSerializer
+
+    def get_queryset(self):
+        application = UserAppService.get(id=self.kwargs['pk'])
+        if application.owner != self.request.user:
+            raise NotAcceptableException(_('No rights to edit application'))
+        return UserAppService.get_application_banners(application=application)
+
+
+class RemoveUserAppCustomBannerView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, *args, **kwargs):
+        banner = UserAppBannerService.get(id=self.kwargs['pk'], is_default=False)
+
+        application = banner.user_apps.first()
+        if not application:
+            return Response({'detail': 'Баннер не привязан ни к одной организации.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if application.owner != self.request.user:
+            raise NotAcceptableException(_('No rights to edit application'))
+
+        application.banners.remove(banner)
+
+        if banner.user_apps.count() == 0:
+            banner.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AddCustomUserAppBannerView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        application = UserAppService.get(id=self.kwargs['pk'])
+        if application.owner != self.request.user:
+            raise NotAcceptableException(_('No rights to edit application'))
+
+        serializer = UserAppBannerCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        banner = serializer.save()
+        application.banners.add(banner)
+        banner_serializer = UserAppBannerSerializer(banner)
+        return Response(banner_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ToggleUserAppView(APIView):

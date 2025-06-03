@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.db.models import QuerySet, Q, Case, When, Value, IntegerField
 
 from applications.models import UserApp, UserAppBanner, UserAppType
 from common.exceptions import ObjectNotFoundException, IntegrityException
@@ -101,6 +102,18 @@ class UserAppService:
             raise IntegrityException(_('Not found: {e}').format(e=str(e)))
         except Exception as e:
             raise IntegrityException(_('Could not update application: {e}').format(e=str(e)))
+
+    @classmethod
+    def get_application_banners(cls, application: UserApp) -> QuerySet:
+        return UserAppBanner.objects.filter(
+            Q(is_default=True) | Q(user_apps=application)
+        ).annotate(
+            sort_order=Case(
+                When(is_default=False, then=Value(0)),
+                When(is_default=True, then=Value(1)),
+                output_field=IntegerField()
+            )
+        ).order_by('sort_order', '-created_at')
 
 
 class UserAppBannerService:

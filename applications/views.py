@@ -1,13 +1,15 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
-from applications.models import AddedApp, UserApp
+from applications.models import AddedApp, UserApp, UserAppCategory
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
-    UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer
+    UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer
 from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
@@ -145,3 +147,18 @@ class ToggleUserAppView(APIView):
             return Response({"message": "Successfully deleted"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "Successfully added"}, status=status.HTTP_201_CREATED)
+
+
+class UserAppCategoryListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserAppCategorySerializer
+    queryset = UserAppCategory.objects.all()
+
+
+class UserAppStoreListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserAppListSerializer
+    queryset = UserApp.objects.all()
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['types__category']
+    search_fields = ['title', 'description']

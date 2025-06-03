@@ -689,6 +689,7 @@ class Service(models.Model):
     is_map = models.BooleanField(default=False)
     is_resume = models.BooleanField(default=False)
     is_wholesale = models.BooleanField(default=False)
+    is_application = models.BooleanField(default=False)
     has_delivery = models.BooleanField(default=False)
     has_self_pick_up = models.BooleanField(default=False)
     has_license = models.BooleanField(default=False)

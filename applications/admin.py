@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp
+from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase
 
 
 @admin.register(UserAppCategory)
@@ -38,3 +38,11 @@ class AddedAppAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'user_app__title')
     autocomplete_fields = ('user', 'user_app')
     ordering = ('-created_at',)
+
+
+@admin.register(UserAppPurchase)
+class UserAppPurchaseAdmin(admin.ModelAdmin):
+    list_display = ('user', 'app', 'is_paid', 'transaction')
+    list_filter = ('is_paid', 'app')
+    search_fields = ('user__username', 'user__email', 'app__title', 'transaction__id')
+    autocomplete_fields = ('user', 'app', 'transaction')

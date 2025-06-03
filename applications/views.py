@@ -1,17 +1,29 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
 from applications.models import AddedApp
-from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer
+from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer
 from applications.services import UserAppService
 
 
-class UserAppCreateView(CreateAPIView):
+class UserAppListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        my_apps = UserAppService.filter(owner=user)
+
+        added_apps = UserAppService.filter(addedapp__user=user).exclude(owner=user)
+
+        return Response({
+            'my_apps': UserAppListSerializer(my_apps, many=True, context={'request': request}).data,
+            'my_added_apps': UserAppListSerializer(added_apps, many=True, context={'request': request}).data
+        })
 
     def create(self, request, *args, **kwargs):
         serializer = UserAppCreateSerializer(data=request.data, context={'request': request})

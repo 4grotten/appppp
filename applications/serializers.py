@@ -67,3 +67,15 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
             'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner', 'app_images',
             'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link'
         )
+
+
+class UserAppListSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    selected_banner = UserAppBannerSerializer()
+    types = UserAppTypeSerializer(many=True)
+
+    class Meta:
+        model = UserApp
+        fields = (
+            'title', 'title_lang', 'types', 'image', 'selected_banner'
+        )

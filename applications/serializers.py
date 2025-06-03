@@ -64,8 +64,9 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserApp
         fields = (
-            'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner', 'app_images',
-            'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link'
+            'id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
+            'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link',
+            'terms_link'
         )
 
 
@@ -76,9 +77,7 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserApp
-        fields = (
-            'title', 'title_lang', 'types', 'image', 'selected_banner'
-        )
+        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner')
 
 
 class UserAppUpdateSerializer(serializers.ModelSerializer):
@@ -102,3 +101,8 @@ class UserAppBannerCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return UserAppBanner.objects.create(image=validated_data['image'])
+
+
+class PurchaseUserAppSerializer(serializers.Serializer):
+    app = serializers.PrimaryKeyRelatedField(queryset=UserApp.objects.all())
+    utc_offset_minutes = serializers.IntegerField()

@@ -4,11 +4,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import QuerySet, Q, Case, When, Value, IntegerField
 
-from applications.models import UserApp, UserAppBanner, UserAppType
+from applications.models import UserApp, UserAppBanner, UserAppType, UserAppPurchase
 from common.exceptions import ObjectNotFoundException, IntegrityException
 from django.utils.translation import gettext_lazy as _
 
 from common.models import File
+from transactions.services.transaction_services import TransactionService
 from users.models import User
 
 
@@ -114,6 +115,29 @@ class UserAppService:
                 output_field=IntegerField()
             )
         ).order_by('sort_order', '-created_at')
+
+    @classmethod
+    @transaction.atomic
+    def create_app_purchase(cls, user, app, processed_by, utc_offset_minutes=0):
+        if not app.price:
+            raise IntegrityException(_('This app is not for sale.'))
+
+        transaction = TransactionService.create_user_app_transaction(
+            user=user,
+            processed_by=processed_by,
+            application=app,
+            utc_offset_minutes=utc_offset_minutes
+        )
+
+        # 2. Создание записи о покупке
+        app_purchase = UserAppPurchase.objects.create(
+            user=user,
+            app=app,
+            transaction=transaction,
+            is_paid=False
+        )
+
+        return app_purchase
 
 
 class UserAppBannerService:

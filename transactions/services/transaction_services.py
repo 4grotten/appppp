@@ -6,6 +6,7 @@ from typing import Union
 
 from django.conf import settings
 
+from applications.models import UserApp
 from common.models import Currency
 from organizations.constants import ACTIVE
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
@@ -2753,6 +2754,48 @@ class TransactionService:
 
     @classmethod
     @transaction.atomic
+    def accept_user_app_transaction(cls, transaction_id: Transaction):
+        transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
+        try:
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.is_processed = True
+            transaction.save()
+        except:
+            raise IntegrityException()
+
+        user_app_purchase = transaction.user_app_purchase
+        user_app_purchase.is_paid = True
+        user_app_purchase.save()
+
+        # organization = org_subscription.organization
+        #
+        # sent_notification.delay(
+        #     recipient_id=transaction.processed_by_id,
+        #     sender_id=transaction.client_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+        # sent_notification.delay(
+        #     recipient_id=transaction.client_id,
+        #     sender_id=transaction.processed_by_id,
+        #     mode=NOTIFICATION_MODE_ASSISTANT,
+        #     notification_type=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE,
+        #     organization_id=transaction.organization_id,
+        #     extra_data=dict(transaction_id=transaction.id,
+        #                     total_price=transaction.final_amount,
+        #                     currency=transaction.currency.code,
+        #                     assistant_position=assistant.position,
+        #                     assistant_name=assistant.name)
+        # )
+
+    @classmethod
+    @transaction.atomic
     def accept_paysy_order_transaction_by_user(cls, transaction_id: Transaction, user: User):
         old_transaction = cls.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
 
@@ -3216,6 +3259,11 @@ class TransactionService:
             pg_description = 'Платная подписка'
 
             return pg_description, purchase_type
+        if transaction.type == Transaction.USER_APP:
+            purchase_type = 'user_app'
+            pg_description = 'Покупка приложения'
+
+            return pg_description, purchase_type
         try:
             booking = transaction.booking
             purchase_type = 'rent'
@@ -3289,6 +3337,28 @@ class TransactionService:
                 continue
             arr_flat_params[name] = str(val)
         return arr_flat_params
+
+    @classmethod
+    def create_user_app_transaction(cls, user: User, processed_by: User, application: UserApp, utc_offset_minutes: int):
+        currency = Currency.objects.get(code='USD')
+
+        transaction = Transaction.objects.create(
+            client=user,
+            processed_by=processed_by,
+            employee_name=processed_by.full_name,
+            employee_avatar=processed_by.avatar,
+            user_app=application,
+            type=Transaction.USER_APP,
+            delivery_type=Transaction.ONLINE_PAYMENT,
+            original_amount=application.price,
+            currency=currency,
+            status=Transaction.ACCEPTED,
+            payment_status=Transaction.IN_PROGRESS,
+            display_time=now() + timedelta(minutes=utc_offset_minutes)
+        )
+        transaction.save()
+
+        return transaction
 
 
 class PaymentSystemMethodService:

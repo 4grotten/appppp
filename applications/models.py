@@ -76,3 +76,14 @@ class AddedApp(TimestampModel):
         constraints = [
             models.UniqueConstraint(fields=('user', 'user_app'), name='unique_user_app_added_by_user')
         ]
+
+
+class UserAppPurchase(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='app_purchases')
+    app = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='purchases')
+    transaction = models.OneToOneField('transactions.Transaction', on_delete=models.SET_NULL,
+                                       related_name='user_app_purchase', null=True, blank=True)
+    is_paid = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.user} - {self.app} - {"PAID" if self.is_paid else "UNPAID"}'

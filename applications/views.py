@@ -7,9 +7,10 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
-from applications.models import AddedApp, UserApp, UserAppCategory
+from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurchase
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
-    UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer
+    UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer, \
+    PurchaseUserAppSerializer
 from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
@@ -162,3 +163,34 @@ class UserAppStoreListView(ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['types__category']
     search_fields = ['title', 'description']
+
+
+class PurchaseUserAppView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PurchaseUserAppSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        app = serializer.validated_data['app']
+        utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
+
+        if UserAppPurchase.objects.filter(user=request.user, app=app, is_paid=True).exists():
+            raise NotAcceptableException(_('You already purchased this app.'))
+
+        app_purchase = UserAppService.create_app_purchase(
+            user=request.user,
+            app=app,
+            processed_by=app.owner,
+            utc_offset_minutes=utc_offset_minutes
+        )
+
+        return Response({
+            "message": _("Success"),
+            "transaction_id": app_purchase.transaction_id
+        })

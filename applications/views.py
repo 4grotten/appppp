@@ -1,13 +1,16 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListCreateAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
-from applications.models import AddedApp
-from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer
+from applications.models import AddedApp, UserApp
+from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
+    UserAppUpdateSerializer
 from applications.services import UserAppService
+from common.exceptions import NotAcceptableException
+from common.utils import method_permission_classes
 
 
 class UserAppListCreateView(ListCreateAPIView):
@@ -38,6 +41,40 @@ class UserAppListCreateView(ListCreateAPIView):
 
         data = UserAppDetailedSerializer(organization, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class UserAppRetrieveUpdateView(RetrieveUpdateAPIView):
+    serializer_class = UserAppDetailedSerializer
+    queryset = UserApp.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        context = {
+            'request': request,
+        }
+
+        serializer = self.serializer_class(instance, context=context)
+        return Response(serializer.data)
+
+    @method_permission_classes((IsAuthenticated,))
+    def put(self, request, *args, **kwargs):
+        serializer = UserAppUpdateSerializer(data=request.data, many=False)
+
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        application = UserAppService.get(id=kwargs['pk'])
+        if application.owner != request.user:
+            raise NotAcceptableException(_('No rights to edit application'))
+        validated_data = serializer.validated_data
+        image_id = validated_data.pop('image_id')
+        updated_application = UserAppService.update(application=application, image_id=image_id,
+                                                    validated_data=validated_data)
+        return Response(self.serializer_class(updated_application, context={'request': request}).data)
 
 
 class ToggleUserAppView(APIView):

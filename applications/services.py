@@ -1,9 +1,10 @@
 from typing import Optional, List
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
 from applications.models import UserApp, UserAppBanner, UserAppType
-from common.exceptions import ObjectNotFoundException
+from common.exceptions import ObjectNotFoundException, IntegrityException
 from django.utils.translation import gettext_lazy as _
 
 from common.models import File
@@ -67,6 +68,39 @@ class UserAppService:
             user_app.app_images.set(app_images)
 
         return user_app
+
+    @classmethod
+    @transaction.atomic
+    def update(cls, application, image_id, validated_data):
+        try:
+            from common.models import File
+
+            image = File.objects.get(id=image_id)
+            application.image = image
+
+            selected_banner_id = validated_data.pop('selected_banner_id', None)
+            if selected_banner_id:
+                from applications.models import UserAppBanner  # путь проверь
+                selected_banner = UserAppBanner.objects.get(id=selected_banner_id)
+                application.selected_banner = selected_banner
+            else:
+                application.selected_banner = None
+
+            for attr, value in validated_data.items():
+                if attr == 'types':
+                    application.types.set(value)
+                elif attr == 'app_images':
+                    application.app_images.set(value)
+                else:
+                    setattr(application, attr, value)
+
+            application.save()
+            return application
+
+        except ObjectDoesNotExist as e:
+            raise IntegrityException(_('Not found: {e}').format(e=str(e)))
+        except Exception as e:
+            raise IntegrityException(_('Could not update application: {e}').format(e=str(e)))
 
 
 class UserAppBannerService:

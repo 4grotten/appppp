@@ -79,3 +79,13 @@ class UserAppListSerializer(serializers.ModelSerializer):
         fields = (
             'title', 'title_lang', 'types', 'image', 'selected_banner'
         )
+
+
+class UserAppUpdateSerializer(serializers.ModelSerializer):
+    image_id = serializers.IntegerField()
+    selected_banner_id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = UserApp
+        fields = ('title', 'image_id', 'description', 'types', 'selected_banner_id', 'app_images',
+                  'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link')

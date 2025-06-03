@@ -89,3 +89,16 @@ class UserAppUpdateSerializer(serializers.ModelSerializer):
         model = UserApp
         fields = ('title', 'image_id', 'description', 'types', 'selected_banner_id', 'app_images',
                   'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link')
+
+
+class UserAppBannerCreateSerializer(serializers.ModelSerializer):
+    image_id = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), source='image', write_only=True
+    )
+
+    class Meta:
+        model = UserAppBanner
+        fields = ('image_id', )
+
+    def create(self, validated_data):
+        return UserAppBanner.objects.create(image=validated_data['image'])

@@ -60,13 +60,29 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
     app_images = ImageSerializer(many=True)
     selected_banner = UserAppBannerSerializer()
     types = UserAppTypeSerializer(many=True)
+    is_paid = serializers.SerializerMethodField()
+
+    def get_is_paid(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        if not user or not user.is_authenticated:
+            return False
+
+        if obj.owner == user:
+            return True
+
+        if not obj.price:
+            return True
+
+        return obj.purchases.filter(user=user, is_paid=True).exists()
 
     class Meta:
         model = UserApp
         fields = (
             'id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
             'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link',
-            'terms_link'
+            'terms_link', 'is_paid'
         )
 
 
@@ -74,10 +90,26 @@ class UserAppListSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     selected_banner = UserAppBannerSerializer()
     types = UserAppTypeSerializer(many=True)
+    is_paid = serializers.SerializerMethodField()
+
+    def get_is_paid(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        if not user or not user.is_authenticated:
+            return False
+
+        if obj.owner == user:
+            return True
+
+        if not obj.price:
+            return True
+
+        return obj.purchases.filter(user=user, is_paid=True).exists()
 
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner')
+        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid')
 
 
 class UserAppUpdateSerializer(serializers.ModelSerializer):

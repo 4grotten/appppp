@@ -60,7 +60,7 @@ class UserApp(TimestampModel):
     instagram_link = models.URLField(null=True, blank=True)
     youtube_links = models.JSONField(null=True, blank=True)
     support_link = models.URLField(null=True, blank=True)
-    company_link = models.URLField(null=True, blank=True)
+    company_name = models.URLField(null=True, blank=True)
     terms_link = models.URLField(null=True, blank=True)
 
 

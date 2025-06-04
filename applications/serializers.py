@@ -25,7 +25,7 @@ class UserAppCreateSerializer(serializers.ModelSerializer):
         model = UserApp
         fields = (
             'title', 'description', 'types', 'image_id', 'banners_image_ids', 'selected_banner_file_id', 'app_images',
-            'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link'
+            'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_name', 'terms_link'
         )
 
     def validate(self, attrs):
@@ -81,7 +81,7 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
         model = UserApp
         fields = (
             'id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
-            'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link',
+            'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_name',
             'terms_link', 'is_paid'
         )
 
@@ -119,7 +119,7 @@ class UserAppUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserApp
         fields = ('title', 'image_id', 'description', 'types', 'selected_banner_id', 'app_images',
-                  'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_link', 'terms_link')
+                  'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_name', 'terms_link')
 
 
 class UserAppBannerCreateSerializer(serializers.ModelSerializer):

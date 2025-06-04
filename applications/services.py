@@ -39,7 +39,7 @@ class UserAppService:
                            instagram_link: Optional[str] = None,
                            youtube_links: Optional[List[str]] = None,
                            support_link: Optional[str] = None,
-                           company_link: Optional[str] = None,
+                           company_name: Optional[str] = None,
                            terms_link: Optional[str] = None
                            ) -> UserApp:
         user_app = UserApp.objects.create(
@@ -52,7 +52,7 @@ class UserAppService:
             instagram_link=instagram_link,
             youtube_links=youtube_links,
             support_link=support_link,
-            company_link=company_link,
+            company_name=company_name,
             terms_link=terms_link
         )
         if types:

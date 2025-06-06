@@ -2,7 +2,7 @@ from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -12,7 +12,7 @@ from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurch
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
     UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer, \
     PurchaseUserAppSerializer, UserAppBalanceSerializer, \
-    UserAppPurchasesSerializer, UserAppPurchaseWithProfitSerializer
+    UserAppPurchasesSerializer, UserAppPurchaseWithProfitSerializer, UserAppChangeVisibilitySerializer
 from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
@@ -278,3 +278,20 @@ class UserAppPurchasesListView(ListAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user, is_paid=True).order_by('-created_at')
+
+
+class ToggleUserAppVisibilityView(GenericAPIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        serializer = UserAppChangeVisibilitySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        UserAppService.update_visibility_status(user=request.user, user_app=serializer.validated_data['app'],
+                                                is_hidden=serializer.validated_data['is_hidden'])
+
+        return Response(data={'message': _('Successfully updated visibility status')})

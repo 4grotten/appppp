@@ -65,6 +65,8 @@ class UserApp(TimestampModel):
     company_name = models.CharField(max_length=255, null=True, blank=True)
     terms_link = models.URLField(null=True, blank=True)
 
+    is_hidden = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.title

@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import QuerySet, Q, Case, When, Value, IntegerField
 
 from applications.models import UserApp, UserAppBanner, UserAppType, UserAppPurchase
-from common.exceptions import ObjectNotFoundException, IntegrityException
+from common.exceptions import ObjectNotFoundException, IntegrityException, NotAcceptableException
 from django.utils.translation import gettext_lazy as _
 
 from common.models import File
@@ -138,6 +138,14 @@ class UserAppService:
         )
 
         return app_purchase
+
+    @classmethod
+    def update_visibility_status(cls, user: User, user_app: UserApp, is_hidden: bool):
+        if user == user_app.owner:
+            user_app.is_hidden = is_hidden
+            user_app.save(update_fields=('is_hidden',))
+        else:
+            raise NotAcceptableException(_('No rights to edit this application'))
 
 
 class UserAppBannerService:

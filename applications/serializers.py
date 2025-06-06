@@ -81,7 +81,7 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
             'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_name',
-            'terms_link', 'is_paid'
+            'terms_link', 'is_paid', 'is_hidden'
         )
 
 
@@ -105,7 +105,7 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid')
+        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid', 'is_hidden')
 
 
 class UserAppUpdateSerializer(serializers.ModelSerializer):
@@ -205,3 +205,8 @@ class UserAppPurchasesSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created_at', 'app', 'amount'
         )
+
+
+class UserAppChangeVisibilitySerializer(serializers.Serializer):
+    is_hidden = serializers.BooleanField()
+    app = serializers.PrimaryKeyRelatedField(queryset=UserApp.objects.all())

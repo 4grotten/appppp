@@ -71,9 +71,6 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
         if not user or not user.is_authenticated:
             return False
 
-        if obj.owner == user:
-            return True
-
         if not obj.price:
             return True
 
@@ -100,9 +97,6 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
         if not user or not user.is_authenticated:
             return False
-
-        if obj.owner == user:
-            return True
 
         if not obj.price:
             return True

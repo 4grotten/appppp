@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from common.models import TimestampModel
+from common.models import TimestampModel, Currency
 from users.models import User
 
 
@@ -87,3 +89,29 @@ class UserAppPurchase(TimestampModel):
 
     def __str__(self):
         return f'{self.user} - {self.app} - {"PAID" if self.is_paid else "UNPAID"}'
+
+
+class PlatformCommission(TimestampModel):
+    commission_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('20.00'))
+
+
+class UserAppBalance(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="user_app_referral_balance")
+    total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    currency = models.CharField(max_length=255, default="USD")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.current_balance} USDT"
+
+
+class UserAppTransaction(TimestampModel):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="app_sales_profits")
+    user_app_purchase = models.ForeignKey(UserAppPurchase, on_delete=models.CASCADE, related_name="referral_transactions")
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default="USD",
+                                 related_name='user_app_sale_transactions')
+    original_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    profit_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.owner} +{self.profit_amount} {self.currency.code}"

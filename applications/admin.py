@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase
+from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase, \
+    PlatformCommission
 
 
 @admin.register(UserAppCategory)
@@ -46,3 +47,8 @@ class UserAppPurchaseAdmin(admin.ModelAdmin):
     list_filter = ('is_paid', 'app')
     search_fields = ('user__username', 'user__email', 'app__title', 'transaction__id')
     autocomplete_fields = ('user', 'app', 'transaction')
+
+
+@admin.register(PlatformCommission)
+class PlatformCommissionAdmin(admin.ModelAdmin):
+    list_display = ('commission_percent',)

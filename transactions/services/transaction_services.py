@@ -6,7 +6,7 @@ from typing import Union
 
 from django.conf import settings
 
-from applications.models import UserApp
+from applications.models import UserApp, PlatformCommission, UserAppTransaction, UserAppBalance
 from common.models import Currency
 from organizations.constants import ACTIVE
 from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET
@@ -2766,6 +2766,31 @@ class TransactionService:
         user_app_purchase = transaction.user_app_purchase
         user_app_purchase.is_paid = True
         user_app_purchase.save()
+
+        app = user_app_purchase.app
+        owner = app.owner
+        original_amount = transaction.original_amount
+        currency = transaction.currency
+
+        commission = PlatformCommission.objects.first()
+        commission_percent = commission.commission_percent if commission else Decimal('20.00')
+
+        platform_fee = (original_amount * commission_percent / Decimal('100')).quantize(Decimal('0.01'))
+        profit = (original_amount - platform_fee).quantize(Decimal('0.01'))
+
+        UserAppTransaction.objects.create(
+            owner=owner,
+            user_app_purchase=user_app_purchase,
+            currency=currency,
+            original_amount=original_amount,
+            profit_amount=profit
+        )
+
+        # 5. Обновляем или создаем баланс владельца
+        balance, created = UserAppBalance.objects.get_or_create(user=owner)
+        balance.total_earned += profit
+        balance.current_balance += profit
+        balance.save()
 
         # organization = org_subscription.organization
         #

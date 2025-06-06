@@ -12,7 +12,8 @@ from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurch
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
     UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer, \
     PurchaseUserAppSerializer, UserAppBalanceSerializer, \
-    UserAppPurchasesSerializer, UserAppPurchaseWithProfitSerializer
+    UserAppPurchasesSerializer, UserAppPurchaseWithProfitSerializer, UserAppCategoryCreateSerializer, \
+    UserAppTypeCreateSerializer
 from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
@@ -278,3 +279,20 @@ class UserAppPurchasesListView(ListAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user, is_paid=True).order_by('-created_at')
+
+
+class CreateCategoryAPIView(APIView):
+    def post(self, request):
+        serializer = UserAppCategoryCreateSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CreateAppTypesAPIView(APIView):
+    def post(self, request):
+        serializer = UserAppTypeCreateSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

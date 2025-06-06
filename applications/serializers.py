@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
-from applications.models import UserApp, UserAppBanner, UserAppCategory, UserAppType
+from applications.models import UserApp, UserAppBanner, UserAppCategory, UserAppType, UserAppBalance, \
+    UserAppTransaction, UserAppPurchase, PlatformCommission
 from common.models import File
 from common.serializers import ImageSerializer
+from users.serializers import UserShortInfoSerializer
 
 
 class UserAppCreateSerializer(serializers.ModelSerializer):
@@ -138,3 +140,74 @@ class UserAppBannerCreateSerializer(serializers.ModelSerializer):
 class PurchaseUserAppSerializer(serializers.Serializer):
     app = serializers.PrimaryKeyRelatedField(queryset=UserApp.objects.all())
     utc_offset_minutes = serializers.IntegerField()
+
+
+class UserAppBalanceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserAppBalance
+        fields = ("id", "total_earned", "current_balance", "currency")
+
+
+class UserAppWithImageSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    selected_banner = UserAppBannerSerializer()
+    types = UserAppTypeSerializer(many=True)
+
+    class Meta:
+        model = UserApp
+        fields = ('id', 'title', 'image', 'selected_banner', 'types')
+
+
+class UserAppPurchaseSerializer(serializers.ModelSerializer):
+    app = UserAppWithImageSerializer()
+    user = UserShortInfoSerializer()
+
+
+    class Meta:
+        model = UserAppPurchase
+        fields = ("id", "app", "user", "is_paid", )
+
+
+class UserAppPurchaseWithProfitSerializer(serializers.ModelSerializer):
+    app = UserAppWithImageSerializer()
+    user = UserShortInfoSerializer()
+    profit_amount = serializers.SerializerMethodField()
+    commission_percent = serializers.SerializerMethodField()
+    original_amount = serializers.SerializerMethodField()
+
+    def get_profit_amount(self, obj):
+        transaction = obj.referral_transactions.first()
+        return transaction.profit_amount if transaction else None
+
+    def get_original_amount(self, obj):
+        transaction = obj.referral_transactions.first()
+        return transaction.original_amount if transaction else None
+
+    def get_commission_percent(self, obj):
+        commission = PlatformCommission.objects.first()
+        return commission.commission_percent if commission else "20"
+
+    class Meta:
+        model = UserAppPurchase
+        fields = (
+            "id",
+            "app",
+            "user",
+            "is_paid",
+            "original_amount",
+            "profit_amount",
+            "commission_percent",
+            "created_at",
+        )
+
+
+class UserAppPurchasesSerializer(serializers.ModelSerializer):
+    app = UserAppWithImageSerializer()
+    amount = serializers.DecimalField(source='transaction.original_amount', max_digits=10, decimal_places=2)
+
+    class Meta:
+        model = UserAppPurchase
+        fields = (
+            'id', 'created_at', 'app', 'amount'
+        )

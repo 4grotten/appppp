@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -7,10 +8,11 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
-from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurchase
+from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurchase, UserAppBalance, UserAppTransaction
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
     UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer, \
-    PurchaseUserAppSerializer
+    PurchaseUserAppSerializer, UserAppBalanceSerializer, \
+    UserAppPurchasesSerializer, UserAppPurchaseWithProfitSerializer
 from applications.services import UserAppService, UserAppBannerService
 from common.exceptions import NotAcceptableException
 from common.utils import method_permission_classes
@@ -199,3 +201,80 @@ class PurchaseUserAppView(CreateAPIView):
             "message": _("Success"),
             "transaction_id": app_purchase.transaction_id
         })
+
+
+class UserAppBalanceView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        balance, created = UserAppBalance.objects.get_or_create(user=request.user)
+        serializer = UserAppBalanceSerializer(balance)
+        return Response(serializer.data)
+
+
+class UserAppStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        clients_count = UserAppPurchase.objects.filter(
+            app__owner=user,
+            is_paid=True
+        ).exclude(user=user).values('user').distinct().count()
+
+        purchases_count = UserAppPurchase.objects.filter(
+            user=user,
+            is_paid=True
+        ).count()
+        total_profit = UserAppTransaction.objects.filter(
+            owner=user
+        ).aggregate(total=Sum('profit_amount'))['total'] or 0
+
+        return Response({
+            "clients_count": clients_count,
+            "purchases_count": purchases_count,
+            "total_profit": float(total_profit),
+        })
+
+
+class UserSoldAppsListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserAppListSerializer
+
+    def get_queryset(self):
+        return UserApp.objects.filter(
+            purchases__is_paid=True,
+            owner=self.request.user
+        ).exclude(
+            purchases__user=self.request.user
+        ).distinct()
+
+
+class AppSoldTransactionsListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserAppPurchaseWithProfitSerializer
+
+    def get_queryset(self):
+        app = UserAppService.get(id=self.kwargs['pk'])
+        return UserAppPurchase.objects.select_related(
+            'app',
+            'user',
+            'transaction'
+        ).prefetch_related(
+            'referral_transactions'
+        ).filter(
+            app=app,
+            app__owner=self.request.user,
+            is_paid=True
+        ).order_by('-created_at')
+
+
+
+class UserAppPurchasesListView(ListAPIView):
+    queryset = UserAppPurchase.objects.select_related('app', 'transaction')
+    serializer_class = UserAppPurchasesSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user, is_paid=True).order_by('-created_at')

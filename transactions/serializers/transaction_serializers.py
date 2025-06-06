@@ -756,3 +756,15 @@ class BalanceInTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Balance
         fields = ('id', 'organization', 'currency', 'payout_systems')
+
+
+class UserAppTransactionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'currency', 'original_amount', 'discount_percent', 'savings', 'from_cashback', 'to_cashback',
+            'final_amount', 'updated_at', 'created_at', 'display_time', 'type', 'status', 'delivery_info',
+            'payment_status', 'purchase_type', 'icon_type'
+        )
+

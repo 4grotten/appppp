@@ -205,3 +205,15 @@ class UserAppPurchasesSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created_at', 'app', 'amount'
         )
+
+
+class UserAppCategoryCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAppCategory
+        fields = ['id', 'name_ru', 'name_en', 'name_tr', 'name_de', 'name_zh']
+
+
+class UserAppTypeCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAppType
+        fields = ['id', 'category', 'title_ru', 'title_en', 'title_tr', 'title_de', 'title_zh', 'is_adult']

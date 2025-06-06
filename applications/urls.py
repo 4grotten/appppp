@@ -3,7 +3,7 @@ from django.urls import path, include
 from applications.views import UserAppListCreateView, ToggleUserAppView, UserAppRetrieveUpdateView, \
     UserAppBannerListView, RemoveUserAppCustomBannerView, AddCustomUserAppBannerView, UserAppStoreListView, \
     UserAppCategoryListView, PurchaseUserAppView, UserAppBalanceView, UserAppStatsView, UserSoldAppsListView, \
-    AppSoldTransactionsListView, UserAppPurchasesListView, CreateCategoryAPIView, CreateAppTypesAPIView
+    AppSoldTransactionsListView, UserAppPurchasesListView
 
 user_app_urls = [
     path('applications/', UserAppListCreateView.as_view(), name='user_applications'),
@@ -22,8 +22,6 @@ user_app_urls = [
     path('applications/sold/', UserSoldAppsListView.as_view(), name='user_apps_sold'),
     path('applications/<int:pk>/sold/', AppSoldTransactionsListView.as_view(), name='user_app_sold'),
     path('applications/purchases/', UserAppPurchasesListView.as_view(), name='user_app_purchases'),
-    path('applications/create-categories/', CreateCategoryAPIView.as_view()),
-    path('applications/create-types/', CreateAppTypesAPIView.as_view()),
 
 
 ]

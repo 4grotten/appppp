@@ -161,7 +161,7 @@ class UserAppCategoryListView(ListAPIView):
 class UserAppStoreListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserAppListSerializer
-    queryset = UserApp.objects.all()
+    queryset = UserApp.objects.filter(is_hidden=False)
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['types__category']
     search_fields = ['title', 'description']

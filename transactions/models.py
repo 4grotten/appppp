@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from applications.models import UserApp
 from common.models import Currency, TimestampModel
 from common.utils import DecimalEncoder, DecimalDecoder, upload_file_with_unique_name
 from organizations.models import Organization, DiscountCard
@@ -43,12 +44,14 @@ class Transaction(TimestampModel):
     WITHDRAWAL = 'withdrawal'
     ASSISTANT = 'assistant'
     ORG_SUBSCRIPTION = 'org_subscription'
+    USER_APP = 'user_app'
     TYPE = (
         (ONLINE, ONLINE),
         (OFFLINE, OFFLINE),
         (WITHDRAWAL, WITHDRAWAL),
         (ASSISTANT, ASSISTANT),
-        (ORG_SUBSCRIPTION, ORG_SUBSCRIPTION)
+        (ORG_SUBSCRIPTION, ORG_SUBSCRIPTION),
+        (USER_APP, USER_APP)
     )
 
     BANKCARD = 'bankcard'
@@ -97,7 +100,8 @@ class Transaction(TimestampModel):
 
     client = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bought_transactions', null=True)
     processed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='processed_transactions', null=True)
-    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='transactions')
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, null=True, related_name='transactions')
+    user_app = models.ForeignKey(UserApp, on_delete=models.PROTECT, null=True, related_name='transactions')
 
     employee_name = models.CharField(max_length=255, null=True, blank=True)
     employee_role = models.CharField(max_length=255, null=True)
@@ -135,7 +139,7 @@ class Transaction(TimestampModel):
     display_time = models.DateTimeField(null=True)
 
     def __str__(self):  # pragma: no cover
-        return f'Transaction #{self.id} for {self.original_amount} in {self.organization.title}'
+        return f'Transaction #{self.id} for {self.original_amount}'
 
     class Meta:
         ordering = ('-updated_at',)

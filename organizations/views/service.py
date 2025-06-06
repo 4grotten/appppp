@@ -26,16 +26,26 @@ class ServiceReadOnlySet(viewsets.ReadOnlyModelViewSet):
         country = serializer.validated_data['country']
         city = serializer.validated_data['city']
 
-        organizations = Organization.objects.filter(shop_items__price__isnull=False, has_delivery=True, is_active=True,
-                                                    shop_items__isnull=False).exclude(is_banned=True). \
-            exclude(is_deleted=True).distinct()
+        organizations = Organization.objects.filter(
+            shop_items__price__isnull=False,
+            has_delivery=True,
+            is_active=True,
+            shop_items__isnull=False
+        ).exclude(is_banned=True).exclude(is_deleted=True).distinct()
+
         if country is not None:
             organizations = organizations.filter(country=country)
         if city is not None:
             organizations = organizations.filter(city=city)
-        queryset = Service.objects.filter(Q(subcategory__organizations__in=organizations) & Q(is_active=True) |
-                                          Q(is_entertainment=True) | Q(is_resume=True) |
-                                          Q(is_wholesale=True)).distinct()
+
+        queryset = Service.objects.filter(
+            Q(subcategory__organizations__in=organizations, is_active=True) |
+            Q(is_entertainment=True) |
+            Q(is_resume=True) |
+            Q(is_wholesale=True) |
+            Q(is_application=True)
+        ).distinct()
+
         return queryset.order_by('-is_discounts', 'ordering')
 
 

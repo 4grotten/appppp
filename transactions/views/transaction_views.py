@@ -2303,6 +2303,8 @@ class CryptoCloudPostbackView(APIView):
                                                                                user=user)
             elif purchase_type == 'org_subscription':
                 TransactionService.accept_org_subscription_transaction(transaction_id=transaction.id)
+            elif purchase_type == 'user_app':
+                TransactionService.accept_user_app_transaction(transaction_id=transaction.id)
             elif purchase_type == 'deal':
                 TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
             elif purchase_type == 'assistant':

@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from applications.forms import UserAppTypeAdminForm
 from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase, \
     PlatformCommission
 
@@ -15,6 +16,7 @@ class UserAppTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'category', 'is_adult')
     list_filter = ('category', 'is_adult')
     search_fields = ('title',)
+    form = UserAppTypeAdminForm
 
 
 @admin.register(UserAppBanner)

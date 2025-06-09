@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, OuterRef, Exists
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.views import APIView
 
-from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurchase, UserAppBalance, UserAppTransaction
+from applications.models import AddedApp, UserApp, UserAppCategory, UserAppPurchase, UserAppBalance, UserAppTransaction, \
+    UserAppType
 from applications.serializers import UserAppCreateSerializer, UserAppDetailedSerializer, UserAppListSerializer, \
     UserAppUpdateSerializer, UserAppBannerSerializer, UserAppBannerCreateSerializer, UserAppCategorySerializer, \
     PurchaseUserAppSerializer, UserAppBalanceSerializer, \
@@ -155,7 +156,16 @@ class ToggleUserAppView(APIView):
 class UserAppCategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserAppCategorySerializer
-    queryset = UserAppCategory.objects.all()
+
+    def get_queryset(self):
+        user_app_type_qs = UserAppType.objects.filter(
+            category=OuterRef('pk'),
+            user_apps__isnull=False
+        )
+
+        return UserAppCategory.objects.annotate(
+            has_apps=Exists(user_app_type_qs)
+        ).filter(has_apps=True)
 
 
 class UserAppStoreListView(ListAPIView):

@@ -55,7 +55,7 @@ class ItemCategoryService:
                     items_count=Count('items_in_category', filter=item_filters, distinct=True)
                 ).filter(
                     items_count__gt=0
-                ).values_list('id', flat=True)
+                ).values_list('id', flat=True).distinct()
             )
 
         else:

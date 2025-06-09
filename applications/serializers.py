@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from applications.models import UserApp, UserAppBanner, UserAppCategory, UserAppType, UserAppBalance, \
-    UserAppTransaction, UserAppPurchase, PlatformCommission
+    UserAppTransaction, UserAppPurchase, PlatformCommission, AddedApp
 from common.models import File
 from common.serializers import ImageSerializer
 from users.serializers import UserShortInfoSerializer
@@ -90,6 +90,8 @@ class UserAppListSerializer(serializers.ModelSerializer):
     selected_banner = UserAppBannerSerializer()
     types = UserAppTypeSerializer(many=True)
     is_paid = serializers.SerializerMethodField()
+    is_added = serializers.SerializerMethodField()
+    is_my_app = serializers.SerializerMethodField()
 
     def get_is_paid(self, obj):
         request = self.context.get('request')
@@ -103,9 +105,25 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
         return obj.purchases.filter(user=user, is_paid=True).exists()
 
+    def get_is_added(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        if not user or not user.is_authenticated:
+            return False
+
+        return AddedApp.objects.filter(user=user, user_app=obj).exists()
+
+    def get_is_my_app(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        return user.is_authenticated and obj.owner_id == user.id
+
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid', 'is_hidden')
+        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid', 'is_added', 'is_my_app',
+                  'is_hidden')
 
 
 class UserAppUpdateSerializer(serializers.ModelSerializer):

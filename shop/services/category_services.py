@@ -25,33 +25,71 @@ class ItemCategoryService:
 
     @classmethod
     def get_general_nonempty_service_subcategory_ids(cls, service: Union[Service, None], country: Union[Country, None], city: Union[City, None]) -> list:
-        item_filters = Q(items_in_category__is_published=True) & \
-                       Q(items_in_category__price__isnull=False) & \
-                       Q(items_in_category__organization__is_banned=False) & \
-                       Q(items_in_category__organization__is_deleted=False)
+        if not service:
+            return []
 
-        if city:
-            item_filters &= Q(items_in_category__organization__city=city)
-        elif country:
-            item_filters &= Q(items_in_category__organization__country=country)
+        if isinstance(service, int):
+            try:
+                service = Service.objects.get(id=service)
+            except Service.DoesNotExist:
+                return []
 
-        org_ids = Organization.objects.filter(types__services=service).values_list('id', flat=True)
+        if service.is_wholesale:
+            item_filters = Q(
+                items_in_category__is_published=True,
+                items_in_category__price__isnull=False,
+                items_in_category__organization__is_banned=False,
+                items_in_category__organization__is_deleted=False,
+                items_in_category__organization__is_wholesale=True,
+                items_in_category__organization__types__services=service
+            )
+            if city:
+                item_filters &= Q(items_in_category__organization__city=city)
+            elif country:
+                item_filters &= Q(items_in_category__organization__country=country)
 
-        org_subcategories = ItemSubcategory.objects.filter(
-            items_in_category__organization__id__in=org_ids,
-            organization__isnull=True
-        ).values_list('id', flat=True).distinct()
+            return list(
+                ItemSubcategory.objects.filter(
+                    organization__isnull=True
+                ).annotate(
+                    items_count=Count('items_in_category', filter=item_filters, distinct=True)
+                ).filter(
+                    items_count__gt=0
+                ).values_list('id', flat=True)
+            )
 
-        service_subcategories = ItemSubcategory.objects.filter(
-            category__services=service,
-            organization__isnull=True
-        ).annotate(
-            items_count=Count('items_in_category', filter=item_filters)
-        ).filter(
-            items_count__gt=0
-        ).values_list('id', flat=True)
+        else:
+            item_filters = Q(
+                items_in_category__is_published=True,
+                items_in_category__price__isnull=False,
+                items_in_category__organization__is_banned=False,
+                items_in_category__organization__is_deleted=False
+            )
 
-        return list(set(org_subcategories) & set(service_subcategories))
+            if city:
+                item_filters &= Q(items_in_category__organization__city=city)
+            elif country:
+                item_filters &= Q(items_in_category__organization__country=country)
+
+            org_ids = Organization.objects.filter(
+                types__services=service
+            ).values_list('id', flat=True)
+
+            org_subcategories = ItemSubcategory.objects.filter(
+                items_in_category__organization__id__in=org_ids,
+                organization__isnull=True
+            ).values_list('id', flat=True).distinct()
+
+            service_subcategories = ItemSubcategory.objects.filter(
+                category__services=service,
+                organization__isnull=True
+            ).annotate(
+                items_count=Count('items_in_category', filter=item_filters)
+            ).filter(
+                items_count__gt=0
+            ).values_list('id', flat=True)
+
+            return list(set(org_subcategories) & set(service_subcategories))
 
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:

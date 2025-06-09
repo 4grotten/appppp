@@ -22,4 +22,5 @@ class OrganizationOptions(TranslationOptions):
 class ServiceOptions(TranslationOptions):
     fields = (
         'name',
+        'description'
     )

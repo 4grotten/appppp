@@ -403,7 +403,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_display = ('preview', 'ordering', 'name', 'name_ru', 'name_en', 'name_tr', 'name_de', 'name_zh')
     list_filter = ('name',)
     search_fields = ('name', 'icon', 'subcategory',)
-    raw_id_fields = ('icon',)
+    raw_id_fields = ('icon', 'banner')
     filter_horizontal = ['subcategory', 'category_of_item']
 
     readonly_fields = ['preview']

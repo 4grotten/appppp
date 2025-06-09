@@ -677,6 +677,9 @@ class PromoSubscriber(models.Model):
 class Service(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название сервиса')
     icon = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
+    banner = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
+                               related_name='service_banner')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание сервиса')
     subcategory = models.ManyToManyField(OrganizationType, related_name='services', blank=True)
     category_of_item = models.ManyToManyField('shop.ItemCategory', related_name='services', blank=True)
     ordering = models.SmallIntegerField(verbose_name='Service ordering',

@@ -9,11 +9,12 @@ from shop.models import ShopItem
 
 class ServiceSerializer(serializers.ModelSerializer):
     icon = ImageSerializer()
+    banner = ImageSerializer()
 
     class Meta:
         model = Service
         fields = ('id', 'is_discounts', 'is_entertainment', 'is_map', 'is_resume', 'is_wholesale', 'is_application',
-                  'ordering', 'name', 'icon',)
+                  'ordering', 'name', 'icon', 'banner', 'description')
 
 
 class OrganizationServiceSerializer(serializers.ModelSerializer):

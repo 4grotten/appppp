@@ -254,7 +254,11 @@ class OrganizationsMapsListView(APIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        data = OrganizationService.get_organizations_by_location_for_map(type=serializer.validated_data['type'])
+        search_query = request.GET.get('search')
+        data = OrganizationService.get_organizations_by_location_for_map(
+            type=serializer.validated_data['type'],
+            search=search_query
+        )
 
         return Response(data)
 
@@ -383,11 +387,7 @@ class OrganizationMapsTypesListView(ListAPIView):
 
     def get_queryset(self):
         serializer = OrganizationCoutrySerializer(data=self.request.GET)
-        if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer.is_valid(raise_exception=True)
 
         return OrganizationService.get_organization_types_by_country(country=serializer.validated_data['country'])
 

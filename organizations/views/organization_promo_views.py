@@ -17,7 +17,8 @@ class OrganizationPromoListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         country = self.request.query_params.get('country')
-        return OrganizationPromoService.get_filtering_promos_by_country(country).order_by('-updated_at')
+        type_id = self.request.query_params.get('type_id')
+        return OrganizationPromoService.get_filtering_promos_by_country(country, type_id).order_by('-updated_at')
 
     def post(self, request, *args, **kwargs):
         serializer = OrganizationPromoCreateSerializer(data=request.data)

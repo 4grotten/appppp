@@ -34,4 +34,4 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'time_working',
-                  'verification_status', 'avg_check', 'currency')
+                  'verification_status', 'avg_check', 'currency', 'full_location')

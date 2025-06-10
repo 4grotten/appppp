@@ -732,9 +732,19 @@ class OrganizationsInServicesView(ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, args, kwargs)
-        response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True).first()
-        return response
+        has_page = 'page' in request.query_params
+        has_limit = 'limit' in request.query_params
+
+        if not has_page and not has_limit:
+            queryset = self.filter_queryset(self.get_queryset())
+            serializer = self.get_serializer(queryset, many=True)
+
+            return Response(serializer.data)
+        else:
+            # С пагинацией
+            response = super().list(request, *args, **kwargs)
+            response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True).first()
+            return response
 
 
 class HomepageSearchView(ListAPIView):

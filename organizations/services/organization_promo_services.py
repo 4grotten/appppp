@@ -103,12 +103,16 @@ class OrganizationPromoService:
             Q(organization__is_active=False) | Q(organization__is_deleted=True) | Q(organization__is_banned=True))
 
     @classmethod
-    def get_filtering_promos_by_country(cls, country: Optional[str]) -> QuerySet:
+    def get_filtering_promos_by_country(cls, country: Optional[str] = None,
+                                        type_id: Optional[int] = None) -> QuerySet:
         query = cls.get_active_promos()
-        if not country:
-            return query
-        else:
-            return query.filter(organization__country__code=country)
+        if country:
+            query = query.filter(organization__country__code=country)
+
+        if type_id:
+            query = query.filter(organization__types__id=type_id)
+
+        return query.distinct()
 
 
 class PromoEditLogService:

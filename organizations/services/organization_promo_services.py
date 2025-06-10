@@ -9,7 +9,7 @@ from common.exceptions import (
     NotAcceptableException, IntegrityException, ObjectNotFoundException, PermissionDeniedException
 )
 from common.models import File
-from organizations.models import Organization, OrganizationPromo, PromoEditLog, PromoSubscriber
+from organizations.models import Organization, OrganizationPromo, PromoEditLog, PromoSubscriber, OrganizationType
 from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import OrganizationClientFinancialStatusService
 from organizations.services.organization_services import OrganizationService
@@ -101,6 +101,19 @@ class OrganizationPromoService:
     def get_active_promos(cls) -> QuerySet:
         return OrganizationPromo.objects.filter(cashback__lte=F('total_cashback') - F('granted_amount')).exclude(
             Q(organization__is_active=False) | Q(organization__is_deleted=True) | Q(organization__is_banned=True))
+
+    @classmethod
+    def get_types_with_active_promos(cls, country: Optional[str] = None) -> QuerySet:
+        active_promos_query = cls.get_active_promos()
+
+        if country:
+            active_promos_query = active_promos_query.filter(organization__country__code=country)
+
+        organization_ids = active_promos_query.values_list('organization_id', flat=True)
+
+        return OrganizationType.objects.filter(
+            organizations__id__in=organization_ids
+        ).distinct().order_by('title')
 
     @classmethod
     def get_filtering_promos_by_country(cls, country: Optional[str] = None,

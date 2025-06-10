@@ -1,9 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.serializers.organization_promo_serializers import (
     OrganizationPromoDetailedSerializer, OrganizationPromoCreateSerializer, OrganizationPromoUpdateSerializer,
     OrganizationPromoListSerializer
@@ -37,6 +38,15 @@ class OrganizationPromoListCreateView(ListCreateAPIView):
         )
         data = OrganizationPromoDetailedSerializer(promo, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class OrganizationTypesWithActivePromosView(ListAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = OrganizationTypeSerializer
+
+    def get_queryset(self):
+        country = self.request.query_params.get('country')
+        return OrganizationPromoService.get_types_with_active_promos(country)
 
 
 class OrganizationPromoRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

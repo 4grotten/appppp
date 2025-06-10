@@ -607,7 +607,7 @@ class OrganizationService:
         return queryset
 
     @classmethod
-    def get_organizations_by_location_for_map(cls, type: Union[OrganizationType, None] = None) -> QuerySet:
+    def get_organizations_by_location_for_map(cls, type: Union[OrganizationType, None] = None, search: str = None):
         json_file_path = Path("organization_maps.json")
         if json_file_path.is_file():
             with open(json_file_path, 'r') as file:
@@ -615,13 +615,23 @@ class OrganizationService:
             if type is not None:
                 data = [item for item in data if type.id in item.get("types", [])]
 
+            if search:
+                data = [item for item in data if search.lower() in item.get("title", "").lower()]
+
             return data
 
         queryset = Organization.objects.all()
 
+        if type is not None:
+            queryset = queryset.filter(types=type)
+
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+
         from organizations.serializers.organization_serializers import OrganizationMapsListSerializer
         serializer = OrganizationMapsListSerializer(queryset, many=True)
         serialized_data = serializer.data
+
         with open(json_file_path, 'w') as file:
             json.dump(serialized_data, file, cls=DecimalEncoder)
 

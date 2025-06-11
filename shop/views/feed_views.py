@@ -58,8 +58,10 @@ class FeedView(ListAPIView):
         else:
             qs = qs.filter(is_published=True).order_by('-updated_at')
 
-        price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
-        qs = qs.filter(price_filter)
+        category_filter = self.request.GET.get('category', None)
+        if not category_filter:
+            price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
+            qs = qs.filter(price_filter)
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

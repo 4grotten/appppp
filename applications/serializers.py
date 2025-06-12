@@ -122,8 +122,8 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'title_lang', 'types', 'image', 'selected_banner', 'is_paid', 'is_added', 'is_my_app',
-                  'is_hidden')
+        fields = ('id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
+                  'price', 'app_link','is_paid', 'is_added', 'is_my_app', 'is_hidden')
 
 
 class UserAppUpdateSerializer(serializers.ModelSerializer):

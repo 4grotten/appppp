@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from applications.models import UserAppCategory, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase, \
+from applications.models import UserAppBalance, UserAppCategory, UserAppTransaction, UserAppType, UserAppBanner, UserApp, AddedApp, UserAppPurchase, \
     PlatformCommission
 
 
@@ -52,3 +52,16 @@ class UserAppPurchaseAdmin(admin.ModelAdmin):
 @admin.register(PlatformCommission)
 class PlatformCommissionAdmin(admin.ModelAdmin):
     list_display = ('commission_percent',)
+
+
+@admin.register(UserAppTransaction)
+class UserAppTransactionAdmin(admin.ModelAdmin):
+    list_display = ('owner', 'user_app_purchase', 'profit_amount', 'currency', 'original_amount', 'created_at')
+    list_filter = ('currency', 'created_at')
+    search_fields = ('owner__username', 'user_app_purchase__id')
+
+
+@admin.register(UserAppBalance)
+class UserAppBalanceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'total_earned', 'current_balance', 'currency')
+    search_fields = ('user__username',)

@@ -231,7 +231,7 @@ class UserAppStatsView(APIView):
         clients_count = UserAppPurchase.objects.filter(
             app__owner=user,
             is_paid=True
-        ).exclude(user=user).values('user').distinct().count()
+        ).values('user').distinct().count()
 
         purchases_count = UserAppPurchase.objects.filter(
             user=user,

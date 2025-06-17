@@ -156,16 +156,8 @@ class ToggleUserAppView(APIView):
 class UserAppCategoryListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserAppCategorySerializer
-
-    def get_queryset(self):
-        user_app_type_qs = UserAppType.objects.filter(
-            category=OuterRef('pk'),
-            user_apps__isnull=False
-        )
-
-        return UserAppCategory.objects.annotate(
-            has_apps=Exists(user_app_type_qs)
-        ).filter(has_apps=True)
+    queryset = UserAppCategory.objects.all()
+        
 
 
 class UserAppStoreListView(ListAPIView):

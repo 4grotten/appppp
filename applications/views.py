@@ -256,8 +256,6 @@ class UserSoldAppsListView(ListAPIView):
         return UserApp.objects.filter(
             purchases__is_paid=True,
             owner=self.request.user
-        ).exclude(
-            purchases__user=self.request.user
         ).distinct()
 
 

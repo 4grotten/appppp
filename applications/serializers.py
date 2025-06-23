@@ -92,7 +92,7 @@ class UserAppDetailedSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserApp
         fields = (
-            'id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
+            'id', 'slug', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
             'app_images', 'app_link', 'price', 'instagram_link', 'youtube_links', 'support_link', 'company_name',
             'terms_link', 'is_paid', 'is_hidden', 'is_owner'
         )
@@ -135,7 +135,7 @@ class UserAppListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
+        fields = ('id', 'slug', 'title', 'title_lang', 'description', 'description_lang', 'types', 'image', 'selected_banner',
                   'price', 'app_link','is_paid', 'is_added', 'is_my_app', 'is_hidden')
 
 
@@ -181,7 +181,7 @@ class UserAppWithImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserApp
-        fields = ('id', 'title', 'image', 'selected_banner', 'types')
+        fields = ('id', 'slug', 'title', 'image', 'selected_banner', 'types')
 
 
 class UserAppPurchaseSerializer(serializers.ModelSerializer):

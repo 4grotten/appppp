@@ -1,4 +1,5 @@
 from django.db.models import Sum, OuterRef, Exists
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -53,6 +54,10 @@ class UserAppRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = UserAppDetailedSerializer
     queryset = UserApp.objects.all()
 
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        return get_object_or_404(self.queryset, slug=slug)
+
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
 
@@ -73,7 +78,7 @@ class UserAppRetrieveUpdateView(RetrieveUpdateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        application = UserAppService.get(id=kwargs['pk'])
+        application = self.get_object()
         if application.owner != request.user:
             raise NotAcceptableException(_('No rights to edit application'))
         validated_data = serializer.validated_data

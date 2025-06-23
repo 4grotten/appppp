@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from common.models import TimestampModel, Currency
 from users.models import User
+from django.utils.text import slugify
 
 
 class UserAppCategory(models.Model):
@@ -43,6 +44,7 @@ class UserAppBanner(TimestampModel):
 
 class UserApp(TimestampModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_user_apps')
+    slug = models.SlugField(unique=True, null=True, blank=True)
     title = models.CharField(max_length=255)
     title_lang = models.CharField(max_length=8, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -70,6 +72,17 @@ class UserApp(TimestampModel):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while UserApp.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
 
 class AddedApp(TimestampModel):

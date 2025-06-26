@@ -26,17 +26,18 @@ class ParentChatMessageSerializer(serializers.ModelSerializer):
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     is_message_liked = serializers.SerializerMethodField()
-    user = UserShortInfoSerializer(read_only=True)
+    sender = UserShortInfoSerializer(read_only=True)
     message_like_count = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
     parent = ParentChatMessageSerializer()
     is_updated = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
         fields = (
-            'id', 'user', 'parent', 'text', 'is_message_liked', 'message_like_count', 'can_delete', 'is_updated',
-            'created_at', 'updated_at'
+            'id', 'sender', 'parent', 'text', 'is_message_liked', 'message_like_count', 'can_delete', 'is_updated',
+            'status', 'created_at', 'updated_at'
         )
 
     def get_is_updated(self, message: ChatMessage) -> bool:
@@ -54,6 +55,15 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_message_like_count(self, message: ChatMessage) -> int:
         return message.likes.count()
+
+    def get_status(self, message: ChatMessage) -> str:
+        if message.is_read:
+            return 'read'
+        elif message.is_delivered:
+            return 'delivered'
+        elif message.is_sent:
+            return 'sent'
+        return 'pending'
 
 
 class ChatMessageWSSerializer(serializers.ModelSerializer):
@@ -63,12 +73,13 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     can_delete = serializers.SerializerMethodField()
     parent = ParentChatMessageSerializer()
     is_updated = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
         fields = (
             'id', 'user', 'parent', 'text', 'is_message_liked', 'message_like_count', 'can_delete', 'is_updated',
-            'created_at', 'updated_at'
+            'status', 'created_at', 'updated_at'
         )
 
     def get_is_updated(self, message: ChatMessage) -> bool:
@@ -86,6 +97,15 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
 
     def get_message_like_count(self, message: ChatMessage) -> int:
         return message.likes.count()
+
+    def get_status(self, message: ChatMessage) -> str:
+        if message.is_read:
+            return 'read'
+        elif message.is_delivered:
+            return 'delivered'
+        elif message.is_sent:
+            return 'sent'
+        return 'pending'
 
 
 class ChatMessageCreateSerializer(serializers.ModelSerializer):

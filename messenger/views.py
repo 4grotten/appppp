@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, ListAPIView
@@ -95,3 +96,19 @@ class ChatMessageListView(ListAPIView):
         response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
         response.data['chat'] = MessengerChatSerializer(chat, context={'request': request}).data
         return response
+
+
+class MarkMessagesAsReadView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        chat = MessengerChatService.get(pk=kwargs['pk'])
+
+        updated_count = ChatMessage.objects.filter(
+            ~Q(sender=user),
+            chat=chat,
+            is_read=False,
+        ).update(is_read=True, is_delivered=True)
+
+        return Response({"detail": f"{updated_count} messages marked as read."})

@@ -37,6 +37,8 @@ class ChatMessage(TimestampModel):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messenger_sent_messages')
     text = models.TextField()
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies')
+    is_sent = models.BooleanField(default=True)
+    is_delivered = models.BooleanField(default=False)
     is_read = models.BooleanField(default=False)
 
     class Meta:

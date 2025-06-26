@@ -83,7 +83,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps(event["message"]))
+        message_data = event["message"]
+
+        message_id = message_data.get("id")
+        await self.mark_as_read(message_id, self.scope["user"])
+
+        await self.send(text_data=json.dumps(message_data))
+
+    @database_sync_to_async
+    def mark_as_read(self, message_id, user):
+        from messenger.models import ChatMessage
+        try:
+            message = ChatMessage.objects.get(id=message_id)
+            if message.sender != user:
+                message.is_delivered = True
+                message.is_read = True
+                message.save(update_fields=["is_delivered", "is_read"])
+        except ChatMessage.DoesNotExist:
+            pass
 
     @database_sync_to_async
     def get_chat(self, chat_id):

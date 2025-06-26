@@ -68,7 +68,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 class ChatMessageWSSerializer(serializers.ModelSerializer):
     is_message_liked = serializers.SerializerMethodField()
-    user = UserShortInfoSerializer(read_only=True)
+    sender = UserShortInfoSerializer(read_only=True)
     message_like_count = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
     parent = ParentChatMessageSerializer()
@@ -78,7 +78,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = (
-            'id', 'user', 'parent', 'text', 'is_message_liked', 'message_like_count', 'can_delete', 'is_updated',
+            'id', 'sender', 'parent', 'text', 'is_message_liked', 'message_like_count', 'can_delete', 'is_updated',
             'status', 'created_at', 'updated_at'
         )
 

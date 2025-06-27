@@ -1,15 +1,16 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils.translation import gettext_lazy as _
 
+from common.exceptions import NotAcceptableException
 from common.pagination import GeneralPagination
 from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
 from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer, \
-    MessengerChatListSerializer, MessageLikeSerializer
+    MessengerChatListSerializer, MessageLikeSerializer, ChatMessageUpdateSerializer
 from messenger.services import MessengerChatService, ChatMessageService
 from shop.services.comment_services import CommentService
 from users.models import User
@@ -162,3 +163,35 @@ class ChatMessageLike(CreateAPIView):
                                                is_liked=serializer.validated_data['is_liked'])
 
         return Response(data={'message': _('Successfully updated like status')})
+
+
+class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ChatMessageSerializer
+    queryset = ChatMessage.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        message = self.get_object()
+        serializer = ChatMessageUpdateSerializer(message, data=request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if self.request.user == message.sender:
+            serializer.save()
+            return Response(data={
+                'message': _('Successfully updated message'),
+            }, status=status.HTTP_200_OK)
+        raise NotAcceptableException(_('No rights to edit message'))
+
+    def delete(self, request, *args, **kwargs):
+        message = self.get_object()
+        if self.request.user == message.sender:
+
+            ChatMessageService.delete_message(message=message)
+            return Response(data={
+                'message': _('Successfully deleted message'),
+            }, status=status.HTTP_200_OK)
+        raise NotAcceptableException(_('No rights to delete message'))

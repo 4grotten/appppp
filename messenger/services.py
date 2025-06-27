@@ -50,4 +50,8 @@ class ChatMessageService:
         else:
             MessageLike.objects.filter(user=user, message=message).delete()
 
+    @classmethod
+    def delete_message(cls, message: ChatMessage):
+        message.delete()
+
 

@@ -53,7 +53,7 @@ class GetOrCreatePrivateChatView(APIView):
 
         if str(request.user.id) == str(user_id):
             return Response({"detail": "You can't create chat with yourself."},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_403_FORBIDDEN)
 
         target_user = UserService.get(id=user_id)
 
@@ -124,7 +124,7 @@ class ChatBlockView(APIView):
             return Response({"detail": "This chat already was blocked by other user"}, status=403)
 
         if hasattr(chat, 'blockedchat') and chat.blockedchat.blocked_by == request.user:
-            return Response({"detail": "You already blocked this chat"}, status=200)
+            return Response({"detail": "You already blocked this chat"}, status=400)
 
         BlockedChat.objects.create(chat=chat, blocked_by=request.user)
         return Response({"detail": "Successfully blocked chat."}, status=200)

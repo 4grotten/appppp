@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 
 from common.pagination import GeneralPagination
 from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
-from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer
+from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer, \
+    MessengerChatListSerializer
 from messenger.services import MessengerChatService, ChatMessageService
 from shop.services.comment_services import CommentService
 from users.models import User
@@ -41,8 +42,13 @@ class FindUserView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GetOrCreatePrivateChatView(APIView):
+class GetOrCreatePrivateChatView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = MessengerChatListSerializer
+
+    def get_queryset(self):
+        return MessengerChat.objects.filter(members=self.request.user).distinct()
+
 
     def post(self, request):
         user_id = request.data.get("user_id")
@@ -76,9 +82,7 @@ class GetOrCreatePrivateChatView(APIView):
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
 
-        return Response({
-            serializer.data
-        }, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ChatMessageListView(ListAPIView):

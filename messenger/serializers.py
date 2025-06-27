@@ -128,3 +128,57 @@ class ChatMessageCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('User is not authenticated')
         attrs['user'] = user
         return attrs
+
+
+class LastMessageSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    is_mine = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatMessage
+        fields = ('id', 'text', 'created_at', 'status', 'is_mine')
+
+    def get_status(self, obj: ChatMessage):
+        if obj.is_read:
+            return 'read'
+        elif obj.is_delivered:
+            return 'delivered'
+        elif obj.is_sent:
+            return 'sent'
+        return 'pending'
+
+    def get_is_mine(self, obj: ChatMessage):
+        request = self.context.get('request')
+        return obj.sender == request.user if request else False
+
+
+class MessengerChatListSerializer(serializers.ModelSerializer):
+    last_message = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
+    blocked_by_me = serializers.SerializerMethodField()
+    sender = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MessengerChat
+        fields = ('id', 'sender', 'chat_type', 'title', 'last_message', 'is_blocked', 'blocked_by_me')
+
+    def get_last_message(self, chat):
+        message = chat.messages.order_by('-created_at').first()
+        if message:
+            return LastMessageSerializer(message).data
+        return None
+
+    def get_is_blocked(self, chat):
+        return chat.is_blocked()
+
+    def get_blocked_by_me(self, chat):
+        user = self.context['request'].user
+        return chat.is_blocked_by(user)
+
+    def get_sender(self, chat):
+        request_user = self.context['request'].user
+        if chat.chat_type == MessengerChat.PRIVATE:
+            sender = chat.members.exclude(id=request_user.id).first()
+            if sender:
+                return UserShortInfoSerializer(sender).data
+        return None

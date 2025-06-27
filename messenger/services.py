@@ -43,4 +43,11 @@ class ChatMessageService:
 
         return message
 
+    @classmethod
+    def like_unlike_message(cls, message: ChatMessage, user: User, is_liked: bool) -> bool:
+        if is_liked:
+            MessageLike.objects.update_or_create(user=user, message=message)
+        else:
+            MessageLike.objects.filter(user=user, message=message).delete()
+
 

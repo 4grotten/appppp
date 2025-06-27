@@ -1,15 +1,15 @@
 from django.db.models import Q
-from django.shortcuts import render
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils.translation import gettext_lazy as _
 
 from common.pagination import GeneralPagination
 from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
 from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer, \
-    MessengerChatListSerializer
+    MessengerChatListSerializer, MessageLikeSerializer
 from messenger.services import MessengerChatService, ChatMessageService
 from shop.services.comment_services import CommentService
 from users.models import User
@@ -144,3 +144,21 @@ class ChatBlockView(APIView):
 
         chat.blockedchat.delete()
         return Response({"detail": "Successfully unblocked chat"}, status=200)
+
+
+class ChatMessageLike(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    pagination_class = GeneralPagination
+
+    def create(self, request, *args, **kwargs):
+        serializer = MessageLikeSerializer(data=self.request.data)
+        if not serializer.is_valid():
+            return Response(data={
+                'message': _('Invalid input'),
+                'errors': serializer.errors
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        ChatMessageService.like_unlike_message(user=request.user, message=serializer.validated_data['message'],
+                                               is_liked=serializer.validated_data['is_liked'])
+
+        return Response(data={'message': _('Successfully updated like status')})

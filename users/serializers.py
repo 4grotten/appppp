@@ -260,7 +260,7 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username')
+        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number')
 
 
 class FollowerListSerializer(UserShortInfoSerializer):

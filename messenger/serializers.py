@@ -3,7 +3,7 @@ from datetime import timedelta
 from instagrapi.types import UserShort
 from rest_framework import serializers
 
-from messenger.models import MessengerChat, ChatMessage
+from messenger.models import MessengerChat, ChatMessage, MessageLike
 from messenger.services import MessengerChatService
 from users.serializers import UserShortInfoSerializer
 
@@ -182,3 +182,11 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             if sender:
                 return UserShortInfoSerializer(sender).data
         return None
+
+
+class MessageLikeSerializer(serializers.ModelSerializer):
+    is_liked = serializers.BooleanField()
+
+    class Meta:
+        model = MessageLike
+        fields = ('message', 'is_liked')

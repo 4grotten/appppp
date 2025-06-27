@@ -190,3 +190,10 @@ class MessageLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessageLike
         fields = ('message', 'is_liked')
+
+
+class ChatMessageUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatMessage
+        fields = ('text', )

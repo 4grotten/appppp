@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'sms_sender.apps.SmsSenderConfig',
     'stock.apps.StockConfig',
     'applications',
+    'messenger',
 
     'rest_framework',
     'rest_framework.authtoken',

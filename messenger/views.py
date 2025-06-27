@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.pagination import GeneralPagination
-from messenger.models import MessengerChat, ChatMember, ChatMessage
+from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
 from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer
 from messenger.services import MessengerChatService, ChatMessageService
 from shop.services.comment_services import CommentService
@@ -64,7 +64,7 @@ class GetOrCreatePrivateChatView(APIView):
             members__id=target_user.id
         ).distinct().first()
 
-        serializer = MessengerChatSerializer(existing_chat)
+        serializer = MessengerChatSerializer(existing_chat, context={"request": request})
         if existing_chat:
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -74,7 +74,7 @@ class GetOrCreatePrivateChatView(APIView):
             ChatMember(chat=chat, user=target_user),
         ])
 
-        serializer = MessengerChatSerializer(chat)
+        serializer = MessengerChatSerializer(chat, context={"request": request})
 
         return Response({
             serializer.data
@@ -112,3 +112,31 @@ class MarkMessagesAsReadView(APIView):
         ).update(is_read=True, is_delivered=True)
 
         return Response({"detail": f"{updated_count} messages marked as read."})
+
+
+class ChatBlockView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chat_id):
+        chat = MessengerChatService.get(pk=chat_id)
+
+        if hasattr(chat, 'blockedchat') and chat.blockedchat.blocked_by != request.user:
+            return Response({"detail": "This chat already was blocked by other user"}, status=403)
+
+        if hasattr(chat, 'blockedchat') and chat.blockedchat.blocked_by == request.user:
+            return Response({"detail": "You already blocked this chat"}, status=200)
+
+        BlockedChat.objects.create(chat=chat, blocked_by=request.user)
+        return Response({"detail": "Successfully blocked chat."}, status=200)
+
+    def delete(self, request, chat_id):
+        chat = MessengerChatService.get(pk=chat_id)
+
+        if not hasattr(chat, 'blockedchat'):
+            return Response({"detail": "Chat is not blocked"}, status=400)
+
+        if chat.blockedchat.blocked_by != request.user:
+            return Response({"detail": "You can't unblock this chat."}, status=403)
+
+        chat.blockedchat.delete()
+        return Response({"detail": "Successfully unblocked chat"}, status=200)

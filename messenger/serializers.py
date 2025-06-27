@@ -9,11 +9,20 @@ from users.serializers import UserShortInfoSerializer
 
 
 class MessengerChatSerializer(serializers.ModelSerializer):
+    is_blocked = serializers.SerializerMethodField()
+    blocked_by_me = serializers.SerializerMethodField()
     members = UserShortInfoSerializer(many=True, read_only=True)
 
     class Meta:
         model = MessengerChat
-        fields = ('id', 'chat_type', 'title', 'members')
+        fields = ('id', 'chat_type', 'title', 'members', 'is_blocked', 'blocked_by_me')
+
+    def get_is_blocked(self, chat):
+        return chat.is_blocked()
+
+    def get_blocked_by_me(self, chat):
+        request = self.context.get('request')
+        return chat.is_blocked_by(request.user) if request else False
 
 
 class ParentChatMessageSerializer(serializers.ModelSerializer):

@@ -21,6 +21,12 @@ class MessengerChat(TimestampModel):
     def __str__(self):
         return self.title or f'{self.chat_type} chat #{self.id}'
 
+    def is_blocked(self):
+        return hasattr(self, 'blockedchat')
+
+    def is_blocked_by(self, user):
+        return self.is_blocked() and self.blockedchat.blocked_by == user
+
 
 class ChatMember(TimestampModel):
     chat = models.ForeignKey(MessengerChat, on_delete=models.CASCADE)

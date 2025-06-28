@@ -14,6 +14,8 @@ messenger_urls = [
     path("messenger/chats/<int:chat_id>/block/", ChatBlockView.as_view(), name='chat-block'),
 ]
 
+
+
 urlpatterns = [
     path('', include(messenger_urls)),
 ]

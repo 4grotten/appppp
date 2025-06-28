@@ -165,7 +165,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
     def get_last_message(self, chat):
         message = chat.messages.order_by('-created_at').first()
         if message:
-            return LastMessageSerializer(message).data
+            return LastMessageSerializer(message, context=self.context).data
         return None
 
     def get_is_blocked(self, chat):

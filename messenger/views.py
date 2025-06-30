@@ -22,6 +22,7 @@ from messenger.models import (
 )
 from messenger.serializers import (
     ChatFolderSerializer,
+    ListChatFolderSerializer,
     MessengerChatSerializer,
     ChatMessageSerializer,
     ChatMessageCreateSerializer,
@@ -244,11 +245,15 @@ class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
 
 class FolderListCreateAPIView(ListCreateAPIView):
     queryset = ChatFolder.objects.all()
-    serializer_class = ChatFolderSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return ChatFolderSerializer
+        return ListChatFolderSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

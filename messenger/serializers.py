@@ -229,6 +229,13 @@ class ChatMessageUpdateSerializer(serializers.ModelSerializer):
 
 
 class ChatFolderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatFolder
+        fields = ("id", "title", "chats")
+
+
+class ListChatFolderSerializer(serializers.ModelSerializer):
     chats = MessengerChatListSerializer(many=True, read_only=True)
 
     class Meta:

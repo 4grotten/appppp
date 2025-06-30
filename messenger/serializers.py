@@ -3,7 +3,7 @@ from datetime import timedelta
 from instagrapi.types import UserShort
 from rest_framework import serializers
 
-from messenger.models import MessengerChat, ChatMessage, MessageLike
+from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
 from messenger.services import MessengerChatService
 from users.serializers import UserShortInfoSerializer
 
@@ -226,3 +226,12 @@ class ChatMessageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ("text",)
+
+
+class ChatFolderSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    chats = MessengerChatListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ChatFolder
+        fields = ("id", "title", "chats", "user")

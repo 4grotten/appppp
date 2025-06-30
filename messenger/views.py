@@ -13,8 +13,15 @@ from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
 from common.pagination import GeneralPagination
-from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
+from messenger.models import (
+    ChatFolder,
+    MessengerChat,
+    ChatMember,
+    ChatMessage,
+    BlockedChat,
+)
 from messenger.serializers import (
+    ChatFolderSerializer,
     MessengerChatSerializer,
     ChatMessageSerializer,
     ChatMessageCreateSerializer,
@@ -229,3 +236,18 @@ class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_200_OK,
             )
         raise NotAcceptableException(_("No rights to delete message"))
+
+
+class FolderListCreateAPIView(ListCreateAPIView):
+    queryset = ChatFolder.objects.all()
+    serializer_class = ChatFolderSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

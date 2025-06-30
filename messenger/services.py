@@ -73,7 +73,6 @@ class FoldersChatSerivice:
     @classmethod
     def create(cls, user: User, data: dict):
         chat_ids = data.pop("chats", [])
-        chats = MessengerChat.objects.filter(id__in=chat_ids)
         folder = cls.model.objects.create(user=user, **data)
-        folder.chats.set(chats)
+        folder.chats.set(chat_ids)
         return folder

@@ -3,6 +3,7 @@ from django.urls import path, include
 from messenger.views import (
     FindUserView,
     FolderListCreateAPIView,
+    FolderUpdateAPIView,
     GetOrCreatePrivateChatView,
     ChatMessageListView,
     MarkMessagesAsReadView,
@@ -39,6 +40,11 @@ messenger_urls = [
         "messenger/folders/",
         FolderListCreateAPIView.as_view(),
         name="folders",
+    ),
+    path(
+        "messenger/folders/<int:pk>/",
+        FolderUpdateAPIView.as_view(),
+        name="folder",
     ),
 ]
 

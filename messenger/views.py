@@ -1,6 +1,11 @@
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    ListAPIView,
+    CreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,8 +14,14 @@ from django.utils.translation import gettext_lazy as _
 from common.exceptions import NotAcceptableException
 from common.pagination import GeneralPagination
 from messenger.models import MessengerChat, ChatMember, ChatMessage, BlockedChat
-from messenger.serializers import MessengerChatSerializer, ChatMessageSerializer, ChatMessageCreateSerializer, \
-    MessengerChatListSerializer, MessageLikeSerializer, ChatMessageUpdateSerializer
+from messenger.serializers import (
+    MessengerChatSerializer,
+    ChatMessageSerializer,
+    ChatMessageCreateSerializer,
+    MessengerChatListSerializer,
+    MessageLikeSerializer,
+    ChatMessageUpdateSerializer,
+)
 from messenger.services import MessengerChatService, ChatMessageService
 from shop.services.comment_services import CommentService
 from users.models import User
@@ -50,36 +61,44 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
     def get_queryset(self):
         return MessengerChat.objects.filter(members=self.request.user).distinct()
 
-
     def post(self, request):
         user_id = request.data.get("user_id")
 
         if not user_id:
-            return Response({"detail": "'user_id' is required."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "'user_id' is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         if str(request.user.id) == str(user_id):
-            return Response({"detail": "You can't create chat with yourself."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You can't create chat with yourself."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         target_user = UserService.get(id=user_id)
 
-        existing_chat = MessengerChatService.filter(
-            chat_type="private",
-            members__id=request.user.id
-        ).filter(
-            members__id=target_user.id
-        ).distinct().first()
+        existing_chat = (
+            MessengerChatService.filter(
+                chat_type="private", members__id=request.user.id
+            )
+            .filter(members__id=target_user.id)
+            .distinct()
+            .first()
+        )
 
-        serializer = MessengerChatSerializer(existing_chat, context={"request": request})
+        serializer = MessengerChatSerializer(
+            existing_chat, context={"request": request}
+        )
         if existing_chat:
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         chat = MessengerChat.objects.create(chat_type="private")
-        ChatMember.objects.bulk_create([
-            ChatMember(chat=chat, user=request.user),
-            ChatMember(chat=chat, user=target_user),
-        ])
+        ChatMember.objects.bulk_create(
+            [
+                ChatMember(chat=chat, user=request.user),
+                ChatMember(chat=chat, user=target_user),
+            ]
+        )
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
 
@@ -92,14 +111,18 @@ class ChatMessageListView(ListAPIView):
     serializer_class = ChatMessageSerializer
 
     def get_queryset(self):
-        chat = MessengerChatService.get(id=self.kwargs['pk'])
-        return ChatMessage.objects.filter(chat=chat).order_by('-created_at')
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        return ChatMessage.objects.filter(chat=chat).order_by("-created_at")
 
     def list(self, request, *args, **kwargs):
-        chat = MessengerChatService.get(id=self.kwargs['pk'])
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
         response = super().list(request, args, kwargs)
-        response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
-        response.data['chat'] = MessengerChatSerializer(chat, context={'request': request}).data
+        response.data["wallpapers"] = CommentService.get_user_theme_or_default(
+            user=self.request.user
+        )
+        response.data["chat"] = MessengerChatSerializer(
+            chat, context={"request": request}
+        ).data
         return response
 
 
@@ -108,7 +131,7 @@ class MarkMessagesAsReadView(APIView):
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        chat = MessengerChatService.get(pk=kwargs['pk'])
+        chat = MessengerChatService.get(pk=kwargs["pk"])
 
         updated_count = ChatMessage.objects.filter(
             ~Q(sender=user),
@@ -125,10 +148,12 @@ class ChatBlockView(APIView):
     def post(self, request, chat_id):
         chat = MessengerChatService.get(pk=chat_id)
 
-        if hasattr(chat, 'blockedchat') and chat.blockedchat.blocked_by != request.user:
-            return Response({"detail": "This chat already was blocked by other user"}, status=403)
+        if hasattr(chat, "blockedchat") and chat.blockedchat.blocked_by != request.user:
+            return Response(
+                {"detail": "This chat already was blocked by other user"}, status=403
+            )
 
-        if hasattr(chat, 'blockedchat') and chat.blockedchat.blocked_by == request.user:
+        if hasattr(chat, "blockedchat") and chat.blockedchat.blocked_by == request.user:
             return Response({"detail": "You already blocked this chat"}, status=400)
 
         BlockedChat.objects.create(chat=chat, blocked_by=request.user)
@@ -137,7 +162,7 @@ class ChatBlockView(APIView):
     def delete(self, request, chat_id):
         chat = MessengerChatService.get(pk=chat_id)
 
-        if not hasattr(chat, 'blockedchat'):
+        if not hasattr(chat, "blockedchat"):
             return Response({"detail": "Chat is not blocked"}, status=400)
 
         if chat.blockedchat.blocked_by != request.user:
@@ -154,15 +179,18 @@ class ChatMessageLike(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = MessageLikeSerializer(data=self.request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        ChatMessageService.like_unlike_message(user=request.user, message=serializer.validated_data['message'],
-                                               is_liked=serializer.validated_data['is_liked'])
+        ChatMessageService.like_unlike_message(
+            user=request.user,
+            message=serializer.validated_data["message"],
+            is_liked=serializer.validated_data["is_liked"],
+        )
 
-        return Response(data={'message': _('Successfully updated like status')})
+        return Response(data={"message": _("Successfully updated like status")})
 
 
 class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
@@ -174,24 +202,30 @@ class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
         message = self.get_object()
         serializer = ChatMessageUpdateSerializer(message, data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         if self.request.user == message.sender:
             serializer.save()
-            return Response(data={
-                'message': _('Successfully updated message'),
-            }, status=status.HTTP_200_OK)
-        raise NotAcceptableException(_('No rights to edit message'))
+            return Response(
+                data={
+                    "message": _("Successfully updated message"),
+                },
+                status=status.HTTP_200_OK,
+            )
+        raise NotAcceptableException(_("No rights to edit message"))
 
     def delete(self, request, *args, **kwargs):
         message = self.get_object()
         if self.request.user == message.sender:
 
             ChatMessageService.delete_message(message=message)
-            return Response(data={
-                'message': _('Successfully deleted message'),
-            }, status=status.HTTP_200_OK)
-        raise NotAcceptableException(_('No rights to delete message'))
+            return Response(
+                data={
+                    "message": _("Successfully deleted message"),
+                },
+                status=status.HTTP_200_OK,
+            )
+        raise NotAcceptableException(_("No rights to delete message"))

@@ -17,11 +17,12 @@ class MessengerChatService:
         try:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException(_('MessengerChat not found'))
+            raise ObjectNotFoundException(_("MessengerChat not found"))
 
     @classmethod
     def is_message_liked_by_user(cls, message: ChatMessage, user: User) -> bool:
         return MessageLike.objects.filter(user=user, message=message).exists()
+
 
 class ChatMessageService:
     model = ChatMessage
@@ -35,16 +36,27 @@ class ChatMessageService:
         try:
             return cls.model.objects.get(*args, **kwargs)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException(_('ChatMessage not found'))
+            raise ObjectNotFoundException(_("ChatMessage not found"))
 
     @classmethod
-    def create_chat_message(cls, text: str, chat: MessengerChat, user: User, parent: ChatMessage = None, is_read: bool = False):
-        message = cls.model.objects.create(chat=chat, sender=user, parent=parent, text=text, is_read=is_read)
+    def create_chat_message(
+        cls,
+        text: str,
+        chat: MessengerChat,
+        user: User,
+        parent: ChatMessage = None,
+        is_read: bool = False,
+    ):
+        message = cls.model.objects.create(
+            chat=chat, sender=user, parent=parent, text=text, is_read=is_read
+        )
 
         return message
 
     @classmethod
-    def like_unlike_message(cls, message: ChatMessage, user: User, is_liked: bool) -> bool:
+    def like_unlike_message(
+        cls, message: ChatMessage, user: User, is_liked: bool
+    ) -> bool:
         if is_liked:
             MessageLike.objects.update_or_create(user=user, message=message)
         else:
@@ -53,5 +65,3 @@ class ChatMessageService:
     @classmethod
     def delete_message(cls, message: ChatMessage):
         message.delete()
-
-

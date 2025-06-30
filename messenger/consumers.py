@@ -17,6 +17,7 @@ REDIS_URL = f"redis://{config('REDIS_HOST', 'redis')}:{config('REDIS_PORT', defa
 logger = logging.getLogger(__name__)
 redis = None
 
+
 async def get_redis():
     global redis
     if not redis:
@@ -27,25 +28,25 @@ async def get_redis():
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
-            self.chat_id = self.scope['url_route']['kwargs']['chat_id']
-            self.room_group_name = f'chat_{self.chat_id}'
-            self.headers = self.scope['headers']
+            self.chat_id = self.scope["url_route"]["kwargs"]["chat_id"]
+            self.room_group_name = f"chat_{self.chat_id}"
+            self.headers = self.scope["headers"]
             self.host = self.extract_host()
 
             subprotocol = None
-            for header in self.scope['headers']:
-                if header[0].decode().lower() == 'sec-websocket-protocol':
+            for header in self.scope["headers"]:
+                if header[0].decode().lower() == "sec-websocket-protocol":
                     subprotocol = header[1].decode()
                     break
 
-            if not self.scope['user'].is_authenticated:
+            if not self.scope["user"].is_authenticated:
                 logger.warning("Unauthorized user attempted to connect.")
                 await self.close()
                 return
 
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
-            user_id = str(self.scope['user'].id)
+            user_id = str(self.scope["user"].id)
             redis_conn = await get_redis()
             chat_key = f"chat_{self.chat_id}_online_users"
             await redis_conn.sadd(chat_key, user_id)
@@ -59,27 +60,28 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        user_id = str(self.scope['user'].id)
+        user_id = str(self.scope["user"].id)
         chat_key = f"chat_{self.chat_id}_online_users"
         redis_conn = await get_redis()
         await redis_conn.srem(chat_key, user_id)
 
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         user = self.scope.get("user")
 
-        serializer = ChatMessageCreateSerializer(data=data, context={'user': user})
+        serializer = ChatMessageCreateSerializer(data=data, context={"user": user})
         if not serializer.is_valid():
-            await self.send(text_data=json.dumps({
-                'type': 'error',
-                'message': 'Invalid input',
-                'errors': serializer.errors
-            }))
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "type": "error",
+                        "message": "Invalid input",
+                        "errors": serializer.errors,
+                    }
+                )
+            )
             return
 
         self.chat = await self.get_chat(self.chat_id)
@@ -89,7 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         redis_conn = await get_redis()
         chat_key = f"chat_{self.chat_id}_online_users"
         online_users = await redis_conn.smembers(chat_key)
-        online_user_ids = set([u.decode('utf-8') for u in online_users])
+        online_user_ids = set([u.decode("utf-8") for u in online_users])
         interlocutor_online = any(uid != user_id for uid in online_user_ids)
 
         # Создаем сообщение с is_read = True, если собеседник онлайн, иначе False
@@ -98,18 +100,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             user=user,
             text=serializer.validated_data["text"],
             parent=serializer.validated_data.get("parent"),
-            is_read=interlocutor_online
+            is_read=interlocutor_online,
         )
 
-        serializer = ChatMessageWSSerializer(message, context={'user': user})
+        serializer = ChatMessageWSSerializer(message, context={"user": user})
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': response_json
-            }
+            self.room_group_name, {"type": "chat_message", "message": response_json}
         )
 
     async def chat_message(self, event):
@@ -123,6 +121,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def mark_as_read(self, message_id, user):
         from messenger.models import ChatMessage
+
         try:
             message = ChatMessage.objects.get(id=message_id)
             if message.sender != user:
@@ -147,7 +146,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     def extract_host(self):
-        for header in self.scope['headers']:
-            if header[0] == b'host':
-                return header[1].decode('utf-8')
-        return 'default_host'
+        for header in self.scope["headers"]:
+            if header[0] == b"host":
+                return header[1].decode("utf-8")
+        return "default_host"

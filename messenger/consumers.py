@@ -102,7 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         serializer = ChatMessageWSSerializer(message, context={'user': user})
-        response_json = await sync_to_async(serializer.data.copy)()
+        response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.channel_layer.group_send(
             self.room_group_name,

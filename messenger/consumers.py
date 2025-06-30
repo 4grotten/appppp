@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from django.contrib.auth import get_user_model
-from messenger.serializers import ChatMessageCreateSerializer, ChatMessageSerializer, ChatMessageWSSerializer
+from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.models import MessengerChat
 from messenger.services import ChatMessageService, MessengerChatService
 
@@ -71,8 +71,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             parent=serializer.validated_data.get("parent")
         )
 
-        response_data = await sync_to_async(ChatMessageWSSerializer)(message, context={'user': user})
-        response_json = await sync_to_async(lambda s: s.data)(response_data)
+        serializer = ChatMessageWSSerializer(message, context={'user': user})
+        response_json = await sync_to_async(serializer.data.copy)()
 
         await self.channel_layer.group_send(
             self.room_group_name,

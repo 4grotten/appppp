@@ -1,5 +1,5 @@
 from common.exceptions import ObjectNotFoundException
-from messenger.models import MessengerChat, MessageLike, ChatMessage
+from messenger.models import ChatFolder, MessengerChat, MessageLike, ChatMessage
 from django.utils.translation import gettext_lazy as _
 
 from users.models import User
@@ -65,3 +65,15 @@ class ChatMessageService:
     @classmethod
     def delete_message(cls, message: ChatMessage):
         message.delete()
+
+
+class FoldersChatSerivice:
+    model = ChatFolder
+
+    @classmethod
+    def create(cls, user: User, data: dict):
+        chat_ids = data.pop("chats", [])
+        chats = MessengerChat.objects.filter(id__in=chat_ids)
+        folder = cls.model.objects.create(user=user, **data)
+        folder.chats.set(chats)
+        return folder

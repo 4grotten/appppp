@@ -29,7 +29,11 @@ from messenger.serializers import (
     MessageLikeSerializer,
     ChatMessageUpdateSerializer,
 )
-from messenger.services import MessengerChatService, ChatMessageService
+from messenger.services import (
+    FoldersChatSerivice,
+    MessengerChatService,
+    ChatMessageService,
+)
 from shop.services.comment_services import CommentService
 from users.models import User
 from users.serializers import UserShortInfoSerializer
@@ -249,7 +253,8 @@ class FolderListCreateAPIView(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
+        user = self.request.user
+        instance = FoldersChatSerivice.create(user, serializer.validated_data)
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
         )

@@ -108,13 +108,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
         return message.likes.count()
 
     def get_status(self, message: ChatMessage) -> str:
-        if message.is_read:
+        if message.sender == self.context.get('user'):
+            if message.is_read:
+                return 'read'
+            elif message.is_delivered:
+                return 'delivered'
+            elif message.is_sent:
+                return 'sent'
+            return 'pending'
+        else:
             return 'read'
-        elif message.is_delivered:
-            return 'delivered'
-        elif message.is_sent:
-            return 'sent'
-        return 'pending'
 
 
 class ChatMessageCreateSerializer(serializers.ModelSerializer):
@@ -165,7 +168,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
     def get_last_message(self, chat):
         message = chat.messages.order_by('-created_at').first()
         if message:
-            return LastMessageSerializer(message).data
+            return LastMessageSerializer(message, context=self.context).data
         return None
 
     def get_is_blocked(self, chat):

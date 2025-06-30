@@ -1,17 +1,27 @@
+from decouple import config
 import logging
-
+import json
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-import json
 from django.contrib.auth import get_user_model
-from messenger.serializers import ChatMessageCreateSerializer, ChatMessageSerializer, ChatMessageWSSerializer
-from messenger.models import MessengerChat
+import aioredis
+
+from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.services import ChatMessageService, MessengerChatService
 
 User = get_user_model()
 
+REDIS_URL = f"redis://{config('REDIS_HOST', 'redis')}:{config('REDIS_PORT', default=6379, cast=int)}"
+
 logger = logging.getLogger(__name__)
+redis = None
+
+async def get_redis():
+    global redis
+    if not redis:
+        redis = await aioredis.create_redis_pool(REDIS_URL)
+    return redis
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -28,12 +38,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     subprotocol = header[1].decode()
                     break
 
-            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-
             if not self.scope['user'].is_authenticated:
                 logger.warning("Unauthorized user attempted to connect.")
                 await self.close()
                 return
+
+            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+
+            user_id = str(self.scope['user'].id)
+            redis_conn = await get_redis()
+            chat_key = f"chat_{self.chat_id}_online_users"
+            await redis_conn.sadd(chat_key, user_id)
 
             if subprotocol:
                 await self.accept(subprotocol=subprotocol)
@@ -44,6 +59,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
+        user_id = str(self.scope['user'].id)
+        chat_key = f"chat_{self.chat_id}_online_users"
+        redis_conn = await get_redis()
+        await redis_conn.srem(chat_key, user_id)
+
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -64,15 +84,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         self.chat = await self.get_chat(self.chat_id)
 
+        # Проверяем есть ли другие онлайн пользователи в этом чате кроме отправителя
+        user_id = str(user.id)
+        redis_conn = await get_redis()
+        chat_key = f"chat_{self.chat_id}_online_users"
+        online_users = await redis_conn.smembers(chat_key)
+        online_user_ids = set([u.decode('utf-8') for u in online_users])
+        interlocutor_online = any(uid != user_id for uid in online_user_ids)
+
+        # Создаем сообщение с is_read = True, если собеседник онлайн, иначе False
         message = await self.send_message(
             chat=self.chat,
             user=user,
             text=serializer.validated_data["text"],
-            parent=serializer.validated_data.get("parent")
+            parent=serializer.validated_data.get("parent"),
+            is_read=interlocutor_online
         )
 
-        response_data = await sync_to_async(ChatMessageWSSerializer)(message, context={'user': user})
-        response_json = await sync_to_async(lambda s: s.data)(response_data)
+        serializer = ChatMessageWSSerializer(message, context={'user': user})
+        response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -107,12 +137,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return MessengerChatService.get(pk=chat_id)
 
     @database_sync_to_async
-    def send_message(self, chat, user, text, parent=None):
+    def send_message(self, chat, user, text, parent=None, is_read=False):
         return ChatMessageService.create_chat_message(
             chat=chat,
             user=user,
             text=text,
-            parent=parent
+            parent=parent,
+            is_read=is_read,
         )
 
     def extract_host(self):

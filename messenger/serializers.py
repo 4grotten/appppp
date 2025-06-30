@@ -229,9 +229,8 @@ class ChatMessageUpdateSerializer(serializers.ModelSerializer):
 
 
 class ChatFolderSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     chats = MessengerChatListSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatFolder
-        fields = ("id", "title", "chats", "user")
+        fields = ("id", "title", "chats")

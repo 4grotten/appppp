@@ -108,13 +108,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
         return message.likes.count()
 
     def get_status(self, message: ChatMessage) -> str:
-        if message.is_read:
+        if message.sender == self.context.get('user'):
+            if message.is_read:
+                return 'read'
+            elif message.is_delivered:
+                return 'delivered'
+            elif message.is_sent:
+                return 'sent'
+            return 'pending'
+        else:
             return 'read'
-        elif message.is_delivered:
-            return 'delivered'
-        elif message.is_sent:
-            return 'sent'
-        return 'pending'
 
 
 class ChatMessageCreateSerializer(serializers.ModelSerializer):

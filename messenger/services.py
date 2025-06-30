@@ -38,8 +38,8 @@ class ChatMessageService:
             raise ObjectNotFoundException(_('ChatMessage not found'))
 
     @classmethod
-    def create_chat_message(cls, text: str, chat: MessengerChat, user: User, parent: ChatMessage = None):
-        message = cls.model.objects.create(chat=chat, sender=user, parent=parent, text=text)
+    def create_chat_message(cls, text: str, chat: MessengerChat, user: User, parent: ChatMessage = None, is_read: bool = False):
+        message = cls.model.objects.create(chat=chat, sender=user, parent=parent, text=text, is_read=is_read)
 
         return message
 

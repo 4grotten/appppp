@@ -229,6 +229,12 @@ class ChatMessageUpdateSerializer(serializers.ModelSerializer):
 
 
 class ChatFolderSerializer(serializers.ModelSerializer):
+    chats = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=MessengerChat.objects.all(),
+        required=False,
+        allow_empty=True,
+    )
 
     class Meta:
         model = ChatFolder

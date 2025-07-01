@@ -72,7 +72,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user = self.scope.get("user")
 
         serializer = ChatMessageCreateSerializer(data=data, context={"user": user})
-        if not serializer.is_valid():
+        is_valid = await sync_to_async(serializer.is_valid)()
+        if not is_valid:
             await self.send(
                 text_data=json.dumps(
                     {

@@ -116,10 +116,13 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ChatMessageListView(ListAPIView):
+class ChatMessageListView(ListAPIView, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = GeneralPagination
     serializer_class = ChatMessageSerializer
+
+    def get_object(self):
+        return MessengerChatService.get(id=self.kwargs["pk"])
 
     def get_queryset(self):
         chat = MessengerChatService.get(id=self.kwargs["pk"])
@@ -135,6 +138,11 @@ class ChatMessageListView(ListAPIView):
             chat, context={"request": request}
         ).data
         return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MarkMessagesAsReadView(APIView):

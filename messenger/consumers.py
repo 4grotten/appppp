@@ -110,7 +110,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
         )
-        participant_ids = [str(uid) for uid in online_user_ids]
+        participant_ids = await self.get_chat_participant_ids(self.chat)
         for user_id in participant_ids:
             await self.channel_layer.group_send(
                 f"user_{user_id}_chats",
@@ -141,6 +141,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message.save(update_fields=["is_delivered", "is_read"])
         except ChatMessage.DoesNotExist:
             pass
+
+    @database_sync_to_async
+    def get_chat_participant_ids(chat):
+        return list(chat.members.values_list("id", flat=True))
 
     @database_sync_to_async
     def get_chat(self, chat_id):

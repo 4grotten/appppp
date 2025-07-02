@@ -143,7 +143,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             pass
 
     @database_sync_to_async
-    def get_chat_participant_ids(chat):
+    def get_chat_participant_ids(self, chat):
         return list(chat.members.values_list("id", flat=True))
 
     @database_sync_to_async

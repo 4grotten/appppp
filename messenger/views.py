@@ -293,3 +293,110 @@ class FolderUpdateAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MessengerChatsDeleteAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        chat_ids = request.data.get("chats", [])
+        if not isinstance(chat_ids, list):
+            return Response(
+                {"error": "chats must be a list of IDs"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        chats = MessengerChat.objects.filter(id__in=chat_ids)
+        deleted_count = chats.count()
+        chats.delete()
+        return Response({"deleted": deleted_count}, status=status.HTTP_200_OK)
+
+
+class MessengerChatsViewAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        chat_ids = request.data.get("chats", [])
+        if not isinstance(chat_ids, list):
+            return Response(
+                {"error": "chats must be a list of IDs"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        chats = MessengerChat.objects.filter(id__in=chat_ids)
+        messages = ChatMessage.objects.filter(chat__in=chats).exclude(
+            sender=request.user
+        )
+
+        updated_count = messages.update(is_read=True)
+
+        return Response({"updated": updated_count}, status=status.HTTP_200_OK)
+
+
+class MessengerChatsBlockAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        chat_ids = request.data.get("chats", [])
+        if not isinstance(chat_ids, list):
+            return Response({"error": "chats must be a list of IDs"}, status=400)
+
+        user = request.user
+        chats = MessengerChat.objects.filter(id__in=chat_ids)
+
+        blocked_chats = BlockedChat.objects.filter(chat__in=chats)
+        blocked_map = {b.chat_id: b.blocked_by_id for b in blocked_chats}
+
+        to_create = []
+        errors = []
+
+        for chat in chats:
+            if chat.id in blocked_map:
+                if blocked_map[chat.id] != user.id:
+                    errors.append(f"Chat {chat.id} blocked by another user")
+                else:
+                    errors.append(f"Chat {chat.id} already blocked by you")
+            else:
+                to_create.append(BlockedChat(chat=chat, blocked_by=user))
+
+        BlockedChat.objects.bulk_create(to_create)
+
+        return Response(
+            {
+                "blocked_count": len(to_create),
+                "errors": errors,
+            },
+            status=200,
+        )
+
+
+class MessengerChatsUnBlockAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        chat_ids = request.data.get("chats", [])
+        if not isinstance(chat_ids, list):
+            return Response({"error": "chats must be a list of IDs"}, status=400)
+
+        user = request.user
+        results = {"unblocked": [], "errors": []}
+
+        for chat_id in chat_ids:
+            try:
+                chat = MessengerChatService.get(pk=chat_id)
+            except MessengerChat.DoesNotExist:
+                results["errors"].append(f"Chat {chat_id} does not exist")
+                continue
+
+            if not hasattr(chat, "blockedchat"):
+                results["errors"].append(f"Chat {chat_id} is not blocked")
+                continue
+
+            if chat.blockedchat.blocked_by != user:
+                results["errors"].append(f"You can't unblock chat {chat_id} blocked by another user")
+                continue
+
+            chat.blockedchat.delete()
+            results["unblocked"].append(chat_id)
+
+        return Response(results, status=200)

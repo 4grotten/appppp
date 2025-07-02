@@ -165,6 +165,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 class ChatListConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        subprotocol = None
+        for header in self.scope["headers"]:
+            if header[0].decode().lower() == "sec-websocket-protocol":
+                subprotocol = header[1].decode()
+                break
         if not self.scope["user"].is_authenticated:
             await self.close()
             return
@@ -173,7 +178,10 @@ class ChatListConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"user_{self.user.id}_chats"
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-        await self.accept()
+        if subprotocol:
+            await self.accept(subprotocol=subprotocol)
+        else:
+            await self.accept()
 
     async def disconnect(self, close_code):
         if hasattr(self, "room_group_name"):

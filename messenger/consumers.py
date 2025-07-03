@@ -110,6 +110,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
         )
+        participant_ids = await self.get_chat_participant_ids(self.chat)
+        for user_id in participant_ids:
+            await self.channel_layer.group_send(
+                f"user_{user_id}_chats",
+                {
+                    "type": "chat_list_update",
+                    "chat_id": self.chat_id,
+                    "last_message": response_json,
+                },
+            )
 
     async def chat_message(self, event):
         message_data = event["message"]
@@ -133,6 +143,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             pass
 
     @database_sync_to_async
+    def get_chat_participant_ids(self, chat):
+        return list(chat.members.values_list("id", flat=True))
+
+    @database_sync_to_async
     def get_chat(self, chat_id):
         return MessengerChatService.get(pk=chat_id)
 
@@ -151,3 +165,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if header[0] == b"host":
                 return header[1].decode("utf-8")
         return "default_host"
+
+
+class ChatListConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        subprotocol = None
+        for header in self.scope["headers"]:
+            if header[0].decode().lower() == "sec-websocket-protocol":
+                subprotocol = header[1].decode()
+                break
+        if not self.scope["user"].is_authenticated:
+            await self.close()
+            return
+
+        self.user = self.scope["user"]
+        self.room_group_name = f"user_{self.user.id}_chats"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        if subprotocol:
+            await self.accept(subprotocol=subprotocol)
+        else:
+            await self.accept()
+
+    async def disconnect(self, close_code):
+        if hasattr(self, "room_group_name"):
+            await self.channel_layer.group_discard(
+                self.room_group_name, self.channel_name
+            )
+
+    async def chat_list_update(self, event):
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "event": "chat_updated",
+                    "chat_id": event["chat_id"],
+                    "last_message": event["last_message"],
+                }
+            )
+        )

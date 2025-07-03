@@ -10,6 +10,10 @@ from messenger.views import (
     ChatBlockView,
     ChatMessageLike,
     ChatMessageDestroyUpdateRetrieveView,
+    MessengerChatsBlockAPIView,
+    MessengerChatsDeleteAPIView,
+    MessengerChatsUnBlockAPIView,
+    MessengerChatsViewAPIView,
 )
 
 messenger_urls = [
@@ -35,6 +39,26 @@ messenger_urls = [
         "messenger/chats/<int:chat_id>/block/",
         ChatBlockView.as_view(),
         name="chat-block",
+    ),
+    path(
+        "messenger/chats/delete/",
+        MessengerChatsDeleteAPIView.as_view(),
+        name="chats-delete",
+    ),
+    path(
+        "messenger/chats/view/",
+        MessengerChatsViewAPIView.as_view(),
+        name="chats-view",
+    ),
+    path(
+        "messenger/chats/block/",
+        MessengerChatsBlockAPIView.as_view(),
+        name="chats-block",
+    ),
+    path(
+        "messenger/chats/unblock/",
+        MessengerChatsUnBlockAPIView.as_view(),
+        name="chats-unblock",
     ),
     path(
         "messenger/folders/",

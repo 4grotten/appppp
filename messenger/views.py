@@ -328,9 +328,9 @@ class MessengerChatsViewAPIView(APIView):
             sender=request.user
         )
 
-        updated_count = messages.update(is_read=True)
+        messages.update(is_read=True)
 
-        return Response({"updated": updated_count}, status=status.HTTP_200_OK)
+        return Response({"updated": len(chats)}, status=status.HTTP_200_OK)
 
 
 class MessengerChatsBlockAPIView(APIView):
@@ -393,7 +393,9 @@ class MessengerChatsUnBlockAPIView(APIView):
                 continue
 
             if chat.blockedchat.blocked_by != user:
-                results["errors"].append(f"You can't unblock chat {chat_id} blocked by another user")
+                results["errors"].append(
+                    f"You can't unblock chat {chat_id} blocked by another user"
+                )
                 continue
 
             chat.blockedchat.delete()

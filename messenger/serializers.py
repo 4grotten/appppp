@@ -192,6 +192,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "sender",
             "chat_type",
             "title",
+            "image",
             "last_message",
             "is_blocked",
             "blocked_by_me",
@@ -252,3 +253,9 @@ class ListChatFolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatFolder
         fields = ("id", "title", "chats")
+
+
+class MessengerChatUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessengerChat
+        fields = ("title", "image")

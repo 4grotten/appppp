@@ -32,6 +32,7 @@ from messenger.serializers import (
     MessengerChatListSerializer,
     MessageLikeSerializer,
     ChatMessageUpdateSerializer,
+    MessengerChatUpdateSerializer,
 )
 from messenger.services import (
     FoldersChatSerivice,
@@ -443,6 +444,8 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
     def post(self, request):
         users_ids = request.data.get("users_ids")
         title = request.data.get("title")
+        image = request.data.get("image")
+
         if not users_ids or not title:
             return Response(
                 {"detail": "'users_ids' and 'title' is required."},
@@ -457,7 +460,7 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
 
         target_users = UserService.filter(id__in=users_ids)
 
-        chat = MessengerChat.objects.create(chat_type="group", title=title)
+        chat = MessengerChat.objects.create(chat_type="group", title=title, image=image)
 
         chat_members = [
             ChatMember(chat=chat, user=request.user),
@@ -470,3 +473,16 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         serializer = MessengerChatSerializer(chat, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class UpdateGroupChatAPIView(UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MessengerChatUpdateSerializer
+    queryset = MessengerChat.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

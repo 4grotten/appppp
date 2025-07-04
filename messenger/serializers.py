@@ -15,7 +15,15 @@ class MessengerChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MessengerChat
-        fields = ("id", "chat_type", "title", "members", "is_blocked", "blocked_by_me")
+        fields = (
+            "id",
+            "chat_type",
+            "title",
+            "members",
+            "image",
+            "is_blocked",
+            "blocked_by_me",
+        )
 
     def get_is_blocked(self, chat):
         return chat.is_blocked()
@@ -111,9 +119,9 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
-    def get_is_mine(self, obj: ChatMessage):
-        request = self.context.get("request")
-        return obj.sender == request.user if request else False
+    def get_is_mine(self, message: ChatMessage):
+        user = self.context.get("user")
+        return user == message.sender
 
     def get_is_updated(self, message: ChatMessage) -> bool:
         return (message.updated_at - message.created_at) > timedelta(seconds=1)

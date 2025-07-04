@@ -23,8 +23,3 @@ private_chats_url = [
         name="chat-block",
     ),
 ]
-
-
-urlpatterns = [
-    path("", include(messenger_urls)),
-]

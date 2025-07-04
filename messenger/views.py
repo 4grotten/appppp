@@ -6,6 +6,9 @@ from rest_framework.generics import (
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,6 +25,7 @@ from messenger.models import (
 )
 from messenger.serializers import (
     ChatFolderSerializer,
+    ChatMessageWSSerializer,
     ListChatFolderSerializer,
     MessengerChatSerializer,
     ChatMessageSerializer,
@@ -203,10 +207,23 @@ class ChatMessageLike(CreateAPIView):
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
 
+        message = serializer.validated_data["message"]
         ChatMessageService.like_unlike_message(
             user=request.user,
-            message=serializer.validated_data["message"],
+            message=message,
             is_liked=serializer.validated_data["is_liked"],
+        )
+
+        # WebSocket отправка обновления
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{message.chat.id}",
+            {
+                "type": "chat_message_update",
+                "message": ChatMessageWSSerializer(
+                    message, context={"user": request.user}
+                ).data,
+            },
         )
 
         return Response(data={"message": _("Successfully updated like status")})
@@ -226,15 +243,27 @@ class ChatMessageDestroyUpdateRetrieveView(RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
 
-        if self.request.user == message.sender:
-            serializer.save()
-            return Response(
-                data={
-                    "message": _("Successfully updated message"),
-                },
-                status=status.HTTP_200_OK,
-            )
-        raise NotAcceptableException(_("No rights to edit message"))
+        if self.request.user != message.sender:
+            raise NotAcceptableException(_("No rights to edit message"))
+
+        serializer.save()
+
+        # WebSocket отправка обновления
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{message.chat.id}",
+            {
+                "type": "chat_message_update",
+                "message": ChatMessageWSSerializer(
+                    message, context={"user": request.user}
+                ).data,
+            },
+        )
+
+        return Response(
+            data={"message": _("Successfully updated message")},
+            status=status.HTTP_200_OK,
+        )
 
     def delete(self, request, *args, **kwargs):
         message = self.get_object()
@@ -328,9 +357,9 @@ class MessengerChatsViewAPIView(APIView):
             sender=request.user
         )
 
-        updated_count = messages.update(is_read=True)
+        messages.update(is_read=True)
 
-        return Response({"updated": updated_count}, status=status.HTTP_200_OK)
+        return Response({"updated": len(chats)}, status=status.HTTP_200_OK)
 
 
 class MessengerChatsBlockAPIView(APIView):
@@ -393,10 +422,51 @@ class MessengerChatsUnBlockAPIView(APIView):
                 continue
 
             if chat.blockedchat.blocked_by != user:
-                results["errors"].append(f"You can't unblock chat {chat_id} blocked by another user")
+                results["errors"].append(
+                    f"You can't unblock chat {chat_id} blocked by another user"
+                )
                 continue
 
             chat.blockedchat.delete()
             results["unblocked"].append(chat_id)
 
         return Response(results, status=200)
+
+
+class GetOrCreateGroupChatView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MessengerChatListSerializer
+
+    def get_queryset(self):
+        return MessengerChat.objects.filter(members=self.request.user).distinct()
+
+    def post(self, request):
+        users_ids = request.data.get("users_ids")
+        title = request.data.get("title")
+        if not users_ids or not title:
+            return Response(
+                {"detail": "'users_ids' and 'title' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if str(request.user.id) in users_ids:
+            return Response(
+                {"detail": "You can't create chat with yourself."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        target_users = UserService.filter(id__in=users_ids)
+
+        chat = MessengerChat.objects.create(chat_type="group", title=title)
+
+        chat_members = [
+            ChatMember(chat=chat, user=request.user),
+        ]
+        for user in target_users:
+            chat_members.append(ChatMember(chat=chat, user=user))
+
+        ChatMember.objects.bulk_create(chat_members)
+
+        serializer = MessengerChatSerializer(chat, context={"request": request})
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

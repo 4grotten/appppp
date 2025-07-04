@@ -92,6 +92,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     parent = ParentChatMessageSerializer()
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    is_mine = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -103,11 +104,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "is_message_liked",
             "message_like_count",
             "can_delete",
+            "is_mine",
             "is_updated",
             "status",
             "created_at",
             "updated_at",
         )
+
+    def get_is_mine(self, obj: ChatMessage):
+        request = self.context.get("request")
+        return obj.sender == request.user if request else False
 
     def get_is_updated(self, message: ChatMessage) -> bool:
         return (message.updated_at - message.created_at) > timedelta(seconds=1)
@@ -206,10 +212,9 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
 
     def get_sender(self, chat):
         request_user = self.context["request"].user
-        if chat.chat_type == MessengerChat.PRIVATE:
-            sender = chat.members.exclude(id=request_user.id).first()
-            if sender:
-                return UserShortInfoSerializer(sender).data
+        sender = chat.members.exclude(id=request_user.id).first()
+        if sender:
+            return UserShortInfoSerializer(sender).data
         return None
 
 

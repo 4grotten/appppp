@@ -16,6 +16,7 @@ class MessengerChat(TimestampModel):
 
     chat_type = models.CharField(max_length=10, choices=CHAT_TYPES)
     title = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to="chat_images", null=True, blank=True)
     members = models.ManyToManyField(
         User, through="ChatMember", related_name="messenger_chats"
     )

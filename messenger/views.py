@@ -402,3 +402,42 @@ class MessengerChatsUnBlockAPIView(APIView):
             results["unblocked"].append(chat_id)
 
         return Response(results, status=200)
+
+
+class GetOrCreateGroupChatView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MessengerChatListSerializer
+
+    def get_queryset(self):
+        return MessengerChat.objects.filter(members=self.request.user).distinct()
+
+    def post(self, request):
+        users_ids = request.data.get("users_ids")
+        title = request.data.get("title")
+        if not users_ids or not title:
+            return Response(
+                {"detail": "'users_ids' and 'title' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if str(request.user.id) in users_ids:
+            return Response(
+                {"detail": "You can't create chat with yourself."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        target_users = UserService.filter(id__in=users_ids)
+
+        chat = MessengerChat.objects.create(chat_type="group", title=title)
+
+        chat_members = [
+            ChatMember(chat=chat, user=request.user),
+        ]
+        for user in target_users:
+            chat_members.append(ChatMember(chat=chat, user=user))
+
+        ChatMember.objects.bulk_create(chat_members)
+
+        serializer = MessengerChatSerializer(chat, context={"request": request})
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

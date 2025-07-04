@@ -1,4 +1,5 @@
 from django.db.models import Q
+from messenger.constants import ADMIN
 from rest_framework import status
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -464,7 +465,7 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         chat = MessengerChat.objects.create(chat_type="group", title=title, image=image)
 
         chat_members = [
-            ChatMember(chat=chat, user=request.user),
+            ChatMember(chat=chat, user=request.user, role=ADMIN),
         ]
         for user in target_users:
             chat_members.append(ChatMember(chat=chat, user=user))
@@ -476,7 +477,7 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class UpdateGroupChatAPIView(UpdateAPIView):
+class UpdateGroupChatAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MessengerChatUpdateSerializer
     queryset = MessengerChat.objects.all()
@@ -487,3 +488,8 @@ class UpdateGroupChatAPIView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

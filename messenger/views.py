@@ -5,6 +5,7 @@ from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
 )
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync

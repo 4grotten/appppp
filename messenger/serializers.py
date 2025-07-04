@@ -11,7 +11,8 @@ from users.serializers import UserShortInfoSerializer
 class MessengerChatSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     blocked_by_me = serializers.SerializerMethodField()
-    members = UserShortInfoSerializer(many=True, read_only=True)
+
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = MessengerChat
@@ -31,6 +32,13 @@ class MessengerChatSerializer(serializers.ModelSerializer):
     def get_blocked_by_me(self, chat):
         request = self.context.get("request")
         return chat.is_blocked_by(request.user) if request else False
+
+    def get_members(self, chat):
+        users = chat.members.all()
+        serializer = UserShortInfoSerializer(
+            users, many=True, context={**self.context, "chat": chat}
+        )
+        return serializer.data
 
 
 class ParentChatMessageSerializer(serializers.ModelSerializer):

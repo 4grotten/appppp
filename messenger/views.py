@@ -1,5 +1,5 @@
 from django.db.models import Q
-from messenger.constants import ADMIN
+from messenger.constants import ADMIN, MEMBER
 from rest_framework import status
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -493,3 +493,162 @@ class UpdateGroupChatAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AddUsersToGroupChatAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        chat = MessengerChatService.get(id=pk)
+        if not chat:
+            return Response(
+                {"detail": "Chat not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if chat.chat_type != "group":
+            return Response(
+                {"detail": "This endpoint is for group chats only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_ids = request.data.get("user_ids", [])
+        if not user_ids:
+            return Response(
+                {"detail": "'user_ids' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if str(request.user.id) not in user_ids:
+            return Response(
+                {"detail": "You must be a member of the chat to add users."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+            return Response(
+                {"detail": "You must be an admin to add users."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        new_members = []
+        for user_id in user_ids:
+            user = UserService.get(id=user_id)
+            if user and user not in chat.members.all():
+                new_members.append(ChatMember(chat=chat, user=user))
+
+        ChatMember.objects.bulk_create(new_members)
+
+        serializer = MessengerChatSerializer(chat, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ExitGroupChatAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        chat = MessengerChatService.get(id=pk)
+        if not chat:
+            return Response(
+                {"detail": "Chat not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if chat.chat_type != "group":
+            return Response(
+                {"detail": "This endpoint is for group chats only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not chat.members.filter(user=request.user).exists():
+            return Response(
+                {"detail": "You are not a member of this chat."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        chat.members.filter(user=request.user).delete()
+
+        return Response({"detail": "You have exited the group chat."}, status=200)
+
+
+class DeleteUsersFromGroupChatAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        chat = MessengerChatService.get(id=pk)
+        if not chat:
+            return Response(
+                {"detail": "Chat not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if chat.chat_type != "group":
+            return Response(
+                {"detail": "This endpoint is for group chats only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_ids = request.data.get("user_ids", [])
+        if not user_ids:
+            return Response(
+                {"detail": "'user_ids' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if str(request.user.id) not in user_ids:
+            return Response(
+                {"detail": "You must be a member of the chat to delete users."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+            return Response(
+                {"detail": "You must be an admin to delete users."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        for user_id in user_ids:
+            user = UserService.get(id=user_id)
+            if user and user in chat.members.all():
+                chat.members.filter(user=user).delete()
+
+        serializer = MessengerChatSerializer(chat, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ChangeGroupChatOwnerAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        chat = MessengerChatService.get(id=pk)
+        if not chat:
+            return Response(
+                {"detail": "Chat not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if chat.chat_type != "group":
+            return Response(
+                {"detail": "This endpoint is for group chats only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user_id = request.data.get("user_id")
+        role = request.data.get("role", None)
+        if not user_id or not role:
+            return Response(
+                {"detail": "'user_id' and ''role' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = UserService.get(id=user_id)
+        if not user or user not in chat.members.all():
+            return Response(
+                {"detail": "User must be in of the chat."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+            return Response(
+                {"detail": "You must be an admin to change the owner."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if role not in [ADMIN, MEMBER]:
+            return Response(
+                {"detail": "Role must be 'admin' or 'member'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        chat.members.filter(user=user).update(role=role)
+
+        serializer = MessengerChatSerializer(chat, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

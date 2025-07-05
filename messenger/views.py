@@ -1,5 +1,5 @@
 from django.db.models import Q
-from messenger.constants import ADMIN, MEMBER
+from messenger.constants import ADMIN, GROUP, MEMBER
 from rest_framework import status
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -462,7 +462,7 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
 
         target_users = UserService.filter(id__in=users_ids)
 
-        chat = MessengerChat.objects.create(chat_type="group", title=title, image=image)
+        chat = MessengerChat.objects.create(chat_type=GROUP, title=title, image=image)
 
         chat_members = [
             ChatMember(chat=chat, user=request.user, role=ADMIN),
@@ -511,13 +511,13 @@ class AddUsersToGroupChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user_ids = request.data.get("user_ids", [])
-        if not user_ids:
+        users_ids = request.data.get("users_ids", [])
+        if not users_ids:
             return Response(
-                {"detail": "'user_ids' is required."},
+                {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in user_ids:
+        if str(request.user.id) not in users_ids:
             return Response(
                 {"detail": "You must be a member of the chat to add users."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -528,7 +528,7 @@ class AddUsersToGroupChatAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         new_members = []
-        for user_id in user_ids:
+        for user_id in users_ids:
             user = UserService.get(id=user_id)
             if user and user not in chat.members.all():
                 new_members.append(ChatMember(chat=chat, user=user))
@@ -582,13 +582,13 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user_ids = request.data.get("user_ids", [])
-        if not user_ids:
+        users_ids = request.data.get("users_ids", [])
+        if not users_ids:
             return Response(
-                {"detail": "'user_ids' is required."},
+                {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in user_ids:
+        if str(request.user.id) not in users_ids:
             return Response(
                 {"detail": "You must be a member of the chat to delete users."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -599,7 +599,7 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        for user_id in user_ids:
+        for user_id in users_ids:
             user = UserService.get(id=user_id)
             if user and user in chat.members.all():
                 chat.members.filter(user=user).delete()

@@ -2,6 +2,7 @@ from django.urls import path
 from messenger.views import (
     AddUsersToGroupChatAPIView,
     ChangeGroupChatOwnerAPIView,
+    DeleteUsersFromGroupChatAPIView,
     ExitGroupChatAPIView,
     GetOrCreateGroupChatView,
     UpdateGroupChatAPIView,
@@ -30,7 +31,7 @@ group_chats_url = [
     ),
     path(
         "messenger/group/<>int:pk>/delete-users/",
-        AddUsersToGroupChatAPIView.as_view(),
+        DeleteUsersFromGroupChatAPIView.as_view(),
         name="messenger-group-delete-users",
     ),
     path(

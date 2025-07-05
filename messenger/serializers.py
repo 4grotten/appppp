@@ -11,11 +11,20 @@ from users.serializers import UserShortInfoSerializer
 class MessengerChatSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     blocked_by_me = serializers.SerializerMethodField()
-    members = UserShortInfoSerializer(many=True, read_only=True)
+
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = MessengerChat
-        fields = ("id", "chat_type", "title", "members", "is_blocked", "blocked_by_me")
+        fields = (
+            "id",
+            "chat_type",
+            "title",
+            "members",
+            "image",
+            "is_blocked",
+            "blocked_by_me",
+        )
 
     def get_is_blocked(self, chat):
         return chat.is_blocked()
@@ -23,6 +32,13 @@ class MessengerChatSerializer(serializers.ModelSerializer):
     def get_blocked_by_me(self, chat):
         request = self.context.get("request")
         return chat.is_blocked_by(request.user) if request else False
+
+    def get_members(self, chat):
+        users = chat.members.all()
+        serializer = UserShortInfoSerializer(
+            users, many=True, context={**self.context, "chat": chat}
+        )
+        return serializer.data
 
 
 class ParentChatMessageSerializer(serializers.ModelSerializer):
@@ -92,6 +108,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     parent = ParentChatMessageSerializer()
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    is_mine = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -103,11 +120,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "is_message_liked",
             "message_like_count",
             "can_delete",
+            "is_mine",
             "is_updated",
             "status",
             "created_at",
             "updated_at",
         )
+
+    def get_is_mine(self, message: ChatMessage):
+        user = self.context.get("user")
+        return user == message.sender
 
     def get_is_updated(self, message: ChatMessage) -> bool:
         return (message.updated_at - message.created_at) > timedelta(seconds=1)
@@ -186,6 +208,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "sender",
             "chat_type",
             "title",
+            "image",
             "last_message",
             "is_blocked",
             "blocked_by_me",
@@ -206,10 +229,9 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
 
     def get_sender(self, chat):
         request_user = self.context["request"].user
-        if chat.chat_type == MessengerChat.PRIVATE:
-            sender = chat.members.exclude(id=request_user.id).first()
-            if sender:
-                return UserShortInfoSerializer(sender).data
+        sender = chat.members.exclude(id=request_user.id).first()
+        if sender:
+            return UserShortInfoSerializer(sender).data
         return None
 
 
@@ -247,3 +269,9 @@ class ListChatFolderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatFolder
         fields = ("id", "title", "chats")
+
+
+class MessengerChatUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessengerChat
+        fields = ("title", "image")

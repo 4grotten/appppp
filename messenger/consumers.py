@@ -167,6 +167,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return "default_host"
 
 
+    async def chat_message_update(self, event):
+        """
+        Метод для обновления сообщений через WebSocket
+        """
+        message_data = event["message"]
+        await self.send(text_data=json.dumps({"type": "update", **message_data}))
+
+    async def update_message(self, message):
+        """
+        Вызывается из API, чтобы отправить обновление всем участникам
+        """
+        serializer = ChatMessageWSSerializer(
+            message, context={"user": self.scope["user"]}
+        )
+        response_json = await sync_to_async(lambda: serializer.data.copy())()
+
+        # Отправляем обновленное сообщение в комнату чата
+        await self.channel_layer.group_send(
+            f"chat_{message.chat.id}",
+            {"type": "chat_message_update", "message": response_json},
+        )
+
+        # Отправляем обновление в список чатов
+        participant_ids = await self.get_chat_participant_ids(message.chat)
+        for user_id in participant_ids:
+            await self.channel_layer.group_send(
+                f"user_{user_id}_chats",
+                {
+                    "type": "chat_list_update",
+                    "chat_id": message.chat.id,
+                    "last_message": response_json,
+                },
+            )
+
+
 class ChatListConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         subprotocol = None

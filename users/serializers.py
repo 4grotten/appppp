@@ -1,18 +1,31 @@
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
+from messenger.models import ChatMember
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from common.serializers import ImageSerializer
-from organizations.models import Organization, BlockedUser, Subscription, UserOrgSubscription
+from organizations.models import (
+    Organization,
+    BlockedUser,
+    Subscription,
+    UserOrgSubscription,
+)
 from organizations.services.attendance_services import AttendanceService
 from organizations.services.organization_promo_services import PromoSubscriberService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
 from transactions.models import Transaction
 from .constants import RESEND_CODE_CHOICES, GENDER_CHOICES
-from .models import PhoneNumber, SocialNetworkContact, MyOwnToken, DeliveryAddress, PromoCode, ReferralBalance, \
-    ReferralTransaction
+from .models import (
+    PhoneNumber,
+    SocialNetworkContact,
+    MyOwnToken,
+    DeliveryAddress,
+    PromoCode,
+    ReferralBalance,
+    ReferralTransaction,
+)
 
 User = get_user_model()
 
@@ -30,7 +43,6 @@ class TemporaryCodeSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
 
 
-
 class ResendTemporaryCodeSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     type = serializers.ChoiceField(choices=RESEND_CODE_CHOICES)
@@ -45,16 +57,31 @@ class ProfileSerializer(serializers.ModelSerializer):
     has_empty_fields = serializers.SerializerMethodField()
 
     def get_has_empty_fields(self, user: User):
-        empty = {None, ''}
-        fields = set(list(User.objects.filter(id=user.id).values_list('email', 'date_of_birth', 'username'))[0])
+        empty = {None, ""}
+        fields = set(
+            list(
+                User.objects.filter(id=user.id).values_list(
+                    "email", "date_of_birth", "username"
+                )
+            )[0]
+        )
         if empty & fields:
             return True
         return False
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'username',
-                  'date_of_birth', 'email', 'gender', 'phone_number', 'has_empty_fields',)
+        fields = (
+            "id",
+            "avatar",
+            "full_name",
+            "username",
+            "date_of_birth",
+            "email",
+            "gender",
+            "phone_number",
+            "has_empty_fields",
+        )
 
 
 class ProfileUpdateSerializer(serializers.Serializer):
@@ -64,7 +91,9 @@ class ProfileUpdateSerializer(serializers.Serializer):
     gender = serializers.ChoiceField(choices=GENDER_CHOICES, default=None)
     date_of_birth = serializers.DateField(required=False, allow_null=True)
     username = serializers.CharField(required=False, allow_null=True)
-    device_type = serializers.CharField(required=False, default=None, allow_null=True, allow_blank=True)
+    device_type = serializers.CharField(
+        required=False, default=None, allow_null=True, allow_blank=True
+    )
     location = serializers.CharField(allow_null=True, required=False)
     device = serializers.CharField(allow_null=True, required=False)
     version_app = serializers.CharField(allow_null=True, required=False)
@@ -74,7 +103,7 @@ class ProfileUpdateSerializer(serializers.Serializer):
 class ProfileBriefSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'full_name')
+        fields = ("id", "full_name")
 
 
 class ProfileBriefWithPhotoSerializer(serializers.ModelSerializer):
@@ -82,7 +111,7 @@ class ProfileBriefWithPhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar')
+        fields = ("id", "full_name", "avatar")
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -90,7 +119,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'phone_number')
+        fields = ("id", "avatar", "full_name", "phone_number")
 
 
 class EmployeeWithRoleSerializer(serializers.ModelSerializer):
@@ -98,11 +127,18 @@ class EmployeeWithRoleSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
     def get_role(self, user: User) -> str:
-        return OrganizationService.get_user_role_in_organization(organization=self.context['organization'], user=user)
+        return OrganizationService.get_user_role_in_organization(
+            organization=self.context["organization"], user=user
+        )
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'role',)
+        fields = (
+            "id",
+            "avatar",
+            "full_name",
+            "role",
+        )
 
 
 class AttendanceEmployeeSerializer(serializers.ModelSerializer):
@@ -111,21 +147,36 @@ class AttendanceEmployeeSerializer(serializers.ModelSerializer):
     attendance = serializers.SerializerMethodField()
 
     def get_role(self, user: User) -> str:
-        return OrganizationService.get_user_role_in_organization(organization=self.context['organization'], user=user)
+        return OrganizationService.get_user_role_in_organization(
+            organization=self.context["organization"], user=user
+        )
 
     def get_attendance(self, user: User):
-        latest = AttendanceService.get_latest_attendance(employee=user, organization=self.context['organization'])
+        latest = AttendanceService.get_latest_attendance(
+            employee=user, organization=self.context["organization"]
+        )
         if latest is None:
             return None
-        from organizations.serializers.attendance_serializers import MembershipListAttendanceSerializer
+        from organizations.serializers.attendance_serializers import (
+            MembershipListAttendanceSerializer,
+        )
+
         return MembershipListAttendanceSerializer(latest).data
 
     def get_is_arriving(self, user: User) -> bool:
-        return not AttendanceService.is_checked_in(employee=user, organization=self.context['organization'])
+        return not AttendanceService.is_checked_in(
+            employee=user, organization=self.context["organization"]
+        )
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'role', 'attendance',)
+        fields = (
+            "id",
+            "avatar",
+            "full_name",
+            "role",
+            "attendance",
+        )
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -133,7 +184,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'avatar', 'full_name', 'phone_number')
+        fields = ("id", "avatar", "full_name", "phone_number")
 
 
 class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
@@ -142,23 +193,30 @@ class GlobalAttendanceEmployeeSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
 
     def get_role(self, obj) -> str:
-        return OrganizationService.get_user_role_in_organization(organization=obj,
-                                                                 user=self.context['user'])
+        return OrganizationService.get_user_role_in_organization(
+            organization=obj, user=self.context["user"]
+        )
 
     def get_attendance(self, obj):
-        latest = AttendanceService.get_latest_attendance(employee=self.context['user'],
-                                                         organization=obj)
+        latest = AttendanceService.get_latest_attendance(
+            employee=self.context["user"], organization=obj
+        )
         if latest is None:
             return None
-        from organizations.serializers.attendance_serializers import MembershipListAttendanceSerializer
+        from organizations.serializers.attendance_serializers import (
+            MembershipListAttendanceSerializer,
+        )
+
         return MembershipListAttendanceSerializer(latest).data
 
     def get_is_arriving(self, obj) -> bool:
-        return not AttendanceService.is_checked_in(employee=self.context['user'], organization=obj)
+        return not AttendanceService.is_checked_in(
+            employee=self.context["user"], organization=obj
+        )
 
     class Meta:
         model = Organization
-        fields = ('id', 'role', 'attendance', 'title', 'image')
+        fields = ("id", "role", "attendance", "title", "image")
 
 
 class GlobalUserAttendanceSerializer(serializers.Serializer):
@@ -166,16 +224,19 @@ class GlobalUserAttendanceSerializer(serializers.Serializer):
     user = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('organizations', 'user')
+        fields = ("organizations", "user")
 
     def get_organizations(self, _):
-        return GlobalAttendanceEmployeeSerializer(self.context['organizations'], context={
-            'user': self.context['user'],
-            'request': self.context['request']
-        }, many=True).data
+        return GlobalAttendanceEmployeeSerializer(
+            self.context["organizations"],
+            context={"user": self.context["user"], "request": self.context["request"]},
+            many=True,
+        ).data
 
     def get_user(self, _):
-        return UserShortInfoSerializer(self.context['user'], context={'request': self.context['request']}).data
+        return UserShortInfoSerializer(
+            self.context["user"], context={"request": self.context["request"]}
+        ).data
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -205,7 +266,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
 class PhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneNumber
-        fields = ('id', 'phone_number')
+        fields = ("id", "phone_number")
 
 
 class PhoneNumberEditSerializer(serializers.Serializer):
@@ -215,7 +276,7 @@ class PhoneNumberEditSerializer(serializers.Serializer):
 class SocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
-        fields = ('id', 'url')
+        fields = ("id", "url")
 
 
 class SocialNetworkEditSerializer(serializers.Serializer):
@@ -229,12 +290,24 @@ class DeliveryAddressesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeliveryAddress
-        fields = ('id', 'address', 'apartment', 'intercom', 'entrance', 'floor', 'phone', 'comment', 'full_location',
-                  'longitude', 'latitude', 'by_default')
+        fields = (
+            "id",
+            "address",
+            "apartment",
+            "intercom",
+            "entrance",
+            "floor",
+            "phone",
+            "comment",
+            "full_location",
+            "longitude",
+            "latitude",
+            "by_default",
+        )
 
     def update(self, instance, validated_data):
-        latitude = validated_data.pop('latitude', None)
-        longitude = validated_data.pop('longitude', None)
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
         if longitude and latitude:
             point = Point(longitude, latitude)
         else:
@@ -257,10 +330,21 @@ class ChangeAndValidateNewNumberSerializer(serializers.Serializer):
 
 class UserShortInfoSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username', 'phone_number')
+        fields = ("id", "full_name", "avatar", "username", "phone_number", "role")
+
+    def get_role(self, user):
+        chat = self.context.get("chat")
+        if not chat:
+            return None
+        try:
+            member = ChatMember.objects.get(chat=chat, user=user)
+            return member.role
+        except ChatMember.DoesNotExist:
+            return None
 
 
 class FollowerListSerializer(UserShortInfoSerializer):
@@ -270,20 +354,38 @@ class FollowerListSerializer(UserShortInfoSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed', 'is_blocked')
+        fields = (
+            "id",
+            "username",
+            "full_name",
+            "has_promo_cashback",
+            "avatar",
+            "is_subscribed",
+            "is_blocked",
+        )
 
     def get_has_promo_cashback(self, user: User) -> bool:
-        if not self.context['can_edit']:
+        if not self.context["can_edit"]:
             return False
-        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
+        return PromoSubscriberService.user_has_promo_cashback(
+            user=user, organization=self.context["organization"]
+        )
 
     def get_is_subscribed(self, user: User) -> str:
-        if not self.context['can_edit']:
-            return 'subscribed'
-        return SubscriptionService.is_subscribed(organization=self.context['organization'], user=user)
+        if not self.context["can_edit"]:
+            return "subscribed"
+        return SubscriptionService.is_subscribed(
+            organization=self.context["organization"], user=user
+        )
 
     def get_is_blocked(self, user: User) -> bool:
-        blocked_users = BlockedUser.objects.filter(organization=self.context['organization'], user=user).values_list('user_id', flat=True).distinct()
+        blocked_users = (
+            BlockedUser.objects.filter(
+                organization=self.context["organization"], user=user
+            )
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
         return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
@@ -294,20 +396,38 @@ class BlockedUsersListSerializer(UserShortInfoSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'is_subscribed', 'is_blocked')
+        fields = (
+            "id",
+            "username",
+            "full_name",
+            "has_promo_cashback",
+            "avatar",
+            "is_subscribed",
+            "is_blocked",
+        )
 
     def get_has_promo_cashback(self, user: User) -> bool:
-        if not self.context['can_edit']:
+        if not self.context["can_edit"]:
             return False
-        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=self.context['organization'])
+        return PromoSubscriberService.user_has_promo_cashback(
+            user=user, organization=self.context["organization"]
+        )
 
     def get_is_subscribed(self, user: User) -> str:
-        if not self.context['can_edit']:
-            return 'subscribed'
-        return SubscriptionService.is_subscribed(organization=self.context['organization'], user=user)
+        if not self.context["can_edit"]:
+            return "subscribed"
+        return SubscriptionService.is_subscribed(
+            organization=self.context["organization"], user=user
+        )
 
     def get_is_blocked(self, user: User) -> bool:
-        blocked_users = BlockedUser.objects.filter(organization=self.context['organization'], user=user).values_list('user_id', flat=True).distinct()
+        blocked_users = (
+            BlockedUser.objects.filter(
+                organization=self.context["organization"], user=user
+            )
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
         return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
@@ -319,31 +439,47 @@ class FollowerOrClientSerializer(FollowerListSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'full_name', 'has_promo_cashback', 'avatar', 'phone_number', 'role', 'is_subscribed',
-            'is_blocked')
+            "id",
+            "username",
+            "full_name",
+            "has_promo_cashback",
+            "avatar",
+            "phone_number",
+            "role",
+            "is_subscribed",
+            "is_blocked",
+        )
 
     def get_is_blocked(self, user: User) -> bool:
-        blocked_users = BlockedUser.objects.filter(organization_id=self.context['organization_id'],
-                                                   user=user).values_list('user_id', flat=True).distinct()
+        blocked_users = (
+            BlockedUser.objects.filter(
+                organization_id=self.context["organization_id"], user=user
+            )
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
         return BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_has_promo_cashback(self, user: User) -> bool:
-        organization = OrganizationService.get(id=self.context['organization_id'])
-        return PromoSubscriberService.user_has_promo_cashback(user=user, organization=organization)
+        organization = OrganizationService.get(id=self.context["organization_id"])
+        return PromoSubscriberService.user_has_promo_cashback(
+            user=user, organization=organization
+        )
 
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(
-            organization_id=self.context['organization_id'], user=user)
+            organization_id=self.context["organization_id"], user=user
+        )
 
     def get_is_subscribed(self, user: User) -> str:
-        organization = OrganizationService.get(id=self.context['organization_id'])
+        organization = OrganizationService.get(id=self.context["organization_id"])
         return SubscriptionService.is_subscribed(organization=organization, user=user)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         is_subscribed = self.get_is_subscribed(instance)
         if is_subscribed == Subscription.UNSUBSCRIBE:
-            representation['phone_number'] = None
+            representation["phone_number"] = None
         return representation
 
 
@@ -353,29 +489,45 @@ class UserWhitClientOrRoleInfoSerializer(serializers.ModelSerializer):
 
     def get_role(self, user: User) -> str:
         return OrganizationService.get_user_role_in_organization_or_client(
-            organization_id=self.context['organization'].id, user=user)
+            organization_id=self.context["organization"].id, user=user
+        )
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'role')
+        fields = ("id", "full_name", "avatar", "role")
 
 
 class MyOwnTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
-        fields = ('id', 'key', 'user', 'location', 'device', 'ip', 'log_time', 'version_app','is_active',
-                  'operating_system', 'user_agent', 'last_active', 'expired_time_choice', 'expired_time')
+        fields = (
+            "id",
+            "key",
+            "user",
+            "location",
+            "device",
+            "ip",
+            "log_time",
+            "version_app",
+            "is_active",
+            "operating_system",
+            "user_agent",
+            "last_active",
+            "expired_time_choice",
+            "expired_time",
+        )
+
 
 class MyOwnTokenExpiredTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyOwnToken
-        fields = ('expired_time_choice', )
+        fields = ("expired_time_choice",)
 
 
 class PromoCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PromoCode
-        fields = ('id', 'code', 'discount_percent', 'profit_percent')
+        fields = ("id", "code", "discount_percent", "profit_percent")
 
 
 class ReferralBalanceSerializer(serializers.ModelSerializer):
@@ -395,14 +547,24 @@ class ReferralTransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReferralTransaction
-        fields = ("id", "profit_amount_usdt", "original_currency", "original_amount", "type", "referred_user",
-                  "subscription", "created_at",)
+        fields = (
+            "id",
+            "profit_amount_usdt",
+            "original_currency",
+            "original_amount",
+            "type",
+            "referred_user",
+            "subscription",
+            "created_at",
+        )
 
     def get_type(self, obj):
         return "referral_income"
 
     def to_representation(self, instance):
-        from organizations.serializers.organization_serializers import UserOrgSubscriptionSerializer
+        from organizations.serializers.organization_serializers import (
+            UserOrgSubscriptionSerializer,
+        )
 
         data = super().to_representation(instance)
         data["subscription"] = UserOrgSubscriptionSerializer(instance.subscription).data
@@ -421,15 +583,17 @@ class ReferredUserWithOrganizationsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'full_name', 'username', 'avatar', 'organizations']
+        fields = ["id", "full_name", "username", "avatar", "organizations"]
 
     def get_organizations(self, user):
-        from organizations.serializers.organization_serializers import ReferralOrganizationSerializer
+        from organizations.serializers.organization_serializers import (
+            ReferralOrganizationSerializer,
+        )
 
         subscriptions = UserOrgSubscription.objects.filter(
             user=user,
             transaction__isnull=False,
             transaction__payment_status=Transaction.ACCEPTED,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
         return ReferralOrganizationSerializer(subscriptions, many=True).data

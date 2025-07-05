@@ -1,15 +1,7 @@
 from django.urls import path, include
 
+from messenger.routers import private_chats, messages, folders, group_chats
 from messenger.views import (
-    FindUserView,
-    FolderListCreateAPIView,
-    FolderUpdateAPIView,
-    GetOrCreatePrivateChatView,
-    ChatMessageListView,
-    MarkMessagesAsReadView,
-    ChatBlockView,
-    ChatMessageLike,
-    ChatMessageDestroyUpdateRetrieveView,
     MessengerChatsBlockAPIView,
     MessengerChatsDeleteAPIView,
     MessengerChatsUnBlockAPIView,
@@ -17,29 +9,6 @@ from messenger.views import (
 )
 
 messenger_urls = [
-    path("messenger/users/", FindUserView.as_view(), name="users-find"),
-    path("messenger/chats/", GetOrCreatePrivateChatView.as_view(), name="chats"),
-    path("messenger/likes/", ChatMessageLike.as_view(), name="messages-likes"),
-    path(
-        "messenger/messages/<int:pk>/",
-        ChatMessageDestroyUpdateRetrieveView.as_view(),
-        name="messages-update-destroy",
-    ),
-    path(
-        "messenger/chats/<int:pk>/",
-        ChatMessageListView.as_view(),
-        name="chat-messages-list",
-    ),
-    path(
-        "messenger/chats/<int:pk>/mark-as-read/",
-        MarkMessagesAsReadView.as_view(),
-        name="chat_mark_read",
-    ),
-    path(
-        "messenger/chats/<int:chat_id>/block/",
-        ChatBlockView.as_view(),
-        name="chat-block",
-    ),
     path(
         "messenger/chats/delete/",
         MessengerChatsDeleteAPIView.as_view(),
@@ -60,19 +29,13 @@ messenger_urls = [
         MessengerChatsUnBlockAPIView.as_view(),
         name="chats-unblock",
     ),
-    path(
-        "messenger/folders/",
-        FolderListCreateAPIView.as_view(),
-        name="folders",
-    ),
-    path(
-        "messenger/folders/<int:pk>/",
-        FolderUpdateAPIView.as_view(),
-        name="folder",
-    ),
 ]
 
 
 urlpatterns = [
     path("", include(messenger_urls)),
+    path("", include(private_chats.private_chats_url)),
+    path("", include(messages.messages_url)),
+    path("", include(folders.folders_url)),
+    path("", include(group_chats.group_chats_url)),
 ]

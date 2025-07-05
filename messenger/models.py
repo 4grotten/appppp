@@ -2,20 +2,14 @@ from django.db import models
 from django.utils import timezone
 
 from common.models import TimestampModel
+from messenger.constants import CHAT_TYPES, MEMBER, ROLE_CHOICES
 from users.models import User
 
 
 class MessengerChat(TimestampModel):
-    PRIVATE = "private"
-    GROUP = "group"
-
-    CHAT_TYPES = [
-        (PRIVATE, "Private"),
-        (GROUP, "Group"),
-    ]
-
     chat_type = models.CharField(max_length=10, choices=CHAT_TYPES)
     title = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to="chat_images", null=True, blank=True)
     members = models.ManyToManyField(
         User, through="ChatMember", related_name="messenger_chats"
     )
@@ -35,6 +29,7 @@ class ChatMember(TimestampModel):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="chat_memberships"
     )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=MEMBER)
     joined_at = models.DateTimeField(auto_now_add=True)
     last_read_at = models.DateTimeField(default=timezone.now)
 

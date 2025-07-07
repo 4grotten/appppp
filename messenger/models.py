@@ -52,8 +52,29 @@ class ChatMessage(TimestampModel):
     is_delivered = models.BooleanField(default=False)
     is_read = models.BooleanField(default=False)
 
+    forwarded_from = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="forwarded_messages",
+        help_text="Оригинальный отправитель пересланного сообщения",
+    )
+    forwarded_message = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="forwards",
+        help_text="Исходное сообщение, которое переслали",
+    )
+
     class Meta:
         ordering = ["created_at"]
+
+    @property
+    def is_forwarded(self):
+        return self.forwarded_from is not None or self.forwarded_message is not None
 
 
 class MessageLike(models.Model):

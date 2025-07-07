@@ -4,7 +4,9 @@ from messenger.views import (
     ChatMessageDestroyUpdateRetrieveView,
     ChatMessageLike,
     FindUserView,
+    ForwardMessageAPIView,
     GetOrCreatePrivateChatView,
+    ReplyMessageAPIView,
 )
 
 messages_url = [
@@ -15,5 +17,15 @@ messages_url = [
         "messenger/messages/<int:pk>/",
         ChatMessageDestroyUpdateRetrieveView.as_view(),
         name="messages-update-destroy",
+    ),
+    path(
+        "messenger/forward-message/",
+        ForwardMessageAPIView.as_view(),
+        name="messages-forward",
+    ),
+    path(
+        "messenger/reply-message/",
+        ReplyMessageAPIView.as_view(),
+        name="messages-reply",
     ),
 ]

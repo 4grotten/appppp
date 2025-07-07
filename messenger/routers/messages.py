@@ -24,7 +24,7 @@ messages_url = [
         name="messages-forward",
     ),
     path(
-        "nessenger/reply-message/",
+        "messenger/reply-message/",
         ReplyMessageAPIView.as_view(),
         name="messages-reply",
     ),

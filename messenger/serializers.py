@@ -166,14 +166,22 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             return None
 
         original_sender = message.forwarded_from
+        if original_sender:
+            full_name = (
+                original_sender.get_full_name().strip()
+                if callable(getattr(original_sender, "get_full_name", None))
+                else ""
+            )
+            if not full_name or full_name.lower() == "none none":
+                full_name = original_sender.username
+        else:
+            full_name = ""
         return {
             "original_sender": (
                 {
                     "id": original_sender.id,
                     "username": original_sender.username,
-                    "full_name": getattr(
-                        original_sender, "get_full_name", lambda: ""
-                    )(),
+                    "full_name": full_name,
                 }
                 if original_sender
                 else None

@@ -115,12 +115,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 sender=user,
                 type="new_message",
                 mode=NOTIFICATION_MODE_PERSONAL,
-                item=None, 
+                item=None,
                 extra_data={
                     "chat_id": self.chat_id,
                     "message_id": message.id,
-                    "text": message.text
-                }
+                    "text": message.text,
+                },
             )
 
         serializer = ChatMessageWSSerializer(message, context={"user": user})
@@ -170,7 +170,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_chat_participants_without_user(self, chat, user):
-        return list(chat.members.exclude(user=user).values_list("id", flat=True))
+        return list(chat.members.exclude(id=user.id).values_list("id", flat=True))
 
     @database_sync_to_async
     def get_chat(self, chat_id):

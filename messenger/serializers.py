@@ -72,6 +72,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "updated_at",
+            "forwarded",
         )
 
     def get_is_updated(self, message: ChatMessage) -> bool:

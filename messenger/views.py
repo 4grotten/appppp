@@ -450,9 +450,9 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         title = request.data.get("title")
         image = request.data.get("image")
 
-        if not users_ids or not title:
+        if not title:
             return Response(
-                {"detail": "'users_ids' and 'title' is required."},
+                {"detail": "'title' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

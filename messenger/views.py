@@ -696,6 +696,23 @@ class ForwardMessageAPIView(APIView):
                     ).data,
                 },
             )
+            participant_ids = list(
+                forwarded_message.chat.members.values_list("id", flat=True)
+            )
+            for user_id in participant_ids:
+                user = User.objects.get(id=user_id)
+                serializer = ChatMessageWSSerializer(
+                    forwarded_message, context={"user": user}
+                )
+                response_json = serializer.data
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{user_id}_chats",
+                    {
+                        "type": "chat_list_update",
+                        "chat_id": forwarded_message.chat.id,
+                        "last_message": response_json,
+                    },
+                )
 
         data = {
             "detail": "Successfully forwarded message",
@@ -753,6 +770,19 @@ class ReplyMessageAPIView(APIView):
                 ).data,
             },
         )
+        participant_ids = list(reply_message.chat.members.values_list("id", flat=True))
+        for user_id in participant_ids:
+            user = User.objects.get(id=user_id)
+            serializer = ChatMessageWSSerializer(reply_message, context={"user": user})
+            response_json = serializer.data
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user_id}_chats",
+                {
+                    "type": "chat_list_update",
+                    "chat_id": reply_message.chat.id,
+                    "last_message": response_json,
+                },
+            )
         data = {
             "detail": "Successfully created reply message",
         }

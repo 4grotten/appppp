@@ -1,13 +1,13 @@
-NOTIFICATION_MODE_DISCOUNT = 'discount'
-NOTIFICATION_MODE_SUBSCRIPTION = 'subscription'
-NOTIFICATION_MODE_SYSTEM = 'system'
-NOTIFICATION_MODE_PARTNER = 'partner'
-NOTIFICATION_MODE_PERSONAL = 'personal'
-NOTIFICATION_MODE_PRODUCT = 'product'
-NOTIFICATION_MODE_RENTAL = 'rental'
-NOTIFICATION_MODE_TICKET = 'ticket'
-NOTIFICATION_MODE_RESUME = 'resume'
-NOTIFICATION_MODE_ASSISTANT = 'assistant'
+NOTIFICATION_MODE_DISCOUNT = "discount"
+NOTIFICATION_MODE_SUBSCRIPTION = "subscription"
+NOTIFICATION_MODE_SYSTEM = "system"
+NOTIFICATION_MODE_PARTNER = "partner"
+NOTIFICATION_MODE_PERSONAL = "personal"
+NOTIFICATION_MODE_PRODUCT = "product"
+NOTIFICATION_MODE_RENTAL = "rental"
+NOTIFICATION_MODE_TICKET = "ticket"
+NOTIFICATION_MODE_RESUME = "resume"
+NOTIFICATION_MODE_ASSISTANT = "assistant"
 
 
 NOTIFICATION_MODES = (
@@ -20,139 +20,152 @@ NOTIFICATION_MODES = (
     (NOTIFICATION_MODE_RENTAL, NOTIFICATION_MODE_RENTAL.capitalize()),
     (NOTIFICATION_MODE_TICKET, NOTIFICATION_MODE_TICKET.capitalize()),
     (NOTIFICATION_MODE_RESUME, NOTIFICATION_MODE_RESUME.capitalize()),
-    (NOTIFICATION_MODE_ASSISTANT, NOTIFICATION_MODE_ASSISTANT.capitalize(),)
+    (
+        NOTIFICATION_MODE_ASSISTANT,
+        NOTIFICATION_MODE_ASSISTANT.capitalize(),
+    ),
 )
 
-NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = 'accepted_partnership'
-NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE = 'declined_partnership'
-NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE = 'requested_partnership'
+NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE = "accepted_partnership"
+NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE = "declined_partnership"
+NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE = "requested_partnership"
 
-NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE = 'accepted_partnership_recipient'
-NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE = 'declined_partnership_recipient'
-NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE = 'requested_partnership_recipient'
-NOTIFICATION_TYPE_REQUEST_FOR_DELIVERY = 'request_for_delivery'
+NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE = "accepted_partnership_recipient"
+NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE = "declined_partnership_recipient"
+NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE = "requested_partnership_recipient"
+NOTIFICATION_TYPE_REQUEST_FOR_DELIVERY = "request_for_delivery"
 
-NOTIFICATION_TYPE_RECRUIT_JOB_TYPE = 'recruit'
-NOTIFICATION_TYPE_GET_JOB_TYPE = 'get_job'
-NOTIFICATION_TYPE_CHANGE_JOB_POSITION = 'changed_position'
-NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER = 'changed_position_as_owner'
-NOTIFICATION_TYPE_DISMISS_JOB = 'dismissed'
-NOTIFICATION_TYPE_QUIT_JOB = 'quit'
+NOTIFICATION_TYPE_RECRUIT_JOB_TYPE = "recruit"
+NOTIFICATION_TYPE_GET_JOB_TYPE = "get_job"
+NOTIFICATION_TYPE_CHANGE_JOB_POSITION = "changed_position"
+NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER = "changed_position_as_owner"
+NOTIFICATION_TYPE_DISMISS_JOB = "dismissed"
+NOTIFICATION_TYPE_QUIT_JOB = "quit"
 
-NEW_DISCOUNT_TYPE = 'new_discount'
-NEW_ORGANIZATION = 'new_organization'
-NEW_DEVICE = 'new_device'
-FOLLOWED_TO_ORGANIZATION_TYPE = 'followed_to_organization'
-ORGANIZATION_FOLLOWED_TYPE = 'organization_followed'
-SYSTEM_TYPE = 'system'
-ORGANIZATION_MESSAGE_TYPE = 'organization_message'
-ORGANIZATION_MESSAGE_SENDER_TYPE = 'sent_message'
+NEW_DISCOUNT_TYPE = "new_discount"
+NEW_ORGANIZATION = "new_organization"
+NEW_DEVICE = "new_device"
+FOLLOWED_TO_ORGANIZATION_TYPE = "followed_to_organization"
+ORGANIZATION_FOLLOWED_TYPE = "organization_followed"
+SYSTEM_TYPE = "system"
+ORGANIZATION_MESSAGE_TYPE = "organization_message"
+ORGANIZATION_MESSAGE_SENDER_TYPE = "sent_message"
 
-ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE = 'organization_withdrawal_under_review'
-WITHDRAWAL_UNDER_REVIEW_TYPE = 'withdrawal_under_review'
+ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE = "organization_withdrawal_under_review"
+WITHDRAWAL_UNDER_REVIEW_TYPE = "withdrawal_under_review"
 
-ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE = 'organization_withdrawal_accepted'
-WITHDRAWAL_ACCEPTED_TYPE = 'withdrawal_accepted'
+ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE = "organization_withdrawal_accepted"
+WITHDRAWAL_ACCEPTED_TYPE = "withdrawal_accepted"
 
-ORGANIZATION_WITHDRAWAL_DECLINED_TYPE = 'organization_withdrawal_declined'
-WITHDRAWAL_DECLINED_TYPE = 'withdrawal_declined'
+ORGANIZATION_WITHDRAWAL_DECLINED_TYPE = "organization_withdrawal_declined"
+WITHDRAWAL_DECLINED_TYPE = "withdrawal_declined"
 
-ORGANIZATION_GAVE_TYPE = 'gave_organization'
-ORGANIZATION_OWN_TYPE = 'owned_organization'
+ORGANIZATION_GAVE_TYPE = "gave_organization"
+ORGANIZATION_OWN_TYPE = "owned_organization"
 
-ATTENDANCE_IN = 'attendance_in'
-ATTENDANCE_OUT = 'attendance_out'
-CHECK_ATTENDANCE_IN = 'check_attendance_in'
-CHECK_ATTENDANCE_OUT = 'check_attendance_out'
+ATTENDANCE_IN = "attendance_in"
+ATTENDANCE_OUT = "attendance_out"
+CHECK_ATTENDANCE_IN = "check_attendance_in"
+CHECK_ATTENDANCE_OUT = "check_attendance_out"
 
 # Following three are no longer used
-ACCEPT_DISCOUNT_TYPE = 'accept_discount'
-ACCEPT_SELLER_DISCOUNT_TYPE = 'accepted_seller_discount'
-DECLINE_DISCOUNT_TYPE = 'decline_discount'
+ACCEPT_DISCOUNT_TYPE = "accept_discount"
+ACCEPT_SELLER_DISCOUNT_TYPE = "accepted_seller_discount"
+DECLINE_DISCOUNT_TYPE = "decline_discount"
 
-WITHDRAW_CASHBACK_CLIENT = 'withdraw_cashback_client'
-CHARGE_CASHBACK_CLIENT = 'charge_cashback_client'
+WITHDRAW_CASHBACK_CLIENT = "withdraw_cashback_client"
+CHARGE_CASHBACK_CLIENT = "charge_cashback_client"
 
-WITHDRAW_CASHBACK_SELLER = 'withdraw_cashback_seller'
-CHARGE_CASHBACK_SELLER = 'charge_cashback_seller'
+WITHDRAW_CASHBACK_SELLER = "withdraw_cashback_seller"
+CHARGE_CASHBACK_SELLER = "charge_cashback_seller"
 
-NEW_CASHBACK = 'new_cashback'
+NEW_CASHBACK = "new_cashback"
 
-REQUEST_ONLINE_ORDER_TYPE = 'requested_online_order'
+REQUEST_ONLINE_ORDER_TYPE = "requested_online_order"
 
-ACCEPT_ORDER_TYPE = 'accepted_order'
-DECLINE_ORDER_TYPE = 'declined_order'
-REQUEST_ORDER_TYPE = 'requested_order'
+ACCEPT_ORDER_TYPE = "accepted_order"
+DECLINE_ORDER_TYPE = "declined_order"
+REQUEST_ORDER_TYPE = "requested_order"
 
-ACCEPT_RENTAL_TYPE = 'accepted_rental'
-DECLINE_RENTAL_TYPE = 'declined_rental'
-REQUEST_RENTAL_TYPE = 'requested_rental'
+ACCEPT_RENTAL_TYPE = "accepted_rental"
+DECLINE_RENTAL_TYPE = "declined_rental"
+REQUEST_RENTAL_TYPE = "requested_rental"
 
-ACCEPT_RESUME_TYPE = 'accepted_resume'
-DECLINE_RESUME_TYPE = 'declined_resume'
-REQUEST_RESUME_TYPE = 'requested_resume'
+ACCEPT_RESUME_TYPE = "accepted_resume"
+DECLINE_RESUME_TYPE = "declined_resume"
+REQUEST_RESUME_TYPE = "requested_resume"
 
-ORGANIZATION_ACCEPT_RESUME_TYPE = 'organization_accepted_resume'
-ORGANIZATION_DECLINE_RESUME_TYPE = 'organization_declined_resume'
-ORGANIZATION_REQUEST_RESUME_TYPE = 'organization_requested_resume'
+ORGANIZATION_ACCEPT_RESUME_TYPE = "organization_accepted_resume"
+ORGANIZATION_DECLINE_RESUME_TYPE = "organization_declined_resume"
+ORGANIZATION_REQUEST_RESUME_TYPE = "organization_requested_resume"
 
-ACCEPT_ORDER_PAYMENT_TYPE = 'accepted_order_payment'
-DECLINE_ORDER_PAYMENT_TYPE = 'declined_order_payment'
+ACCEPT_ORDER_PAYMENT_TYPE = "accepted_order_payment"
+DECLINE_ORDER_PAYMENT_TYPE = "declined_order_payment"
 
-ACCEPT_ASSISTANT_PAYMENT_TYPE = 'accepted_assistant_payment'
+ACCEPT_ASSISTANT_PAYMENT_TYPE = "accepted_assistant_payment"
 
-ACCEPT_RENTAL_PAYMENT_TYPE = 'accepted_rental_payment'
-DECLINE_RENTAL_PAYMENT_TYPE = 'declined_rental_payment'
+ACCEPT_RENTAL_PAYMENT_TYPE = "accepted_rental_payment"
+DECLINE_RENTAL_PAYMENT_TYPE = "declined_rental_payment"
 
-DECLINE_ACCEPTED_RENTAL_TYPE = 'declined_accepted_rental'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE = 'declined_accepted_rental_client'
+DECLINE_ACCEPTED_RENTAL_TYPE = "declined_accepted_rental"
+DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE = "declined_accepted_rental_client"
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TYPE = 'accepted_order_payment_client'
-DECLINE_ORDER_PAYMENT_CLIENT_TYPE = 'declined_order_payment_client'
+ACCEPT_ORDER_PAYMENT_CLIENT_TYPE = "accepted_order_payment_client"
+DECLINE_ORDER_PAYMENT_CLIENT_TYPE = "declined_order_payment_client"
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE = 'accepted_assistant_payment_client'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE = "accepted_assistant_payment_client"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE = 'accepted_rental_payment_client'
-DECLINE_RENTAL_PAYMENT_CLIENT_TYPE = 'declined_rental_payment_client'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE = "accepted_rental_payment_client"
+DECLINE_RENTAL_PAYMENT_CLIENT_TYPE = "declined_rental_payment_client"
 
-ACCEPT_ORDER_CLIENT_TYPE = 'accepted_order_client'
-DECLINE_ORDER_CLIENT_TYPE = 'declined_order_client'
-REQUEST_ORDER_CLIENT_TYPE = 'requested_order_client'
+ACCEPT_ORDER_CLIENT_TYPE = "accepted_order_client"
+DECLINE_ORDER_CLIENT_TYPE = "declined_order_client"
+REQUEST_ORDER_CLIENT_TYPE = "requested_order_client"
 
-ACCEPTED_ONLINE_ORDER_CLIENT_TYPE = 'accepted_online_order_client'
+ACCEPTED_ONLINE_ORDER_CLIENT_TYPE = "accepted_online_order_client"
 
-ACCEPT_RENTAL_CLIENT_TYPE = 'accepted_rental_client'
-DECLINE_RENTAL_CLIENT_TYPE = 'declined_rental_client'
-REQUEST_RENTAL_CLIENT_TYPE = 'requested_rental_client'
+ACCEPT_RENTAL_CLIENT_TYPE = "accepted_rental_client"
+DECLINE_RENTAL_CLIENT_TYPE = "declined_rental_client"
+REQUEST_RENTAL_CLIENT_TYPE = "requested_rental_client"
 
-ACTIVATE_RENTAL_TYPE = 'activated_rental'
-ACTIVATE_RENTAL_CLIENT_TYPE = 'activated_rental_client'
+ACTIVATE_RENTAL_TYPE = "activated_rental"
+ACTIVATE_RENTAL_CLIENT_TYPE = "activated_rental_client"
 
-ACTIVATE_TICKET_TYPE = 'activated_ticket'
-ACTIVATE_TICKET_CLIENT_TYPE = 'activated_ticket_client'
+ACTIVATE_TICKET_TYPE = "activated_ticket"
+ACTIVATE_TICKET_CLIENT_TYPE = "activated_ticket_client"
 
-DECLINE_RESUME_CLIENT_TYPE = 'declined_resume_client'
-ACCEPT_RESUME_CLIENT_TYPE = 'accepted_resume_client'
-REQUEST_RESUME_CLIENT_TYPE = 'requested_resume_client'
+DECLINE_RESUME_CLIENT_TYPE = "declined_resume_client"
+ACCEPT_RESUME_CLIENT_TYPE = "accepted_resume_client"
+REQUEST_RESUME_CLIENT_TYPE = "requested_resume_client"
 
-ORGANIZATION_ACCEPT_RESUME_CLIENT_TYPE = 'organization_accepted_resume_client'
-ORGANIZATION_DECLINE_RESUME_CLIENT_TYPE = 'organization_declined_resume_client'
-ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE = 'organization_requested_resume_client'
+ORGANIZATION_ACCEPT_RESUME_CLIENT_TYPE = "organization_accepted_resume_client"
+ORGANIZATION_DECLINE_RESUME_CLIENT_TYPE = "organization_declined_resume_client"
+ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE = "organization_requested_resume_client"
 
-NEW_COMMENT_TYPE = 'new_comment'
+NEW_COMMENT_TYPE = "new_comment"
 
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY = 'for_delivery'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION = 'for_delivery_for_organization'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = 'accepted_by_delivery'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION = 'accepted_by_delivery_for_organization'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'accepted_by_delivery_for_client'
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT = 'sent_to_delivery_by_organization_for_client'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE = 'rejected_by_delivery'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT = 'rejected_by_delivery_for_client'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION = 'rejected_by_delivery_for_organization'
-NOTIFICATION_TYPE_DELIVERED = 'delivery_delivered'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT = 'delivery_delivered_for_client'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION = 'delivery_delivered_for_organization'
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY = "for_delivery"
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION = "for_delivery_for_organization"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE = "accepted_by_delivery"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION = (
+    "accepted_by_delivery_for_organization"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT = (
+    "accepted_by_delivery_for_client"
+)
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT = (
+    "sent_to_delivery_by_organization_for_client"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE = "rejected_by_delivery"
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT = (
+    "rejected_by_delivery_for_client"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION = (
+    "rejected_by_delivery_for_organization"
+)
+NOTIFICATION_TYPE_DELIVERED = "delivery_delivered"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT = "delivery_delivered_for_client"
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION = "delivery_delivered_for_organization"
 
 NOTIFICATION_TYPES = (
     (ACCEPT_ORDER_CLIENT_TYPE, ACCEPT_ORDER_CLIENT_TYPE),
@@ -213,877 +226,1156 @@ NOTIFICATION_TYPES = (
     (NEW_DEVICE, NEW_DEVICE),
     (FOLLOWED_TO_ORGANIZATION_TYPE, FOLLOWED_TO_ORGANIZATION_TYPE),
     (ORGANIZATION_FOLLOWED_TYPE, ORGANIZATION_FOLLOWED_TYPE),
-    (ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE, ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE),
+    (
+        ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
+        ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE,
+    ),
     (WITHDRAWAL_UNDER_REVIEW_TYPE, WITHDRAWAL_UNDER_REVIEW_TYPE),
     (ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE, ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE),
     (WITHDRAWAL_ACCEPTED_TYPE, WITHDRAWAL_ACCEPTED_TYPE),
     (ORGANIZATION_WITHDRAWAL_DECLINED_TYPE, ORGANIZATION_WITHDRAWAL_DECLINED_TYPE),
     (WITHDRAWAL_DECLINED_TYPE, WITHDRAWAL_DECLINED_TYPE),
     (SYSTEM_TYPE, SYSTEM_TYPE),
-    (NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE),
-    (NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE),
-    (NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE),
+    (
+        NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
+        NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE,
+    ),
+    (
+        NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
+        NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE,
+    ),
+    (
+        NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE,
+        NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE,
+    ),
     (ACCEPT_SELLER_DISCOUNT_TYPE, ACCEPT_SELLER_DISCOUNT_TYPE),
     (NOTIFICATION_TYPE_GET_JOB_TYPE, NOTIFICATION_TYPE_GET_JOB_TYPE),
     (NOTIFICATION_TYPE_RECRUIT_JOB_TYPE, NOTIFICATION_TYPE_RECRUIT_JOB_TYPE),
     (NOTIFICATION_TYPE_CHANGE_JOB_POSITION, NOTIFICATION_TYPE_CHANGE_JOB_POSITION),
     (NOTIFICATION_TYPE_DISMISS_JOB, NOTIFICATION_TYPE_DISMISS_JOB),
     (NOTIFICATION_TYPE_QUIT_JOB, NOTIFICATION_TYPE_QUIT_JOB),
-    (NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER, NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER),
+    (
+        NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER,
+        NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER,
+    ),
     (ORGANIZATION_MESSAGE_TYPE, ORGANIZATION_MESSAGE_TYPE),
     (ORGANIZATION_GAVE_TYPE, ORGANIZATION_GAVE_TYPE),
     (ORGANIZATION_OWN_TYPE, ORGANIZATION_OWN_TYPE),
     (ORGANIZATION_MESSAGE_SENDER_TYPE, ORGANIZATION_MESSAGE_SENDER_TYPE),
-    (NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE),
-    (NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE),
-    (NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE, NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE),
+    (
+        NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+        NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE,
+    ),
+    (
+        NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
+        NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE,
+    ),
+    (
+        NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+        NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE,
+    ),
     (NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_AVAILABLE_DELIVERY),
-    (NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE),
-    (NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
-     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT),
-    (NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
-     NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT),
-    (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE, NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE),
-    (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
-     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT),
-    (NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
-     NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION),
+    (
+        NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
+        NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE,
+    ),
+    (
+        NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+        NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+    ),
+    (
+        NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+        NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+    ),
+    (
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE,
+    ),
+    (
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT,
+    ),
+    (
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+        NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION,
+    ),
     (NOTIFICATION_TYPE_DELIVERED, NOTIFICATION_TYPE_DELIVERED),
     (NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT, NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT),
-    (NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION, NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION),
-    (NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION),
+    (
+        NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION,
+        NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION,
+    ),
+    (
+        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+    ),
     (NEW_COMMENT_TYPE, NEW_COMMENT_TYPE),
 )
 
 # ______________________RUSSIAN___________________________#
-NEW_COMMENT_TITLE_RU = 'У вас новый комментарий'
-NEW_COMMENT_DESCRIPTION = '{comment_text}'
+NEW_COMMENT_TITLE_RU = "У вас новый комментарий"
+NEW_COMMENT_DESCRIPTION = "{comment_text}"
 
-ACCEPT_ORDER_TITLE_RU = 'Вы приняли заказ #{transaction_id}'
-DECLINE_ORDER_TITLE_RU = 'Вы отменили заказ #{transaction_id}'
-REQUEST_ORDER_TITLE_RU = 'У вас новый заказ #{transaction_id}'
+ACCEPT_ORDER_TITLE_RU = "Вы приняли заказ #{transaction_id}"
+DECLINE_ORDER_TITLE_RU = "Вы отменили заказ #{transaction_id}"
+REQUEST_ORDER_TITLE_RU = "У вас новый заказ #{transaction_id}"
 
-ACCEPT_RENTAL_TITLE_RU = 'Вы приняли заказ аренды #{transaction_id}'
-DECLINE_RENTAL_TITLE_RU = 'Вы отменили заказ аренды #{transaction_id}'
-REQUEST_RENTAL_TITLE_RU = 'У вас новый заказ аренды #{transaction_id}'
+ACCEPT_RENTAL_TITLE_RU = "Вы приняли заказ аренды #{transaction_id}"
+DECLINE_RENTAL_TITLE_RU = "Вы отменили заказ аренды #{transaction_id}"
+REQUEST_RENTAL_TITLE_RU = "У вас новый заказ аренды #{transaction_id}"
 
-ACCEPT_RESUME_TITLE_RU = 'Вы приняли запрос на Вакансию: {resume_name}'
-DECLINE_RESUME_TITLE_RU = 'Вы отклонили запрос на Вакансию: {resume_name}'
-REQUEST_RESUME_TITLE_RU = 'У вас новый запрос на Вакансию: {resume_name}'
+ACCEPT_RESUME_TITLE_RU = "Вы приняли запрос на Вакансию: {resume_name}"
+DECLINE_RESUME_TITLE_RU = "Вы отклонили запрос на Вакансию: {resume_name}"
+REQUEST_RESUME_TITLE_RU = "У вас новый запрос на Вакансию: {resume_name}"
 
-DECLINE_ORDER_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
+DECLINE_ORDER_PAYMENT_TITLE_RU = "Клиент отклонил оплату за заказ #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_TITLE_RU = 'Клиент оплатил заказ, завершите сделку #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_TITLE_RU = 'Клиент отклонил оплату за заказ #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_TITLE_RU = (
+    "Клиент оплатил заказ, завершите сделку #{transaction_id}"
+)
+DECLINE_RENTAL_PAYMENT_TITLE_RU = "Клиент отклонил оплату за заказ #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_TITLE_RU = 'Клиент оплатил за {assistant_position} {assistant_name} на 33 дня #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_TITLE_RU = "Клиент оплатил за {assistant_position} {assistant_name} на 33 дня #{transaction_id}"
 
-ACCEPT_RENTAL_SALE_TITLE_RU = 'У вас новая аренда #{transaction_id}'
-ACCEPT_RENTAL_SALE_CLIENT_TITLE_RU = 'Спасибо Вам за аренду !!! Ждём вас по этому чеку.'
+ACCEPT_RENTAL_SALE_TITLE_RU = "У вас новая аренда #{transaction_id}"
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_RU = "Спасибо Вам за аренду !!! Ждём вас по этому чеку."
 
-DECLINE_ACCEPTED_RENTAL_TITLE_RU = 'Вы отменили сделку аренды, возвращение оплаты #{transaction_id}'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU = 'Вам отменили сделку аренды, возвращение оплаты #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_TITLE_RU = (
+    "Вы отменили сделку аренды, возвращение оплаты #{transaction_id}"
+)
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU = (
+    "Вам отменили сделку аренды, возвращение оплаты #{transaction_id}"
+)
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU = 'Ваш заказ оплачен !!! Наши сотрудники свяжутся с Вами. #{transaction_id}'
-DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату за заказ #{transaction_id}'
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU = (
+    "Ваш заказ оплачен !!! Наши сотрудники свяжутся с Вами. #{transaction_id}"
+)
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU = "Вы отклонили оплату за заказ #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU = 'Поздравляем, вы наняли на работу {assistant_position} {assistant_name} на 33 дня #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU = "Поздравляем, вы наняли на работу {assistant_position} {assistant_name} на 33 дня #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Поздравляем, Ваш заказ оплачен! Воспользуйтесь арендой, показав данный чек. #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU = 'Вы отклонили оплату за аренду #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU = "Поздравляем, Ваш заказ оплачен! Воспользуйтесь арендой, показав данный чек. #{transaction_id}"
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU = (
+    "Вы отклонили оплату за аренду #{transaction_id}"
+)
 
-ACCEPT_ORDER_CLIENT_TITLE_RU = 'Ваш заказ приняли #{transaction_id}'
-DECLINE_ORDER_CLIENT_TITLE_RU = 'Вам отменили заказ #{transaction_id}'
-REQUEST_ORDER_CLIENT_TITLE_RU = 'Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами.'
+ACCEPT_ORDER_CLIENT_TITLE_RU = "Ваш заказ приняли #{transaction_id}"
+DECLINE_ORDER_CLIENT_TITLE_RU = "Вам отменили заказ #{transaction_id}"
+REQUEST_ORDER_CLIENT_TITLE_RU = (
+    "Спасибо Вам за заказ !!! Наши сотрудники свяжутся с Вами."
+)
 
-ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU = 'Ваш заказ готов к оплате #{transaction_id}'
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU = "Ваш заказ готов к оплате #{transaction_id}"
 
-ACCEPT_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ аренды готов к оплате #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_RU = 'Вам отменили заказ аренды #{transaction_id}'
-REQUEST_RENTAL_CLIENT_TITLE_RU = 'Спасибо Вам за заказ #{transaction_id} !!! Ждём подтверждения к оплате аренды.'
+ACCEPT_RENTAL_CLIENT_TITLE_RU = "Ваш заказ аренды готов к оплате #{transaction_id}"
+DECLINE_RENTAL_CLIENT_TITLE_RU = "Вам отменили заказ аренды #{transaction_id}"
+REQUEST_RENTAL_CLIENT_TITLE_RU = (
+    "Спасибо Вам за заказ #{transaction_id} !!! Ждём подтверждения к оплате аренды."
+)
 
-ACCEPT_RESUME_CLIENT_TITLE_RU = 'Ваш  запрос приняли на Вакансию: {resume_name}'
-DECLINE_RESUME_CLIENT_TITLE_RU = 'Ваш запрос отклонили на Вакансию: {resume_name}'
-REQUEST_RESUME_CLIENT_TITLE_RU = 'Спасибо Вам за запрос ! Кандидат  свяжется с Вами по вакансии: {resume_name}'
-RESUME_DESCRIPTION_RU = 'Оплата от: {salary_from} {currency}'
+ACCEPT_RESUME_CLIENT_TITLE_RU = "Ваш  запрос приняли на Вакансию: {resume_name}"
+DECLINE_RESUME_CLIENT_TITLE_RU = "Ваш запрос отклонили на Вакансию: {resume_name}"
+REQUEST_RESUME_CLIENT_TITLE_RU = (
+    "Спасибо Вам за запрос ! Кандидат  свяжется с Вами по вакансии: {resume_name}"
+)
+RESUME_DESCRIPTION_RU = "Оплата от: {salary_from} {currency}"
 
-ACTIVATE_RENTAL_CLIENT_TITLE_RU = 'Ваш заказ аренды активирован #{transaction_id}'
-ACTIVATE_RENTAL_TITLE_RU = 'Вы активировали заказ аренды #{transaction_id}'
+ACTIVATE_RENTAL_CLIENT_TITLE_RU = "Ваш заказ аренды активирован #{transaction_id}"
+ACTIVATE_RENTAL_TITLE_RU = "Вы активировали заказ аренды #{transaction_id}"
 
-ACTIVATE_TICKET_CLIENT_TITLE_RU = 'Ваш билет активирован #{transaction_id}'
-ACTIVATE_TICKET_TITLE_RU = 'Вы активировали билет #{transaction_id}'
+ACTIVATE_TICKET_CLIENT_TITLE_RU = "Ваш билет активирован #{transaction_id}"
+ACTIVATE_TICKET_TITLE_RU = "Вы активировали билет #{transaction_id}"
 
-ORDER_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
-RENTAL_DESCRIPTION_RU = 'Сумма заказа: {total_price} {currency}'
+ORDER_DESCRIPTION_RU = "Сумма заказа: {total_price} {currency}"
+RENTAL_DESCRIPTION_RU = "Сумма заказа: {total_price} {currency}"
 
-ATTENDANCE_IN_TITLE_RU = 'Вход {organization}'
-ATTENDANCE_OUT_TITLE_RU = 'Выход {organization}'
-CHECK_ATTENDANCE_IN_TITLE_RU = 'Пропуск на вход {organization}'
-CHECK_ATTENDANCE_OUT_TITLE_RU = 'Пропуск на выход {organization}'
+ATTENDANCE_IN_TITLE_RU = "Вход {organization}"
+ATTENDANCE_OUT_TITLE_RU = "Выход {organization}"
+CHECK_ATTENDANCE_IN_TITLE_RU = "Пропуск на вход {organization}"
+CHECK_ATTENDANCE_OUT_TITLE_RU = "Пропуск на выход {organization}"
 
-ATTENDANCE_DESCRIPTION_RU = ' '
+ATTENDANCE_DESCRIPTION_RU = " "
 
-FOLLOWED_TO_ORGANIZATION_TITLE_RU = 'На вашу организацию подписались'
-BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU = 'На вашу организацию подписались'
-ORGANIZATION_FOLLOWED_TITLE_RU = 'Вы подписались на организацию'
-BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU = 'Вы подписались'
-DISCOUNT_COMPLETE_USER_TITLE_RU = 'Вам провели скидку {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION_RU = 'Итого со скидкой: {final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE_RU = 'Вы провели скидку {discount_percent} %'
+FOLLOWED_TO_ORGANIZATION_TITLE_RU = "На вашу организацию подписались"
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_RU = "На вашу организацию подписались"
+ORGANIZATION_FOLLOWED_TITLE_RU = "Вы подписались на организацию"
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION_RU = "Вы подписались"
+DISCOUNT_COMPLETE_USER_TITLE_RU = "Вам провели скидку {discount_percent} %"
+DISCOUNT_COMPLETE_DESCRIPTION_RU = "Итого со скидкой: {final_amount} {currency}"
+DISCOUNT_COMPLETE_TITLE_RU = "Вы провели скидку {discount_percent} %"
 
-NEW_DISCOUNT_TITLE_RU = 'Доступна новая скидка {percent} %'
-NEW_CASHBACK_TITLE_RU = 'Доступен новый кэшбэк {percent} %'
+NEW_DISCOUNT_TITLE_RU = "Доступна новая скидка {percent} %"
+NEW_CASHBACK_TITLE_RU = "Доступен новый кэшбэк {percent} %"
 
-NEW_DISCOUNT_DESCRIPTION_RU = '{address} '
-PARTNERSHIP_REQUEST_TITLE_RU = '{sender_organization} запрашивает стать партнером {recipient_organization}'
-PARTNERSHIP_REQUEST_DESCRIPTION_RU = '{address} '
-SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU = '{address} '
-TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU = 'Вам отменили сделку'
-YOU_DECLINED_NOTIFICATION_TITLE_RU = 'Вы отменили сделку'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_RU = 'Скидка {savings} {currency}'
+NEW_DISCOUNT_DESCRIPTION_RU = "{address} "
+PARTNERSHIP_REQUEST_TITLE_RU = (
+    "{sender_organization} запрашивает стать партнером {recipient_organization}"
+)
+PARTNERSHIP_REQUEST_DESCRIPTION_RU = "{address} "
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU = "{address} "
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU = "Вам отменили сделку"
+YOU_DECLINED_NOTIFICATION_TITLE_RU = "Вы отменили сделку"
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_RU = "Скидка {savings} {currency}"
 
-NEW_ORGANIZATION_TITLE_RU = 'Новая организация доступна для вас'
-NEW_ORGANIZATION_DESCRIPTION_RU = '{organization_title} '
+NEW_ORGANIZATION_TITLE_RU = "Новая организация доступна для вас"
+NEW_ORGANIZATION_DESCRIPTION_RU = "{organization_title} "
 
-NEW_DEVICE_TITLE_RU = 'Новая активация пользователя'
-NEW_DEVICE_DESCRIPTION_RU = '{device_title}'
+NEW_DEVICE_TITLE_RU = "Новая активация пользователя"
+NEW_DEVICE_DESCRIPTION_RU = "{device_title}"
 
-RECRUIT_JOB_TITLE_RU = 'Вы приняли на работу'
-RECRUIT_JOB_DESCRIPTION_RU = '{position} '
+RECRUIT_JOB_TITLE_RU = "Вы приняли на работу"
+RECRUIT_JOB_DESCRIPTION_RU = "{position} "
 
-GET_JOB_TITLE_RU = 'Вас приняли на работу'
-GET_JOB_DESCRIPTION_RU = '{position} '
+GET_JOB_TITLE_RU = "Вас приняли на работу"
+GET_JOB_DESCRIPTION_RU = "{position} "
 
-CHANGE_JOB_POSITION_TITLE_RU = 'Вас назначили на новую должность'
-CHANGE_JOB_POSITION_DESCRIPTION_RU = '{old_position} на {new_position}'
+CHANGE_JOB_POSITION_TITLE_RU = "Вас назначили на новую должность"
+CHANGE_JOB_POSITION_DESCRIPTION_RU = "{old_position} на {new_position}"
 
-CHANGE_JOB_POSITION_OWNER_TITLE_RU = 'Вы назначили другую должность'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU = '{old_position} на {new_position}'
+CHANGE_JOB_POSITION_OWNER_TITLE_RU = "Вы назначили другую должность"
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU = "{old_position} на {new_position}"
 
-QUIT_JOB_TITLE_RU = 'Вас уволили с работы'
-QUIT_JOB_DESCRIPTION_RU = '{position} '
+QUIT_JOB_TITLE_RU = "Вас уволили с работы"
+QUIT_JOB_DESCRIPTION_RU = "{position} "
 
-DISMISS_JOB_TITLE_RU = 'Вы уволили с работы'
-DISMISS_JOB_DESCRIPTION_RU = '{position} '
+DISMISS_JOB_TITLE_RU = "Вы уволили с работы"
+DISMISS_JOB_DESCRIPTION_RU = "{position} "
 
-ORGANIZATION_MESSAGE_TITLE_RU = 'Сообщение от '
-ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU = 'Сообщение для партнеров '
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Сообщение подписчикам партнеров '
-ORGANIZATION_MESSAGE_DESCRIPTION_RU = '{content} '
-ORGANIZATION_OWNER_MESSAGE_TITLE_RU = 'Вы отправили сообщение'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU = 'Вы отправили сообщение партнерам'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = 'Вы отправили сообщение подписчикам партнеров'
+ORGANIZATION_MESSAGE_TITLE_RU = "Сообщение от "
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU = "Сообщение для партнеров "
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = "Сообщение подписчикам партнеров "
+ORGANIZATION_MESSAGE_DESCRIPTION_RU = "{content} "
+ORGANIZATION_OWNER_MESSAGE_TITLE_RU = "Вы отправили сообщение"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU = "Вы отправили сообщение партнерам"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU = (
+    "Вы отправили сообщение подписчикам партнеров"
+)
 
-ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Ваш вывод на рассмотрении #{transaction_id}'
-UNDER_REVIEW_WITHDRAWAL_TITLE_RU = 'Вы передали вывод на рассмотрение #{transaction_id}'
-ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU = 'Поздравляем Ваш вывод завершен #{transaction_id}'
-ACCEPTED_WITHDRAWAL_TITLE_RU = 'Поздравляем вы завершили вывод #{transaction_id}'
-ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU = 'Ваш вывод отменен #{transaction_id}'
-DECLINED_WITHDRAWAL_TITLE_RU = 'Вы отменили рассмотрения вывода #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_RU = 'Сумма вывода: {total_withdrawal} {currency}'
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU = (
+    "Ваш вывод на рассмотрении #{transaction_id}"
+)
+UNDER_REVIEW_WITHDRAWAL_TITLE_RU = "Вы передали вывод на рассмотрение #{transaction_id}"
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU = (
+    "Поздравляем Ваш вывод завершен #{transaction_id}"
+)
+ACCEPTED_WITHDRAWAL_TITLE_RU = "Поздравляем вы завершили вывод #{transaction_id}"
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU = "Ваш вывод отменен #{transaction_id}"
+DECLINED_WITHDRAWAL_TITLE_RU = "Вы отменили рассмотрения вывода #{transaction_id}"
+WITHDRAWAL_DESCRIPTION_RU = "Сумма вывода: {total_withdrawal} {currency}"
 
-ORGANIZATION_GAVE_TITLE_RU = 'Вы передали права собственника'
-ORGANIZATION_GAVE_DESCRIPTION_RU = ' '
+ORGANIZATION_GAVE_TITLE_RU = "Вы передали права собственника"
+ORGANIZATION_GAVE_DESCRIPTION_RU = " "
 
-ORGANIZATION_OWN_TITLE_RU = 'Поздравляем Вы стали собственником'
-ORGANIZATION_OWN_DESCRIPTION_RU = ' '
+ORGANIZATION_OWN_TITLE_RU = "Поздравляем Вы стали собственником"
+ORGANIZATION_OWN_DESCRIPTION_RU = " "
 
-WITHDRAW_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем Вам сняли {amount} {currency} с кешбэка'
-CHARGE_CASHBACK_CLIENT_TITLE_RU = 'Поздравляем вам начислили кешбэк {amount} {currency}'
+WITHDRAW_CASHBACK_CLIENT_TITLE_RU = (
+    "Поздравляем Вам сняли {amount} {currency} с кешбэка"
+)
+CHARGE_CASHBACK_CLIENT_TITLE_RU = "Поздравляем вам начислили кешбэк {amount} {currency}"
 
-WITHDRAW_CASHBACK_SELLER_TITLE_RU = 'Вы сняли {amount} {currency} с кэшбэка'
-CHARGE_CASHBACK_SELLER_TITLE_RU = 'Вы начислили кэшбэк {amount} {currency}'
+WITHDRAW_CASHBACK_SELLER_TITLE_RU = "Вы сняли {amount} {currency} с кэшбэка"
+CHARGE_CASHBACK_SELLER_TITLE_RU = "Вы начислили кэшбэк {amount} {currency}"
 
-NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU = 'Доступен новый заказ!!!'
-NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU = 'Курьерская служба может доставить ваш заказ'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы взяли заказ к доставке'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_RU = 'Ваш заказ отправлен в курьерскую службу. С вами свяжутся '
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Ваш заказ в пути'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU = 'Ваш заказ взяли к доставке'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU = ''
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_RU = "Доступен новый заказ!!!"
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_RU = (
+    "Курьерская служба может доставить ваш заказ"
+)
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU = "Вы взяли заказ к доставке"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_RU = (
+    "Ваш заказ отправлен в курьерскую службу. С вами свяжутся "
+)
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = "Ваш заказ в пути"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU = (
+    "Ваш заказ взяли к доставке"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU = ""
 
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU = 'Вы отменили заказ'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = 'Доставка Вашего заказа отменена'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU = 'Доставка Вашего заказа отменена'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_DELIVERED_TITLE_RU = ''
-NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_RU = 'Ваш заказ доставлен'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_RU = 'Ваш заказ доставлен'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_RU = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_RU = "Вы отменили заказ"
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_RU = (
+    "Доставка Вашего заказа отменена"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_RU = (
+    "Доставка Вашего заказа отменена"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_DELIVERED_TITLE_RU = ""
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_RU = "Ваш заказ доставлен"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_RU = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_RU = "Ваш заказ доставлен"
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_RU = ""
 # _______________________ ENGLISH _______________________#
-NEW_COMMENT_TITLE_EN = 'You have a new comment'
+NEW_COMMENT_TITLE_EN = "You have a new comment"
 
-ACCEPT_ORDER_TITLE_EN = 'You accepted order #{transaction_id}'
-DECLINE_ORDER_TITLE_EN = 'You canceled order #{transaction_id}'
-REQUEST_ORDER_TITLE_EN = 'You got new order #{transaction_id}'
+ACCEPT_ORDER_TITLE_EN = "You accepted order #{transaction_id}"
+DECLINE_ORDER_TITLE_EN = "You canceled order #{transaction_id}"
+REQUEST_ORDER_TITLE_EN = "You got new order #{transaction_id}"
 
-ACCEPT_RENTAL_TITLE_EN = 'You accepted rental order #{transaction_id}'
-DECLINE_RENTAL_TITLE_EN = 'You canceled rental order #{transaction_id}'
-REQUEST_RENTAL_TITLE_EN = 'You got new rent order #{transaction_id}'
+ACCEPT_RENTAL_TITLE_EN = "You accepted rental order #{transaction_id}"
+DECLINE_RENTAL_TITLE_EN = "You canceled rental order #{transaction_id}"
+REQUEST_RENTAL_TITLE_EN = "You got new rent order #{transaction_id}"
 
-ACCEPT_RESUME_TITLE_EN = 'You accepted request for the position: {resume_name}'
-DECLINE_RESUME_TITLE_EN = 'You have declined request for the position: {resume_name}'
-REQUEST_RESUME_TITLE_EN = 'You have vacancy request for the position: {resume_name}'
+ACCEPT_RESUME_TITLE_EN = "You accepted request for the position: {resume_name}"
+DECLINE_RESUME_TITLE_EN = "You have declined request for the position: {resume_name}"
+REQUEST_RESUME_TITLE_EN = "You have vacancy request for the position: {resume_name}"
 
-DECLINE_ORDER_PAYMENT_TITLE_EN = 'Customer canceled payment #{transaction_id}'
+DECLINE_ORDER_PAYMENT_TITLE_EN = "Customer canceled payment #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_TITLE_EN = 'Customer has paid for the order, complete deal #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_TITLE_EN = 'Customer canceled rent payment #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_TITLE_EN = (
+    "Customer has paid for the order, complete deal #{transaction_id}"
+)
+DECLINE_RENTAL_PAYMENT_TITLE_EN = "Customer canceled rent payment #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_TITLE_EN = 'Customer paid for {assistant_position} {assistant_name} for 33 days #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_TITLE_EN = "Customer paid for {assistant_position} {assistant_name} for 33 days #{transaction_id}"
 
-ACCEPT_RENTAL_SALE_TITLE_EN = 'You have a new rent #{transaction_id}'
-ACCEPT_RENTAL_SALE_CLIENT_TITLE_EN = 'Thank you for the rental !!! Looking forward to seeing you on this check.'
+ACCEPT_RENTAL_SALE_TITLE_EN = "You have a new rent #{transaction_id}"
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_EN = (
+    "Thank you for the rental !!! Looking forward to seeing you on this check."
+)
 
-DECLINE_ACCEPTED_RENTAL_TITLE_EN = 'You canceled rent order, payment refunding #{transaction_id}'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN = 'Your rent order canceled, payment refunding #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_TITLE_EN = (
+    "You canceled rent order, payment refunding #{transaction_id}"
+)
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN = (
+    "Your rent order canceled, payment refunding #{transaction_id}"
+)
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_EN = 'Your order paid !!! We will contact you. #{transaction_id}'
-DECLINE_ORDER_PAYMENT_CLIENT_TITLE_EN = 'You canceled payment #{transaction_id}'
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_EN = (
+    "Your order paid !!! We will contact you. #{transaction_id}"
+)
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_EN = "You canceled payment #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN = 'Congratulations, you have hired {assistant_position} {assistant_name} for 33 days #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN = "Congratulations, you have hired {assistant_position} {assistant_name} for 33 days #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'Congratulations, your order paid! Use this receipt to get rental. #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN = 'You canceled rent payment #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN = "Congratulations, your order paid! Use this receipt to get rental. #{transaction_id}"
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN = "You canceled rent payment #{transaction_id}"
 
-ACCEPT_ORDER_CLIENT_TITLE_EN = 'Your order accepted #{transaction_id}'
-DECLINE_ORDER_CLIENT_TITLE_EN = 'Your order has been canceled #{transaction_id}'
-REQUEST_ORDER_CLIENT_TITLE_EN = 'Thank you for your order !!! We will contact you.'
-ORDER_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
+ACCEPT_ORDER_CLIENT_TITLE_EN = "Your order accepted #{transaction_id}"
+DECLINE_ORDER_CLIENT_TITLE_EN = "Your order has been canceled #{transaction_id}"
+REQUEST_ORDER_CLIENT_TITLE_EN = "Thank you for your order !!! We will contact you."
+ORDER_DESCRIPTION_EN = "Order price: {total_price} {currency}"
 
-ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN = 'Your order is ready for payment #{transaction_id}'
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN = (
+    "Your order is ready for payment #{transaction_id}"
+)
 
-ACCEPT_RENTAL_CLIENT_TITLE_EN = 'Your rent order is ready for payment #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_EN = 'Your rental order canceled #{transaction_id}'
-REQUEST_RENTAL_CLIENT_TITLE_EN = 'Thank you for your order #{transaction_id} !!! Waiting for confirmation to pay the rent.'
-RENTAL_DESCRIPTION_EN = 'Order price: {total_price} {currency}'
+ACCEPT_RENTAL_CLIENT_TITLE_EN = "Your rent order is ready for payment #{transaction_id}"
+DECLINE_RENTAL_CLIENT_TITLE_EN = "Your rental order canceled #{transaction_id}"
+REQUEST_RENTAL_CLIENT_TITLE_EN = "Thank you for your order #{transaction_id} !!! Waiting for confirmation to pay the rent."
+RENTAL_DESCRIPTION_EN = "Order price: {total_price} {currency}"
 
-ACCEPT_RESUME_CLIENT_TITLE_EN = 'Your request have accepted for position: {resume_name}'
-DECLINE_RESUME_CLIENT_TITLE_EN = 'Your request declined  for the position: {resume_name}'
-REQUEST_RESUME_CLIENT_TITLE_EN = 'Thank you for your request ! The candidate will contact you for position: {resume_name}'
-RESUME_DESCRIPTION_EN = 'Salary from: {salary_from} {currency}'
+ACCEPT_RESUME_CLIENT_TITLE_EN = "Your request have accepted for position: {resume_name}"
+DECLINE_RESUME_CLIENT_TITLE_EN = (
+    "Your request declined  for the position: {resume_name}"
+)
+REQUEST_RESUME_CLIENT_TITLE_EN = "Thank you for your request ! The candidate will contact you for position: {resume_name}"
+RESUME_DESCRIPTION_EN = "Salary from: {salary_from} {currency}"
 
-ACTIVATE_RENTAL_TITLE_EN = 'You activated rent order #{transaction_id}'
-ACTIVATE_RENTAL_CLIENT_TITLE_EN = 'Your rent order is activated #{transaction_id}'
+ACTIVATE_RENTAL_TITLE_EN = "You activated rent order #{transaction_id}"
+ACTIVATE_RENTAL_CLIENT_TITLE_EN = "Your rent order is activated #{transaction_id}"
 
-ACTIVATE_TICKET_TITLE_EN = 'You activated ticket #{transaction_id}'
-ACTIVATE_TICKET_CLIENT_TITLE_EN = 'Your ticket is activated #{transaction_id}'
+ACTIVATE_TICKET_TITLE_EN = "You activated ticket #{transaction_id}"
+ACTIVATE_TICKET_CLIENT_TITLE_EN = "Your ticket is activated #{transaction_id}"
 
-ATTENDANCE_IN_TITLE = 'Input {organization}'
-ATTENDANCE_OUT_TITLE = 'Exit {organization}'
-CHECK_ATTENDANCE_IN_TITLE = 'Entry pass {organization}'
-CHECK_ATTENDANCE_OUT_TITLE = 'Exit pass {organization}'
+ATTENDANCE_IN_TITLE = "Input {organization}"
+ATTENDANCE_OUT_TITLE = "Exit {organization}"
+CHECK_ATTENDANCE_IN_TITLE = "Entry pass {organization}"
+CHECK_ATTENDANCE_OUT_TITLE = "Exit pass {organization}"
 
-ATTENDANCE_DESCRIPTION = ' '
+ATTENDANCE_DESCRIPTION = " "
 
-FOLLOWED_TO_ORGANIZATION_TITLE = 'Subscribed to your organization'
-BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION = 'Subscribed to your organization'
-ORGANIZATION_FOLLOWED_TITLE = 'You subscribed to'
-BG_ORGANIZATION_FOLLOWED_DESCRIPTION = 'You are subscribed'
-DISCOUNT_COMPLETE_USER_TITLE = 'You got a discount {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION = 'Total with discount: {final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE = 'You made a discount {discount_percent} %'
+FOLLOWED_TO_ORGANIZATION_TITLE = "Subscribed to your organization"
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION = "Subscribed to your organization"
+ORGANIZATION_FOLLOWED_TITLE = "You subscribed to"
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION = "You are subscribed"
+DISCOUNT_COMPLETE_USER_TITLE = "You got a discount {discount_percent} %"
+DISCOUNT_COMPLETE_DESCRIPTION = "Total with discount: {final_amount} {currency}"
+DISCOUNT_COMPLETE_TITLE = "You made a discount {discount_percent} %"
 
-ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'Your withdrawal is under review #{transaction_id}'
-UNDER_REVIEW_WITHDRAWAL_TITLE_EN = 'You submitted a withdrawal for review #{transaction_id}'
-ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN = 'Congratulations, your withdrawal is complete #{transaction_id}'
-ACCEPTED_WITHDRAWAL_TITLE_EN = 'Congratulations, you have completed the withdrawal #{transaction_id}'
-ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN = 'Your withdrawal has been canceled #{transaction_id}'
-DECLINED_WITHDRAWAL_TITLE_EN = 'You have canceled the review of withdrawal #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_EN = 'Withdrawal amount: {total_withdrawal} {currency}'
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN = (
+    "Your withdrawal is under review #{transaction_id}"
+)
+UNDER_REVIEW_WITHDRAWAL_TITLE_EN = (
+    "You submitted a withdrawal for review #{transaction_id}"
+)
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN = (
+    "Congratulations, your withdrawal is complete #{transaction_id}"
+)
+ACCEPTED_WITHDRAWAL_TITLE_EN = (
+    "Congratulations, you have completed the withdrawal #{transaction_id}"
+)
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN = (
+    "Your withdrawal has been canceled #{transaction_id}"
+)
+DECLINED_WITHDRAWAL_TITLE_EN = (
+    "You have canceled the review of withdrawal #{transaction_id}"
+)
+WITHDRAWAL_DESCRIPTION_EN = "Withdrawal amount: {total_withdrawal} {currency}"
 
-NEW_DISCOUNT_TITLE = 'New discount available {percent} %'
-NEW_CASHBACK_TITLE = 'New cashback available {percent} %'
+NEW_DISCOUNT_TITLE = "New discount available {percent} %"
+NEW_CASHBACK_TITLE = "New cashback available {percent} %"
 
-NEW_DISCOUNT_DESCRIPTION = '{address} '
-PARTNERSHIP_REQUEST_TITLE = '{sender_organization} wants to become a partner {recipient_organization}'
-PARTNERSHIP_REQUEST_DESCRIPTION = '{address} '
-SUBSCRIPTION_NOTIFICATION_DESCRIPTION = '{address} '
-TRANSACTION_DECLINED_NOTIFICATION_TITLE = 'Your deal was canceled'
-YOU_DECLINED_NOTIFICATION_TITLE = 'You canceled the deal'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = 'Discount {savings} {currency}'
+NEW_DISCOUNT_DESCRIPTION = "{address} "
+PARTNERSHIP_REQUEST_TITLE = (
+    "{sender_organization} wants to become a partner {recipient_organization}"
+)
+PARTNERSHIP_REQUEST_DESCRIPTION = "{address} "
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION = "{address} "
+TRANSACTION_DECLINED_NOTIFICATION_TITLE = "Your deal was canceled"
+YOU_DECLINED_NOTIFICATION_TITLE = "You canceled the deal"
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION = "Discount {savings} {currency}"
 
-NEW_ORGANIZATION_TITLE = 'New organization is available for you '
-NEW_ORGANIZATION_DESCRIPTION = '{organization_title} '
+NEW_ORGANIZATION_TITLE = "New organization is available for you "
+NEW_ORGANIZATION_DESCRIPTION = "{organization_title} "
 
-NEW_DEVICE_TITLE = 'New user activated'
-NEW_DEVICE_DESCRIPTION = '{device_title}'
+NEW_DEVICE_TITLE = "New user activated"
+NEW_DEVICE_DESCRIPTION = "{device_title}"
 
-RECRUIT_JOB_TITLE = 'You hired an employee'
-RECRUIT_JOB_DESCRIPTION = '{position} '
+RECRUIT_JOB_TITLE = "You hired an employee"
+RECRUIT_JOB_DESCRIPTION = "{position} "
 
-GET_JOB_TITLE = 'You were hired as an employee'
-GET_JOB_DESCRIPTION = '{position} '
+GET_JOB_TITLE = "You were hired as an employee"
+GET_JOB_DESCRIPTION = "{position} "
 
-CHANGE_JOB_POSITION_TITLE = 'You have been appointed to new position'
-CHANGE_JOB_POSITION_DESCRIPTION = '{old_position} на {new_position}'
+CHANGE_JOB_POSITION_TITLE = "You have been appointed to new position"
+CHANGE_JOB_POSITION_DESCRIPTION = "{old_position} на {new_position}"
 
-CHANGE_JOB_POSITION_OWNER_TITLE = 'You have appointed different position'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION = '{old_position} to {new_position}'
+CHANGE_JOB_POSITION_OWNER_TITLE = "You have appointed different position"
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION = "{old_position} to {new_position}"
 
-QUIT_JOB_TITLE = 'You got fired from'
-QUIT_JOB_DESCRIPTION = '{position} '
+QUIT_JOB_TITLE = "You got fired from"
+QUIT_JOB_DESCRIPTION = "{position} "
 
-DISMISS_JOB_TITLE = 'You fired from'
-DISMISS_JOB_DESCRIPTION = '{position} '
+DISMISS_JOB_TITLE = "You fired from"
+DISMISS_JOB_DESCRIPTION = "{position} "
 
-ORGANIZATION_MESSAGE_TITLE = 'Message from '
-ORGANIZATION_MESSAGE_PARTNERS_TITLE = 'Message for partners'
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'Message to subscribers of partners'
-ORGANIZATION_MESSAGE_DESCRIPTION = '{content} '
-ORGANIZATION_OWNER_MESSAGE_TITLE = 'You have sent a message'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = 'You have sent a message to partners'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = 'You have sent message to your partners subscribers'
+ORGANIZATION_MESSAGE_TITLE = "Message from "
+ORGANIZATION_MESSAGE_PARTNERS_TITLE = "Message for partners"
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE = "Message to subscribers of partners"
+ORGANIZATION_MESSAGE_DESCRIPTION = "{content} "
+ORGANIZATION_OWNER_MESSAGE_TITLE = "You have sent a message"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE = "You have sent a message to partners"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE = (
+    "You have sent message to your partners subscribers"
+)
 
-ORGANIZATION_GAVE_TITLE = 'You have transferred ownership rights'
-ORGANIZATION_GAVE_DESCRIPTION = ' '
+ORGANIZATION_GAVE_TITLE = "You have transferred ownership rights"
+ORGANIZATION_GAVE_DESCRIPTION = " "
 
-ORGANIZATION_OWN_TITLE = 'Congratulations, you became an owner of'
-ORGANIZATION_OWN_DESCRIPTION = ' '
+ORGANIZATION_OWN_TITLE = "Congratulations, you became an owner of"
+ORGANIZATION_OWN_DESCRIPTION = " "
 
-WITHDRAW_CASHBACK_CLIENT_TITLE = 'Congratulations you have paid,{amount} {currency} from cashback'
-CHARGE_CASHBACK_CLIENT_TITLE = ' Congratulations you received cashback {amount} {currency}'
+WITHDRAW_CASHBACK_CLIENT_TITLE = (
+    "Congratulations you have paid,{amount} {currency} from cashback"
+)
+CHARGE_CASHBACK_CLIENT_TITLE = (
+    " Congratulations you received cashback {amount} {currency}"
+)
 
-WITHDRAW_CASHBACK_SELLER_TITLE = 'You took transfer {amount} {currency} from cashback'
-CHARGE_CASHBACK_SELLER_TITLE = 'You have credited cashback {amount} {currency}'
-NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN = 'New delivery order available!!!'
-NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_EN = ' '
+WITHDRAW_CASHBACK_SELLER_TITLE = "You took transfer {amount} {currency} from cashback"
+CHARGE_CASHBACK_SELLER_TITLE = "You have credited cashback {amount} {currency}"
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_EN = "New delivery order available!!!"
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_EN = " "
 
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You took an order for delivery'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_EN = 'Courier service can deliver your order'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_EN = 'Your order already sent to delivery service and will contact with you.'
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Your order on the way'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN = 'Your order was accepted by delivery organization'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_EN = (
+    "You took an order for delivery"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_EN = (
+    "Courier service can deliver your order"
+)
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_EN = (
+    "Your order already sent to delivery service and will contact with you."
+)
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = (
+    "Your order on the way"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN = (
+    "Your order was accepted by delivery organization"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN = ""
 
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN = 'You canceled order '
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = 'Delivery of your order canceled'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN = 'Delivery of your order canceled'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_DELIVERED_TITLE_EN = ''
-NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_EN = 'Your order delivered'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_EN = 'Your order delivered'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_EN = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_EN = "You canceled order "
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_EN = (
+    "Delivery of your order canceled"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN = (
+    "Delivery of your order canceled"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_DELIVERED_TITLE_EN = ""
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_EN = "Your order delivered"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_EN = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_EN = "Your order delivered"
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_EN = ""
 
 # _______________________ GERMAN _______________________#
-NEW_COMMENT_TITLE_DE = 'Es gibt einen neuen Kommentar'
-NEW_COMMENT_DESCRIPTION_DE = 'comment_text'
+NEW_COMMENT_TITLE_DE = "Es gibt einen neuen Kommentar"
+NEW_COMMENT_DESCRIPTION_DE = "comment_text"
 
-ACCEPT_ORDER_TITLE_DE = 'Sie haben die Bestellung #{transaction_id} akzeptiert'
-DECLINE_ORDER_TITLE_DE = 'Sie haben die Bestellung #{transaction_id} storniert'
-REQUEST_ORDER_TITLE_DE = 'Sie haben eine neue Bestellung #{transaction_id}'
+ACCEPT_ORDER_TITLE_DE = "Sie haben die Bestellung #{transaction_id} akzeptiert"
+DECLINE_ORDER_TITLE_DE = "Sie haben die Bestellung #{transaction_id} storniert"
+REQUEST_ORDER_TITLE_DE = "Sie haben eine neue Bestellung #{transaction_id}"
 
-ACCEPT_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung #{transaction_id} akzeptiert'
-DECLINE_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung #{transaction_id} storniert'
-REQUEST_RENTAL_TITLE_DE = 'Sie haben eine neue Mietbestellung #{transaction_id}'
+ACCEPT_RENTAL_TITLE_DE = "Sie haben die Mietbestellung #{transaction_id} akzeptiert"
+DECLINE_RENTAL_TITLE_DE = "Sie haben die Mietbestellung #{transaction_id} storniert"
+REQUEST_RENTAL_TITLE_DE = "Sie haben eine neue Mietbestellung #{transaction_id}"
 
-ACCEPT_RESUME_TITLE_DE = 'Sie haben die Bewerbung für die Stelle: {resume_name} akzeptiert'
-DECLINE_RESUME_TITLE_DE = 'Sie haben die Bewerbung für die Stelle: {resume_name} abgelehnt'
-REQUEST_RESUME_TITLE_DE = 'Sie haben eine neue Bewerbung für die Stelle: {resume_name}'
+ACCEPT_RESUME_TITLE_DE = (
+    "Sie haben die Bewerbung für die Stelle: {resume_name} akzeptiert"
+)
+DECLINE_RESUME_TITLE_DE = (
+    "Sie haben die Bewerbung für die Stelle: {resume_name} abgelehnt"
+)
+REQUEST_RESUME_TITLE_DE = "Sie haben eine neue Bewerbung für die Stelle: {resume_name}"
 
-DECLINE_ORDER_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung #{transaction_id} abgelehnt'
+DECLINE_ORDER_PAYMENT_TITLE_DE = (
+    "Der Kunde hat die Zahlung für die Bestellung #{transaction_id} abgelehnt"
+)
 
-ACCEPT_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Bestellung #{transaction_id} getätigt, bitte schließen Sie die Transaktion ab'
-DECLINE_RENTAL_PAYMENT_TITLE_DE = 'Der Kunde hat die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
+ACCEPT_RENTAL_PAYMENT_TITLE_DE = "Der Kunde hat die Zahlung für die Bestellung #{transaction_id} getätigt, bitte schließen Sie die Transaktion ab"
+DECLINE_RENTAL_PAYMENT_TITLE_DE = (
+    "Der Kunde hat die Zahlung für die Mietbestellung #{transaction_id} abgelehnt"
+)
 
-ACCEPT_ASSISTANT_PAYMENT_TITLE_DE = 'Ein Kunde hat für {assistant_position} {assistant_name} für 33 Tage #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_TITLE_DE = "Ein Kunde hat für {assistant_position} {assistant_name} für 33 Tage #{transaction_id}"
 
-ACCEPT_RENTAL_SALE_TITLE_DE = 'Sie haben eine neue Vermietung #{transaction_id}'
-ACCEPT_RENTAL_SALE_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Miete! Wir erwarten Sie mit diesem Beleg.'
+ACCEPT_RENTAL_SALE_TITLE_DE = "Sie haben eine neue Vermietung #{transaction_id}"
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_DE = (
+    "Vielen Dank für Ihre Miete! Wir erwarten Sie mit diesem Beleg."
+)
 
-DECLINE_ACCEPTED_RENTAL_TITLE_DE = 'Sie haben die Vermietungstransaktion storniert, Rückerstattung #{transaction_id}'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE = 'Ihre Vermietungstransaktion wurde storniert, Rückerstattung #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_TITLE_DE = (
+    "Sie haben die Vermietungstransaktion storniert, Rückerstattung #{transaction_id}"
+)
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE = (
+    "Ihre Vermietungstransaktion wurde storniert, Rückerstattung #{transaction_id}"
+)
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Ihre Bestellung wurde bezahlt! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen. #{transaction_id}'
-DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Bestellung #{transaction_id} abgelehnt'
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE = "Ihre Bestellung wurde bezahlt! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen. #{transaction_id}"
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE = (
+    "Sie haben die Zahlung für die Bestellung #{transaction_id} abgelehnt"
+)
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben {assistant_position} eingestellt {assistant_name} für 33 Tage eingestellt #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE = "Herzlichen Glückwunsch, Sie haben {assistant_position} eingestellt {assistant_name} für 33 Tage eingestellt #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Ihre Mietbestellung wurde bezahlt! Nutzen Sie die Miete, indem Sie diesen Beleg vorzeigen. #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE = 'Sie haben die Zahlung für die Mietbestellung #{transaction_id} abgelehnt'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE = "Herzlichen Glückwunsch, Ihre Mietbestellung wurde bezahlt! Nutzen Sie die Miete, indem Sie diesen Beleg vorzeigen. #{transaction_id}"
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE = (
+    "Sie haben die Zahlung für die Mietbestellung #{transaction_id} abgelehnt"
+)
 
-ACCEPT_ORDER_CLIENT_TITLE_DE = 'Ihre Bestellung wurde angenommen #{transaction_id}'
-DECLINE_ORDER_CLIENT_TITLE_DE = 'Ihre Bestellung #{transaction_id} wurde storniert'
-REQUEST_ORDER_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Bestellung! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen.'
+ACCEPT_ORDER_CLIENT_TITLE_DE = "Ihre Bestellung wurde angenommen #{transaction_id}"
+DECLINE_ORDER_CLIENT_TITLE_DE = "Ihre Bestellung #{transaction_id} wurde storniert"
+REQUEST_ORDER_CLIENT_TITLE_DE = "Vielen Dank für Ihre Bestellung! Unsere Mitarbeiter werden sich mit Ihnen in Verbindung setzen."
 
-ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE = 'Ihre Online-Bestellung kann bezahlt werden #{transaction_id}'
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE = (
+    "Ihre Online-Bestellung kann bezahlt werden #{transaction_id}"
+)
 
-ACCEPT_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung kann bezahlt werden #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung #{transaction_id} wurde storniert'
-REQUEST_RENTAL_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Mietbestellung #{transaction_id}! Wir warten auf die Bestätigung der Mietzahlung.'
+ACCEPT_RENTAL_CLIENT_TITLE_DE = (
+    "Ihre Mietbestellung kann bezahlt werden #{transaction_id}"
+)
+DECLINE_RENTAL_CLIENT_TITLE_DE = "Ihre Mietbestellung #{transaction_id} wurde storniert"
+REQUEST_RENTAL_CLIENT_TITLE_DE = "Vielen Dank für Ihre Mietbestellung #{transaction_id}! Wir warten auf die Bestätigung der Mietzahlung."
 
-ACCEPT_RESUME_CLIENT_TITLE_DE = 'Ihre Bewerbung für die Stelle: {resume_name} wurde akzeptiert'
-DECLINE_RESUME_CLIENT_TITLE_DE = 'Ihre Bewerbung für die Stelle: {resume_name} wurde abgelehnt'
-REQUEST_RESUME_CLIENT_TITLE_DE = 'Vielen Dank für Ihre Bewerbung! Der Bewerber wird sich bezüglich der Stelle: {resume_name} mit Ihnen in Verbindung setzen.'
-RESUME_DESCRIPTION_DE = 'Zahlung ab: {salary_from} {currency}'
+ACCEPT_RESUME_CLIENT_TITLE_DE = (
+    "Ihre Bewerbung für die Stelle: {resume_name} wurde akzeptiert"
+)
+DECLINE_RESUME_CLIENT_TITLE_DE = (
+    "Ihre Bewerbung für die Stelle: {resume_name} wurde abgelehnt"
+)
+REQUEST_RESUME_CLIENT_TITLE_DE = "Vielen Dank für Ihre Bewerbung! Der Bewerber wird sich bezüglich der Stelle: {resume_name} mit Ihnen in Verbindung setzen."
+RESUME_DESCRIPTION_DE = "Zahlung ab: {salary_from} {currency}"
 
-ACTIVATE_RENTAL_CLIENT_TITLE_DE = 'Ihre Mietbestellung wurde aktiviert #{transaction_id}'
-ACTIVATE_RENTAL_TITLE_DE = 'Sie haben die Mietbestellung aktiviert #{transaction_id}'
+ACTIVATE_RENTAL_CLIENT_TITLE_DE = (
+    "Ihre Mietbestellung wurde aktiviert #{transaction_id}"
+)
+ACTIVATE_RENTAL_TITLE_DE = "Sie haben die Mietbestellung aktiviert #{transaction_id}"
 
-ACTIVATE_TICKET_CLIENT_TITLE_DE = 'Ihr Ticket wurde aktiviert #{transaction_id}'
-ACTIVATE_TICKET_TITLE_DE = 'Sie haben das Ticket aktiviert #{transaction_id}'
+ACTIVATE_TICKET_CLIENT_TITLE_DE = "Ihr Ticket wurde aktiviert #{transaction_id}"
+ACTIVATE_TICKET_TITLE_DE = "Sie haben das Ticket aktiviert #{transaction_id}"
 
-ORDER_DESCRIPTION_DE = 'Bestellsumme: {total_price} {currency}'
-RENTAL_DESCRIPTION_DE = 'Bestellsumme: {total_price} {currency}'
+ORDER_DESCRIPTION_DE = "Bestellsumme: {total_price} {currency}"
+RENTAL_DESCRIPTION_DE = "Bestellsumme: {total_price} {currency}"
 
-ATTENDANCE_IN_TITLE_DE = 'Eingang {organization}'
-ATTENDANCE_OUT_TITLE_DE = 'Ausgang {organization}'
-CHECK_ATTENDANCE_IN_TITLE_DE = 'Zutritt {organization}'
-CHECK_ATTENDANCE_OUT_TITLE_DE = 'Zutritt {organization}'
+ATTENDANCE_IN_TITLE_DE = "Eingang {organization}"
+ATTENDANCE_OUT_TITLE_DE = "Ausgang {organization}"
+CHECK_ATTENDANCE_IN_TITLE_DE = "Zutritt {organization}"
+CHECK_ATTENDANCE_OUT_TITLE_DE = "Zutritt {organization}"
 
-ATTENDANCE_DESCRIPTION_DE = ''
+ATTENDANCE_DESCRIPTION_DE = ""
 
-FOLLOWED_TO_ORGANIZATION_TITLE_DE = 'Jemand hat Ihr Unternehmen abonniert'
-BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE = 'Jemand hat Ihr Unternehmen abonniert'
-ORGANIZATION_FOLLOWED_TITLE_DE = 'Sie haben ein Unternehmen abonniert'
-BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE = 'Sie haben ein Unternehmen abonniert'
-DISCOUNT_COMPLETE_USER_TITLE_DE = 'Sie haben einen Rabatt erhalten {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION_DE = 'Gesamtsumme mit Rabatt: {final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE_DE = 'Sie haben einen Rabatt gewährt {discount_percent} %'
+FOLLOWED_TO_ORGANIZATION_TITLE_DE = "Jemand hat Ihr Unternehmen abonniert"
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_DE = "Jemand hat Ihr Unternehmen abonniert"
+ORGANIZATION_FOLLOWED_TITLE_DE = "Sie haben ein Unternehmen abonniert"
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION_DE = "Sie haben ein Unternehmen abonniert"
+DISCOUNT_COMPLETE_USER_TITLE_DE = "Sie haben einen Rabatt erhalten {discount_percent} %"
+DISCOUNT_COMPLETE_DESCRIPTION_DE = "Gesamtsumme mit Rabatt: {final_amount} {currency}"
+DISCOUNT_COMPLETE_TITLE_DE = "Sie haben einen Rabatt gewährt {discount_percent} %"
 
-NEW_DISCOUNT_TITLE_DE = 'Ein neuer Rabatt ist verfügbar {percent} %'
-NEW_CASHBACK_TITLE_DE = 'Ein neues Cashback-Angebot ist verfügbar {percent} %'
+NEW_DISCOUNT_TITLE_DE = "Ein neuer Rabatt ist verfügbar {percent} %"
+NEW_CASHBACK_TITLE_DE = "Ein neues Cashback-Angebot ist verfügbar {percent} %"
 
-NEW_DISCOUNT_DESCRIPTION_DE = '{address}'
+NEW_DISCOUNT_DESCRIPTION_DE = "{address}"
 
-PARTNERSHIP_REQUEST_TITLE_DE = '{sender_organization} beantragt eine Partnerschaft mit {recipient_organization}'
-PARTNERSHIP_REQUEST_DESCRIPTION_DE = '{address}'
+PARTNERSHIP_REQUEST_TITLE_DE = (
+    "{sender_organization} beantragt eine Partnerschaft mit {recipient_organization}"
+)
+PARTNERSHIP_REQUEST_DESCRIPTION_DE = "{address}"
 
-SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE = '{address}'
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE = "{address}"
 
-TRANSACTION_DECLINED_NOTIFICATION_TITLE_DE = 'Die Transaktion wurde abgelehnt'
-YOU_DECLINED_NOTIFICATION_TITLE_DE = 'Sie haben die Transaktion abgelehnt'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE = 'Rabatt {savings} {currency}'
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_DE = "Die Transaktion wurde abgelehnt"
+YOU_DECLINED_NOTIFICATION_TITLE_DE = "Sie haben die Transaktion abgelehnt"
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE = "Rabatt {savings} {currency}"
 
-NEW_ORGANIZATION_TITLE_DE = 'Ein neues Unternehmen steht Ihnen zur Verfügung'
-NEW_ORGANIZATION_DESCRIPTION_DE = '{organization_title}'
+NEW_ORGANIZATION_TITLE_DE = "Ein neues Unternehmen steht Ihnen zur Verfügung"
+NEW_ORGANIZATION_DESCRIPTION_DE = "{organization_title}"
 
-NEW_DEVICE_TITLE_DE = 'Neue Benutzeraktivierung'
-NEW_DEVICE_DESCRIPTION_DE = '{device_title}'
+NEW_DEVICE_TITLE_DE = "Neue Benutzeraktivierung"
+NEW_DEVICE_DESCRIPTION_DE = "{device_title}"
 
-RECRUIT_JOB_TITLE_DE = 'Sie haben den Job angenommen'
-RECRUIT_JOB_DESCRIPTION_DE = '{position}'
+RECRUIT_JOB_TITLE_DE = "Sie haben den Job angenommen"
+RECRUIT_JOB_DESCRIPTION_DE = "{position}"
 
-GET_JOB_TITLE_DE = 'Sie wurden eingestellt'
-GET_JOB_DESCRIPTION_DE = '{position}'
+GET_JOB_TITLE_DE = "Sie wurden eingestellt"
+GET_JOB_DESCRIPTION_DE = "{position}"
 
-CHANGE_JOB_POSITION_TITLE_DE = 'Sie wurden auf eine neue Position versetzt'
-CHANGE_JOB_POSITION_DESCRIPTION_DE = 'Von {old_position} auf {new_position}'
+CHANGE_JOB_POSITION_TITLE_DE = "Sie wurden auf eine neue Position versetzt"
+CHANGE_JOB_POSITION_DESCRIPTION_DE = "Von {old_position} auf {new_position}"
 
-CHANGE_JOB_POSITION_OWNER_TITLE_DE = 'Sie haben jemanden auf eine neue Position versetzt'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE = 'Von {old_position} auf {new_position}'
+CHANGE_JOB_POSITION_OWNER_TITLE_DE = (
+    "Sie haben jemanden auf eine neue Position versetzt"
+)
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE = "Von {old_position} auf {new_position}"
 
-QUIT_JOB_TITLE_DE = 'Sie wurden entlassen'
-QUIT_JOB_DESCRIPTION_DE = '{position}'
+QUIT_JOB_TITLE_DE = "Sie wurden entlassen"
+QUIT_JOB_DESCRIPTION_DE = "{position}"
 
-DISMISS_JOB_TITLE_DE = 'Sie haben jemanden entlassen'
-DISMISS_JOB_DESCRIPTION_DE = '{position}'
+DISMISS_JOB_TITLE_DE = "Sie haben jemanden entlassen"
+DISMISS_JOB_DESCRIPTION_DE = "{position}"
 
-ORGANIZATION_MESSAGE_TITLE_DE = 'Nachricht von {organization}'
-ORGANIZATION_MESSAGE_PARTNERS_TITLE_DE = 'Nachricht an Partner von {organization}'
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = 'Nachricht an Follower von Partnerunternehmen von {organization}'
-ORGANIZATION_MESSAGE_DESCRIPTION_DE = '{content}'
-ORGANIZATION_OWNER_MESSAGE_TITLE_DE = 'Sie haben eine Nachricht gesendet'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_DE = 'Sie haben eine Nachricht an Partner gesendet'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = 'Sie haben eine Nachricht an Follower von Partnerunternehmen gesendet'
+ORGANIZATION_MESSAGE_TITLE_DE = "Nachricht von {organization}"
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_DE = "Nachricht an Partner von {organization}"
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = (
+    "Nachricht an Follower von Partnerunternehmen von {organization}"
+)
+ORGANIZATION_MESSAGE_DESCRIPTION_DE = "{content}"
+ORGANIZATION_OWNER_MESSAGE_TITLE_DE = "Sie haben eine Nachricht gesendet"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_DE = (
+    "Sie haben eine Nachricht an Partner gesendet"
+)
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE = (
+    "Sie haben eine Nachricht an Follower von Partnerunternehmen gesendet"
+)
 
-ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_DE = 'Ihre Auszahlungsanfrage wird überprüft #{transaction_id}'
-UNDER_REVIEW_WITHDRAWAL_TITLE_DE = 'Sie haben die Auszahlung zur Überprüfung übergeben #{transaction_id}'
-ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE = 'Herzlichen Glückwunsch, Ihre Auszahlung wurde abgeschlossen #{transaction_id}'
-ACCEPTED_WITHDRAWAL_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben die Auszahlung abgeschlossen #{transaction_id}'
-ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE = 'Ihre Auszahlung wurde storniert #{transaction_id}'
-DECLINED_WITHDRAWAL_TITLE_DE = 'Sie haben die Auszahlung zur Überprüfung storniert #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_DE = 'Auszahlungsbetrag: {total_withdrawal} {currency}'
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_DE = (
+    "Ihre Auszahlungsanfrage wird überprüft #{transaction_id}"
+)
+UNDER_REVIEW_WITHDRAWAL_TITLE_DE = (
+    "Sie haben die Auszahlung zur Überprüfung übergeben #{transaction_id}"
+)
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE = (
+    "Herzlichen Glückwunsch, Ihre Auszahlung wurde abgeschlossen #{transaction_id}"
+)
+ACCEPTED_WITHDRAWAL_TITLE_DE = (
+    "Herzlichen Glückwunsch, Sie haben die Auszahlung abgeschlossen #{transaction_id}"
+)
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE = (
+    "Ihre Auszahlung wurde storniert #{transaction_id}"
+)
+DECLINED_WITHDRAWAL_TITLE_DE = (
+    "Sie haben die Auszahlung zur Überprüfung storniert #{transaction_id}"
+)
+WITHDRAWAL_DESCRIPTION_DE = "Auszahlungsbetrag: {total_withdrawal} {currency}"
 
-ORGANIZATION_GAVE_TITLE_DE = 'Sie haben die Eigentumsrechte übertragen'
-ORGANIZATION_GAVE_DESCRIPTION_DE = ''
+ORGANIZATION_GAVE_TITLE_DE = "Sie haben die Eigentumsrechte übertragen"
+ORGANIZATION_GAVE_DESCRIPTION_DE = ""
 
-ORGANIZATION_OWN_TITLE_DE = 'Herzlichen Glückwunsch, Sie sind jetzt Eigentümer'
-ORGANIZATION_OWN_DESCRIPTION_DE = ''
+ORGANIZATION_OWN_TITLE_DE = "Herzlichen Glückwunsch, Sie sind jetzt Eigentümer"
+ORGANIZATION_OWN_DESCRIPTION_DE = ""
 
-WITHDRAW_CASHBACK_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Sie haben {amount} {currency} von Ihrem Cashback abgehoben'
-CHARGE_CASHBACK_CLIENT_TITLE_DE = 'Herzlichen Glückwunsch, Ihnen wurde Cashback in Höhe von {amount} {currency} gutgeschrieben'
+WITHDRAW_CASHBACK_CLIENT_TITLE_DE = (
+    "Herzlichen Glückwunsch, Sie haben {amount} {currency} von Ihrem Cashback abgehoben"
+)
+CHARGE_CASHBACK_CLIENT_TITLE_DE = "Herzlichen Glückwunsch, Ihnen wurde Cashback in Höhe von {amount} {currency} gutgeschrieben"
 
-WITHDRAW_CASHBACK_SELLER_TITLE_DE = 'Sie haben {amount} {currency} von Ihrem Cashback abgehoben'
-CHARGE_CASHBACK_SELLER_TITLE_DE = 'Sie haben Cashback in Höhe von {amount} {currency} gutgeschrieben'
+WITHDRAW_CASHBACK_SELLER_TITLE_DE = (
+    "Sie haben {amount} {currency} von Ihrem Cashback abgehoben"
+)
+CHARGE_CASHBACK_SELLER_TITLE_DE = (
+    "Sie haben Cashback in Höhe von {amount} {currency} gutgeschrieben"
+)
 
-NOTIFICATION_DELIVERY_AVAILABLE_TITLE_DE = 'Neue Lieferung verfügbar!!!'
-NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_DE = ''
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_DE = "Neue Lieferung verfügbar!!!"
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_DE = ""
 
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_DE = 'Der Lieferservice kann Ihre Bestellung liefern'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_DE = (
+    "Der Lieferservice kann Ihre Bestellung liefern"
+)
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_DE = ""
 
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_DE = 'Sie haben die Lieferung übernommen'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_DE = (
+    "Sie haben die Lieferung übernommen"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ""
 
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung wurde an den Lieferservice gesendet. Sie werden kontaktiert'
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_DE = (
+    "Ihre Bestellung wurde an den Lieferservice gesendet. Sie werden kontaktiert"
+)
 
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung ist unterwegs'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = 'Ihre Bestellung wurde zur Lieferung übernommen'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = (
+    "Ihre Bestellung ist unterwegs"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = (
+    "Ihre Bestellung wurde zur Lieferung übernommen"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ""
 
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_DE = 'Sie haben Ihre Bestellung storniert'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = 'Die Lieferung Ihrer Bestellung wurde storniert'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = 'Die Lieferung Ihrer Bestellung wurde storniert'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_DELIVERED_TITLE_DE = ''
-NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_DE = 'Ihre Bestellung wurde zugestellt'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_DE = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_DE = 'Ihre Bestellung wurde zugestellt'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_DE = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_DE = (
+    "Sie haben Ihre Bestellung storniert"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_DE = (
+    "Die Lieferung Ihrer Bestellung wurde storniert"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_DE = (
+    "Die Lieferung Ihrer Bestellung wurde storniert"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_DELIVERED_TITLE_DE = ""
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_DE = "Ihre Bestellung wurde zugestellt"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_DE = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_DE = (
+    "Ihre Bestellung wurde zugestellt"
+)
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_DE = ""
 
 # ______________________TURKISH___________________________#
-NEW_COMMENT_TITLE_TR = 'Yeni bir yorumunuz var'
-NEW_COMMENT_DESCRIPTION_TR = '{comment_text}'
+NEW_COMMENT_TITLE_TR = "Yeni bir yorumunuz var"
+NEW_COMMENT_DESCRIPTION_TR = "{comment_text}"
 
-ACCEPT_ORDER_TITLE_TR = 'Siparişinizi onayladınız #{transaction_id}'
-DECLINE_ORDER_TITLE_TR = 'Siparişinizi iptal ettiniz #{transaction_id}'
-REQUEST_ORDER_TITLE_TR = 'Yeni siparişiniz var #{transaction_id}'
+ACCEPT_ORDER_TITLE_TR = "Siparişinizi onayladınız #{transaction_id}"
+DECLINE_ORDER_TITLE_TR = "Siparişinizi iptal ettiniz #{transaction_id}"
+REQUEST_ORDER_TITLE_TR = "Yeni siparişiniz var #{transaction_id}"
 
-ACCEPT_RENTAL_TITLE_TR = 'Kiralama siparişinizi onayladınız #{transaction_id}'
-DECLINE_RENTAL_TITLE_TR = 'Kiralama siparişinizi iptal ettiniz #{transaction_id}'
-REQUEST_RENTAL_TITLE_TR = 'Yeni kiralama siparişiniz var #{transaction_id}'
+ACCEPT_RENTAL_TITLE_TR = "Kiralama siparişinizi onayladınız #{transaction_id}"
+DECLINE_RENTAL_TITLE_TR = "Kiralama siparişinizi iptal ettiniz #{transaction_id}"
+REQUEST_RENTAL_TITLE_TR = "Yeni kiralama siparişiniz var #{transaction_id}"
 
-ACCEPT_RESUME_TITLE_TR = '{resume_name} adlı iş başvurunuzu kabul ettiniz'
-DECLINE_RESUME_TITLE_TR = '{resume_name} adlı iş başvurunuzu reddettiniz'
-REQUEST_RESUME_TITLE_TR = '{resume_name} adlı iş başvurusu aldınız'
+ACCEPT_RESUME_TITLE_TR = "{resume_name} adlı iş başvurunuzu kabul ettiniz"
+DECLINE_RESUME_TITLE_TR = "{resume_name} adlı iş başvurunuzu reddettiniz"
+REQUEST_RESUME_TITLE_TR = "{resume_name} adlı iş başvurusu aldınız"
 
-DECLINE_ORDER_PAYMENT_TITLE_TR = 'Müşteri sipariş ödemesini reddetti #{transaction_id}'
+DECLINE_ORDER_PAYMENT_TITLE_TR = "Müşteri sipariş ödemesini reddetti #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_TITLE_TR = 'Müşteri siparişi ödedi, işlemi tamamlayın #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_TITLE_TR = 'Müşteri sipariş ödemesini reddetti #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_TITLE_TR = (
+    "Müşteri siparişi ödedi, işlemi tamamlayın #{transaction_id}"
+)
+DECLINE_RENTAL_PAYMENT_TITLE_TR = "Müşteri sipariş ödemesini reddetti #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_TITLE_TR = 'Bir müşteri {assistant_position} için ödeme yaptı {assistant_name} 33 gün boyunca #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_TITLE_TR = "Bir müşteri {assistant_position} için ödeme yaptı {assistant_name} 33 gün boyunca #{transaction_id}"
 
-ACCEPT_RENTAL_SALE_TITLE_TR = 'Yeni bir kiralama var #{transaction_id}'
-ACCEPT_RENTAL_SALE_CLIENT_TITLE_TR = 'Kiralama için teşekkür ederiz! Bu makbuzu göstererek gelin.'
+ACCEPT_RENTAL_SALE_TITLE_TR = "Yeni bir kiralama var #{transaction_id}"
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_TR = (
+    "Kiralama için teşekkür ederiz! Bu makbuzu göstererek gelin."
+)
 
-DECLINE_ACCEPTED_RENTAL_TITLE_TR = 'Kiralama işlemini iptal ettiniz, ödemenin iadesi #{transaction_id}'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_TR = 'Kiralama işleminiz iptal edildi, ödemenin iadesi #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_TITLE_TR = (
+    "Kiralama işlemini iptal ettiniz, ödemenin iadesi #{transaction_id}"
+)
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_TR = (
+    "Kiralama işleminiz iptal edildi, ödemenin iadesi #{transaction_id}"
+)
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_TR = 'Siparişiniz ödendi! Çalışanlarımız sizinle iletişime geçecek. #{transaction_id}'
-DECLINE_ORDER_PAYMENT_CLIENT_TITLE_TR = 'Sipariş ödemesini reddettiniz #{transaction_id}'
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_TR = (
+    "Siparişiniz ödendi! Çalışanlarımız sizinle iletişime geçecek. #{transaction_id}"
+)
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_TR = (
+    "Sipariş ödemesini reddettiniz #{transaction_id}"
+)
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR = 'Tebrikler, {assistant_position} işe aldınız 33 gün boyunca {assistant_name} #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR = "Tebrikler, {assistant_position} işe aldınız 33 gün boyunca {assistant_name} #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_TR = 'Tebrikler, siparişiniz ödendi! Bu makbuzu göstererek kiralama hizmetinden faydalanabilirsiniz. #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_TR = 'Kiralama ödemesini reddettiniz #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_TR = "Tebrikler, siparişiniz ödendi! Bu makbuzu göstererek kiralama hizmetinden faydalanabilirsiniz. #{transaction_id}"
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_TR = (
+    "Kiralama ödemesini reddettiniz #{transaction_id}"
+)
 
-ACCEPT_ORDER_CLIENT_TITLE_TR = 'Siparişiniz onaylandı #{transaction_id}'
-DECLINE_ORDER_CLIENT_TITLE_TR = 'Siparişiniz iptal edildi #{transaction_id}'
-REQUEST_ORDER_CLIENT_TITLE_TR = 'Siparişiniz için teşekkür ederiz! Çalışanlarımız sizinle iletişime geçecek.'
+ACCEPT_ORDER_CLIENT_TITLE_TR = "Siparişiniz onaylandı #{transaction_id}"
+DECLINE_ORDER_CLIENT_TITLE_TR = "Siparişiniz iptal edildi #{transaction_id}"
+REQUEST_ORDER_CLIENT_TITLE_TR = (
+    "Siparişiniz için teşekkür ederiz! Çalışanlarımız sizinle iletişime geçecek."
+)
 
-ACCEPT_ONLINE_ORDER_CLIENT_TITLE_TR = 'Siparişiniz ödeme için hazır #{transaction_id}'
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_TR = "Siparişiniz ödeme için hazır #{transaction_id}"
 
-ACCEPT_RENTAL_CLIENT_TITLE_TR = 'Kiralama siparişiniz ödeme için hazır #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_TR = 'Kiralama siparişiniz iptal edildi #{transaction_id}'
-REQUEST_RENTAL_CLIENT_TITLE_TR = 'Siparişiniz için teşekkür ederiz #{transaction_id} !!! Ödeme onayını bekliyoruz.'
+ACCEPT_RENTAL_CLIENT_TITLE_TR = (
+    "Kiralama siparişiniz ödeme için hazır #{transaction_id}"
+)
+DECLINE_RENTAL_CLIENT_TITLE_TR = "Kiralama siparişiniz iptal edildi #{transaction_id}"
+REQUEST_RENTAL_CLIENT_TITLE_TR = (
+    "Siparişiniz için teşekkür ederiz #{transaction_id} !!! Ödeme onayını bekliyoruz."
+)
 
-ACCEPT_RESUME_CLIENT_TITLE_TR = '{resume_name} adlı iş başvurunuz onaylandı'
-DECLINE_RESUME_CLIENT_TITLE_TR = '{resume_name} adlı iş başvurunuz reddedildi'
-REQUEST_RESUME_CLIENT_TITLE_TR = 'Başvurunuz için teşekkür ederiz! Aday, {resume_name} iş başvurunuzla iletişime geçecektir.'
-RESUME_DESCRIPTION_TR = 'Ödeme: {salary_from} {currency}'
+ACCEPT_RESUME_CLIENT_TITLE_TR = "{resume_name} adlı iş başvurunuz onaylandı"
+DECLINE_RESUME_CLIENT_TITLE_TR = "{resume_name} adlı iş başvurunuz reddedildi"
+REQUEST_RESUME_CLIENT_TITLE_TR = "Başvurunuz için teşekkür ederiz! Aday, {resume_name} iş başvurunuzla iletişime geçecektir."
+RESUME_DESCRIPTION_TR = "Ödeme: {salary_from} {currency}"
 
-ACTIVATE_RENTAL_CLIENT_TITLE_TR = 'Kiralama siparişiniz aktive edildi #{transaction_id}'
-ACTIVATE_RENTAL_TITLE_TR = 'Kiralama siparişinizi aktive ettiniz #{transaction_id}'
+ACTIVATE_RENTAL_CLIENT_TITLE_TR = "Kiralama siparişiniz aktive edildi #{transaction_id}"
+ACTIVATE_RENTAL_TITLE_TR = "Kiralama siparişinizi aktive ettiniz #{transaction_id}"
 
-ACTIVATE_TICKET_CLIENT_TITLE_TR = 'Biletiniz aktive edildi #{transaction_id}'
-ACTIVATE_TICKET_TITLE_TR = 'Biletinizi aktive ettiniz #{transaction_id}'
+ACTIVATE_TICKET_CLIENT_TITLE_TR = "Biletiniz aktive edildi #{transaction_id}"
+ACTIVATE_TICKET_TITLE_TR = "Biletinizi aktive ettiniz #{transaction_id}"
 
-ORDER_DESCRIPTION_TR = 'Toplam sipariş tutarı: {total_price} {currency}'
-RENTAL_DESCRIPTION_TR = 'Toplam kiralama tutarı: {total_price} {currency}'
+ORDER_DESCRIPTION_TR = "Toplam sipariş tutarı: {total_price} {currency}"
+RENTAL_DESCRIPTION_TR = "Toplam kiralama tutarı: {total_price} {currency}"
 
-ATTENDANCE_IN_TITLE_TR = '{organization} girişi'
-ATTENDANCE_OUT_TITLE_TR = '{organization} çıkışı'
-CHECK_ATTENDANCE_IN_TITLE_TR = '{organization} giriş izni'
-CHECK_ATTENDANCE_OUT_TITLE_TR = '{organization} çıkış izni'
+ATTENDANCE_IN_TITLE_TR = "{organization} girişi"
+ATTENDANCE_OUT_TITLE_TR = "{organization} çıkışı"
+CHECK_ATTENDANCE_IN_TITLE_TR = "{organization} giriş izni"
+CHECK_ATTENDANCE_OUT_TITLE_TR = "{organization} çıkış izni"
 
-ATTENDANCE_DESCRIPTION_TR = ' '
+ATTENDANCE_DESCRIPTION_TR = " "
 
-FOLLOWED_TO_ORGANIZATION_TITLE_TR = 'Organizasyonunuza abone oldu'
-BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_TR = 'Organizasyonunuza abone oldu'
-ORGANIZATION_FOLLOWED_TITLE_TR = 'Bir organizasyona abone oldunuz'
-BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR = 'Bir organizasyona abone oldunuz'
-DISCOUNT_COMPLETE_USER_TITLE_TR = 'İndirim uygulandı: {discount_percent} %'
-DISCOUNT_COMPLETE_DESCRIPTION_TR = 'İndirimli toplam: {final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE_TR = 'İndirim uygulandı: {discount_percent} %'
+FOLLOWED_TO_ORGANIZATION_TITLE_TR = "Organizasyonunuza abone oldu"
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_TR = "Organizasyonunuza abone oldu"
+ORGANIZATION_FOLLOWED_TITLE_TR = "Bir organizasyona abone oldunuz"
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION_TR = "Bir organizasyona abone oldunuz"
+DISCOUNT_COMPLETE_USER_TITLE_TR = "İndirim uygulandı: {discount_percent} %"
+DISCOUNT_COMPLETE_DESCRIPTION_TR = "İndirimli toplam: {final_amount} {currency}"
+DISCOUNT_COMPLETE_TITLE_TR = "İndirim uygulandı: {discount_percent} %"
 
-NEW_DISCOUNT_TITLE_TR = 'Yeni indirim mevcut: {percent} %'
-NEW_CASHBACK_TITLE_TR = 'Yeni nakit para iadesi mevcut: {percent} %'
+NEW_DISCOUNT_TITLE_TR = "Yeni indirim mevcut: {percent} %"
+NEW_CASHBACK_TITLE_TR = "Yeni nakit para iadesi mevcut: {percent} %"
 
-NEW_DISCOUNT_DESCRIPTION_TR = '{address} '
-PARTNERSHIP_REQUEST_TITLE_TR = '{sender_organization} kuruluşuyla ortaklık isteği'
-PARTNERSHIP_REQUEST_DESCRIPTION_TR = '{address} '
-SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR = '{address} '
-TRANSACTION_DECLINED_NOTIFICATION_TITLE_TR = 'İşlem iptal edildi'
-YOU_DECLINED_NOTIFICATION_TITLE_TR = 'İşlemi iptal ettiniz'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR = 'İndirim: {savings} {currency}'
+NEW_DISCOUNT_DESCRIPTION_TR = "{address} "
+PARTNERSHIP_REQUEST_TITLE_TR = "{sender_organization} kuruluşuyla ortaklık isteği"
+PARTNERSHIP_REQUEST_DESCRIPTION_TR = "{address} "
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR = "{address} "
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_TR = "İşlem iptal edildi"
+YOU_DECLINED_NOTIFICATION_TITLE_TR = "İşlemi iptal ettiniz"
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR = "İndirim: {savings} {currency}"
 
-NEW_ORGANIZATION_TITLE_TR = 'Yeni bir organizasyon sizin için mevcut'
-NEW_ORGANIZATION_DESCRIPTION_TR = '{organization_title} '
+NEW_ORGANIZATION_TITLE_TR = "Yeni bir organizasyon sizin için mevcut"
+NEW_ORGANIZATION_DESCRIPTION_TR = "{organization_title} "
 
-NEW_DEVICE_TITLE_TR = 'Yeni bir kullanıcı etkinleştirme'
-NEW_DEVICE_DESCRIPTION_TR = '{device_title}'
+NEW_DEVICE_TITLE_TR = "Yeni bir kullanıcı etkinleştirme"
+NEW_DEVICE_DESCRIPTION_TR = "{device_title}"
 
-RECRUIT_JOB_TITLE_TR = 'İşe aldınız'
-RECRUIT_JOB_DESCRIPTION_TR = '{position} '
+RECRUIT_JOB_TITLE_TR = "İşe aldınız"
+RECRUIT_JOB_DESCRIPTION_TR = "{position} "
 
-GET_JOB_TITLE_TR = 'İşe alındınız'
-GET_JOB_DESCRIPTION_TR = '{position} '
+GET_JOB_TITLE_TR = "İşe alındınız"
+GET_JOB_DESCRIPTION_TR = "{position} "
 
-CHANGE_JOB_POSITION_TITLE_TR = 'Yeni bir pozisyona atanıldınız'
-CHANGE_JOB_POSITION_DESCRIPTION_TR = '{old_position} pozisyonundan {new_position} pozisyonuna atanıldınız'
+CHANGE_JOB_POSITION_TITLE_TR = "Yeni bir pozisyona atanıldınız"
+CHANGE_JOB_POSITION_DESCRIPTION_TR = (
+    "{old_position} pozisyonundan {new_position} pozisyonuna atanıldınız"
+)
 
-CHANGE_JOB_POSITION_OWNER_TITLE_TR = 'Başka bir pozisyona atama yapıldı'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION_TR = '{old_position} pozisyonundan {new_position} pozisyonuna atanıldınız'
+CHANGE_JOB_POSITION_OWNER_TITLE_TR = "Başka bir pozisyona atama yapıldı"
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_TR = (
+    "{old_position} pozisyonundan {new_position} pozisyonuna atanıldınız"
+)
 
-QUIT_JOB_TITLE_TR = 'İşten çıkarıldınız'
-QUIT_JOB_DESCRIPTION_TR = '{position} '
+QUIT_JOB_TITLE_TR = "İşten çıkarıldınız"
+QUIT_JOB_DESCRIPTION_TR = "{position} "
 
-DISMISS_JOB_TITLE_TR = 'İşten çıkardınız'
-DISMISS_JOB_DESCRIPTION_TR = '{position} '
+DISMISS_JOB_TITLE_TR = "İşten çıkardınız"
+DISMISS_JOB_DESCRIPTION_TR = "{position} "
 
-ORGANIZATION_MESSAGE_TITLE_TR = 'Mesajınız var '
-ORGANIZATION_MESSAGE_PARTNERS_TITLE_TR = 'Ortaklarınıza bir mesajınız var '
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR = 'Ortakların takipçilerine bir mesajınız var '
-ORGANIZATION_MESSAGE_DESCRIPTION_TR = '{content} '
-ORGANIZATION_OWNER_MESSAGE_TITLE_TR = 'Mesaj gönderdiniz'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_TR = 'Ortaklara mesaj gönderdiniz'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR = 'Ortakların takipçilerine mesaj gönderdiniz'
+ORGANIZATION_MESSAGE_TITLE_TR = "Mesajınız var "
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_TR = "Ortaklarınıza bir mesajınız var "
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR = (
+    "Ortakların takipçilerine bir mesajınız var "
+)
+ORGANIZATION_MESSAGE_DESCRIPTION_TR = "{content} "
+ORGANIZATION_OWNER_MESSAGE_TITLE_TR = "Mesaj gönderdiniz"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_TR = "Ortaklara mesaj gönderdiniz"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR = (
+    "Ortakların takipçilerine mesaj gönderdiniz"
+)
 
-ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_TR = 'Çekme talebiniz inceleniyor #{transaction_id}'
-UNDER_REVIEW_WITHDRAWAL_TITLE_TR = 'Çekme talebinizi incelemeye aldınız #{transaction_id}'
-ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_TR = 'Çekme işleminiz tamamlandı #{transaction_id}'
-ACCEPTED_WITHDRAWAL_TITLE_TR = 'Çekme işleminiz tamamlandı #{transaction_id}'
-ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_TR = 'Çekme talebiniz reddedildi #{transaction_id}'
-DECLINED_WITHDRAWAL_TITLE_TR = 'Çekme talebinizi iptal ettiniz #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_TR = 'Toplam çekilen miktar: {total_withdrawal} {currency}'
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_TR = (
+    "Çekme talebiniz inceleniyor #{transaction_id}"
+)
+UNDER_REVIEW_WITHDRAWAL_TITLE_TR = (
+    "Çekme talebinizi incelemeye aldınız #{transaction_id}"
+)
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_TR = (
+    "Çekme işleminiz tamamlandı #{transaction_id}"
+)
+ACCEPTED_WITHDRAWAL_TITLE_TR = "Çekme işleminiz tamamlandı #{transaction_id}"
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_TR = (
+    "Çekme talebiniz reddedildi #{transaction_id}"
+)
+DECLINED_WITHDRAWAL_TITLE_TR = "Çekme talebinizi iptal ettiniz #{transaction_id}"
+WITHDRAWAL_DESCRIPTION_TR = "Toplam çekilen miktar: {total_withdrawal} {currency}"
 
-ORGANIZATION_GAVE_TITLE_TR = 'Sahiplik haklarını devrettiniz'
-ORGANIZATION_GAVE_DESCRIPTION_TR = ' '
+ORGANIZATION_GAVE_TITLE_TR = "Sahiplik haklarını devrettiniz"
+ORGANIZATION_GAVE_DESCRIPTION_TR = " "
 
-ORGANIZATION_OWN_TITLE_TR = 'Tebrikler, sahibi oldunuz'
-ORGANIZATION_OWN_DESCRIPTION_TR = ' '
+ORGANIZATION_OWN_TITLE_TR = "Tebrikler, sahibi oldunuz"
+ORGANIZATION_OWN_DESCRIPTION_TR = " "
 
-WITHDRAW_CASHBACK_CLIENT_TITLE_TR = 'Tebrikler, {amount} {currency} nakit para iadeniz alındı'
-CHARGE_CASHBACK_CLIENT_TITLE_TR = 'Tebrikler, {amount} {currency} nakit para iadeniz yatırıldı'
+WITHDRAW_CASHBACK_CLIENT_TITLE_TR = (
+    "Tebrikler, {amount} {currency} nakit para iadeniz alındı"
+)
+CHARGE_CASHBACK_CLIENT_TITLE_TR = (
+    "Tebrikler, {amount} {currency} nakit para iadeniz yatırıldı"
+)
 
-WITHDRAW_CASHBACK_SELLER_TITLE_TR = 'Tebrikler, {amount} {currency} nakit para iadenizi çektiniz'
-CHARGE_CASHBACK_SELLER_TITLE_TR = 'Tebrikler, {amount} {currency} nakit para iadenizi aldınız'
+WITHDRAW_CASHBACK_SELLER_TITLE_TR = (
+    "Tebrikler, {amount} {currency} nakit para iadenizi çektiniz"
+)
+CHARGE_CASHBACK_SELLER_TITLE_TR = (
+    "Tebrikler, {amount} {currency} nakit para iadenizi aldınız"
+)
 
-NOTIFICATION_DELIVERY_AVAILABLE_TITLE_TR = 'Yeni bir sipariş mevcut!!!'
-NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_TR = 'Kurye servisi siparişinizi teslim edebilir'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_TR = 'Siparişi teslim etmek üzere aldınız'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_TR = 'Siparişiniz kurye servisine gönderildi. Sizinle iletişime geçecekler '
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_TR = 'Siparişiniz yolda'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_TR = 'Siparişiniz teslimat için alındı'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_TR = ''
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_TR = "Yeni bir sipariş mevcut!!!"
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_TR = (
+    "Kurye servisi siparişinizi teslim edebilir"
+)
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_TR = (
+    "Siparişi teslim etmek üzere aldınız"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_TR = (
+    "Siparişiniz kurye servisine gönderildi. Sizinle iletişime geçecekler "
+)
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_TR = "Siparişiniz yolda"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_TR = (
+    "Siparişiniz teslimat için alındı"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_TR = ""
 
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_TR = 'Siparişi iptal ettiniz'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_TR = 'Sipariş teslimatı iptal edildi'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_TR = 'Sipariş teslimatı iptal edildi'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_DELIVERED_TITLE_TR = ''
-NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_TR = 'Siparişiniz teslim edildi'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_TR = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_TR = 'Siparişiniz teslim edildi'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_TR = ''
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_TR = "Siparişi iptal ettiniz"
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_TR = (
+    "Sipariş teslimatı iptal edildi"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_TR = (
+    "Sipariş teslimatı iptal edildi"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_DELIVERED_TITLE_TR = ""
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_TR = "Siparişiniz teslim edildi"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_TR = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_TR = "Siparişiniz teslim edildi"
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_TR = ""
 
 # ______________________CHINESE___________________________#
-NEW_COMMENT_TITLE_ZH = '您有新评论'
-NEW_COMMENT_DESCRIPTION_ZH = '{comment_text}'
+NEW_COMMENT_TITLE_ZH = "您有新评论"
+NEW_COMMENT_DESCRIPTION_ZH = "{comment_text}"
 
-ACCEPT_ORDER_TITLE_ZH = '您已接受订单 #{transaction_id}'
-DECLINE_ORDER_TITLE_ZH = '您已取消订单 #{transaction_id}'
-REQUEST_ORDER_TITLE_ZH = '您有新订单 #{transaction_id}'
+ACCEPT_ORDER_TITLE_ZH = "您已接受订单 #{transaction_id}"
+DECLINE_ORDER_TITLE_ZH = "您已取消订单 #{transaction_id}"
+REQUEST_ORDER_TITLE_ZH = "您有新订单 #{transaction_id}"
 
-ACCEPT_RENTAL_TITLE_ZH = '您已接受租赁订单 #{transaction_id}'
-DECLINE_RENTAL_TITLE_ZH = '您已取消租赁订单 #{transaction_id}'
-REQUEST_RENTAL_TITLE_ZH = '您有新租赁订单 #{transaction_id}'
+ACCEPT_RENTAL_TITLE_ZH = "您已接受租赁订单 #{transaction_id}"
+DECLINE_RENTAL_TITLE_ZH = "您已取消租赁订单 #{transaction_id}"
+REQUEST_RENTAL_TITLE_ZH = "您有新租赁订单 #{transaction_id}"
 
-ACCEPT_RESUME_TITLE_ZH = '您已接受对职位的请求：{resume_name}'
-DECLINE_RESUME_TITLE_ZH = '您已拒绝对职位的请求：{resume_name}'
-REQUEST_RESUME_TITLE_ZH = '您有新的对职位的请求：{resume_name}'
+ACCEPT_RESUME_TITLE_ZH = "您已接受对职位的请求：{resume_name}"
+DECLINE_RESUME_TITLE_ZH = "您已拒绝对职位的请求：{resume_name}"
+REQUEST_RESUME_TITLE_ZH = "您有新的对职位的请求：{resume_name}"
 
-DECLINE_ORDER_PAYMENT_TITLE_ZH = '客户拒绝支付订单 #{transaction_id}'
+DECLINE_ORDER_PAYMENT_TITLE_ZH = "客户拒绝支付订单 #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_TITLE_ZH = '客户已支付订单，请完成交易 #{transaction_id}'
-DECLINE_RENTAL_PAYMENT_TITLE_ZH = '客户拒绝支付订单 #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_TITLE_ZH = "客户已支付订单，请完成交易 #{transaction_id}"
+DECLINE_RENTAL_PAYMENT_TITLE_ZH = "客户拒绝支付订单 #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH = '一位客户为 {assistant_position} {assistant_name} 支付了 33 天的费用 #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH = "一位客户为 {assistant_position} {assistant_name} 支付了 33 天的费用 #{transaction_id}"
 
-ACCEPT_RENTAL_SALE_TITLE_ZH = '您有新的租赁订单 #{transaction_id}'
-ACCEPT_RENTAL_SALE_CLIENT_TITLE_ZH = '感谢您租赁！期待您出示此凭证。'
+ACCEPT_RENTAL_SALE_TITLE_ZH = "您有新的租赁订单 #{transaction_id}"
+ACCEPT_RENTAL_SALE_CLIENT_TITLE_ZH = "感谢您租赁！期待您出示此凭证。"
 
-DECLINE_ACCEPTED_RENTAL_TITLE_ZH = '您取消了租赁交易，返还支付 #{transaction_id}'
-DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_ZH = '您的租赁交易已取消，返还支付 #{transaction_id}'
+DECLINE_ACCEPTED_RENTAL_TITLE_ZH = "您取消了租赁交易，返还支付 #{transaction_id}"
+DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_ZH = (
+    "您的租赁交易已取消，返还支付 #{transaction_id}"
+)
 
-ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH = '您的订单已支付！我们的员工将与您联系。#{transaction_id}'
-DECLINE_ORDER_PAYMENT_CLIENT_TITLE_ZH = '您拒绝支付订单 #{transaction_id}'
+ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH = (
+    "您的订单已支付！我们的员工将与您联系。#{transaction_id}"
+)
+DECLINE_ORDER_PAYMENT_CLIENT_TITLE_ZH = "您拒绝支付订单 #{transaction_id}"
 
-ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH = '恭喜您，您聘用了 {assistant_position}。{assistant_name}，为期 33 天 #{transaction_id}'
+ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH = "恭喜您，您聘用了 {assistant_position}。{assistant_name}，为期 33 天 #{transaction_id}"
 
-ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_ZH = '恭喜您，订单已支付！请出示此凭证使用租赁。#{transaction_id}'
-DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_ZH = '您拒绝支付租赁订单 #{transaction_id}'
+ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_ZH = (
+    "恭喜您，订单已支付！请出示此凭证使用租赁。#{transaction_id}"
+)
+DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_ZH = "您拒绝支付租赁订单 #{transaction_id}"
 
-ACCEPT_ORDER_CLIENT_TITLE_ZH = '您的订单已接受 #{transaction_id}'
-DECLINE_ORDER_CLIENT_TITLE_ZH = '您的订单已取消 #{transaction_id}'
-REQUEST_ORDER_CLIENT_TITLE_ZH = '感谢您的订单！我们的员工将与您联系。'
+ACCEPT_ORDER_CLIENT_TITLE_ZH = "您的订单已接受 #{transaction_id}"
+DECLINE_ORDER_CLIENT_TITLE_ZH = "您的订单已取消 #{transaction_id}"
+REQUEST_ORDER_CLIENT_TITLE_ZH = "感谢您的订单！我们的员工将与您联系。"
 
-ACCEPT_ONLINE_ORDER_CLIENT_TITLE_ZH = '您的在线订单已准备支付 #{transaction_id}'
+ACCEPT_ONLINE_ORDER_CLIENT_TITLE_ZH = "您的在线订单已准备支付 #{transaction_id}"
 
-ACCEPT_RENTAL_CLIENT_TITLE_ZH = '您的租赁订单已准备支付 #{transaction_id}'
-DECLINE_RENTAL_CLIENT_TITLE_ZH = '您的租赁订单已取消 #{transaction_id}'
-REQUEST_RENTAL_CLIENT_TITLE_ZH = '感谢您的订单 #{transaction_id}！等待租赁支付确认。'
+ACCEPT_RENTAL_CLIENT_TITLE_ZH = "您的租赁订单已准备支付 #{transaction_id}"
+DECLINE_RENTAL_CLIENT_TITLE_ZH = "您的租赁订单已取消 #{transaction_id}"
+REQUEST_RENTAL_CLIENT_TITLE_ZH = "感谢您的订单 #{transaction_id}！等待租赁支付确认。"
 
-ACCEPT_RESUME_CLIENT_TITLE_ZH = '您的职位请求已被接受：{resume_name}'
-DECLINE_RESUME_CLIENT_TITLE_ZH = '您的职位请求已被拒绝：{resume_name}'
-REQUEST_RESUME_CLIENT_TITLE_ZH = '感谢您的请求！求职者将与您联系，有关职位：{resume_name}'
-RESUME_DESCRIPTION_ZH = '薪资范围：{salary_from} {currency}'
+ACCEPT_RESUME_CLIENT_TITLE_ZH = "您的职位请求已被接受：{resume_name}"
+DECLINE_RESUME_CLIENT_TITLE_ZH = "您的职位请求已被拒绝：{resume_name}"
+REQUEST_RESUME_CLIENT_TITLE_ZH = (
+    "感谢您的请求！求职者将与您联系，有关职位：{resume_name}"
+)
+RESUME_DESCRIPTION_ZH = "薪资范围：{salary_from} {currency}"
 
-ACTIVATE_RENTAL_CLIENT_TITLE_ZH = '您的租赁订单已激活 #{transaction_id}'
-ACTIVATE_RENTAL_TITLE_ZH = '您已激活租赁订单 #{transaction_id}'
+ACTIVATE_RENTAL_CLIENT_TITLE_ZH = "您的租赁订单已激活 #{transaction_id}"
+ACTIVATE_RENTAL_TITLE_ZH = "您已激活租赁订单 #{transaction_id}"
 
-ACTIVATE_TICKET_CLIENT_TITLE_ZH = '您的票已激活 #{transaction_id}'
-ACTIVATE_TICKET_TITLE_ZH = '您已激活票 #{transaction_id}'
+ACTIVATE_TICKET_CLIENT_TITLE_ZH = "您的票已激活 #{transaction_id}"
+ACTIVATE_TICKET_TITLE_ZH = "您已激活票 #{transaction_id}"
 
-ORDER_DESCRIPTION_ZH = '订单金额：{total_price} {currency}'
-RENTAL_DESCRIPTION_ZH = '订单金额：{total_price} {currency}'
+ORDER_DESCRIPTION_ZH = "订单金额：{total_price} {currency}"
+RENTAL_DESCRIPTION_ZH = "订单金额：{total_price} {currency}"
 
-ATTENDANCE_IN_TITLE_ZH = '进入 {organization}'
-ATTENDANCE_OUT_TITLE_ZH = '离开 {organization}'
-CHECK_ATTENDANCE_IN_TITLE_ZH = '进入 {organization} 的通行证'
-CHECK_ATTENDANCE_OUT_TITLE_ZH = '离开 {organization} 的通行证'
+ATTENDANCE_IN_TITLE_ZH = "进入 {organization}"
+ATTENDANCE_OUT_TITLE_ZH = "离开 {organization}"
+CHECK_ATTENDANCE_IN_TITLE_ZH = "进入 {organization} 的通行证"
+CHECK_ATTENDANCE_OUT_TITLE_ZH = "离开 {organization} 的通行证"
 
-ATTENDANCE_DESCRIPTION_ZH = ' '
+ATTENDANCE_DESCRIPTION_ZH = " "
 
-FOLLOWED_TO_ORGANIZATION_TITLE_ZH = '有人关注您的组织'
-BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_ZH = '有人关注您的组织'
-ORGANIZATION_FOLLOWED_TITLE_ZH = '您关注了该组织'
-BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH = '您关注了该组织'
-DISCOUNT_COMPLETE_USER_TITLE_ZH = '您获得了 {discount_percent} 折扣'
-DISCOUNT_COMPLETE_DESCRIPTION_ZH = '折扣后总额：{final_amount} {currency}'
-DISCOUNT_COMPLETE_TITLE_ZH = '您提供了 {discount_percent} 折扣'
+FOLLOWED_TO_ORGANIZATION_TITLE_ZH = "有人关注您的组织"
+BG_FOLLOWED_TO_ORGANIZATION_DESCRIPTION_ZH = "有人关注您的组织"
+ORGANIZATION_FOLLOWED_TITLE_ZH = "您关注了该组织"
+BG_ORGANIZATION_FOLLOWED_DESCRIPTION_ZH = "您关注了该组织"
+DISCOUNT_COMPLETE_USER_TITLE_ZH = "您获得了 {discount_percent} 折扣"
+DISCOUNT_COMPLETE_DESCRIPTION_ZH = "折扣后总额：{final_amount} {currency}"
+DISCOUNT_COMPLETE_TITLE_ZH = "您提供了 {discount_percent} 折扣"
 
-NEW_DISCOUNT_TITLE_ZH = '有新的 {percent} 折扣'
-NEW_CASHBACK_TITLE_ZH = '有新的 {percent} 返现'
+NEW_DISCOUNT_TITLE_ZH = "有新的 {percent} 折扣"
+NEW_CASHBACK_TITLE_ZH = "有新的 {percent} 返现"
 
-NEW_DISCOUNT_DESCRIPTION_ZH = '{address} '
-PARTNERSHIP_REQUEST_TITLE_ZH = '{sender_organization} 请求成为 {recipient_organization} 的合作伙伴'
-PARTNERSHIP_REQUEST_DESCRIPTION_ZH = '{address} '
-SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH = '{address} '
-TRANSACTION_DECLINED_NOTIFICATION_TITLE_ZH = '您的交易已被取消'
-YOU_DECLINED_NOTIFICATION_TITLE_ZH = '您取消了交易'
-TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_ZH = '折扣 {savings} {currency}'
+NEW_DISCOUNT_DESCRIPTION_ZH = "{address} "
+PARTNERSHIP_REQUEST_TITLE_ZH = (
+    "{sender_organization} 请求成为 {recipient_organization} 的合作伙伴"
+)
+PARTNERSHIP_REQUEST_DESCRIPTION_ZH = "{address} "
+SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH = "{address} "
+TRANSACTION_DECLINED_NOTIFICATION_TITLE_ZH = "您的交易已被取消"
+YOU_DECLINED_NOTIFICATION_TITLE_ZH = "您取消了交易"
+TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_ZH = "折扣 {savings} {currency}"
 
-NEW_ORGANIZATION_TITLE_ZH = '有新的组织可供您选择'
-NEW_ORGANIZATION_DESCRIPTION_ZH = '{organization_title} '
+NEW_ORGANIZATION_TITLE_ZH = "有新的组织可供您选择"
+NEW_ORGANIZATION_DESCRIPTION_ZH = "{organization_title} "
 
-NEW_DEVICE_TITLE_ZH = '新用户激活'
-NEW_DEVICE_DESCRIPTION_ZH = '{device_title}'
+NEW_DEVICE_TITLE_ZH = "新用户激活"
+NEW_DEVICE_DESCRIPTION_ZH = "{device_title}"
 
-RECRUIT_JOB_TITLE_ZH = '您已雇佣'
-RECRUIT_JOB_DESCRIPTION_ZH = '{position} '
+RECRUIT_JOB_TITLE_ZH = "您已雇佣"
+RECRUIT_JOB_DESCRIPTION_ZH = "{position} "
 
-GET_JOB_TITLE_ZH = '您已被雇佣'
-GET_JOB_DESCRIPTION_ZH = '{position} '
+GET_JOB_TITLE_ZH = "您已被雇佣"
+GET_JOB_DESCRIPTION_ZH = "{position} "
 
-CHANGE_JOB_POSITION_TITLE_ZH = '您已调整职位'
-CHANGE_JOB_POSITION_DESCRIPTION_ZH = '从 {old_position} 到 {new_position}'
+CHANGE_JOB_POSITION_TITLE_ZH = "您已调整职位"
+CHANGE_JOB_POSITION_DESCRIPTION_ZH = "从 {old_position} 到 {new_position}"
 
-CHANGE_JOB_POSITION_OWNER_TITLE_ZH = '您已调整职位'
-CHANGE_JOB_POSITION_OWNER_DESCRIPTION_ZH = '从 {old_position} 到 {new_position}'
+CHANGE_JOB_POSITION_OWNER_TITLE_ZH = "您已调整职位"
+CHANGE_JOB_POSITION_OWNER_DESCRIPTION_ZH = "从 {old_position} 到 {new_position}"
 
-QUIT_JOB_TITLE_ZH = '您已被解雇'
-QUIT_JOB_DESCRIPTION_ZH = '{position} '
+QUIT_JOB_TITLE_ZH = "您已被解雇"
+QUIT_JOB_DESCRIPTION_ZH = "{position} "
 
-DISMISS_JOB_TITLE_ZH = '您已解雇'
-DISMISS_JOB_DESCRIPTION_ZH = '{position} '
+DISMISS_JOB_TITLE_ZH = "您已解雇"
+DISMISS_JOB_DESCRIPTION_ZH = "{position} "
 
-ORGANIZATION_MESSAGE_TITLE_ZH = '来自 {organization} 的消息'
-ORGANIZATION_MESSAGE_PARTNERS_TITLE_ZH = '给合作伙伴的消息来自 {organization} '
-ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH = '给合作伙伴关注者的消息来自 {organization} '
-ORGANIZATION_MESSAGE_DESCRIPTION_ZH = '{content} '
-ORGANIZATION_OWNER_MESSAGE_TITLE_ZH = '您发送了消息'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_ZH = '您发送了消息给合作伙伴'
-ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH = '您发送了消息给合作伙伴关注者'
+ORGANIZATION_MESSAGE_TITLE_ZH = "来自 {organization} 的消息"
+ORGANIZATION_MESSAGE_PARTNERS_TITLE_ZH = "给合作伙伴的消息来自 {organization} "
+ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH = (
+    "给合作伙伴关注者的消息来自 {organization} "
+)
+ORGANIZATION_MESSAGE_DESCRIPTION_ZH = "{content} "
+ORGANIZATION_OWNER_MESSAGE_TITLE_ZH = "您发送了消息"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_ZH = "您发送了消息给合作伙伴"
+ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH = "您发送了消息给合作伙伴关注者"
 
-ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_ZH = '您的提现正在审核中 #{transaction_id}'
-UNDER_REVIEW_WITHDRAWAL_TITLE_ZH = '您提交了提现申请 #{transaction_id}'
-ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_ZH = '恭喜，您的提现已完成 #{transaction_id}'
-ACCEPTED_WITHDRAWAL_TITLE_ZH = '恭喜，您已完成提现 #{transaction_id}'
-ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_ZH = '很抱歉，您的提现已取消 #{transaction_id}'
-DECLINED_WITHDRAWAL_TITLE_ZH = '您取消了提现审核 #{transaction_id}'
-WITHDRAWAL_DESCRIPTION_ZH = '提现金额：{total_withdrawal} {currency}'
+ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_ZH = "您的提现正在审核中 #{transaction_id}"
+UNDER_REVIEW_WITHDRAWAL_TITLE_ZH = "您提交了提现申请 #{transaction_id}"
+ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_ZH = "恭喜，您的提现已完成 #{transaction_id}"
+ACCEPTED_WITHDRAWAL_TITLE_ZH = "恭喜，您已完成提现 #{transaction_id}"
+ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_ZH = "很抱歉，您的提现已取消 #{transaction_id}"
+DECLINED_WITHDRAWAL_TITLE_ZH = "您取消了提现审核 #{transaction_id}"
+WITHDRAWAL_DESCRIPTION_ZH = "提现金额：{total_withdrawal} {currency}"
 
-ORGANIZATION_GAVE_TITLE_ZH = '您转让了组织所有权'
-ORGANIZATION_GAVE_DESCRIPTION_ZH = ' '
+ORGANIZATION_GAVE_TITLE_ZH = "您转让了组织所有权"
+ORGANIZATION_GAVE_DESCRIPTION_ZH = " "
 
-ORGANIZATION_OWN_TITLE_ZH = '恭喜，您成为组织所有者'
-ORGANIZATION_OWN_DESCRIPTION_ZH = ' '
+ORGANIZATION_OWN_TITLE_ZH = "恭喜，您成为组织所有者"
+ORGANIZATION_OWN_DESCRIPTION_ZH = " "
 
-WITHDRAW_CASHBACK_CLIENT_TITLE_ZH = '恭喜，您提取了 {amount} {currency} 的返现'
-CHARGE_CASHBACK_CLIENT_TITLE_ZH = '恭喜，您获得了 {amount} {currency} 的返现'
+WITHDRAW_CASHBACK_CLIENT_TITLE_ZH = "恭喜，您提取了 {amount} {currency} 的返现"
+CHARGE_CASHBACK_CLIENT_TITLE_ZH = "恭喜，您获得了 {amount} {currency} 的返现"
 
-WITHDRAW_CASHBACK_SELLER_TITLE_ZH = '您提取了 {amount} {currency} 的返现'
-CHARGE_CASHBACK_SELLER_TITLE_ZH = '您为返现提取了 {amount} {currency}'
+WITHDRAW_CASHBACK_SELLER_TITLE_ZH = "您提取了 {amount} {currency} 的返现"
+CHARGE_CASHBACK_SELLER_TITLE_ZH = "您为返现提取了 {amount} {currency}"
 
-NOTIFICATION_DELIVERY_AVAILABLE_TITLE_ZH = '有新订单可用！'
-NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_ZH = '快递服务可以为您提供送货服务'
-NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_ZH = '您已接受交付订单'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_ZH = '您的订单已提交给快递服务，他们将与您联系'
-NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_ZH = '您的订单正在途中'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_ZH = '您的订单已经交付服务处理'
-NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_ZH = ''
+NOTIFICATION_DELIVERY_AVAILABLE_TITLE_ZH = "有新订单可用！"
+NOTIFICATION_DELIVERY_AVAILABLE_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_TITLE_ZH = (
+    "快递服务可以为您提供送货服务"
+)
+NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_ZH = "您已接受交付订单"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_ZH = (
+    "您的订单已提交给快递服务，他们将与您联系"
+)
+NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_ZH = "您的订单正在途中"
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_ZH = (
+    "您的订单已经交付服务处理"
+)
+NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_ZH = ""
 
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_ZH = '您已取消订单'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_ZH = '您的订单交付已取消'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_ZH = '您的订单交付已取消'
-NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_DELIVERED_TITLE_ZH = ''
-NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_ZH = '您的订单已交付'
-NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_ZH = ''
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_ZH = '您的订单已交付'
-NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_ZH = ''
-
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_TITLE_ZH = "您已取消订单"
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_TITLE_ZH = (
+    "您的订单交付已取消"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_ZH = (
+    "您的订单交付已取消"
+)
+NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_DELIVERED_TITLE_ZH = ""
+NOTIFICATION_TYPE_DELIVERED_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_TITLE_ZH = "您的订单已交付"
+NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT_DESCRIPTION_ZH = ""
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_TITLE_ZH = "您的订单已交付"
+NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION_DESCRIPTION_ZH = ""
 
 
 def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -> dict:
@@ -1093,1640 +1385,2950 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
     notification_str = dict()
 
     if notification_type == NEW_ORGANIZATION:
-        notification_str = dict(title=NEW_ORGANIZATION_TITLE,
-                                description=NEW_ORGANIZATION_DESCRIPTION.format(
-                                    organization_title=extra_data.get('organization_title')),
-                                title_ru=NEW_ORGANIZATION_TITLE_RU,
-                                description_ru=NEW_ORGANIZATION_DESCRIPTION_RU.format(
-                                    organization_title=extra_data.get('organization_title')),
-                                title_de=NEW_ORGANIZATION_TITLE_DE,
-                                description_de=NEW_ORGANIZATION_DESCRIPTION_DE.format(
-                                    organization_title=extra_data.get('organization_title')),
-                                title_tr=NEW_ORGANIZATION_TITLE_TR,
-                                description_tr=NEW_ORGANIZATION_DESCRIPTION_TR.format(
-                                    organization_title=extra_data.get('organization_title')),
-                                title_zh=NEW_ORGANIZATION_TITLE_ZH,
-                                description_zh=NEW_ORGANIZATION_DESCRIPTION_ZH.format(
-                                    organization_title=extra_data.get('organization_title'))
-                                )
+        notification_str = dict(
+            title=NEW_ORGANIZATION_TITLE,
+            description=NEW_ORGANIZATION_DESCRIPTION.format(
+                organization_title=extra_data.get("organization_title")
+            ),
+            title_ru=NEW_ORGANIZATION_TITLE_RU,
+            description_ru=NEW_ORGANIZATION_DESCRIPTION_RU.format(
+                organization_title=extra_data.get("organization_title")
+            ),
+            title_de=NEW_ORGANIZATION_TITLE_DE,
+            description_de=NEW_ORGANIZATION_DESCRIPTION_DE.format(
+                organization_title=extra_data.get("organization_title")
+            ),
+            title_tr=NEW_ORGANIZATION_TITLE_TR,
+            description_tr=NEW_ORGANIZATION_DESCRIPTION_TR.format(
+                organization_title=extra_data.get("organization_title")
+            ),
+            title_zh=NEW_ORGANIZATION_TITLE_ZH,
+            description_zh=NEW_ORGANIZATION_DESCRIPTION_ZH.format(
+                organization_title=extra_data.get("organization_title")
+            ),
+        )
 
     elif notification_type == NEW_DEVICE:
-        notification_str = dict(title=NEW_DEVICE_TITLE,
-                                description=NEW_DEVICE_DESCRIPTION.format(
-                                    device_title=extra_data.get('device_title')),
-                                title_ru=NEW_DEVICE_TITLE_RU,
-                                description_ru=NEW_DEVICE_DESCRIPTION_RU.format(
-                                    device_title=extra_data.get('device_title'),
-                                    location=extra_data.get('location')),
-                                title_de=NEW_DEVICE_TITLE_DE,
-                                description_de=NEW_DEVICE_DESCRIPTION_DE.format(
-                                    device_title=extra_data.get('device_title'),
-                                    location=extra_data.get('location')),
-                                title_tr=NEW_DEVICE_TITLE_TR,
-                                description_tr=NEW_DEVICE_DESCRIPTION_TR.format(
-                                    device_title=extra_data.get('device_title'),
-                                    location=extra_data.get('location')),
-                                title_zh=NEW_DEVICE_TITLE_ZH,
-                                description_zh=NEW_DEVICE_DESCRIPTION_ZH.format(
-                                    device_title=extra_data.get('device_title'),
-                                    location=extra_data.get('location'))
-                                )
+        notification_str = dict(
+            title=NEW_DEVICE_TITLE,
+            description=NEW_DEVICE_DESCRIPTION.format(
+                device_title=extra_data.get("device_title")
+            ),
+            title_ru=NEW_DEVICE_TITLE_RU,
+            description_ru=NEW_DEVICE_DESCRIPTION_RU.format(
+                device_title=extra_data.get("device_title"),
+                location=extra_data.get("location"),
+            ),
+            title_de=NEW_DEVICE_TITLE_DE,
+            description_de=NEW_DEVICE_DESCRIPTION_DE.format(
+                device_title=extra_data.get("device_title"),
+                location=extra_data.get("location"),
+            ),
+            title_tr=NEW_DEVICE_TITLE_TR,
+            description_tr=NEW_DEVICE_DESCRIPTION_TR.format(
+                device_title=extra_data.get("device_title"),
+                location=extra_data.get("location"),
+            ),
+            title_zh=NEW_DEVICE_TITLE_ZH,
+            description_zh=NEW_DEVICE_DESCRIPTION_ZH.format(
+                device_title=extra_data.get("device_title"),
+                location=extra_data.get("location"),
+            ),
+        )
 
     elif notification_type == ORGANIZATION_OWN_TYPE:
-        notification_str = dict(title=ORGANIZATION_OWN_TITLE,
-                                description=ORGANIZATION_OWN_DESCRIPTION,
-                                title_ru=ORGANIZATION_OWN_TITLE_RU,
-                                description_ru=ORGANIZATION_OWN_DESCRIPTION,
-                                title_de=ORGANIZATION_OWN_TITLE_DE,
-                                description_de=ORGANIZATION_OWN_DESCRIPTION_DE,
-                                title_tr=ORGANIZATION_OWN_TITLE_TR,
-                                description_tr=ORGANIZATION_OWN_DESCRIPTION_TR,
-                                title_zh=ORGANIZATION_OWN_TITLE_ZH,
-                                description_zh=ORGANIZATION_OWN_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=ORGANIZATION_OWN_TITLE,
+            description=ORGANIZATION_OWN_DESCRIPTION,
+            title_ru=ORGANIZATION_OWN_TITLE_RU,
+            description_ru=ORGANIZATION_OWN_DESCRIPTION,
+            title_de=ORGANIZATION_OWN_TITLE_DE,
+            description_de=ORGANIZATION_OWN_DESCRIPTION_DE,
+            title_tr=ORGANIZATION_OWN_TITLE_TR,
+            description_tr=ORGANIZATION_OWN_DESCRIPTION_TR,
+            title_zh=ORGANIZATION_OWN_TITLE_ZH,
+            description_zh=ORGANIZATION_OWN_DESCRIPTION_ZH,
+        )
 
     elif notification_type == ORGANIZATION_GAVE_TYPE:
-        notification_str = dict(title=ORGANIZATION_GAVE_TITLE,
-                                description=ORGANIZATION_GAVE_DESCRIPTION,
-                                title_ru=ORGANIZATION_GAVE_TITLE_RU,
-                                description_ru=ORGANIZATION_GAVE_DESCRIPTION,
-                                title_de=ORGANIZATION_GAVE_TITLE_DE,
-                                description_de=ORGANIZATION_GAVE_DESCRIPTION_DE,
-                                title_tr=ORGANIZATION_GAVE_TITLE_TR,
-                                description_tr=ORGANIZATION_GAVE_DESCRIPTION_TR,
-                                title_zh=ORGANIZATION_GAVE_TITLE_ZH,
-                                description_zh=ORGANIZATION_GAVE_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=ORGANIZATION_GAVE_TITLE,
+            description=ORGANIZATION_GAVE_DESCRIPTION,
+            title_ru=ORGANIZATION_GAVE_TITLE_RU,
+            description_ru=ORGANIZATION_GAVE_DESCRIPTION,
+            title_de=ORGANIZATION_GAVE_TITLE_DE,
+            description_de=ORGANIZATION_GAVE_DESCRIPTION_DE,
+            title_tr=ORGANIZATION_GAVE_TITLE_TR,
+            description_tr=ORGANIZATION_GAVE_DESCRIPTION_TR,
+            title_zh=ORGANIZATION_GAVE_TITLE_ZH,
+            description_zh=ORGANIZATION_GAVE_DESCRIPTION_ZH,
+        )
 
     elif notification_type == ORGANIZATION_MESSAGE_TYPE:
-        title_ru = ''
-        title = ''
-        title_de = ''
-        title_tr = ''
-        title_zh = ''
-        if extra_data.get('message_to') == 'organization_followers':
+        title_ru = ""
+        title = ""
+        title_de = ""
+        title_tr = ""
+        title_zh = ""
+        if extra_data.get("message_to") == "organization_followers":
             title = ORGANIZATION_MESSAGE_TITLE
             title_ru = ORGANIZATION_MESSAGE_TITLE_RU
             title_de = ORGANIZATION_MESSAGE_TITLE_DE
             title_tr = ORGANIZATION_MESSAGE_TITLE_TR
             title_zh = ORGANIZATION_MESSAGE_TITLE_ZH
-        elif extra_data.get('message_to') == 'partners_followers':
+        elif extra_data.get("message_to") == "partners_followers":
             title = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             title_ru = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
             title_de = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE
             title_tr = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR
             title_zh = ORGANIZATION_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH
-        elif extra_data.get('message_to') == 'partners_members':
+        elif extra_data.get("message_to") == "partners_members":
             title = ORGANIZATION_MESSAGE_PARTNERS_TITLE
             title_ru = ORGANIZATION_MESSAGE_PARTNERS_TITLE_RU
             title_de = ORGANIZATION_MESSAGE_PARTNERS_TITLE_DE
             title_tr = ORGANIZATION_MESSAGE_PARTNERS_TITLE_TR
             title_zh = ORGANIZATION_MESSAGE_PARTNERS_TITLE_ZH
-        notification_str = dict(title=title,
-                                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(
-                                    content=extra_data.get('content')),
-                                title_ru=title_ru,
-                                description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
-                                    content=extra_data.get('content')),
-                                title_de=title_de,
-                                description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(
-                                    content=extra_data.get('content')),
-                                title_tr=title_tr,
-                                description_tr=ORGANIZATION_MESSAGE_DESCRIPTION_TR.format(
-                                    content=extra_data.get('content')),
-                                title_zh=title_zh,
-                                description_zh=ORGANIZATION_MESSAGE_DESCRIPTION_ZH.format(
-                                    content=extra_data.get('content'))
-                                )
+        notification_str = dict(
+            title=title,
+            description=ORGANIZATION_MESSAGE_DESCRIPTION.format(
+                content=extra_data.get("content")
+            ),
+            title_ru=title_ru,
+            description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
+                content=extra_data.get("content")
+            ),
+            title_de=title_de,
+            description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(
+                content=extra_data.get("content")
+            ),
+            title_tr=title_tr,
+            description_tr=ORGANIZATION_MESSAGE_DESCRIPTION_TR.format(
+                content=extra_data.get("content")
+            ),
+            title_zh=title_zh,
+            description_zh=ORGANIZATION_MESSAGE_DESCRIPTION_ZH.format(
+                content=extra_data.get("content")
+            ),
+        )
 
     elif notification_type == ORGANIZATION_MESSAGE_SENDER_TYPE:
-        title_ru = ''
-        title = ''
-        title_de = ''
-        title_tr = ''
-        title_zh = ''
-        if extra_data.get('message_to') == 'organization_followers':
+        title_ru = ""
+        title = ""
+        title_de = ""
+        title_tr = ""
+        title_zh = ""
+        if extra_data.get("message_to") == "organization_followers":
             title = ORGANIZATION_OWNER_MESSAGE_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_TITLE_RU
             title_de = ORGANIZATION_OWNER_MESSAGE_TITLE_DE
             title_tr = ORGANIZATION_OWNER_MESSAGE_TITLE_TR
             title_zh = ORGANIZATION_OWNER_MESSAGE_TITLE_ZH
-        elif extra_data.get('message_to') == 'partners_followers':
+        elif extra_data.get("message_to") == "partners_followers":
             title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_RU
             title_de = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_DE
             title_tr = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_TR
             title_zh = ORGANIZATION_OWNER_MESSAGE_PARTNERS_FOLLOWERS_TITLE_ZH
-        elif extra_data.get('message_to') == 'partners_members':
+        elif extra_data.get("message_to") == "partners_members":
             title = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE
             title_ru = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_RU
             title_de = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_DE
             title_tr = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_TR
             title_zh = ORGANIZATION_OWNER_MESSAGE_PARTNERS_TITLE_ZH
-        notification_str = dict(title=title,
-                                description=ORGANIZATION_MESSAGE_DESCRIPTION.format(
-                                    content=extra_data.get('content')),
-                                title_ru=title_ru,
-                                description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
-                                    content=extra_data.get('content')),
-                                title_de=title_de,
-                                description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(
-                                    content=extra_data.get('content')),
-                                title_tr=title_tr,
-                                description_tr=ORGANIZATION_MESSAGE_DESCRIPTION_TR.format(
-                                    content=extra_data.get('content')),
-                                title_zh=title_zh,
-                                description_zh=ORGANIZATION_MESSAGE_DESCRIPTION_ZH.format(
-                                    content=extra_data.get('content'))
-                                )
+        notification_str = dict(
+            title=title,
+            description=ORGANIZATION_MESSAGE_DESCRIPTION.format(
+                content=extra_data.get("content")
+            ),
+            title_ru=title_ru,
+            description_ru=ORGANIZATION_MESSAGE_DESCRIPTION_RU.format(
+                content=extra_data.get("content")
+            ),
+            title_de=title_de,
+            description_de=ORGANIZATION_MESSAGE_DESCRIPTION_DE.format(
+                content=extra_data.get("content")
+            ),
+            title_tr=title_tr,
+            description_tr=ORGANIZATION_MESSAGE_DESCRIPTION_TR.format(
+                content=extra_data.get("content")
+            ),
+            title_zh=title_zh,
+            description_zh=ORGANIZATION_MESSAGE_DESCRIPTION_ZH.format(
+                content=extra_data.get("content")
+            ),
+        )
 
     elif notification_type == NEW_CASHBACK:
-        notification_str = dict(title=NEW_CASHBACK_TITLE.format(percent=extra_data.get('cashback')),
-                                description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data.get('address')),
-                                title_ru=NEW_CASHBACK_TITLE_RU.format(percent=extra_data.get('cashback')),
-                                description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')),
-                                title_de=NEW_CASHBACK_TITLE_DE.format(percent=extra_data.get('cashback')),
-                                description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(address=extra_data.get('address')),
-                                title_tr=NEW_CASHBACK_TITLE_TR.format(percent=extra_data.get('cashback')),
-                                description_tr=NEW_DISCOUNT_DESCRIPTION_TR.format(address=extra_data.get('address')),
-                                title_zh=NEW_CASHBACK_TITLE_ZH.format(percent=extra_data.get('cashback')),
-                                description_zh=NEW_DISCOUNT_DESCRIPTION_ZH.format(address=extra_data.get('address'))
-                                )
+        notification_str = dict(
+            title=NEW_CASHBACK_TITLE.format(percent=extra_data.get("cashback")),
+            description=NEW_DISCOUNT_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=NEW_CASHBACK_TITLE_RU.format(percent=extra_data.get("cashback")),
+            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=NEW_CASHBACK_TITLE_DE.format(percent=extra_data.get("cashback")),
+            description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=NEW_CASHBACK_TITLE_TR.format(percent=extra_data.get("cashback")),
+            description_tr=NEW_DISCOUNT_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=NEW_CASHBACK_TITLE_ZH.format(percent=extra_data.get("cashback")),
+            description_zh=NEW_DISCOUNT_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
+        )
 
     elif notification_type == NEW_DISCOUNT_TYPE:
         notification_str = dict(
-            title=NEW_DISCOUNT_TITLE.format(percent=extra_data.get('percent')),
-            title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data.get('percent')),
-            title_de=NEW_DISCOUNT_TITLE_DE.format(percent=extra_data.get('percent')),
-            title_tr=NEW_DISCOUNT_TITLE_TR.format(percent=extra_data.get('percent')),
-            title_zh=NEW_DISCOUNT_TITLE_ZH.format(percent=extra_data.get('percent')),
-            description=NEW_DISCOUNT_DESCRIPTION.format(address=extra_data.get('address')),
-            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            description_tr=NEW_DISCOUNT_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            description_zh=NEW_DISCOUNT_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=NEW_DISCOUNT_TITLE.format(percent=extra_data.get("percent")),
+            title_ru=NEW_DISCOUNT_TITLE_RU.format(percent=extra_data.get("percent")),
+            title_de=NEW_DISCOUNT_TITLE_DE.format(percent=extra_data.get("percent")),
+            title_tr=NEW_DISCOUNT_TITLE_TR.format(percent=extra_data.get("percent")),
+            title_zh=NEW_DISCOUNT_TITLE_ZH.format(percent=extra_data.get("percent")),
+            description=NEW_DISCOUNT_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            description_ru=NEW_DISCOUNT_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            description_de=NEW_DISCOUNT_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            description_tr=NEW_DISCOUNT_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            description_zh=NEW_DISCOUNT_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == WITHDRAW_CASHBACK_CLIENT:
         notification_str = dict(
-            title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(amount=extra_data.get('amount'),
-                                                        currency=extra_data.get('currency')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=WITHDRAW_CASHBACK_CLIENT_TITLE_RU.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=WITHDRAW_CASHBACK_CLIENT_TITLE_DE.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=WITHDRAW_CASHBACK_CLIENT_TITLE_TR.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=WITHDRAW_CASHBACK_CLIENT_TITLE_ZH.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=WITHDRAW_CASHBACK_CLIENT_TITLE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=WITHDRAW_CASHBACK_CLIENT_TITLE_RU.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=WITHDRAW_CASHBACK_CLIENT_TITLE_DE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=WITHDRAW_CASHBACK_CLIENT_TITLE_TR.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=WITHDRAW_CASHBACK_CLIENT_TITLE_ZH.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
     elif notification_type == CHARGE_CASHBACK_CLIENT:
         notification_str = dict(
-            title=CHARGE_CASHBACK_CLIENT_TITLE.format(amount=extra_data.get('amount'),
-                                                      currency=extra_data.get('currency')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=CHARGE_CASHBACK_CLIENT_TITLE_RU.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=CHARGE_CASHBACK_CLIENT_TITLE_DE.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=CHARGE_CASHBACK_CLIENT_TITLE_TR.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=CHARGE_CASHBACK_CLIENT_TITLE_ZH.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=CHARGE_CASHBACK_CLIENT_TITLE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=CHARGE_CASHBACK_CLIENT_TITLE_RU.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=CHARGE_CASHBACK_CLIENT_TITLE_DE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=CHARGE_CASHBACK_CLIENT_TITLE_TR.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=CHARGE_CASHBACK_CLIENT_TITLE_ZH.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
     elif notification_type == WITHDRAW_CASHBACK_SELLER:
         notification_str = dict(
-            title=WITHDRAW_CASHBACK_SELLER_TITLE.format(amount=extra_data.get('amount'),
-                                                        currency=extra_data.get('currency')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=WITHDRAW_CASHBACK_SELLER_TITLE_RU.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=WITHDRAW_CASHBACK_SELLER_TITLE_DE.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=WITHDRAW_CASHBACK_SELLER_TITLE_TR.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=WITHDRAW_CASHBACK_SELLER_TITLE_ZH.format(amount=extra_data.get('amount'),
-                                                              currency=extra_data.get('currency')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=WITHDRAW_CASHBACK_SELLER_TITLE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=WITHDRAW_CASHBACK_SELLER_TITLE_RU.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=WITHDRAW_CASHBACK_SELLER_TITLE_DE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=WITHDRAW_CASHBACK_SELLER_TITLE_TR.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=WITHDRAW_CASHBACK_SELLER_TITLE_ZH.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
     elif notification_type == CHARGE_CASHBACK_SELLER:
         notification_str = dict(
-            title=CHARGE_CASHBACK_SELLER_TITLE.format(amount=extra_data.get('amount'),
-                                                      currency=extra_data.get('currency')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=CHARGE_CASHBACK_SELLER_TITLE_RU.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=CHARGE_CASHBACK_SELLER_TITLE_DE.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=CHARGE_CASHBACK_SELLER_TITLE_TR.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=CHARGE_CASHBACK_SELLER_TITLE_ZH.format(amount=extra_data.get('amount'),
-                                                            currency=extra_data.get('currency')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=CHARGE_CASHBACK_SELLER_TITLE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=CHARGE_CASHBACK_SELLER_TITLE_RU.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=CHARGE_CASHBACK_SELLER_TITLE_DE.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=CHARGE_CASHBACK_SELLER_TITLE_TR.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=CHARGE_CASHBACK_SELLER_TITLE_ZH.format(
+                amount=extra_data.get("amount"), currency=extra_data.get("currency")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
     elif notification_type == CHECK_ATTENDANCE_IN:
-        notification_str = dict(title=CHECK_ATTENDANCE_IN_TITLE.format(organization=extra_data.get('organization')),
-                                description=ATTENDANCE_DESCRIPTION,
-                                title_ru=CHECK_ATTENDANCE_IN_TITLE_RU.format(
-                                    organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU,
-                                title_de=CHECK_ATTENDANCE_IN_TITLE_DE.format(
-                                    organization=extra_data.get('organization')),
-                                description_de=ATTENDANCE_DESCRIPTION_DE,
-                                title_tr=CHECK_ATTENDANCE_IN_TITLE_TR.format(
-                                    organization=extra_data.get('organization')),
-                                description_tr=ATTENDANCE_DESCRIPTION_TR,
-                                title_zh=CHECK_ATTENDANCE_IN_TITLE_ZH.format(
-                                    organization=extra_data.get('organization')),
-                                description_zh=ATTENDANCE_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=CHECK_ATTENDANCE_IN_TITLE.format(
+                organization=extra_data.get("organization")
+            ),
+            description=ATTENDANCE_DESCRIPTION,
+            title_ru=CHECK_ATTENDANCE_IN_TITLE_RU.format(
+                organization=extra_data.get("organization")
+            ),
+            description_ru=ATTENDANCE_DESCRIPTION_RU,
+            title_de=CHECK_ATTENDANCE_IN_TITLE_DE.format(
+                organization=extra_data.get("organization")
+            ),
+            description_de=ATTENDANCE_DESCRIPTION_DE,
+            title_tr=CHECK_ATTENDANCE_IN_TITLE_TR.format(
+                organization=extra_data.get("organization")
+            ),
+            description_tr=ATTENDANCE_DESCRIPTION_TR,
+            title_zh=CHECK_ATTENDANCE_IN_TITLE_ZH.format(
+                organization=extra_data.get("organization")
+            ),
+            description_zh=ATTENDANCE_DESCRIPTION_ZH,
+        )
 
     elif notification_type == CHECK_ATTENDANCE_OUT:
-        notification_str = dict(title=CHECK_ATTENDANCE_OUT_TITLE.format(organization=extra_data.get('organization')),
-                                description=ATTENDANCE_DESCRIPTION,
-                                title_ru=CHECK_ATTENDANCE_OUT_TITLE_RU.format(
-                                    organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU,
-                                title_de=CHECK_ATTENDANCE_OUT_TITLE_DE.format(
-                                    organization=extra_data.get('organization')),
-                                description_de=ATTENDANCE_DESCRIPTION_DE,
-                                title_tr=CHECK_ATTENDANCE_OUT_TITLE_TR.format(
-                                    organization=extra_data.get('organization')),
-                                description_tr=ATTENDANCE_DESCRIPTION_TR,
-                                title_zh=CHECK_ATTENDANCE_OUT_TITLE_ZH.format(
-                                    organization=extra_data.get('organization')),
-                                description_zh=ATTENDANCE_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=CHECK_ATTENDANCE_OUT_TITLE.format(
+                organization=extra_data.get("organization")
+            ),
+            description=ATTENDANCE_DESCRIPTION,
+            title_ru=CHECK_ATTENDANCE_OUT_TITLE_RU.format(
+                organization=extra_data.get("organization")
+            ),
+            description_ru=ATTENDANCE_DESCRIPTION_RU,
+            title_de=CHECK_ATTENDANCE_OUT_TITLE_DE.format(
+                organization=extra_data.get("organization")
+            ),
+            description_de=ATTENDANCE_DESCRIPTION_DE,
+            title_tr=CHECK_ATTENDANCE_OUT_TITLE_TR.format(
+                organization=extra_data.get("organization")
+            ),
+            description_tr=ATTENDANCE_DESCRIPTION_TR,
+            title_zh=CHECK_ATTENDANCE_OUT_TITLE_ZH.format(
+                organization=extra_data.get("organization")
+            ),
+            description_zh=ATTENDANCE_DESCRIPTION_ZH,
+        )
 
     elif notification_type == ATTENDANCE_IN:
-        notification_str = dict(title=ATTENDANCE_IN_TITLE.format(organization=extra_data.get('organization')),
-                                description=ATTENDANCE_DESCRIPTION,
-                                title_ru=ATTENDANCE_IN_TITLE_RU.format(organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU,
-                                title_de=ATTENDANCE_IN_TITLE_DE.format(organization=extra_data.get('organization')),
-                                description_de=ATTENDANCE_DESCRIPTION_DE,
-                                title_tr=ATTENDANCE_IN_TITLE_TR.format(organization=extra_data.get('organization')),
-                                description_tr=ATTENDANCE_DESCRIPTION_TR,
-                                title_zh=ATTENDANCE_IN_TITLE_ZH.format(organization=extra_data.get('organization')),
-                                description_zh=ATTENDANCE_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=ATTENDANCE_IN_TITLE.format(
+                organization=extra_data.get("organization")
+            ),
+            description=ATTENDANCE_DESCRIPTION,
+            title_ru=ATTENDANCE_IN_TITLE_RU.format(
+                organization=extra_data.get("organization")
+            ),
+            description_ru=ATTENDANCE_DESCRIPTION_RU,
+            title_de=ATTENDANCE_IN_TITLE_DE.format(
+                organization=extra_data.get("organization")
+            ),
+            description_de=ATTENDANCE_DESCRIPTION_DE,
+            title_tr=ATTENDANCE_IN_TITLE_TR.format(
+                organization=extra_data.get("organization")
+            ),
+            description_tr=ATTENDANCE_DESCRIPTION_TR,
+            title_zh=ATTENDANCE_IN_TITLE_ZH.format(
+                organization=extra_data.get("organization")
+            ),
+            description_zh=ATTENDANCE_DESCRIPTION_ZH,
+        )
 
     elif notification_type == ATTENDANCE_OUT:
-        notification_str = dict(title=ATTENDANCE_OUT_TITLE.format(organization=extra_data.get('organization')),
-                                description=ATTENDANCE_DESCRIPTION,
-                                title_ru=ATTENDANCE_OUT_TITLE_RU.format(organization=extra_data.get('organization')),
-                                description_ru=ATTENDANCE_DESCRIPTION_RU,
-                                title_de=ATTENDANCE_OUT_TITLE_DE.format(organization=extra_data.get('organization')),
-                                description_de=ATTENDANCE_DESCRIPTION_DE,
-                                title_tr=ATTENDANCE_OUT_TITLE_TR.format(organization=extra_data.get('organization')),
-                                description_tr=ATTENDANCE_DESCRIPTION_TR,
-                                title_zh=ATTENDANCE_OUT_TITLE_ZH.format(organization=extra_data.get('organization')),
-                                description_zh=ATTENDANCE_DESCRIPTION_ZH
-                                )
+        notification_str = dict(
+            title=ATTENDANCE_OUT_TITLE.format(
+                organization=extra_data.get("organization")
+            ),
+            description=ATTENDANCE_DESCRIPTION,
+            title_ru=ATTENDANCE_OUT_TITLE_RU.format(
+                organization=extra_data.get("organization")
+            ),
+            description_ru=ATTENDANCE_DESCRIPTION_RU,
+            title_de=ATTENDANCE_OUT_TITLE_DE.format(
+                organization=extra_data.get("organization")
+            ),
+            description_de=ATTENDANCE_DESCRIPTION_DE,
+            title_tr=ATTENDANCE_OUT_TITLE_TR.format(
+                organization=extra_data.get("organization")
+            ),
+            description_tr=ATTENDANCE_DESCRIPTION_TR,
+            title_zh=ATTENDANCE_OUT_TITLE_ZH.format(
+                organization=extra_data.get("organization")
+            ),
+            description_zh=ATTENDANCE_DESCRIPTION_ZH,
+        )
 
     elif notification_type == ACCEPT_DISCOUNT_TYPE:
         notification_str = dict(
-            title=DISCOUNT_COMPLETE_USER_TITLE.format(discount_percent=extra_data.get('discount_percent')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=DISCOUNT_COMPLETE_USER_TITLE_RU.format(discount_percent=extra_data.get('discount_percent')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=DISCOUNT_COMPLETE_USER_TITLE_DE.format(discount_percent=extra_data.get('discount_percent')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=DISCOUNT_COMPLETE_USER_TITLE_TR.format(discount_percent=extra_data.get('discount_percent')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=DISCOUNT_COMPLETE_USER_TITLE_ZH.format(discount_percent=extra_data.get('discount_percent')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=DISCOUNT_COMPLETE_USER_TITLE.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DISCOUNT_COMPLETE_USER_TITLE_RU.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DISCOUNT_COMPLETE_USER_TITLE_DE.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DISCOUNT_COMPLETE_USER_TITLE_TR.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DISCOUNT_COMPLETE_USER_TITLE_ZH.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
-
 
     elif notification_type == ACCEPT_SELLER_DISCOUNT_TYPE:
         notification_str = dict(
-            title=DISCOUNT_COMPLETE_TITLE.format(discount_percent=extra_data.get('discount_percent')),
-            description=DISCOUNT_COMPLETE_DESCRIPTION.format(final_amount=extra_data.get('final_amount'),
-                                                             currency=extra_data.get('currency')),
-            title_ru=DISCOUNT_COMPLETE_TITLE_RU.format(discount_percent=extra_data.get('discount_percent')),
-            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_de=DISCOUNT_COMPLETE_TITLE_DE.format(discount_percent=extra_data.get('discount_percent')),
-            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_tr=DISCOUNT_COMPLETE_TITLE_TR.format(discount_percent=extra_data.get('discount_percent')),
-            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency')),
-            title_zh=DISCOUNT_COMPLETE_TITLE_ZH.format(discount_percent=extra_data.get('discount_percent')),
-            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(final_amount=extra_data.get('final_amount'),
-                                                                   currency=extra_data.get('currency'))
+            title=DISCOUNT_COMPLETE_TITLE.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description=DISCOUNT_COMPLETE_DESCRIPTION.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DISCOUNT_COMPLETE_TITLE_RU.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_ru=DISCOUNT_COMPLETE_DESCRIPTION_RU.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DISCOUNT_COMPLETE_TITLE_DE.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_de=DISCOUNT_COMPLETE_DESCRIPTION_DE.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DISCOUNT_COMPLETE_TITLE_TR.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_tr=DISCOUNT_COMPLETE_DESCRIPTION_TR.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DISCOUNT_COMPLETE_TITLE_ZH.format(
+                discount_percent=extra_data.get("discount_percent")
+            ),
+            description_zh=DISCOUNT_COMPLETE_DESCRIPTION_ZH.format(
+                final_amount=extra_data.get("final_amount"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_DISCOUNT_TYPE:
-        if extra_data.get('recipient') == 'client':
+        if extra_data.get("recipient") == "client":
             notification_str = dict(
                 title=TRANSACTION_DECLINED_NOTIFICATION_TITLE,
-                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
-                                                                                 currency=extra_data.get('currency')),
+                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_ru=TRANSACTION_DECLINED_NOTIFICATION_TITLE_RU,
-                description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_de=TRANSACTION_DECLINED_NOTIFICATION_TITLE_DE,
-                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_tr=TRANSACTION_DECLINED_NOTIFICATION_TITLE_TR,
-                description_tr=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_tr=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_zh=TRANSACTION_DECLINED_NOTIFICATION_TITLE_ZH,
                 description_zh=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_ZH.format(
-                    savings=extra_data.get('savings'),
-                    currency=extra_data.get(
-                        'currency'))
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
             )
         else:
             notification_str = dict(
                 title=YOU_DECLINED_NOTIFICATION_TITLE,
-                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
-                                                                                 currency=extra_data.get('currency')),
+                description=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_ru=YOU_DECLINED_NOTIFICATION_TITLE_RU,
-                description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_ru=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_de=YOU_DECLINED_NOTIFICATION_TITLE_DE,
-                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_de=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_DE.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_tr=YOU_DECLINED_NOTIFICATION_TITLE_TR,
-                description_tr=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR.format(savings=extra_data.get('savings'),
-                                                                                    currency=extra_data.get(
-                                                                                        'currency')),
+                description_tr=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_TR.format(
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
                 title_zh=YOU_DECLINED_NOTIFICATION_TITLE_ZH,
                 description_zh=TRANSACTION_DECLINED_NOTIFICATION_DESCRIPTION_ZH.format(
-                    savings=extra_data.get('savings'),
-                    currency=extra_data.get(
-                        'currency'))
+                    savings=extra_data.get("savings"),
+                    currency=extra_data.get("currency"),
+                ),
             )
 
     elif notification_type == FOLLOWED_TO_ORGANIZATION_TYPE:
-        notification_str = dict(title=FOLLOWED_TO_ORGANIZATION_TITLE,
-                                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
-                                    address=extra_data.get('address')),
-                                title_ru=FOLLOWED_TO_ORGANIZATION_TITLE_RU,
-                                description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
-                                    address=extra_data.get('address')),
-                                title_de=FOLLOWED_TO_ORGANIZATION_TITLE_DE,
-                                description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
-                                    address=extra_data.get('address')),
-                                title_tr=FOLLOWED_TO_ORGANIZATION_TITLE_TR,
-                                description_tr=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR.format(
-                                    address=extra_data.get('address')),
-                                title_zh=FOLLOWED_TO_ORGANIZATION_TITLE_ZH,
-                                description_zh=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH.format(
-                                    address=extra_data.get('address'))
-                                )
+        notification_str = dict(
+            title=FOLLOWED_TO_ORGANIZATION_TITLE,
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=FOLLOWED_TO_ORGANIZATION_TITLE_RU,
+            description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=FOLLOWED_TO_ORGANIZATION_TITLE_DE,
+            description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=FOLLOWED_TO_ORGANIZATION_TITLE_TR,
+            description_tr=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=FOLLOWED_TO_ORGANIZATION_TITLE_ZH,
+            description_zh=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
+        )
 
     elif notification_type == ORGANIZATION_FOLLOWED_TYPE:
-        notification_str = dict(title=ORGANIZATION_FOLLOWED_TITLE,
-                                description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
-                                    address=extra_data.get('address')),
-                                title_ru=ORGANIZATION_FOLLOWED_TITLE_RU,
-                                description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
-                                    address=extra_data.get('address')),
-                                title_de=ORGANIZATION_FOLLOWED_TITLE_DE,
-                                description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
-                                    address=extra_data.get('address')),
-                                title_tr=ORGANIZATION_FOLLOWED_TITLE_TR,
-                                description_tr=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR.format(
-                                    address=extra_data.get('address')),
-                                title_zh=ORGANIZATION_FOLLOWED_TITLE_ZH,
-                                description_zh=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH.format(
-                                    address=extra_data.get('address'))
-                                )
+        notification_str = dict(
+            title=ORGANIZATION_FOLLOWED_TITLE,
+            description=SUBSCRIPTION_NOTIFICATION_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=ORGANIZATION_FOLLOWED_TITLE_RU,
+            description_ru=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=ORGANIZATION_FOLLOWED_TITLE_DE,
+            description_de=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=ORGANIZATION_FOLLOWED_TITLE_TR,
+            description_tr=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=ORGANIZATION_FOLLOWED_TITLE_ZH,
+            description_zh=SUBSCRIPTION_NOTIFICATION_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_RECRUIT_JOB_TYPE:
-        notification_str = dict(title=RECRUIT_JOB_TITLE,
-                                description=RECRUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=RECRUIT_JOB_TITLE_RU,
-                                description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
-                                title_de=RECRUIT_JOB_TITLE_DE,
-                                description_de=RECRUIT_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')),
-                                title_tr=RECRUIT_JOB_TITLE_TR,
-                                description_tr=RECRUIT_JOB_DESCRIPTION_TR.format(position=extra_data.get('position')),
-                                title_zh=RECRUIT_JOB_TITLE_ZH,
-                                description_zh=RECRUIT_JOB_DESCRIPTION_ZH.format(position=extra_data.get('position'))
-                                )
+        notification_str = dict(
+            title=RECRUIT_JOB_TITLE,
+            description=RECRUIT_JOB_DESCRIPTION.format(
+                position=extra_data.get("position")
+            ),
+            title_ru=RECRUIT_JOB_TITLE_RU,
+            description_ru=RECRUIT_JOB_DESCRIPTION_RU.format(
+                position=extra_data.get("position")
+            ),
+            title_de=RECRUIT_JOB_TITLE_DE,
+            description_de=RECRUIT_JOB_DESCRIPTION_DE.format(
+                position=extra_data.get("position")
+            ),
+            title_tr=RECRUIT_JOB_TITLE_TR,
+            description_tr=RECRUIT_JOB_DESCRIPTION_TR.format(
+                position=extra_data.get("position")
+            ),
+            title_zh=RECRUIT_JOB_TITLE_ZH,
+            description_zh=RECRUIT_JOB_DESCRIPTION_ZH.format(
+                position=extra_data.get("position")
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_GET_JOB_TYPE:
-        notification_str = dict(title=GET_JOB_TITLE,
-                                description=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=GET_JOB_TITLE_RU,
-                                description_ru=GET_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_de=GET_JOB_TITLE_DE,
-                                description_de=GET_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')),
-                                title_tr=GET_JOB_TITLE_TR,
-                                description_tr=GET_JOB_DESCRIPTION_TR.format(position=extra_data.get('position')),
-                                title_zh=GET_JOB_TITLE_ZH,
-                                description_zh=GET_JOB_DESCRIPTION_ZH.format(position=extra_data.get('position'))
-                                )
+        notification_str = dict(
+            title=GET_JOB_TITLE,
+            description=GET_JOB_DESCRIPTION.format(position=extra_data.get("position")),
+            title_ru=GET_JOB_TITLE_RU,
+            description_ru=GET_JOB_DESCRIPTION.format(
+                position=extra_data.get("position")
+            ),
+            title_de=GET_JOB_TITLE_DE,
+            description_de=GET_JOB_DESCRIPTION_DE.format(
+                position=extra_data.get("position")
+            ),
+            title_tr=GET_JOB_TITLE_TR,
+            description_tr=GET_JOB_DESCRIPTION_TR.format(
+                position=extra_data.get("position")
+            ),
+            title_zh=GET_JOB_TITLE_ZH,
+            description_zh=GET_JOB_DESCRIPTION_ZH.format(
+                position=extra_data.get("position")
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION:
-        notification_str = dict(title=CHANGE_JOB_POSITION_TITLE,
-                                description=CHANGE_JOB_POSITION_DESCRIPTION.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_ru=CHANGE_JOB_POSITION_TITLE_RU,
-                                description_ru=CHANGE_JOB_POSITION_DESCRIPTION_RU.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_de=CHANGE_JOB_POSITION_TITLE_DE,
-                                description_de=CHANGE_JOB_POSITION_DESCRIPTION_DE.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_tr=CHANGE_JOB_POSITION_TITLE_TR,
-                                description_tr=CHANGE_JOB_POSITION_DESCRIPTION_TR.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_zh=CHANGE_JOB_POSITION_TITLE_ZH,
-                                description_zh=CHANGE_JOB_POSITION_DESCRIPTION_ZH.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position'))
-                                )
+        notification_str = dict(
+            title=CHANGE_JOB_POSITION_TITLE,
+            description=CHANGE_JOB_POSITION_DESCRIPTION.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_ru=CHANGE_JOB_POSITION_TITLE_RU,
+            description_ru=CHANGE_JOB_POSITION_DESCRIPTION_RU.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_de=CHANGE_JOB_POSITION_TITLE_DE,
+            description_de=CHANGE_JOB_POSITION_DESCRIPTION_DE.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_tr=CHANGE_JOB_POSITION_TITLE_TR,
+            description_tr=CHANGE_JOB_POSITION_DESCRIPTION_TR.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_zh=CHANGE_JOB_POSITION_TITLE_ZH,
+            description_zh=CHANGE_JOB_POSITION_DESCRIPTION_ZH.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_DISMISS_JOB:
-        notification_str = dict(title=DISMISS_JOB_TITLE,
-                                description=DISMISS_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=DISMISS_JOB_TITLE_RU,
-                                description_ru=DISMISS_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
-                                title_de=DISMISS_JOB_TITLE_DE,
-                                description_de=DISMISS_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')),
-                                title_tr=DISMISS_JOB_TITLE_TR,
-                                description_tr=DISMISS_JOB_DESCRIPTION_TR.format(position=extra_data.get('position')),
-                                title_zh=DISMISS_JOB_TITLE_ZH,
-                                description_zh=DISMISS_JOB_DESCRIPTION_ZH.format(position=extra_data.get('position'))
-                                )
+        notification_str = dict(
+            title=DISMISS_JOB_TITLE,
+            description=DISMISS_JOB_DESCRIPTION.format(
+                position=extra_data.get("position")
+            ),
+            title_ru=DISMISS_JOB_TITLE_RU,
+            description_ru=DISMISS_JOB_DESCRIPTION_RU.format(
+                position=extra_data.get("position")
+            ),
+            title_de=DISMISS_JOB_TITLE_DE,
+            description_de=DISMISS_JOB_DESCRIPTION_DE.format(
+                position=extra_data.get("position")
+            ),
+            title_tr=DISMISS_JOB_TITLE_TR,
+            description_tr=DISMISS_JOB_DESCRIPTION_TR.format(
+                position=extra_data.get("position")
+            ),
+            title_zh=DISMISS_JOB_TITLE_ZH,
+            description_zh=DISMISS_JOB_DESCRIPTION_ZH.format(
+                position=extra_data.get("position")
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_QUIT_JOB:
-        notification_str = dict(title=QUIT_JOB_TITLE,
-                                description=QUIT_JOB_DESCRIPTION.format(position=extra_data.get('position')),
-                                title_ru=QUIT_JOB_TITLE_RU,
-                                description_ru=QUIT_JOB_DESCRIPTION_RU.format(position=extra_data.get('position')),
-                                title_de=QUIT_JOB_TITLE_DE,
-                                description_de=QUIT_JOB_DESCRIPTION_DE.format(position=extra_data.get('position')),
-                                title_tr=QUIT_JOB_TITLE_TR,
-                                description_tr=QUIT_JOB_DESCRIPTION_TR.format(position=extra_data.get('position')),
-                                title_zh=QUIT_JOB_TITLE_ZH,
-                                description_zh=QUIT_JOB_DESCRIPTION_ZH.format(position=extra_data.get('position'))
-                                )
+        notification_str = dict(
+            title=QUIT_JOB_TITLE,
+            description=QUIT_JOB_DESCRIPTION.format(
+                position=extra_data.get("position")
+            ),
+            title_ru=QUIT_JOB_TITLE_RU,
+            description_ru=QUIT_JOB_DESCRIPTION_RU.format(
+                position=extra_data.get("position")
+            ),
+            title_de=QUIT_JOB_TITLE_DE,
+            description_de=QUIT_JOB_DESCRIPTION_DE.format(
+                position=extra_data.get("position")
+            ),
+            title_tr=QUIT_JOB_TITLE_TR,
+            description_tr=QUIT_JOB_DESCRIPTION_TR.format(
+                position=extra_data.get("position")
+            ),
+            title_zh=QUIT_JOB_TITLE_ZH,
+            description_zh=QUIT_JOB_DESCRIPTION_ZH.format(
+                position=extra_data.get("position")
+            ),
+        )
 
     elif notification_type == NOTIFICATION_TYPE_CHANGE_JOB_POSITION_OWNER:
-        notification_str = dict(title=CHANGE_JOB_POSITION_OWNER_TITLE,
-                                description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_ru=CHANGE_JOB_POSITION_OWNER_TITLE_RU,
-                                description_ru=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_de=CHANGE_JOB_POSITION_OWNER_TITLE_DE,
-                                description_de=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_tr=CHANGE_JOB_POSITION_OWNER_TITLE_TR,
-                                description_tr=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_TR.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position')),
-                                title_zh=CHANGE_JOB_POSITION_OWNER_TITLE_ZH,
-                                description_zh=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_ZH.format(
-                                    old_position=extra_data.get('old_position'),
-                                    new_position=extra_data.get('new_position'))
-                                )
+        notification_str = dict(
+            title=CHANGE_JOB_POSITION_OWNER_TITLE,
+            description=CHANGE_JOB_POSITION_OWNER_DESCRIPTION.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_ru=CHANGE_JOB_POSITION_OWNER_TITLE_RU,
+            description_ru=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_RU.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_de=CHANGE_JOB_POSITION_OWNER_TITLE_DE,
+            description_de=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_DE.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_tr=CHANGE_JOB_POSITION_OWNER_TITLE_TR,
+            description_tr=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_TR.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+            title_zh=CHANGE_JOB_POSITION_OWNER_TITLE_ZH,
+            description_zh=CHANGE_JOB_POSITION_OWNER_DESCRIPTION_ZH.format(
+                old_position=extra_data.get("old_position"),
+                new_position=extra_data.get("new_position"),
+            ),
+        )
     elif notification_type == NOTIFICATION_TYPE_ACCEPT_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_DECLINE_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_REQUEST_PARTNERSHIP_RECIPIENT_TYPE:
         notification_str = dict(
-            title=PARTNERSHIP_REQUEST_TITLE.format(sender_organization=extra_data.get('sender_organization'),
-                                                   recipient_organization=extra_data.get('recipient_organization')),
-            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(address=extra_data.get('address')),
-            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(address=extra_data.get('address')),
-            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(address=extra_data.get('address')),
-            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(address=extra_data.get('address')),
-            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(sender_organization=extra_data.get('sender_organization'),
-                                                         recipient_organization=extra_data.get(
-                                                             'recipient_organization')),
-            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(address=extra_data.get('address'))
+            title=PARTNERSHIP_REQUEST_TITLE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description=PARTNERSHIP_REQUEST_DESCRIPTION.format(
+                address=extra_data.get("address")
+            ),
+            title_ru=PARTNERSHIP_REQUEST_TITLE_RU.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_ru=PARTNERSHIP_REQUEST_DESCRIPTION_RU.format(
+                address=extra_data.get("address")
+            ),
+            title_de=PARTNERSHIP_REQUEST_TITLE_DE.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_de=PARTNERSHIP_REQUEST_DESCRIPTION_DE.format(
+                address=extra_data.get("address")
+            ),
+            title_tr=PARTNERSHIP_REQUEST_TITLE_TR.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_tr=PARTNERSHIP_REQUEST_DESCRIPTION_TR.format(
+                address=extra_data.get("address")
+            ),
+            title_zh=PARTNERSHIP_REQUEST_TITLE_ZH.format(
+                sender_organization=extra_data.get("sender_organization"),
+                recipient_organization=extra_data.get("recipient_organization"),
+            ),
+            description_zh=PARTNERSHIP_REQUEST_DESCRIPTION_ZH.format(
+                address=extra_data.get("address")
+            ),
         )
 
     elif notification_type == ACCEPT_ORDER_TYPE:
         notification_str = dict(
-            title=ACCEPT_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ORDER_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ORDER_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=ACCEPT_ORDER_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ORDER_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ORDER_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ORDER_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ORDER_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RENTAL_TYPE:
         notification_str = dict(
-            title=ACCEPT_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RENTAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RENTAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RENTAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RENTAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RENTAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RENTAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RENTAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ORDER_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=DECLINE_ORDER_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=DECLINE_ORDER_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=DECLINE_ORDER_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ORDER_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ORDER_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ORDER_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ORDER_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RENTAL_TYPE:
         notification_str = dict(
-            title=DECLINE_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RENTAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RENTAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RENTAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RENTAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RENTAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RENTAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RENTAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_ORDER_PAYMENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RENTAL_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RENTAL_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RENTAL_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RENTAL_PAYMENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RENTAL_PAYMENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RENTAL_PAYMENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_ASSISTANT_PAYMENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ASSISTANT_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id'),
-                                                           assistant_position=extra_data.get('assistant_position'),
-                                                           assistant_name=extra_data.get('assistant_name')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price',),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ASSISTANT_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id'),
-                                                           assistant_position=extra_data.get('assistant_position'),
-                                                           assistant_name=extra_data.get('assistant_name')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ASSISTANT_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id'),
-                                                           assistant_position=extra_data.get('assistant_position'),
-                                                           assistant_name=extra_data.get('assistant_name')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ASSISTANT_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id'),
-                                                           assistant_position=extra_data.get('assistant_position'),
-                                                           assistant_name=extra_data.get('assistant_name')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id'),
-                                                           assistant_position=extra_data.get('assistant_position'),
-                                                           assistant_name=extra_data.get('assistant_name')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_ASSISTANT_PAYMENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get(
+                    "total_price",
+                ),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ASSISTANT_PAYMENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ASSISTANT_PAYMENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ASSISTANT_PAYMENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ASSISTANT_PAYMENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RENTAL_PAYMENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RENTAL_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RENTAL_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RENTAL_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RENTAL_PAYMENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RENTAL_PAYMENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RENTAL_PAYMENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RENTAL_PAYMENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RENTAL_PAYMENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_ORDER_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ORDER_PAYMENT_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id'),
-                                                                  assistant_position=extra_data.get('assistant_position'),
-                                                                  assistant_name=extra_data.get('assistant_name')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id'),
-                                                                     assistant_position=extra_data.get('assistant_position'),
-                                                                     assistant_name=extra_data.get('assistant_name')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id'),
-                                                                     assistant_position=extra_data.get('assistant_position'),
-                                                                     assistant_name=extra_data.get('assistant_name')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id'),
-                                                                     assistant_position=extra_data.get('assistant_position'),
-                                                                     assistant_name=extra_data.get('assistant_name')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id'),
-                                                                     assistant_position=extra_data.get('assistant_position'),
-                                                                     assistant_name=extra_data.get('assistant_name')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id"),
+                assistant_position=extra_data.get("assistant_position"),
+                assistant_name=extra_data.get("assistant_name"),
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RENTAL_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RENTAL_PAYMENT_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ORDER_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ORDER_PAYMENT_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RENTAL_PAYMENT_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RENTAL_PAYMENT_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ORDER_PAYMENT_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ORDER_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_ORDER_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_ORDER_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_ORDER_PAYMENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ORDER_PAYMENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ORDER_PAYMENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ORDER_PAYMENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ORDER_PAYMENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RENTAL_PAYMENT_TYPE:
         notification_str = dict(
-            title=DECLINE_RENTAL_PAYMENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RENTAL_PAYMENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RENTAL_PAYMENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RENTAL_PAYMENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RENTAL_PAYMENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RENTAL_PAYMENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RENTAL_PAYMENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RENTAL_PAYMENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RENTAL_PAYMENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RENTAL_PAYMENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ACCEPTED_RENTAL_TYPE:
         notification_str = dict(
-            title=DECLINE_ACCEPTED_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ACCEPTED_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ACCEPTED_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_ACCEPTED_RENTAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_ACCEPTED_RENTAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_ACCEPTED_RENTAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ACCEPTED_RENTAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ACCEPTED_RENTAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ACCEPTED_RENTAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ACCEPTED_RENTAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ACCEPTED_RENTAL_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ACCEPTED_RENTAL_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == NEW_COMMENT_TYPE:
         notification_str = dict(
             title=NEW_COMMENT_TITLE_EN,
-            description=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
+            description=NEW_COMMENT_DESCRIPTION.format(
+                comment_text=extra_data.get("comment_text")
+            ),
             title_ru=NEW_COMMENT_TITLE_RU,
-            description_ru=NEW_COMMENT_DESCRIPTION.format(comment_text=extra_data.get('comment_text')),
+            description_ru=NEW_COMMENT_DESCRIPTION.format(
+                comment_text=extra_data.get("comment_text")
+            ),
             title_de=NEW_COMMENT_TITLE_DE,
-            description_de=NEW_COMMENT_DESCRIPTION_DE.format(comment_text=extra_data.get('comment_text')),
+            description_de=NEW_COMMENT_DESCRIPTION_DE.format(
+                comment_text=extra_data.get("comment_text")
+            ),
             title_tr=NEW_COMMENT_TITLE_TR,
-            description_tr=NEW_COMMENT_DESCRIPTION_TR.format(comment_text=extra_data.get('comment_text')),
+            description_tr=NEW_COMMENT_DESCRIPTION_TR.format(
+                comment_text=extra_data.get("comment_text")
+            ),
             title_zh=NEW_COMMENT_TITLE_ZH,
-            description_zh=NEW_COMMENT_DESCRIPTION_ZH.format(comment_text=extra_data.get('comment_text'))
+            description_zh=NEW_COMMENT_DESCRIPTION_ZH.format(
+                comment_text=extra_data.get("comment_text")
+            ),
         )
 
     elif notification_type == REQUEST_ONLINE_ORDER_TYPE:
         notification_str = dict(
-            title=REQUEST_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=REQUEST_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=REQUEST_ORDER_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=REQUEST_ORDER_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=REQUEST_ORDER_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_ORDER_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_ORDER_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_ORDER_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_ORDER_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_ORDER_TYPE:
         notification_str = dict(
-            title=REQUEST_ORDER_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=REQUEST_ORDER_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=REQUEST_ORDER_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=REQUEST_ORDER_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=REQUEST_ORDER_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=REQUEST_ORDER_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_ORDER_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_ORDER_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_ORDER_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_ORDER_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_RENTAL_TYPE:
         notification_str = dict(
-            title=REQUEST_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=REQUEST_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=REQUEST_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RENTAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RENTAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RENTAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RENTAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RENTAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RENTAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RENTAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_RESUME_TYPE:
         notification_str = dict(
-            title=REQUEST_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=REQUEST_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_REQUEST_RESUME_TYPE:
         notification_str = dict(
-            title=REQUEST_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=REQUEST_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=REQUEST_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_ACCEPT_RESUME_TYPE:
         notification_str = dict(
-            title=ACCEPT_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=ACCEPT_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RESUME_TYPE:
         notification_str = dict(
-            title=ACCEPT_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=ACCEPT_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RESUME_TYPE:
         notification_str = dict(
-            title=DECLINE_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=DECLINE_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=DECLINE_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_DECLINE_RESUME_TYPE:
         notification_str = dict(
-            title=DECLINE_RESUME_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=DECLINE_RESUME_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=DECLINE_RESUME_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RESUME_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RESUME_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RESUME_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RESUME_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RESUME_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RESUME_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RESUME_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_ORDER_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ORDER_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ORDER_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=ACCEPT_ORDER_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ORDER_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ORDER_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ORDER_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ORDER_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
-
 
     elif notification_type == ORGANIZATION_WITHDRAWAL_UNDER_REVIEW_TYPE:
         notification_str = dict(
-            title=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
+            title=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
             title_de=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_DE.format(
-                transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
             title_tr=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_TR.format(
-                transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
             title_zh=ORGANIZATION_UNDER_REVIEW_WITHDRAWAL_TITLE_ZH.format(
-                transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == WITHDRAWAL_UNDER_REVIEW_TYPE:
         notification_str = dict(
-            title=UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
-            title_de=UNDER_REVIEW_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_tr=UNDER_REVIEW_WITHDRAWAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_zh=UNDER_REVIEW_WITHDRAWAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+            title=UNDER_REVIEW_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=UNDER_REVIEW_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=UNDER_REVIEW_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=UNDER_REVIEW_WITHDRAWAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=UNDER_REVIEW_WITHDRAWAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_WITHDRAWAL_ACCEPTED_TYPE:
         notification_str = dict(
-            title=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_tr=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_zh=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+            title=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ORGANIZATION_ACCEPTED_WITHDRAWAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == WITHDRAWAL_ACCEPTED_TYPE:
         notification_str = dict(
-            title=ACCEPTED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPTED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPTED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_tr=ACCEPTED_WITHDRAWAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_zh=ACCEPTED_WITHDRAWAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+            title=ACCEPTED_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPTED_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPTED_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPTED_WITHDRAWAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPTED_WITHDRAWAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
-
 
     elif notification_type == ORGANIZATION_WITHDRAWAL_DECLINED_TYPE:
         notification_str = dict(
-            title=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_tr=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_zh=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+            title=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ORGANIZATION_DECLINED_WITHDRAWAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == WITHDRAWAL_DECLINED_TYPE:
         notification_str = dict(
-            title=DECLINED_WITHDRAWAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=WITHDRAWAL_DESCRIPTION_EN.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINED_WITHDRAWAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINED_WITHDRAWAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=WITHDRAWAL_DESCRIPTION_DE.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_tr=DECLINED_WITHDRAWAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency')),
-            title_zh=DECLINED_WITHDRAWAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(total_withdrawal=extra_data.get('total_withdrawal'),
-                                                            currency=extra_data.get('currency'))
+            title=DECLINED_WITHDRAWAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=WITHDRAWAL_DESCRIPTION_EN.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINED_WITHDRAWAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=WITHDRAWAL_DESCRIPTION_RU.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINED_WITHDRAWAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=WITHDRAWAL_DESCRIPTION_DE.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINED_WITHDRAWAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=WITHDRAWAL_DESCRIPTION_TR.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINED_WITHDRAWAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=WITHDRAWAL_DESCRIPTION_ZH.format(
+                total_withdrawal=extra_data.get("total_withdrawal"),
+                currency=extra_data.get("currency"),
+            ),
         )
-
 
     elif notification_type == ACCEPTED_ONLINE_ORDER_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_ONLINE_ORDER_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RENTAL_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACCEPT_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RENTAL_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RENTAL_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RENTAL_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RENTAL_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RENTAL_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RENTAL_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RENTAL_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_ORDER_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_ORDER_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_ORDER_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_ORDER_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_tr=DECLINE_ORDER_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_zh=DECLINE_ORDER_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            title=DECLINE_ORDER_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_ORDER_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_ORDER_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_ORDER_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_ORDER_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RENTAL_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RENTAL_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RENTAL_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RENTAL_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RENTAL_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RENTAL_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RENTAL_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RENTAL_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == DECLINE_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_DECLINE_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=DECLINE_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                       currency=extra_data.get('currency')),
-            title_de=DECLINE_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=DECLINE_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=DECLINE_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=DECLINE_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=DECLINE_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=DECLINE_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=DECLINE_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=DECLINE_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_ORDER_CLIENT_TYPE:
         notification_str = dict(
             title=REQUEST_ORDER_CLIENT_TITLE_EN,
-            description=ORDER_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
+            description=ORDER_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
             title_ru=REQUEST_ORDER_CLIENT_TITLE_RU,
-            description_ru=ORDER_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
+            description_ru=ORDER_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
             title_de=REQUEST_ORDER_CLIENT_TITLE_DE,
-            description_de=ORDER_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
+            description_de=ORDER_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
             title_tr=REQUEST_ORDER_CLIENT_TITLE_TR,
-            description_tr=ORDER_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
+            description_tr=ORDER_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
             title_zh=REQUEST_ORDER_CLIENT_TITLE_ZH,
-            description_zh=ORDER_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency'))
+            description_zh=ORDER_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_RENTAL_CLIENT_TYPE:
         notification_str = dict(
-            title=REQUEST_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=REQUEST_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=REQUEST_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RENTAL_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RENTAL_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RENTAL_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RENTAL_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RENTAL_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RENTAL_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RENTAL_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == REQUEST_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=REQUEST_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_REQUEST_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=REQUEST_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=REQUEST_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=REQUEST_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=REQUEST_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=REQUEST_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=REQUEST_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=REQUEST_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=REQUEST_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACCEPT_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=ACCEPT_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ORGANIZATION_ACCEPT_RESUME_CLIENT_TYPE:
         notification_str = dict(
-            title=ACCEPT_RESUME_CLIENT_TITLE_EN.format(resume_name=extra_data.get('resume_name')),
-            description=RESUME_DESCRIPTION_EN.format(salary_from=extra_data.get('salary_from'),
-                                                     currency=extra_data.get('currency')),
-            title_ru=ACCEPT_RESUME_CLIENT_TITLE_RU.format(resume_name=extra_data.get('resume_name')),
-            description_ru=RESUME_DESCRIPTION_RU.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_de=ACCEPT_RESUME_CLIENT_TITLE_DE.format(resume_name=extra_data.get('resume_name')),
-            description_de=RESUME_DESCRIPTION_DE.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACCEPT_RESUME_CLIENT_TITLE_TR.format(resume_name=extra_data.get('resume_name')),
-            description_tr=RESUME_DESCRIPTION_TR.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACCEPT_RESUME_CLIENT_TITLE_ZH.format(resume_name=extra_data.get('resume_name')),
-            description_zh=RESUME_DESCRIPTION_ZH.format(salary_from=extra_data.get('salary_from'),
-                                                        currency=extra_data.get('currency'))
+            title=ACCEPT_RESUME_CLIENT_TITLE_EN.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description=RESUME_DESCRIPTION_EN.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACCEPT_RESUME_CLIENT_TITLE_RU.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_ru=RESUME_DESCRIPTION_RU.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACCEPT_RESUME_CLIENT_TITLE_DE.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_de=RESUME_DESCRIPTION_DE.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACCEPT_RESUME_CLIENT_TITLE_TR.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_tr=RESUME_DESCRIPTION_TR.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACCEPT_RESUME_CLIENT_TITLE_ZH.format(
+                resume_name=extra_data.get("resume_name")
+            ),
+            description_zh=RESUME_DESCRIPTION_ZH.format(
+                salary_from=extra_data.get("salary_from"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACTIVATE_RENTAL_TYPE:
         notification_str = dict(
-            title=ACTIVATE_RENTAL_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACTIVATE_RENTAL_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACTIVATE_RENTAL_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACTIVATE_RENTAL_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACTIVATE_RENTAL_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACTIVATE_RENTAL_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACTIVATE_RENTAL_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACTIVATE_RENTAL_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACTIVATE_RENTAL_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACTIVATE_RENTAL_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACTIVATE_RENTAL_CLIENT_TYPE:
         notification_str = dict(
-            title=ACTIVATE_RENTAL_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACTIVATE_RENTAL_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACTIVATE_RENTAL_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACTIVATE_RENTAL_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACTIVATE_RENTAL_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACTIVATE_RENTAL_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACTIVATE_RENTAL_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACTIVATE_RENTAL_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACTIVATE_RENTAL_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACTIVATE_RENTAL_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACTIVATE_TICKET_TYPE:
         notification_str = dict(
-            title=ACTIVATE_TICKET_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACTIVATE_TICKET_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACTIVATE_TICKET_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACTIVATE_TICKET_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACTIVATE_TICKET_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACTIVATE_TICKET_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACTIVATE_TICKET_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACTIVATE_TICKET_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACTIVATE_TICKET_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACTIVATE_TICKET_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == ACTIVATE_TICKET_CLIENT_TYPE:
         notification_str = dict(
-            title=ACTIVATE_TICKET_CLIENT_TITLE_EN.format(transaction_id=extra_data.get('transaction_id')),
-            description=RENTAL_DESCRIPTION_EN.format(total_price=extra_data.get('total_price'),
-                                                    currency=extra_data.get('currency')),
-            title_ru=ACTIVATE_TICKET_CLIENT_TITLE_RU.format(transaction_id=extra_data.get('transaction_id')),
-            description_ru=RENTAL_DESCRIPTION_RU.format(total_price=extra_data.get('total_price'),
-                                                       currency=extra_data.get('currency')),
-            title_de=ACTIVATE_TICKET_CLIENT_TITLE_DE.format(transaction_id=extra_data.get('transaction_id')),
-            description_de=RENTAL_DESCRIPTION_DE.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_tr=ACTIVATE_TICKET_CLIENT_TITLE_TR.format(transaction_id=extra_data.get('transaction_id')),
-            description_tr=RENTAL_DESCRIPTION_TR.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency')),
-            title_zh=ACTIVATE_TICKET_CLIENT_TITLE_ZH.format(transaction_id=extra_data.get('transaction_id')),
-            description_zh=RENTAL_DESCRIPTION_ZH.format(total_price=extra_data.get('total_price'),
-                                                        currency=extra_data.get('currency'))
+            title=ACTIVATE_TICKET_CLIENT_TITLE_EN.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description=RENTAL_DESCRIPTION_EN.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_ru=ACTIVATE_TICKET_CLIENT_TITLE_RU.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_ru=RENTAL_DESCRIPTION_RU.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_de=ACTIVATE_TICKET_CLIENT_TITLE_DE.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_de=RENTAL_DESCRIPTION_DE.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_tr=ACTIVATE_TICKET_CLIENT_TITLE_TR.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_tr=RENTAL_DESCRIPTION_TR.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
+            title_zh=ACTIVATE_TICKET_CLIENT_TITLE_ZH.format(
+                transaction_id=extra_data.get("transaction_id")
+            ),
+            description_zh=RENTAL_DESCRIPTION_ZH.format(
+                total_price=extra_data.get("total_price"),
+                currency=extra_data.get("currency"),
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY:
@@ -2765,7 +4367,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION:
         notification_str = dict(
@@ -2803,7 +4405,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE:
         notification_str = dict(
@@ -2814,7 +4416,6 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id'),
-
             ),
             title_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_TITLE_RU,
             description_ru=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_DESCRIPTION_RU.format(
@@ -2847,9 +4448,12 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
-    elif notification_type == NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT:
+    elif (
+        notification_type
+        == NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
+    ):
         notification_str = dict(
             title=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_TITLE_EN,
             description=NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT_DESCRIPTION_EN.format(
@@ -2890,7 +4494,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
 
     elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
@@ -2934,9 +4538,12 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
-    elif notification_type == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION:
+    elif (
+        notification_type
+        == NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION
+    ):
         notification_str = dict(
             title=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN,
             description=NOTIFICATION_TYPE_ACCEPTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN.format(
@@ -2977,7 +4584,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE:
         notification_str = dict(
@@ -3020,7 +4627,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_CLIENT:
         notification_str = dict(
@@ -3063,9 +4670,12 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
-    elif notification_type == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION:
+    elif (
+        notification_type
+        == NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION
+    ):
         notification_str = dict(
             title=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_TITLE_EN,
             description=NOTIFICATION_TYPE_REJECTED_BY_DELIVERY_SERVICE_FOR_ORGANIZATION_DESCRIPTION_EN.format(
@@ -3106,7 +4716,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_CLIENT:
         notification_str = dict(
@@ -3149,7 +4759,7 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
     elif notification_type == NOTIFICATION_TYPE_DELIVERED_FOR_ORGANIZATION:
         notification_str = dict(
@@ -3192,7 +4802,6 @@ def get_titles_descriptions_from_type(notification_type: str, extra_data=None) -
                 # total_price=extra_data.get('total_price'),
                 # currency=extra_data.get('currency'),
                 # transaction_id=extra_data.get('transaction_id')
-            )
+            ),
         )
-
     return notification_str

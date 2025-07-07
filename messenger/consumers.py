@@ -114,7 +114,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 recipient=participant,
                 sender=user,
                 type="new_message",
-                mode=NOTIFICATION_MODE_PERSONAL,
+                mode="chat",
+                title=user.full_name,
+                description=message.text,
                 item=None,
                 extra_data={
                     "chat_id": self.chat_id,

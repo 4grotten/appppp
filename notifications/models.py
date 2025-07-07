@@ -79,16 +79,28 @@ class Notification(TimestampModel):
             notification_str = get_titles_descriptions_from_type(
                 notification_type=self.type, extra_data=self.extra_data
             )
-            self.title = notification_str["title"]
-            self.description = notification_str["description"]
-            self.title_ru = notification_str["title_ru"]
-            self.description_ru = notification_str["description_ru"]
-            self.title_de = notification_str["title_de"]
-            self.description_de = notification_str["description_de"]
-            self.title_tr = notification_str["title_tr"]
-            self.description_tr = notification_str["description_tr"]
-            self.title_zh = notification_str["title_zh"]
-            self.description_zh = notification_str["description_zh"]
+            if notification_str:
+                self.title = notification_str["title"]
+                self.description = notification_str["description"]
+                self.title_ru = notification_str["title_ru"]
+                self.description_ru = notification_str["description_ru"]
+                self.title_de = notification_str["title_de"]
+                self.description_de = notification_str["description_de"]
+                self.title_tr = notification_str["title_tr"]
+                self.description_tr = notification_str["description_tr"]
+                self.title_zh = notification_str["title_zh"]
+                self.description_zh = notification_str["description_zh"]
+            else:
+                self.title = self.title
+                self.description = self.description
+                self.title_ru = self.title
+                self.description_ru = self.description
+                self.title_de = self.title
+                self.description_de = self.description
+                self.title_tr = self.title
+                self.description_tr = self.description
+                self.title_zh = self.title
+                self.description_zh = self.description
         super().save(*args, **kwargs)
 
         self.send_notification(

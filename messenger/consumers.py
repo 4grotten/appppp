@@ -112,6 +112,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         participant_ids = await self.get_chat_participant_ids(self.chat)
         for user_id in participant_ids:
+            user = await sync_to_async(User.objects.get)(id=user_id)
+            serializer = ChatMessageWSSerializer(message, context={"user": user})
+            response_json = await sync_to_async(lambda: serializer.data.copy())()
             await self.channel_layer.group_send(
                 f"user_{user_id}_chats",
                 {
@@ -166,7 +169,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return header[1].decode("utf-8")
         return "default_host"
 
-
     async def chat_message_update(self, event):
         """
         Метод для обновления сообщений через WebSocket
@@ -192,6 +194,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Отправляем обновление в список чатов
         participant_ids = await self.get_chat_participant_ids(message.chat)
         for user_id in participant_ids:
+            user = await sync_to_async(User.objects.get)(id=user_id)
+            serializer = ChatMessageWSSerializer(message, context={"user": user})
+            response_json = await sync_to_async(lambda: serializer.data.copy())()
+
             await self.channel_layer.group_send(
                 f"user_{user_id}_chats",
                 {

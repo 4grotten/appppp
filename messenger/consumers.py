@@ -9,6 +9,9 @@ import aioredis
 
 from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.services import ChatMessageService, MessengerChatService
+from notifications.constants import NOTIFICATION_MODE_PERSONAL
+from notifications.models import Notification
+from notifications.services import NotificationService
 
 User = get_user_model()
 
@@ -102,6 +105,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
             is_read=interlocutor_online,
         )
 
+        users_notif = await self.get_chat_participants_without_user(
+            chat=self.chat, user=user
+        )
+        for participant_id in users_notif:
+            participant = await sync_to_async(User.objects.get)(id=participant_id)
+            Notification.objects.create(
+                recipient=participant,
+                sender=user,
+                type="new_message",
+                mode=NOTIFICATION_MODE_PERSONAL,
+                item=None, 
+                extra_data={
+                    "chat_id": self.chat_id,
+                    "message_id": message.id,
+                    "text": message.text
+                }
+            )
+
         serializer = ChatMessageWSSerializer(message, context={"user": user})
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
@@ -146,6 +167,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_chat_participant_ids(self, chat):
         return list(chat.members.values_list("id", flat=True))
+
+    @database_sync_to_async
+    def get_chat_participants_without_user(self, chat, user):
+        return list(chat.members.exclude(user=user).values_list("id", flat=True))
 
     @database_sync_to_async
     def get_chat(self, chat_id):

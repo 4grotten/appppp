@@ -11,7 +11,6 @@ from users.serializers import UserShortInfoSerializer
 class MessengerChatSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     blocked_by_me = serializers.SerializerMethodField()
-
     members = serializers.SerializerMethodField()
 
     class Meta:
@@ -57,6 +56,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     parent = ParentChatMessageSerializer()
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    forwarded = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -98,6 +98,41 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         elif message.is_sent:
             return "sent"
         return "pending"
+
+    def get_forwarded(self, message: ChatMessage):
+        if not message.forwarded_from or not message.forwarded_message:
+            return None
+
+        original_sender = message.forwarded_from
+        if original_sender:
+            full_name = (
+                original_sender.get_full_name().strip()
+                if callable(getattr(original_sender, "get_full_name", None))
+                else ""
+            )
+            if not full_name or full_name.lower() == "none none":
+                full_name = original_sender.username
+        else:
+            full_name = ""
+        return {
+            "original_sender": (
+                {
+                    "id": original_sender.id,
+                    "username": original_sender.username,
+                    "full_name": full_name,
+                }
+                if original_sender
+                else None
+            ),
+            "original_message_id": (
+                message.forwarded_message.id if message.forwarded_message else None
+            ),
+            "text": (
+                message.forwarded_message.text
+                if message.forwarded_message
+                else message.text
+            ),
+        }
 
 
 class ChatMessageWSSerializer(serializers.ModelSerializer):

@@ -87,7 +87,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         self.chat = await self.get_chat(self.chat_id)
 
-        # Проверяем есть ли другие онлайн пользователи в этом чате кроме отправителя
         user_id = str(user.id)
         redis_conn = await get_redis()
         chat_key = f"chat_{self.chat_id}_online_users"
@@ -95,7 +94,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         online_user_ids = set([u.decode("utf-8") for u in online_users])
         interlocutor_online = any(uid != user_id for uid in online_user_ids)
 
-        # Создаем сообщение с is_read = True, если собеседник онлайн, иначе False
         message = await self.send_message(
             chat=self.chat,
             user=user,
@@ -185,13 +183,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
-        # Отправляем обновленное сообщение в комнату чата
         await self.channel_layer.group_send(
             f"chat_{message.chat.id}",
             {"type": "chat_message_update", "message": response_json},
         )
 
-        # Отправляем обновление в список чатов
         participant_ids = await self.get_chat_participant_ids(message.chat)
         for user_id in participant_ids:
             user = await sync_to_async(User.objects.get)(id=user_id)

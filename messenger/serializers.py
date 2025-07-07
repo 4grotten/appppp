@@ -109,6 +109,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     is_mine = serializers.SerializerMethodField()
+    forwarded = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -125,6 +126,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "updated_at",
+            "forwarded",
         )
 
     def get_is_mine(self, message: ChatMessage):
@@ -158,6 +160,33 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             return "pending"
         else:
             return "read"
+
+    def get_forwarded(self, message: ChatMessage):
+        if not message.forwarded_from or not message.forwarded_message:
+            return None
+
+        original_sender = message.forwarded_from
+        return {
+            "original_sender": (
+                {
+                    "id": original_sender.id,
+                    "username": original_sender.username,
+                    "full_name": getattr(
+                        original_sender, "get_full_name", lambda: ""
+                    )(),
+                }
+                if original_sender
+                else None
+            ),
+            "original_message_id": (
+                message.forwarded_message.id if message.forwarded_message else None
+            ),
+            "text": (
+                message.forwarded_message.text
+                if message.forwarded_message
+                else message.text
+            ),
+        }
 
 
 class ChatMessageCreateSerializer(serializers.ModelSerializer):

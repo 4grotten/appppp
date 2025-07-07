@@ -1,4 +1,6 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
 from messenger.constants import ADMIN, GROUP, MEMBER
 from rest_framework import status
 from rest_framework.generics import (
@@ -652,3 +654,107 @@ class ChangeGroupChatOwnerAPIView(APIView):
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ForwardMessageAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Ожидает в body JSON:
+        {
+            "original_message_id": int,  # id сообщения, которое пересылаем
+            "target_chat_ids": list[int]         # id чата, куда пересылаем
+        }
+        """
+        original_message_id = request.data.get("original_message_id")
+        target_chat_ids = request.data.get("target_chat_ids")
+
+        if not original_message_id or not target_chat_ids:
+            return Response(
+                {"detail": "original_message_id и target_chat_id обязательны"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        original_message = get_object_or_404(ChatMessage, id=original_message_id)
+        for target_chat_id in target_chat_ids:
+            target_chat = get_object_or_404(MessengerChat, id=target_chat_id)
+            forwarded_message = ChatMessage.objects.create(
+                chat=target_chat,
+                sender=request.user,
+                text=original_message.text,
+                forwarded_from=original_message.sender,
+                forwarded_message=original_message,
+            )
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{forwarded_message.chat.id}",
+                {
+                    "type": "chat_message",
+                    "message": ChatMessageWSSerializer(
+                        forwarded_message, context={"user": request.user}
+                    ).data,
+                },
+            )
+
+        data = {
+            "detail": "Successfully forwarded message",
+        }
+
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class ReplyMessageAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Ожидает в body JSON:
+        {
+            "chat_id": int,         # id чата, где создаётся ответ
+            "parent_message_id": int,  # id сообщения, на которое отвечают
+            "text": str             # текст ответа
+        }
+        """
+        chat_id = request.data.get("chat_id")
+        parent_message_id = request.data.get("parent_message_id")
+        text = request.data.get("text")
+
+        if not chat_id or not parent_message_id or not text:
+            return Response(
+                {"detail": "chat_id, parent_message_id и text обязательны"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        chat = get_object_or_404(MessengerChat, id=chat_id)
+        parent_message = get_object_or_404(ChatMessage, id=parent_message_id)
+
+        if parent_message.chat_id != chat.id:
+            return Response(
+                {
+                    "detail": "Сообщение, на которое отвечают, должно принадлежать тому же чату"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reply_message = ChatMessage.objects.create(
+            chat=chat,
+            sender=request.user,
+            text=text,
+            parent=parent_message,
+        )
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{reply_message.chat.id}",
+            {
+                "type": "chat_message",
+                "message": ChatMessageWSSerializer(
+                    reply_message, context={"user": request.user}
+                ).data,
+            },
+        )
+        data = {
+            "detail": "Successfully created reply message",
+        }
+
+        return Response(data, status=status.HTTP_201_CREATED)

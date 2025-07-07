@@ -684,6 +684,7 @@ class ForwardMessageAPIView(APIView):
                 sender=request.user,
                 text=original_message.text,
                 forwarded_from=original_message.sender,
+                parent=original_message.parent,
                 forwarded_message=original_message,
             )
             channel_layer = get_channel_layer()

@@ -682,7 +682,7 @@ class ForwardMessageAPIView(APIView):
             forwarded_message = ChatMessage.objects.create(
                 chat=target_chat,
                 sender=request.user,
-                text=original_message.text,
+                text="",
                 forwarded_from=original_message.sender,
                 parent=original_message.parent,
                 forwarded_message=original_message,

@@ -110,7 +110,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         for participant_id in users_notif:
             participant = await sync_to_async(User.objects.get)(id=participant_id)
-            Notification.objects.create(
+            await sync_to_async(Notification.objects.create)(
                 recipient=participant,
                 sender=user,
                 type="new_message",

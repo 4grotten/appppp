@@ -446,7 +446,7 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         return MessengerChat.objects.filter(members=self.request.user).distinct()
 
     def post(self, request):
-        users_ids = request.data.get("users_ids")
+        users_ids = request.data.getlist("users_ids")
         title = request.data.get("title")
         image = request.data.get("image")
 

@@ -253,7 +253,7 @@ class LastMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        fields = ("id", "text", "created_at", "status", "is_mine")
+        fields = ("id", "text", "created_at", "status", "is_mine", "forwarded")
 
     def get_status(self, obj: ChatMessage):
         if obj.is_read:

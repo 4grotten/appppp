@@ -500,7 +500,7 @@ class UpdateGroupChatAPIView(ListAPIView, RetrieveUpdateDestroyAPIView):
         response.data["chat"] = MessengerChatSerializer(
             chat, context={"request": request}
         ).data
-        return
+        return response
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -479,19 +479,28 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class UpdateGroupChatAPIView(RetrieveUpdateDestroyAPIView):
+class UpdateGroupChatAPIView(ListAPIView, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
-    queryset = MessengerChat.objects.all()
+    pagination_class = GeneralPagination
+    serializer_class = ChatMessageSerializer
 
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return ChatMessageSerializer
-        return MessengerChatUpdateSerializer
+    def get_object(self):
+        return MessengerChatService.get(id=self.kwargs["pk"])
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def get_queryset(self):
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        return ChatMessage.objects.filter(chat=chat).order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        response = super().list(request, args, kwargs)
+        response.data["wallpapers"] = CommentService.get_user_theme_or_default(
+            user=self.request.user
+        )
+        response.data["chat"] = MessengerChatSerializer(
+            chat, context={"request": request}
+        ).data
+        return
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

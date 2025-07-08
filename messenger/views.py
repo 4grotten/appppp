@@ -481,8 +481,17 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
 
 class UpdateGroupChatAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = MessengerChatUpdateSerializer
     queryset = MessengerChat.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return ChatMessageSerializer
+        return MessengerChatUpdateSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

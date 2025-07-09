@@ -174,8 +174,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             notification_setting = await sync_to_async(
                 lambda: NotificationSetting.objects.filter(user=participant).first()
             )()
+            participant_str = await sync_to_async(lambda: str(participant))()
+            notification_setting_str = await sync_to_async(
+                lambda: str(notification_setting)
+            )()
             logger.warning(
-                f"Notification setting for {await sync_to_async(participant)}: {await sync_to_async(notification_setting)}"
+                f"Notification setting for {participant_str}: {notification_setting_str}"
             )
             if not notification_setting:
                 continue

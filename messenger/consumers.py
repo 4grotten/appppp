@@ -106,19 +106,56 @@ class ChatConsumer(AsyncWebsocketConsumer):
             is_read=interlocutor_online,
         )
 
+        serializer = ChatMessageWSSerializer(message, context={"user": user})
+        response_json = await sync_to_async(lambda: serializer.data.copy())()
+
+        await self.send_notification(message=message, user=user)
+
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "chat_message", "message": response_json}
+        )
+        participant_ids = await self.get_chat_participant_ids(self.chat)
+        for user_id in participant_ids:
+            user = await sync_to_async(User.objects.get)(id=user_id)
+            serializer = ChatMessageWSSerializer(message, context={"user": user})
+            response_json = await sync_to_async(lambda: serializer.data.copy())()
+            await self.channel_layer.group_send(
+                f"user_{user_id}_chats",
+                {
+                    "type": "chat_list_update",
+                    "chat_id": self.chat_id,
+                    "last_message": response_json,
+                },
+            )
+
+    async def chat_message(self, event):
+        message_data = event["message"]
+
+        message_id = message_data.get("id")
+        await self.mark_as_read(message_id, self.scope["user"])
+
+        await self.send(text_data=json.dumps(message_data))
+
+    async def send_notification(self, message, user):
+        """
+        Отправка push-уведомления через Firebase Cloud Messaging
+        """
         users_notif = await self.get_chat_participants_without_user(
             chat=self.chat, user=user
         )
         for participant_id in users_notif:
             participant = await sync_to_async(User.objects.get)(id=participant_id)
 
+            chat_image = await sync_to_async(lambda: message.chat.image)()
+            avatar_image_url = await sync_to_async(
+                lambda: (
+                    message.sender.avatar.image_url if message.sender.avatar else None
+                )
+            )()
+            image = str(chat_image) if chat_image else str(avatar_image_url)
+
             title = user.full_name
             body = message.text
-            image = (
-                str(message.chat.image)
-                if message.chat.image
-                else str(message.sender.avatar.image_url)
-            )
             logger.warning(f"image: {image}")
             logger.warning(f"body: {body}")
             logger.warning(f"title: {title}")
@@ -147,34 +184,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await sync_to_async(fcm_devices.send_message)(
                     push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
                 )
-
-        serializer = ChatMessageWSSerializer(message, context={"user": user})
-        response_json = await sync_to_async(lambda: serializer.data.copy())()
-
-        await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat_message", "message": response_json}
-        )
-        participant_ids = await self.get_chat_participant_ids(self.chat)
-        for user_id in participant_ids:
-            user = await sync_to_async(User.objects.get)(id=user_id)
-            serializer = ChatMessageWSSerializer(message, context={"user": user})
-            response_json = await sync_to_async(lambda: serializer.data.copy())()
-            await self.channel_layer.group_send(
-                f"user_{user_id}_chats",
-                {
-                    "type": "chat_list_update",
-                    "chat_id": self.chat_id,
-                    "last_message": response_json,
-                },
-            )
-
-    async def chat_message(self, event):
-        message_data = event["message"]
-
-        message_id = message_data.get("id")
-        await self.mark_as_read(message_id, self.scope["user"])
-
-        await self.send(text_data=json.dumps(message_data))
 
     @database_sync_to_async
     def mark_as_read(self, message_id, user):

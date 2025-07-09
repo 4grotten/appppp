@@ -117,7 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             image = (
                 str(message.chat.image)
                 if message.chat.image
-                else str(message.user.avatar.image_url)
+                else str(message.sender.avatar.image_url)
             )
             logger.warning(f"image: {image}")
             logger.warning(f"body: {body}")

@@ -187,7 +187,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             fcm_devices = await sync_to_async(
                 lambda: notification_setting.fcm_device.all()
             )()
-            logger.warning(f"FCM devices: {fcm_devices}")
+            fcm_devices_list = await sync_to_async(lambda: list(fcm_devices))()
+            logger.warning(f"FCM devices: {fcm_devices_list}")
             exists = await sync_to_async(fcm_devices.exists)()
             logger.warning(f"FCM devices exist: {exists}")
             if exists:

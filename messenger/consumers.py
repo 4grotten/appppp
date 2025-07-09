@@ -180,7 +180,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 lambda: notification_setting.fcm_device.all()
             )()
 
-            if fcm_devices.exists():
+            exists = await sync_to_async(fcm_devices.exists)()
+            if exists:
                 await sync_to_async(fcm_devices.send_message)(
                     push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
                 )

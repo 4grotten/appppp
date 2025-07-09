@@ -9,9 +9,10 @@ import aioredis
 
 from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.services import ChatMessageService, MessengerChatService
-from notifications.constants import NOTIFICATION_MODE_PERSONAL
-from notifications.models import Notification
-from notifications.services import NotificationService
+from firebase_admin.messaging import Message, Notification as FCMNotification
+from django.conf import settings
+
+from notifications.models import NotificationSetting
 
 User = get_user_model()
 
@@ -110,20 +111,42 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         for participant_id in users_notif:
             participant = await sync_to_async(User.objects.get)(id=participant_id)
-            await sync_to_async(Notification.objects.create)(
-                recipient=participant,
-                sender=user,
-                type="new_message",
-                mode="chat",
-                title=user.full_name,
-                description=message.text,
-                item=None,
-                extra_data={
-                    "chat_id": self.chat_id,
-                    "message_id": message.id,
+
+            title = user.full_name
+            body = message.text
+            image = (
+                str(message.chat.image)
+                if message.chat.image
+                else str(message.user.avatar.image_url)
+            )
+            logger.warning(f"image: {image}")
+            logger.warning(f"body: {body}")
+            logger.warning(f"title: {title}")
+
+            push_message = Message(
+                notification=FCMNotification(title=title, body=body, image=image),
+                data={
+                    "chat_id": str(self.chat_id),
+                    "message_id": str(message.id),
                     "text": message.text,
                 },
             )
+
+            notification_setting = await sync_to_async(
+                lambda: NotificationSetting.objects.filter(user=participant).first()
+            )()
+
+            if not notification_setting:
+                continue
+
+            fcm_devices = await sync_to_async(
+                lambda: notification_setting.fcm_device.all()
+            )()
+
+            if fcm_devices.exists():
+                await sync_to_async(fcm_devices.send_message)(
+                    push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                )
 
         serializer = ChatMessageWSSerializer(message, context={"user": user})
         response_json = await sync_to_async(lambda: serializer.data.copy())()

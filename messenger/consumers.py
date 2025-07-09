@@ -175,7 +175,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 lambda: NotificationSetting.objects.filter(user=participant).first()
             )()
             logger.warning(
-                f"Notification setting for {participant.username}: {notification_setting}"
+                f"Notification setting for {participant}: {notification_setting}"
             )
             if not notification_setting:
                 continue

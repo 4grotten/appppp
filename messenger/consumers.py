@@ -152,6 +152,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     message.sender.avatar.image_url if message.sender.avatar else None
                 )
             )()
+            logger.warning(f"chat_image: {chat_image}")
+            logger.warning(f"avatar_image_url: {avatar_image_url}")
             image = str(chat_image) if chat_image else str(avatar_image_url)
 
             title = user.full_name
@@ -172,15 +174,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             notification_setting = await sync_to_async(
                 lambda: NotificationSetting.objects.filter(user=participant).first()
             )()
-
+            logger.warning(
+                f"Notification setting for {participant.username}: {notification_setting}"
+            )
             if not notification_setting:
                 continue
 
             fcm_devices = await sync_to_async(
                 lambda: notification_setting.fcm_device.all()
             )()
-
+            logger.warning(f"FCM devices: {fcm_devices}")
             exists = await sync_to_async(fcm_devices.exists)()
+            logger.warning(f"FCM devices exist: {exists}")
             if exists:
                 await sync_to_async(fcm_devices.send_message)(
                     push_message, dry_run=settings.FCM_DRY_RUN_ENABLE

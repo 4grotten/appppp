@@ -192,14 +192,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             exists = await sync_to_async(fcm_devices.exists)()
             logger.warning(f"FCM devices exist: {exists}")
             if exists:
-                responses = await sync_to_async(fcm_devices.send_message)(
+                batch_response = await sync_to_async(fcm_devices.send_message)(
                     push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
                 )
 
+                responses = await sync_to_async(lambda: batch_response.responses)()
+
                 for i, res in enumerate(responses):
-                    res_success = await sync_to_async(lambda: res.success)()
-                    res_msg_id = await sync_to_async(lambda: getattr(res, "message_id", None))()
-                    res_error = await sync_to_async(lambda: str(res.exception) if res.exception else None)()
+                    res_success = await sync_to_async(lambda r=res: r.success)()
+                    res_msg_id = await sync_to_async(
+                        lambda r=res: getattr(r, "message_id", None)
+                    )()
+                    res_error = await sync_to_async(
+                        lambda r=res: str(r.exception) if r.exception else None
+                    )()
 
                     logger.warning(
                         f"FCM response {i}: success={res_success}, message_id={res_msg_id}, error={res_error}"

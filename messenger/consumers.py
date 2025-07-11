@@ -152,6 +152,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     message.sender.avatar.image_url if message.sender.avatar else None
                 )
             )()
+            logger.error(
+                f"Chat image: {chat_image}, Avatar image URL: {avatar_image_url}"
+            )
             image = str(chat_image) if chat_image else str(avatar_image_url)
 
             title = user.full_name

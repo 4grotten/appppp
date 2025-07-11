@@ -611,14 +611,17 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in users_ids:
+        if not ChatMember.objects.filter(chat=chat, user=request.user).exists():
             return Response(
-                {"detail": "You must be a member of the chat to delete users."},
+                {"detail": "You must be a member of the chat to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+
+        if not ChatMember.objects.filter(
+            chat=chat, user=request.user, role=ADMIN
+        ).exists():
             return Response(
-                {"detail": "You must be an admin to delete users."},
+                {"detail": "You must be an admin to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -661,9 +664,11 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+        if not ChatMember.objects.filter(
+            chat=chat, user=request.user, role=ADMIN
+        ).exists():
             return Response(
-                {"detail": "You must be an admin to change the owner."},
+                {"detail": "You must be an admin to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if role not in [ADMIN, MEMBER]:

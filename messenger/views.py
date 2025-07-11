@@ -583,13 +583,13 @@ class ExitGroupChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not chat.members.filter(user=request.user).exists():
+        if not ChatMember.objects.filter(chat=chat, user=request.user).exists():
             return Response(
                 {"detail": "You are not a member of this chat."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        chat.members.filter(user=request.user).delete()
+        ChatMember.objects.filter(chat=chat, user=request.user).delete()
 
         return Response({"detail": "You have exited the group chat."}, status=200)
 

@@ -148,9 +148,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             chat_image = await sync_to_async(lambda: message.chat.image)()
             avatar_image_url = await sync_to_async(
-                lambda: (
-                    message.sender.avatar.image_url if message.sender.avatar else None
-                )
+                lambda: (message.sender.avatar.file if message.sender.avatar else None)
             )()
             logger.error(
                 f"Chat image: {chat_image}, Avatar image URL: {avatar_image_url}"

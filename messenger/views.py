@@ -681,7 +681,7 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 {"detail": "Role must be 'admin' or 'member'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        chat.members.filter(user=user).update(role=role)
+        ChatMember.objects.filter(user=user, chat=chat).update(role=role)
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)

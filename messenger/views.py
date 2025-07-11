@@ -487,6 +487,11 @@ class UpdateGroupChatAPIView(ListAPIView, RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return MessengerChatService.get(id=self.kwargs["pk"])
 
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return MessengerChatUpdateSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
         chat = MessengerChatService.get(id=self.kwargs["pk"])
         return ChatMessage.objects.filter(chat=chat).order_by("-created_at")

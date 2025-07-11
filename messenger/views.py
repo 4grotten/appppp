@@ -810,3 +810,27 @@ class ReplyMessageAPIView(APIView):
         }
 
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class MessengerChatsUnReadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Возвращает количество чатов, в которых есть непрочитанные сообщения для пользователя.
+        """
+        user = request.user
+        unread_chat_count = (
+            ChatMessage.objects.filter(
+                chat__members=user,
+                is_read=False,
+                sender__is_active=True,
+            )
+            .values("chat")
+            .distinct()
+            .count()
+        )
+
+        return Response(
+            {"unread_chat_count": unread_chat_count}, status=status.HTTP_200_OK
+        )

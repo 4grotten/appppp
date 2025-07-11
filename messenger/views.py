@@ -537,7 +537,7 @@ class AddUsersToGroupChatAPIView(APIView):
                 {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in users_ids:
+        if not chat.members.filter(user=request.user).exists():
             return Response(
                 {"detail": "You must be a member of the chat to add users."},
                 status=status.HTTP_403_FORBIDDEN,

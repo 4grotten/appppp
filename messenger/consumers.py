@@ -152,15 +152,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     message.sender.avatar.image_url if message.sender.avatar else None
                 )
             )()
-            logger.warning(f"chat_image: {chat_image}")
-            logger.warning(f"avatar_image_url: {avatar_image_url}")
             image = str(chat_image) if chat_image else str(avatar_image_url)
 
             title = user.full_name
             body = message.text
-            logger.warning(f"image: {image}")
-            logger.warning(f"body: {body}")
-            logger.warning(f"title: {title}")
 
             push_message = Message(
                 notification=FCMNotification(title=title, body=body, image=image),
@@ -174,42 +169,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             notification_setting = await sync_to_async(
                 lambda: NotificationSetting.objects.filter(user=participant).first()
             )()
-            participant_str = await sync_to_async(lambda: str(participant))()
-            notification_setting_str = await sync_to_async(
-                lambda: str(notification_setting)
-            )()
-            logger.warning(
-                f"Notification setting for {participant_str}: {notification_setting_str}"
-            )
             if not notification_setting:
                 continue
 
             fcm_devices = await sync_to_async(
                 lambda: notification_setting.fcm_device.all()
             )()
-            fcm_devices_list = await sync_to_async(lambda: list(fcm_devices))()
-            logger.warning(f"FCM devices: {fcm_devices_list}")
             exists = await sync_to_async(fcm_devices.exists)()
-            logger.warning(f"FCM devices exist: {exists}")
             if exists:
-                batch_response = await sync_to_async(fcm_devices.send_message)(
+                return await sync_to_async(fcm_devices.send_message)(
                     push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
                 )
-
-                responses = await sync_to_async(lambda: batch_response.responses)()
-
-                for i, res in enumerate(responses):
-                    res_success = await sync_to_async(lambda r=res: r.success)()
-                    res_msg_id = await sync_to_async(
-                        lambda r=res: getattr(r, "message_id", None)
-                    )()
-                    res_error = await sync_to_async(
-                        lambda r=res: str(r.exception) if r.exception else None
-                    )()
-
-                    logger.warning(
-                        f"FCM response {i}: success={res_success}, message_id={res_msg_id}, error={res_error}"
-                    )
 
     @database_sync_to_async
     def mark_as_read(self, message_id, user):

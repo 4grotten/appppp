@@ -77,9 +77,16 @@ class FindUserView(APIView):
 class GetOrCreatePrivateChatView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MessengerChatListSerializer
+    services_class = MessengerChatService
 
     def get_queryset(self):
-        return MessengerChat.objects.filter(members=self.request.user).distinct()
+        sort_by = self.request.query_params.get("sort_by")
+        queryset = MessengerChat.objects.filter(members=self.request.user).distinct()
+        if sort_by:
+            queryset = self.services_class.sort_by(
+                queryset, sort_by, user=self.request.user
+            )
+        return queryset
 
     def post(self, request):
         user_id = request.data.get("user_id")

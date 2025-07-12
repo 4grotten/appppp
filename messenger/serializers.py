@@ -249,10 +249,11 @@ class ChatMessageCreateSerializer(serializers.ModelSerializer):
 class LastMessageSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     is_mine = serializers.SerializerMethodField()
+    forwarded = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
-        fields = ("id", "text", "created_at", "status", "is_mine")
+        fields = ("id", "text", "created_at", "status", "is_mine", "forwarded")
 
     def get_status(self, obj: ChatMessage):
         if obj.is_read:
@@ -266,6 +267,41 @@ class LastMessageSerializer(serializers.ModelSerializer):
     def get_is_mine(self, obj: ChatMessage):
         request = self.context.get("request")
         return obj.sender == request.user if request else False
+
+    def get_forwarded(self, message: ChatMessage):
+        if not message.forwarded_from or not message.forwarded_message:
+            return None
+
+        original_sender = message.forwarded_from
+        if original_sender:
+            full_name = (
+                original_sender.get_full_name().strip()
+                if callable(getattr(original_sender, "get_full_name", None))
+                else ""
+            )
+            if not full_name or full_name.lower() == "none none":
+                full_name = original_sender.username
+        else:
+            full_name = ""
+        return {
+            "original_sender": (
+                {
+                    "id": original_sender.id,
+                    "username": original_sender.username,
+                    "full_name": full_name,
+                }
+                if original_sender
+                else None
+            ),
+            "original_message_id": (
+                message.forwarded_message.id if message.forwarded_message else None
+            ),
+            "text": (
+                message.forwarded_message.text
+                if message.forwarded_message
+                else message.text
+            ),
+        }
 
 
 class MessengerChatListSerializer(serializers.ModelSerializer):

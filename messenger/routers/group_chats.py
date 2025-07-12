@@ -30,7 +30,7 @@ group_chats_url = [
         name="messenger-group-exit",
     ),
     path(
-        "messenger/group/<>int:pk>/delete-users/",
+        "messenger/group/<int:pk>/delete-users/",
         DeleteUsersFromGroupChatAPIView.as_view(),
         name="messenger-group-delete-users",
     ),

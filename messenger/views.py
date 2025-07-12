@@ -446,13 +446,13 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         return MessengerChat.objects.filter(members=self.request.user).distinct()
 
     def post(self, request):
-        users_ids = request.data.get("users_ids")
+        users_ids = request.data.getlist("users_ids")
         title = request.data.get("title")
         image = request.data.get("image")
 
-        if not users_ids or not title:
+        if not title:
             return Response(
-                {"detail": "'users_ids' and 'title' is required."},
+                {"detail": "'title' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -479,10 +479,33 @@ class GetOrCreateGroupChatView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class UpdateGroupChatAPIView(RetrieveUpdateDestroyAPIView):
+class UpdateGroupChatAPIView(ListAPIView, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = MessengerChatUpdateSerializer
-    queryset = MessengerChat.objects.all()
+    pagination_class = GeneralPagination
+    serializer_class = ChatMessageSerializer
+
+    def get_object(self):
+        return MessengerChatService.get(id=self.kwargs["pk"])
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return MessengerChatUpdateSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self):
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        return ChatMessage.objects.filter(chat=chat).order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        response = super().list(request, args, kwargs)
+        response.data["wallpapers"] = CommentService.get_user_theme_or_default(
+            user=self.request.user
+        )
+        response.data["chat"] = MessengerChatSerializer(
+            chat, context={"request": request}
+        ).data
+        return response
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -519,12 +542,15 @@ class AddUsersToGroupChatAPIView(APIView):
                 {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in users_ids:
+        if not ChatMember.objects.filter(chat=chat, user=request.user).exists():
             return Response(
                 {"detail": "You must be a member of the chat to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+
+        if not ChatMember.objects.filter(
+            chat=chat, user=request.user, role=ADMIN
+        ).exists():
             return Response(
                 {"detail": "You must be an admin to add users."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -557,13 +583,13 @@ class ExitGroupChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not chat.members.filter(user=request.user).exists():
+        if not ChatMember.objects.filter(chat=chat, user=request.user).exists():
             return Response(
                 {"detail": "You are not a member of this chat."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        chat.members.filter(user=request.user).delete()
+        ChatMember.objects.filter(chat=chat, user=request.user).delete()
 
         return Response({"detail": "You have exited the group chat."}, status=200)
 
@@ -590,14 +616,17 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 {"detail": "'users_ids' is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if str(request.user.id) not in users_ids:
+        if not ChatMember.objects.filter(chat=chat, user=request.user).exists():
             return Response(
-                {"detail": "You must be a member of the chat to delete users."},
+                {"detail": "You must be a member of the chat to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+
+        if not ChatMember.objects.filter(
+            chat=chat, user=request.user, role=ADMIN
+        ).exists():
             return Response(
-                {"detail": "You must be an admin to delete users."},
+                {"detail": "You must be an admin to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -640,9 +669,11 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if not chat.members.filter(user=request.user, role=ADMIN).exists():
+        if not ChatMember.objects.filter(
+            chat=chat, user=request.user, role=ADMIN
+        ).exists():
             return Response(
-                {"detail": "You must be an admin to change the owner."},
+                {"detail": "You must be an admin to add users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if role not in [ADMIN, MEMBER]:
@@ -650,7 +681,7 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 {"detail": "Role must be 'admin' or 'member'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        chat.members.filter(user=user).update(role=role)
+        ChatMember.objects.filter(user=user, chat=chat).update(role=role)
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -789,3 +820,27 @@ class ReplyMessageAPIView(APIView):
         }
 
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class MessengerChatsUnReadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Возвращает количество чатов, в которых есть непрочитанные сообщения для пользователя.
+        """
+        user = request.user
+        unread_chat_count = (
+            ChatMessage.objects.filter(
+                chat__members=user,
+                is_read=False,
+                sender__is_active=True,
+            )
+            .values("chat")
+            .distinct()
+            .count()
+        )
+
+        return Response(
+            {"unread_chat_count": unread_chat_count}, status=status.HTTP_200_OK
+        )

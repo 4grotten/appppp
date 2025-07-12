@@ -9,6 +9,10 @@ import aioredis
 
 from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.services import ChatMessageService, MessengerChatService
+from firebase_admin.messaging import Message, Notification as FCMNotification
+from django.conf import settings
+
+from notifications.models import NotificationSetting
 
 User = get_user_model()
 
@@ -105,6 +109,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer = ChatMessageWSSerializer(message, context={"user": user})
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
+        await self.send_notification(message=message, user=user)
+
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
         )
@@ -130,6 +136,55 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.send(text_data=json.dumps(message_data))
 
+    async def send_notification(self, message, user):
+        """
+        Отправка push-уведомления через Firebase Cloud Messaging
+        """
+        users_notif = await self.get_chat_participants_without_user(
+            chat=self.chat, user=user
+        )
+        for participant_id in users_notif:
+            participant = await sync_to_async(User.objects.get)(id=participant_id)
+
+            chat_image = await sync_to_async(lambda: message.chat.image)()
+            avatar_image_url = await sync_to_async(
+                lambda: (
+                    message.sender.avatar.medium.url if message.sender.avatar else None
+                )
+            )()
+            logger.error(
+                f"Chat image: {chat_image}, Avatar image URL: {avatar_image_url}"
+            )
+            image = str(chat_image) if chat_image else str(avatar_image_url)
+
+            title = user.full_name
+            body = message.text
+
+            push_message = Message(
+                notification=FCMNotification(title=title, body=body, image=None),
+                data={
+                    "chat_id": str(self.chat_id),
+                    "message_id": str(message.id),
+                    "text": message.text,
+                    "icon": image,
+                },
+            )
+
+            notification_setting = await sync_to_async(
+                lambda: NotificationSetting.objects.filter(user=participant).first()
+            )()
+            if not notification_setting:
+                continue
+
+            fcm_devices = await sync_to_async(
+                lambda: notification_setting.fcm_device.all()
+            )()
+            exists = await sync_to_async(fcm_devices.exists)()
+            if exists:
+                return await sync_to_async(fcm_devices.send_message)(
+                    push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                )
+
     @database_sync_to_async
     def mark_as_read(self, message_id, user):
         from messenger.models import ChatMessage
@@ -146,6 +201,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_chat_participant_ids(self, chat):
         return list(chat.members.values_list("id", flat=True))
+
+    @database_sync_to_async
+    def get_chat_participants_without_user(self, chat, user):
+        return list(chat.members.exclude(id=user.id).values_list("id", flat=True))
 
     @database_sync_to_async
     def get_chat(self, chat_id):

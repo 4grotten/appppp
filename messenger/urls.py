@@ -5,6 +5,7 @@ from messenger.views import (
     MessengerChatsBlockAPIView,
     MessengerChatsDeleteAPIView,
     MessengerChatsUnBlockAPIView,
+    MessengerChatsUnReadAPIView,
     MessengerChatsViewAPIView,
 )
 
@@ -28,6 +29,11 @@ messenger_urls = [
         "messenger/chats/unblock/",
         MessengerChatsUnBlockAPIView.as_view(),
         name="chats-unblock",
+    ),
+    path(
+        "messenger/chats/unread/",
+        MessengerChatsUnReadAPIView.as_view(),
+        name="chats-unread",
     ),
 ]
 

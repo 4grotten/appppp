@@ -1,6 +1,8 @@
 from datetime import timedelta
 
+from common.serializers import ImageSerializer
 from instagrapi.types import UserShort
+from organizations.models import Organization
 from rest_framework import serializers
 
 from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
@@ -384,3 +386,12 @@ class MessengerChatUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessengerChat
         fields = ("title", "image")
+
+
+class OrganizationSimpleSerializer(serializers.ModelSerializer):
+    unread_messages_count = serializers.IntegerField()
+    image = ImageSerializer()
+
+    class Meta:
+        model = Organization
+        fields = ("id", "title", "description", "image", "unread_messages_count")

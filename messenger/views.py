@@ -1,7 +1,9 @@
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Sum, Count
 from django.shortcuts import get_object_or_404
+from django.db.models.functions import Coalesce
 
-from messenger.constants import ADMIN, GROUP, MEMBER
+from messenger.constants import ADMIN, GROUP, MEMBER, PRIVATE
+from organizations.models import Organization
 from rest_framework import status
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -37,6 +39,7 @@ from messenger.serializers import (
     MessageLikeSerializer,
     ChatMessageUpdateSerializer,
     MessengerChatUpdateSerializer,
+    OrganizationSimpleSerializer,
 )
 from messenger.services import (
     FoldersChatSerivice,
@@ -81,7 +84,12 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
 
     def get_queryset(self):
         sort_by = self.request.query_params.get("sort_by")
+        organization_id = self.request.query_params.get("organization_id")
         queryset = MessengerChat.objects.filter(members=self.request.user).distinct()
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        else:
+            queryset = queryset.filter(organization__isnull=True)
         if sort_by:
             queryset = self.services_class.sort_by(
                 queryset, sort_by, user=self.request.user
@@ -850,4 +858,62 @@ class MessengerChatsUnReadAPIView(APIView):
 
         return Response(
             {"unread_chat_count": unread_chat_count}, status=status.HTTP_200_OK
+        )
+
+
+class MessengerChatsOrganiationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        organizations = Organization.objects.filter(owner=user)
+
+        organizations = organizations.annotate(
+            unread_messages_count=Coalesce(
+                Sum(
+                    Subquery(
+                        ChatMessage.objects.filter(
+                            chat__organization=OuterRef("pk"),
+                            is_read=False,
+                        )
+                        .exclude(sender=user)
+                        .values("chat__organization")
+                        .annotate(cnt=Count("id"))
+                        .values("cnt")
+                    ),
+                    output_field=IntegerField(),
+                ),
+                0,
+            )
+        )
+
+        serializer = OrganizationSimpleSerializer(
+            organizations, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=200)
+
+    def post(self, request):
+        user = request.user
+        org_id = request.data.get("organization_id")
+        organization = get_object_or_404(Organization, id=org_id)
+        owner = organization.owner
+
+        if user == owner:
+            return Response(
+                {"detail": "Нельзя создать чат с самим собой."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        chat = MessengerChat.objects.create(
+            chat_type=PRIVATE, title=None, organization=organization
+        )
+
+        ChatMember.objects.bulk_create(
+            [ChatMember(chat=chat, user=user), ChatMember(chat=chat, user=owner)]
+        )
+
+        return Response(
+            {"chat_id": chat.id, "detail": "Чат успешно создан."},
+            status=status.HTTP_201_CREATED,
         )

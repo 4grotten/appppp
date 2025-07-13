@@ -867,21 +867,24 @@ class MessengerChatsOrganiationAPIView(APIView):
     def get(self, request):
         user = request.user
 
-        organizations = Organization.objects.filter(owner=user)
+        chat_exists_subquery = MessengerChat.objects.filter(organization=OuterRef("pk"))
+
+        organizations = (
+            Organization.objects.filter(owner=user)
+            .annotate(has_chat=Exists(chat_exists_subquery))
+            .filter(has_chat=True)
+        )
+
+        unread_subquery = ChatMessage.objects.filter(
+            chat__organization=OuterRef("pk"), is_read=False
+        ).exclude(sender=user)
 
         organizations = organizations.annotate(
             unread_messages_count=Coalesce(
-                Sum(
-                    Subquery(
-                        ChatMessage.objects.filter(
-                            chat__organization=OuterRef("pk"),
-                            is_read=False,
-                        )
-                        .exclude(sender=user)
-                        .values("chat__organization")
-                        .annotate(cnt=Count("id"))
-                        .values("cnt")
-                    ),
+                Subquery(
+                    unread_subquery.values("chat__organization")
+                    .annotate(cnt=Count("id"))
+                    .values("cnt"),
                     output_field=IntegerField(),
                 ),
                 0,

@@ -922,7 +922,7 @@ class MessengerChatsOrganiationAPIView(APIView):
             if exists_chat.filter(members=user).exists():
                 return Response(
                     {
-                        "chat_id": exists_chat.filter().id,
+                        "chat_id": exists_chat.first().id,
                         "detail": "You already have access to this organization's group chat.",
                     },
                     status=200,

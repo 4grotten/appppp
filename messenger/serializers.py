@@ -393,13 +393,15 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
     unread_messages_count = serializers.IntegerField()
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
+    chat_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
-        fields = (
-            "id",
-            "title",
-            "image",
-            "unread_messages_count",
-            "types",
-        )
+        fields = ("id", "title", "image", "unread_messages_count", "types", "chat_id")
+
+    def get_chat_id(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.id if chat else None

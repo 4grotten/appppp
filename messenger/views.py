@@ -901,21 +901,36 @@ class MessengerChatsOrganiationAPIView(APIView):
         user = request.user
         org_id = request.data.get("organization_id")
         organization = get_object_or_404(Organization, id=org_id)
-        owner = organization.owner
+        users_organization = organization.memberships.filter(
+            role__can_send_message=True
+        )
 
-        if user == owner:
+        if user in users_organization.values_list("user", flat=True):
             return Response(
-                {"detail": "Нельзя создать чат с самим собой."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "You already have access to this organization."},
+                status=200,
             )
 
+        exists_chat = MessengerChat.objects.filter(
+            organization=organization,
+            chat_type=GROUP,
+        ).first()
+        memgers = exists_chat.values_list("members", flat=True)
+        if user in memgers:
+            return Response(
+                {
+                    "chat_id": exists_chat.id,
+                    "detail": "You already have access to this organization's group chat.",
+                },
+                status=200,
+            )
         chat = MessengerChat.objects.create(
-            chat_type=PRIVATE, title=None, organization=organization
+            chat_type=GROUP, title=None, organization=organization
         )
-
-        ChatMember.objects.bulk_create(
-            [ChatMember(chat=chat, user=user), ChatMember(chat=chat, user=owner)]
-        )
+        chat_members = [ChatMember(chat=chat, user=user)]
+        for member in users_organization:
+            chat_members.append(ChatMember(chat=chat, user=member.user))
+        ChatMember.objects.bulk_create(chat_members)
 
         return Response(
             {"chat_id": chat.id, "detail": "Чат успешно создан."},

@@ -914,9 +914,9 @@ class MessengerChatsOrganiationAPIView(APIView):
         exists_chat = MessengerChat.objects.filter(
             organization=organization,
             chat_type=GROUP,
-        ).first()
+        )
         if exists_chat:
-            memgers = exists_chat.values_list("members", flat=True)
+            memgers = exists_chat.first().values_list("members", flat=True)
             if user in memgers:
                 return Response(
                     {

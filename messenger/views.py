@@ -916,13 +916,13 @@ class MessengerChatsOrganiationAPIView(APIView):
         exists_chat = MessengerChat.objects.filter(
             organization=organization,
             chat_type=GROUP,
-        ).first()
+        )
 
         if exists_chat:
-            if exists_chat.members.filter(user=user).exists():
+            if exists_chat.filter(members=user).exists():
                 return Response(
                     {
-                        "chat_id": exists_chat.id,
+                        "chat_id": exists_chat.filter().id,
                         "detail": "You already have access to this organization's group chat.",
                     },
                     status=200,

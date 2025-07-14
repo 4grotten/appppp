@@ -907,7 +907,7 @@ class MessengerChatsOrganiationAPIView(APIView):
             role__can_send_message=True
         )
 
-        if user in users_organization.values_list("user", flat=True):
+        if users_organization.filter(user=user).exists():
             return Response(
                 {"detail": "You already have access to this organization."},
                 status=200,

@@ -915,15 +915,16 @@ class MessengerChatsOrganiationAPIView(APIView):
             organization=organization,
             chat_type=GROUP,
         ).first()
-        memgers = exists_chat.values_list("members", flat=True)
-        if user in memgers:
-            return Response(
-                {
-                    "chat_id": exists_chat.id,
-                    "detail": "You already have access to this organization's group chat.",
-                },
-                status=200,
-            )
+        if exists_chat:
+            memgers = exists_chat.values_list("members", flat=True)
+            if user in memgers:
+                return Response(
+                    {
+                        "chat_id": exists_chat.id,
+                        "detail": "You already have access to this organization's group chat.",
+                    },
+                    status=200,
+                )
         chat = MessengerChat.objects.create(
             chat_type=GROUP, title=None, organization=organization
         )

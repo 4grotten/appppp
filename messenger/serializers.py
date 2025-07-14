@@ -419,6 +419,6 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        return organization.objects.filter(
-            memberships__user=request.user, role__can_send_message=True
+        return organization.memberships.filter(
+            user=request.user, role__can_send_message=True
         ).exists()

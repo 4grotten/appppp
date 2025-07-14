@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Sum, Count
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
@@ -915,9 +917,13 @@ class MessengerChatsOrganiationAPIView(APIView):
             organization=organization,
             chat_type=GROUP,
         )
+        logging.info(f"Exists chat: {exists_chat}")
         if exists_chat:
             members_ids = exists_chat.members.values_list("id", flat=True)
+            logging.info(f"Members IDs: {members_ids}")
+            logging.info(f"User ID: {user.id}")
             if user.id in members_ids:
+                logging.info(f"User {user.id} already in chat {exists_chat.id}")
                 return Response(
                     {
                         "chat_id": exists_chat.id,

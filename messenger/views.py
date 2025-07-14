@@ -916,11 +916,11 @@ class MessengerChatsOrganiationAPIView(APIView):
             chat_type=GROUP,
         )
         if exists_chat:
-            memgers = exists_chat.values_list("members", flat=True)
-            if user in memgers:
+            members_ids = exists_chat.members.values_list("id", flat=True)
+            if user.id in members_ids:
                 return Response(
                     {
-                        "chat_id": exists_chat.first().id,
+                        "chat_id": exists_chat.id,
                         "detail": "You already have access to this organization's group chat.",
                     },
                     status=200,

@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Sum, Count
+from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Value, Count
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
 
@@ -92,6 +92,21 @@ class GetOrCreatePrivateChatView(ListCreateAPIView):
             queryset = queryset.filter(organization_id=organization_id)
         else:
             queryset = queryset.filter(organization__isnull=True)
+        unread_count_subquery = (
+            ChatMessage.objects.filter(
+                chat=OuterRef("pk"), is_read=False, sender__is_active=True
+            )
+            .exclude(sender=self.request.user)
+            .values("chat")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+
+        queryset = queryset.annotate(
+            unread_messages_count=Coalesce(
+                Subquery(unread_count_subquery, output_field=IntegerField()), Value(0)
+            )
+        )
         if sort_by:
             queryset = self.services_class.sort_by(
                 queryset, sort_by, user=self.request.user
@@ -458,9 +473,36 @@ class MessengerChatsUnBlockAPIView(APIView):
 class GetOrCreateGroupChatView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MessengerChatListSerializer
+    services_class = MessengerChatService
 
     def get_queryset(self):
-        return MessengerChat.objects.filter(members=self.request.user).distinct()
+        sort_by = self.request.query_params.get("sort_by")
+        organization_id = self.request.query_params.get("organization_id")
+        queryset = MessengerChat.objects.filter(members=self.request.user).distinct()
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        else:
+            queryset = queryset.filter(organization__isnull=True)
+        unread_count_subquery = (
+            ChatMessage.objects.filter(
+                chat=OuterRef("pk"), is_read=False, sender__is_active=True
+            )
+            .exclude(sender=self.request.user)
+            .values("chat")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+
+        queryset = queryset.annotate(
+            unread_messages_count=Coalesce(
+                Subquery(unread_count_subquery, output_field=IntegerField()), Value(0)
+            )
+        )
+        if sort_by:
+            queryset = self.services_class.sort_by(
+                queryset, sort_by, user=self.request.user
+            )
+        return queryset
 
     def post(self, request):
         users_ids = request.data.getlist("users_ids")

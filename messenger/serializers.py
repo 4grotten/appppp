@@ -1,5 +1,6 @@
 from datetime import timedelta
-
+from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
+from django.db.models.functions import Coalesce
 from common.serializers import ImageSerializer
 from instagrapi.types import UserShort
 from organizations.models import Organization
@@ -312,6 +313,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     blocked_by_me = serializers.SerializerMethodField()
     sender = serializers.SerializerMethodField()
+    unread_messages_count = serializers.IntegerField()
 
     class Meta:
         model = MessengerChat
@@ -324,6 +326,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "last_message",
             "is_blocked",
             "blocked_by_me",
+            "unread_messages_count",
         )
 
     def get_last_message(self, chat):
@@ -376,11 +379,33 @@ class ChatFolderSerializer(serializers.ModelSerializer):
 
 
 class ListChatFolderSerializer(serializers.ModelSerializer):
-    chats = MessengerChatListSerializer(many=True, read_only=True)
+    chats = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatFolder
         fields = ("id", "title", "chats")
+
+    def get_chats(self, obj):
+        user = self.context["request"].user
+
+        unread_count_subquery = (
+            ChatMessage.objects.filter(
+                chat=OuterRef("pk"), is_read=False, sender__is_active=True
+            )
+            .exclude(sender=user)
+            .values("chat")
+            .annotate(count=Count("id"))
+            .values("count")
+        )
+
+        chats = obj.chats.annotate(
+            unread_messages_count=Coalesce(
+                Subquery(unread_count_subquery, output_field=IntegerField()), Value(0)
+            )
+        ).filter(members=user)
+
+        serializer = MessengerChatListSerializer(chats, many=True, context=self.context)
+        return serializer.data
 
 
 class MessengerChatUpdateSerializer(serializers.ModelSerializer):

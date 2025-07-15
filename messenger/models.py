@@ -13,6 +13,14 @@ class MessengerChat(TimestampModel):
     members = models.ManyToManyField(
         User, through="ChatMember", related_name="messenger_chats"
     )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="messenger_chats",
+        null=True,
+        blank=True,
+        help_text="Organization this chat belongs to, if any",
+    )
 
     def __str__(self):
         return self.title or f"{self.chat_type} chat #{self.id}"

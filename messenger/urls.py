@@ -1,6 +1,12 @@
 from django.urls import path, include
 
-from messenger.routers import private_chats, messages, folders, group_chats
+from messenger.routers import (
+    private_chats,
+    messages,
+    folders,
+    group_chats,
+    organizations,
+)
 from messenger.views import (
     MessengerChatsBlockAPIView,
     MessengerChatsDeleteAPIView,
@@ -44,4 +50,5 @@ urlpatterns = [
     path("", include(messages.messages_url)),
     path("", include(folders.folders_url)),
     path("", include(group_chats.group_chats_url)),
+    path("", include(organizations.organization_urls)),
 ]

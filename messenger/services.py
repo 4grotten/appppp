@@ -1,6 +1,7 @@
 from common.exceptions import ObjectNotFoundException
 from messenger.models import ChatFolder, MessengerChat, MessageLike, ChatMessage
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Exists, OuterRef
 
 from users.models import User
 
@@ -22,6 +23,27 @@ class MessengerChatService:
     @classmethod
     def is_message_liked_by_user(cls, message: ChatMessage, user: User) -> bool:
         return MessageLike.objects.filter(user=user, message=message).exists()
+
+    @classmethod
+    def sort_by(cls, queryset, sort_by: str, user=None):
+        if sort_by == "new":
+            return queryset.order_by("-created_at")
+
+        elif sort_by == "unread" and user:
+            unread_subquery = ChatMessage.objects.filter(
+                chat=OuterRef("pk"),
+                is_read=False,
+            )
+            return (
+                queryset.annotate(has_unread=Exists(unread_subquery))
+                .filter(has_unread=True)
+                .order_by("-created_at")
+            )
+
+        elif sort_by == "blocked" and user:
+            return queryset.filter(blockedchat__blocked_by=user).order_by("-created_at")
+
+        return queryset.order_by("-created_at")
 
 
 class ChatMessageService:

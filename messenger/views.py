@@ -1,7 +1,11 @@
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
+import logging
 
-from messenger.constants import ADMIN, GROUP, MEMBER
+from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Sum, Count
+from django.shortcuts import get_object_or_404
+from django.db.models.functions import Coalesce
+
+from messenger.constants import ADMIN, GROUP, MEMBER, PRIVATE
+from organizations.models import Organization
 from rest_framework import status
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -37,6 +41,7 @@ from messenger.serializers import (
     MessageLikeSerializer,
     ChatMessageUpdateSerializer,
     MessengerChatUpdateSerializer,
+    OrganizationSimpleSerializer,
 )
 from messenger.services import (
     FoldersChatSerivice,
@@ -77,9 +82,21 @@ class FindUserView(APIView):
 class GetOrCreatePrivateChatView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = MessengerChatListSerializer
+    services_class = MessengerChatService
 
     def get_queryset(self):
-        return MessengerChat.objects.filter(members=self.request.user).distinct()
+        sort_by = self.request.query_params.get("sort_by")
+        organization_id = self.request.query_params.get("organization_id")
+        queryset = MessengerChat.objects.filter(members=self.request.user).distinct()
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        else:
+            queryset = queryset.filter(organization__isnull=True)
+        if sort_by:
+            queryset = self.services_class.sort_by(
+                queryset, sort_by, user=self.request.user
+            )
+        return queryset
 
     def post(self, request):
         user_id = request.data.get("user_id")
@@ -843,4 +860,82 @@ class MessengerChatsUnReadAPIView(APIView):
 
         return Response(
             {"unread_chat_count": unread_chat_count}, status=status.HTTP_200_OK
+        )
+
+
+class MessengerChatsOrganiationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        user_chats_subquery = MessengerChat.objects.filter(
+            organization=OuterRef("pk"),
+            chatmember__user=user,
+        )
+
+        organizations = Organization.objects.annotate(
+            user_in_chat=Exists(user_chats_subquery)
+        ).filter(user_in_chat=True)
+
+        unread_messages_subquery = ChatMessage.objects.filter(
+            chat__organization=OuterRef("pk"), is_read=False
+        ).exclude(sender=user)
+
+        organizations = organizations.annotate(
+            unread_messages_count=Coalesce(
+                Subquery(
+                    unread_messages_subquery.values("chat__organization")
+                    .annotate(cnt=Count("id"))
+                    .values("cnt"),
+                    output_field=IntegerField(),
+                ),
+                0,
+            )
+        )
+
+        serializer = OrganizationSimpleSerializer(
+            organizations, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=200)
+
+    def post(self, request):
+        user = request.user
+        org_id = request.data.get("organization_id")
+        organization = get_object_or_404(Organization, id=org_id)
+        users_organization = organization.memberships.filter(
+            role__can_send_message=True
+        )
+
+        if users_organization.filter(user=user).exists():
+            return Response(
+                {"detail": "You already have access to this organization."},
+                status=200,
+            )
+
+        exists_chat = MessengerChat.objects.filter(
+            organization=organization,
+            chat_type=GROUP,
+        )
+
+        if exists_chat:
+            if exists_chat.filter(members=user).exists():
+                return Response(
+                    {
+                        "chat_id": exists_chat.first().id,
+                        "detail": "You already have access to this organization's group chat.",
+                    },
+                    status=200,
+                )
+        chat = MessengerChat.objects.create(
+            chat_type=GROUP, title=None, organization=organization
+        )
+        chat_members = [ChatMember(chat=chat, user=user)]
+        for member in users_organization:
+            chat_members.append(ChatMember(chat=chat, user=member.user))
+        ChatMember.objects.bulk_create(chat_members)
+
+        return Response(
+            {"chat_id": chat.id, "detail": "Чат успешно создан."},
+            status=status.HTTP_201_CREATED,
         )

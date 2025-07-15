@@ -1,6 +1,9 @@
 from datetime import timedelta
 
+from common.serializers import ImageSerializer
 from instagrapi.types import UserShort
+from organizations.models import Organization
+from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from rest_framework import serializers
 
 from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
@@ -384,3 +387,38 @@ class MessengerChatUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessengerChat
         fields = ("title", "image")
+
+
+class OrganizationSimpleSerializer(serializers.ModelSerializer):
+    unread_messages_count = serializers.IntegerField()
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    chat_id = serializers.SerializerMethodField()
+    is_members = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = (
+            "id",
+            "title",
+            "image",
+            "unread_messages_count",
+            "types",
+            "chat_id",
+            "is_members",
+        )
+
+    def get_chat_id(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.id if chat else None
+
+    def get_is_members(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return organization.memberships.filter(
+            user=request.user, role__can_send_message=True
+        ).exists()

@@ -1,5 +1,11 @@
 from common.exceptions import ObjectNotFoundException
-from messenger.models import ChatFolder, MessengerChat, MessageLike, ChatMessage
+from messenger.models import (
+    BlockedChat,
+    ChatFolder,
+    MessengerChat,
+    MessageLike,
+    ChatMessage,
+)
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Exists, OuterRef
 
@@ -34,16 +40,21 @@ class MessengerChatService:
                 chat=OuterRef("pk"),
                 is_read=False,
             )
-            return (
-                queryset.annotate(has_unread=Exists(unread_subquery))
-                .filter(has_unread=True)
-                .order_by("-created_at")
+            queryset = queryset.annotate(has_unread=Exists(unread_subquery)).order_by(
+                "-has_unread", "-created_at"
             )
 
         elif sort_by == "blocked" and user:
-            return queryset.filter(blockedchat__blocked_by=user).order_by("-created_at")
+            queryset = queryset.annotate(
+                is_blocked=Exists(
+                    BlockedChat.objects.filter(chat=OuterRef("pk"), blocked_by=user)
+                )
+            ).order_by("-is_blocked", "-created_at")
 
-        return queryset.order_by("-created_at")
+        else:
+            queryset = queryset.order_by("-created_at")
+
+        return queryset
 
 
 class ChatMessageService:

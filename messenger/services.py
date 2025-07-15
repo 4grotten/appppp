@@ -46,10 +46,10 @@ class MessengerChatService:
 
         elif sort_by == "blocked" and user:
             queryset = queryset.annotate(
-                is_blocked=Exists(
+                is_blockeds=Exists(
                     BlockedChat.objects.filter(chat=OuterRef("pk"), blocked_by=user)
                 )
-            ).order_by("-is_blocked", "-created_at")
+            ).order_by("-is_blockeds", "-created_at")
 
         else:
             queryset = queryset.order_by("-created_at")

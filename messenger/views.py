@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Sum, Count
+from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Value, Count
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
 

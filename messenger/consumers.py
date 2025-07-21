@@ -161,7 +161,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             body = message.text
 
             push_message = Message(
-                notification=FCMNotification(title=title, body=body, image=None),
+                notification=FCMNotification(title=title, body=body, image=image),
                 data={
                     "chat_id": str(self.chat_id),
                     "message_id": str(message.id),
@@ -181,9 +181,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )()
             exists = await sync_to_async(fcm_devices.exists)()
             if exists:
-                return await sync_to_async(fcm_devices.send_message)(
-                    push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
-                )
+                for device in fcm_devices:
+                    await sync_to_async(device.send_message)(
+                        push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                    )
 
     @database_sync_to_async
     def mark_as_read(self, message_id, user):

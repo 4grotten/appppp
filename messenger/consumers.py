@@ -10,7 +10,11 @@ import aioredis
 from messenger.constants import GROUP
 from messenger.serializers import ChatMessageCreateSerializer, ChatMessageWSSerializer
 from messenger.services import ChatMessageService, MessengerChatService
-from firebase_admin.messaging import Message, Notification as FCMNotification
+from firebase_admin.messaging import (
+    Message,
+    UnregisteredError,
+    Notification as FCMNotification,
+)
 from django.conf import settings
 
 from notifications.models import NotificationSetting
@@ -158,12 +162,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             body = message.text
 
             push_message = Message(
-                notification=FCMNotification(title=title, body=body, image=image),
+                notification=FCMNotification(title=title, body=body, image=None),
                 data={
                     "user_id": str(user.id),
                     "chat_id": str(self.chat_id),
                     "message_id": str(message.id),
-                    "is_group": message.chat.chat_type == GROUP,
+                    "is_group": str(message.chat.chat_type == GROUP).lower(),
                     "text": message.text,
                     "icon": image,
                 },
@@ -180,9 +184,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )()
             if fcm_devices:
                 for device in fcm_devices:
-                    await sync_to_async(device.send_message)(
-                        push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
-                    )
+                    try:
+                        await sync_to_async(device.send_message)(
+                            push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                        )
+                    except UnregisteredError:
+                        logger.warning(
+                            f"Удаление недействительного FCM устройства: {device.registration_id}"
+                        )
+                        await sync_to_async(device.delete)()
+                    except Exception as e:
+                        logger.error(f"Ошибка при отправке push: {e}")
 
     @database_sync_to_async
     def mark_as_read(self, message_id, user):

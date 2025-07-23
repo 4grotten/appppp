@@ -813,6 +813,7 @@ class ChangeGroupChatOwnerAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
+
         language = request.headers.get("Accept-Language", "en").lower()[:2]
         chat = MessengerChatService.get(id=pk)
         if not chat:
@@ -857,12 +858,14 @@ class ChangeGroupChatOwnerAPIView(APIView):
         is_group = True
         admin_member = "appointed_admin" if role == ADMIN else "removed_admin"
         message_body = get_chat_translation(admin_member, language, is_group=is_group)
-        message_title = chat.title if is_group else f"{user.full_name}"
+        message_title = chat.title if is_group else f"{request.user.full_name}"
 
         send_push_message_chat(
             user=member.user,
             title=message_title,
-            body=(f"{user.full_name} {message_body}" if is_group else message_body),
+            body=(
+                f"{request.user.full_name} {message_body}" if is_group else message_body
+            ),
             chat_id=chat.id,
             is_group=is_group,
         )

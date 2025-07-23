@@ -852,7 +852,8 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 {"detail": "Role must be 'admin' or 'member'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        member = ChatMember.objects.filter(user=user, chat=chat).update(role=role)
+        ChatMember.objects.filter(user=user, chat=chat).update(role=role)
+        member = ChatMember.objects.get(user=user, chat=chat)
         is_group = True
         admin_member = "appointed_admin" if role == ADMIN else "removed_admin"
         message_body = get_chat_translation(admin_member, language, is_group=is_group)

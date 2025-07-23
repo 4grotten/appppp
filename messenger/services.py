@@ -7,8 +7,9 @@ from messenger.models import (
     ChatMessage,
 )
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Exists, OuterRef
-
+from django.db.models import Exists, OuterRef, Subquery, DateTimeField, Value
+from django.db.models.functions import Coalesce, Greatest
+from django.utils import timezone
 from users.models import User
 
 
@@ -33,7 +34,37 @@ class MessengerChatService:
     @classmethod
     def sort_by(cls, queryset, sort_by: str, user=None):
         if sort_by == "new":
-            return queryset.order_by("-created_at")
+            last_message_subquery = (
+                ChatMessage.objects.filter(chat=OuterRef("pk"))
+                .order_by("-created_at")
+                .values("created_at")[:1]
+            )
+
+            # Последний лайк
+            last_like_subquery = (
+                MessageLike.objects.filter(message__chat=OuterRef("pk"))
+                .order_by("-id")
+                .values("message__created_at")[:1]
+            )
+
+            queryset = queryset.annotate(
+                last_message_time=Subquery(
+                    last_message_subquery, output_field=DateTimeField()
+                ),
+                last_like_time=Subquery(
+                    last_like_subquery, output_field=DateTimeField()
+                ),
+                latest_activity=Greatest(
+                    Coalesce(
+                        Subquery(last_message_subquery, output_field=DateTimeField()),
+                        Value(timezone.datetime.min),
+                    ),
+                    Coalesce(
+                        Subquery(last_like_subquery, output_field=DateTimeField()),
+                        Value(timezone.datetime.min),
+                    ),
+                ),
+            ).order_by("-latest_activity", "-created_at")
 
         elif sort_by == "unread" and user:
             unread_subquery = ChatMessage.objects.filter(

@@ -41,6 +41,7 @@ from messenger.serializers import (
     MessageLikeSerializer,
     ChatMessageUpdateSerializer,
     MessengerChatUpdateSerializer,
+    OrganizationChatDetailSerializer,
     OrganizationSimpleSerializer,
 )
 from messenger.services import (
@@ -981,3 +982,12 @@ class MessengerChatsOrganiationAPIView(APIView):
             {"chat_id": chat.id, "detail": "Чат успешно создан."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class MessengerChatsOrganizationDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, organization_id):
+        organization = get_object_or_404(Organization, id=organization_id)
+        serializer = OrganizationChatDetailSerializer(organization, context={"request": request})
+        return Response(serializer.data, status=200)

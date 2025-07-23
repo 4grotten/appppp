@@ -223,11 +223,6 @@ class ChatBlockView(APIView):
         if hasattr(chat, "blockedchat") and chat.blockedchat.blocked_by == user:
             return Response({"detail": "You already blocked this chat"}, status=400)
         language = request.headers.get("Accept-Language", "en").lower()[:2]
-        if not hasattr(chat, "blockedchat"):
-            return Response({"detail": "Chat is not blocked"}, status=400)
-
-        if chat.blockedchat.blocked_by != user:
-            return Response({"detail": "You can't unblock this chat."}, status=403)
         participants = (
             ChatMember.objects.filter(chat=chat)
             .exclude(user=user)

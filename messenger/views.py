@@ -775,7 +775,7 @@ class DeleteUsersFromGroupChatAPIView(APIView):
 
         participants = (
             ChatMember.objects.filter(chat=chat)
-            .exclude(user=user)
+            .exclude(user=request.user)
             .select_related("user")
         )
 
@@ -784,12 +784,12 @@ class DeleteUsersFromGroupChatAPIView(APIView):
             message_body = get_chat_translation(
                 "deleted_member", language, is_group=is_group
             )
-            message_title = chat.title if is_group else f"{user.full_name}"
+            message_title = chat.title if is_group else f"{request.user.full_name}"
 
             send_push_message_chat(
                 user=member.user,
                 title=message_title,
-                body=(f"{user.full_name} {message_body}" if is_group else message_body),
+                body=(f"{request.user.full_name} {message_body}" if is_group else message_body),
                 chat_id=chat.id,
                 is_group=is_group,
             )

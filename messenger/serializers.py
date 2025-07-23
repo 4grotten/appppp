@@ -447,3 +447,18 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
         return organization.memberships.filter(
             user=request.user, role__can_send_message=True
         ).exists()
+
+
+class OrganizationChatDetailSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+
+    class Meta:
+        model = Organization
+        fields = (
+            "id",
+            "title",
+            "image",
+            "types",
+            "description",
+        )

@@ -652,6 +652,7 @@ class AddUsersToGroupChatAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
+        language = request.headers.get("Accept-Language", "en").lower()[:2]
         chat = MessengerChatService.get(id=pk)
         if not chat:
             return Response(
@@ -690,7 +691,26 @@ class AddUsersToGroupChatAPIView(APIView):
                 new_members.append(ChatMember(chat=chat, user=user))
 
         ChatMember.objects.bulk_create(new_members)
+        participants = (
+            ChatMember.objects.filter(chat=chat)
+            .exclude(user=user)
+            .select_related("user")
+        )
 
+        for member in participants:
+            is_group = chat.chat_type != "private"
+            message_body = get_chat_translation(
+                "added_member", language, is_group=is_group
+            )
+            message_title = chat.title if is_group else f"{user.full_name}"
+
+            send_push_message_chat(
+                user=member.user,
+                title=message_title,
+                body=(f"{user.full_name} {message_body}" if is_group else message_body),
+                chat_id=chat.id,
+                is_group=is_group,
+            )
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -726,6 +746,7 @@ class DeleteUsersFromGroupChatAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
+        language = request.headers.get("Accept-Language", "en").lower()[:2]
         chat = MessengerChatService.get(id=pk)
         if not chat:
             return Response(
@@ -762,7 +783,26 @@ class DeleteUsersFromGroupChatAPIView(APIView):
             user = UserService.get(id=user_id)
             if user and user in chat.members.all():
                 chat.members.filter(user=user).delete()
+        participants = (
+            ChatMember.objects.filter(chat=chat)
+            .exclude(user=user)
+            .select_related("user")
+        )
 
+        for member in participants:
+            is_group = chat.chat_type != "private"
+            message_body = get_chat_translation(
+                "deleted_member", language, is_group=is_group
+            )
+            message_title = chat.title if is_group else f"{user.full_name}"
+
+            send_push_message_chat(
+                user=member.user,
+                title=message_title,
+                body=(f"{user.full_name} {message_body}" if is_group else message_body),
+                chat_id=chat.id,
+                is_group=is_group,
+            )
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -771,6 +811,7 @@ class ChangeGroupChatOwnerAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk):
+        language = request.headers.get("Accept-Language", "en").lower()[:2]
         chat = MessengerChatService.get(id=pk)
         if not chat:
             return Response(
@@ -809,7 +850,19 @@ class ChangeGroupChatOwnerAPIView(APIView):
                 {"detail": "Role must be 'admin' or 'member'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        ChatMember.objects.filter(user=user, chat=chat).update(role=role)
+        member = ChatMember.objects.filter(user=user, chat=chat).update(role=role)
+        is_group = True
+        admin_member = "appointed_admin" if role == ADMIN else "removed_admin"
+        message_body = get_chat_translation(admin_member, language, is_group=is_group)
+        message_title = chat.title if is_group else f"{user.full_name}"
+
+        send_push_message_chat(
+            user=member.user,
+            title=message_title,
+            body=(f"{user.full_name} {message_body}" if is_group else message_body),
+            chat_id=chat.id,
+            is_group=is_group,
+        )
 
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -158,7 +158,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             body = message.text
 
             push_message = Message(
-                notification=FCMNotification(title=title, body=body, image=image),
+                notification=FCMNotification(title=title, body=body, image=None),
                 data={
                     "user_id": str(user.id),
                     "chat_id": str(self.chat_id),

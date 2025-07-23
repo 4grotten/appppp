@@ -690,15 +690,9 @@ class AddUsersToGroupChatAPIView(APIView):
             if user and user not in chat.members.all():
                 new_members.append(ChatMember(chat=chat, user=user))
 
-        ChatMember.objects.bulk_create(new_members)
-        participants = (
-            ChatMember.objects.filter(chat=chat)
-            .exclude(user=user)
-            .select_related("user")
-        )
-
-        for member in participants:
-            is_group = chat.chat_type != "private"
+        new_members = ChatMember.objects.bulk_create(new_members)
+        for member in new_members:
+            is_group = True
             message_body = get_chat_translation(
                 "added_member", language, is_group=is_group
             )
@@ -779,10 +773,6 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        for user_id in users_ids:
-            user = UserService.get(id=user_id)
-            if user and user in chat.members.all():
-                chat.members.filter(user=user).delete()
         participants = (
             ChatMember.objects.filter(chat=chat)
             .exclude(user=user)
@@ -803,6 +793,10 @@ class DeleteUsersFromGroupChatAPIView(APIView):
                 chat_id=chat.id,
                 is_group=is_group,
             )
+        for user_id in users_ids:
+            user = UserService.get(id=user_id)
+            if user and chat.members.filter(id=user.id).exists():
+                ChatMember.objects.filter(chat=chat, user=user).delete()
         serializer = MessengerChatSerializer(chat, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 

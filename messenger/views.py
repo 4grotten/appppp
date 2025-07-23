@@ -4,7 +4,13 @@ from django.db.models import Q, Exists, OuterRef, Subquery, IntegerField, Value,
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import Coalesce
 
-from messenger.constants import ADMIN, GROUP, MEMBER, PRIVATE
+from messenger.constants import (
+    ADMIN,
+    GROUP,
+    MEMBER,
+    PRIVATE,
+)
+from messenger.utils import get_chat_translation, send_push_message_chat
 from organizations.models import Organization
 from rest_framework import status
 from rest_framework.generics import (
@@ -222,13 +228,33 @@ class ChatBlockView(APIView):
 
     def delete(self, request, chat_id):
         chat = MessengerChatService.get(pk=chat_id)
-
+        user = request.user
+        language = request.headers.get("Accept-Language", "en").lower()[:2]
         if not hasattr(chat, "blockedchat"):
             return Response({"detail": "Chat is not blocked"}, status=400)
 
-        if chat.blockedchat.blocked_by != request.user:
+        if chat.blockedchat.blocked_by != user:
             return Response({"detail": "You can't unblock this chat."}, status=403)
+        participants = (
+            ChatMember.objects.filter(chat=chat)
+            .exclude(user=user)
+            .select_related("user")
+        )
 
+        for member in participants:
+            is_group = chat.chat_type != "private"
+            message_body = get_chat_translation(
+                "unblocked", language, is_group=is_group
+            )
+            message_title = chat.title if is_group else f"{user.full_name}"
+
+            send_push_message_chat(
+                user=member.user,
+                title=message_title,
+                body=(f"{user.full_name} {message_body}" if is_group else message_body),
+                chat_id=chat.id,
+                is_group=is_group,
+            )
         chat.blockedchat.delete()
         return Response({"detail": "Successfully unblocked chat"}, status=200)
 
@@ -404,6 +430,8 @@ class MessengerChatsBlockAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
+        language = request.headers.get("Accept-Language", "en").lower()[:2]
+
         chat_ids = request.data.get("chats", [])
         if not isinstance(chat_ids, list):
             return Response({"error": "chats must be a list of IDs"}, status=400)
@@ -423,8 +451,30 @@ class MessengerChatsBlockAPIView(APIView):
                     errors.append(f"Chat {chat.id} blocked by another user")
                 else:
                     errors.append(f"Chat {chat.id} already blocked by you")
-            else:
-                to_create.append(BlockedChat(chat=chat, blocked_by=user))
+                continue
+            participants = (
+                ChatMember.objects.filter(chat=chat)
+                .exclude(user=user)
+                .select_related("user")
+            )
+
+            for member in participants:
+                is_group = chat.chat_type != "private"
+                message_body = get_chat_translation(
+                    "blocked", language, is_group=is_group
+                )
+                message_title = chat.title if is_group else f"{user.full_name}"
+
+                send_push_message_chat(
+                    user=member.user,
+                    title=message_title,
+                    body=(
+                        f"{user.full_name} {message_body}" if is_group else message_body
+                    ),
+                    chat_id=chat.id,
+                    is_group=is_group,
+                )
+            to_create.append(BlockedChat(chat=chat, blocked_by=user))
 
         BlockedChat.objects.bulk_create(to_create)
 
@@ -989,5 +1039,7 @@ class MessengerChatsOrganizationDetailAPIView(APIView):
 
     def get(self, request, organization_id):
         organization = get_object_or_404(Organization, id=organization_id)
-        serializer = OrganizationChatDetailSerializer(organization, context={"request": request})
+        serializer = OrganizationChatDetailSerializer(
+            organization, context={"request": request}
+        )
         return Response(serializer.data, status=200)

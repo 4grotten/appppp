@@ -14,7 +14,7 @@ from firebase_admin.messaging import Message, Notification as FCMNotification
 from django.conf import settings
 
 from notifications.models import NotificationSetting
-from organizations.models import ChatMessage
+from messenger.models import ChatMessage
 
 User = get_user_model()
 

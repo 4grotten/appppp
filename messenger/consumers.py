@@ -163,7 +163,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "user_id": str(user.id),
                     "chat_id": str(self.chat_id),
                     "message_id": str(message.id),
-                    "is_group": message.chat.chat_type == GROUP,
+                    "is_group": str(message.chat.chat_type == GROUP).lower(),
                     "text": message.text,
                     "icon": image,
                 },

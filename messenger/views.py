@@ -1018,10 +1018,15 @@ class MessengerChatsUnReadAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        unread_message_count = ChatMessage.objects.filter(
-            chat__members=user,
-            is_read=False,
-        ).count()
+        unread_message_count = (
+            ChatMessage.objects.filter(
+                chat__members=user,
+                is_read=False,
+            )
+            .exclude(sender=user)
+            .count()
+        )
+
         return Response(
             {"unread_chat_count": unread_message_count}, status=status.HTTP_200_OK
         )

@@ -17,6 +17,7 @@ from firebase_admin.messaging import (
 )
 from django.conf import settings
 
+from messenger.utils import send_unread_message_count_via_ws
 from notifications.models import NotificationSetting
 from messenger.models import ChatMessage
 
@@ -116,7 +117,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.send_notification(message=message, user=user)
-
+        await sync_to_async(send_unread_message_count_via_ws, thread_sensitive=True)(
+            user
+        )
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
         )

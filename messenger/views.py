@@ -10,7 +10,11 @@ from messenger.constants import (
     MEMBER,
     PRIVATE,
 )
-from messenger.utils import get_chat_translation, send_push_message_chat
+from messenger.utils import (
+    get_chat_translation,
+    send_push_message_chat,
+    send_unread_message_count_via_ws,
+)
 from organizations.models import Organization
 from rest_framework import status
 from rest_framework.generics import (
@@ -205,7 +209,7 @@ class MarkMessagesAsReadView(APIView):
             chat=chat,
             is_read=False,
         ).update(is_read=True, is_delivered=True)
-
+        send_unread_message_count_via_ws(user)
         return Response({"detail": f"{updated_count} messages marked as read."})
 
 
@@ -1027,7 +1031,7 @@ class MessengerChatsUnReadAPIView(APIView):
             .distinct()
             .count()
         )
-
+        send_unread_message_count_via_ws(user)
         return Response(
             {"unread_chat_count": unread_chat_count}, status=status.HTTP_200_OK
         )

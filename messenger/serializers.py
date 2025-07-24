@@ -62,6 +62,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     forwarded = serializers.SerializerMethodField()
+    unread_messages_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -78,6 +79,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "forwarded",
+            "unread_messages_count",
         )
 
     def get_is_updated(self, message: ChatMessage) -> bool:
@@ -104,6 +106,16 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         elif message.is_sent:
             return "sent"
         return "pending"
+
+    def get_unread_messages_count(self, message: ChatMessage) -> int:
+        user = self.context.get("user")
+        if not user or not user.is_authenticated:
+            return 0
+        return (
+            ChatMessage.objects.filter(chat=message.chat, is_read=False)
+            .exclude(sender=user)
+            .count()
+        )
 
     def get_forwarded(self, message: ChatMessage):
         if not message.forwarded_from or not message.forwarded_message:
@@ -151,6 +163,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     is_mine = serializers.SerializerMethodField()
     forwarded = serializers.SerializerMethodField()
+    unread_messages_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -168,6 +181,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "forwarded",
+            "unread_messages_count",
         )
 
     def get_is_mine(self, message: ChatMessage):
@@ -201,6 +215,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             return "pending"
         else:
             return "read"
+
+    def get_unread_messages_count(self, message: ChatMessage) -> int:
+        user = self.context.get("user")
+        if not user or not user.is_authenticated:
+            return 0
+        return (
+            ChatMessage.objects.filter(chat=message.chat, is_read=False)
+            .exclude(sender=user)
+            .count()
+        )
 
     def get_forwarded(self, message: ChatMessage):
         if not message.forwarded_from or not message.forwarded_message:

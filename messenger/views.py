@@ -25,7 +25,7 @@ from rest_framework.generics import (
     UpdateAPIView,
 )
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import async_to_sync
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -181,17 +181,11 @@ class ChatMessageListView(ListAPIView, RetrieveUpdateDestroyAPIView):
         return ChatMessage.objects.filter(chat=chat).order_by("-created_at")
 
     def list(self, request, *args, **kwargs):
-        chat = sync_to_async(MessengerChatService.get, thread_sensitive=True)(
-            id=self.kwargs["pk"]
-        ).result()
-
-        response = super().list(request, *args, **kwargs)
-
-        wallpapers = sync_to_async(
-            CommentService.get_user_theme_or_default, thread_sensitive=True
-        )(user=self.request.user).result()
-
-        response.data["wallpapers"] = wallpapers
+        chat = MessengerChatService.get(id=self.kwargs["pk"])
+        response = super().list(request, args, kwargs)
+        response.data["wallpapers"] = CommentService.get_user_theme_or_default(
+            user=self.request.user
+        )
         response.data["chat"] = MessengerChatSerializer(
             chat, context={"request": request}
         ).data

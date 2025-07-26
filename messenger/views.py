@@ -180,12 +180,18 @@ class ChatMessageListView(ListAPIView, RetrieveUpdateDestroyAPIView):
         chat = MessengerChatService.get(id=self.kwargs["pk"])
         return ChatMessage.objects.filter(chat=chat).order_by("-created_at")
 
-    async def list(self, request, *args, **kwargs):
-        chat = await sync_to_async(MessengerChatService.get)(id=self.kwargs["pk"])
-        response = await sync_to_async(super().list)(request, args, kwargs)
-        response.data["wallpapers"] = await sync_to_async(
-            CommentService.get_user_theme_or_default
-        )(user=self.request.user)
+    def list(self, request, *args, **kwargs):
+        chat = sync_to_async(MessengerChatService.get, thread_sensitive=True)(
+            id=self.kwargs["pk"]
+        ).result()
+
+        response = super().list(request, *args, **kwargs)
+
+        wallpapers = sync_to_async(
+            CommentService.get_user_theme_or_default, thread_sensitive=True
+        )(user=self.request.user).result()
+
+        response.data["wallpapers"] = wallpapers
         response.data["chat"] = MessengerChatSerializer(
             chat, context={"request": request}
         ).data

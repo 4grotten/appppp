@@ -204,13 +204,32 @@ class MarkMessagesAsReadView(APIView):
         user = request.user
         chat = MessengerChatService.get(pk=kwargs["pk"])
 
-        updated_count = ChatMessage.objects.filter(
+        messages_to_update = ChatMessage.objects.filter(
             ~Q(sender=user),
             chat=chat,
             is_read=False,
-        ).update(is_read=True, is_delivered=True)
+        )
+        message_ids = list(messages_to_update.values_list("id", flat=True))
+
+        count = messages_to_update.update(is_read=True, is_delivered=True)
+
+        updated_messages = ChatMessage.objects.filter(id__in=message_ids)
+
         send_unread_message_count_via_ws(user)
-        return Response({"detail": f"{updated_count} messages marked as read."})
+        channel_layer = get_channel_layer()
+
+        for message in updated_messages:
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{message.chat.id}",
+                {
+                    "type": "chat_message_update",
+                    "message": ChatMessageWSSerializer(
+                        message, context={"user": request.user}
+                    ).data,
+                },
+            )
+
+        return Response({"detail": f"{count} messages marked as read."})
 
 
 class ChatBlockView(APIView):

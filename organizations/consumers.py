@@ -3,6 +3,7 @@ import json
 import logging
 import decimal
 
+from stock.serializers import ShopItemSizeCountSetSerializer
 import websockets
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -481,14 +482,16 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         item_info = ItemInfoSerializer(comment.item).data
         assistant = comment.item.organization.assistant
         organization_info = CommentService.get_training_data(assistant=assistant)
-        total_items = assistant.organization.shop_items.count()
+        size_info = comment.item.shop_item_size_counts.all()
+        stock_info = ShopItemSizeCountSetSerializer(
+            size_info, many=True, context={"request": None}
+        ).data
         data = {
             "assistant_id": assistant.id,
             "parent_id": comment.id,
             "item_id": comment.item.id,
             "message": comment.text,
             "host": self.host,
-            # "training_data": CommentService.get_training_data(assistant=comment.chat.assistant),
             "training_data": {
                 "assistant_info": {
                     "organization": assistant.organization.title,
@@ -499,7 +502,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 },
                 "item_info": item_info,
                 "organization_info": organization_info,
-                "total_items": total_items,
+                "stock_info": stock_info,
             },
             "headers": decoded_headers,
         }

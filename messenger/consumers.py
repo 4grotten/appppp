@@ -1,7 +1,7 @@
 from decouple import config
 import logging
 import json
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
@@ -17,6 +17,7 @@ from firebase_admin.messaging import (
 )
 from django.conf import settings
 
+from messenger.utils import send_unread_message_count_via_ws_async
 from notifications.models import NotificationSetting
 from messenger.models import ChatMessage
 
@@ -116,6 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.send_notification(message=message, user=user)
+        await send_unread_message_count_via_ws_async(user)
 
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
@@ -206,6 +208,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message.is_delivered = True
                 message.is_read = True
                 message.save(update_fields=["is_delivered", "is_read"])
+                unread_count = (
+                    ChatMessage.objects.filter(is_read=False)
+                    .exclude(sender=user)
+                    .filter(chat__members=user)
+                    .count()
+                )
+
+                async_to_sync(self.channel_layer.group_send)(
+                    f"user_{user.id}_unread_messages",
+                    {
+                        "type": "send_unread_count",
+                        "count": unread_count,
+                    },
+                )
         except ChatMessage.DoesNotExist:
             pass
 
@@ -313,3 +329,33 @@ class ChatListConsumer(AsyncWebsocketConsumer):
                 }
             )
         )
+
+
+class CountUnreadMessagesConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        subprotocol = None
+        for header in self.scope["headers"]:
+            if header[0].decode().lower() == "sec-websocket-protocol":
+                subprotocol = header[1].decode()
+                break
+        if not self.scope["user"].is_authenticated:
+            await self.close()
+            return
+
+        self.user = self.scope["user"]
+        self.room_group_name = f"user_{self.user.id}_unread_messages"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        if subprotocol:
+            await self.accept(subprotocol=subprotocol)
+        else:
+            await self.accept()
+
+    async def disconnect(self, close_code):
+        if hasattr(self, "room_group_name"):
+            await self.channel_layer.group_discard(
+                self.room_group_name, self.channel_name
+            )
+
+    async def send_unread_count(self, count):
+        await self.send(text_data=json.dumps({"unread_count": count}))

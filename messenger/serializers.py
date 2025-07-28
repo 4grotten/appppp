@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
 from messenger.services import MessengerChatService
+from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer
 
 
@@ -61,6 +62,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     is_updated = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     forwarded = serializers.SerializerMethodField()
+    unread_messages_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -77,6 +79,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "forwarded",
+            "unread_messages_count",
         )
 
     def get_is_updated(self, message: ChatMessage) -> bool:
@@ -103,6 +106,16 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         elif message.is_sent:
             return "sent"
         return "pending"
+
+    def get_unread_messages_count(self, message: ChatMessage) -> int:
+        user = self.context.get("user")
+        if not user or not user.is_authenticated:
+            return 0
+        return (
+            ChatMessage.objects.filter(chat=message.chat, is_read=False)
+            .exclude(sender=user)
+            .count()
+        )
 
     def get_forwarded(self, message: ChatMessage):
         if not message.forwarded_from or not message.forwarded_message:
@@ -150,6 +163,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     is_mine = serializers.SerializerMethodField()
     forwarded = serializers.SerializerMethodField()
+    unread_messages_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -167,6 +181,7 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "forwarded",
+            "unread_messages_count",
         )
 
     def get_is_mine(self, message: ChatMessage):
@@ -200,6 +215,16 @@ class ChatMessageWSSerializer(serializers.ModelSerializer):
             return "pending"
         else:
             return "read"
+
+    def get_unread_messages_count(self, message: ChatMessage) -> int:
+        user = self.context.get("user")
+        if not user or not user.is_authenticated:
+            return 0
+        return (
+            ChatMessage.objects.filter(chat=message.chat, is_read=False)
+            .exclude(sender=user)
+            .count()
+        )
 
     def get_forwarded(self, message: ChatMessage):
         if not message.forwarded_from or not message.forwarded_message:
@@ -452,6 +477,10 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
 class OrganizationChatDetailSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
+    chat_id = serializers.SerializerMethodField()
+    is_members = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+    wallpapers = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -461,4 +490,41 @@ class OrganizationChatDetailSerializer(serializers.ModelSerializer):
             "image",
             "types",
             "description",
+            "chat_id",
+            "is_members",
+            "wallpapers",
+            "last_message",
+        )
+
+    def get_chat_id(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.id if chat else None
+
+    def get_is_members(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return organization.memberships.filter(
+            user=request.user, role__can_send_message=True
+        ).exists()
+
+    def get_last_message(self, organization: Organization):
+        chat = organization.messenger_chats.filter(
+            members=self.context["request"].user
+        ).first()
+        if not chat:
+            return None
+        message = chat.messages.order_by("-created_at").first()
+        if message:
+            return LastMessageSerializer(message, context=self.context).data
+        return None
+
+    def get_wallpapers(self, organization: Organization):
+        return (
+            CommentService.get_user_theme_or_default(user=self.context["request"].user)
+            if self.context.get("request")
+            else None
         )

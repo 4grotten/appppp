@@ -19,7 +19,7 @@ from django.urls import re_path
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
-from messenger.consumers import ChatConsumer, ChatListConsumer
+from messenger.consumers import ChatConsumer, ChatListConsumer, CountUnreadMessagesConsumer
 from organizations.consumers import CommentConsumer, CommentItemConsumer
 from organizations.middleware import TokenAuthMiddleware
 
@@ -39,6 +39,7 @@ application = ProtocolTypeRouter(
                         r"ws/messenger/chat/(?P<chat_id>\d+)/$", ChatConsumer.as_asgi()
                     ),
                     re_path(r"ws/messenger/chats/$", ChatListConsumer.as_asgi()),
+                    re_path(r"ws/messenger/chats/unread/$", CountUnreadMessagesConsumer.as_asgi()),
                 ]
             )
         ),

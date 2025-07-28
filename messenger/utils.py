@@ -2,9 +2,12 @@ from firebase_admin.messaging import Message, Notification as FCMNotification
 from messenger.constants import (
     TRANSLATIONS,
 )
+from messenger.models import ChatMessage
 from notifications.models import NotificationSetting
 from users.models import User
 from django.conf import settings
+from asgiref.sync import async_to_sync, sync_to_async
+from channels.layers import get_channel_layer
 
 
 def send_push_message_chat(
@@ -49,4 +52,38 @@ def get_chat_translation(action: str, lang: str, is_group: bool) -> str:
         TRANSLATIONS.get(action, {})
         .get(chat_type, {})
         .get(lang, TRANSLATIONS.get(action, {}).get(chat_type, {}).get("en", ""))
+    )
+
+
+def send_unread_message_count_via_ws(user):
+    unread_count = (
+        ChatMessage.objects.filter(is_read=False, chat__members=user)
+        .exclude(sender=user)
+        .count()
+    )
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"user_{user.id}_unread_messages",
+        {
+            "type": "send_unread_count",
+            "count": unread_count,
+        },
+    )
+
+
+async def send_unread_message_count_via_ws_async(user):
+    unread_count = await sync_to_async(
+        lambda: ChatMessage.objects.filter(is_read=False, chat__members=user)
+        .exclude(sender=user)
+        .count()
+    )()
+
+    channel_layer = get_channel_layer()
+    await channel_layer.group_send(
+        f"user_{user.id}_unread_messages",
+        {
+            "type": "send_unread_count",
+            "count": unread_count,
+        },
     )

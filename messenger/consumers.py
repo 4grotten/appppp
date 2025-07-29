@@ -122,8 +122,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name, {"type": "chat_message", "message": response_json}
         )
         participant_ids = await self.get_chat_participant_ids(self.chat)
+        users = await self.get_users_by_ids(participant_ids)
+        users_map = {user.id: user for user in users}
         for user_id in participant_ids:
-            user = await sync_to_async(User.objects.get)(id=user_id)
+            user = users_map[user_id]
             await send_unread_message_count_via_ws_async(user)
             serializer = ChatMessageWSSerializer(message, context={"user": user})
             response_json = await sync_to_async(lambda: serializer.data.copy())()
@@ -141,7 +143,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         message_id = message_data.get("id")
         await self.mark_as_read(message_id, self.scope["user"])
+        unread_count = (
+            ChatMessage.objects.filter(is_read=False)
+            .exclude(sender=self.scope["user"])
+            .filter(chat__members=self.scope["user"])
+            .count()
+        )
 
+        await self.channel_layer.group_send(
+            f"user_{self.scope['user'].id}_unread_messages",
+            {
+                "type": "send_unread_count",
+                "count": unread_count,
+            },
+        )
         await self.send(text_data=json.dumps(message_data))
 
     async def send_notification(self, message, user):
@@ -182,21 +197,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 continue
 
             fcm_devices = await sync_to_async(
-                lambda: list(notification_setting.fcm_device.all())
+                lambda: notification_setting.fcm_device.all()
             )()
+
             if fcm_devices:
-                for device in fcm_devices:
-                    try:
-                        await sync_to_async(device.send_message)(
-                            push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
-                        )
-                    except UnregisteredError:
-                        logger.warning(
-                            f"Удаление недействительного FCM устройства: {device.registration_id}"
-                        )
-                        await sync_to_async(device.delete)()
-                    except Exception as e:
-                        logger.error(f"Ошибка при отправке push: {e}")
+                try:
+                    await sync_to_async(fcm_devices.send_message)(
+                        push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                    )
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке push: {e}")
+
+    @database_sync_to_async
+    def get_users_by_ids(self, ids):
+        return list(User.objects.filter(id__in=ids))
 
     @database_sync_to_async
     def mark_as_read(self, message_id, user):
@@ -208,20 +222,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message.is_delivered = True
                 message.is_read = True
                 message.save(update_fields=["is_delivered", "is_read"])
-                unread_count = (
-                    ChatMessage.objects.filter(is_read=False)
-                    .exclude(sender=user)
-                    .filter(chat__members=user)
-                    .count()
-                )
-
-                async_to_sync(self.channel_layer.group_send)(
-                    f"user_{user.id}_unread_messages",
-                    {
-                        "type": "send_unread_count",
-                        "count": unread_count,
-                    },
-                )
         except ChatMessage.DoesNotExist:
             pass
 

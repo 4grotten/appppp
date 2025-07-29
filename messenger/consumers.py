@@ -117,7 +117,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         response_json = await sync_to_async(lambda: serializer.data.copy())()
 
         await self.send_notification(message=message, user=user)
-        await send_unread_message_count_via_ws_async(user)
 
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat_message", "message": response_json}
@@ -125,6 +124,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         participant_ids = await self.get_chat_participant_ids(self.chat)
         for user_id in participant_ids:
             user = await sync_to_async(User.objects.get)(id=user_id)
+            await send_unread_message_count_via_ws_async(user)
             serializer = ChatMessageWSSerializer(message, context={"user": user})
             response_json = await sync_to_async(lambda: serializer.data.copy())()
             await self.channel_layer.group_send(

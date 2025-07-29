@@ -140,18 +140,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message_data = event["message"]
+        user = self.scope["user"]
 
         message_id = message_data.get("id")
-        await self.mark_as_read(message_id, self.scope["user"])
-        unread_count = (
-            ChatMessage.objects.filter(is_read=False)
-            .exclude(sender=self.scope["user"])
-            .filter(chat__members=self.scope["user"])
-            .count()
-        )
+        await self.mark_as_read(message_id, user)
+
+        unread_count = await sync_to_async(
+            lambda: (
+                ChatMessage.objects.filter(is_read=False)
+                .exclude(sender=user)
+                .filter(chat__members=user)
+                .count()
+            )
+        )()
 
         await self.channel_layer.group_send(
-            f"user_{self.scope['user'].id}_unread_messages",
+            f"user_{user.id}_unread_messages",
             {
                 "type": "send_unread_count",
                 "count": unread_count,

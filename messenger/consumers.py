@@ -197,14 +197,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 continue
 
             fcm_devices = await sync_to_async(
-                lambda: notification_setting.fcm_device.all()
+                lambda: list(notification_setting.fcm_device.all())
             )()
 
             if fcm_devices:
                 try:
-                    await sync_to_async(fcm_devices.send_message)(
-                        push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
-                    )
+                    for device in fcm_devices:
+                        await sync_to_async(device.send_message)(
+                            push_message, dry_run=settings.FCM_DRY_RUN_ENABLE
+                        )
                 except Exception as e:
                     logger.error(f"Ошибка при отправке push: {e}")
 

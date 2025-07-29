@@ -352,6 +352,8 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "is_blocked",
             "blocked_by_me",
             "unread_messages_count",
+            "created_at",
+            "updated_at",
         )
 
     def get_last_message(self, chat):

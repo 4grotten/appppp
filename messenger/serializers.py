@@ -352,6 +352,8 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "is_blocked",
             "blocked_by_me",
             "unread_messages_count",
+            "created_at",
+            "updated_at",
         )
 
     def get_last_message(self, chat):
@@ -445,6 +447,8 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
     chat_id = serializers.SerializerMethodField()
     is_members = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -456,7 +460,23 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
             "types",
             "chat_id",
             "is_members",
+            "updated_at",
+            "created_at",
         )
+
+    def get_updated_at(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.updated_at if chat else None
+
+    def get_created_at(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.created_at if chat else None
 
     def get_chat_id(self, organization: Organization):
         request = self.context.get("request")

@@ -449,6 +449,8 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
     is_members = serializers.SerializerMethodField()
     updated_at = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
+    blocked_by_me = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -462,7 +464,20 @@ class OrganizationSimpleSerializer(serializers.ModelSerializer):
             "is_members",
             "updated_at",
             "created_at",
+            "blocked_by_me",
+            "is_blocked",
         )
+
+    def get_is_blocked(self, organization: Organization):
+        request = self.context.get("request")
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.is_blocked()
+
+    def get_blocked_by_me(self, organization: Organization):
+        request = self.context.get("request")
+        user = request.user
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.is_blocked_by(user)
 
     def get_updated_at(self, organization: Organization):
         request = self.context.get("request")

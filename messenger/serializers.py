@@ -14,6 +14,73 @@ from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer
 
 
+class OrganizationFinderSerializer(serializers.ModelSerializer):
+    unread_messages_count = serializers.IntegerField()
+    image = ImageSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    chat_id = serializers.SerializerMethodField()
+    is_members = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
+    blocked_by_me = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = (
+            "id",
+            "title",
+            "image",
+            "types",
+            "chat_id",
+            "is_members",
+            "updated_at",
+            "created_at",
+            "blocked_by_me",
+            "is_blocked",
+        )
+
+    def get_is_blocked(self, organization: Organization):
+        request = self.context.get("request")
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.is_blocked()
+
+    def get_blocked_by_me(self, organization: Organization):
+        request = self.context.get("request")
+        user = request.user
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.is_blocked_by(user)
+
+    def get_updated_at(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.updated_at if chat else None
+
+    def get_created_at(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.created_at if chat else None
+
+    def get_chat_id(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        chat = organization.messenger_chats.filter(members=request.user).first()
+        return chat.id if chat else None
+
+    def get_is_members(self, organization: Organization):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return organization.memberships.filter(
+            user=request.user, role__can_send_message=True
+        ).exists()
+
+
 class MessengerChatSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     blocked_by_me = serializers.SerializerMethodField()
@@ -383,7 +450,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         organization = chat.organization
         if organization:
-            return OrganizationSimpleSerializer(
+            return OrganizationFinderSerializer(
                 organization, context={"request": request}
             ).data
 

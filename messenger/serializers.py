@@ -5,6 +5,7 @@ from common.serializers import ImageSerializer
 from instagrapi.types import UserShort
 from organizations.models import Organization
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
+from organizations.serializers.organization_serializers import OrganizationSerializer
 from rest_framework import serializers
 
 from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
@@ -339,6 +340,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
     blocked_by_me = serializers.SerializerMethodField()
     sender = serializers.SerializerMethodField()
     unread_messages_count = serializers.IntegerField()
+    organization = serializers.SerializerMethodField()
 
     class Meta:
         model = MessengerChat
@@ -352,6 +354,7 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
             "is_blocked",
             "blocked_by_me",
             "unread_messages_count",
+            "organization",
             "created_at",
             "updated_at",
         )
@@ -374,6 +377,16 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
         sender = chat.members.exclude(id=request_user.id).first()
         if sender:
             return UserShortInfoSerializer(sender).data
+        return None
+
+    def get_organization(self, chat):
+        request = self.context["request"]
+        organization = chat.organization
+        if organization:
+            return OrganizationSimpleSerializer(
+                organization, context={"request": request}
+            ).data
+
         return None
 
 

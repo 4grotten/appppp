@@ -15,7 +15,6 @@ from users.serializers import UserShortInfoSerializer
 
 
 class OrganizationFinderSerializer(serializers.ModelSerializer):
-    unread_messages_count = serializers.IntegerField()
     image = ImageSerializer()
     types = OrganizationTypeSerializer(many=True)
     chat_id = serializers.SerializerMethodField()

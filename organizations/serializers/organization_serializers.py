@@ -431,8 +431,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     unread_chat_count = serializers.SerializerMethodField(allow_null=True)
 
     def get_unread_chat_count(self, organization: Organization):
+        organization_id = organization.id
         count_unread = ChatMessage.objects.filter(
-            chat__organization=organization, is_read=False
+            chat__organization=organization_id, is_read=False
         ).count()
         return count_unread
 

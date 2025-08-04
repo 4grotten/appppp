@@ -53,7 +53,7 @@ from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
 from users.models import PromoCode, User
 from users.serializers import UserShortInfoSerializer, UserInfoSerializer
-
+from messenger.models import MessengerChat, ChatMessage as ChatMessageModel
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -432,7 +432,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
     def get_unread_chat_count(self, organization: Organization):
         organization_id = organization.id
-        count_unread = ChatMessage.objects.filter(
+        count_unread = ChatMessageModel.objects.filter(
             chat__organization=organization_id, is_read=False
         ).count()
         return count_unread

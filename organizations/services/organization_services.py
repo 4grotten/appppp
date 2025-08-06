@@ -975,9 +975,7 @@ class ItemService:
                              subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
 
         base_filters = (
-            Q(is_active=True) &
             Q(subcategory__in=service.subcategory.all()) &
-            ~Q(is_deleted=True) &
             Q(organization__is_active=True) &
             ~Q(organization__is_banned=True) &
             ~Q(organization__is_deleted=True)

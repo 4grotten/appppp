@@ -61,7 +61,7 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
 
 
 class ItemServiceSerializer(serializers.ModelSerializer):
-    images = ImageSerializer()
+    images = ImageSerializer(many=True, read_only=True)
     organization_name = serializers.CharField(
         source="organization.title", read_only=True
     )

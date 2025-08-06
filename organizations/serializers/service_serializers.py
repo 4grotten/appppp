@@ -70,7 +70,6 @@ class ItemServiceSerializer(serializers.ModelSerializer):
     )
     organization_id = serializers.IntegerField(source="organization.id", read_only=True)
     category = serializers.CharField(source="subcategory.title", read_only=True)
-    old_price = serializers.SerializerMethodField()
     instagram = serializers.URLField(source="instagram_link", read_only=True)
 
     class Meta:
@@ -80,18 +79,12 @@ class ItemServiceSerializer(serializers.ModelSerializer):
             "name",
             "images",
             "price",
-            "old_price",
-            "discount_price",
             "currency",
             "category",
+            "discount",
             "description",
             "organization_name",
             "types",
             "organization_id",
             "instagram",
         )
-
-    def get_old_price(self, obj):
-        if obj.discount and obj.discount > 0:
-            return obj.price
-        return None

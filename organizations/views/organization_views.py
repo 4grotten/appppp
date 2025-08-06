@@ -131,6 +131,7 @@ from organizations.tasks import (
     add_subscribers_to_organization,
 )
 from shop.models import ShopItem
+from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 from users.services import UserService
@@ -962,7 +963,7 @@ class OrganizationsInServicesView(ListAPIView):
 
 
 class ItemsInServiceView(ListAPIView):
-    serializer_class = ItemServiceSerializer
+    serializer_class = ItemFeedSerializer
     queryset = ShopItem.objects.all()
     filter_backends = [SearchFilter]
     search_fields = ["name"]

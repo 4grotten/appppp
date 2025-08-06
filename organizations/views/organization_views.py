@@ -133,6 +133,7 @@ from organizations.tasks import (
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
+from shop.services.item_services import ShopItemService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 from users.services import UserService
 
@@ -981,13 +982,15 @@ class ItemsInServiceView(ListAPIView):
             service = Service.objects.get(id=service_id)
         except Service.DoesNotExist:
             raise ObjectNotFoundException
-
-        return ItemService.get_items_in_service(
+        queryset = ItemService.get_items_in_service(
             request=self.request,
             service=service,
             country=country,
             city=city,
             subcategory=subcategory,
+        )
+        return ShopItemService.annotate_likes_and_bookmarks(
+            queryset=queryset, user=self.request.user
         )
 
     def list(self, request, *args, **kwargs):

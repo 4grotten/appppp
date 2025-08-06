@@ -42,7 +42,7 @@ from organizations.models import (
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import delete_not_updated_posts_from_instagram, parse_instagram_to_shop_items
-from shop.models import ItemSubcategory
+from shop.models import ItemSubcategory, ShopItem
 from transactions.models import Transaction
 from users.models import User
 from utils.translator import GoogleTranslator
@@ -964,3 +964,33 @@ class OrganizationBannerService:
         ]
         return banners
 
+
+
+class ItemService:
+    model = ShopItem
+
+    @classmethod
+    def get_items_in_service(cls, request, service: Service, country: Union[Country, None] = None,
+                             city: Union[City, None] = None,
+                             subcategory: Union[ItemSubcategory, None] = None) -> QuerySet:
+
+        base_filters = (
+            Q(is_active=True) &
+            Q(subcategory__in=service.subcategory.all()) &
+            ~Q(is_deleted=True) &
+            Q(organization__is_active=True) &
+            ~Q(organization__is_banned=True) &
+            ~Q(organization__is_deleted=True)
+        )
+
+        if subcategory:
+            base_filters &= Q(subcategory=subcategory)
+
+        if country:
+            base_filters &= Q(organization__country=country)
+
+        if city:
+            base_filters &= Q(organization__city=city)
+
+        queryset = cls.model.objects.filter(base_filters).distinct()
+        return queryset

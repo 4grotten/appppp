@@ -13,8 +13,20 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Service
-        fields = ('id', 'is_discounts', 'is_entertainment', 'is_map', 'is_resume', 'is_wholesale', 'is_application',
-                  'ordering', 'name', 'icon', 'banner', 'description')
+        fields = (
+            "id",
+            "is_discounts",
+            "is_entertainment",
+            "is_map",
+            "is_resume",
+            "is_wholesale",
+            "is_application",
+            "ordering",
+            "name",
+            "icon",
+            "banner",
+            "description",
+        )
 
 
 class OrganizationServiceSerializer(serializers.ModelSerializer):
@@ -25,13 +37,42 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
     def get_time_working(self, organization: Organization):
         working_type = organization.time_working
         if working_type == 1:
-            return 'around_the_clock'
+            return "around_the_clock"
         if working_type == 2:
-            return 'open'
+            return "open"
         if working_type == 3:
-            return 'closed'
+            return "closed"
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'opens_at', 'closes_at', 'time_working',
-                  'verification_status', 'avg_check', 'currency', 'full_location')
+        fields = (
+            "id",
+            "title",
+            "image",
+            "types",
+            "opens_at",
+            "closes_at",
+            "time_working",
+            "verification_status",
+            "avg_check",
+            "currency",
+            "full_location",
+        )
+
+
+class ItemServiceSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = ShopItem
+        fields = (
+            "id",
+            "title",
+            "image",
+            "price",
+            "currency",
+            "is_available",
+            "is_discounted",
+            "discount_price",
+            "description",
+        )

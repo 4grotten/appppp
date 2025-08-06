@@ -54,11 +54,11 @@ from organizations.serializers.query_param_serializers import (
     OrganizationMapsLocationSerializer, OrganizationQueryParamSerializer, OrganizationNumSubsQueryParamSerializer,
     CountryQueryParamSerializer
 )
-from organizations.serializers.service_serializers import OrganizationServiceSerializer
+from organizations.serializers.service_serializers import ItemServiceSerializer, OrganizationServiceSerializer
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
 from organizations.services.organization_services import (
-    OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
+    ItemService, OrganizationService, OrgPhoneNumberService, OrgSocialNetworkContactService, OrgMessageService,
     OrganizationInstagramIntegrationService, OrganizationBannerService
 )
 from organizations.services.subscription_services import SubscriptionService, UserOrgSubscriptionService
@@ -66,6 +66,7 @@ from organizations.services.verifications_service import VerificationService, Pa
 from organizations.tasks import (
     parse_instagram_to_shop_items, add_subscribers_to_organization
 )
+from shop.models import ShopItem
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
 from users.services import UserService
@@ -746,6 +747,34 @@ class OrganizationsInServicesView(ListAPIView):
             response.data['name'] = Service.objects.filter(id=self.kwargs['pk']).values_list('name', flat=True).first()
             return response
 
+class ItemsInServiceView(ListAPIView):
+    serializer_class = ItemServiceSerializer
+    queryset = ShopItem.objects.all()
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
+
+    def get_queryset(self):
+        serializer = OrganizationCoutrySerializer(data=self.request.GET)
+        serializer.is_valid(raise_exception=True)
+
+        country = serializer.validated_data.get('country')
+        city = serializer.validated_data.get('city')
+        subcategory = serializer.validated_data.get('subcategory')
+
+        service_id = self.kwargs.get('pk')
+        try:
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            raise ObjectNotFoundException
+
+        # Получаем отфильтрованные товары
+        return ItemService.get_items_in_service(
+            request=self.request,
+            service=service,
+            country=country,
+            city=city,
+            subcategory=subcategory
+        )
 
 class HomepageSearchView(ListAPIView):
     filter_backends = (SearchFilter, DjangoFilterBackend)

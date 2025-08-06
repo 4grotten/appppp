@@ -61,18 +61,37 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
 
 
 class ItemServiceSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    images = ImageSerializer()
+    organization_name = serializers.CharField(
+        source="organization.title", read_only=True
+    )
+    types = OrganizationTypeSerializer(
+        many=True, source="organization.types", read_only=True
+    )
+    organization_id = serializers.IntegerField(source="organization.id", read_only=True)
+    category = serializers.CharField(source="subcategory.title", read_only=True)
+    old_price = serializers.SerializerMethodField()
+    instagram = serializers.URLField(source="instagram_link", read_only=True)
 
     class Meta:
         model = ShopItem
         fields = (
             "id",
-            "title",
-            "image",
+            "name",
+            "images",
             "price",
-            "currency",
-            "is_available",
-            "is_discounted",
+            "old_price",
             "discount_price",
+            "currency",
+            "category",
             "description",
+            "organization_name",
+            "types",
+            "organization_id",
+            "instagram",
         )
+
+    def get_old_price(self, obj):
+        if obj.discount and obj.discount > 0:
+            return obj.price
+        return None

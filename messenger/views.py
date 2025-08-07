@@ -8,7 +8,6 @@ from messenger.constants import (
     ADMIN,
     GROUP,
     MEMBER,
-    PRIVATE,
 )
 from messenger.utils import (
     get_chat_translation,
@@ -1088,14 +1087,15 @@ class MessengerChatsOrganiationAPIView(APIView):
         return Response(serializer.data, status=200)
 
     def post(self, request):
-        user = request.user
+        user_id = request.user.id
+
         org_id = request.data.get("organization_id")
         organization = get_object_or_404(Organization, id=org_id)
         users_organization = organization.memberships.filter(
             role__can_send_message=True
         )
 
-        if users_organization.filter(user=user).exists():
+        if users_organization.filter(user=user_id).exists():
             return Response(
                 {"detail": "You already have access to this organization."},
                 status=200,
@@ -1107,7 +1107,7 @@ class MessengerChatsOrganiationAPIView(APIView):
         )
 
         if exists_chat:
-            if exists_chat.filter(members=user).exists():
+            if exists_chat.filter(members=user_id).exists():
                 return Response(
                     {
                         "chat_id": exists_chat.first().id,
@@ -1118,9 +1118,9 @@ class MessengerChatsOrganiationAPIView(APIView):
         chat = MessengerChat.objects.create(
             chat_type=GROUP, title=None, organization=organization
         )
-        chat_members = [ChatMember(chat=chat, user=user)]
+        chat_members = [ChatMember(chat=chat, user=user_id, role=MEMBER)]
         for member in users_organization:
-            chat_members.append(ChatMember(chat=chat, user=member.user))
+            chat_members.append(ChatMember(chat=chat, user=member.user, role=ADMIN))
         ChatMember.objects.bulk_create(chat_members)
 
         return Response(

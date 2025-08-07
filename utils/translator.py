@@ -16,8 +16,11 @@ class GoogleTranslator:
             f"используется прокси {random_proxy} для перевода текста: {text}"
         )
         try:
-            proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
-            translator = Translator(proxies=proxies)
+            if random_proxy:
+                proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
+                translator = Translator(proxies=proxies)
+            else:
+                translator = Translator()
             return translator
         except Exception as e:
             message = (

@@ -11,17 +11,41 @@ from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
-from common.serializers import ImageSerializer, CountrySerializer, CitySerializer, FileSmallImageSerializer
-from organizations.models import (
-    PhoneNumber, SocialNetworkContact, Organization, Message, Membership, InstagramIntegration,
-    OrganizationVerificationUsers, OrganizationComplaint, OrganizationBlacklist, BlockedUser,
-    OrganizationPaymentSystemUsers, ChatMessage, RegionalTariff, UserOrgSubscription, OrganizationBanner
+from common.serializers import (
+    ImageSerializer,
+    CountrySerializer,
+    CitySerializer,
+    FileSmallImageSerializer,
 )
-from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
-from organizations.serializers.card_serializers import DiscountGroupSerializer, DiscountCardSerializer
+from organizations.models import (
+    PhoneNumber,
+    SocialNetworkContact,
+    Organization,
+    Message,
+    Membership,
+    InstagramIntegration,
+    OrganizationVerificationUsers,
+    OrganizationComplaint,
+    OrganizationBlacklist,
+    BlockedUser,
+    OrganizationPaymentSystemUsers,
+    ChatMessage,
+    RegionalTariff,
+    UserOrgSubscription,
+    OrganizationBanner,
+)
+from organizations.serializers.assistant_serializers import (
+    OrganizationAssistantSerializer,
+)
+from organizations.serializers.card_serializers import (
+    DiscountGroupSerializer,
+    DiscountCardSerializer,
+)
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
-from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.client_status_services import (
+    OrganizationClientFinancialStatusService,
+)
 from organizations.services.organization_promo_services import OrganizationPromoService
 from organizations.services.organization_services import OrganizationService
 from organizations.services.subscription_services import SubscriptionService
@@ -29,12 +53,12 @@ from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
 from users.models import PromoCode, User
 from users.serializers import UserShortInfoSerializer, UserInfoSerializer
-
+from messenger.models import MessengerChat, ChatMessage as ChatMessageModel
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneNumber
-        fields = ('id', 'phone_number')
+        fields = ("id", "phone_number")
 
 
 class OrgPhoneNumberEditSerializer(serializers.Serializer):
@@ -44,7 +68,7 @@ class OrgPhoneNumberEditSerializer(serializers.Serializer):
 class OrgSocialNetworkContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialNetworkContact
-        fields = ('id', 'url')
+        fields = ("id", "url")
 
 
 class OrgSocialNetworkEditSerializer(serializers.Serializer):
@@ -56,7 +80,7 @@ class OrganizationBannerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrganizationBanner
-        fields = ('id', 'image', 'is_default')
+        fields = ("id", "image", "is_default")
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -65,25 +89,40 @@ class OrganizationSerializer(serializers.ModelSerializer):
     types = serializers.StringRelatedField(many=True)
 
     def get_role(self, organization: Organization):
-        if 'request' in self.context:
-            user = self.context['request'].user
-            return OrganizationService.get_user_role_in_organization(organization=organization, user=user)
+        if "request" in self.context:
+            user = self.context["request"].user
+            return OrganizationService.get_user_role_in_organization(
+                organization=organization, user=user
+            )
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'role', 'description', 'image_id',
-                  'opens_at', 'closes_at', 'show_contacts', 'types', 'full_location', 'address', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "image",
+            "role",
+            "description",
+            "image_id",
+            "opens_at",
+            "closes_at",
+            "show_contacts",
+            "types",
+            "full_location",
+            "address",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationBlacklistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrganizationBlacklist
-        fields = ['organization']
+        fields = ["organization"]
 
     def validate(self, attrs):
-        attrs['user'] = self.context['request'].user
+        attrs["user"] = self.context["request"].user
         return attrs
 
 
@@ -91,17 +130,17 @@ class BlockedUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BlockedUser
-        fields = ['id', 'user', 'organization']
+        fields = ["id", "user", "organization"]
 
     def validate(self, attrs):
-        organization_id = attrs['organization'].id
-        user_id = self.context['request'].user.id
+        organization_id = attrs["organization"].id
+        user_id = self.context["request"].user.id
         try:
             organization = Organization.objects.get(id=organization_id)
             if organization.owner.id != user_id:
-                raise NotAcceptableException(_('No rights to edit organization'))
+                raise NotAcceptableException(_("No rights to edit organization"))
         except Organization.DoesNotExist:
-            raise ObjectNotFoundException(_('Organization not found'))
+            raise ObjectNotFoundException(_("Organization not found"))
 
         return attrs
 
@@ -109,10 +148,13 @@ class BlockedUserSerializer(serializers.ModelSerializer):
 class OrganizationComplaintSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationComplaint
-        fields = ('organization', 'reason',)
+        fields = (
+            "organization",
+            "reason",
+        )
 
     def validate(self, attrs):
-        attrs['user'] = self.context['request'].user
+        attrs["user"] = self.context["request"].user
         return attrs
 
 
@@ -121,8 +163,8 @@ class OrganizationWithImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "image", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
@@ -131,8 +173,8 @@ class OrganizationWithTypeImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "image", "types", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
@@ -141,28 +183,41 @@ class ItemFeedOrganizationSerializer(OrganizationWithTypeImageSerializer):
     phone_numbers = OrgPhoneNumberSerializer(many=True)
 
     def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
-        return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
+        return OrganizationPromoService.get_available_promo_cashback_amount(
+            organization=organization
+        )
 
     def get_permissions(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
+        if self.context["request"].user.is_anonymous:
             return None
-        return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                             user=self.context['request'].user)
+        return OrganizationService.get_user_permissions_dict(
+            organization=organization, user=self.context["request"].user
+        )
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'currency', 'promo_cashback', 'types', 'phone_numbers', 'permissions',
-            'verification_status', 'is_private', 'is_wholesale', 'subscription_status'
+            "id",
+            "title",
+            "image",
+            "currency",
+            "promo_cashback",
+            "types",
+            "phone_numbers",
+            "permissions",
+            "verification_status",
+            "is_private",
+            "is_wholesale",
+            "subscription_status",
         )
-        read_only_fields = ['verification_status']
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationShortInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class PartnerSerializer(serializers.ModelSerializer):
@@ -171,17 +226,28 @@ class PartnerSerializer(serializers.ModelSerializer):
     partners = serializers.SerializerMethodField()
 
     def get_partners(self, organization: Organization):
-        count, partners = OrganizationService.get_partners_dict(organization=organization)
+        count, partners = OrganizationService.get_partners_dict(
+            organization=organization
+        )
         return {
-            'count': count,
-            'list': OrganizationWithImageSerializer(partners, many=True,
-                                                    context={'request': self.context.get('request')}).data
+            "count": count,
+            "list": OrganizationWithImageSerializer(
+                partners, many=True, context={"request": self.context.get("request")}
+            ).data,
         }
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "address",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class PartnerWithLatestTransactionSerializer(PartnerSerializer):
@@ -193,12 +259,22 @@ class PartnerWithLatestTransactionSerializer(PartnerSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'latest_transaction_time', 'image', 'types', 'partners',
-                  'verification_status')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "address",
+            "latest_transaction_time",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
-class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(
+    PartnerSerializer
+):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()
 
@@ -207,18 +283,31 @@ class PartnerWithLatestTransactionUnprocessedTransactionCountSerializer(PartnerS
         return organization.latest_transaction_time
 
     def get_unprocessed_transaction_count(self, organization: Organization):
-        return Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.ONLINE).count()
+        return Transaction.objects.filter(
+            organization=organization,
+            status=Transaction.IN_PROGRESS,
+            type=Transaction.ONLINE,
+        ).count()
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
-            'partners', 'verification_status')
-        read_only_fields = ['verification_status']
+            "id",
+            "title",
+            "address",
+            "latest_transaction_time",
+            "unprocessed_transaction_count",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
-class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer(
+    PartnerSerializer
+):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()
 
@@ -226,9 +315,13 @@ class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerialize
         return organization.latest_transaction_time
 
     def get_unprocessed_transaction_count(self, organization: Organization):
-        withdrawal_type = self.context['request'].GET.get('withdrawal_type', None)
-        transactions = Transaction.objects.filter(organization=organization, status=Transaction.IN_PROGRESS,
-                                          type=Transaction.WITHDRAWAL, payment_info__isnull=False)
+        withdrawal_type = self.context["request"].GET.get("withdrawal_type", None)
+        transactions = Transaction.objects.filter(
+            organization=organization,
+            status=Transaction.IN_PROGRESS,
+            type=Transaction.WITHDRAWAL,
+            payment_info__isnull=False,
+        )
         if withdrawal_type is not None:
             transactions = transactions.filter(withdrawal_type=withdrawal_type)
         return transactions.count()
@@ -236,38 +329,59 @@ class PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerialize
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
-            'partners', 'verification_status')
-        read_only_fields = ['verification_status']
+            "id",
+            "title",
+            "address",
+            "latest_transaction_time",
+            "unprocessed_transaction_count",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
-class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(PartnerSerializer):
+class PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer(
+    PartnerSerializer
+):
     latest_transaction_time = serializers.SerializerMethodField()
     unprocessed_transaction_count = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
 
-
     def get_permissions(self, organization: Organization):
-        if 'request' in self.context:
-            if self.context['request'].user.is_anonymous:
+        if "request" in self.context:
+            if self.context["request"].user.is_anonymous:
                 return None
-            return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                                 user=self.context['request'].user)
+            return OrganizationService.get_user_permissions_dict(
+                organization=organization, user=self.context["request"].user
+            )
 
     def get_latest_transaction_time(self, organization: Organization):
         # Annotated field
         return organization.latest_transaction_time
 
     def get_unprocessed_transaction_count(self, organization: Organization):
-        queryset = Transaction.objects.filter(organization=organization, ticket__item__purchase_type=ShopItem.TICKET)
+        queryset = Transaction.objects.filter(
+            organization=organization, ticket__item__purchase_type=ShopItem.TICKET
+        )
         return Ticket.objects.filter(transaction__in=queryset, is_active=False).count()
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'address', 'latest_transaction_time', 'unprocessed_transaction_count', 'image', 'types',
-            'partners', 'verification_status', 'permissions')
-        read_only_fields = ['verification_status']
+            "id",
+            "title",
+            "address",
+            "latest_transaction_time",
+            "unprocessed_transaction_count",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+            "permissions",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class HomepagePartnerSerializer(serializers.ModelSerializer):
@@ -276,13 +390,15 @@ class HomepagePartnerSerializer(serializers.ModelSerializer):
     partners = serializers.SerializerMethodField()
 
     def get_partners(self, organization: Organization):
-        partners = OrganizationService.get_organization_partners(organization=organization)
+        partners = OrganizationService.get_organization_partners(
+            organization=organization
+        )
         return OrganizationWithImageSerializer(partners, many=True).data
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'types', 'partners', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "image", "types", "partners", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationDetailedSerializer(serializers.ModelSerializer):
@@ -312,11 +428,21 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     online_payment_activated = serializers.SerializerMethodField()
     is_wholesale_in_request = serializers.SerializerMethodField()
     all_unread_messages_count = serializers.SerializerMethodField(allow_null=True)
+    unread_chat_count = serializers.SerializerMethodField(allow_null=True)
+
+    def get_unread_chat_count(self, organization: Organization):
+        organization_id = organization.id
+        count_unread = ChatMessageModel.objects.filter(
+            chat__organization=organization_id, is_read=False
+        ).count()
+        return count_unread
 
     def get_all_unread_messages_count(self, organization: Organization):
         try:
             assistant = organization.assistant
-            return ChatMessage.objects.filter(chat__assistant=assistant, is_read=False).count()
+            return ChatMessage.objects.filter(
+                chat__assistant=assistant, is_read=False
+            ).count()
         except Organization.assistant.RelatedObjectDoesNotExist:
             return None
 
@@ -329,7 +455,9 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return True
 
     def get_is_adult_content(self, organization: Organization):
-        has_adults_item = bool(organization.shop_items.filter(subcategory__category__is_adult=True).count())
+        has_adults_item = bool(
+            organization.shop_items.filter(subcategory__category__is_adult=True).count()
+        )
         has_adult_org_type = bool(organization.types.filter(is_adult=True).count())
         if has_adults_item or has_adult_org_type:
             return True
@@ -345,42 +473,53 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return CountrySerializer(currency_country).data
 
     def get_permissions(self, organization: Organization):
-        if 'request' in self.context:
-            if self.context['request'].user.is_anonymous:
+        if "request" in self.context:
+            if self.context["request"].user.is_anonymous:
                 return None
-            return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                                 user=self.context['request'].user)
+            return OrganizationService.get_user_permissions_dict(
+                organization=organization, user=self.context["request"].user
+            )
 
     def get_subscribers(self, organization: Organization):
-        return SubscriptionService.get_number_of_subscriptions(organization=organization)
+        return SubscriptionService.get_number_of_subscriptions(
+            organization=organization
+        )
 
     def get_discounts(self, organization: Organization):
-        discounts = DiscountCardService.get_grouped_discounts(organization_id=organization.id)
+        discounts = DiscountCardService.get_grouped_discounts(
+            organization_id=organization.id
+        )
         return DiscountGroupSerializer(discounts).data
 
     def get_is_subscribed(self, organization: Organization):
-        if 'request' in self.context:
-            if self.context['request'].user.is_anonymous:
+        if "request" in self.context:
+            if self.context["request"].user.is_anonymous:
                 return
-            return SubscriptionService.is_subscribed(organization=organization, user=self.context['request'].user)
+            return SubscriptionService.is_subscribed(
+                organization=organization, user=self.context["request"].user
+            )
 
     def get_promo_cashback(self, organization: Organization) -> Optional[Decimal]:
-        return OrganizationPromoService.get_available_promo_cashback_amount(organization=organization)
+        return OrganizationPromoService.get_available_promo_cashback_amount(
+            organization=organization
+        )
 
     def get_client_status(self, organization: Organization):
-        if 'request' in self.context:
-            if self.context['request'].user.is_anonymous:
+        if "request" in self.context:
+            if self.context["request"].user.is_anonymous:
                 return
             data = OrganizationClientFinancialStatusService.get_client_financial_status_data(
-                client=self.context['request'].user, organization=organization
+                client=self.context["request"].user, organization=organization
             )
             return data
 
     def get_partners(self, organization: Organization):
-        count, partners = OrganizationService.get_partners_dict(organization=organization)
+        count, partners = OrganizationService.get_partners_dict(
+            organization=organization
+        )
         return {
-            'count': count,
-            'list': OrganizationWithImageSerializer(partners, many=True).data
+            "count": count,
+            "list": OrganizationWithImageSerializer(partners, many=True).data,
         }
 
     def get_need_add_item(self, obj):
@@ -389,9 +528,11 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         return False
 
     def get_is_blacklist(self, organization: Organization):
-        if 'request' in self.context:
-            user = self.context['request'].user
-            return OrganizationBlacklist.objects.filter(organization_id=organization.id, user_id=user.id).exists()
+        if "request" in self.context:
+            user = self.context["request"].user
+            return OrganizationBlacklist.objects.filter(
+                organization_id=organization.id, user_id=user.id
+            ).exists()
 
     def get_has_online_payment(self, organization: Organization):
         freedompay_confirmed = organization.freedompay_confirmed
@@ -399,7 +540,12 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         libersave_confirmed = organization.libersave_confirmed
         betapay_confirmed = organization.betapay_confirmed
 
-        return freedompay_confirmed or paysy_confirmed or libersave_confirmed or betapay_confirmed
+        return (
+            freedompay_confirmed
+            or paysy_confirmed
+            or libersave_confirmed
+            or betapay_confirmed
+        )
 
     def get_online_payment_activated(self, organization: Organization):
         payment_systems_activated = organization.payment_systems_activated
@@ -411,22 +557,68 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
         betapay_actiavated = organization.betapay_activated
         cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_actiavated or \
-               cryptocloud_activated
+        return (
+            freedompay_activated
+            or paysy_activated
+            or libersave_activated
+            or betapay_actiavated
+            or cryptocloud_activated
+        )
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'title_lang', 'image', 'subscribers', 'description', 'description_lang', 'show_contacts',
-            'opens_at', 'closes_at', 'currency', 'currency_country', 'country', 'city', 'address', 'selected_banner',
-            'full_location', 'types', 'phone_numbers', 'social_contacts', 'discounts', 'has_delivery',
-            'has_self_pick_up', 'promo_cashback', 'is_subscribed', 'permissions', 'client_status', 'partners',
-            'is_deleted', 'is_delivery_service', 'is_adult_content', 'time_working', 'is_banned', 'is_private',
-            'verification_status', 'avg_check', 'need_add_item', 'switcher', 'is_blacklist', 'has_online_payment',
-            'online_payment_activated', 'show_followers', 'is_wholesale', 'can_update_is_wholesale',
-            'is_wholesale_in_request', 'assistant', 'all_unread_messages_count', 'subscription_status'
+            "id",
+            "title",
+            "title_lang",
+            "image",
+            "subscribers",
+            "description",
+            "description_lang",
+            "show_contacts",
+            "opens_at",
+            "closes_at",
+            "currency",
+            "currency_country",
+            "country",
+            "city",
+            "address",
+            "selected_banner",
+            "full_location",
+            "types",
+            "phone_numbers",
+            "social_contacts",
+            "discounts",
+            "has_delivery",
+            "has_self_pick_up",
+            "promo_cashback",
+            "is_subscribed",
+            "permissions",
+            "client_status",
+            "partners",
+            "is_deleted",
+            "is_delivery_service",
+            "is_adult_content",
+            "time_working",
+            "is_banned",
+            "is_private",
+            "verification_status",
+            "avg_check",
+            "need_add_item",
+            "switcher",
+            "is_blacklist",
+            "has_online_payment",
+            "online_payment_activated",
+            "show_followers",
+            "is_wholesale",
+            "can_update_is_wholesale",
+            "is_wholesale_in_request",
+            "assistant",
+            "all_unread_messages_count",
+            "subscription_status",
+            "unread_chat_count",
         )
-        read_only_fields = ['verification_status', 'need_add_item']
+        read_only_fields = ["verification_status", "need_add_item"]
 
 
 class OrganizationListSerializer(serializers.ModelSerializer):
@@ -434,22 +626,35 @@ class OrganizationListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
     def get_role(self, organization: Organization):
-        user = self.context['request'].user
-        return OrganizationService.get_user_role_in_organization(organization=organization, user=user)
+        user = self.context["request"].user
+        return OrganizationService.get_user_role_in_organization(
+            organization=organization, user=user
+        )
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'is_deleted', 'is_private', 'is_banned', 'verification_status', 'image', 'role',
-            'is_delivery_service', 'verification_status', 'avg_check', 'subscription_status')
-        read_only_fields = ['verification_status']
+            "id",
+            "title",
+            "is_deleted",
+            "is_private",
+            "is_banned",
+            "verification_status",
+            "image",
+            "role",
+            "is_delivery_service",
+            "verification_status",
+            "avg_check",
+            "subscription_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationNameListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title')
+        fields = ("id", "title")
 
 
 class OrganizationMapsListSerializer(serializers.ModelSerializer):
@@ -459,14 +664,47 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'image', 'avg_check', 'currency', 'full_location', 'types', 'country', 'city',
-            'verification_status', 'has_delivery', 'has_self_pick_up', 'has_license', 'freedompay_activated',
-            'paysy_activated', 'libersave_activated', 'betapay_activated', 'cryptocloud_activated',
-            'payment_systems_activated', 'payment_with_confirmation', 'freedompay_confirmed', 'paysy_confirmed',
-            'libersave_confirmed', 'betapay_confirmed', 'cryptocloud_confirmed', 'is_active', 'is_deleted', 'is_banned',
-            'is_under_review', 'is_private', 'show_contacts', 'is_wholesale', 'can_update_is_wholesale',
-            'is_delivery_service', 'is_bank', 'show_followers', 'is_show_on_map', 'opens_at', 'closes_at')
-        read_only_fields = ['verification_status']
+            "id",
+            "title",
+            "image",
+            "avg_check",
+            "currency",
+            "full_location",
+            "types",
+            "country",
+            "city",
+            "verification_status",
+            "has_delivery",
+            "has_self_pick_up",
+            "has_license",
+            "freedompay_activated",
+            "paysy_activated",
+            "libersave_activated",
+            "betapay_activated",
+            "cryptocloud_activated",
+            "payment_systems_activated",
+            "payment_with_confirmation",
+            "freedompay_confirmed",
+            "paysy_confirmed",
+            "libersave_confirmed",
+            "betapay_confirmed",
+            "cryptocloud_confirmed",
+            "is_active",
+            "is_deleted",
+            "is_banned",
+            "is_under_review",
+            "is_private",
+            "show_contacts",
+            "is_wholesale",
+            "can_update_is_wholesale",
+            "is_delivery_service",
+            "is_bank",
+            "show_followers",
+            "is_show_on_map",
+            "opens_at",
+            "closes_at",
+        )
+        read_only_fields = ["verification_status"]
 
     def get_is_show_on_map(self, organization: Organization):
         if organization.is_banned:
@@ -484,14 +722,11 @@ class OrganizationMapsListSerializer(serializers.ModelSerializer):
         return True
 
 
-
 class OrganizationCreateSerializer(serializers.ModelSerializer):
-    image_id = serializers.PrimaryKeyRelatedField(
-        queryset=File.objects.all()
-    )
+    image_id = serializers.PrimaryKeyRelatedField(queryset=File.objects.all())
     banners_image_ids = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=File.objects.all()),
-        required=False
+        required=False,
     )
     selected_banner_file_id = serializers.PrimaryKeyRelatedField(
         queryset=File.objects.all(), required=False
@@ -505,14 +740,30 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = (
-            'title', 'description', 'image_id', 'banners_image_ids', 'selected_banner_file_id', 'currency', 'country', 'city',
-            'opens_at', 'closes_at', 'address', 'longitude', 'latitude',
-            'types', 'numbers', 'accounts', 'cards', 'verification_status', 'avg_check'
+            "title",
+            "description",
+            "image_id",
+            "banners_image_ids",
+            "selected_banner_file_id",
+            "currency",
+            "country",
+            "city",
+            "opens_at",
+            "closes_at",
+            "address",
+            "longitude",
+            "latitude",
+            "types",
+            "numbers",
+            "accounts",
+            "cards",
+            "verification_status",
+            "avg_check",
         )
-        read_only_fields = ['verification_status']
+        read_only_fields = ["verification_status"]
 
     def validate(self, attrs):
-        attrs['owner'] = self.context['request'].user
+        attrs["owner"] = self.context["request"].user
         return attrs
 
 
@@ -520,7 +771,10 @@ class OrganizationGoogleMapsCreateSerializer(serializers.Serializer):
     google_maps_url = serializers.URLField()
 
     def validate_google_maps_url(self, value):
-        if not any(pattern in value.lower() for pattern in ['maps.google.com', 'google.com/maps', 'maps.app.goo.gl']):
+        if not any(
+            pattern in value.lower()
+            for pattern in ["maps.google.com", "google.com/maps", "maps.app.goo.gl"]
+        ):
             raise serializers.ValidationError(_("Invalid Google Maps URL"))
 
         return value
@@ -546,10 +800,29 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('title', 'image_id', 'longitude', 'latitude', 'description', 'types', 'selected_banner_id',
-                  'opens_at', 'closes_at', 'address', 'currency', 'show_contacts', 'country', 'city',
-                  'verification_status', 'avg_check', 'is_private', 'show_followers', 'switcher', 'is_wholesale')
-        read_only_fields = ['verification_status']
+        fields = (
+            "title",
+            "image_id",
+            "longitude",
+            "latitude",
+            "description",
+            "types",
+            "selected_banner_id",
+            "opens_at",
+            "closes_at",
+            "address",
+            "currency",
+            "show_contacts",
+            "country",
+            "city",
+            "verification_status",
+            "avg_check",
+            "is_private",
+            "show_followers",
+            "switcher",
+            "is_wholesale",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
@@ -558,11 +831,16 @@ class DeliverySettingsUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('has_delivery', 'has_self_pick_up',)
+        fields = (
+            "has_delivery",
+            "has_self_pick_up",
+        )
 
     def validate(self, attrs):
-        if not attrs['has_delivery'] and not attrs['has_self_pick_up']:
-            raise NotAcceptableException(_('Should have at least one enabled delivery option'))
+        if not attrs["has_delivery"] and not attrs["has_self_pick_up"]:
+            raise NotAcceptableException(
+                _("Should have at least one enabled delivery option")
+            )
         return attrs
 
 
@@ -575,15 +853,20 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = (
-            'id', 'content', 'message_to', 'created_at', 'receivers_count', 'receivers', 'receiver_partners',
-            'receiver_partner_count')
+            "id",
+            "content",
+            "message_to",
+            "created_at",
+            "receivers_count",
+            "receivers",
+            "receiver_partners",
+            "receiver_partner_count",
+        )
 
     def get_receivers(self, obj):
         receivers = Message.objects.get(id=obj.id).receivers.all()[0:3]
         return UserShortInfoSerializer(
-            receivers,
-            many=True,
-            context={"request": self.context.get("request")}
+            receivers, many=True, context={"request": self.context.get("request")}
         ).data
 
     def get_receivers_count(self, obj):
@@ -592,9 +875,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def get_receiver_partners(self, obj):
         partners = Message.objects.get(id=obj.id).receiver_partners.all()[0:3]
         return OrganizationWithImageSerializer(
-            partners,
-            many=True,
-            context={"request": self.context.get("request")}
+            partners, many=True, context={"request": self.context.get("request")}
         ).data
 
     def get_receiver_partner_count(self, obj):
@@ -608,12 +889,23 @@ class OrgMessageSerializer(MessageSerializer):
     class Meta:
         model = Message
         fields = (
-            'id', 'sender', 'message_to', 'content', 'created_at', 'receivers_count', 'receivers', 'sender_role',
-            'receiver_partner_count', 'receiver_partners')
+            "id",
+            "sender",
+            "message_to",
+            "content",
+            "created_at",
+            "receivers_count",
+            "receivers",
+            "sender_role",
+            "receiver_partner_count",
+            "receiver_partners",
+        )
 
     def get_sender_role(self, obj):
         try:
-            membership = Membership.objects.get(organization=obj.organization, user=obj.sender)
+            membership = Membership.objects.get(
+                organization=obj.organization, user=obj.sender
+            )
             return membership.role.title
         except Membership.DoesNotExist:
             return None
@@ -625,8 +917,17 @@ class SubscriptionsMessageSerializer(MessageSerializer):
     class Meta:
         model = Message
         fields = (
-            'id', 'content', 'message_to', 'organization', 'organization_address', 'created_at', 'receivers_count',
-            'receivers', 'receiver_partner_count', 'receiver_partners')
+            "id",
+            "content",
+            "message_to",
+            "organization",
+            "organization_address",
+            "created_at",
+            "receivers_count",
+            "receivers",
+            "receiver_partner_count",
+            "receiver_partners",
+        )
 
 
 class OrgMessageCreateSerializer(serializers.ModelSerializer):
@@ -634,7 +935,7 @@ class OrgMessageCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('content', 'message_to')
+        fields = ("content", "message_to")
 
 
 class OrganizationBannerInfo(serializers.ModelSerializer):
@@ -647,8 +948,16 @@ class OrganizationBannerInfo(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'max_discount', 'types', 'image', 'verification_status', 'avg_check')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "max_discount",
+            "types",
+            "image",
+            "verification_status",
+            "avg_check",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
@@ -668,22 +977,40 @@ class OrganizationShortInfoWithCurrencySerializer(serializers.ModelSerializer):
         betapay_activated = organization.betapay_activated
         cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated or \
-               cryptocloud_activated
+        return (
+            freedompay_activated
+            or paysy_activated
+            or libersave_activated
+            or betapay_activated
+            or cryptocloud_activated
+        )
 
     def get_permissions(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
+        if self.context["request"].user.is_anonymous:
             return None
-        return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                             user=self.context['request'].user)
+        return OrganizationService.get_user_permissions_dict(
+            organization=organization, user=self.context["request"].user
+        )
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'types', 'image', 'address', 'time_working', 'has_delivery',
-                  'has_self_pick_up', 'verification_status', 'avg_check', 'permissions', 'online_payment_activated',
-                  'payment_with_confirmation'
-                  )
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "currency",
+            "types",
+            "image",
+            "address",
+            "time_working",
+            "has_delivery",
+            "has_self_pick_up",
+            "verification_status",
+            "avg_check",
+            "permissions",
+            "online_payment_activated",
+            "payment_with_confirmation",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
@@ -700,36 +1027,69 @@ class OrganizationInCartDetailsSerializer(OrganizationShortInfoWithCurrencySeria
         betapay_activated = organization.betapay_activated
         cryptocloud_activated = organization.cryptocloud_activated
 
-        return freedompay_activated or paysy_activated or libersave_activated or betapay_activated or \
-               cryptocloud_activated
+        return (
+            freedompay_activated
+            or paysy_activated
+            or libersave_activated
+            or betapay_activated
+            or cryptocloud_activated
+        )
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'online_payment_activated',
-            'payment_with_confirmation', 'is_wholesale'
+            "id",
+            "title",
+            "currency",
+            "types",
+            "image",
+            "address",
+            "has_delivery",
+            "has_self_pick_up",
+            "opens_at",
+            "closes_at",
+            "time_working",
+            "verification_status",
+            "avg_check",
+            "online_payment_activated",
+            "payment_with_confirmation",
+            "is_wholesale",
         )
-        read_only_fields = ['verification_status']
+        read_only_fields = ["verification_status"]
 
 
-class OrganizationInBookingDetailsSerializer(OrganizationShortInfoWithCurrencySerializer):
+class OrganizationInBookingDetailsSerializer(
+    OrganizationShortInfoWithCurrencySerializer
+):
     time_working = serializers.CharField(read_only=True)
     permissions = serializers.SerializerMethodField()
 
     def get_permissions(self, organization: Organization):
-        if self.context['request'].user.is_anonymous:
+        if self.context["request"].user.is_anonymous:
             return None
-        return OrganizationService.get_user_permissions_dict(organization=organization,
-                                                             user=self.context['request'].user)
+        return OrganizationService.get_user_permissions_dict(
+            organization=organization, user=self.context["request"].user
+        )
 
     class Meta:
         model = Organization
         fields = (
-            'id', 'title', 'currency', 'types', 'image', 'address', 'has_delivery', 'has_self_pick_up',
-            'opens_at', 'closes_at', 'time_working', 'verification_status', 'avg_check', 'permissions'
+            "id",
+            "title",
+            "currency",
+            "types",
+            "image",
+            "address",
+            "has_delivery",
+            "has_self_pick_up",
+            "opens_at",
+            "closes_at",
+            "time_working",
+            "verification_status",
+            "avg_check",
+            "permissions",
         )
-        read_only_fields = ['verification_status']
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationTitleImageSerializer(serializers.ModelSerializer):
@@ -737,15 +1097,15 @@ class OrganizationTitleImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "image", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationTitleImageCurrencySerializer(OrganizationTitleImageSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'currency', 'image', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "currency", "image", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationNotificationInfo(serializers.ModelSerializer):
@@ -753,8 +1113,8 @@ class OrganizationNotificationInfo(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'image', 'address', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = ("id", "title", "image", "address", "verification_status")
+        read_only_fields = ["verification_status"]
 
 
 class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
@@ -763,38 +1123,61 @@ class OrganizationUserTransactionSerializer(OrganizationNotificationInfo):
 
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'address', 'image', 'types', 'partners', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "address",
+            "image",
+            "types",
+            "partners",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
     def get_partners(self, organization: Organization):
-        count, partners = OrganizationService.get_partners_dict(organization=organization)
+        count, partners = OrganizationService.get_partners_dict(
+            organization=organization
+        )
         return {
-            'count': count,
-            'list': OrganizationWithImageSerializer(partners, many=True).data
+            "count": count,
+            "list": OrganizationWithImageSerializer(partners, many=True).data,
         }
 
 
 class OrganizationTitleSerializer(OrganizationUserTransactionSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'title', 'description',
-                  'currency', 'address', 'image', 'types', 'partners', 'is_delivery_service', 'verification_status')
-        read_only_fields = ['verification_status']
+        fields = (
+            "id",
+            "title",
+            "description",
+            "currency",
+            "address",
+            "image",
+            "types",
+            "partners",
+            "is_delivery_service",
+            "verification_status",
+        )
+        read_only_fields = ["verification_status"]
 
 
 class InstagramIntegrationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstagramIntegration
-        fields = ('url',)
+        fields = ("url",)
 
 
 class InstagramIntegrationUserProfile(serializers.ModelSerializer):
-    full_name = serializers.CharField(source='account_full_name')
-    profile_image = serializers.ImageField(source='avatar.medium', allow_null=True)
+    full_name = serializers.CharField(source="account_full_name")
+    profile_image = serializers.ImageField(source="avatar.medium", allow_null=True)
 
     class Meta:
         model = InstagramIntegration
-        fields = ('full_name', 'profile_image',)
+        fields = (
+            "full_name",
+            "profile_image",
+        )
 
 
 class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
@@ -802,7 +1185,7 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstagramIntegration
-        fields = ('id', 'url', 'user_profile')
+        fields = ("id", "url", "user_profile")
 
     def get_user_profile(self, obj: InstagramIntegration):
         return InstagramIntegrationUserProfile(obj, context=self.context).data
@@ -811,14 +1194,15 @@ class InstagramIntegrationLinkSerializer(serializers.ModelSerializer):
 class OrgVerificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationVerificationUsers
-        fields = ('username', 'phone_number', 'email')
+        fields = ("username", "phone_number", "email")
 
 
 class OrgPaymentSystemConfirmationSerializer(serializers.ModelSerializer):
     payment_system_id = serializers.IntegerField(required=False)
+
     class Meta:
         model = OrganizationPaymentSystemUsers
-        fields = ('username', 'phone_number', 'email', 'payment_system_id')
+        fields = ("username", "phone_number", "email", "payment_system_id")
 
 
 class PaymentSystemSerializer(serializers.Serializer):
@@ -832,27 +1216,31 @@ class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', )
+        fields = ("id",)
 
 
 class RegionalTariffSerializer(serializers.ModelSerializer):
-    tariff_type_display = serializers.CharField(source='get_tariff_type_display', read_only=True)
-    currency = serializers.CharField(source='country.currency.code', read_only=True)
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    tariff_type_display = serializers.CharField(
+        source="get_tariff_type_display", read_only=True
+    )
+    currency = serializers.CharField(source="country.currency.code", read_only=True)
+    total_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
     price_per_month = serializers.SerializerMethodField()
 
     class Meta:
         model = RegionalTariff
         fields = (
-            'id',
-            'tariff_type',
-            'tariff_type_display',
-            'original_price',
-            'discount',
-            'total_price',
-            'price_per_month',
-            'duration_months',
-            'currency'
+            "id",
+            "tariff_type",
+            "tariff_type_display",
+            "original_price",
+            "discount",
+            "total_price",
+            "price_per_month",
+            "duration_months",
+            "currency",
         )
 
     def get_price_per_month(self, obj):
@@ -860,42 +1248,47 @@ class RegionalTariffSerializer(serializers.ModelSerializer):
 
 
 class PurchaseOrgSubscriptionSerializer(serializers.Serializer):
-    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True))
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.filter(is_active=True)
+    )
     tariff = serializers.PrimaryKeyRelatedField(queryset=RegionalTariff.objects.all())
     promocode = serializers.SlugRelatedField(
         queryset=PromoCode.objects.all(),
-        slug_field='code',
+        slug_field="code",
         required=False,
-        allow_null=True
+        allow_null=True,
     )
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
-
     def validate(self, attrs):
-        user = self.context['request'].user
-        organization = attrs['organization']
-        tariff = attrs['tariff']
+        user = self.context["request"].user
+        organization = attrs["organization"]
+        tariff = attrs["tariff"]
 
-        if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
-            raise serializers.ValidationError(_('No rights to edit organization'))
+        if not OrganizationService.user_can_edit_organization(
+            user=user, organization=organization
+        ):
+            raise serializers.ValidationError(_("No rights to edit organization"))
 
         if tariff.country != organization.country:
-            raise serializers.ValidationError(_('Selected tariff does not apply to this organization\'s country.'))
+            raise serializers.ValidationError(
+                _("Selected tariff does not apply to this organization's country.")
+            )
 
         return attrs
 
 
 class OrganizationBannerCreateSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
-        queryset=File.objects.all(), source='image', write_only=True
+        queryset=File.objects.all(), source="image", write_only=True
     )
 
     class Meta:
         model = OrganizationBanner
-        fields = ('image_id', )
+        fields = ("image_id",)
 
     def create(self, validated_data):
-        return OrganizationBanner.objects.create(image=validated_data['image'])
+        return OrganizationBanner.objects.create(image=validated_data["image"])
 
 
 class UserOrgSubscriptionSerializer(serializers.ModelSerializer):
@@ -913,7 +1306,7 @@ class ReferralOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserOrgSubscription
-        fields = ('id', 'organization', 'days_left')
+        fields = ("id", "organization", "days_left")
 
     def get_days_left(self, obj):
         if obj.active_until:
@@ -927,21 +1320,16 @@ class OrganizationWithUsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ['id', 'title', 'image', 'users']
+        fields = ["id", "title", "image", "users"]
 
     def get_users(self, org):
         subscriptions = UserOrgSubscription.objects.filter(
             organization=org,
             transaction__isnull=False,
             transaction__payment_status=Transaction.ACCEPTED,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
 
         referred_user_ids = subscriptions.values_list("user_id", flat=True)
         users = User.objects.filter(id__in=referred_user_ids).distinct()
         return UserInfoSerializer(users, many=True).data
-
-
-
-
-

@@ -8,7 +8,6 @@ from messenger.constants import (
     ADMIN,
     GROUP,
     MEMBER,
-    PRIVATE,
 )
 from messenger.utils import (
     get_chat_translation,
@@ -1089,6 +1088,9 @@ class MessengerChatsOrganiationAPIView(APIView):
 
     def post(self, request):
         user = request.user
+        logging.warning(user.id)
+        logging.warning(request.data)
+
         org_id = request.data.get("organization_id")
         organization = get_object_or_404(Organization, id=org_id)
         users_organization = organization.memberships.filter(

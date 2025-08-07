@@ -1118,9 +1118,9 @@ class MessengerChatsOrganiationAPIView(APIView):
         chat = MessengerChat.objects.create(
             chat_type=GROUP, title=None, organization=organization
         )
-        chat_members = [ChatMember(chat=chat, user=user_id)]
+        chat_members = [ChatMember(chat=chat, user=user_id, role=MEMBER)]
         for member in users_organization:
-            chat_members.append(ChatMember(chat=chat, user=member.user))
+            chat_members.append(ChatMember(chat=chat, user=member.user, role=ADMIN))
         ChatMember.objects.bulk_create(chat_members)
 
         return Response(

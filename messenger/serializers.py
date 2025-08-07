@@ -441,6 +441,13 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
     def get_sender(self, chat):
         request_user = self.context["request"].user
         sender = chat.members.exclude(id=request_user.id).first()
+        if chat.organization is not None:
+            sender = chat.members.filter(
+                role="member",
+            ).first()
+            if not sender:
+                return None
+            return UserShortInfoSerializer(sender).data
         if sender:
             return UserShortInfoSerializer(sender).data
         return None

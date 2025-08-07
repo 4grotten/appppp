@@ -8,7 +8,13 @@ from organizations.serializers.categories_serializers import OrganizationTypeSer
 from organizations.serializers.organization_serializers import OrganizationSerializer
 from rest_framework import serializers
 
-from messenger.models import ChatFolder, MessengerChat, ChatMessage, MessageLike
+from messenger.models import (
+    ChatFolder,
+    ChatMember,
+    MessengerChat,
+    ChatMessage,
+    MessageLike,
+)
 from messenger.services import MessengerChatService
 from shop.services.comment_services import CommentService
 from users.serializers import UserShortInfoSerializer
@@ -440,16 +446,22 @@ class MessengerChatListSerializer(serializers.ModelSerializer):
 
     def get_sender(self, chat):
         request_user = self.context["request"].user
-        sender = chat.members.exclude(id=request_user.id).first()
+
         if chat.organization is not None:
-            sender = chat.members.filter(
-                role="member",
-            ).first()
-            if not sender:
-                return None
-            return UserShortInfoSerializer(sender).data
+            chat_member = (
+                ChatMember.objects.filter(chat=chat, role="member")
+                .select_related("user")
+                .first()
+            )
+            if chat_member:
+                return UserShortInfoSerializer(chat_member.user).data
+            return None
+
+        # Исключаем текущего пользователя
+        sender = chat.members.exclude(id=request_user.id).first()
         if sender:
             return UserShortInfoSerializer(sender).data
+
         return None
 
     def get_organization(self, chat):

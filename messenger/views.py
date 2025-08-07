@@ -1087,9 +1087,7 @@ class MessengerChatsOrganiationAPIView(APIView):
         return Response(serializer.data, status=200)
 
     def post(self, request):
-        user = request.user
-        logging.warning(user.id)
-        logging.warning(request.data)
+        user_id = request.user.id
 
         org_id = request.data.get("organization_id")
         organization = get_object_or_404(Organization, id=org_id)
@@ -1097,7 +1095,7 @@ class MessengerChatsOrganiationAPIView(APIView):
             role__can_send_message=True
         )
 
-        if users_organization.filter(user=user).exists():
+        if users_organization.filter(user=user_id).exists():
             return Response(
                 {"detail": "You already have access to this organization."},
                 status=200,
@@ -1109,7 +1107,7 @@ class MessengerChatsOrganiationAPIView(APIView):
         )
 
         if exists_chat:
-            if exists_chat.filter(members=user).exists():
+            if exists_chat.filter(members=user_id).exists():
                 return Response(
                     {
                         "chat_id": exists_chat.first().id,
@@ -1120,7 +1118,7 @@ class MessengerChatsOrganiationAPIView(APIView):
         chat = MessengerChat.objects.create(
             chat_type=GROUP, title=None, organization=organization
         )
-        chat_members = [ChatMember(chat=chat, user=user)]
+        chat_members = [ChatMember(chat=chat, user=user_id)]
         for member in users_organization:
             chat_members.append(ChatMember(chat=chat, user=member.user))
         ChatMember.objects.bulk_create(chat_members)

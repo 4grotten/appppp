@@ -1,6 +1,7 @@
 import datetime
 import logging
 import random
+import time
 
 from googletrans import Translator
 from common.services.slack import bot_2
@@ -17,8 +18,11 @@ class GoogleTranslator:
     @classmethod
     def _get_translator(cls, text=None):
         proxy_str = ProxyService.get_random_formed_proxy()
+        if not proxy_str or not proxy_str.strip():
+            proxy_str = None
+
         try:
-            proxies = {"http": proxy_str, "https": proxy_str}
+            proxies = {"http": proxy_str, "https": proxy_str} if proxy_str else None
             user_agent = random.choice(USER_AGENTS)
 
             logging.info(f"Используется прокси {proxy_str} для перевода текста: {text}")
@@ -55,16 +59,29 @@ class GoogleTranslator:
     def translate(cls, text, lang):
         if len(text) > 5000:
             text = text[:5000]
-        try:
+
+        last_exc = None
+        for attempt in range(1, cls.MAX_RETRIES + 1):
             translator = cls._get_translator(text=text)
             if translator is None:
-                return text
-            result = translator.translate(text, dest=lang)
-            return result.text
-        except Exception as e:
-            logging.error(f"Ошибка при переводе '{text}' -> '{lang}':\n{e}")
-            bot_2(f"Ошибка перевода:\n{e}\n{text}")
-            return text
+                break
+            try:
+                result = translator.translate(text, dest=lang)
+                return result.text
+            except Exception as e:
+                last_exc = e
+                logging.error(f"Ошибка при переводе попытка {attempt}: {e}")
+                if "NoneType" in str(e) or "429" in str(e):
+                    delay = random.uniform(2, 5)
+                    logging.warning(f"Ошибка {e}, ждем {delay:.1f} сек и пробуем снова")
+                    time.sleep(delay)
+                else:
+                    bot_2(f"Ошибка перевода:\n{e}\n{text}")
+                    break
+        logging.error(
+            f"Не удалось перевести после {cls.MAX_RETRIES} попыток: {last_exc}"
+        )
+        return text
 
     @classmethod
     def get_lang(cls, text):

@@ -1,4 +1,4 @@
-FROM python:3.9.2-slim as env
+FROM python:3.10 as env
 
 ARG build_version_report=none
 

@@ -1,31 +1,93 @@
-FROM python:3.10 as env
+FROM python:3.9.2-slim as env
 
 ARG build_version_report=none
 
 ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
-ENV PATH="/root/.local/bin:$PATH"
+
+RUN apt-get update
+RUN apt-get install --no-install-recommends --yes \
+    netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev graphviz \
+    libjpeg-dev libpng-dev
 
 WORKDIR /app
+RUN pip3 install setuptools
+RUN pip3 install poetry
 
-RUN apt-get update && apt-get install --no-install-recommends --yes \
-    netcat-openbsd curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev graphviz \
-    libjpeg-dev libpng-dev && \
-    rm -rf /var/lib/apt/lists/*
+COPY ./pyproject.toml /app
+COPY ./poetry.lock /app
 
-RUN pip install --upgrade pip setuptools
+#COPY ./Pipfile /app/
+#COPY ./Pipfile.lock /app/
+#RUN pip install pipenv
+#RUN pipenv install --system --deploy
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-
-COPY ./pyproject.toml ./poetry.lock /app/
-
+RUN pip install --upgrade pip
 RUN poetry self update
-RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false && \
+    poetry install
 
 COPY . /app/
-
 COPY ./bin/gunicorn.sh ./bin/entrypoint.sh ./bin/celery_worker.sh ./bin/runserver.sh /
 
-RUN sed -i 's/\r//' /entrypoint.sh && chmod +x /entrypoint.sh
-RUN sed -i 's/\r//' /gunicorn.sh && sed -i 's/\r//' /runserver.sh && sed -i 's/\r//' /celery_worker.sh && \
-    chmod +x /gunicorn.sh /runserver.sh /celery_worker.sh
+
+RUN sed -i 's/\r//' /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+RUN sed -i 's/\r//' /gunicorn.sh && \
+    sed -i 's/\r//' /runserver.sh && \
+    sed -i 's/\r//' /celery_worker.sh && \
+    chmod +x /gunicorn.sh && \
+    chmod +x /runserver.sh && \
+    chmod +x /celery_worker.sh
+
+#FROM env as celery-dev
+#
+#RUN pip install flower
+#
+#
+#FROM env as development
+#
+#RUN pipenv install --dev --system --deploy
+
+#
+#
+#FROM env as production
+## Prod env
+#ENV DEBUG=False
+#ENV prometheus_multiproc_dir=/dev/shm
+#
+## -------- Building Nginx Unit --------
+#ARG UNIT_VERSION=1.22.0
+#RUN curl -O https://unit.nginx.org/download/unit-$UNIT_VERSION.tar.gz && \
+#    tar xzf unit-$UNIT_VERSION.tar.gz && \
+#    rm -f unit-$UNIT_VERSION.tar.gz && \
+#    cd unit-$UNIT_VERSION && \
+#    ./configure --prefix="/usr" \
+#            --tmp="/tmp" \
+#            --state="/var/lib/unit" \
+#            --control="unix:/run/control.unit.sock" \
+#            --pid="/run/unit.pid" \
+#            --log="/dev/stdout" \
+#            --modules="/usr/lib/unit/modules" \
+#            --user=unit \
+#            --group=unit \
+#            --tests && \
+#    ./configure python --config=python3-config && \
+#    make && \
+#    make tests && \
+#    ./build/tests && \
+#    make install && \
+#    useradd -d /var/lib/unit -U -m -r -s /sbin/nologin unit && \
+#    rm -rf unit-$UNIT_VERSION
+#
+#STOPSIGNAL SIGTERM
+## -------------------------------------
+#
+## Unit config
+#RUN ln -s /app/unit.json /var/lib/unit/conf.json
+#
+## Collect static
+#RUN mv /app/gag.env /app/.env && python manage.py collectstatic --noinput --link && rm /app/.env
+#
+## Unit startup
+#CMD unitd --no-daemon

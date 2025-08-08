@@ -6,7 +6,7 @@ authors = ["Azamat Tokhtaev <krik123@gmail.com>"]
 package-mode = false 
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
+python = ">=3.9,<3.11"
 imageio = "2.5.0"
 instagrapi = "^1.16.14"
 django = "3.1.7"
@@ -31,7 +31,7 @@ python-json-logger = "^2.0.2"
 django-prometheus = "^2.2.0"
 sentry-sdk = "^1.5.7"
 django-phonenumber-field = "^6.1.0"
-googletrans = "4.0.2"
+googletrans = "4.0.0rc1"
 twilio = "7.5.0"
 transliterate = "1.10.2"
 django-ipware = "^4.0.2"

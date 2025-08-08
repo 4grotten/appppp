@@ -1,6 +1,7 @@
 import datetime
 import logging
 from googletrans import Translator
+from httpx import URLLib3Transport, Proxy
 
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
@@ -16,14 +17,14 @@ class GoogleTranslator:
         )
         try:
             if random_proxy:
-                proxies = {"https": random_proxy}
+                proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
                 translator = Translator(proxies=proxies)
             else:
                 translator = Translator()
             return translator
         except Exception as e:
             message = (
-                f"Что-то не так с переводчиком...\n"
+                f"Что то не так с переводчиком......\n"
                 f"{e} \n"
                 f"text: {text} \n"
                 f"{datetime.datetime.now()}\n"
@@ -35,7 +36,7 @@ class GoogleTranslator:
                 return translator
             except Exception as e:
                 message = (
-                    f"Что-то не так с переводчиком (повторная попытка)...\n"
+                    f"Что то не так с переводчиком......\n"
                     f"{e} \n"
                     f"text: {text} \n"
                     f"{datetime.datetime.now()}\n"
@@ -58,7 +59,7 @@ class GoogleTranslator:
             return translated_text
         except Exception as e:
             message = (
-                f"Что-то не так с переводчиком. Функция перевода.\n"
+                f"Что то не так с переводчиком. Функция определения языка.\n"
                 f"{e} \n"
                 f"{datetime.datetime.now()}\n"
                 f"text: {text}\n"
@@ -83,7 +84,7 @@ class GoogleTranslator:
                 return detection.lang[index]
         except Exception as e:
             message = (
-                f"Что-то не так с переводчиком. Функция определения языка.\n"
+                f"Что то не так с переводчиком. Функция перевода текста.\n"
                 f"{e} \n"
                 f"{datetime.datetime.now()}\n"
                 f"text: {text}\n"

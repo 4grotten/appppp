@@ -15,6 +15,8 @@ USER_AGENTS = [
 
 
 class GoogleTranslator:
+    MAX_RETRIES = 5
+
     @classmethod
     def _get_translator(cls, text=None):
         proxy_str = ProxyService.get_random_formed_proxy()

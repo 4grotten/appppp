@@ -20,7 +20,13 @@ class GoogleTranslator:
             logging.info(
                 f"используется прокси {random_proxy} для перевода текста: {text}"
             )
-            translator = Translator(proxies=proxies)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/116.0.0.0 Safari/537.36"
+            }
+
+            translator = Translator(proxies=proxies, headers=headers)
             return translator
         except Exception as e:
             logging.error(

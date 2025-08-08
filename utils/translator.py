@@ -4,6 +4,7 @@ import random
 import time
 
 from googletrans import Translator
+from googletrans.constants import DEFAULT_SERVICE_URLS
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
 from httpx import Proxy, URLLib3Transport
@@ -27,7 +28,7 @@ class GoogleTranslator:
         try:
             if not proxy_str:
                 translator = Translator(
-                    service_urls=["translate.google.com"],
+                    service_urls=DEFAULT_SERVICE_URLS,
                     user_agent=random.choice(USER_AGENTS),
                 )
                 return translator
@@ -42,9 +43,7 @@ class GoogleTranslator:
             translator = Translator(
                 proxies=proxies,
                 user_agent=user_agent,
-                service_urls=[
-                    "translate.google.com",
-                ],
+                service_urls=DEFAULT_SERVICE_URLS,
                 raise_exception=True,
             )
             return translator
@@ -59,7 +58,7 @@ class GoogleTranslator:
             bot_2(f"Ошибка с переводчиком и прокси {proxy_str}:\n{e}\n{text}")
             try:
                 translator = Translator(
-                    service_urls=["translate.googleapis.com"],
+                    service_urls=DEFAULT_SERVICE_URLS,
                     user_agent=random.choice(USER_AGENTS),
                 )
                 return translator

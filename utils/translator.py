@@ -68,14 +68,24 @@ class GoogleTranslator:
 
     @classmethod
     def get_lang(cls, text):
+        if not text:
+            return "en"
+
+        text = text.replace(".", " ").strip()
         if len(text) > 100:
             text = text[:100]
+
+        translator = cls._get_translator(text=text)
+        if not translator:
+            return "en"
+
         try:
-            translator = cls.get_translator(text=text)
-            if translator is None:
-                return "en"
             detection = translator.detect(text)
-            return detection.lang
+            if isinstance(detection.lang, str):
+                return detection.lang
+            if isinstance(detection.lang, list):
+                idx = detection.confidence.index(max(detection.confidence))
+                return detection.lang[idx]
         except Exception as e:
-            bot_2(f"Ошибка определения языка:\n{e}\n{text}")
+            bot_2(f"Ошибка определения языка: {e}\ntext: {text}")
             return "en"

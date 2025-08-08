@@ -27,7 +27,7 @@ class GoogleTranslator:
         try:
             if not proxy_str:
                 translator = Translator(
-                    service_urls=["translate.googleapis.com"],
+                    service_urls=["translate.google.com"],
                     user_agent=random.choice(USER_AGENTS),
                 )
                 return translator

@@ -24,12 +24,13 @@ class GoogleTranslator:
         random_proxy = ProxyService.get_random_formed_proxy()
         try:
             translator = Translator()
-            # Меняем сессию после создания
-            translator.session.proxies = {
-                "http": random_proxy,
-                "https": random_proxy,
-            }
-            translator.session.headers.update(
+            translator.client.session.proxies.update(
+                {
+                    "http": random_proxy,
+                    "https": random_proxy,
+                }
+            )
+            translator.client.session.headers.update(
                 {"User-Agent": random.choice(cls.USER_AGENTS)}
             )
             logging.info(
@@ -46,7 +47,7 @@ class GoogleTranslator:
             )
             try:
                 translator = Translator()
-                translator.session.headers.update(
+                translator.client.session.headers.update(
                     {"User-Agent": random.choice(cls.USER_AGENTS)}
                 )
                 logging.info("[Translator] Пробую без прокси...")

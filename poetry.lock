@@ -1908,9 +1908,6 @@ files = [
     {file = "Markdown-3.3.6.tar.gz", hash = "sha256:76df8ae32294ec39dcf89340382882dfa12975f87f45c3ed1ecdb1e8cefc7006"},
 ]
 
-[package.dependencies]
-importlib-metadata = {version = ">=4.4", markers = "python_version < \"3.10\""}
-
 [package.extras]
 testing = ["coverage", "pyyaml"]
 
@@ -3203,5 +3200,5 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.9,<3.11"
-content-hash = "d9f2bd80ad7f4c250f0b73c17bac616b989380f1dc4a7ed0eea6333ca443122c"
+python-versions = ">=3.10,<3.11"
+content-hash = "f9741f1e36facd9452f81ffea035dd7aeefff686b09fc7e2e336086371604ada"

@@ -50,7 +50,7 @@ from shop.services.item_services import ShopItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService, CollectionService
 from shop.services.booking_services import BookingService
 from users.services import UserService
-from utils.translator import GoogleTranslator
+from utils.translator import GPTTranslator, GoogleTranslator
 
 
 class ItemCreateView(CreateAPIView):
@@ -705,34 +705,19 @@ class TranslateItemTextView(GenericAPIView):
             lang = query_lang
         body = {}
         try:
-            for _ in range(10):
-                if data.get('title'):
-                    translate_name = GoogleTranslator().translate(data['title'], lang)
-                    if isinstance(translate_name, str):
-                        continue  # Skip this iteration and try again
-                    else:
-                        body['title'] = translate_name.text
-                        break  # Exit the loop if translation is successful
-                else:
-                    body['title'] = None
-
-            for _ in range(10):
-                if data.get('description'):
-                    translate_description = GoogleTranslator().translate(data['description'], lang)
-                    if isinstance(translate_description, str):
-                        continue  # Skip this iteration and try again
-                    else:
-                        body['description'] = translate_description.text
-                        break  # Exit the loop if translation is successful
-                else:
-                    body['description'] = None
+            if data.get("title"):
+                translate = GPTTranslator.translate(data['title'], lang)
+                body['title'] = translate
+            
+            if data.get("description"):
+                translate = GPTTranslator.translate(data['description'], lang)
+                body['description'] = translate
 
             return Response(data=body, status=status.HTTP_200_OK)
-        except KeyError as e:
-            error = str(e)
+        except Exception as e:
             return Response(data={
                 "message": _("Invalid input"),
-                'This field is required': error
+                'error': str(e)
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 class SuggestSearchItem(ListAPIView):

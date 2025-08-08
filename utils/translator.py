@@ -1,5 +1,5 @@
 import datetime
-import logging
+
 from googletrans import Translator
 from httpx import URLLib3Transport, Proxy
 
@@ -11,16 +11,12 @@ class GoogleTranslator:
 
     @classmethod
     def get_translator(cls, text=None):
-        random_proxy = ProxyService.get_random_formed_proxy()
-        logging.warning(
-            f"используется прокси {random_proxy} для перевода текста: {text}"
-        )
+        random_proxy = (
+            ProxyService.get_random_formed_proxy()
+        )  # .replace("https://", '')
         try:
-            if random_proxy:
-                proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
-                translator = Translator(proxies=proxies)
-            else:
-                translator = Translator()
+            proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
+            translator = Translator(proxies=proxies)
             return translator
         except Exception as e:
             message = (
@@ -54,7 +50,6 @@ class GoogleTranslator:
             translator = cls.get_translator(text=text)
             if translator is None:
                 return text
-
             translated_text = translator.translate(text, dest=lang)
             return translated_text
         except Exception as e:

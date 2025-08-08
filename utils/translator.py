@@ -1,119 +1,108 @@
 import datetime
 import logging
+import random
+import time
 
 from googletrans import Translator
-from httpx import URLLib3Transport, Proxy
-
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
 
 
 class GoogleTranslator:
+    MAX_TEXT_LEN = 5000
+    RETRY_COUNT = 5
+
+    USER_AGENTS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:114.0) Gecko/20100101 Firefox/114.0",
+    ]
 
     @classmethod
-    def get_translator(cls, text=None):
-        random_proxy = (
-            ProxyService.get_random_formed_proxy()
-        )  # .replace("https://", '')
+    def _get_translator(cls, text=None):
+        """Создаёт переводчик с прокси или без него."""
+        random_proxy = ProxyService.get_random_formed_proxy()
+        proxies = {"https": random_proxy}
+        headers = {"User-Agent": random.choice(cls.USER_AGENTS)}
         try:
-            proxies = {"https": URLLib3Transport(proxy=Proxy(random_proxy))}
             logging.info(
-                f"используется прокси {random_proxy} для перевода текста: {text}"
+                f"[Translator] Используется прокси {random_proxy} для текста: {text}"
             )
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/116.0.0.0 Safari/537.36"
-            }
-
-            translator = Translator(proxies=proxies, headers=headers)
-            return translator
+            return Translator(proxies=proxies, headers=headers)
         except Exception as e:
             logging.error(
                 f"Ошибка при создании переводчика с прокси {random_proxy}.\n"
-                f"{e} \n"
-                f"text: {text} \n"
-                f"{datetime.datetime.now()}"
+                f"{e}\ntext: {text}\n{datetime.datetime.now()}"
             )
-            message = (
-                f"Что то не так с переводчиком......\n"
-                f"{e} \n"
-                f"text: {text} \n"
-                f"{datetime.datetime.now()}\n"
-                f"прокси = {random_proxy}"
+            bot_2(
+                f"Проблема с переводчиком через прокси {random_proxy}\n{e}\ntext: {text}"
             )
-            bot_2(message)
             try:
-                translator = Translator()
-                return translator
-            except Exception as e:
-                logging.error(
-                    f"Ошибка при создании переводчика без прокси.\n"
-                    f"{e} \n"
-                    f"text: {text} \n"
-                    f"{datetime.datetime.now()}"
-                )
-                message = (
-                    f"Что то не так с переводчиком......\n"
-                    f"{e} \n"
-                    f"text: {text} \n"
-                    f"{datetime.datetime.now()}\n"
-                    f"прокси = {random_proxy}"
-                )
-                bot_2(message)
+                logging.info("[Translator] Пробую без прокси...")
+                return Translator(headers=headers)
+            except Exception as e2:
+                logging.error(f"Ошибка без прокси: {e2}")
+                bot_2(f"Переводчик умер даже без прокси.\n{e2}")
                 return None
 
     @classmethod
     def translate(cls, text, lang):
-        if len(text) > 100:
-            text = text[0:5000]
-        try:
-            text = text.replace(".", " ")
-            translator = cls.get_translator(text=text)
-            logging.info(
-                f"используется прокси {translator} для перевода текста: {text}"
-            )
-            if translator is None:
-                return text
-            translated_text = translator.translate(text, dest=lang)
+        """Перевод текста с автоматическими повторами при 429."""
+        if not text:
+            return None
 
-            return translated_text
-        except Exception as e:
-            logging.error(
-                f"Ошибка при переводе текста '{text}' на язык '{lang}'.\n"
-                f"{e} \n"
-                f"{datetime.datetime.now()}"
-            )
-            message = (
-                f"Что то не так с переводчиком. Функция определения языка.\n"
-                f"{e} \n"
-                f"{datetime.datetime.now()}\n"
-                f"text: {text}\n"
-            )
-            bot_2(message)
-            return text
+        text = text.replace(".", " ").strip()
+        if len(text) > cls.MAX_TEXT_LEN:
+            text = text[: cls.MAX_TEXT_LEN]
+
+        for attempt in range(1, cls.RETRY_COUNT + 1):
+            translator = cls._get_translator(text=text)
+            if not translator:
+                return text
+
+            try:
+                result = translator.translate(text, dest=lang)
+                if hasattr(result, "text"):
+                    return result
+                return text
+            except Exception as e:
+                err_str = str(e)
+                logging.error(f"[Translator] Ошибка на попытке {attempt}: {err_str}")
+                if "429" in err_str:
+                    delay = random.uniform(3, 8) * attempt
+                    logging.warning(
+                        f"[Translator] Поймал 429, жду {delay:.1f} сек и пробую снова..."
+                    )
+                    time.sleep(delay)
+                    continue
+                else:
+                    bot_2(f"Ошибка перевода: {e}\ntext: {text}")
+                    return text
+
+        logging.error("[Translator] Все попытки перевода исчерпаны")
+        return text
 
     @classmethod
     def get_lang(cls, text):
+        """Определение языка."""
+        if not text:
+            return "en"
+
+        text = text.replace(".", " ").strip()
         if len(text) > 100:
-            text = text[0:100]
+            text = text[:100]
+
+        translator = cls._get_translator(text=text)
+        if not translator:
+            return "en"
+
         try:
-            text = text.replace(".", " ")
-            translator = cls.get_translator(text=text)
-            if translator is None:
-                return "en"
             detection = translator.detect(text)
             if isinstance(detection.lang, str):
                 return detection.lang
             if isinstance(detection.lang, list):
-                index = detection.confidence.index(max(detection.confidence))
-                return detection.lang[index]
+                idx = detection.confidence.index(max(detection.confidence))
+                return detection.lang[idx]
         except Exception as e:
-            message = (
-                f"Что то не так с переводчиком. Функция перевода текста.\n"
-                f"{e} \n"
-                f"{datetime.datetime.now()}\n"
-                f"text: {text}\n"
-            )
-            bot_2(message)
+            bot_2(f"Ошибка определения языка: {e}\ntext: {text}")
             return "en"

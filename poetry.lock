@@ -1570,14 +1570,14 @@ files = [
 
 [[package]]
 name = "hstspreload"
-version = "2021.12.1"
+version = "2025.1.1"
 description = "Chromium HSTS Preload list as a Python package"
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "hstspreload-2021.12.1-py3-none-any.whl", hash = "sha256:e8f03aac620d1947d66e311b706b46cc24a36792b346db7b483f148360843921"},
-    {file = "hstspreload-2021.12.1.tar.gz", hash = "sha256:d9cd749fbb6ff6ca1a8945c4a48cb6f33d2f6d066cb5f9752a8b64a134ed5260"},
+    {file = "hstspreload-2025.1.1-py3-none-any.whl", hash = "sha256:02bd5b0885b62f0d5239ca6c6876ffcad8d9c08dc97cee54292598141a16e9dc"},
+    {file = "hstspreload-2025.1.1.tar.gz", hash = "sha256:346552a807b3a1762376de8ecce097544e7fcd64fb64231b4652da52f86fa6f1"},
 ]
 
 [[package]]
@@ -3191,4 +3191,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "b497db2b65c78dcdeb9f71692492d052357c281c7a35f0642b8b0bb66cee41e8"
+content-hash = "eb9208334c15aef805b9d415bfe0ec25519b031095d230e2afe8e0643b6e8f06"

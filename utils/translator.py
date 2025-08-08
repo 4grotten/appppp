@@ -6,6 +6,7 @@ import time
 from googletrans import Translator
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
+from httpx import Proxy
 
 
 USER_AGENTS = [
@@ -24,7 +25,14 @@ class GoogleTranslator:
             proxy_str = None
 
         try:
-            proxies = {"http": proxy_str, "https": proxy_str} if proxy_str else None
+            if not proxy_str:
+                translator = Translator(
+                    service_urls=["translate.googleapis.com"],
+                    user_agent=random.choice(USER_AGENTS),
+                )
+                return translator
+            proxy_obj = Proxy(proxy_str)
+            proxies = {"http": proxy_obj, "https": proxy_obj}
             user_agent = random.choice(USER_AGENTS)
 
             logging.info(f"Используется прокси {proxy_str} для перевода текста: {text}")

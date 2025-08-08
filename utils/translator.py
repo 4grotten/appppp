@@ -15,7 +15,7 @@ USER_AGENTS = [
 
 class GoogleTranslator:
     @classmethod
-    def get_translator(cls, text=None):
+    def _get_translator(cls, text=None):
         proxy_str = ProxyService.get_random_formed_proxy()
         try:
             proxies = {"http": proxy_str, "https": proxy_str}
@@ -56,7 +56,7 @@ class GoogleTranslator:
         if len(text) > 5000:
             text = text[:5000]
         try:
-            translator = cls.get_translator(text=text)
+            translator = cls._get_translator(text=text)
             if translator is None:
                 return text
             result = translator.translate(text, dest=lang)

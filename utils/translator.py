@@ -8,7 +8,7 @@ from googletrans.constants import DEFAULT_SERVICE_URLS
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
 from httpx import Proxy, URLLib3Transport
-
+import requests
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
@@ -120,3 +120,54 @@ class GoogleTranslator:
         except Exception as e:
             bot_2(f"Ошибка определения языка: {e}\ntext: {text}")
             return "en"
+
+
+class GPTTranslator:
+    @classmethod
+    def translate(cls, text, lang):
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer sk-proj-0p6Vt7kqzskVbaUtLFftT3BlbkFJix0thXqnXi7kmmF1jI4a",
+        }
+        logging.debug(f"Headers: {headers}")
+
+        payload = {
+            "model": "gpt-3.5-turbo",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Translate the text to the specified language.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Translate the following text to {lang}:\n{text}",
+                },
+            ],
+        }
+
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+        )
+
+        result = response.json()
+        logging.error(f"GPT translation response: {result}")
+        if response.status_code != 200:
+            logging.error(
+                f"Error in GPT translation: {response.status_code} {response.text}"
+            )
+            return text
+
+        try:
+            result = response.json()
+        except ValueError as e:
+            logging.error(f"JSON decode error: {e}")
+            return text
+
+        try:
+            translated_text = result["choices"][0]["message"]["content"]
+            return translated_text.strip()
+        except (KeyError, IndexError) as e:
+            logging.error(f"Unexpected response format: {e}")
+            return text

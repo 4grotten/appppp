@@ -152,8 +152,22 @@ class GPTTranslator:
         )
 
         result = response.json()
-        logging.debug(f"GPT translation response: {result}")
+        logging.error(f"GPT translation response: {result}")
         if response.status_code != 200:
-            logging.error(f"Error in GPT translation: {result}")
+            logging.error(
+                f"Error in GPT translation: {response.status_code} {response.text}"
+            )
             return text
-        return result
+
+        try:
+            result = response.json()
+        except ValueError as e:
+            logging.error(f"JSON decode error: {e}")
+            return text
+
+        try:
+            translated_text = result["choices"][0]["message"]["content"]
+            return translated_text.strip()
+        except (KeyError, IndexError) as e:
+            logging.error(f"Unexpected response format: {e}")
+            return text

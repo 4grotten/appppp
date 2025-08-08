@@ -22,13 +22,20 @@ class GoogleTranslator:
     def _get_translator(cls, text=None):
         """Создаёт переводчик с прокси или без него."""
         random_proxy = ProxyService.get_random_formed_proxy()
-        proxies = {"https": random_proxy}
-        headers = {"User-Agent": random.choice(cls.USER_AGENTS)}
         try:
+            translator = Translator()
+            # Меняем сессию после создания
+            translator.session.proxies = {
+                "http": random_proxy,
+                "https": random_proxy,
+            }
+            translator.session.headers.update(
+                {"User-Agent": random.choice(cls.USER_AGENTS)}
+            )
             logging.info(
                 f"[Translator] Используется прокси {random_proxy} для текста: {text}"
             )
-            return Translator(proxies=proxies, headers=headers)
+            return translator
         except Exception as e:
             logging.error(
                 f"Ошибка при создании переводчика с прокси {random_proxy}.\n"
@@ -38,8 +45,12 @@ class GoogleTranslator:
                 f"Проблема с переводчиком через прокси {random_proxy}\n{e}\ntext: {text}"
             )
             try:
+                translator = Translator()
+                translator.session.headers.update(
+                    {"User-Agent": random.choice(cls.USER_AGENTS)}
+                )
                 logging.info("[Translator] Пробую без прокси...")
-                return Translator(headers=headers)
+                return translator
             except Exception as e2:
                 logging.error(f"Ошибка без прокси: {e2}")
                 bot_2(f"Переводчик умер даже без прокси.\n{e2}")
@@ -47,7 +58,6 @@ class GoogleTranslator:
 
     @classmethod
     def translate(cls, text, lang):
-        """Перевод текста с автоматическими повторами при 429."""
         if not text:
             return None
 
@@ -84,7 +94,6 @@ class GoogleTranslator:
 
     @classmethod
     def get_lang(cls, text):
-        """Определение языка."""
         if not text:
             return "en"
 

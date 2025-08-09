@@ -136,7 +136,7 @@ class GPTTranslator:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Translate the text to the specified language.",
+                    "content": "Translate the text to the specified language. If translation is not possible or any problem occurs, return the original text unchanged.",
                 },
                 {
                     "role": "user",

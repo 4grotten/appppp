@@ -137,10 +137,11 @@ class GPTTranslator:
                 {
                     "role": "system",
                     "content": (
-                        f"You are a translation engine. Translate the input text into {lang}. "
-                        "If you cannot confidently translate, output the original text exactly as provided. "
-                        "Do not say anything else — no explanations, no comments, no descriptions. "
-                        "Only output the translation or the original text."
+                        f"You are a translation and transcription engine. "
+                        f"If the request is to translate, translate the text into {lang}. "
+                        f"If the request is to transcribe, write the text in {lang} letters, preserving its pronunciation. "
+                        "If you cannot confidently perform the requested action, output the original text exactly as provided. "
+                        "Do not give explanations, comments, or any additional text — only the translation or transcription."
                     ),
                 },
                 {

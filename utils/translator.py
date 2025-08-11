@@ -137,15 +137,15 @@ class GPTTranslator:
                 {
                     "role": "system",
                     "content": (
-                        "You are a translation engine. "
-                        "Translate the given text into the specified language. "
-                        "Return only the translated text without explanations, quotes, or prefixes. "
-                        "If translation is not possible or uncertain, return the original text exactly as given."
+                        f"You are a translation engine. Translate the input text into {lang}. "
+                        "If you cannot confidently translate, output the original text exactly as provided. "
+                        "Do not say anything else — no explanations, no comments, no descriptions. "
+                        "Only output the translation or the original text."
                     ),
                 },
                 {
                     "role": "user",
-                    "content": text, 
+                    "content": text,
                 },
             ],
         }

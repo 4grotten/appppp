@@ -12,31 +12,69 @@ from organizations.services.membership_services import MembershipService
 from users.models import User
 from common.exceptions import NotAcceptableException
 from common.models import File, FileVideo, Currency, Country, City
-from common.serializers import ImageSerializer, VideoSerializer, CountryResumeSerializer, CityResumeSerializer
-from organizations.models import HotlinkCollectionItem, Organization, BlockedUser, Role, Membership
-from organizations.serializers.organization_serializers import ItemFeedOrganizationSerializer, \
-    OrganizationTitleImageSerializer, OrganizationNotificationInfo, ShopItemSubcategoryOrganizationSerializer
+from common.serializers import (
+    ImageSerializer,
+    VideoSerializer,
+    CountryResumeSerializer,
+    CityResumeSerializer,
+)
+from organizations.models import (
+    HotlinkCollectionItem,
+    Organization,
+    BlockedUser,
+    Role,
+    Membership,
+)
+from organizations.serializers.organization_serializers import (
+    ItemFeedOrganizationSerializer,
+    OrganizationTitleImageSerializer,
+    OrganizationNotificationInfo,
+    ShopItemSubcategoryOrganizationSerializer,
+)
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, ItemInstagramData, RentalPeriod, Booking, TicketPeriod, Ticket, ResumeInfo, \
-    ResumeInfoFile, ResumePhoneNumber, ResumeSocialNetwork, ResumeDetailInfo, ResumeWorkExperience, Education, \
-    ResumeEducation, ResumeRequest
+from shop.models import (
+    ShopItem,
+    ItemInstagramData,
+    RentalPeriod,
+    Booking,
+    TicketPeriod,
+    Ticket,
+    ResumeInfo,
+    ResumeInfoFile,
+    ResumePhoneNumber,
+    ResumeSocialNetwork,
+    ResumeDetailInfo,
+    ResumeWorkExperience,
+    Education,
+    ResumeEducation,
+    ResumeRequest,
+)
 from shop.serializers.category_serializers import ItemSubcategoryBriefSerializer
 from shop.services.cart_services import CartItemService
 from shop.services.like_bookmark_services import LikeService, BookmarkService
 from stock.models import ShopItemSizeCount
-from stock.serializers import SizeFormatByItemSerializer, ShopItemSizeCountSerializer, SubcategorySerializer
+from stock.serializers import (
+    SizeFormatByItemSerializer,
+    ShopItemSizeCountSerializer,
+    SubcategorySerializer,
+)
 from transactions.models import Transaction
 from users.serializers import UserInfoSerializer, ProfileSerializer
 
 
 class ItemSetRetrieveSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
-    currency = serializers.CharField(source='organization.currency')
+    currency = serializers.CharField(source="organization.currency")
     has_in_stock = serializers.SerializerMethodField()
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+            return (
+                ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(
+                    total=Sum("count")
+                )["total"]
+                > 0
+            )
         else:
             return True
 
@@ -52,84 +90,133 @@ class ItemSetRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'price', 'discount', 'currency', 'image', 'has_in_stock')
+        fields = ("id", "price", "discount", "currency", "image", "has_in_stock")
 
 
 class RentItemsPeriodSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
-    end_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
-    start_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
-    end_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
+    start_date = serializers.DateField(
+        input_formats=[
+            "%d.%m.%Y",
+        ],
+        format="%d.%m.%Y",
+    )
+    end_date = serializers.DateField(
+        input_formats=[
+            "%d.%m.%Y",
+        ],
+        format="%d.%m.%Y",
+    )
+    start_time = serializers.DateTimeField(input_formats=["%H:%M"], format="%H:%M")
+    end_time = serializers.DateTimeField(input_formats=["%H:%M"], format="%H:%M")
 
     class Meta:
         model = RentalPeriod
         fields = (
-            'id', 'rent_time_type', 'start_date', 'end_date', 'start_time', 'end_time'
+            "id",
+            "rent_time_type",
+            "start_date",
+            "end_date",
+            "start_time",
+            "end_time",
         )
 
 
 class TicketPeriodSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
-    end_date = serializers.DateField(input_formats=['%d.%m.%Y',], format="%d.%m.%Y")
-    start_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
-    end_time = serializers.DateTimeField(input_formats=['%H:%M'], format="%H:%M")
+    start_date = serializers.DateField(
+        input_formats=[
+            "%d.%m.%Y",
+        ],
+        format="%d.%m.%Y",
+    )
+    end_date = serializers.DateField(
+        input_formats=[
+            "%d.%m.%Y",
+        ],
+        format="%d.%m.%Y",
+    )
+    start_time = serializers.DateTimeField(input_formats=["%H:%M"], format="%H:%M")
+    end_time = serializers.DateTimeField(input_formats=["%H:%M"], format="%H:%M")
 
     class Meta:
         model = TicketPeriod
-        fields = (
-            'id', 'start_date', 'end_date', 'start_time', 'end_time'
-        )
+        fields = ("id", "start_date", "end_date", "start_time", "end_time")
 
 
 class ResumeInfoUpdateSerializer(serializers.ModelSerializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+    )
 
     class Meta:
         model = ResumeInfo
-        fields = ('id', 'item', 'gender', 'full_name', 'date_of_birth', 'languages', 'files')
+        fields = (
+            "id",
+            "item",
+            "gender",
+            "full_name",
+            "date_of_birth",
+            "languages",
+            "files",
+        )
 
 
 class ResumePhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumePhoneNumber
-        fields = ('id', 'phone_number')
+        fields = ("id", "phone_number")
 
 
 class ResumePhoneNumberUpdateSerializer(serializers.Serializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+    )
     phone_numbers = serializers.ListSerializer(child=serializers.CharField())
 
 
 class ResumeSocialNetworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeSocialNetwork
-        fields = ('id', 'url')
+        fields = ("id", "url")
 
 
 class ResumeSocialNetworkUpdateSerializer(serializers.Serializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+    )
     urls = serializers.ListSerializer(child=serializers.CharField())
 
 
 class ResumeDetailInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeDetailInfo
-        fields = ('id', 'text')
+        fields = ("id", "text")
 
 
 class ResumeDetailInfoUpdateSerializer(serializers.Serializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+    )
     text = serializers.CharField()
 
 
 class ResumeWorkExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeWorkExperience
-        fields = ('id', 'company_name', 'position', 'text', 'start_of_work', 'end_of_work', 'up_to_now')
+        fields = (
+            "id",
+            "company_name",
+            "position",
+            "text",
+            "start_of_work",
+            "end_of_work",
+            "up_to_now",
+        )
 
 
 class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
+    )
     work_experiences = serializers.ListSerializer(
         child=ResumeWorkExperienceSerializer()
     )
@@ -138,14 +225,22 @@ class ResumeWorkExperienceUpdateSerializer(serializers.Serializer):
 class ResumeEducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeEducation
-        fields = ('id', 'school_name', 'category', 'text', 'start_of_study', 'end_of_study', 'up_to_now')
+        fields = (
+            "id",
+            "school_name",
+            "category",
+            "text",
+            "start_of_study",
+            "end_of_study",
+            "up_to_now",
+        )
 
 
 class ResumeEducationUpdateSerializer(serializers.Serializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME))
-    educations = serializers.ListSerializer(
-        child=ResumeEducationSerializer()
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.filter(purchase_type=ShopItem.RESUME)
     )
+    educations = serializers.ListSerializer(child=ResumeEducationSerializer())
 
 
 class ResumeInfoFileSerializer(serializers.ModelSerializer):
@@ -153,8 +248,8 @@ class ResumeInfoFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeInfoFile
-        fields = ('id', 'file', 'name')
-        read_only_fields = ('name',)
+        fields = ("id", "file", "name")
+        read_only_fields = ("name",)
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
@@ -170,9 +265,19 @@ class ResumeInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeInfo
-        fields = ('id', 'gender', 'full_name', 'date_of_birth', 'languages', 'files', 'contact_filled',
-                  'social_network_filled', 'detail_info_filled', 'work_experience_filled', 'education_filled')
-
+        fields = (
+            "id",
+            "gender",
+            "full_name",
+            "date_of_birth",
+            "languages",
+            "files",
+            "contact_filled",
+            "social_network_filled",
+            "detail_info_filled",
+            "work_experience_filled",
+            "education_filled",
+        )
 
     def get_contact_filled(self, resume_info: ResumeInfo):
         return resume_info.item.resume_phone_numbers.exists()
@@ -181,7 +286,10 @@ class ResumeInfoSerializer(serializers.ModelSerializer):
         return resume_info.item.resume_social_networks.exists()
 
     def get_detail_info_filled(self, resume_info: ResumeInfo):
-        return hasattr(resume_info.item, 'resume_detail_info') and resume_info.item.resume_detail_info is not None
+        return (
+            hasattr(resume_info.item, "resume_detail_info")
+            and resume_info.item.resume_detail_info is not None
+        )
 
     def get_work_experience_filled(self, resume_info: ResumeInfo):
         return resume_info.item.resume_work_experience.exists()
@@ -194,7 +302,7 @@ class EducationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Education
-        fields = ('id', 'name')
+        fields = ("id", "name")
 
 
 class ItemRetrieveSerializer(serializers.ModelSerializer):
@@ -225,49 +333,77 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         return item.comments_disabled
 
     def get_own_resume(self, item: ShopItem):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if item.user == user:
             return True
         return False
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+            return (
+                ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(
+                    total=Sum("count")
+                )["total"]
+                > 0
+            )
         else:
             return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
-            Q(shop_items_set_stocks__main_shop_item=item) |
-            Q(shop_items_link_set_stocks__main_shop_item=item)
+            Q(shop_items_set_stocks__main_shop_item=item)
+            | Q(shop_items_link_set_stocks__main_shop_item=item)
         )[:2]
         return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all().order_by('order')
-        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
-        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+        sizes = item.available_sizes.all().order_by("order")
+        if (
+            sizes.exists()
+            and ShopItemSizeCount.objects.filter(main_shop_item=item).exists()
+        ):
+            item_size_counts = ShopItemSizeCount.objects.filter(
+                main_shop_item=item
+            ).values_list("size_id", flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by(
+                "order"
+            )
+        elif (
+            sizes.first() is None
+            and ShopItemSizeCount.objects.filter(
+                main_shop_item=item, size=None
+            ).exists()
+        ):
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
-            return ShopItemSizeCountSerializer(sizes, many=True, context={'shop_item': item, 'request': self.context['request']}).data
-        return SizeFormatByItemSerializer(sizes, many=True,
-                                          context={'shop_item': item, 'request': self.context['request']}).data
+            return ShopItemSizeCountSerializer(
+                sizes,
+                many=True,
+                context={"shop_item": item, "request": self.context["request"]},
+            ).data
+        return SizeFormatByItemSerializer(
+            sizes,
+            many=True,
+            context={"shop_item": item, "request": self.context["request"]},
+        ).data
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
-        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('pk')
-        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
-                    images=ItemInstagramImageSerializer(images, many=True).data)
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by(
+            "pk"
+        )
+        return dict(
+            videos=ItemInstagramVideoSerializer(videos, many=True).data,
+            images=ItemInstagramImageSerializer(images, many=True).data,
+        )
 
     def get_is_liked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return LikeService.is_item_liked_by_user(item=item, user=user)
 
     def get_is_bookmarked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
@@ -279,9 +415,15 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
         return item.comments.count()
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=item.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_current_locations(self, item: ShopItem):
@@ -322,19 +464,54 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
 
         return preferred_locations_list
 
-
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'price', 'discount',
-            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
-            'can_comment', 'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type',
-            'rental_period', 'ticket_period', 'address', 'full_location', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'current_locations', 'preferred_locations', 'links', 'education', 'own_resume',
-            'is_comments_disabled'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_hidden",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "comment_count",
+            "can_comment",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "instagram_data",
+            "is_updated",
+            "available_sizes",
+            "set_items",
+            "has_in_stock",
+            "purchase_type",
+            "rental_period",
+            "ticket_period",
+            "address",
+            "full_location",
+            "minimum_purchase",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "education",
+            "own_resume",
+            "is_comments_disabled",
         )
 
 
@@ -356,45 +533,72 @@ class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
     rental_period = RentItemsPeriodSerializer()
     ticket_period = TicketPeriodSerializer()
 
-
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+            return (
+                ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(
+                    total=Sum("count")
+                )["total"]
+                > 0
+            )
         else:
             return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
-            Q(shop_items_set_stocks__main_shop_item=item) |
-            Q(shop_items_link_set_stocks__main_shop_item=item)
+            Q(shop_items_set_stocks__main_shop_item=item)
+            | Q(shop_items_link_set_stocks__main_shop_item=item)
         )[:2]
         return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all().order_by('order')
-        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
-        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+        sizes = item.available_sizes.all().order_by("order")
+        if (
+            sizes.exists()
+            and ShopItemSizeCount.objects.filter(main_shop_item=item).exists()
+        ):
+            item_size_counts = ShopItemSizeCount.objects.filter(
+                main_shop_item=item
+            ).values_list("size_id", flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by(
+                "order"
+            )
+        elif (
+            sizes.first() is None
+            and ShopItemSizeCount.objects.filter(
+                main_shop_item=item, size=None
+            ).exists()
+        ):
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
-            return ShopItemSizeCountSerializer(sizes, many=True, context={'shop_item': item, 'request': self.context['request']}).data
-        return SizeFormatByItemSerializer(sizes, many=True,
-                                          context={'shop_item': item, 'request': self.context['request']}).data
+            return ShopItemSizeCountSerializer(
+                sizes,
+                many=True,
+                context={"shop_item": item, "request": self.context["request"]},
+            ).data
+        return SizeFormatByItemSerializer(
+            sizes,
+            many=True,
+            context={"shop_item": item, "request": self.context["request"]},
+        ).data
 
     def get_instagram_data(self, item: ShopItem):
         videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None)
-        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('pk')
-        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
-                    images=ItemInstagramImageSerializer(images, many=True).data)
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by(
+            "pk"
+        )
+        return dict(
+            videos=ItemInstagramVideoSerializer(videos, many=True).data,
+            images=ItemInstagramImageSerializer(images, many=True).data,
+        )
 
     def get_is_liked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return LikeService.is_item_liked_by_user(item=item, user=user)
 
     def get_is_bookmarked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
@@ -406,22 +610,55 @@ class ItemRentalRetrieveSerializer(serializers.ModelSerializer):
         return item.comments.count()
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=item.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
-
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'price', 'discount',
-            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
-            'can_comment', 'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'purchase_type', 'address',
-            'full_location', 'rental_period', 'ticket_period', 'purchase_type'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_hidden",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "comment_count",
+            "can_comment",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "instagram_data",
+            "is_updated",
+            "available_sizes",
+            "set_items",
+            "has_in_stock",
+            "purchase_type",
+            "address",
+            "full_location",
+            "rental_period",
+            "ticket_period",
+            "purchase_type",
         )
 
 
@@ -430,49 +667,86 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
     ticket_period = TicketPeriodSerializer(required=False)
-    citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
-    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
+    citizenship = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.all(), many=True, required=False
+    )
+    education = serializers.PrimaryKeyRelatedField(
+        queryset=Education.objects.all(), many=True, required=False
+    )
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'organization', 'subcategory',
-            'name', 'name_lang', 'description', 'description_lang',
-            'price', 'discount', 'article',
-            'instagram_link', 'images', 'videos', 'youtube_links',
-            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
-            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
-            'current_locations', 'preferred_locations', 'links', 'education'
+            "id",
+            "organization",
+            "subcategory",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "price",
+            "discount",
+            "article",
+            "instagram_link",
+            "images",
+            "videos",
+            "youtube_links",
+            "is_updated",
+            "removed_at",
+            "purchase_type",
+            "address",
+            "rental_period",
+            "ticket_period",
+            "full_location",
+            "longitude",
+            "latitude",
+            "minimum_purchase",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "education",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
     def validate(self, attrs):
-        user = self.context['request'].user
-        organization = attrs['organization']
+        user = self.context["request"].user
+        organization = attrs["organization"]
 
-        subcategory = attrs.get('subcategory', None)
-        subcategory_organization = getattr(subcategory, 'organization', None)
-        if subcategory_organization is not None and not subcategory_organization == organization:
-            raise NotAcceptableException(_('Organization does not have this subcategory'))
+        subcategory = attrs.get("subcategory", None)
+        subcategory_organization = getattr(subcategory, "organization", None)
+        if (
+            subcategory_organization is not None
+            and not subcategory_organization == organization
+        ):
+            raise NotAcceptableException(
+                _("Organization does not have this subcategory")
+            )
 
-        if OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']) or \
-                OrganizationService.user_can_edit_own_resume(user=user, organization=attrs['organization']):
+        if OrganizationService.user_can_edit_organization(
+            user=user, organization=attrs["organization"]
+        ) or OrganizationService.user_can_edit_own_resume(
+            user=user, organization=attrs["organization"]
+        ):
             return attrs
         else:
-            raise NotAcceptableException(_('No rights to edit organization'))
-
-
+            raise NotAcceptableException(_("No rights to edit organization"))
 
     def update(self, instance, validated_data):
-        rental_period_data = validated_data.pop('rental_period', None)
+        rental_period_data = validated_data.pop("rental_period", None)
         if rental_period_data:
             rental_period = instance.rental_period
-            rental_period_serializer = RentItemsPeriodSerializer(rental_period, data=rental_period_data, partial=True)
+            rental_period_serializer = RentItemsPeriodSerializer(
+                rental_period, data=rental_period_data, partial=True
+            )
             if rental_period_serializer.is_valid(raise_exception=True):
                 rental_period_serializer.save()
 
-        latitude = validated_data.pop('latitude', None)
-        longitude = validated_data.pop('longitude', None)
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
         if longitude and latitude:
             point = Point(longitude, latitude)
         else:
@@ -480,25 +754,25 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         instance.location = point
         instance.save()
 
-        validated_data.pop('organization', None)
-        if 'price' in validated_data and validated_data.get('price') is None:
+        validated_data.pop("organization", None)
+        if "price" in validated_data and validated_data.get("price") is None:
             CartItemService.delete_item_from_all_carts(self.instance)
 
         return super().update(instance, validated_data)
 
     def save(self, **kwargs):
-        images = self.validated_data.get('images', [])
+        images = self.validated_data.get("images", [])
         for index, image in enumerate(images):
             image.order = index
-            image.save(update_fields=('order',))
+            image.save(update_fields=("order",))
 
-        videos = self.validated_data.get('videos', [])
+        videos = self.validated_data.get("videos", [])
         for index, video in enumerate(videos):
             video.order = index
-            video.save(update_fields=('order',))
+            video.save(update_fields=("order",))
 
-        longitude = self.validated_data.pop('longitude', None)
-        latitude = self.validated_data.pop('latitude', None)
+        longitude = self.validated_data.pop("longitude", None)
+        latitude = self.validated_data.pop("latitude", None)
 
         if longitude and latitude:
             point = Point(longitude, latitude)
@@ -509,21 +783,23 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         instance.location = point
         instance.save()
 
-        if instance.article == '' or instance.article is None:
+        if instance.article == "" or instance.article is None:
             instance.article = f"ART{instance.id}"
-            instance.save(update_fields=('article',))
+            instance.save(update_fields=("article",))
 
-        if self.validated_data.get('price') == 0.00:
+        if self.validated_data.get("price") == 0.00:
             instance.price = None
             instance.save()
 
-        organization_data = self.validated_data.get('organization')
-        Organization.objects.filter(id=organization_data.id).update(add_item_date=datetime.datetime.now())
+        organization_data = self.validated_data.get("organization")
+        Organization.objects.filter(id=organization_data.id).update(
+            add_item_date=datetime.datetime.now()
+        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation.pop('latitude', None)
-        representation.pop('longitude', None)
+        representation.pop("latitude", None)
+        representation.pop("longitude", None)
         return representation
 
 
@@ -532,35 +808,67 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(allow_null=True, required=False)
     rental_period = RentItemsPeriodSerializer(required=False)
     ticket_period = TicketPeriodSerializer(required=False)
-    citizenship = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), many=True, required=False)
-    education = serializers.PrimaryKeyRelatedField(queryset=Education.objects.all(), many=True, required=False)
+    citizenship = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.all(), many=True, required=False
+    )
+    education = serializers.PrimaryKeyRelatedField(
+        queryset=Education.objects.all(), many=True, required=False
+    )
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'user', 'organization', 'subcategory',
-            'name', 'name_lang', 'description', 'description_lang',
-            'price', 'discount', 'article',
-            'instagram_link', 'images', 'videos', 'youtube_links',
-            'is_updated', 'removed_at', 'purchase_type', 'address', 'rental_period', 'ticket_period', 'full_location',
-            'longitude', 'latitude', 'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship',
-            'current_locations', 'preferred_locations', 'links', 'education'
+            "id",
+            "user",
+            "organization",
+            "subcategory",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "price",
+            "discount",
+            "article",
+            "instagram_link",
+            "images",
+            "videos",
+            "youtube_links",
+            "is_updated",
+            "removed_at",
+            "purchase_type",
+            "address",
+            "rental_period",
+            "ticket_period",
+            "full_location",
+            "longitude",
+            "latitude",
+            "minimum_purchase",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "education",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
     def validate(self, attrs):
-        user = self.context['request'].user
+        user = self.context["request"].user
         max_items_for_user = 3
 
-        existing_items_count = ShopItem.objects.filter(user=user, purchase_type=ShopItem.RESUME).count()
+        existing_items_count = ShopItem.objects.filter(
+            user=user, purchase_type=ShopItem.RESUME
+        ).count()
         if existing_items_count >= max_items_for_user:
-            raise NotAcceptableException(_('Maximum allowed resumes for user reached'))
+            raise NotAcceptableException(_("Maximum allowed resumes for user reached"))
 
         return attrs
 
     def update(self, instance, validated_data):
-        latitude = validated_data.pop('latitude', None)
-        longitude = validated_data.pop('longitude', None)
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
         if longitude and latitude:
             point = Point(longitude, latitude)
         else:
@@ -571,18 +879,18 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def save(self, **kwargs):
-        images = self.validated_data.get('images', [])
+        images = self.validated_data.get("images", [])
         for index, image in enumerate(images):
             image.order = index
-            image.save(update_fields=('order',))
+            image.save(update_fields=("order",))
 
-        videos = self.validated_data.get('videos', [])
+        videos = self.validated_data.get("videos", [])
         for index, video in enumerate(videos):
             video.order = index
-            video.save(update_fields=('order',))
+            video.save(update_fields=("order",))
 
-        longitude = self.validated_data.pop('longitude', None)
-        latitude = self.validated_data.pop('latitude', None)
+        longitude = self.validated_data.pop("longitude", None)
+        latitude = self.validated_data.pop("latitude", None)
 
         if longitude and latitude:
             point = Point(longitude, latitude)
@@ -590,46 +898,52 @@ class UserItemCreateUpdateSerializer(serializers.ModelSerializer):
             point = None
 
         instance = super().save(**kwargs)
-        user = self.validated_data.get('user', None)
+        user = self.validated_data.get("user", None)
         if user:
             organization = Organization.objects.filter(types__is_resume=True).first()
             if organization:
                 instance.organization = organization
-                instance.save(update_fields=('organization',))
+                instance.save(update_fields=("organization",))
 
                 role, created = Role.objects.get_or_create(
-                    title='Vacancy Publisher',
+                    title="Vacancy Publisher",
                     organization=organization,
                     defaults={
-                        'can_sale': False,
-                        'can_check_attendance': False,
-                        'can_see_stats': False,
-                        'can_edit_organization': False,
-                        'can_send_message': True,
-                        'can_edit_partner': False,
-                        'can_deliver': False,
-                        'can_edit_own_resume': True
-                    }
+                        "can_sale": False,
+                        "can_check_attendance": False,
+                        "can_see_stats": False,
+                        "can_edit_organization": False,
+                        "can_send_message": True,
+                        "can_edit_partner": False,
+                        "can_deliver": False,
+                        "can_edit_own_resume": True,
+                    },
                 )
-                is_employee = Membership.objects.filter(organization=organization, user=user, role=role).exists()
+                is_employee = Membership.objects.filter(
+                    organization=organization, user=user, role=role
+                ).exists()
                 if not is_employee and user != organization.owner:
-                    MembershipService.add_employee_to_resume_org(organization=organization, employee=user, role=role,
-                                                             added_by=organization.owner)
+                    MembershipService.add_employee_to_resume_org(
+                        organization=organization,
+                        employee=user,
+                        role=role,
+                        added_by=organization.owner,
+                    )
         instance.location = point
         instance.save()
 
-        if instance.article == '' or instance.article is None:
+        if instance.article == "" or instance.article is None:
             instance.article = f"ART{instance.id}"
-            instance.save(update_fields=('article',))
+            instance.save(update_fields=("article",))
 
-        if self.validated_data.get('price') == 0.00:
+        if self.validated_data.get("price") == 0.00:
             instance.price = None
             instance.save()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation.pop('latitude', None)
-        representation.pop('longitude', None)
+        representation.pop("latitude", None)
+        representation.pop("longitude", None)
         return representation
 
 
@@ -646,9 +960,7 @@ class ItemInstagramVideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemInstagramData
-        fields = (
-            'thumbnail', 'video_url'
-        )
+        fields = ("thumbnail", "video_url")
 
 
 class ItemInstagramImageSerializer(serializers.ModelSerializer):
@@ -671,9 +983,7 @@ class ItemInstagramImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemInstagramData
-        fields = (
-            'file', 'large', 'small', 'medium'
-        )
+        fields = ("file", "large", "small", "medium")
 
 
 class ItemsSerializer(serializers.ModelSerializer):
@@ -682,8 +992,15 @@ class ItemsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang',
-            'price', 'is_published', 'updated_at', 'images'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "price",
+            "is_published",
+            "updated_at",
+            "images",
         )
 
 
@@ -698,10 +1015,18 @@ class ItemListSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
 
     def get_instagram_data(self, item: ShopItem):
-        videos = ItemInstagramData.objects.filter(item=item).exclude(video_url=None).order_by('created_at')
-        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by('created_at')
-        return dict(videos=ItemInstagramVideoSerializer(videos, many=True).data,
-                    images=ItemInstagramImageSerializer(images, many=True).data)
+        videos = (
+            ItemInstagramData.objects.filter(item=item)
+            .exclude(video_url=None)
+            .order_by("created_at")
+        )
+        images = ItemInstagramData.objects.filter(item=item, video_url=None).order_by(
+            "created_at"
+        )
+        return dict(
+            videos=ItemInstagramVideoSerializer(videos, many=True).data,
+            images=ItemInstagramImageSerializer(images, many=True).data,
+        )
 
     def get_like_count(self, item: ShopItem) -> int:
         return item.liked_users.count()
@@ -712,14 +1037,30 @@ class ItemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'price', 'discount', 'instagram_link', 'is_published',
-            'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
-            'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images',
-            'instagram_data', 'is_updated'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "comment_count",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "instagram_data",
+            "is_updated",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
 
 class SubscriptionItemSerializer(ItemListSerializer):
@@ -738,28 +1079,51 @@ class SubscriptionItemSerializer(ItemListSerializer):
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+            return (
+                ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(
+                    total=Sum("count")
+                )["total"]
+                > 0
+            )
         else:
             return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
-            Q(shop_items_set_stocks__main_shop_item=item) |
-            Q(shop_items_link_set_stocks__main_shop_item=item)
+            Q(shop_items_set_stocks__main_shop_item=item)
+            | Q(shop_items_link_set_stocks__main_shop_item=item)
         )[:2]
         return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all().order_by('order')
-        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
-        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+        sizes = item.available_sizes.all().order_by("order")
+        if (
+            sizes.exists()
+            and ShopItemSizeCount.objects.filter(main_shop_item=item).exists()
+        ):
+            item_size_counts = ShopItemSizeCount.objects.filter(
+                main_shop_item=item
+            ).values_list("size_id", flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by(
+                "order"
+            )
+        elif (
+            sizes.first() is None
+            and ShopItemSizeCount.objects.filter(
+                main_shop_item=item, size=None
+            ).exists()
+        ):
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
-            return ShopItemSizeCountSerializer(sizes, many=True,
-                                               context={'shop_item': item, 'request': self.context['request']}).data
-        return SizeFormatByItemSerializer(sizes, many=True,
-                                          context={'shop_item': item, 'request': self.context['request']}).data
+            return ShopItemSizeCountSerializer(
+                sizes,
+                many=True,
+                context={"shop_item": item, "request": self.context["request"]},
+            ).data
+        return SizeFormatByItemSerializer(
+            sizes,
+            many=True,
+            context={"shop_item": item, "request": self.context["request"]},
+        ).data
 
     def get_current_locations(self, item: ShopItem):
         current_locations_list = []
@@ -800,7 +1164,7 @@ class SubscriptionItemSerializer(ItemListSerializer):
         return preferred_locations_list
 
     def get_own_resume(self, item: ShopItem):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if item.user == user:
             return True
         return False
@@ -808,22 +1172,56 @@ class SubscriptionItemSerializer(ItemListSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'price', 'discount', 'instagram_link', 'is_published',
-            'is_liked', 'is_bookmarked', 'like_count', 'comment_count',
-            'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'instagram_data', 'is_updated', 'available_sizes', 'set_items', 'has_in_stock', 'rental_period',
-            'ticket_period', 'full_location', 'purchase_type', 'address', 'minimum_purchase', 'currency', 'salary_from',
-            'salary_to', 'citizenship', 'education', 'current_locations', 'preferred_locations', 'links', 'own_resume'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "comment_count",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "instagram_data",
+            "is_updated",
+            "available_sizes",
+            "set_items",
+            "has_in_stock",
+            "rental_period",
+            "ticket_period",
+            "full_location",
+            "purchase_type",
+            "address",
+            "minimum_purchase",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "education",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "own_resume",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
 
 class ItemFeedSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
-    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
-    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    created_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
+    updated_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
     available_sizes = serializers.SerializerMethodField()
@@ -841,33 +1239,62 @@ class ItemFeedSerializer(ItemListSerializer):
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            return ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(total=Sum('count'))['total'] > 0
+            return (
+                ShopItemSizeCount.objects.filter(main_shop_item=item).aggregate(
+                    total=Sum("count")
+                )["total"]
+                > 0
+            )
         else:
             return True
 
     def get_set_items(self, item: ShopItem):
         items = ShopItem.objects.filter(
-            Q(shop_items_set_stocks__main_shop_item=item) |
-            Q(shop_items_link_set_stocks__main_shop_item=item)
+            Q(shop_items_set_stocks__main_shop_item=item)
+            | Q(shop_items_link_set_stocks__main_shop_item=item)
         )[:2]
         return ItemSetRetrieveSerializer(items, many=True, context=self.context).data
 
     def get_available_sizes(self, item: ShopItem):
-        sizes = item.available_sizes.all().order_by('order')
-        if sizes.exists() and ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
-            item_size_counts = ShopItemSizeCount.objects.filter(main_shop_item=item).values_list('size_id', flat=True)
-            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by('order')
-        elif sizes.first() is None and ShopItemSizeCount.objects.filter(main_shop_item=item, size=None).exists():
+        sizes = item.available_sizes.all().order_by("order")
+        if (
+            sizes.exists()
+            and ShopItemSizeCount.objects.filter(main_shop_item=item).exists()
+        ):
+            item_size_counts = ShopItemSizeCount.objects.filter(
+                main_shop_item=item
+            ).values_list("size_id", flat=True)
+            sizes = item.available_sizes.filter(id__in=item_size_counts).order_by(
+                "order"
+            )
+        elif (
+            sizes.first() is None
+            and ShopItemSizeCount.objects.filter(
+                main_shop_item=item, size=None
+            ).exists()
+        ):
             sizes = ShopItemSizeCount.objects.filter(main_shop_item=item, size=None)
-            return ShopItemSizeCountSerializer(sizes, many=True,
-                                               context={'shop_item': item, 'request': self.context['request']}).data
-        return SizeFormatByItemSerializer(sizes, many=True,
-                                          context={'shop_item': item, 'request': self.context['request']}).data
+            return ShopItemSizeCountSerializer(
+                sizes,
+                many=True,
+                context={"shop_item": item, "request": self.context["request"]},
+            ).data
+        return SizeFormatByItemSerializer(
+            sizes,
+            many=True,
+            context={"shop_item": item, "request": self.context["request"]},
+        ).data
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=item.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_current_locations(self, item: ShopItem):
@@ -909,7 +1336,7 @@ class ItemFeedSerializer(ItemListSerializer):
         return preferred_locations_list
 
     def get_own_resume(self, item: ShopItem):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if item.user == user:
             return True
         return False
@@ -920,23 +1347,60 @@ class ItemFeedSerializer(ItemListSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
-            'is_liked', 'is_bookmarked', 'like_count',
-            'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
-            'instagram_data', 'is_updated', 'comment_count', 'can_comment', 'available_sizes', 'set_items',
-            'has_in_stock', 'rental_period', 'ticket_period', 'purchase_type', 'full_location', 'address',
-            'minimum_purchase', 'currency', 'salary_from', 'salary_to', 'citizenship', 'education', 'current_locations',
-            'preferred_locations', 'links', 'own_resume', 'is_comments_disabled'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_hidden",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "user",
+            "instagram_data",
+            "is_updated",
+            "comment_count",
+            "can_comment",
+            "available_sizes",
+            "set_items",
+            "has_in_stock",
+            "rental_period",
+            "ticket_period",
+            "purchase_type",
+            "full_location",
+            "address",
+            "minimum_purchase",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "education",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "own_resume",
+            "is_comments_disabled",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
 
 class ResumeFeedSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
-    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
-    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    created_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
+    updated_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
     is_liked = serializers.SerializerMethodField()
@@ -949,21 +1413,27 @@ class ResumeFeedSerializer(ItemListSerializer):
     own_resume = serializers.SerializerMethodField()
 
     def get_is_liked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return LikeService.is_item_liked_by_user(item=item, user=user)
 
     def get_is_bookmarked(self, item: ShopItem) -> bool:
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return BookmarkService.is_item_bookmarked_by_user(item=item, user=user)
 
     def get_can_comment(self, item: ShopItem) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=item.organization.id, user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=item.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_current_locations(self, item: ShopItem):
@@ -1005,7 +1475,7 @@ class ResumeFeedSerializer(ItemListSerializer):
         return preferred_locations_list
 
     def get_own_resume(self, item: ShopItem):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if item.user == user:
             return True
         return False
@@ -1013,15 +1483,45 @@ class ResumeFeedSerializer(ItemListSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'article',
-            'instagram_link', 'is_published', 'is_hidden', 'is_liked', 'is_bookmarked', 'like_count',
-            'created_at', 'updated_at', 'removed_at',
-            'youtube_links', 'subcategory', 'images', 'videos', 'organization', 'user',
-            'instagram_data', 'is_updated', 'comment_count', 'can_comment',
-            'purchase_type', 'full_location', 'address', 'currency', 'salary_from', 'salary_to', 'citizenship',
-            'education', 'current_locations', 'preferred_locations', 'links', 'own_resume'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "article",
+            "instagram_link",
+            "is_published",
+            "is_hidden",
+            "is_liked",
+            "is_bookmarked",
+            "like_count",
+            "created_at",
+            "updated_at",
+            "removed_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "user",
+            "instagram_data",
+            "is_updated",
+            "comment_count",
+            "can_comment",
+            "purchase_type",
+            "full_location",
+            "address",
+            "currency",
+            "salary_from",
+            "salary_to",
+            "citizenship",
+            "education",
+            "current_locations",
+            "preferred_locations",
+            "links",
+            "own_resume",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
 
 class StartDateTimeSerializer(serializers.Serializer):
@@ -1032,14 +1532,16 @@ class ItemInCartSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
     def get_image(self, item: ShopItem) -> dict:
-        image = item.images.filter(order=0).first()
-        video = item.videos.filter(order=0).first()
+        image = item.images.first()
+        video = item.videos.first()
         if image:
             return ImageSerializer(image, context=self.context).data
         if video:
             return ImageSerializer(video.thumbnail, context=self.context).data
         image_data = None
-        insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
+        insta_data = ItemInstagramData.objects.filter(
+            item=item, thumbnail_url__isnull=False
+        ).first()
         if insta_data is not None:
             item_video_thumbnail_url = insta_data.thumbnail_url
             image_data = {
@@ -1048,14 +1550,19 @@ class ItemInCartSerializer(serializers.ModelSerializer):
                 "name": "Cart thumbnail",
                 "large": item_video_thumbnail_url,
                 "medium": item_video_thumbnail_url,
-                "small": item_video_thumbnail_url
+                "small": item_video_thumbnail_url,
             }
         return image_data
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'price', 'discounted_price', 'image', 'minimum_purchase'
+            "id",
+            "name",
+            "price",
+            "discounted_price",
+            "image",
+            "minimum_purchase",
         )
 
 
@@ -1070,7 +1577,9 @@ class ItemInBookingSerializer(serializers.ModelSerializer):
         if video:
             return ImageSerializer(video.thumbnail, context=self.context).data
         image_data = None
-        insta_data = ItemInstagramData.objects.filter(item=item, thumbnail_url__isnull=False).first()
+        insta_data = ItemInstagramData.objects.filter(
+            item=item, thumbnail_url__isnull=False
+        ).first()
         if insta_data is not None:
             item_video_thumbnail_url = insta_data.thumbnail_url
             image_data = {
@@ -1079,38 +1588,45 @@ class ItemInBookingSerializer(serializers.ModelSerializer):
                 "name": "Cart thumbnail",
                 "large": item_video_thumbnail_url,
                 "medium": item_video_thumbnail_url,
-                "small": item_video_thumbnail_url
+                "small": item_video_thumbnail_url,
             }
         return image_data
 
     class Meta:
         model = ShopItem
-        fields = (
-            'id', 'name', 'price', 'discounted_price', 'image'
-        )
+        fields = ("id", "name", "price", "discounted_price", "image")
 
 
 class ItemInHotlinkSerializer(ItemInCartSerializer):
     class Meta:
         model = ShopItem
-        fields = (
-            'id', 'name', 'image'
-        )
+        fields = ("id", "name", "image")
 
 
 class ItemInHotlinkCollectionSerializer(ItemInCartSerializer):
-    subcategory_name = serializers.CharField(source='subcategory.name', default=None)
-    currency = serializers.CharField(source='organization.currency.code')
+    subcategory_name = serializers.CharField(source="subcategory.name", default=None)
+    currency = serializers.CharField(source="organization.currency.code")
     is_selected = serializers.SerializerMethodField()
 
     class Meta:
         model = ShopItem
-        fields = ('id', 'name', 'subcategory_name', 'price', 'discounted_price', 'currency', 'is_selected', 'image')
+        fields = (
+            "id",
+            "name",
+            "subcategory_name",
+            "price",
+            "discounted_price",
+            "currency",
+            "is_selected",
+            "image",
+        )
 
     def get_is_selected(self, item: ShopItem) -> bool:
-        if 'hotlink' not in self.context:
+        if "hotlink" not in self.context:
             return False
-        return HotlinkCollectionItem.objects.filter(hotlink=self.context['hotlink'], item=item).exists()
+        return HotlinkCollectionItem.objects.filter(
+            hotlink=self.context["hotlink"], item=item
+        ).exists()
 
 
 class ItemRentalYearSerializer(serializers.Serializer):
@@ -1120,13 +1636,13 @@ class ItemRentalYearSerializer(serializers.Serializer):
 
     class Meta:
         model = Booking
-        fields = ('value', 'is_booked', 'is_available')
+        fields = ("value", "is_booked", "is_available")
 
     def get_is_available(self, booking: Booking) -> bool:
-        year = int(booking['value'])
+        year = int(booking["value"])
         current_year = datetime.datetime.now().year
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         start_year = rental.rental_period.start_date.year
         end_year = rental.rental_period.end_date.year
 
@@ -1137,19 +1653,18 @@ class ItemRentalYearSerializer(serializers.Serializer):
         return True
 
     def get_is_booked(self, booking: Booking) -> bool:
-        year = int(booking['value'])
-        rental = self.context.get('rental')
+        year = int(booking["value"])
+        rental = self.context.get("rental")
 
         bookings = rental.user_bookings.filter(
             start_time__year__lte=year,
             end_time__year__gte=year,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
         if bookings.exists():
             for month in range(1, 13):
                 bookings_in_month = bookings.filter(
-                    start_time__month__lte=month,
-                    end_time__month__gte=month
+                    start_time__month__lte=month, end_time__month__gte=month
                 )
                 if not bookings_in_month.exists():
                     return False
@@ -1164,39 +1679,44 @@ class ItemRentalMonthSerializer(serializers.Serializer):
 
     class Meta:
         model = Booking
-        fields = ('value', 'is_available', 'is_booked')
+        fields = ("value", "is_available", "is_booked")
 
     def get_is_available(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
         year = time_query_datetime.year
-        value = booking['value']
+        value = booking["value"]
 
-        value_datetime = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M')
+        value_datetime = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M")
         month = value_datetime.month
 
         current_year = datetime.datetime.now().year
         current_month = datetime.datetime.now().month
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         start_year = rental.rental_period.start_date.year
         end_year = rental.rental_period.end_date.year
         start_month = rental.rental_period.start_date.month
         end_month = rental.rental_period.end_date.month
 
-
         if year < current_year:
             return False
-        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
-                year == end_year and month > end_month):
+        elif (
+            year < start_year
+            or year > end_year
+            or (year == start_year and month < start_month)
+            or (year == end_year and month > end_month)
+        ):
             return False
         elif year == current_year and month < current_month:
             return False
@@ -1205,38 +1725,41 @@ class ItemRentalMonthSerializer(serializers.Serializer):
 
     def get_is_booked(self, booking):
 
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
         year = time_query_datetime.year
 
-        value = booking['value']
-        value_datetime = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M')
+        value = booking["value"]
+        value_datetime = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M")
         month = value_datetime.month
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         num_days = calendar.monthrange(year, month)[1]
-        days = [datetime.datetime(year, month, day).date() for day in range(1, num_days + 1)]
+        days = [
+            datetime.datetime(year, month, day).date() for day in range(1, num_days + 1)
+        ]
         bookings = rental.user_bookings.filter(
             start_time__year__lte=year,
             end_time__year__gte=year,
             start_time__month__lte=month,
             end_time__month__gte=month,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
         if bookings.exists():
             month_booked = False
             for day in days:
                 is_day_booked = bookings.filter(
-                    start_time__date__lte=day,
-                    end_time__date__gte=day
+                    start_time__date__lte=day, end_time__date__gte=day
                 ).exists()
                 if not is_day_booked:
                     month_booked = False
@@ -1254,17 +1777,19 @@ class ItemRentalDaySerializer(serializers.Serializer):
     is_available = serializers.SerializerMethodField()
 
     def get_is_available(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
 
         year = time_query_datetime.year
         month = time_query_datetime.month
@@ -1275,7 +1800,7 @@ class ItemRentalDaySerializer(serializers.Serializer):
         current_month = current_datetime.month
         current_day = current_datetime.day
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         start_year = rental.rental_period.start_date.year
         end_year = rental.rental_period.end_date.year
         start_month = rental.rental_period.start_date.month
@@ -1283,41 +1808,45 @@ class ItemRentalDaySerializer(serializers.Serializer):
         start_day = rental.rental_period.start_date.day
         end_day = rental.rental_period.end_date.day
 
-
         if year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False
-        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
-                year == end_year and month > end_month) or (
-                year == start_year and month == start_month and day < start_day) or (
-                year == end_year and month == end_month and day > end_day):
+        elif (
+            year < start_year
+            or year > end_year
+            or (year == start_year and month < start_month)
+            or (year == end_year and month > end_month)
+            or (year == start_year and month == start_month and day < start_day)
+            or (year == end_year and month == end_month and day > end_day)
+        ):
             return False
         elif year == current_year and month == current_month and day < current_day:
             return False
 
         return True
 
-
     def get_is_booked(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
         current_date = value
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         hours = [hour for hour in range(0, 24)]
         bookings = rental.user_bookings.filter(
             start_time__date__lte=current_date,
             end_time__date__gte=current_date,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
 
         if bookings.exists():
@@ -1337,19 +1866,20 @@ class ItemRentalHourSerializer(serializers.Serializer):
     is_booked = serializers.SerializerMethodField()
     is_available = serializers.SerializerMethodField()
 
-
     def get_is_available(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
 
         year = time_query_datetime.year
         month = time_query_datetime.month
@@ -1362,7 +1892,7 @@ class ItemRentalHourSerializer(serializers.Serializer):
         current_day = current_datetime.day
         current_hour = current_datetime.hour
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         start_year = rental.rental_period.start_date.year
         end_year = rental.rental_period.end_date.year
         start_month = rental.rental_period.start_date.month
@@ -1378,49 +1908,68 @@ class ItemRentalHourSerializer(serializers.Serializer):
             return False
         elif year == current_year and month == current_month and day < current_day:
             return False
-        elif year < start_year or year > end_year or (year == start_year and month < start_month) or (
-                year == end_year and month > end_month) or (
-                year == start_year and month == start_month and day < start_day) or (
-                year == end_year and month == end_month and day > end_day) or (
-                year == start_year and month == start_month and day == start_day and hour < start_hour) or (
-                year == end_year and month == end_month and day == end_day and hour >= end_hour):
+        elif (
+            year < start_year
+            or year > end_year
+            or (year == start_year and month < start_month)
+            or (year == end_year and month > end_month)
+            or (year == start_year and month == start_month and day < start_day)
+            or (year == end_year and month == end_month and day > end_day)
+            or (
+                year == start_year
+                and month == start_month
+                and day == start_day
+                and hour < start_hour
+            )
+            or (
+                year == end_year
+                and month == end_month
+                and day == end_day
+                and hour >= end_hour
+            )
+        ):
             return False
-        elif year == current_year and month == current_month and day == current_day and hour < current_hour:
+        elif (
+            year == current_year
+            and month == current_month
+            and day == current_day
+            and hour < current_hour
+        ):
             return False
 
         return True
 
-
     def get_is_booked(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
         current_date = time_query_datetime
         current_hour = value.hour
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
 
         bookings = rental.user_bookings.filter(
             start_time__date=current_date,
             start_time__hour__lte=current_hour,
             end_time__date=current_date,
             end_time__hour__gte=current_hour,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
 
         if bookings.exists():
             for minute in range(0, 60):
                 bookings_in_minute = bookings.filter(
-                    start_time__minute__lte=minute,
-                    end_time__minute__gte=minute
+                    start_time__minute__lte=minute, end_time__minute__gte=minute
                 )
                 if not bookings_in_minute.exists():
                     return False
@@ -1433,24 +1982,24 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
     is_booked = serializers.SerializerMethodField()
     is_available = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Booking
-        fields = ('value', 'is_available', 'is_booked')
-
+        fields = ("value", "is_available", "is_booked")
 
     def get_is_available(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
 
         year = time_query_datetime.year
         month = time_query_datetime.month
@@ -1465,7 +2014,7 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
         current_hour = current_datetime.hour
         current_minute = current_datetime.minute
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
         start_year = rental.rental_period.start_date.year
         end_year = rental.rental_period.end_date.year
         start_month = rental.rental_period.start_date.month
@@ -1477,50 +2026,84 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
         start_minute = rental.rental_period.start_time.minute
         end_minute = rental.rental_period.end_time.minute
 
-
         if year < current_year:
             return False
         elif year == current_year and month < current_month:
             return False
         elif year == current_year and month == current_month and day < current_day:
             return False
-        elif year == current_year and month == current_month and day == current_day and hour < current_hour:
+        elif (
+            year == current_year
+            and month == current_month
+            and day == current_day
+            and hour < current_hour
+        ):
             return False
-        elif (year < start_year or year > end_year or
-                (year == start_year and month < start_month) or
-                (year == end_year and month > end_month) or
-                (year == start_year and month == start_month and day < start_day) or
-                (year == end_year and month == end_month and day > end_day) or
-                (year == start_year and month == start_month and day == start_day and hour < start_hour) or
-                (year == end_year and month == end_month and day == end_day and hour > end_hour) or
-                (
-                        year == start_year and month == start_month and day == start_day and hour == start_hour and minute < start_minute) or
-                (
-                        year == end_year and month == end_month and day == end_day and hour == end_hour and minute > end_minute)):
+        elif (
+            year < start_year
+            or year > end_year
+            or (year == start_year and month < start_month)
+            or (year == end_year and month > end_month)
+            or (year == start_year and month == start_month and day < start_day)
+            or (year == end_year and month == end_month and day > end_day)
+            or (
+                year == start_year
+                and month == start_month
+                and day == start_day
+                and hour < start_hour
+            )
+            or (
+                year == end_year
+                and month == end_month
+                and day == end_day
+                and hour > end_hour
+            )
+            or (
+                year == start_year
+                and month == start_month
+                and day == start_day
+                and hour == start_hour
+                and minute < start_minute
+            )
+            or (
+                year == end_year
+                and month == end_month
+                and day == end_day
+                and hour == end_hour
+                and minute > end_minute
+            )
+        ):
             return False
-        elif year == current_year and month == current_month and day == current_day and hour == current_hour and \
-                minute < current_minute:
+        elif (
+            year == current_year
+            and month == current_month
+            and day == current_day
+            and hour == current_hour
+            and minute < current_minute
+        ):
             return False
 
         return True
 
     def get_is_booked(self, booking):
-        time_query = self.context.get('time_query')
+        time_query = self.context.get("time_query")
 
         if not time_query:
             return False
 
         try:
-            time_query_datetime = datetime.datetime.strptime(time_query, '%Y-%m-%dT%H:%M')
+            time_query_datetime = datetime.datetime.strptime(
+                time_query, "%Y-%m-%dT%H:%M"
+            )
         except ValueError:
             return False
 
-        value = booking['value']
+        value = booking["value"]
         current_date = time_query_datetime
         current_hour = time_query_datetime.hour
         minute = value.minute
 
-        rental = self.context.get('rental')
+        rental = self.context.get("rental")
 
         bookings = rental.user_bookings.filter(
             start_time__date=current_date,
@@ -1529,7 +2112,7 @@ class ItemRentalMinuteSerializer(serializers.ModelSerializer):
             end_time__date=current_date,
             end_time__hour=current_hour,
             end_time__minute__gte=minute,
-            transaction__is_processed=True
+            transaction__is_processed=True,
         )
         return bookings.exists()
 
@@ -1543,17 +2126,24 @@ class BookingItemRentalRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'rental_period', 'ticket_period'
+            "id",
+            "name",
+            "name_lang",
+            "price",
+            "discount",
+            "images",
+            "videos",
+            "rental_period",
+            "ticket_period",
         )
+
 
 class TicketWithTicketPeriodSerializer(serializers.ModelSerializer):
     ticket_period = TicketPeriodSerializer()
 
     class Meta:
         model = ShopItem
-        fields = (
-            'id', 'ticket_period'
-        )
+        fields = ("id", "ticket_period")
 
 
 class TicketItemRetrieveSerializer(serializers.ModelSerializer):
@@ -1561,36 +2151,67 @@ class TicketItemRetrieveSerializer(serializers.ModelSerializer):
     videos = VideoSerializer(many=True)
     ticket_period = TicketPeriodSerializer()
     subcategory = SubcategorySerializer()
-    currency = serializers.CharField(source='organization.currency.code')
+    currency = serializers.CharField(source="organization.currency.code")
 
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'price', 'discount', 'images', 'videos', 'subcategory', 'currency',
-                  'ticket_period'
+            "id",
+            "name",
+            "name_lang",
+            "price",
+            "discount",
+            "images",
+            "videos",
+            "subcategory",
+            "currency",
+            "ticket_period",
         )
+
 
 class BookInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'start_time', 'end_time', )
+        fields = (
+            "id",
+            "organization",
+            "start_time",
+            "end_time",
+        )
 
 
 class SubmitUserResumeRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_user', 'organization', 'item', 'show_contacts', 'phone_numbers',
-                  'links', 'text')
+        fields = (
+            "id",
+            "sender_user",
+            "organization",
+            "item",
+            "show_contacts",
+            "phone_numbers",
+            "links",
+            "text",
+        )
 
 
 class SubmitOrganizationResumeRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_organization', 'organization', 'item', 'show_contacts', 'phone_numbers',
-                  'links', 'text')
+        fields = (
+            "id",
+            "sender_organization",
+            "organization",
+            "item",
+            "show_contacts",
+            "phone_numbers",
+            "links",
+            "text",
+        )
+
 
 class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
     organization = ItemFeedOrganizationSerializer(allow_null=True)
@@ -1599,8 +2220,19 @@ class ResumeItemRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang', 'organization', 'purchase_type',
-            'salary_from', 'salary_to', 'is_published', 'updated_at', 'images', 'currency'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "organization",
+            "purchase_type",
+            "salary_from",
+            "salary_to",
+            "is_published",
+            "updated_at",
+            "images",
+            "currency",
         )
 
 
@@ -1612,7 +2244,7 @@ class UserResumeRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'status')
+        fields = ("id", "sender_user", "organization", "processed_by", "item", "status")
 
 
 class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
@@ -1623,8 +2255,17 @@ class UserResumeRequestAcceptedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_user', 'organization', 'processed_by', 'item', 'phone_numbers', 'links', 'status',
-                  'text')
+        fields = (
+            "id",
+            "sender_user",
+            "organization",
+            "processed_by",
+            "item",
+            "phone_numbers",
+            "links",
+            "status",
+            "text",
+        )
 
 
 class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
@@ -1635,7 +2276,14 @@ class OrganizationResumeRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'status')
+        fields = (
+            "id",
+            "sender_organization",
+            "organization",
+            "processed_by",
+            "item",
+            "status",
+        )
 
 
 class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
@@ -1646,8 +2294,17 @@ class OrganizationResumeRequestAcceptedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResumeRequest
-        fields = ('id', 'sender_organization', 'organization', 'processed_by', 'item', 'phone_numbers', 'links',
-                  'status', 'text')
+        fields = (
+            "id",
+            "sender_organization",
+            "organization",
+            "processed_by",
+            "item",
+            "phone_numbers",
+            "links",
+            "status",
+            "text",
+        )
 
 
 class AcceptDeclineUserResumeRequestSerializer(serializers.Serializer):
@@ -1669,7 +2326,13 @@ class BookInfoWithClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'client', 'start_time', 'end_time',)
+        fields = (
+            "id",
+            "organization",
+            "client",
+            "start_time",
+            "end_time",
+        )
 
 
 class BookInfoWithUTCSerializer(serializers.ModelSerializer):
@@ -1677,24 +2340,24 @@ class BookInfoWithUTCSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'start_time', 'end_time', 'utc_offset_minutes')
+        fields = ("id", "organization", "start_time", "end_time", "utc_offset_minutes")
 
 
 class TransactionBookingInfoSerializer(serializers.ModelSerializer):
     item = BookingItemRentalRetrieveSerializer()
-    start_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M')
-    end_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M')
+    start_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M")
+    end_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M")
 
     class Meta:
         model = Booking
-        fields = ('id', 'organization', 'item', 'start_time', 'end_time', 'is_active')
+        fields = ("id", "organization", "item", "start_time", "end_time", "is_active")
 
 
 class IsActiveBookingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ('id', 'is_active')
+        fields = ("id", "is_active")
 
 
 class IsActiveTicketSerializer(serializers.ModelSerializer):
@@ -1708,32 +2371,46 @@ class IsActiveTicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ('id', 'item', 'is_active', 'activated_time')
+        fields = ("id", "item", "is_active", "activated_time")
+
 
 class RentalTicketListSerializer(ItemListSerializer):
     organization = ItemFeedOrganizationSerializer()
-    created_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
-    updated_at = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S%z')
+    created_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
+    updated_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
     videos = VideoSerializer(many=True)
     subcategory = ItemSubcategoryBriefSerializer()
     ticket_period = TicketPeriodSerializer()
 
-
     class Meta:
         model = ShopItem
         fields = (
-            'id', 'name', 'name_lang', 'description', 'description_lang',
-            'price', 'discount', 'instagram_link', 'is_published', 'is_hidden',
-            'created_at', 'updated_at', 'youtube_links', 'subcategory', 'images', 'videos', 'organization',
-            'is_updated', 'purchase_type', 'ticket_period'
+            "id",
+            "name",
+            "name_lang",
+            "description",
+            "description_lang",
+            "price",
+            "discount",
+            "instagram_link",
+            "is_published",
+            "is_hidden",
+            "created_at",
+            "updated_at",
+            "youtube_links",
+            "subcategory",
+            "images",
+            "videos",
+            "organization",
+            "is_updated",
+            "purchase_type",
+            "ticket_period",
         )
-        read_only_fields = ['name_lang', 'description_lang']
+        read_only_fields = ["name_lang", "description_lang"]
 
 
 class ItemInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopItem
-        fields = (
-            'id', 'name', 'description', 'price'
-        )
+        fields = ("id", "name", "description", "price")

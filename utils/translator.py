@@ -136,11 +136,16 @@ class GPTTranslator:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Translate the text to the specified language. If translation is not possible or any problem occurs, return the original text unchanged.",
+                    "content": (
+                        "You are a translation engine. "
+                        "Translate the given text into the specified language. "
+                        "Return only the translated text without explanations, quotes, or prefixes. "
+                        "If translation is not possible or uncertain, return the original text exactly as given."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": f"Translate the following text to {lang}:\n{text}",
+                    "content": text, 
                 },
             ],
         }

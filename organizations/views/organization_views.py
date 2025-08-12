@@ -968,11 +968,10 @@ class ItemsInServiceView(ListAPIView):
     serializer_class = ItemFeedSerializer
     queryset = ShopItem.objects.all()
     filter_backends = [SearchFilter, FeedItemOrderingFilter]
-    ordering_fields = ["updated_at", "price", "created_at"]
-    ordering = ["-created_at"]
     search_fields = ["name"]
 
     def get_queryset(self):
+        ordering = self.request.query_params.get("ordering")  
         serializer = OrganizationCoutrySerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
 
@@ -991,6 +990,7 @@ class ItemsInServiceView(ListAPIView):
             country=country,
             city=city,
             subcategory=subcategory,
+            ordering=ordering
         )
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=queryset, user=self.request.user

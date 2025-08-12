@@ -1339,9 +1339,9 @@ class ItemService:
         service: Service,
         country: Union[Country, None] = None,
         city: Union[City, None] = None,
+        ordering=None,
         subcategory: Union[ItemSubcategory, None] = None,
     ) -> QuerySet:
-
         base_filters = (
             Q(organization__types__in=service.subcategory.all())
             & Q(organization__is_active=True)
@@ -1359,4 +1359,12 @@ class ItemService:
             base_filters &= Q(organization__city=city)
 
         queryset = cls.model.objects.filter(base_filters).distinct()
+
+        if ordering == "price":
+            queryset = queryset.order_by("price")
+        elif ordering == "-price":
+            queryset = queryset.order_by("-price")
+        else:
+            queryset = queryset.order_by("-created_at")
+
         return queryset

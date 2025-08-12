@@ -967,6 +967,7 @@ class ItemsInServiceView(ListAPIView):
     serializer_class = ItemFeedSerializer
     queryset = ShopItem.objects.all()
     filter_backends = [SearchFilter]
+    ordering_fields = ["updated_at", "price"]
     search_fields = ["name"]
 
     def get_queryset(self):

@@ -969,6 +969,7 @@ class ItemsInServiceView(ListAPIView):
     queryset = ShopItem.objects.all()
     filter_backends = [SearchFilter, FeedItemOrderingFilter]
     ordering_fields = ["updated_at", "price", "created_at"]
+    ordering = ["-created_at"]
     search_fields = ["name"]
 
     def get_queryset(self):

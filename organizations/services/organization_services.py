@@ -1358,7 +1358,5 @@ class ItemService:
         if city:
             base_filters &= Q(organization__city=city)
 
-        queryset = (
-            cls.model.objects.filter(base_filters).order_by("-created_at").distinct()
-        )
+        queryset = cls.model.objects.filter(base_filters).distinct()
         return queryset

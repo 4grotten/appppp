@@ -130,6 +130,7 @@ from organizations.tasks import (
     parse_instagram_to_shop_items,
     add_subscribers_to_organization,
 )
+from shop.filters import FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
@@ -966,10 +967,11 @@ class OrganizationsInServicesView(ListAPIView):
 class ItemsInServiceView(ListAPIView):
     serializer_class = ItemFeedSerializer
     queryset = ShopItem.objects.all()
-    filter_backends = [SearchFilter]
+    filter_backends = [SearchFilter, FeedItemOrderingFilter]
     search_fields = ["name"]
 
     def get_queryset(self):
+        ordering = self.request.query_params.get("ordering")  
         serializer = OrganizationCoutrySerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
 
@@ -988,6 +990,7 @@ class ItemsInServiceView(ListAPIView):
             country=country,
             city=city,
             subcategory=subcategory,
+            ordering=ordering
         )
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=queryset, user=self.request.user

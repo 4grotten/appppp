@@ -130,6 +130,7 @@ from organizations.tasks import (
     parse_instagram_to_shop_items,
     add_subscribers_to_organization,
 )
+from shop.filters import FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
@@ -966,8 +967,8 @@ class OrganizationsInServicesView(ListAPIView):
 class ItemsInServiceView(ListAPIView):
     serializer_class = ItemFeedSerializer
     queryset = ShopItem.objects.all()
-    filter_backends = [SearchFilter]
-    ordering_fields = ["updated_at", "price"]
+    filter_backends = [SearchFilter, FeedItemOrderingFilter]
+    ordering_fields = ["updated_at", "price", "created_at"]
     search_fields = ["name"]
 
     def get_queryset(self):

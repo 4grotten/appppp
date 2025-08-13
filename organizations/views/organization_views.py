@@ -130,7 +130,7 @@ from organizations.tasks import (
     parse_instagram_to_shop_items,
     add_subscribers_to_organization,
 )
-from shop.filters import FeedItemOrderingFilter
+from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
@@ -969,6 +969,7 @@ class ItemsInServiceView(ListAPIView):
     queryset = ShopItem.objects.all()
     filter_backends = [SearchFilter, FeedItemOrderingFilter]
     search_fields = ["name"]
+    filter_class = FeedItemFilter 
 
     def get_queryset(self):
         ordering = self.request.query_params.get("ordering")  

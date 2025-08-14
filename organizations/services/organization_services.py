@@ -783,12 +783,16 @@ class OrganizationService:
         queryset: QuerySet,
         country: Union[Country, None] = None,
         city: Union[City, None] = None,
+        subcategory: Union[ItemSubcategory, None] = None,
     ) -> QuerySet:
-        if country is not None:
-            queryset = queryset.filter(country=country)
-        if city is not None:
-            queryset = queryset.filter(city=city)
-        return queryset
+        if subcategory is None:
+            if country is not None:
+                queryset = queryset.filter(country=country)
+            if city is not None:
+                queryset = queryset.filter(city=city)
+            return queryset
+        else:
+            return queryset.filter(shop_items__subcategory=subcategory)
 
     @classmethod
     def get_random_organizations_in_category(
@@ -969,7 +973,7 @@ class OrganizationService:
 
         queryset = Organization.objects.filter(base_filters).distinct()
 
-        queryset = cls._filter_by_country_and_city(queryset, country, city)
+        queryset = cls._filter_by_country_and_city(queryset, country, city, subcategory)
 
         if subcategory:
             queryset = queryset.filter(shop_items__subcategory=subcategory)
@@ -1351,12 +1355,12 @@ class ItemService:
 
         if subcategory:
             base_filters &= Q(subcategory=subcategory)
+        else:
+            if country:
+                base_filters &= Q(organization__country=country)
 
-        if country:
-            base_filters &= Q(organization__country=country)
-
-        if city:
-            base_filters &= Q(organization__city=city)
+            if city:
+                base_filters &= Q(organization__city=city)
 
         queryset = cls.model.objects.filter(base_filters).distinct()
 

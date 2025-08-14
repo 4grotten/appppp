@@ -6,8 +6,8 @@ from common.models import City, Country
 from organizations.models import Service, Organization
 from organizations.services.common_shop_item_services import CommonItemsGroupService
 from organizations.services.organization_services import OrganizationService
-from shop.models import ItemSubcategory, ItemCategory
-
+from shop.models import ItemSubcategory, ItemCategory, ShopItem
+import logging
 
 class ItemCategoryService:
     @classmethod
@@ -88,8 +88,13 @@ class ItemCategoryService:
             ).filter(
                 items_count__gt=0
             ).values_list('id', flat=True)
-
-            return list(set(org_subcategories) & set(service_subcategories))
+            ids = list(set(org_subcategories) & set(service_subcategories))
+            items = ShopItem.objects.filter(subcategory__in=ids)
+            logging.warning(items.count())
+            for item in items:
+                logging.warning(item.id)
+                logging.warning(item)
+            return ids
 
     @classmethod
     def get_nonempty_general_categories(cls, country: Union[Country, None], city: Union[City, None]) -> QuerySet:

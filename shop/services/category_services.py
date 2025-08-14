@@ -94,7 +94,7 @@ class ItemCategoryService:
             org_ids = Organization.objects.filter(
                 types__services=service, **filters
             ).values_list("id", flat=True)
-
+            logging.warning(f"org_ids: {org_ids}")
             org_subcategories = (
                 ItemSubcategory.objects.filter(
                     items_in_category__organization__id__in=org_ids,

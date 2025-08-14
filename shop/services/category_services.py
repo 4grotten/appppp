@@ -90,17 +90,13 @@ class ItemCategoryService:
             elif country:
                 filters["country"] = country
                 item_filters &= Q(items_in_category__organization__country=country)
-
             org_ids = Organization.objects.filter(
                 types__services=service, **filters
             ).values_list("id", flat=True)
-
             org_subcategories = (
                 ItemSubcategory.objects.filter(
                     items_in_category__organization__id__in=org_ids,
                     organization__isnull=True,
-                    items_in_category__organization__country=country,
-                    items_in_category__organization__city=city,
                 )
                 .values_list("id", flat=True)
                 .distinct()
@@ -115,11 +111,6 @@ class ItemCategoryService:
                 .values_list("id", flat=True)
             )
             ids = list(set(org_subcategories) & set(service_subcategories))
-            items = ShopItem.objects.filter(subcategory__in=ids)
-            logging.warning(items.count())
-            for item in items:
-                logging.warning(item.id)
-                logging.warning(item)
             return ids
 
     @classmethod

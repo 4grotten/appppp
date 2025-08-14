@@ -90,17 +90,13 @@ class ItemCategoryService:
             elif country:
                 filters["country"] = country
                 item_filters &= Q(items_in_category__organization__country=country)
-            logging.warning(f"filters: {filters}")
             org_ids = Organization.objects.filter(
                 types__services=service, **filters
             ).values_list("id", flat=True)
-            logging.warning(f"org_ids: {org_ids}")
             org_subcategories = (
                 ItemSubcategory.objects.filter(
                     items_in_category__organization__id__in=org_ids,
                     organization__isnull=True,
-                    items_in_category__organization__country=country,
-                    items_in_category__organization__city=city,
                 )
                 .values_list("id", flat=True)
                 .distinct()

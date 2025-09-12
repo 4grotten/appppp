@@ -158,6 +158,7 @@ class GPTTranslator:
         )
 
         result = response.json()
+        print(result)
         logging.error(f"GPT translation response: {result}")
         if response.status_code != 200:
             logging.error(
@@ -173,6 +174,7 @@ class GPTTranslator:
 
         try:
             translated_text = result["choices"][0]["message"]["content"]
+            print(translated_text)
             return translated_text.strip()
         except (KeyError, IndexError) as e:
             logging.error(f"Unexpected response format: {e}")

@@ -232,11 +232,13 @@ class ItemSubcategoryCreateView(CreateAPIView):
                 data={"message": _("Invalid input"), "errors": serializer.errors},
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
-        name_ru = GPTTranslator().translate(serializer.validated_data["name"], "ru")
-        name_en = GPTTranslator().translate(serializer.validated_data["name"], "en")
-        name_tr = GPTTranslator().translate(serializer.validated_data["name"], "tr")
-        name_de = GPTTranslator().translate(serializer.validated_data["name"], "de")
-        name_zh = GPTTranslator().translate(serializer.validated_data["name"], "zh-CN")
+        name_ru = GoogleTranslator().translate(serializer.validated_data["name"], "RU")
+        name_en = GoogleTranslator().translate(serializer.validated_data["name"], "EN")
+        name_tr = GoogleTranslator().translate(serializer.validated_data["name"], "TR")
+        name_de = GoogleTranslator().translate(serializer.validated_data["name"], "DE")
+        name_zh = GoogleTranslator().translate(
+            serializer.validated_data["name"], "zh-CN"
+        )
         subcategory = ItemSubcategory.objects.create(
             organization=serializer.validated_data["organization"],
             name=serializer.validated_data["name"],

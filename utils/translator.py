@@ -125,6 +125,7 @@ class GoogleTranslator:
 class GPTTranslator:
     @classmethod
     def translate(cls, text, lang):
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer sk-proj-0p6Vt7kqzskVbaUtLFftT3BlbkFJix0thXqnXi7kmmF1jI4a",

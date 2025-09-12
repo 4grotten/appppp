@@ -156,7 +156,6 @@ class GPTTranslator:
             "https://api.openai.com/v1/chat/completions",
             headers=headers,
             json=payload,
-            proxies=proxies,
         )
 
         result = response.json()

@@ -125,7 +125,7 @@ class GoogleTranslator:
 class GPTTranslator:
     @classmethod
     def translate(cls, text, lang):
-        proxy_str = ProxyService.get_random_formed_proxy()
+        proxy_str = ProxyService.get_random_proxy_for_requests()
 
         proxies = {
             "https": URLLib3Transport(proxy=Proxy(proxy_str)),

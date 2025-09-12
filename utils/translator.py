@@ -125,6 +125,13 @@ class GoogleTranslator:
 class GPTTranslator:
     @classmethod
     def translate(cls, text, lang):
+        proxy_str = ProxyService.get_random_formed_proxy()
+
+        proxies = {
+            "https": URLLib3Transport(proxy=Proxy(proxy_str)),
+            "http": URLLib3Transport(proxy=Proxy(proxy_str)),
+        }
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer sk-proj-0p6Vt7kqzskVbaUtLFftT3BlbkFJix0thXqnXi7kmmF1jI4a",
@@ -155,6 +162,7 @@ class GPTTranslator:
             "https://api.openai.com/v1/chat/completions",
             headers=headers,
             json=payload,
+            proxies=proxies,
         )
 
         result = response.json()

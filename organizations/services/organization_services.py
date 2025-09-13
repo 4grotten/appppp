@@ -1366,6 +1366,6 @@ class ItemService:
         elif ordering == "-price":
             queryset = queryset.order_by("-price")
         else:
-            queryset = queryset.order_by("updated_at")
+            queryset = queryset.order_by("-updated_at", "-created_at")
 
         return queryset

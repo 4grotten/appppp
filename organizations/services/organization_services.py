@@ -1347,6 +1347,7 @@ class ItemService:
             & Q(organization__is_active=True)
             & ~Q(organization__is_banned=True)
             & ~Q(organization__is_deleted=True)
+            & ~Q(organization__is_private=True)
         )
 
         if subcategory:

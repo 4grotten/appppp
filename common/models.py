@@ -215,7 +215,7 @@ class Currency(models.Model):
 class Country(models.Model):
     code = models.CharField(max_length=2, primary_key=True)
     name = models.CharField(max_length=50)
-    flag = models.URLField()
+    flag = models.CharField(max_length=255)
     currency = models.ForeignKey(
         Currency, on_delete=models.CASCADE, related_name="countries"
     )
@@ -228,25 +228,6 @@ class Country(models.Model):
 
     def __str__(self):  # pragma: no cover
         return f"{self.name}"
-
-    def clean(self):
-        super().clean()
-        # Валидация флага
-        if self.flag.startswith("/"):
-            # Разрешаем только внутри /media/
-            if not self.flag.startswith("/media/"):
-                raise ValidationError(
-                    {"flag": "Разрешены только относительные пути внутри /media/"}
-                )
-        else:
-            # Проверка для абсолютного URL
-            from django.core.validators import URLValidator
-
-            validator = URLValidator()
-            try:
-                validator(self.flag)
-            except ValidationError:
-                raise ValidationError({"flag": "Неверный URL"})
 
     class Meta:
         ordering = (

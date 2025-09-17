@@ -16,9 +16,12 @@ from imagekit.models import ImageSpecField
 
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
 from common.processors import ResizeWatermarkedSpec, MobileWallpaper
-from common.utils import upload_file_with_unique_name, upload_file_video_with_unique_name
+from common.utils import (
+    upload_file_with_unique_name,
+    upload_file_video_with_unique_name,
+)
+from django.core.exceptions import ValidationError
 from django_resized import ResizedImageField
-
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -36,11 +39,11 @@ class SmallWatermarkedSpec(ResizeWatermarkedSpec):
     width = 150
 
 
-register.generator('common:file:large', LargeWatermarkedSpec)
-register.generator('common:file:medium', MediumWatermarkedSpec)
-register.generator('common:file:small', SmallWatermarkedSpec)
+register.generator("common:file:large", LargeWatermarkedSpec)
+register.generator("common:file:medium", MediumWatermarkedSpec)
+register.generator("common:file:small", SmallWatermarkedSpec)
 
-register.generator('common:commentswallpaper:mobile', MobileWallpaper)
+register.generator("common:commentswallpaper:mobile", MobileWallpaper)
 
 
 class TimestampModel(models.Model):
@@ -57,15 +60,15 @@ class File(TimestampModel):
 
     file = models.ImageField(
         upload_to=upload_file_with_unique_name,
-        help_text=_('Image that you want to store'),
-        max_length=1000
+        help_text=_("Image that you want to store"),
+        max_length=1000,
     )
 
     image_url = models.URLField(null=True, blank=True, max_length=1000)
 
-    large = ImageSpecField(source='file', id='common:file:large')
-    medium = ImageSpecField(source='file', id='common:file:medium')
-    small = ImageSpecField(source='file', id='common:file:small')
+    large = ImageSpecField(source="file", id="common:file:large")
+    medium = ImageSpecField(source="file", id="common:file:medium")
+    small = ImageSpecField(source="file", id="common:file:small")
 
     @property
     def name(self):
@@ -86,25 +89,29 @@ class File(TimestampModel):
     def __str__(self):  # pragma: no cover
         return self.file.name
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         if self.image_url and not self.file:
-            if self.image_url.startswith('https://renty.ae') or self.image_url.startswith('https://avacarrental.com/') \
-                    or ".2gis.com" in self.image_url:
+            if (
+                self.image_url.startswith("https://renty.ae")
+                or self.image_url.startswith("https://avacarrental.com/")
+                or ".2gis.com" in self.image_url
+            ):
                 try:
                     response = requests.get(self.image_url)
                     img = Image.open(BytesIO(response.content))
-                    if img.mode == 'RGBA':
-                        img = img.convert('RGB')
+                    if img.mode == "RGBA":
+                        img = img.convert("RGB")
                     img_io = BytesIO()
-                    img.save(img_io, format='JPEG')
+                    img.save(img_io, format="JPEG")
                     img_file = InMemoryUploadedFile(
                         img_io,
                         None,
                         os.path.basename(self.image_url),
-                        'image/jpeg',
+                        "image/jpeg",
                         img_io.tell,
-                        None
+                        None,
                     )
                     self.file = img_file
                 except Exception as e:
@@ -116,7 +123,7 @@ class File(TimestampModel):
                         result = request.urlretrieve(self.image_url)
                         self.file.save(
                             os.path.basename(self.image_url),
-                            Files(open(result[0], 'rb'))
+                            Files(open(result[0], "rb")),
                         )
                         break
                     except:
@@ -124,17 +131,23 @@ class File(TimestampModel):
         super(File, self).save()
 
     class Meta:
-        ordering = ('order',)
+        ordering = ("order",)
 
 
 class FileVideo(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
-    thumbnail = models.ForeignKey(File, on_delete=models.CASCADE, related_name='file_videos', blank=True, null=True)
+    thumbnail = models.ForeignKey(
+        File,
+        on_delete=models.CASCADE,
+        related_name="file_videos",
+        blank=True,
+        null=True,
+    )
     video = models.FileField(
         upload_to=upload_file_video_with_unique_name,
-        help_text=_('Image that you want to store'),
-        max_length=1000
+        help_text=_("Image that you want to store"),
+        max_length=1000,
     )
 
     video_url = models.URLField(null=True, blank=True, max_length=1000)
@@ -146,34 +159,34 @@ class FileVideo(TimestampModel):
     def __str__(self):  # pragma: no cover
         return self.video.name
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         if self.video_url and not self.video:
             result = request.urlretrieve(self.video_url)
             self.video.save(
-                os.path.basename(self.video_url),
-                Files(open(result[0], 'rb'))
+                os.path.basename(self.video_url), Files(open(result[0], "rb"))
             )
         super(FileVideo, self).save()
 
     class Meta:
-        ordering = ('order',)
+        ordering = ("order",)
 
 
 class CommentsWallpaper(TimestampModel):
     web_image = models.ImageField(
         upload_to=upload_file_with_unique_name,
-        help_text=_('Web wallpaper that you want to store'),
-        max_length=1000
+        help_text=_("Web wallpaper that you want to store"),
+        max_length=1000,
     )
 
     mobile_image = models.ImageField(
         upload_to=upload_file_with_unique_name,
-        help_text=_('Mobile wallpaper that you want to store'),
-        max_length=1000
+        help_text=_("Mobile wallpaper that you want to store"),
+        max_length=1000,
     )
     is_active = models.BooleanField(default=True)
-    mobile = ImageSpecField(source='mobile_image', id='common:commentswallpaper:mobile')
+    mobile = ImageSpecField(source="mobile_image", id="common:commentswallpaper:mobile")
 
     @property
     def name(self):
@@ -192,29 +205,59 @@ class Currency(models.Model):
     name = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):  # pragma: no cover
-        return f'{self.code}'
+        return f"{self.code}"
 
     class Meta:
-        ordering = ('name',)
-        verbose_name_plural = _('Currencies')
+        ordering = ("name",)
+        verbose_name_plural = _("Currencies")
 
 
 class Country(models.Model):
     code = models.CharField(max_length=2, primary_key=True)
     name = models.CharField(max_length=50)
     flag = models.URLField()
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='countries')
+    currency = models.ForeignKey(
+        Currency, on_delete=models.CASCADE, related_name="countries"
+    )
 
     is_priority = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    is_paid_subscription = models.BooleanField(default=False, verbose_name="Платная подписка")
+    is_paid_subscription = models.BooleanField(
+        default=False, verbose_name="Платная подписка"
+    )
 
     def __str__(self):  # pragma: no cover
-        return f'{self.name}'
+        return f"{self.name}"
+
+    def clean(self):
+        super().clean()
+        # Валидация флага
+        if self.flag.startswith("/"):
+            # Разрешаем только внутри /media/
+            if not self.flag.startswith("/media/"):
+                raise ValidationError(
+                    {"flag": "Разрешены только относительные пути внутри /media/"}
+                )
+        else:
+            # Проверка для абсолютного URL
+            from django.core.validators import URLValidator
+
+            validator = URLValidator()
+            try:
+                validator(self.flag)
+            except ValidationError:
+                raise ValidationError({"flag": "Неверный URL"})
+
+        if value.startswith("/"):
+            if not value.startswith("/media"):
+                raise
 
     class Meta:
-        ordering = ('-is_priority', 'code',)
-        verbose_name_plural = _('Countries')
+        ordering = (
+            "-is_priority",
+            "code",
+        )
+        verbose_name_plural = _("Countries")
 
 
 class City(models.Model):
@@ -222,14 +265,19 @@ class City(models.Model):
     postal = models.CharField(max_length=20, null=True, blank=True)
     location = PointField(null=True, blank=True)
 
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='cities')
+    country = models.ForeignKey(
+        Country, on_delete=models.CASCADE, related_name="cities"
+    )
 
     def __str__(self):  # pragma: no cover
-        return f'{self.name} in {self.country.name}'
+        return f"{self.name} in {self.country.name}"
 
     class Meta:
-        ordering = ('name', 'country',)
-        verbose_name_plural = _('Cities')
+        ordering = (
+            "name",
+            "country",
+        )
+        verbose_name_plural = _("Cities")
 
 
 class Version(TimestampModel):
@@ -238,11 +286,11 @@ class Version(TimestampModel):
     force_update = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.device}- {self.version}'
+        return f"{self.device}- {self.version}"
 
     class Meta:
-        verbose_name = _('Version')
-        verbose_name_plural = _('Versions')
+        verbose_name = _("Version")
+        verbose_name_plural = _("Versions")
 
 
 class SingletonModel(models.Model):
@@ -258,18 +306,18 @@ class OpenExchangeRates(TimestampModel, SingletonModel):
     app_id = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.app_id}- {self.created_at} - {self.updated_at}'
+        return f"{self.app_id}- {self.created_at} - {self.updated_at}"
 
     class Meta:
-        verbose_name = _('id for exchange service')
-        verbose_name_plural = _('id for exchange services')
+        verbose_name = _("id for exchange service")
+        verbose_name_plural = _("id for exchange services")
 
 
 class LinkApp(SingletonModel):
     name_link = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.name_link}'
+        return f"{self.name_link}"
 
 
 class Languages(models.Model):
@@ -277,28 +325,38 @@ class Languages(models.Model):
     language_en = models.CharField(max_length=255)
     language_ru = models.CharField(max_length=255)
     national_language = models.CharField(max_length=255)
-    flag = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='language')
+    flag = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="language",
+    )
 
     def __str__(self):
-        return f'{self.flag} - {self.code} - {self.language_ru} - {self.national_language}'
+        return (
+            f"{self.flag} - {self.code} - {self.language_ru} - {self.national_language}"
+        )
 
     class Meta:
-        verbose_name = _('Language')
-        verbose_name_plural = _('Languages')
-        ordering = ('code',)
+        verbose_name = _("Language")
+        verbose_name_plural = _("Languages")
+        ordering = ("code",)
 
 
 class UmaiWallet(TimestampModel, SingletonModel):
     wallet = models.CharField(max_length=255, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
-    amount = models.SmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(1000)], default=50)
+    amount = models.SmallIntegerField(
+        validators=[MinValueValidator(2), MaxValueValidator(1000)], default=50
+    )
     activate = models.BooleanField(default=True)
-    version = models.CharField(max_length=255, blank=True, null=True, default='2.14.8')
+    version = models.CharField(max_length=255, blank=True, null=True, default="2.14.8")
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.id}-{self.amount}'
+        return f"{self.id}-{self.amount}"
 
     @property
     def is_accepted(self):
@@ -307,52 +365,61 @@ class UmaiWallet(TimestampModel, SingletonModel):
         return False
 
     class Meta:
-        verbose_name = _('Registration payment')
-        verbose_name_plural = _('Registration payments')
+        verbose_name = _("Registration payment")
+        verbose_name_plural = _("Registration payments")
 
 
 class MessageText(TimestampModel):
-    name = models.CharField(max_length=255, unique=True, verbose_name=_('Message name, unique'), help_text=_('*unique'))
-    body = models.TextField(max_length=2000, verbose_name=_('Message text'))
-    message_type = models.CharField(max_length=255, choices=MESSAGE_TYPE, verbose_name=_('message type'))
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name=_("Message name, unique"),
+        help_text=_("*unique"),
+    )
+    body = models.TextField(max_length=2000, verbose_name=_("Message text"))
+    message_type = models.CharField(
+        max_length=255, choices=MESSAGE_TYPE, verbose_name=_("message type")
+    )
 
     def __str__(self):
-        return f'{self.id}- {self.name}'
+        return f"{self.id}- {self.name}"
 
     class Meta:
-        verbose_name = _('Message text')
-        verbose_name_plural = _('Messages Text')
+        verbose_name = _("Message text")
+        verbose_name_plural = _("Messages Text")
 
 
 class SmsServices(SingletonModel):
-    twilio_service = models.BooleanField(verbose_name=_('Twilio service'), default=True)
-    nikita_service = models.BooleanField(verbose_name=_('Nikita Service'), default=True)
-    bird_message = models.BooleanField(verbose_name=_('Bird message Service'), default=True)
+    twilio_service = models.BooleanField(verbose_name=_("Twilio service"), default=True)
+    nikita_service = models.BooleanField(verbose_name=_("Nikita Service"), default=True)
+    bird_message = models.BooleanField(
+        verbose_name=_("Bird message Service"), default=True
+    )
 
     def __str__(self):
-        return f'Twilio: {self.twilio_service}| Nikita: {self.nikita_service}'
+        return f"Twilio: {self.twilio_service}| Nikita: {self.nikita_service}"
 
     class Meta:
-        verbose_name = _('Sms service')
-        verbose_name_plural = _('Sms services')
+        verbose_name = _("Sms service")
+        verbose_name_plural = _("Sms services")
 
 
 class TemporaryCodeSwitcher(SingletonModel):
     is_enable = models.BooleanField(verbose_name=_("Enable"), default=True)
 
     def __str__(self):
-        return f'{self.is_enable}'
+        return f"{self.is_enable}"
 
     class Meta:
-        verbose_name = _('Temporary code switcher')
+        verbose_name = _("Temporary code switcher")
 
 
 class BlockedIps(TimestampModel):
-    ip_address = models.CharField(max_length=255, verbose_name=_('Blocked ip'))
+    ip_address = models.CharField(max_length=255, verbose_name=_("Blocked ip"))
 
     def __str__(self):
-        return f'{self.id} - IP:{self.ip_address}'
+        return f"{self.id} - IP:{self.ip_address}"
 
     class Meta:
-        verbose_name = _('IP address')
-        verbose_name_plural = _('IP addresses')
+        verbose_name = _("IP address")
+        verbose_name_plural = _("IP addresses")

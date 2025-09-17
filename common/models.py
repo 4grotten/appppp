@@ -248,10 +248,6 @@ class Country(models.Model):
             except ValidationError:
                 raise ValidationError({"flag": "Неверный URL"})
 
-        if value.startswith("/"):
-            if not value.startswith("/media"):
-                raise
-
     class Meta:
         ordering = (
             "-is_priority",

@@ -4,6 +4,7 @@ import random
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Case, When, IntegerField
@@ -107,6 +108,11 @@ from organizations.serializers.service_serializers import (
     ItemServiceSerializer,
     OrganizationServiceSerializer,
 )
+from organizations.serializers.coupon_serializers import (
+    CouponListSerializer,
+    ValidateCreateCouponSerializer,
+)
+
 from organizations.services.categories_services import OrganizationCategoryService
 from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
 from organizations.services.organization_services import (
@@ -126,6 +132,7 @@ from organizations.services.verifications_service import (
     VerificationService,
     PaymentSystemConfirmationService,
 )
+from organizations.services.coupon_services import CouponServiceClass
 from organizations.tasks import (
     parse_instagram_to_shop_items,
     add_subscribers_to_organization,
@@ -1606,3 +1613,35 @@ class RemoveCustomBannerView(APIView):
             banner.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CouponListCreateAPIView(ListCreateAPIView):
+    permission_classes = [
+        IsAuthenticated,
+    ]
+    service_class = CouponServiceClass
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return CouponListSerializer
+        elif self.request.method == "POST":
+            return ValidateCreateCouponSerializer
+
+    def get_queryset(self):
+        return self.service_class.get(**self.request.query_params)
+
+    def get(self, request):
+        qs = self.get_queryset()
+        serializer = self.get_serializer(qs, many=True)
+        return Response(data=serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        self.service_class.create_coupon(**validated_data)
+
+        return Response(
+            data={"message": "succsefully created"}, status=status.HTTP_201_CREATED
+        )

@@ -13,8 +13,18 @@ from phonenumber_field.modelfields import PhoneNumberField
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import TimestampModel, Currency, Country, City
 from common.utils import upload_file_with_unique_name
-from organizations.constants import HOTLINK_TYPES, HOTLINK_URL, HOTLINK_INTERNAL_LINK_DOMAINS, HOTLINK_PARTNERS, \
-    VERIFICATIONS_STATUS, NOT_VERIFIED, SWITCHER_TYPE, WEB, SUBSCRIPTION_STATUS, ACTIVE
+from organizations.constants import (
+    HOTLINK_TYPES,
+    HOTLINK_URL,
+    HOTLINK_INTERNAL_LINK_DOMAINS,
+    HOTLINK_PARTNERS,
+    VERIFICATIONS_STATUS,
+    NOT_VERIFIED,
+    SWITCHER_TYPE,
+    WEB,
+    SUBSCRIPTION_STATUS,
+    ACTIVE,
+)
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
 from users.models import User
@@ -25,63 +35,69 @@ class CashbackGroup(TimestampModel):
     name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class CumulativeGroup(TimestampModel):
     name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class CommonItemsGroup(TimestampModel):
     name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class OrganizationCategory(models.Model):
     name = models.CharField(max_length=255)
 
     class Meta:
-        verbose_name_plural = _('Organization categories')
-        ordering = ('name',)
+        verbose_name_plural = _("Organization categories")
+        ordering = ("name",)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class OrganizationType(models.Model):
     title = models.CharField(max_length=255)
-    category = models.ForeignKey(OrganizationCategory, on_delete=models.CASCADE, related_name='types')
+    category = models.ForeignKey(
+        OrganizationCategory, on_delete=models.CASCADE, related_name="types"
+    )
     is_adult = models.BooleanField(default=False)
     is_resume = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('title',)
+        ordering = ("title",)
 
     def __str__(self):
-        return f'{self.title}'
-
-
+        return f"{self.title}"
 
 
 class OrganizationBanner(TimestampModel):
-    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='organization_banners')
-    is_default = models.BooleanField(default=False, help_text='Системный баннер, удаляется только из админки')
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, related_name="organization_banners"
+    )
+    is_default = models.BooleanField(
+        default=False, help_text="Системный баннер, удаляется только из админки"
+    )
 
     class Meta:
-        verbose_name = 'Баннер организации'
-        verbose_name_plural = 'Баннеры организаций'
+        verbose_name = "Баннер организации"
+        verbose_name_plural = "Баннеры организаций"
 
     def __str__(self):
         return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
 
 
 class Organization(TimestampModel):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_organizations')
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="owned_organizations"
+    )
 
     title = models.CharField(max_length=255)
     title_lang = models.CharField(max_length=8, null=True, blank=True)
@@ -89,49 +105,123 @@ class Organization(TimestampModel):
     description_lang = models.CharField(max_length=8, null=True, blank=True)
     opens_at = models.TimeField(null=True, blank=True)
     closes_at = models.TimeField(null=True, blank=True)
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='organizations', default='KGS')
-    country = models.ForeignKey(Country, on_delete=models.PROTECT, related_name='organizations', default='KG')
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, related_name='organizations', null=True)
-    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
-                              related_name='organizations')
-    banners = models.ManyToManyField(OrganizationBanner, blank=True, related_name='organizations')
-    selected_banner = models.ForeignKey(OrganizationBanner,null=True,blank=True,on_delete=models.SET_NULL,
-                                        related_name='selected_for_organizations',
-                                        help_text="The banner shown on the organization's detail page"
+    currency = models.ForeignKey(
+        Currency, on_delete=models.PROTECT, related_name="organizations", default="KGS"
+    )
+    country = models.ForeignKey(
+        Country, on_delete=models.PROTECT, related_name="organizations", default="KG"
+    )
+    city = models.ForeignKey(
+        City, on_delete=models.SET_NULL, related_name="organizations", null=True
+    )
+    image = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="organizations",
+    )
+    banners = models.ManyToManyField(
+        OrganizationBanner, blank=True, related_name="organizations"
+    )
+    selected_banner = models.ForeignKey(
+        OrganizationBanner,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="selected_for_organizations",
+        help_text="The banner shown on the organization's detail page",
     )
     show_contacts = models.BooleanField(default=False)
-    types = models.ManyToManyField(OrganizationType, blank=True, related_name='organizations')
+    types = models.ManyToManyField(
+        OrganizationType, blank=True, related_name="organizations"
+    )
     address = models.CharField(max_length=255, null=True, blank=True)
-    location = PointField(help_text="Для создания местоположения", null=True, blank=True)
+    location = PointField(
+        help_text="Для создания местоположения", null=True, blank=True
+    )
 
-    cashback_group = models.ForeignKey(CashbackGroup, on_delete=models.SET_NULL, null=True, blank=True,
-                                       related_name='organizations')
-    cumulative_group = models.ForeignKey(CumulativeGroup, on_delete=models.SET_NULL, null=True, blank=True,
-                                         related_name='organizations')
-    items_group = models.ForeignKey(CommonItemsGroup, on_delete=models.SET_NULL, null=True, blank=True,
-                                    related_name='organizations')
-    running_purchase_id = models.PositiveIntegerField(default=1, help_text=_('For transaction purchase ids'))
-    verification_status = models.CharField(max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED)
-    subscription_status = models.CharField(max_length=255, choices=SUBSCRIPTION_STATUS, default=ACTIVE)
-    avg_check = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    has_delivery = models.BooleanField(default=True, help_text=_('Does organization have courier delivery?'))
-    has_self_pick_up = models.BooleanField(default=True, help_text=_('Does organization have self pick up?'))
-    has_license = models.BooleanField(default=False, help_text=_('Does organization have license?'))
+    cashback_group = models.ForeignKey(
+        CashbackGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="organizations",
+    )
+    cumulative_group = models.ForeignKey(
+        CumulativeGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="organizations",
+    )
+    items_group = models.ForeignKey(
+        CommonItemsGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="organizations",
+    )
+    running_purchase_id = models.PositiveIntegerField(
+        default=1, help_text=_("For transaction purchase ids")
+    )
+    verification_status = models.CharField(
+        max_length=255, choices=VERIFICATIONS_STATUS, default=NOT_VERIFIED
+    )
+    subscription_status = models.CharField(
+        max_length=255, choices=SUBSCRIPTION_STATUS, default=ACTIVE
+    )
+    avg_check = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    has_delivery = models.BooleanField(
+        default=True, help_text=_("Does organization have courier delivery?")
+    )
+    has_self_pick_up = models.BooleanField(
+        default=True, help_text=_("Does organization have self pick up?")
+    )
+    has_license = models.BooleanField(
+        default=False, help_text=_("Does organization have license?")
+    )
 
-    freedompay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
-    paysy_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
-    libersave_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
-    betapay_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
-    cryptocloud_activated = models.BooleanField(default=False, help_text=_('Activated in this organization'))
+    freedompay_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
+    paysy_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
+    libersave_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
+    betapay_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
+    cryptocloud_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
 
-    payment_systems_activated = models.BooleanField(default=False, help_text=_('All payment systems are activated'))
-    payment_with_confirmation = models.BooleanField(default=True, help_text=_('Payments with confirmation'))
+    payment_systems_activated = models.BooleanField(
+        default=False, help_text=_("All payment systems are activated")
+    )
+    payment_with_confirmation = models.BooleanField(
+        default=True, help_text=_("Payments with confirmation")
+    )
 
-    freedompay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
-    paysy_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
-    libersave_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
-    betapay_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
-    cryptocloud_confirmed = models.BooleanField(default=False, help_text=_('Available in this organization'))
+    freedompay_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    paysy_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    libersave_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    betapay_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    cryptocloud_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
 
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -141,6 +231,7 @@ class Organization(TimestampModel):
     is_wholesale = models.BooleanField(default=False)
     can_update_is_wholesale = models.BooleanField(default=False)
     is_wholesale_request_timestamp = models.DateTimeField(null=True, blank=True)
+    update_posts = models.BooleanField(default=False)
 
     is_delivery_service = models.BooleanField(default=False)
     is_bank = models.BooleanField(default=False)
@@ -155,15 +246,18 @@ class Organization(TimestampModel):
     active_organizations = ActiveOrganizationManager()
 
     class Meta:
-        ordering = ('title',)
+        ordering = ("title",)
 
     def __str__(self):
-        return f'{self.title}'
+        return f"{self.title}"
 
     def save(self, *args, **kwargs):
         if not self.is_banned:
             self.is_under_review = False
-        if self.verification_status == NOT_VERIFIED and self.verification_users_data.exists():
+        if (
+            self.verification_status == NOT_VERIFIED
+            and self.verification_users_data.exists()
+        ):
             for verifications_data in self.verification_users_data.all():
                 verifications_data.delete()
         if self.avg_check == 0:
@@ -173,8 +267,12 @@ class Organization(TimestampModel):
     @property
     def full_location(self):
         full_location = dict(
-            latitude=None if not self.location or not self.location.y else self.location.y,
-            longitude=None if not self.location or not self.location.x else self.location.x
+            latitude=(
+                None if not self.location or not self.location.y else self.location.y
+            ),
+            longitude=(
+                None if not self.location or not self.location.x else self.location.x
+            ),
         )
         return full_location
 
@@ -189,134 +287,174 @@ class PaymentSystemMethod(TimestampModel):
 
 
 class TariffType(models.TextChoices):
-    STARTER = 'starter', _('Стартовый')
-    STANDARD = 'standard', _('Стандартный')
-    PROFITABLE = 'profitable', _('Выгодный')
+    STARTER = "starter", _("Стартовый")
+    STANDARD = "standard", _("Стандартный")
+    PROFITABLE = "profitable", _("Выгодный")
 
 
 class RegionalTariff(models.Model):
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='tariffs',
-                                limit_choices_to={'is_paid_subscription': True}, verbose_name='Страна')
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.CASCADE,
+        related_name="tariffs",
+        limit_choices_to={"is_paid_subscription": True},
+        verbose_name="Страна",
+    )
     tariff_type = models.CharField(max_length=20, choices=TariffType.choices)
     original_price = models.DecimalField(max_digits=10, decimal_places=2)
-    duration_months = models.PositiveIntegerField(help_text="Срок действия тарифа в месяцах", null=True, blank=True)
-    discount = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    duration_months = models.PositiveIntegerField(
+        help_text="Срок действия тарифа в месяцах", null=True, blank=True
+    )
+    discount = models.PositiveSmallIntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
 
     class Meta:
-        unique_together = ('country', 'tariff_type')
-        verbose_name = _('Regional Tariff')
-        verbose_name_plural = _('Regional Tariffs')
+        unique_together = ("country", "tariff_type")
+        verbose_name = _("Regional Tariff")
+        verbose_name_plural = _("Regional Tariffs")
 
     def __str__(self):
-        return f'{self.country.name} - {self.get_tariff_type_display()}'
+        return f"{self.country.name} - {self.get_tariff_type_display()}"
 
     @property
     def total_price(self):
         if not self.duration_months:
-            return Decimal('0.00')
+            return Decimal("0.00")
         full_price = self.original_price * self.duration_months
-        discount_amount = full_price * Decimal(self.discount) / Decimal('100')
+        discount_amount = full_price * Decimal(self.discount) / Decimal("100")
         return full_price - discount_amount
 
     @property
     def price_per_month(self):
         if not self.duration_months:
-            return Decimal('0.00')
+            return Decimal("0.00")
         return self.total_price / self.duration_months
 
+
 class OrganizationBlacklist(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_blacklist')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_blacklist')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organization_blacklist"
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="organization_blacklist"
+    )
+
 
 class BlockedUser(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blocked_user')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_owner_block')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="blocked_user"
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="organization_owner_block"
+    )
 
 
 class OrganizationComplaint(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_complaints')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_complaints')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organization_complaints"
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="organization_complaints"
+    )
     reason = models.TextField(max_length=800)
 
     def __str__(self):
-        return f'Complaint of {self.user} about {self.organization.title}'
+        return f"Complaint of {self.user} about {self.organization.title}"
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('user', 'organization'), name='unique_organization_complaint_from_user')
+            models.UniqueConstraint(
+                fields=("user", "organization"),
+                name="unique_organization_complaint_from_user",
+            )
         ]
 
 
 class OrganizationVerificationUsers(TimestampModel):
     organization = models.ForeignKey(
-        'organizations.Organization',
+        "organizations.Organization",
         on_delete=models.CASCADE,
-        related_name='verification_users_data'
+        related_name="verification_users_data",
     )
-    username = models.CharField(max_length=255, verbose_name=_('User name'))
-    phone_number = PhoneNumberField(max_length=255, verbose_name=_('Phone number'))
-    email = models.EmailField(verbose_name='Email')
+    username = models.CharField(max_length=255, verbose_name=_("User name"))
+    phone_number = PhoneNumberField(max_length=255, verbose_name=_("Phone number"))
+    email = models.EmailField(verbose_name="Email")
 
     def __str__(self):
-        return f'{self.id} - {self.username} - {self.phone_number}'
+        return f"{self.id} - {self.username} - {self.phone_number}"
 
     class Meta:
-        verbose_name = _('Users data for verification organization')
-        verbose_name_plural = _('Users data for verification organization')
+        verbose_name = _("Users data for verification organization")
+        verbose_name_plural = _("Users data for verification organization")
 
 
 class OrganizationPaymentSystemUsers(TimestampModel):
     organization = models.ForeignKey(
-        'organizations.Organization',
+        "organizations.Organization",
         on_delete=models.CASCADE,
-        related_name='payment_system_users_data'
+        related_name="payment_system_users_data",
     )
-    username = models.CharField(max_length=255, verbose_name=_('User name'))
-    phone_number = PhoneNumberField(max_length=255, verbose_name=_('Phone number'))
-    email = models.EmailField(verbose_name='Email')
+    username = models.CharField(max_length=255, verbose_name=_("User name"))
+    phone_number = PhoneNumberField(max_length=255, verbose_name=_("Phone number"))
+    email = models.EmailField(verbose_name="Email")
 
     def __str__(self):
-        return f'{self.id} - {self.username} - {self.phone_number}'
+        return f"{self.id} - {self.username} - {self.phone_number}"
 
     class Meta:
-        verbose_name = _('Users data for payment settings of organization')
-        verbose_name_plural = _('Users data for payment settings of organization')
+        verbose_name = _("Users data for payment settings of organization")
+        verbose_name_plural = _("Users data for payment settings of organization")
 
 
 class PhoneNumber(TimestampModel):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='phone_numbers')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="phone_numbers"
+    )
     phone_number = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.phone_number}'
+        return f"{self.phone_number}"
 
 
 class SocialNetworkContact(TimestampModel):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='social_contacts')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="social_contacts"
+    )
     url = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.url}'
+        return f"{self.url}"
 
 
 class InstagramIntegration(TimestampModel):
-    organization = models.OneToOneField(Organization, on_delete=models.CASCADE,
-                                        related_name='instagram_integration_link')
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="instagram_integration_link",
+    )
     url = models.URLField(max_length=255)
     account_full_name = models.CharField(null=True, blank=True, max_length=50)
     account_user_name = models.CharField(null=True, blank=True, max_length=50)
     account_user_id = models.CharField(null=True, blank=True, max_length=50)
     profile_photo = models.URLField(null=True, max_length=500)
-    avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
-                               related_name='instagram_integrations')
+    avatar = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="instagram_integrations",
+    )
 
     def __str__(self):
-        return f'{self.url}'
+        return f"{self.url}"
 
 
 class Role(models.Model):
     title = models.CharField(max_length=255)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='roles')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="roles"
+    )
     can_sale = models.BooleanField(default=False)
     can_check_attendance = models.BooleanField(default=False)
     can_see_stats = models.BooleanField(default=False)
@@ -327,77 +465,124 @@ class Role(models.Model):
     can_edit_own_resume = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.title} in {self.organization.title}'
+        return f"{self.title} in {self.organization.title}"
 
 
 class Membership(TimestampModel):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='memberships')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name='memberships')
-    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='added_memberships')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="memberships"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="memberships")
+    role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="memberships")
+    added_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_memberships",
+    )
 
     class Meta:
-        unique_together = ('organization', 'user')
+        unique_together = ("organization", "user")
 
     def __str__(self):
-        return f'{self.user} as {self.role} in {self.organization}'
+        return f"{self.user} as {self.role} in {self.organization}"
 
 
 class Attendance(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendances')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='attendances')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="attendances")
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="attendances"
+    )
     arrival_time = models.DateTimeField(auto_now_add=True)
-    arrival_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                           related_name='checked_arrivals')
+    arrival_checked_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="checked_arrivals",
+    )
     arrival_checker_role = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     departure_time = models.DateTimeField(null=True, blank=True)
-    departure_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                             related_name='checked_departures')
+    departure_checked_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="checked_departures",
+    )
     departure_checker_role = models.CharField(max_length=255, null=True, blank=True)
     organization_name = models.CharField(max_length=255, null=True, blank=True)
 
     # TODO organization name saving
 
     def __str__(self):
-        return f'{self.user} came to {self.organization.title} at {self.arrival_time}'
+        return f"{self.user} came to {self.organization.title} at {self.arrival_time}"
 
     class Meta:
-        ordering = ('-arrival_time',)
+        ordering = ("-arrival_time",)
 
 
 class DiscountCard(TimestampModel):
-    FIXED = 'fixed'
-    CUMULATIVE = 'cumulative'
-    CASHBACK = 'cashback'
+    FIXED = "fixed"
+    CUMULATIVE = "cumulative"
+    CASHBACK = "cashback"
     TYPES = (
         (FIXED, FIXED),
         (CUMULATIVE, CUMULATIVE),
         (CASHBACK, CASHBACK),
     )
 
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='discounts')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="discounts"
+    )
     type = models.CharField(max_length=20, choices=TYPES, default=FIXED)
-    percent = models.PositiveSmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='discounts', null=True, blank=True)
+    percent = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    currency = models.ForeignKey(
+        Currency,
+        on_delete=models.PROTECT,
+        related_name="discounts",
+        null=True,
+        blank=True,
+    )
     limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ForeignKey(
+        "common.File", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
-    next_cumulative = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True,
-                                           related_name='previous_cumulative')
+    next_cumulative = models.OneToOneField(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="previous_cumulative",
+    )
 
     is_published = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ('organization', 'type', 'limit', 'percent',)
+        ordering = (
+            "organization",
+            "type",
+            "limit",
+            "percent",
+        )
         constraints = [
-            models.UniqueConstraint(fields=('organization', 'type', 'percent'), name='unique_percents_of_organization'),
-            models.UniqueConstraint(fields=('organization', 'type', 'limit'), name='unique_limits_of_organization'),
+            models.UniqueConstraint(
+                fields=("organization", "type", "percent"),
+                name="unique_percents_of_organization",
+            ),
+            models.UniqueConstraint(
+                fields=("organization", "type", "limit"),
+                name="unique_limits_of_organization",
+            ),
         ]
 
     def __str__(self):
-        return f'{self.percent}% {self.type} card in {self.organization.title}'
+        return f"{self.percent}% {self.type} card in {self.organization.title}"
 
     def clean_fields(self, exclude=None):
         super().clean_fields(exclude)
@@ -405,63 +590,88 @@ class DiscountCard(TimestampModel):
 
         if self.type == self.CUMULATIVE:
             if not self.currency:
-                errors['currency'] = _('This field is required')
+                errors["currency"] = _("This field is required")
             if not self.limit:
-                errors['limit'] = _('This field is required')
+                errors["limit"] = _("This field is required")
 
         if errors:
             raise ValidationError(errors)
 
 
 class CardBackground(models.Model):
-    image = models.ForeignKey('common.File', on_delete=models.CASCADE, null=True, blank=True,
-                              related_name='backgrounds')
+    image = models.ForeignKey(
+        "common.File",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="backgrounds",
+    )
 
     def __str__(self):
-        return f'Card background #{self.id}: {self.image}'
+        return f"Card background #{self.id}: {self.image}"
 
 
 class OrganizationClientFinancialStatus(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cards')
-    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='client_statuses')
-    card = models.ForeignKey(DiscountCard, on_delete=models.PROTECT, related_name='clients', null=True, blank=True)
-    accrued_cashback = models.DecimalField(max_digits=16, decimal_places=2, default=0,
-                                           validators=[MinValueValidator(0)])
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="cards")
+    organization = models.ForeignKey(
+        Organization, on_delete=models.PROTECT, related_name="client_statuses"
+    )
+    card = models.ForeignKey(
+        DiscountCard,
+        on_delete=models.PROTECT,
+        related_name="clients",
+        null=True,
+        blank=True,
+    )
+    accrued_cashback = models.DecimalField(
+        max_digits=16, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
 
     def __str__(self):
-        return f'{self.user} status in {self.organization.title}'
+        return f"{self.user} status in {self.organization.title}"
 
     class Meta:
-        verbose_name_plural = _('Organization client financial statuses')
+        verbose_name_plural = _("Organization client financial statuses")
         constraints = [
-            models.UniqueConstraint(fields=('user', 'organization'), name='unique_statuses_of_user_in_organization')
+            models.UniqueConstraint(
+                fields=("user", "organization"),
+                name="unique_statuses_of_user_in_organization",
+            )
         ]
 
 
 class Subscription(TimestampModel):
-    SUBSCRIBE = 'subscribed'
-    UNSUBSCRIBE = 'not_subscribed'
-    PENDING = 'pending'
+    SUBSCRIBE = "subscribed"
+    UNSUBSCRIBE = "not_subscribed"
+    PENDING = "pending"
     STATUSES = (
         (SUBSCRIBE, SUBSCRIBE),
         (UNSUBSCRIBE, UNSUBSCRIBE),
         (PENDING, PENDING),
     )
 
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='subscriptions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="subscriptions"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="subscriptions"
+    )
     status = models.CharField(max_length=20, choices=STATUSES, default=SUBSCRIBE)
 
     class Meta:
-        unique_together = ('organization', 'user')
+        unique_together = ("organization", "user")
 
     def __str__(self):
-        return f'{self.user} subscribed to {self.organization}'
+        return f"{self.user} subscribed to {self.organization}"
 
 
 class Partnership(TimestampModel):
-    requested_by = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='requested_partnerships')
-    accepted_by = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='accepted_partnerships')
+    requested_by = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="requested_partnerships"
+    )
+    accepted_by = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="accepted_partnerships"
+    )
 
     is_accepted = models.BooleanField(default=False)
 
@@ -474,75 +684,110 @@ class Partnership(TimestampModel):
 
     class Meta:
         constraints = (
-            models.UniqueConstraint(fields=('requested_by', 'accepted_by'), name='unique_partnerships'),
+            models.UniqueConstraint(
+                fields=("requested_by", "accepted_by"), name="unique_partnerships"
+            ),
         )
 
     def __str__(self):
-        return f'{self.accepted_by} accepted partnership of {self.requested_by}'
+        return f"{self.accepted_by} accepted partnership of {self.requested_by}"
 
 
 class Banner(TimestampModel):
-    host_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hosted_banners')
-    linked_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='leading_banners')
+    host_organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="hosted_banners"
+    )
+    linked_organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="leading_banners"
+    )
 
-    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='banners')
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, related_name="banners"
+    )
 
     def __str__(self):
-        return f'Banner of {self.linked_organization} hosted by {self.host_organization}'
+        return (
+            f"Banner of {self.linked_organization} hosted by {self.host_organization}"
+        )
 
 
 class Message(TimestampModel):
-    ORGANIZATION_FOLLOWERS = 'organization_followers'
-    PARTNERS_MEMBERS = 'partners_members'
-    PARTNERS_SUBSCRIPTIONS = 'partners_followers'
+    ORGANIZATION_FOLLOWERS = "organization_followers"
+    PARTNERS_MEMBERS = "partners_members"
+    PARTNERS_SUBSCRIPTIONS = "partners_followers"
     MESSAGE_TO = (
         (ORGANIZATION_FOLLOWERS, ORGANIZATION_FOLLOWERS),
         (PARTNERS_MEMBERS, PARTNERS_MEMBERS),
-        (PARTNERS_SUBSCRIPTIONS, PARTNERS_SUBSCRIPTIONS)
+        (PARTNERS_SUBSCRIPTIONS, PARTNERS_SUBSCRIPTIONS),
     )
-    sender = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sent_messages')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organization_messages')
+    sender = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="sent_messages"
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="organization_messages"
+    )
     content = models.CharField(blank=False, null=False, max_length=2000)
-    message_to = models.CharField(max_length=50, choices=MESSAGE_TO, default=ORGANIZATION_FOLLOWERS)
-    receivers = models.ManyToManyField(User, related_name='received_messages')
+    message_to = models.CharField(
+        max_length=50, choices=MESSAGE_TO, default=ORGANIZATION_FOLLOWERS
+    )
+    receivers = models.ManyToManyField(User, related_name="received_messages")
     organization_address = models.CharField(max_length=255, null=True)
-    receiver_partners = models.ManyToManyField(Organization, related_name='receiver_partners')
+    receiver_partners = models.ManyToManyField(
+        Organization, related_name="receiver_partners"
+    )
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
 
     def __str__(self):
-        return f'Message of {self.organization.title}'
+        return f"Message of {self.organization.title}"
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         if not self.pk:
             self.organization_address = self.organization.address
         super(Message, self).save()
 
 
 class Hotlink(TimestampModel):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='hotlinks')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="hotlinks"
+    )
     content = models.CharField(max_length=500)
     link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES)
-    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='hotlinks')
-    linked_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, null=True, blank=True,
-                                    related_name='hotlinks_to_organization')
-    linked_organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
-                                            related_name='hotlinks_to_organization')
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, related_name="hotlinks"
+    )
+    linked_item = models.ForeignKey(
+        "shop.ShopItem",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="hotlinks_to_organization",
+    )
+    linked_organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="hotlinks_to_organization",
+    )
 
     def __str__(self):
-        return f'#{self.id} | Hotlink of {self.organization}'
+        return f"#{self.id} | Hotlink of {self.organization}"
 
     def save(self, *args, **kwargs):
         parsed_link = urlparse(self.content)
         is_internal = False
 
         if (
-                self.link_type == HOTLINK_URL or self.link_type == HOTLINK_PARTNERS) and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
-            if parsed_link.path.startswith('/p/'):
-                item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+            self.link_type == HOTLINK_URL or self.link_type == HOTLINK_PARTNERS
+        ) and parsed_link.netloc in HOTLINK_INTERNAL_LINK_DOMAINS:
+            if parsed_link.path.startswith("/p/"):
+                item_id = parsed_link.path.replace("/p/", "").replace("/", "")
                 from shop.models import ShopItem
+
                 try:
                     linked_item = ShopItem.objects.get(id=item_id)
                     self.linked_item = linked_item
@@ -550,8 +795,10 @@ class Hotlink(TimestampModel):
                     is_internal = True
                 except ShopItem.DoesNotExist:
                     pass
-            elif parsed_link.path.startswith('/organizations/'):
-                organization_id = parsed_link.path.replace('/organizations/', '').replace('/', '')
+            elif parsed_link.path.startswith("/organizations/"):
+                organization_id = parsed_link.path.replace(
+                    "/organizations/", ""
+                ).replace("/", "")
                 try:
                     linked_organization = Organization.objects.get(id=organization_id)
                     self.linked_organization = linked_organization
@@ -559,8 +806,10 @@ class Hotlink(TimestampModel):
                     is_internal = True
                 except Organization.DoesNotExist:
                     pass
-            elif parsed_link.path.startswith('/home/partners/'):
-                organization_id = parsed_link.path.replace('/home/partners/', '').replace('/', '')
+            elif parsed_link.path.startswith("/home/partners/"):
+                organization_id = parsed_link.path.replace(
+                    "/home/partners/", ""
+                ).replace("/", "")
                 try:
                     linked_organization = Organization.objects.get(id=organization_id)
                     self.linked_organization = linked_organization
@@ -579,114 +828,174 @@ class Hotlink(TimestampModel):
 
 
 class HotlinkCollectionItem(TimestampModel):
-    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_items')
-    item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, related_name='hotlinks')
+    hotlink = models.ForeignKey(
+        Hotlink, on_delete=models.CASCADE, related_name="collection_items"
+    )
+    item = models.ForeignKey(
+        "shop.ShopItem", on_delete=models.CASCADE, related_name="hotlinks"
+    )
 
     def __str__(self):
-        return f'{self.item} in collection {self.hotlink.content}'
+        return f"{self.item} in collection {self.hotlink.content}"
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('hotlink', 'item'), name='one_item_per_hotlink_collection')
+            models.UniqueConstraint(
+                fields=("hotlink", "item"), name="one_item_per_hotlink_collection"
+            )
         ]
 
 
 class HotlinkCollectionSubcategory(TimestampModel):
-    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_subcategories')
-    subcategory = models.ForeignKey('shop.ItemSubcategory', on_delete=models.CASCADE, related_name='hotlinks')
+    hotlink = models.ForeignKey(
+        Hotlink, on_delete=models.CASCADE, related_name="collection_subcategories"
+    )
+    subcategory = models.ForeignKey(
+        "shop.ItemSubcategory", on_delete=models.CASCADE, related_name="hotlinks"
+    )
 
     def __str__(self):
-        return f'{self.subcategory} in collection {self.hotlink.content}'
+        return f"{self.subcategory} in collection {self.hotlink.content}"
 
     class Meta:
-        verbose_name_plural = _('hotlink collection subcategories')
+        verbose_name_plural = _("hotlink collection subcategories")
         constraints = [
-            models.UniqueConstraint(fields=('hotlink', 'subcategory'), name='one_subcategory_per_hotlink_collection')
+            models.UniqueConstraint(
+                fields=("hotlink", "subcategory"),
+                name="one_subcategory_per_hotlink_collection",
+            )
         ]
 
 
 class HotlinkCollectionLink(TimestampModel):
-    hotlink = models.ForeignKey(Hotlink, on_delete=models.CASCADE, related_name='collection_links')
+    hotlink = models.ForeignKey(
+        Hotlink, on_delete=models.CASCADE, related_name="collection_links"
+    )
     content = models.CharField(max_length=500)
-    linked_item = models.ForeignKey('shop.ShopItem', on_delete=models.CASCADE, related_name='links_in_collections')
+    linked_item = models.ForeignKey(
+        "shop.ShopItem", on_delete=models.CASCADE, related_name="links_in_collections"
+    )
 
     def __str__(self):
-        return f'{self.linked_item} in collection {self.hotlink.content}'
+        return f"{self.linked_item} in collection {self.hotlink.content}"
 
     def save(self, *args, **kwargs):
         parsed_link = urlparse(self.content)
 
         if parsed_link.netloc not in HOTLINK_INTERNAL_LINK_DOMAINS:
-            raise NotAcceptableException(_('Wrong url for shop item'))
-        if not parsed_link.path.startswith('/p/'):
-            raise NotAcceptableException(_('Wrong url for shop item'))
+            raise NotAcceptableException(_("Wrong url for shop item"))
+        if not parsed_link.path.startswith("/p/"):
+            raise NotAcceptableException(_("Wrong url for shop item"))
 
-        item_id = parsed_link.path.replace('/p/', '').replace('/', '')
+        item_id = parsed_link.path.replace("/p/", "").replace("/", "")
         from shop.models import ShopItem
+
         try:
             linked_item = ShopItem.objects.get(id=item_id)
             self.linked_item = linked_item
         except ValueError:
-            raise NotAcceptableException(_('Wrong url for shop item'))
+            raise NotAcceptableException(_("Wrong url for shop item"))
         except ShopItem.DoesNotExist:
-            raise ObjectNotFoundException(_('Shop item with given id is not found'))
+            raise ObjectNotFoundException(_("Shop item with given id is not found"))
 
         super().save(*args, **kwargs)
 
 
 class OrganizationPromo(TimestampModel):
-    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='promo')
-    total_cashback = models.DecimalField(max_digits=16, decimal_places=2,
-                                         validators=([MinValueValidator(0), MaxValueValidator(999999999)]))
-    cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    organization = models.OneToOneField(
+        Organization, on_delete=models.CASCADE, related_name="promo"
+    )
+    total_cashback = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        validators=([MinValueValidator(0), MaxValueValidator(999999999)]),
+    )
+    cashback = models.DecimalField(
+        max_digits=16, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     granted_amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
-    image = models.ForeignKey('common.File', on_delete=models.CASCADE, related_name='org_promos')
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, related_name="org_promos"
+    )
 
     def __str__(self):
-        return f'{self.organization} cashback promo'
+        return f"{self.organization} cashback promo"
 
 
 class PromoEditLog(models.Model):
-    promo = models.ForeignKey(OrganizationPromo, on_delete=models.CASCADE, related_name='edit_logs')
+    promo = models.ForeignKey(
+        OrganizationPromo, on_delete=models.CASCADE, related_name="edit_logs"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    changed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='promo_edit_logs')
+    changed_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="promo_edit_logs"
+    )
     employee_name = models.CharField(max_length=255, null=True, blank=True)
     employee_role = models.CharField(max_length=255, null=True)
-    employee_avatar = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True)
+    employee_avatar = models.ForeignKey(
+        "common.File", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ("-created_at",)
 
     def __str__(self):
-        return f'{self.changed_by} edited {self.promo}'
+        return f"{self.changed_by} edited {self.promo}"
 
 
 class PromoSubscriber(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='promo_subscribers')
-    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='promo_subscriptions')
-    cashback = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="promo_subscribers"
+    )
+    subscriber = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="promo_subscriptions"
+    )
+    cashback = models.DecimalField(
+        max_digits=16, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = (
-            models.constraints.UniqueConstraint(fields=('organization', 'subscriber'), name='unique_promo_subscriber'),
+            models.constraints.UniqueConstraint(
+                fields=("organization", "subscriber"), name="unique_promo_subscriber"
+            ),
         )
 
 
 class Service(models.Model):
-    name = models.CharField(max_length=255, verbose_name='Название сервиса')
-    icon = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True, related_name='services')
-    banner = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
-                               related_name='service_banner')
-    description = models.TextField(null=True, blank=True, verbose_name='Описание сервиса')
-    subcategory = models.ManyToManyField(OrganizationType, related_name='services', blank=True)
-    category_of_item = models.ManyToManyField('shop.ItemCategory', related_name='services', blank=True)
-    ordering = models.SmallIntegerField(verbose_name='Service ordering',
-                                        validators=[MinValueValidator(1)],
-                                        null=True,
-                                        blank=True,
-                                        help_text='Не заполнять при создании!')
+    name = models.CharField(max_length=255, verbose_name="Название сервиса")
+    icon = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="services",
+    )
+    banner = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="service_banner",
+    )
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Описание сервиса"
+    )
+    subcategory = models.ManyToManyField(
+        OrganizationType, related_name="services", blank=True
+    )
+    category_of_item = models.ManyToManyField(
+        "shop.ItemCategory", related_name="services", blank=True
+    )
+    ordering = models.SmallIntegerField(
+        verbose_name="Service ordering",
+        validators=[MinValueValidator(1)],
+        null=True,
+        blank=True,
+        help_text="Не заполнять при создании!",
+    )
     is_discounts = models.BooleanField(default=False)
     is_entertainment = models.BooleanField(default=False)
     is_map = models.BooleanField(default=False)
@@ -700,11 +1009,11 @@ class Service(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
     def save(self, *args, **kwargs):
         if not self.id:
-            has_obj = Service.objects.order_by('ordering').last()
+            has_obj = Service.objects.order_by("ordering").last()
             if has_obj:
                 self.ordering = has_obj.ordering + 1
             else:
@@ -712,9 +1021,9 @@ class Service(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = _('Service')
-        verbose_name_plural = _('Services')
-        ordering = ('ordering',)
+        verbose_name = _("Service")
+        verbose_name_plural = _("Services")
+        ordering = ("ordering",)
 
 
 class Plan(TimestampModel):
@@ -724,7 +1033,9 @@ class Plan(TimestampModel):
     description = models.TextField(null=True, blank=True)
     description_lang = models.CharField(max_length=5, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='plans', null=True, blank=True)
+    currency = models.ForeignKey(
+        Currency, on_delete=models.CASCADE, related_name="plans", null=True, blank=True
+    )
     is_best_choice = models.BooleanField(default=False)
 
     def __str__(self):
@@ -738,12 +1049,19 @@ class Plan(TimestampModel):
 
 
 class Assistant(TimestampModel):
-    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='assistant')
+    organization = models.OneToOneField(
+        Organization, on_delete=models.CASCADE, related_name="assistant"
+    )
     name = models.CharField(max_length=255)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
     position = models.CharField(max_length=255)
-    image = models.ForeignKey('common.File', on_delete=models.SET_NULL, null=True, blank=True,
-                              related_name='assistants')
+    image = models.ForeignKey(
+        "common.File",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assistants",
+    )
     is_enabled = models.BooleanField(default=True)
 
     def __str__(self):
@@ -752,12 +1070,13 @@ class Assistant(TimestampModel):
 
 class Question(TimestampModel):
     text = models.CharField(max_length=5000, null=True, blank=True)
-    ordering = models.SmallIntegerField(verbose_name='Question ordering',
-                                        validators=[MinValueValidator(0)],
-                                        null=True,
-                                        blank=True,
-                                        help_text='Не заполнять при создании!')
-
+    ordering = models.SmallIntegerField(
+        verbose_name="Question ordering",
+        validators=[MinValueValidator(0)],
+        null=True,
+        blank=True,
+        help_text="Не заполнять при создании!",
+    )
 
     def __str__(self):
         if self.text:
@@ -766,7 +1085,7 @@ class Question(TimestampModel):
 
     def save(self, *args, **kwargs):
         if not self.id:
-            has_obj = Question.objects.order_by('ordering').last()
+            has_obj = Question.objects.order_by("ordering").last()
             if has_obj:
                 self.ordering = has_obj.ordering + 1
             else:
@@ -774,76 +1093,111 @@ class Question(TimestampModel):
         super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = _('Question')
-        verbose_name_plural = _('Questions')
-        ordering = ('ordering',)
+        verbose_name = _("Question")
+        verbose_name_plural = _("Questions")
+        ordering = ("ordering",)
 
 
 class AnswerFile(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
-    file = models.FileField(upload_to=upload_file_with_unique_name,
-                             help_text=_('File that you want to store'),
-                             null=True, blank=True)
+    file = models.FileField(
+        upload_to=upload_file_with_unique_name,
+        help_text=_("File that you want to store"),
+        null=True,
+        blank=True,
+    )
 
     @property
     def name(self):
         return self.file.name.split("/")[-1]
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         super(AnswerFile, self).save()
 
     class Meta:
-        ordering = ('order',)
+        ordering = ("order",)
 
 
 class Answer(TimestampModel):
-    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='answers')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
+    assistant = models.ForeignKey(
+        Assistant, on_delete=models.CASCADE, related_name="answers"
+    )
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="answers"
+    )
     text = models.CharField(max_length=5000)
-    files = models.ManyToManyField(AnswerFile, blank=True, related_name='answers')
+    files = models.ManyToManyField(AnswerFile, blank=True, related_name="answers")
 
     def __str__(self):
-        return f'{self.assistant.name}'
+        return f"{self.assistant.name}"
 
 
 class UserAssistant(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_assistants')
-    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='user_assistants',
-                                  null=True, blank=True)
-    plans = models.ManyToManyField(Plan, blank=True, related_name='user_assistants')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user_assistants"
+    )
+    assistant = models.ForeignKey(
+        Assistant,
+        on_delete=models.CASCADE,
+        related_name="user_assistants",
+        null=True,
+        blank=True,
+    )
+    plans = models.ManyToManyField(Plan, blank=True, related_name="user_assistants")
     is_active = models.BooleanField(default=False)
     active_until = models.DateTimeField(null=True, blank=True)
-    transaction = models.OneToOneField("transactions.Transaction", on_delete=models.SET_NULL,
-                                       related_name='user_assistants', null=True)
-
+    transaction = models.OneToOneField(
+        "transactions.Transaction",
+        on_delete=models.SET_NULL,
+        related_name="user_assistants",
+        null=True,
+    )
 
     def __str__(self):
-        return f'Assistant {self.assistant} of {self.user}'
+        return f"Assistant {self.assistant} of {self.user}"
 
 
 class UserOrgSubscription(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_org_subscription')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_subscription',
-                                  null=True, blank=True)
-    tariff = models.ForeignKey(RegionalTariff, on_delete=models.CASCADE, related_name='org_subscription')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user_org_subscription"
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="org_subscription",
+        null=True,
+        blank=True,
+    )
+    tariff = models.ForeignKey(
+        RegionalTariff, on_delete=models.CASCADE, related_name="org_subscription"
+    )
     is_active = models.BooleanField(default=False)
     active_until = models.DateTimeField(null=True, blank=True)
-    transaction = models.OneToOneField("transactions.Transaction", on_delete=models.SET_NULL,
-                                       related_name='org_subscription', null=True)
+    transaction = models.OneToOneField(
+        "transactions.Transaction",
+        on_delete=models.SET_NULL,
+        related_name="org_subscription",
+        null=True,
+    )
 
     def save(self, *args, **kwargs):
         if self.tariff and not self.active_until:
-            self.active_until = timezone.now() + timedelta(days=30 * self.tariff.duration_months)
+            self.active_until = timezone.now() + timedelta(
+                days=30 * self.tariff.duration_months
+            )
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'Subscription of {self.user} to {self.organization}'
+        return f"Subscription of {self.user} to {self.organization}"
 
 
 class Chat(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
-    assistant = models.ForeignKey(Assistant, on_delete=models.CASCADE, related_name='chats')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chats")
+    assistant = models.ForeignKey(
+        Assistant, on_delete=models.CASCADE, related_name="chats"
+    )
     chat_by_org_user = models.BooleanField(default=False)
 
     def __str__(self):
@@ -851,30 +1205,76 @@ class Chat(TimestampModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('user', 'assistant'), name='one_chat_between_user_and_assistant')
+            models.UniqueConstraint(
+                fields=("user", "assistant"), name="one_chat_between_user_and_assistant"
+            )
         ]
 
 
 class ChatMessage(TimestampModel):
-    USER = 'user'
-    ASSISTANT = 'assistant'
-    ORG_USER = 'org_user'
+    USER = "user"
+    ASSISTANT = "assistant"
+    ORG_USER = "org_user"
 
-    SENDER_TYPE = (
-        (USER, USER),
-        (ASSISTANT, ASSISTANT),
-        (ORG_USER, ORG_USER)
+    SENDER_TYPE = ((USER, USER), (ASSISTANT, ASSISTANT), (ORG_USER, ORG_USER))
+    chat = models.ForeignKey(
+        Chat, on_delete=models.CASCADE, related_name="chat_messages"
     )
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_messages')
-    parent = models.ForeignKey(
-        'self', on_delete=models.SET_NULL, blank=True, null=True
-    )
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
     sender = models.CharField(max_length=25, default=USER, choices=SENDER_TYPE)
     text = models.TextField()
     is_read = models.BooleanField(default=False)
-    organization_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
-                                          related_name='org_user_messages')
+    organization_user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="org_user_messages",
+    )
 
     def __str__(self):
         return f"Message from {self.sender} in {self.chat}"
 
+
+class Coupon(TimestampModel):
+    DISCOUNT = "discount"
+    PRODUCT = "product"
+
+    COUPON_TYPE_CHOICES = [(DISCOUNT, "Скидка"), (PRODUCT, "Товарный купон")]
+
+    product = models.ForeignKey(
+        "shop.ShopItem",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="coupon",
+    )
+    discount = models.ForeignKey(
+        DiscountCard,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="coupon",
+    )
+    percent = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True
+    )
+    description = models.CharField(max_length=300, null=True, blank=True)
+    image = models.ImageField(upload_to="coupons/")
+    expire_date = models.DateTimeField(null=True, blank=True)
+    always_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_updating = models.BooleanField(default=False)
+    coupon_type = models.CharField(
+        max_length=20, choices=COUPON_TYPE_CHOICES, default="product"
+    )
+
+
+class CouponUsage(TimestampModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="coupon_usage"
+    )
+    coupon = models.ForeignKey(
+        Coupon, on_delete=models.CASCADE, related_name="coupon_usage"
+    )
+    is_used = models.BooleanField(default=True)

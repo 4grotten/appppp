@@ -113,6 +113,7 @@ from .views.organization_views import (
     OrganizationBannerListView,
     AddCustomBannerView,
     RemoveCustomBannerView,
+    CouponListCreateAPIView,
 )
 from .views.partnerships_views import (
     PartnershipView,
@@ -697,6 +698,10 @@ services_urls = [
         "service/<int:pk>/items/", ItemsInServiceView.as_view(), name="items_in_service"
     ),
 ]
+coupon_urls = [
+    path("coupon/", CouponListCreateAPIView.as_view(), name="list-create-coupon"),
+]
+
 
 urlpatterns = [
     path("", include(organization_urls)),
@@ -710,6 +715,7 @@ urlpatterns = [
     path("", include(organization_promo_urls)),
     path("", include(router.urls)),
     path("", include(services_urls)),
+    path("", include(coupon_urls)),
     path("subscriptions/", SubscriptionsView.as_view(), name="subscriptions"),
     path(
         "subscriptions/subscribe_to_partners/",

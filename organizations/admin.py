@@ -52,6 +52,7 @@ from .models import (
     PaymentSystemMethod,
     OrganizationBanner,
     UserOrgSubscription,
+    Coupon,
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -185,6 +186,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         "is_active",
         "is_banned",
         "is_private",
+        "update_posts",
         "cashback_group",
         "cumulative_group",
         "items_group",
@@ -271,6 +273,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "is_deleted",
                     "is_banned",
                     "is_private",
+                    "update_posts",
                     "is_under_review",
                     "is_delivery_service",
                     "is_bank",
@@ -823,3 +826,22 @@ class UserOrgSubscriptionAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "tariff", "organization")
     search_fields = ("user__phone_number", "organization__name", "tariff__name")
     autocomplete_fields = ("user", "organization", "tariff", "transaction")
+
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = (
+        "product",
+        "discount",
+        "percent",
+        "image",
+        "expire_date",
+        "always_active",
+        "is_active",
+        "is_updating",
+    )
+    list_filter = ("is_active", "product", "percent")
+    search_fields = [
+        "product",
+    ]
+    list_select_related = ("product", "discount")

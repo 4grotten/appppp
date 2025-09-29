@@ -465,11 +465,11 @@ class OrganizationAdmin(admin.ModelAdmin):
         )
 
         if request.method == "POST":
-            category_id = request.POST.get("category_id")
+            category_ids = request.POST.getlist("categories")
             queryset = ShopItem.objects.filter(organization=organization)
 
-            if category_id and category_id != "all":
-                queryset = queryset.filter(subcategory_id=category_id)
+            if category_ids and "all" not in category_ids:
+                queryset = queryset.filter(subcategory_id__in=category_ids)
 
             deleted_count, _ = queryset.delete()
 

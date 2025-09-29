@@ -891,23 +891,23 @@ class UserOrgSubscriptionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("user", "organization", "tariff", "transaction")
 
 
-@admin.register(Coupon)
-class CouponAdmin(admin.ModelAdmin):
-    list_display = (
-        "product",
-        "discount",
-        "percent",
-        "image",
-        "expire_date",
-        "always_active",
-        "is_active",
-        "is_updating",
-    )
-    list_filter = ("is_active", "product", "percent")
-    search_fields = [
-        "product",
-    ]
-    list_select_related = ("product", "discount")
+# @admin.register(Coupon)
+# class CouponAdmin(admin.ModelAdmin):
+#     list_display = (
+#         "product",
+#         "discount",
+#         "percent",
+#         "image",
+#         "expire_date",
+#         "always_active",
+#         "is_active",
+#         "is_updating",
+#     )
+#     list_filter = ("is_active", "product", "percent")
+#     search_fields = [
+#         "product",
+#     ]
+#     list_select_related = ("product", "discount")
 
 
 # @admin.register(Invoice)

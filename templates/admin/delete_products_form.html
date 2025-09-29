@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Удаление товаров для "{{ organization.title }}"</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom: 1rem;">
+        <label for="category_id">Категория</label>
+            <select name="category_id" id="category_id">
+                <option value="all">Все категории</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+    </div>
+
+    <button type="submit" class="button btn btn-danger">
+        Удалить товары
+    </button>
+    <a href="../change/" class="button">Отмена</a>
+</form>
+{% endblock %}

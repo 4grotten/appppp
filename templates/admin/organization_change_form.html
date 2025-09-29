@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a class="button" href="{% url 'admin:organization-delete-products' original.id %}">
+            Удалить товары
+        </a>
+    </li>
+
+    {% endblock %}

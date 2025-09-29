@@ -1,13 +1,23 @@
 import json
+import os
 from pathlib import Path
-
-from django.contrib import admin
+from django.urls import path
+from django.shortcuts import redirect
+from decimal import Decimal
+from django.contrib import admin, messages
 from django.contrib.gis.db import models
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.conf import settings
 from mapwidgets.widgets import GooglePointFieldWidget
+from django.forms.models import model_to_dict
+from datetime import datetime
+
+# from organizations.tasks import create_invoice_pdf
+from django.shortcuts import redirect, render, get_object_or_404
 
 from common.utils import DecimalDecoder, DecimalEncoder
+from shop.models import ItemSubcategory, ShopItem
 from .models import (
     Organization,
     OrganizationType,
@@ -52,7 +62,9 @@ from .models import (
     PaymentSystemMethod,
     OrganizationBanner,
     UserOrgSubscription,
-    Coupon,
+    # Coupon,
+    # Invoice,
+    # OrganizationInvoiceInfo,
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
 
@@ -172,6 +184,7 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
+    change_form_template = "admin/organization_change_form.html"
     list_select_related = True
     formfield_overrides = {models.PointField: {"widget": GooglePointFieldWidget}}
     list_display_links = ("id", "title")
@@ -423,6 +436,56 @@ class OrganizationAdmin(admin.ModelAdmin):
                 json.dump(data, file, cls=DecimalEncoder)
 
         super().delete_queryset(request, queryset)
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        custom_urls = [
+            path(
+                "<int:organization_id>/delete-products/",
+                self.admin_site.admin_view(self.delete_products_view),
+                name="organization-delete-products",
+            )
+        ]
+
+        return custom_urls + urls
+
+    def delete_products_view(self, request, organization_id):
+        organization = get_object_or_404(Organization, pk=organization_id)
+        categories = (
+            (
+                ItemSubcategory.objects.filter(
+                    items_in_category__organization=organization
+                )
+                .prefetch_related("items_in_category")
+                .select_related("category")
+            )
+            .all()
+            .distinct()
+        )
+
+        if request.method == "POST":
+            category_id = request.POST.get("category_id")
+            queryset = ShopItem.objects.filter(organization=organization)
+
+            if category_id and category_id != "all":
+                queryset = queryset.filter(subcategory_id=category_id)
+
+            deleted_count, _ = queryset.delete()
+
+            messages.success(request, f"Удалено {deleted_count} товаров")
+            return redirect(f"../../{organization_id}/change/")
+
+        return render(
+            request,
+            "admin/delete_products_form.html",
+            {
+                "organization": organization,
+                "categories": categories,
+                "opts": self.model._meta,
+                "has_view_permission": True,
+            },
+        )
 
 
 @admin.register(OrganizationType)
@@ -845,3 +908,100 @@ class CouponAdmin(admin.ModelAdmin):
         "product",
     ]
     list_select_related = ("product", "discount")
+
+
+# @admin.register(Invoice)
+# class InvoiceAdmin(admin.ModelAdmin):
+#     change_form_template = "admin/invoice_change_form.html"
+
+#     list_display = [
+#         "invoice_number",
+#         "invoice_pdf",
+#         "receipt_pdf",
+#     ]
+
+#     def get_urls(self):
+#         urls = super().get_urls()
+
+#         custom_urls = [
+#             path(
+#                 "<int:invoice_id>/activate-subsrciption/",
+#                 self.admin_site.admin_view(self.activate_subscription),
+#                 name="activate-org-subscription",
+#             )
+#         ]
+#         return custom_urls + urls
+
+#     def activate_subscription(self, request, invoice_id):
+#         invoice_qs = (
+#             Invoice.objects.select_related(
+#                 "organization_info", "user", "tariff__country"
+#             )
+#             .prefetch_related("tariff__country__invoice_info")
+#             .get(id=invoice_id)
+#         )
+#         logo_path = os.path.join(settings.BASE_DIR, "static", "images", "apofiz.png")
+#         tariff = invoice_qs.tariff
+#         invoice_info = invoice_qs.tariff.country.invoice_info
+#         country_data = {
+#             "name": invoice_info.name,
+#             "country": tariff.country.name,
+#             "city": invoice_info.city,
+#             "address": invoice_info.address,
+#             "email": invoice_info.email,
+#             "price": tariff.original_price,
+#             "code": tariff.country.code,
+#             "currency": tariff.country.currency.code,
+#             "tariff": tariff.tariff_type,
+#             "tax": invoice_info.tax,
+#             "tax_id": invoice_info.tax_id,
+#         }
+#         if country_data["tax"] == 0:
+#             country_data.pop("tax")
+#             country_data.pop("tax_id")
+#             country_data["amount"] = country_data["price"]
+#         else:
+#             tax_decimal = Decimal(str(country_data["tax"])) / Decimal("100")
+#             country_data["tax_amount"] = country_data["price"] * tax_decimal
+#             country_data["amount"] = country_data["price"] + country_data["tax_amount"]
+#             country_data["tax_amount"] = format(country_data["tax_amount"], ",.2f")
+
+#         country_data["price"] = format(country_data["price"], ",.2f")
+#         country_data["amount"] = format(country_data["amount"], ",.2f")
+#         context = {
+#             "country_data": country_data,
+#             "data": model_to_dict(invoice_qs.organization_info),
+#             "title": "receipt",
+#             "invoice_number": invoice_qs.invoice_number,
+#             "invoice_date": datetime.now().strftime("%d%m%Y"),
+#             "payment_method": invoice_qs.payment_method,
+#             "logo_path": f"file://{logo_path}",
+#             "extra_info": "",
+#         }
+#         subscription = UserOrgSubscription.objects.create(
+#             user=invoice_qs.user,
+#             organization=invoice_qs.organization_info.organization,
+#             tariff=tariff,
+#             is_active=True,
+#         )
+#         invoice_qs.subscription = subscription
+#         invoice_qs.save()
+#         create_invoice_pdf.delay(invoice_qs.invoice_number, context)
+
+#         return redirect(f"../../{invoice_id}/change")
+
+
+# @admin.register(OrganizationInvoiceInfo)
+# class InvoiceInfoAdmin(admin.ModelAdmin):
+#     list_display = [
+#         "organization",
+#         "full_name",
+#         "country",
+#         "city",
+#         "address",
+#         "email",
+#     ]
+
+#     list_select_related = [
+#         "organization",
+#     ]

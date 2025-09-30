@@ -807,7 +807,7 @@ class OrganizationService:
 
         discount_exists = DiscountCard.objects.filter(
             organization=OuterRef("pk"), is_published=True
-        )
+        ).exclude(percent=0)
 
         if Service.objects.get(pk=5).is_without_discount:
             additional_ids = list(additional.values_list("id", flat=True))

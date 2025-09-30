@@ -243,8 +243,14 @@ class ItemSubcategoryCreateView(CreateAPIView):
         name_zh = GoogleTranslator().translate(
             serializer.validated_data["name"], "zh-CN"
         )
+        name = serializer.validated_data["name"]
         if ItemSubcategory.objects.filter(
-            name=serializer.validated_data["name"]
+            Q(name=name)
+            | Q(name_ru=name)
+            | Q(name_en=name)
+            | Q(name_tr=name)
+            | Q(name_de=name)
+            | Q(name_zh=name)
         ).exists():
             raise SubcategoryExist()
         subcategory = ItemSubcategory.objects.create(

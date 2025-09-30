@@ -805,7 +805,9 @@ class OrganizationService:
             is_active=True, types__in=category.types.all()
         ).distinct()
 
-        discount_exists = DiscountCard.objects.filter(organization=OuterRef("pk"))
+        discount_exists = DiscountCard.objects.filter(
+            organization=OuterRef("pk"), is_published=True
+        )
 
         if Service.objects.get(pk=5).is_without_discount:
             additional_ids = list(additional.values_list("id", flat=True))

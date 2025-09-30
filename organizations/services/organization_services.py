@@ -21,6 +21,8 @@ from django.db.models import (
     IntegerField,
     TimeField,
     CharField,
+    Exists,
+    OuterRef,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -80,6 +82,7 @@ from organizations.models import (
     OrganizationType,
     UserAssistant,
     OrganizationBanner,
+    DiscountCard,
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import (
@@ -801,13 +804,27 @@ class OrganizationService:
         additional = Organization.active_organizations.filter(
             is_active=True, types__in=category.types.all()
         ).distinct()
-        queryset = (
-            Organization.active_organizations.prefetch_related("types")
-            .select_related("image")
-            .filter(id__in=additional)
-            .order_by("?")
-        )
 
+        discount_exists = DiscountCard.objects.filter(
+            organization=OuterRef("pk"), is_published=True
+        ).exclude(percent=0)
+
+        if Service.objects.get(pk=5).is_without_discount:
+            additional_ids = list(additional.values_list("id", flat=True))
+            queryset = (
+                Organization.active_organizations.prefetch_related("types")
+                .select_related("image")
+                .annotate(has_discount=Exists(discount_exists))
+                .filter(has_discount=True, id__in=additional_ids)
+                .order_by("?")
+            )
+        else:
+            queryset = (
+                Organization.active_organizations.prefetch_related("types")
+                .select_related("image")
+                .filter(id__in=additional)
+                .order_by("?")
+            )
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
         queryset = cls._filter_by_country_and_city(

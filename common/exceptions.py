@@ -49,3 +49,12 @@ class CouponException(APIException):
         "detail": _("Please enter organization id"),
         "code": "A1",
     }
+
+
+class SubcategoryExist(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = {
+        "message": _("This subcategory already exists"),
+        "detail": _("Please make sure that subcategory with this name not exists"),
+        "code": "A2",
+    }

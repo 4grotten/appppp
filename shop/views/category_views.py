@@ -12,7 +12,11 @@ from rest_framework.response import Response
 
 from organizations.models import Organization
 
-from common.exceptions import NotAcceptableException, ObjectNotFoundException
+from common.exceptions import (
+    NotAcceptableException,
+    ObjectNotFoundException,
+    SubcategoryExist,
+)
 from common.serializers import CountryCityQueryParamSerializer
 from organizations.serializers.query_param_serializers import (
     OptionalOrganizationQueryParamSerializer,
@@ -239,6 +243,10 @@ class ItemSubcategoryCreateView(CreateAPIView):
         name_zh = GoogleTranslator().translate(
             serializer.validated_data["name"], "zh-CN"
         )
+        if ItemSubcategory.objects.filter(
+            name=serializer.validated_data["name"]
+        ).exists():
+            raise SubcategoryExist()
         subcategory = ItemSubcategory.objects.create(
             organization=serializer.validated_data["organization"],
             name=serializer.validated_data["name"],

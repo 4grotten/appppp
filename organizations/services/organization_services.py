@@ -808,18 +808,19 @@ class OrganizationService:
         discount_exists = DiscountCard.objects.filter(organization=OuterRef("pk"))
 
         if Service.objects.get(pk=5).is_without_discount:
+            additional_ids = list(additional.values_list("id", flat=True))
             queryset = (
                 Organization.active_organizations.prefetch_related("types")
                 .select_related("image")
                 .annotate(has_discount=Exists(discount_exists))
-                .filter(has_discount=True, id__in=additional)
+                .filter(has_discount=True, id__in=additional_ids)
                 .order_by("?")
             )
         else:
             queryset = (
                 Organization.active_organizations.prefetch_related("types")
                 .select_related("image")
-                .filter(filter, id__in=additional)
+                .filter(id__in=additional)
                 .order_by("?")
             )
         if partner is not None:

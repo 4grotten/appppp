@@ -362,7 +362,7 @@ FCM_DRY_RUN_ENABLE = config("FCM_DRY_RUN_ENABLE", default=True, cast=bool)
 
 HOST_URL = config("DJANGO_HOST_URL", default="https://apofiz.com/media/")
 CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
-
+CELERY_RESULT_BACKEND = "rpc://"
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},
@@ -383,18 +383,7 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.add_subscribers_to_organization": {"queue": "org_subscribers"},
     "organizations.tasks.subscribe_user_to_organization": {"queue": "org_subscribers"},
     "organizations.tasks.process_comment_with_assistant": {"queue": "default"},
-}
-
-CELERY_BEAT_SCHEDULE = {
-    # "expire_coupons_every_hour": {
-    #     "task": "organizations.tasks.expire_coupons",
-    #     "schedule": crontab(minute=0),
-    #     "options": {"queue": "default"},
-    # },
-    "update-posts-daily": {
-        "task": "organizations.tasks.update_posts",
-        "schedule": crontab(hour=0, minute=0),
-    },
+    "organizations.tasks.create_invoice_pdf": {"queue": "default"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)

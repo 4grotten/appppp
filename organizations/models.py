@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Iterable
 from django.utils import timezone
 from datetime import timedelta
 from urllib.parse import urlparse
@@ -1007,7 +1008,7 @@ class Service(models.Model):
     has_license = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    is_without_discount = models.BooleanField(default=False)
+    is_without_discount = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -1279,3 +1280,67 @@ class CouponUsage(TimestampModel):
         Coupon, on_delete=models.CASCADE, related_name="coupon_usage"
     )
     is_used = models.BooleanField(default=True)
+
+
+class OrganizationInvoiceInfo(TimestampModel):
+    organization = models.OneToOneField(
+        Organization, on_delete=models.CASCADE, related_name="invoice_info"
+    )
+    full_name = models.CharField(max_length=255)
+    address = models.CharField(max_length=600)
+    country = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    email = models.EmailField()
+    company_name = models.CharField(max_length=255, null=True, blank=True)
+    tax_id = models.CharField(max_length=255, null=True, blank=True)
+
+
+class Invoice(TimestampModel):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="invoices",
+        null=True,
+        blank=True,
+        default=None,
+    )
+    organization_info = models.ForeignKey(
+        OrganizationInvoiceInfo,
+        related_name="invoices",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    subscription = models.ForeignKey(
+        UserOrgSubscription,
+        on_delete=models.CASCADE,
+        related_name="invoices",
+        null=True,
+        blank=True,
+        default=None,
+    )
+    tariff = models.ForeignKey(
+        RegionalTariff,
+        on_delete=models.CASCADE,
+        related_name="invoices",
+        null=True,
+        default=None,
+    )
+    code = models.CharField(max_length=60, default="")
+    invoice_number = models.CharField(max_length=455, null=True, blank=True)
+    invoice_pdf = models.FileField(upload_to="invoices/", null=True, blank=True)
+    receipt_pdf = models.FileField(upload_to="bills/", null=True, blank=True)
+    invoice_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    invoice_tax = models.DecimalField(default=0, max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=255, default="Bank")
+
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        if self.invoice_number:
+            return
+        today_str = timezone.now().strftime("%d%m%Y")
+        self.invoice_number = f"{self.code}-{today_str}{self.pk:02d}"
+
+        kwargs["force_insert"] = False
+        super().save(update_fields=["invoice_number"], *args, **kwargs)
+        return

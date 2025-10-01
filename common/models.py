@@ -246,6 +246,8 @@ class City(models.Model):
         Country, on_delete=models.CASCADE, related_name="cities"
     )
 
+    timezone = models.CharField(max_length=64, default="UTC")
+
     def __str__(self):  # pragma: no cover
         return f"{self.name} in {self.country.name}"
 
@@ -400,3 +402,15 @@ class BlockedIps(TimestampModel):
     class Meta:
         verbose_name = _("IP address")
         verbose_name_plural = _("IP addresses")
+
+
+class CountryInvoiceInfo(TimestampModel):
+    country = models.OneToOneField(
+        Country, on_delete=models.CASCADE, related_name="invoice_info"
+    )
+    tax = models.PositiveIntegerField(default=0)
+    tax_id = models.CharField(max_length=255, default="")
+    name = models.CharField(max_length=455)
+    city = models.CharField(max_length=255, default="")
+    address = models.CharField(max_length=455)
+    email = models.EmailField()

@@ -114,6 +114,7 @@ from .views.organization_views import (
     AddCustomBannerView,
     RemoveCustomBannerView,
     CouponListCreateAPIView,
+    CouponRetrieveUpdateAPIView,
 )
 from .views.partnerships_views import (
     PartnershipView,
@@ -138,6 +139,7 @@ from .views.subscription_views import (
     OrgBlockedUsersListAPIView,
     OrgBlockedDetailsAPIView,
 )
+from .views.organization_tariff import OrganizationTariffInvoiceAPIView
 
 router = DefaultRouter()
 router.register("services", ServiceReadOnlySet)
@@ -493,6 +495,11 @@ organization_urls = [
         name="regional-tariffs-by-country",
     ),
     path(
+        "organizations/tariff/invoice/",
+        OrganizationTariffInvoiceAPIView.as_view(),
+        name="organization-tariff-invoice",
+    ),
+    path(
         "organizations/subscription/purchase/",
         PurchaseOrgSubscriptionView.as_view(),
         name="org_subscription_purchase",
@@ -700,6 +707,11 @@ services_urls = [
 ]
 coupon_urls = [
     path("coupon/", CouponListCreateAPIView.as_view(), name="list-create-coupon"),
+    path(
+        "coupon/<int:pk>/",
+        CouponRetrieveUpdateAPIView.as_view(),
+        name="retrieve-update-coupon",
+    ),
 ]
 
 

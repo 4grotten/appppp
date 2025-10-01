@@ -291,7 +291,7 @@ class OrganizationsListCreateView(ListCreateAPIView):
         search = self.request.query_params.get("search", None)
         filters = Q()
         filters |= Q(owner=user)
-        filters |= Q(memberships_user=user)
+        filters |= Q(memberships__user=user)
         if search:
             filters &= Q(title__icontains=search)
 

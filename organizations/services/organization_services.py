@@ -809,7 +809,7 @@ class OrganizationService:
             organization=OuterRef("pk"), is_published=True
         )
 
-        if Service.objects.get(pk=5).is_without_discount:
+        if Service.objects.get(name__icontains="Скидки").is_without_discount:
             additional_ids = list(additional.values_list("id", flat=True))
             queryset = (
                 Organization.active_organizations.prefetch_related("types")

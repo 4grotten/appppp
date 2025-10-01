@@ -111,6 +111,7 @@ from organizations.serializers.service_serializers import (
 from organizations.serializers.coupon_serializers import (
     CouponListSerializer,
     ValidateCreateCouponSerializer,
+    CouponDetailSerializer,
 )
 
 from organizations.services.categories_services import OrganizationCategoryService
@@ -1629,7 +1630,8 @@ class CouponListCreateAPIView(ListCreateAPIView):
             return ValidateCreateCouponSerializer
 
     def get_queryset(self):
-        return self.service_class.get(**self.request.query_params)
+        organization_id = self.request.query_params.get("organization_id")
+        return self.service_class.get(organization_id=organization_id)
 
     def get(self, request):
         qs = self.get_queryset()
@@ -1640,8 +1642,20 @@ class CouponListCreateAPIView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        self.service_class.create_coupon(**validated_data)
+        self.service_class.create_coupon(user=self.request.user, **validated_data)
 
         return Response(
             data={"message": "succsefully created"}, status=status.HTTP_201_CREATED
         )
+
+
+class CouponRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+    serializer_class = CouponDetailSerializer
+    permission_classes = [
+        IsAuthenticated,
+    ]
+    service_class = CouponServiceClass
+
+    def get_object(self):
+        pk = self.kwargs.get("pk")
+        return self.service_class.get_detail(id=pk)

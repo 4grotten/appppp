@@ -1,4 +1,4 @@
-import time
+import time, tracemalloc
 import random
 
 from datetime import timedelta, datetime
@@ -18,7 +18,11 @@ from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization, Assistant, Coupon
 from shop.models import ShopItem, ItemInstagramData
+from django.template.loader import render_to_string
+from django.core.files.base import ContentFile
+from weasyprint import HTML
 from users.models import User
+from organizations.models import Invoice
 import logging
 
 logger = logging.getLogger(__name__)
@@ -325,3 +329,17 @@ def update_posts():
 
     logger.info(f"Total_updated {total_updated} random shop items")
     print(f"Total_updated {total_updated} random shop items")
+
+
+@shared_task
+def create_invoice_pdf(invoice_number: str, context: dict):
+    html = render_to_string("invoice.html", context=context)
+    pdf_bytes = HTML(string=html).write_pdf()
+
+    file_name = f"{invoice_number}.pdf"
+    invoice = Invoice.objects.get(invoice_number=invoice_number)
+    if context.get("title") == "invoice":
+        invoice.invoice_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
+    else:
+        file_name = f"receipt_{file_name}"
+        invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)

@@ -1,4 +1,4 @@
-FROM python:3.9.2-slim as env
+FROM python:3.9-slim as env
 
 ARG build_version_report=none
 
@@ -6,9 +6,30 @@ ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
 
 RUN apt-get update
-RUN apt-get install --no-install-recommends --yes \
-    netcat curl git gettext build-essential libpcre3-dev libpq-dev zlib1g-dev libjpeg-dev gdal-bin graphviz-dev graphviz \
-    libjpeg-dev libpng-dev
+RUN apt-get update && apt-get install --no-install-recommends --yes \
+    netcat-openbsd \
+    curl \
+    git \
+    gettext \
+    python3-dev \
+    build-essential \
+    libpcre2-dev \
+    libpq-dev \
+    zlib1g-dev \
+    libjpeg-dev \
+    gdal-bin \
+    graphviz-dev \
+    graphviz \
+    libpng-dev \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
+    libjpeg-dev \
+    zlib1g-dev &&\
+    rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 RUN pip3 install setuptools

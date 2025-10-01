@@ -20,6 +20,7 @@ from .models import (
     SmsServices,
     BlockedIps,
     TemporaryCodeSwitcher,
+    CountryInvoiceInfo,
 )
 
 
@@ -212,3 +213,19 @@ class BlockedIpsAdmin(admin.ModelAdmin):
 @admin.register(TemporaryCodeSwitcher)
 class TemporaryCodeSwitcherAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(CountryInvoiceInfo)
+class CountryInvoiceInfoAdmin(admin.ModelAdmin):
+    list_display = [
+        "country",
+        "name",
+        "address",
+        "email",
+        "city",
+        "tax",
+        "tax_id",
+    ]
+    list_select_related = [
+        "country",
+    ]

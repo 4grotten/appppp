@@ -34,8 +34,6 @@ class CouponListSerializer(serializers.ModelSerializer):
             "percent",
             "description",
             "expire_date",
-            "is_active",
-            "is_updating",
             "image",
         ]
 
@@ -90,3 +88,23 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
             )
 
         return attrs
+
+
+class CouponDetailSerializer(serializers.ModelSerializer):
+    discount = DiscountCouponSerializer()
+    product = ProductCouponSerializer()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            "id",
+            "discount",
+            "product",
+            "percent",
+            "description",
+            "expire_date",
+            "is_updating",
+            "is_active",
+            "always_active",
+            "image",
+        ]

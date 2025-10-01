@@ -29,11 +29,15 @@ services:
       - ./media:/app/media
     command: /runserver.sh
 
+    restart: on-failure
+
   woker:
     <<: *django
     ports: [ ]
     command: /celery_worker.sh
     env_file: ./env/development.env
+    restart: on-failure
+
 
   daphne:
     build: .
@@ -45,6 +49,8 @@ services:
       - django
     volumes:
       - .:/app
+    restart: on-failure
+
 
   postgres:
     image: mdillon/postgis:10
@@ -54,20 +60,28 @@ services:
       - postgres_data_dev:/var/lib/postgresql/data
       - ./backups:/backups
     env_file: ./env/development.env
+    restart: on-failure
+
 
   rabbitmq:
     image: rabbitmq:3.8-alpine
     env_file: ./env/development.env
+    restart: on-failure
+
 
   memcached:
     image: memcached:1.6-alpine
     env_file: ./env/development.env
+    restart: on-failure
+
 
   celery_beat:
     <<: *django
     ports: [ ]
     command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
     env_file: ./env/development.env
+    restart: on-failure
+
 
   redis:
     image: redis:6.2.6

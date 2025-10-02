@@ -78,7 +78,7 @@ test_push:
     BUILD_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build --target production -t $BUILD_IMAGE_NAME .
+    - docker build --target env -t $BUILD_IMAGE_NAME .
     - docker run --rm $BUILD_IMAGE_NAME python manage.py test
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"

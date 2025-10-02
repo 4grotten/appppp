@@ -5,14 +5,8 @@ ARG build_version_report=none
 ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
 
-# Убираем docker-clean, чтобы кеш не удалялся слишком рано
 RUN rm -f /etc/apt/apt.conf.d/docker-clean
-
-# Обновляем пакеты
-RUN apt-get clean && apt-get update
-
-# Устанавливаем базовые пакеты и компиляторы
-RUN apt-get install --no-install-recommends --yes \
+RUN apt-get clean && apt-get update && apt-get install --no-install-recommends --yes \
     netcat-openbsd \
     curl \
     git \
@@ -22,21 +16,21 @@ RUN apt-get install --no-install-recommends --yes \
     libpcre2-dev \
     libpq-dev \
     zlib1g-dev \
-    libjpeg-dev && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-# Устанавливаем графические библиотеки и GDAL
-RUN apt-get update && apt-get install --no-install-recommends --yes \
+    libjpeg-dev \
     gdal-bin \
-    libgraphviz-dev \
-    graphviz \
+    graphviz-dev \
+    graphviz 
+    
+RUN apt-get install --no-install-recommends --yes \
     libpng-dev \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 \
-    libffi-dev && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    libffi-dev \
+    libjpeg-dev \
+    zlib1g-dev &&\
+    rm -rf /var/lib/apt/lists/*
 
 
 WORKDIR /app

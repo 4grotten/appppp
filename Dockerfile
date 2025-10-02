@@ -5,6 +5,7 @@ ARG build_version_report=none
 ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
 
+RUN rm -f /etc/apt/apt.conf.d/docker-clean
 RUN apt-get update
 RUN apt-get update && apt-get install --no-install-recommends --yes \
     netcat-openbsd \

@@ -6,8 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean
-RUN apt-get update
-RUN apt-get update && apt-get install --no-install-recommends --yes \
+RUN apt-get clean && apt-get update && apt-get install --no-install-recommends --yes \
     netcat-openbsd \
     curl \
     git \
@@ -20,7 +19,9 @@ RUN apt-get update && apt-get install --no-install-recommends --yes \
     libjpeg-dev \
     gdal-bin \
     graphviz-dev \
-    graphviz \
+    graphviz 
+    
+RUN apt-get install --no-install-recommends --yes \
     libpng-dev \
     libcairo2 \
     libpango-1.0-0 \

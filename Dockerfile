@@ -4,30 +4,41 @@ ARG build_version_report=none
 
 ENV PYTHONUNBUFFERED=1
 ENV BACKEND_VERSION_REPORT=${build_version_report}
+ENV TMPDIR = /tmp
 
-RUN rm -f /etc/apt/apt.conf.d/docker-clean
-RUN apt-get clean && apt-get update && apt-get install --no-install-recommends --yes \
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get clean && apt-get update && apt-get install --no-install-recommends --yes \
     netcat-openbsd \
     curl \
     git \
-    gettext \
+    gettext &&\
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes \
     python3-dev \
     build-essential \
     libpcre2-dev \
     libpq-dev \
+    libffi-dev &&\
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes \
     zlib1g-dev \
     libjpeg-dev \
     gdal-bin \
     graphviz-dev \
-    graphviz 
+    graphviz &&\
+    rm -rf /var/lib/apt/lists/*
     
-RUN apt-get install --no-install-recommends --yes \
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes \
     libpng-dev \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 \
-    libffi-dev \
     libjpeg-dev \
     zlib1g-dev &&\
     rm -rf /var/lib/apt/lists/*

@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -1386,3 +1387,30 @@ class ItemService:
             queryset = queryset.order_by("-updated_at", "-created_at")
 
         return queryset
+
+
+class OrganizationJSONService:
+    file_path = Path("organization_maps.json")
+
+    @classmethod
+    def get_organizations(cls):
+        if not cls.file_path.exists():
+            return []
+
+        with cls.file_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @classmethod
+    def get_organizations_in_category(cls, category: OrganizationCategory):
+        data = cls.get_organizations()
+
+        type_ids = list(category.types.values_list("id", flat=True))
+        filtered = [
+            org for org in data if any(t in type_ids for t in org.get("types", []))
+        ]
+        if Service.objects.get(is_discounts=True).is_without_discount:
+            filtered = [org for org in filtered if org.get("discounts")]
+
+        random.shuffle(filtered)
+
+        return filtered

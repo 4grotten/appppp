@@ -112,7 +112,7 @@ class OrganizationWithDiscountsJSONSerializer(serializers.Serializer):
     subscription_status = serializers.CharField(allow_null=True, required=False)
 
     def get_promo_cashback(self, organization: dict) -> Optional[Decimal]:
-        return OrganizationPromoService.get_available_promo_cashback_amount(
+        return OrganizationPromoService.get_available_promo_cashback_amount_json(
             organization=organization
         )
 

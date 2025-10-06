@@ -1409,11 +1409,11 @@ class OrganizationJSONService:
         filtered = [
             org for org in data if any(t in type_ids for t in org.get("types", []))
         ]
+        print(filtered)
 
         if Service.objects.get(is_discounts=True).is_without_discount:
             filtered = [org for org in filtered if org.get("discounts")]
 
         random.shuffle(filtered)
-        print(filtered)
 
         return filtered

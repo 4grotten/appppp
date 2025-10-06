@@ -28,6 +28,7 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from common.exceptions import (
     ObjectNotFoundException,
@@ -1390,7 +1391,7 @@ class ItemService:
 
 
 class OrganizationJSONService:
-    file_path = Path("organization_maps.json")
+    file_path = Path(settings.BASE_DIR) / "organization_maps.json"
 
     @classmethod
     def get_organizations(cls):

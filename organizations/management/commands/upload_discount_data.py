@@ -1,14 +1,15 @@
 import json
 from pathlib import Path
-from django.core.management.base import BaseCommand, CommandParser
+from django.core.management.base import BaseCommand
 from organizations.models import DiscountCard
+from django.conf import settings
 
 
 class Command(BaseCommand):
     help = "Добавляет к организациям информацию про discount"
 
     def handle(self, *args, **options):
-        file_path = Path("organization_maps.json")
+        file_path = Path(settings.BASE_DIR) / "organization_maps.json"
 
         if not file_path.exists():
             self.stdout.write(self.style.ERROR(f"Файл не найден!"))

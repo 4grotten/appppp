@@ -34,6 +34,7 @@ class Command(BaseCommand):
 
         with file_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+        self.stdout.write(self.style.WARNING(f"Writing to: {file_path.resolve()}"))
         self.stdout.write(
             self.style.SUCCESS(
                 f"SUCCESFULLY UPDATED {updated_organizations} ORGANIZATIONS DISCOUNTS"

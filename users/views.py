@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.contrib.auth import authenticate
 from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy
-import logging
 
 from django.db import transaction
 from rest_framework import status
@@ -367,25 +366,17 @@ class SetPasswordAPIView(APIView):
         )
 
 
-logger = logging.getLogger(__name__)
-
-
 class LoginAPIView(APIView):
     authentication_classes = ()
     permission_classes = ()
     serializer_class = LoginSerializer
 
     def post(self, request):
-        print("FORWARDED_FOR:", request.META.get("HTTP_X_FORWARDED_FOR"))
-        print("REMOTE_ADDR:", request.META.get("REMOTE_ADDR"))
-        logger.debug("START login request")
         serializer = LoginSerializer(
             data=UserService.get_data_with_valid_location(request)
         )
-        logger.debug("Serializer initialized")
 
         if not serializer.is_valid():
-            logger.debug("serializer invalid")
             return Response(
                 data={
                     "message": gettext_lazy("Invalid input"),
@@ -394,23 +385,17 @@ class LoginAPIView(APIView):
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
 
-        logger.debug("Serializer valid, authenticating user...")
-
         user = authenticate(**serializer.validated_data)
-        logger.debug("user authenticated: %s", bool(user))
 
         if user is not None:
-            logger.debug("Getting device info...")
             device_info = MyOwnTokenService.get_device_info(
                 serializer=serializer, request=request
             )
             location = UserService.get_location_info(serializer=serializer)
-            logger.debug("Got device info and location")
 
             token = MyOwnTokenService.get_or_create_token(
                 user=user, request=request, location=location, device_info=device_info
             )
-            logger.debug("Token created")
 
             user_data = ProfileSerializer(user, context={"request": request}).data
 
@@ -427,7 +412,6 @@ class LoginAPIView(APIView):
                     ),
                 )
             )
-            logger.debug("Its a final step returning response")
 
             return Response(
                 data={

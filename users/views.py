@@ -376,6 +376,8 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        print("FORWARDED_FOR:", request.META.get("HTTP_X_FORWARDED_FOR"))
+        print("REMOTE_ADDR:", request.META.get("REMOTE_ADDR"))
         logger.debug("START login request")
         serializer = LoginSerializer(
             data=UserService.get_data_with_valid_location(request)

@@ -142,10 +142,17 @@ class OrganizationPromoService:
         return None
 
     @classmethod
-    def get_available_promo_cashback_amount(
+    def get_available_promo_cashback_amount_json(
         cls, organization: dict
     ) -> Optional[Decimal]:
         promo = cls.get_usable_promo_from_json(organization=organization.get("id"))
+        if promo is None:
+            return None
+        return promo.cashback
+
+    @classmethod
+    def get_available_promo_cashback_amount(cls, organization: Organization):
+        promo = cls.get_usable_promo(organization=organization)
         if promo is None:
             return None
         return promo.cashback

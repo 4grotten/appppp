@@ -319,6 +319,8 @@ class OrganizationAdmin(admin.ModelAdmin):
             obj.avg_check = None
         image_file = f"https://apofiz-media.s3.amazonaws.com/{obj.image.file.name}"
         small = f"https://apofiz-media.s3.amazonaws.com/{obj.image.small}"
+        large = f"https://apofiz-media.s3.amazonaws.com/{obj.image.large}"
+        medium = f"https://apofiz-media.s3.amazonaws.com/{obj.image.medium}"
         types = form.cleaned_data.get("types")
         types_list = [type.id for type in types]
 
@@ -351,6 +353,8 @@ class OrganizationAdmin(admin.ModelAdmin):
                     organization_data["types"] = types_list
                     organization_data["image"]["file"] = image_file
                     organization_data["image"]["small"] = small
+                    organization_data["image"]["large"] = large
+                    organization_data["image"]["medium"] = medium
                     organization_data["country"] = obj.country.code
                     organization_data["city"] = obj.city.id
                     organization_data["verification_status"] = obj.verification_status

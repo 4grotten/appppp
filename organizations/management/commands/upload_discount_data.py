@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from django.core.management.base import BaseCommand
-from organizations.models import DiscountCard
+from organizations.models import DiscountCard, Organization
 from django.conf import settings
 
 
@@ -25,10 +25,19 @@ class Command(BaseCommand):
             discount_id = DiscountCard.objects.filter(
                 organization_id=org["id"], is_published=True
             )
+            organization = (
+                Organization.objects.filter(pk=org["id"])
+                .select_related("image")
+                .first()
+            )
             if discount_id.exists():
                 ids = list(discount_id.values_list("id", flat=True))
+                image_medium = organization.image.medium_property
+                image_large = organization.image.large_property
                 data[index]["discounts"] = ids
                 updated_organizations += 1
+                data[index]["image"]["medium"] = image_medium
+                data[index]["image"]["large"] = image_large
             else:
                 data[index]["discounts"] = []
 

@@ -1,4 +1,6 @@
 from decimal import Decimal
+import json
+from django.conf import settings
 from typing import Iterable
 from django.utils import timezone
 from datetime import timedelta
@@ -597,6 +599,39 @@ class DiscountCard(TimestampModel):
 
         if errors:
             raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        super().save(*args, **kwargs)
+
+        if is_new:
+            file_path = Path(settings.BASE_DIR) / "organization_maps.json"
+
+            if not file_path.exists():
+                return
+
+            try:
+                with file_path.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception as e:
+                print(f"Ошибка JSON {e}")
+                return
+
+            for org in data:
+                if org.get("id") == self.organization_id:
+                    discounts = org.get("discounts", [])
+                    if self.pk not in discounts:
+                        discounts.append(self.pk)
+                        org["discounts"] = discounts
+                    break
+            try:
+                with file_path.open("w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+
+                print(f"Discount card {self.pk} add to organization maps json")
+            except Exception as e:
+                print(f"Error when adding to JSON {e}")
 
 
 class CardBackground(models.Model):

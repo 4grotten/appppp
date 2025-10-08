@@ -477,9 +477,10 @@ class FollowerOrClientSerializer(FollowerListSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        is_subscribed = self.get_is_subscribed(instance)
-        if is_subscribed == Subscription.UNSUBSCRIBE:
-            representation["phone_number"] = None
+        if not self.context.get("show_phones"):
+            is_subscribed = self.get_is_subscribed(instance)
+            if is_subscribed == Subscription.UNSUBSCRIBE:
+                representation["phone_number"] = None
         return representation
 
 

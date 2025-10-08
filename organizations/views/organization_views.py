@@ -1300,7 +1300,11 @@ class OrganizationClientDetailsAPIView(APIView):
         )
         data = FollowerOrClientSerializer(
             user,
-            context={"request": request, "organization_id": kwargs["organization_id"]},
+            context={
+                "request": request,
+                "organization_id": kwargs["organization_id"],
+                "show_phones": True,
+            },
         ).data
         return Response(data, status=status.HTTP_200_OK)
 

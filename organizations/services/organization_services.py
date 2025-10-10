@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -27,6 +28,7 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from common.exceptions import (
     ObjectNotFoundException,
@@ -801,37 +803,49 @@ class OrganizationService:
         country: Union[Country, None] = None,
         city: Union[City, None] = None,
     ) -> QuerySet:
-        additional = Organization.active_organizations.filter(
-            is_active=True, types__in=category.types.all()
-        ).distinct()
+        queryset = (
+            Organization.active_organizations.prefetch_related("types")
+            .select_related("image")
+            .filter(types__in=category.types.all())
+            .distinct()
+        )
+        # additional = Organization.active_organizations.filter(
+        #     types__in=category.types.all()
+        # ).distinct()
 
         discount_exists = DiscountCard.objects.filter(
             organization=OuterRef("pk"), is_published=True
         )
+        # count = queryset.count()
+        # random_offset = random.randint(0, count - 1)
+        # additional_qs = additional.values("id")
 
-        if Service.objects.get(name__icontains="Скидки").is_without_discount:
-            additional_ids = list(additional.values_list("id", flat=True))
-            queryset = (
-                Organization.active_organizations.prefetch_related("types")
-                .select_related("image")
-                .annotate(has_discount=Exists(discount_exists))
-                .filter(has_discount=True, id__in=additional_ids)
-                .order_by("?")
+        if Service.objects.get(is_discounts=True).is_without_discount:
+            # queryset = (
+            #     Organization.active_organizations.prefetch_related("types")
+            #     .select_related("image")
+            #     .annotate(has_discount=Exists(discount_exists))
+            #     .filter(has_discount=True, id__in=additional_qs)
+            #     .order_by("?")
+            # )
+            queryset = queryset.annotate(has_discount=Exists(discount_exists)).filter(
+                has_discount=True
             )
-        else:
-            queryset = (
-                Organization.active_organizations.prefetch_related("types")
-                .select_related("image")
-                .filter(id__in=additional)
-                .order_by("?")
-            )
+        # else:
+        # queryset = (
+        #     Organization.active_organizations.prefetch_related("types")
+        #     .select_related("image")
+        #     .filter(id__in=additional)
+        #     .order_by("?")
+        # )
+        # random_org = queryset[random_offset]
         if partner is not None:
             queryset = queryset.filter(id__in=cls.get_organization_partners(partner))
         queryset = cls._filter_by_country_and_city(
             queryset=queryset, country=country, city=city
         )
 
-        return queryset
+        return queryset.order_by("?")
 
     @classmethod
     def get_organizations_in_category(
@@ -1386,3 +1400,46 @@ class ItemService:
             queryset = queryset.order_by("-updated_at", "-created_at")
 
         return queryset
+
+
+class OrganizationJSONService:
+    file_path = Path(settings.BASE_DIR) / "organization_maps.json"
+
+    @classmethod
+    def get_organizations(cls):
+        if not cls.file_path.exists():
+            return []
+
+        with cls.file_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @classmethod
+    def get_organizations_in_category(
+        cls, partner, city, country, category: OrganizationCategory
+    ):
+        q_filter = Q()
+        if city:
+            q_filter &= Q(city=city)
+        if country:
+            q_filter &= Q(country=country)
+        if partner:
+            q_filter &= Q(id__in=OrganizationService.get_organization_partners(partner))
+        data = cls.get_organizations()
+
+        type_ids = list(category.types.values_list("id", flat=True))
+        org_ids = list(
+            Organization.objects.filter(q_filter, is_active=True, types__in=type_ids)
+            .distinct()
+            .values_list("id", flat=True)
+        )
+
+        org_ids_set = set(org_ids)
+        filtered = [org for org in data if org.get("id") in org_ids_set]
+        print(filtered)
+
+        if Service.objects.get(is_discounts=True).is_without_discount:
+            filtered = [org for org in filtered if org.get("discounts")]
+
+        random.shuffle(filtered)
+
+        return filtered

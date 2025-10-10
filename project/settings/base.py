@@ -86,7 +86,7 @@ MIDDLEWARE = [
     "xff.middleware.XForwardedForMiddleware",
 ]
 
-XFF_TRUSTED_PROXY_DEPTH = 2
+XFF_TRUSTED_PROXY_DEPTH = 1
 ROOT_URLCONF = "project.urls"
 
 TEMPLATES = [

@@ -24,7 +24,6 @@ from django.db.models import (
     CharField,
     Exists,
     OuterRef,
-    Max,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -41,7 +40,6 @@ from common.exceptions import (
 )
 from common.models import Country, City, File, Currency
 from common.utils import zoom_to_radius, DecimalEncoder, DecimalDecoder
-from organizations.utils import Random
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
 from instagram_parsers.services.proxy_services import ProxyService

@@ -250,6 +250,14 @@ class Organization(TimestampModel):
 
     class Meta:
         ordering = ("title",)
+        indexes = [
+            models.Index(fields=["is_deleted"]),
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["is_banned"]),
+            models.Index(fields=["city"]),
+            models.Index(fields=["country"]),
+            models.Index(fields=["is_deleted", "is_active", "is_banned"]),
+        ]
 
     def __str__(self):
         return f"{self.title}"

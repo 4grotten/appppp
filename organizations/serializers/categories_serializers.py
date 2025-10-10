@@ -42,16 +42,23 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
     organizations_count = serializers.SerializerMethodField()
 
     def get_organizations(self, category: OrganizationCategory):
-        # partner = self.context["partner"]
-        # country = self.context["country"]
-        # city = self.context["city"]
-        # organizations = OrganizationService.get_random_organizations_in_category(
-        #     category=category, partner=partner, country=country, city=city
-        # )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
-        organizations = OrganizationJSONService.get_organizations_in_category(category)
+        partner = self.context["partner"]
+        country = self.context["country"]
+        city = self.context["city"]
+        organizations = OrganizationService.get_random_organizations_in_category(
+            category=category, partner=partner, country=country, city=city
+        )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        # organizations = OrganizationJSONService.get_organizations_in_category(
+        #     partner=partner, country=country, city=city, category=category
+        # )
 
-        organizations = organizations[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
-        return OrganizationWithDiscountsJSONSerializer(
+        # organizations = organizations[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        # return OrganizationWithDiscountsJSONSerializer(
+        #     organizations,
+        #     many=True,
+        #     context={"request": self.context.get("request", None)},
+        # ).data
+        return OrganizationWithDiscountsSerializer(
             organizations,
             many=True,
             context={"request": self.context.get("request", None)},

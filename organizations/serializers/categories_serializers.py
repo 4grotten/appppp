@@ -48,21 +48,21 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
         organizations = OrganizationService.get_random_organizations_in_category(
             category=category, partner=partner, country=country, city=city
         )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
-        # organizations = OrganizationJSONService.get_organizations_in_category(
-        #     partner=partner, country=country, city=city, category=category
-        # )
+        organizations = OrganizationJSONService.get_organizations_in_category(
+            partner=partner, country=country, city=city, category=category
+        )
 
-        # organizations = organizations[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
-        # return OrganizationWithDiscountsJSONSerializer(
-        #     organizations,
-        #     many=True,
-        #     context={"request": self.context.get("request", None)},
-        # ).data
-        return OrganizationWithDiscountsSerializer(
+        organizations = organizations[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        return OrganizationWithDiscountsJSONSerializer(
             organizations,
             many=True,
             context={"request": self.context.get("request", None)},
         ).data
+        # return OrganizationWithDiscountsSerializer(
+        #     organizations,
+        #     many=True,
+        #     context={"request": self.context.get("request", None)},
+        # ).data
 
     def get_organizations_count(self, category: OrganizationCategory):
         # using annotated value from OrganizationCategoryService.get_nonempty_categories

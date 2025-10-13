@@ -1435,7 +1435,6 @@ class OrganizationJSONService:
 
         org_ids_set = set(org_ids)
         filtered = [org for org in data if org.get("id") in org_ids_set]
-        print(filtered)
 
         if Service.objects.get(is_discounts=True).is_without_discount:
             filtered = [org for org in filtered if org.get("discounts")]

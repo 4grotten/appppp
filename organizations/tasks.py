@@ -38,6 +38,7 @@ def parse_instagram_to_shop_items(
     mix_content_expired_time = now() + timedelta(
         days=settings.INSTAGRAM_IMG_EXPIRE_DAYS
     )
+    print("AND THERE IS THE TASK")
 
     organization = Organization.objects.get(id=organization_id)
     instagram_integration = InstagramIntegration.objects.get(organization=organization)
@@ -46,7 +47,6 @@ def parse_instagram_to_shop_items(
         posts_count=posts_count,
         anonymous=anonymous,
     )
-    print(instagram_posts.json())
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
             created_at=instagram.get("created_at"), organization=organization

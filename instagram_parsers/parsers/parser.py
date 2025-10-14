@@ -49,46 +49,44 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
         f"Params -> user_id: {user_id}, posts_count: {posts_count}, anonymous: {anonymous}"
     )
 
-    try:
-        if anonymous:
-            proxy = InstagramClientService.get_random_proxy()
-            logger.debug(f"Using random proxy: {proxy}")
-        else:
-            login_device = InstagramClientService.get_login_device()
-            proxy = f"http://{login_device.proxy_login}:{login_device.proxy_password}@{login_device.proxy_http_s}"
-            logger.debug(f"Using login device proxy: {proxy}")
+    # try:
+    if True:
+        proxy = InstagramClientService.get_random_proxy()
+        logger.debug(f"Using random proxy: {proxy}")
+        # else:
+        #     login_device = InstagramClientService.get_login_device()
+        #     proxy = f"http://{login_device.proxy_login}:{login_device.proxy_password}@{login_device.proxy_http_s}"
+        #     logger.debug(f"Using login device proxy: {proxy}")
 
-            payload = {
-                "settings": login_device.settings,
-                "proxy": proxy,
-                "user_id": user_id,
-                "posts_count": posts_count,
-            }
+        payload = {
+            # "settings": login_device.settings,
+            "proxy": proxy,
+            "user_id": user_id,
+            "posts_count": posts_count,
+        }
 
-            logger.debug(
-                f"Sending request to remote service: {remote_service_url} with payload: {payload}"
-            )
-            response = requests.post(remote_service_url, json=payload)
-            print("THISI IS RESPONSE", response)
+        logger.debug(
+            f"Sending request to remote service: {remote_service_url} with payload: {payload}"
+        )
+        response = requests.post(remote_service_url, json=payload)
+        print("THISI IS RESPONSE", response)
 
-            logger.debug(f"Response status code: {response.status_code}")
-            if response.status_code != 200:
-                logger.warning(f"Non-200 response from remote service: {response.text}")
-                return Response(data=response.json(), status=response.status_code)
+        logger.debug(f"Response status code: {response.status_code}")
+        if response.status_code != 200:
+            logger.warning(f"Non-200 response from remote service: {response.text}")
+            return Response(data=response.json(), status=response.status_code)
 
-            post = response.json()
-            print(post)
-            logger.info(
-                f"Successfully fetched {len(post)} posts for user_id: {user_id}"
-            )
-            return post
+        post = response.json()
+        print(post)
+        logger.info(f"Successfully fetched {len(post)} posts for user_id: {user_id}")
+        return post
 
-    except ConnectionError as e:
-        logger.error(f"ConnectionError while contacting remote service: {str(e)}")
-        return _("Connection Error")
-    except Exception as e:
-        logger.exception("Unexpected error in get_posts")
-        return _("Unexpected Error")
+    # except ConnectionError as e:
+    #     logger.error(f"ConnectionError while contacting remote service: {str(e)}")
+    #     return _("Connection Error")
+    # except Exception as e:
+    #     logger.exception("Unexpected error in get_posts")
+    #     return _("Unexpected Error")
 
 
 def get_video_urls_from_post(post_url: str) -> Tuple[str, str]:

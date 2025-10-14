@@ -47,44 +47,46 @@ def parse_instagram_to_shop_items(
         posts_count=posts_count,
         anonymous=anonymous,
     )
-    for instagram in instagram_posts:
-        if not ShopItem.objects.filter(
-            created_at=instagram.get("created_at"), organization=organization
-        ):
-            description = instagram.pop("description")
-            created_at = instagram.pop("created_at")
-            post_url = instagram.pop("post_url")
-            shop_item = ShopItem.objects.create(
-                name="Instagram",
-                organization=organization,
-                created_at=created_at,
-                updated_at=created_at,
-                description=description,
-                instagram_link=post_url,
-            )
-            for data in instagram.get("data"):
-                # if data.get('video_url'):
-                #     thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
-                #     video = FileVideo.objects.create(video_url=data.get('video_url'),
-                #                                      thumbnail=thumbnail)
-                #     ItemInstagramData.objects.create(item=shop_item,
-                #                                      thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                #                                          thumbnail),
-                #                                      video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                #                                          video))
-                # else:
-                ItemInstagramData.objects.create(
-                    item=shop_item,
-                    thumbnail_url=data.get("thumbnail_url"),
-                    video_url=data.get("video_url"),
-                )
 
-            if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
-                shop_item.removed_at = mix_content_expired_time
-                shop_item.save()
-            else:
-                shop_item.removed_at = video_expired_time
-                shop_item.save()
+    logger.error(instagram_posts)
+    # for instagram in instagram_posts:
+    #     if not ShopItem.objects.filter(
+    #         created_at=instagram.get("created_at"), organization=organization
+    #     ):
+    #         description = instagram.pop("description")
+    #         created_at = instagram.pop("created_at")
+    #         post_url = instagram.pop("post_url")
+    #         shop_item = ShopItem.objects.create(
+    #             name="Instagram",
+    #             organization=organization,
+    #             created_at=created_at,
+    #             updated_at=created_at,
+    #             description=description,
+    #             instagram_link=post_url,
+    #         )
+    #         for data in instagram.get("data"):
+    #             # if data.get('video_url'):
+    #             #     thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
+    #             #     video = FileVideo.objects.create(video_url=data.get('video_url'),
+    #             #                                      thumbnail=thumbnail)
+    #             #     ItemInstagramData.objects.create(item=shop_item,
+    #             #                                      thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+    #             #                                          thumbnail),
+    #             #                                      video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+    #             #                                          video))
+    #             # else:
+    #             ItemInstagramData.objects.create(
+    #                 item=shop_item,
+    #                 thumbnail_url=data.get("thumbnail_url"),
+    #                 video_url=data.get("video_url"),
+    #             )
+
+    #         if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
+    #             shop_item.removed_at = mix_content_expired_time
+    #             shop_item.save()
+    #         else:
+    #             shop_item.removed_at = video_expired_time
+    #             shop_item.save()
 
 
 @shared_task

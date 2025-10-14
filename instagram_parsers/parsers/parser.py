@@ -45,24 +45,24 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
     print("THERE IS A PARSERS URL")
     remote_service_url = "http://161.35.153.151:8080/bot/instagram-get-posts/"
     logger.info("Executing get_posts")
-    logger.debug(
+    logger.error(
         f"Params -> user_id: {user_id}, posts_count: {posts_count}, anonymous: {anonymous}"
     )
 
     # try:
     if True:
         proxy = InstagramClientService.get_random_proxy()
-        logger.debug(f"Using random proxy: {proxy}")
+        logger.error(f"Using random proxy: {proxy}")
         login_device = InstagramClientService.get_login_device()
         logger.error(f"Proxy anon danon: {proxy}")
         logger.error(f"Device anal mynal: {login_device}")
 
         # else:
         proxy = f"http://{login_device.proxy_login}:{login_device.proxy_password}@{login_device.proxy_http_s}"
-        logger.debug(f"Using login device proxy: {proxy}")
-        logger.debug(f"Using login settings: {login_device.settings}")
-        logger.debug(f"Using login usid: {user_id}")
-        logger.debug(f"Using login postscn: {posts_count}")
+        logger.error(f"Using login device proxy: {proxy}")
+        logger.error(f"Using login settings: {login_device.settings}")
+        logger.error(f"Using login usid: {user_id}")
+        logger.error(f"Using login postscn: {posts_count}")
 
         payload = {
             "settings": login_device.settings,
@@ -71,20 +71,20 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
             "posts_count": posts_count,
         }
 
-        logger.debug(
+        logger.error(
             f"Sending request to remote service: {remote_service_url} with payload: {payload}"
         )
         response = requests.post(remote_service_url, json=payload)
         print("THISI IS RESPONSE", response)
 
-        logger.debug(f"Response status code: {response.status_code}")
+        logger.error(f"Response status code: {response.status_code}")
         if response.status_code != 200:
             logger.warning(f"Non-200 response from remote service: {response.text}")
             return Response(data=response.json(), status=response.status_code)
 
         post = response.json()
         print(post)
-        logger.info(f"Successfully fetched {len(post)} posts for user_id: {user_id}")
+        logger.error(f"Successfully fetched {len(post)} posts for user_id: {user_id}")
         return post
 
     # except ConnectionError as e:

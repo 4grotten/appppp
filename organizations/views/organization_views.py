@@ -1190,6 +1190,7 @@ class InstagramIntegrationCreateRetrieveAPIView(APIView):
         )
 
     def post(self, request, *args, **kwargs):
+        print("LOGI SUKA NE RABOTAYUT")
         serializer = InstagramIntegrationCreateUpdateSerializer(
             data=request.data, many=False
         )

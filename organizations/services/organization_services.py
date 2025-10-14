@@ -1209,6 +1209,7 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def create(cls, organization: Organization, url: str, host) -> InstagramIntegration:
+        print("THIS IS CREATE PART")
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username, host)
@@ -1225,6 +1226,7 @@ class OrganizationInstagramIntegrationService:
                 account_full_name=user_info.get("full_name"),
                 avatar=avatar,
             )
+            print("AND THERE WE GONNA START OUR CELERY TASK")
             parse_instagram_to_shop_items.delay(organization_id=organization.id)
             return instance
         except Exception as e:

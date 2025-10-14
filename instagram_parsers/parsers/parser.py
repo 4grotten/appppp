@@ -53,13 +53,14 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
     if True:
         proxy = InstagramClientService.get_random_proxy()
         logger.debug(f"Using random proxy: {proxy}")
+        login_device = InstagramClientService.get_login_device()
+
         # else:
-        #     login_device = InstagramClientService.get_login_device()
         #     proxy = f"http://{login_device.proxy_login}:{login_device.proxy_password}@{login_device.proxy_http_s}"
         #     logger.debug(f"Using login device proxy: {proxy}")
 
         payload = {
-            # "settings": login_device.settings,
+            "settings": login_device.settings,
             "proxy": proxy,
             "user_id": user_id,
             "posts_count": posts_count,

@@ -1154,7 +1154,6 @@ class OrganizationService:
 
         with open(json_path, "r", encoding="utf-8") as f:
             organizations = json.load(f)
-        print(organizations)
 
         def base_filter(org: dict) -> bool:
             if not org.get("is_active"):
@@ -1185,6 +1184,7 @@ class OrganizationService:
             return True
 
         filtered = list(filter(base_filter, organizations))
+        print(filtered)
 
         def working_status(org: dict) -> int:
             opens_at = cls._parse_time(org.get("opens_at"))

@@ -1,5 +1,6 @@
 import datetime
 import random
+import math
 
 import requests
 from django.conf import settings
@@ -964,19 +965,35 @@ class OrganizationsInServicesView(ListAPIView):
         has_limit = "limit" in request.query_params
 
         if not has_page and not has_limit:
-            queryset = self.filter_queryset(self.get_queryset())
+            # queryset = self.filter_queryset(self.get_queryset())
             serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         else:
             # С пагинацией
-            response = super().list(request, *args, **kwargs)
-            response.data["name"] = (
-                Service.objects.filter(id=self.kwargs["pk"])
-                .values_list("name", flat=True)
-                .first()
+            page = int(request.query_params.get("page", 1))
+            limit = int(request.query_params.get("limit", len(queryset)))
+            start = (page - 1) * limit
+            end = start + limit
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset[start:end], many=True)
+            # response.data["name"] = (
+            #     Service.objects.filter(id=self.kwargs["pk"])
+            #     .values_list("name", flat=True)
+            #     .first()
+            # )
+            # return response
+            total_pages = math.ceil(len(queryset) / limit)
+            return Response(
+                {
+                    "list": serializer.data,
+                    "total_count": len(queryset),
+                    "total_pages": total_pages,
+                    "name": Service.objects.filter(id=self.kwargs["pk"])
+                    .values_list("name", flat=True)
+                    .first(),
+                }
             )
-            return response
 
 
 class ItemsInServiceView(ListAPIView):

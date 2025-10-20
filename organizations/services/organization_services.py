@@ -1154,6 +1154,7 @@ class OrganizationService:
 
         with open(json_path, "r", encoding="utf-8") as f:
             organizations = json.load(f)
+        print(organizations)
 
         def base_filter(org: dict) -> bool:
             if not org.get("is_active"):

@@ -943,7 +943,14 @@ class OrganizationsInServicesView(ListAPIView):
             service = Service.objects.get(id=self.kwargs["pk"])
         except ObjectDoesNotExist:
             raise ObjectNotFoundException
-        queryset = OrganizationService.get_organizations_in_service(
+        # queryset = OrganizationService.get_organizations_in_service(
+        #     service=service,
+        #     country=country,
+        #     city=city,
+        #     subcategory=subcategory,
+        #     request=self.request,
+        # )
+        queryset = OrganizationService.get_organization_in_service_json(
             service=service,
             country=country,
             city=city,

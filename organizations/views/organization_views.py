@@ -971,11 +971,11 @@ class OrganizationsInServicesView(ListAPIView):
             return Response(serializer.data)
         else:
             # С пагинацией
+            queryset = self.get_queryset()
             page = int(request.query_params.get("page", 1))
             limit = int(request.query_params.get("limit", len(queryset)))
             start = (page - 1) * limit
             end = start + limit
-            queryset = self.get_queryset()
             serializer = self.get_serializer(queryset[start:end], many=True)
             # response.data["name"] = (
             #     Service.objects.filter(id=self.kwargs["pk"])

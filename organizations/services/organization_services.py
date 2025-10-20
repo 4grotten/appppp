@@ -1146,7 +1146,7 @@ class OrganizationService:
             "HTTP_DEVICE_TIMESTAMP",
             timezone.now().strftime("%Y-%m-%d%T%H:%M:%S"),
         )
-        json_path = ...
+        json_path = Path(settings.BASE_DIR) / "organization_maps.json"
         try:
             locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").time()
         except ValueError:

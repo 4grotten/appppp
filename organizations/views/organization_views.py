@@ -289,8 +289,12 @@ class OrganizationsListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        q_filter = Q(owner=user) | Q(memberships__user=user)
+        search = self.request.query_params.get("search")
+        if search:
+            q_filter &= Q(title__icontains=search)
         return (
-            Organization.objects.filter(Q(owner=user) | Q(memberships__user=user))
+            Organization.objects.filter(q_filter)
             .annotate(
                 priority=Case(
                     When(owner=user, then=0),

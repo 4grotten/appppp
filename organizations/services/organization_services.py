@@ -1167,9 +1167,9 @@ class OrganizationService:
                 if not any(t in org["types"] for t in service.subcategory.all()):
                     return False
 
-            if country and org.get("country") != country:
+            if country and org.get("country") != country.code:
                 return False
-            if city and org.get("city") != city:
+            if city and org.get("city") != city.pk:
                 return False
 
             if subcategory and subcategory not in org.get("types", []):

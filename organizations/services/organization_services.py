@@ -1164,7 +1164,7 @@ class OrganizationService:
             if org.get("has_delivery") != service.has_delivery:
                 return False
             if org.get("types") and service.subcategory:
-                if not any(t in org["types"] for t in service.subcategory.all()):
+                if not any(t.pk in org["types"] for t in service.subcategory.all()):
                     return False
 
             if country and org.get("country") != country.code:
@@ -1172,7 +1172,7 @@ class OrganizationService:
             if city and org.get("city") != city.pk:
                 return False
 
-            if subcategory and subcategory not in org.get("types", []):
+            if subcategory and subcategory.pk not in org.get("types", []):
                 return False
 
             if service.is_verified and org.get("verification_status") != "verified":
@@ -1184,7 +1184,6 @@ class OrganizationService:
             return True
 
         filtered = list(filter(base_filter, organizations))
-        print(filtered)
 
         def working_status(org: dict) -> int:
             opens_at = cls._parse_time(org.get("opens_at"))

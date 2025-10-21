@@ -93,7 +93,6 @@ class OrganizationJSONServiceSerializer(serializers.Serializer):
     title = serializers.CharField()
     opens_at = serializers.DateField()
     closes_at = serializers.DateField()
-    time_working = serializers.DateField()
     verification_status = serializers.BooleanField()
     avg_check = serializers.IntegerField()
     currency = serializers.CharField()

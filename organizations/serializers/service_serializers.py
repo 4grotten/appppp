@@ -60,7 +60,7 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
         )
 
 
-class ImageJSONSerializer(serializers.ModelSerializer):
+class ImageJSONSerializer(serializers.Serializer):
     # name = serializers.URLField(read_only=True)
     file = serializers.ImageField(read_only=True)
     large = serializers.ImageField(read_only=True)

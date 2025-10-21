@@ -23,6 +23,20 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
         )
 
 
+class OrganizationJSONTypeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+    def to_representation(self, instance):
+
+        if isinstance(instance, int):
+            try:
+                org_type = OrganizationType.objects.only("id", "title").get(id=instance)
+                return {"id": org_type.id, "title": org_type.title}
+            except OrganizationType.DoesNotExist:
+                return {"id": instance, "title": None}
+        return super().to_representation(instance)
+
+
 class OrganizationCategorySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
 
@@ -45,9 +59,9 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
         partner = self.context["partner"]
         country = self.context["country"]
         city = self.context["city"]
-        organizations = OrganizationService.get_random_organizations_in_category(
-            category=category, partner=partner, country=country, city=city
-        )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        # organizations = OrganizationService.get_random_organizations_in_category(
+        #     category=category, partner=partner, country=country, city=city
+        # )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
         organizations = OrganizationJSONService.get_organizations_in_category(
             partner=partner, country=country, city=city, category=category
         )

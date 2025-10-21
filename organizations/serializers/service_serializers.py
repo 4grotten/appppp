@@ -3,7 +3,10 @@ from rest_framework import serializers
 from common.serializers import ImageSerializer
 from organizations.models import Organization
 from organizations.models import Service
-from organizations.serializers.categories_serializers import OrganizationTypeSerializer
+from organizations.serializers.categories_serializers import (
+    OrganizationTypeSerializer,
+    OrganizationJSONTypeSerializer,
+)
 from shop.models import ShopItem
 
 
@@ -87,7 +90,7 @@ class ImageJSONSerializer(serializers.Serializer):
 
 class OrganizationJSONServiceSerializer(serializers.Serializer):
     image = ImageJSONSerializer()
-    types = OrganizationTypeSerializer(many=True)
+    types = OrganizationJSONTypeSerializer(many=True)
     time_working = serializers.SerializerMethodField(read_only=True)
     id = serializers.IntegerField()
     title = serializers.CharField()

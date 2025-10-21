@@ -946,14 +946,14 @@ files = [
 
 [[package]]
 name = "django-storages"
-version = "1.10.1"
+version = "1.11.1"
 description = "Support for many storage backends in Django"
 optional = false
 python-versions = ">=3.5"
 groups = ["main"]
 files = [
-    {file = "django-storages-1.10.1.tar.gz", hash = "sha256:652275ab7844538c462b62810276c0244866f345878256a9e0e86f5b1283ae18"},
-    {file = "django_storages-1.10.1-py3-none-any.whl", hash = "sha256:12de8fb2605b9b57bfaf54b075280d7cbb3b3ee1ca4bc9b9add147af87fe3a2c"},
+    {file = "django-storages-1.11.1.tar.gz", hash = "sha256:c823dbf56c9e35b0999a13d7e05062b837bae36c518a40255d522fbe3750fbb4"},
+    {file = "django_storages-1.11.1-py3-none-any.whl", hash = "sha256:f28765826d507a0309cfaa849bd084894bc71d81bf0d09479168d44785396f80"},
 ]
 
 [package.dependencies]
@@ -3808,4 +3808,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "6053acf9f974e476efdcaaf920eea3c6be8d9eb3030466286ef3f5472fee6f78"
+content-hash = "2e49a3555482e868e0ef9cbd60bc7b9f93cc7a8bff0fcc5816545bb6161ad8e3"

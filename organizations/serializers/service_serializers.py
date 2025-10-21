@@ -60,6 +60,62 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
         )
 
 
+class ImageJSONSerializer(serializers.ModelSerializer):
+    # name = serializers.URLField(read_only=True)
+    file = serializers.ImageField(read_only=True)
+    large = serializers.ImageField(read_only=True)
+    medium = serializers.ImageField(read_only=True)
+    small = serializers.ImageField(read_only=True)
+    # is_watermarked = serializers.BooleanField(write_only=True)
+
+    # class Meta:
+    #     model = File
+    #     fields = (
+    #         "id",
+    #         "file",
+    #         "name",
+    #         "large",
+    #         "medium",
+    #         "small",
+    #         # "is_watermarked",
+    #     )
+    #     read_only_fields = ("name",)
+
+    # def get_name(self, obj):
+    #     return obj.file.name.split("/")[-1]
+
+
+class OrganizationJSONServiceSerializer(serializers.ModelSerializer):
+    image = ImageJSONSerializer()
+    types = OrganizationTypeSerializer(many=True)
+    time_working = serializers.SerializerMethodField(read_only=True)
+
+    def get_time_working(self, organization: dict):
+        working_type = organization.get("time_working")
+        if working_type == 1:
+            return "around_the_clock"
+        if working_type == 2:
+            return "open"
+        if working_type == 3:
+            return "closed"
+
+    class Meta:
+        model = Organization
+        fields = (
+            "id",
+            "title",
+            "image",
+            "types",
+            "opens_at",
+            "closes_at",
+            "time_working",
+            "verification_status",
+            "avg_check",
+            "currency",
+            "full_location",
+        )
+
+
 class ItemServiceSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
     organization_name = serializers.CharField(

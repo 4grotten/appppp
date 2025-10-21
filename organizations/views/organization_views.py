@@ -108,6 +108,7 @@ from organizations.serializers.query_param_serializers import (
 from organizations.serializers.service_serializers import (
     ItemServiceSerializer,
     OrganizationServiceSerializer,
+    OrganizationJSONServiceSerializer,
 )
 from organizations.serializers.coupon_serializers import (
     CouponListSerializer,
@@ -925,7 +926,8 @@ class OrganizationsInCategoryView(ListAPIView):
 
 
 class OrganizationsInServicesView(ListAPIView):
-    serializer_class = OrganizationServiceSerializer
+    # serializer_class = OrganizationServiceSerializer
+    serializer_class = OrganizationJSONServiceSerializer
     queryset = Organization.objects.all()
     filter_backends = [SearchFilter]
     search_fields = ["title"]

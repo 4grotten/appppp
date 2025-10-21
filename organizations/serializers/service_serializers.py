@@ -85,10 +85,19 @@ class ImageJSONSerializer(serializers.Serializer):
     #     return obj.file.name.split("/")[-1]
 
 
-class OrganizationJSONServiceSerializer(serializers.ModelSerializer):
+class OrganizationJSONServiceSerializer(serializers.Serializer):
     image = ImageJSONSerializer()
     types = OrganizationTypeSerializer(many=True)
     time_working = serializers.SerializerMethodField(read_only=True)
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    opens_at = serializers.DateField()
+    closes_at = serializers.DateField()
+    time_working = serializers.DateField()
+    verification_status = serializers.BooleanField()
+    avg_check = serializers.IntegerField()
+    currency = serializers.CharField()
+    full_location = serializers.DictField()
 
     def get_time_working(self, organization: dict):
         working_type = organization.get("time_working")
@@ -99,21 +108,21 @@ class OrganizationJSONServiceSerializer(serializers.ModelSerializer):
         if working_type == 3:
             return "closed"
 
-    class Meta:
-        model = Organization
-        fields = (
-            "id",
-            "title",
-            "image",
-            "types",
-            "opens_at",
-            "closes_at",
-            "time_working",
-            "verification_status",
-            "avg_check",
-            "currency",
-            "full_location",
-        )
+    # class Meta:
+    #     model = Organization
+    #     fields = (
+    #         "id",
+    #         "title",
+    #         "image",
+    #         "types",
+    #         "opens_at",
+    #         "closes_at",
+    #         "time_working",
+    #         "verification_status",
+    #         "avg_check",
+    #         "currency",
+    #         "full_location",
+    #     )
 
 
 class ItemServiceSerializer(serializers.ModelSerializer):

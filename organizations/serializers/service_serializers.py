@@ -97,7 +97,7 @@ class OrganizationJSONServiceSerializer(serializers.Serializer):
     opens_at = serializers.TimeField()
     closes_at = serializers.TimeField()
     verification_status = serializers.CharField()
-    avg_check = serializers.IntegerField()
+    avg_check = serializers.IntegerField(allow_null=True)
     currency = serializers.CharField()
     full_location = serializers.DictField()
 

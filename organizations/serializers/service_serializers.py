@@ -65,10 +65,10 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
 
 class ImageJSONSerializer(serializers.Serializer):
     # name = serializers.URLField(read_only=True)
-    file = serializers.ImageField(read_only=True)
-    large = serializers.ImageField(read_only=True)
-    medium = serializers.ImageField(read_only=True)
-    small = serializers.ImageField(read_only=True)
+    file = serializers.URLField(read_only=True)
+    large = serializers.URLField(read_only=True)
+    medium = serializers.URLField(read_only=True)
+    small = serializers.URLField(read_only=True)
     # is_watermarked = serializers.BooleanField(write_only=True)
 
     # class Meta:

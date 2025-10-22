@@ -42,7 +42,7 @@ def get_data_from_post(dict_list):
 
 
 def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
-    print("THERE IS A PARSERS URL")
+    print("THERE IS A PARSER")
     remote_service_url = "http://161.35.153.151:8080/bot/instagram-get-posts/"
     logger.info("Executing get_posts")
     logger.debug(
@@ -69,11 +69,11 @@ def get_posts(user_id: int, posts_count: int, anonymous: bool = False):
                 f"Sending request to remote service: {remote_service_url} with payload: {payload}"
             )
             response = requests.post(remote_service_url, json=payload)
-            print("THISI IS RESPONSE", response)
 
             logger.debug(f"Response status code: {response.status_code}")
             if response.status_code != 200:
                 logger.warning(f"Non-200 response from remote service: {response.text}")
+                print(response.json())
                 return Response(data=response.json(), status=response.status_code)
 
             post = response.json()

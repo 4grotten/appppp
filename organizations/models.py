@@ -1,5 +1,6 @@
 from decimal import Decimal
 import json
+from pathlib import Path
 from django.conf import settings
 from typing import Iterable
 from django.utils import timezone
@@ -1387,3 +1388,25 @@ class Invoice(TimestampModel):
         kwargs["force_insert"] = False
         super().save(update_fields=["invoice_number"], *args, **kwargs)
         return
+
+
+class PinnedOrganizations(TimestampModel):
+    user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        related_name="pinned_organizations",
+        on_delete=models.CASCADE,
+    )
+    organization = models.ForeignKey(
+        Organization,
+        null=True,
+        blank=True,
+        related_name="pinned_by",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        db_table = "pinned_organizations"
+        verbose_name = "Pinned organizations"
+        ordering = ["created_at"]

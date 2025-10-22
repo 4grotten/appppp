@@ -409,6 +409,11 @@ if not DEBUG and JSON_LOGGING:
             }
         },
         "loggers": {
+            "": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
             "django.request": {
                 "handlers": ["console"],
                 "level": "ERROR",

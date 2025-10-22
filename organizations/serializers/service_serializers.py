@@ -102,7 +102,6 @@ class OrganizationJSONServiceSerializer(serializers.Serializer):
     full_location = serializers.DictField()
 
     def get_time_working(self, organization: dict):
-        print(self.types)
         working_type = organization.get("time_working")
         if working_type == 1:
             return "around_the_clock"

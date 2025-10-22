@@ -983,7 +983,6 @@ class OrganizationsInServicesView(ListAPIView):
         else:
             # С пагинацией
             queryset = self.get_queryset()
-            print(queryset)
             page = int(request.query_params.get("page", 1))
             limit = int(request.query_params.get("limit", len(queryset)))
             start = (page - 1) * limit

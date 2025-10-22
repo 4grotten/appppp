@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, OuterRef, Exists
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -53,6 +53,7 @@ from organizations.models import (
     RegionalTariff,
     PaymentSystemMethod,
     OrganizationBanner,
+    PinnedOrganizations,
 )
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
@@ -293,6 +294,9 @@ class OrganizationsListCreateView(ListCreateAPIView):
         user = self.request.user
         q_filter = Q(owner=user) | Q(memberships__user=user)
         search = self.request.query_params.get("search")
+        pinned_subquery = PinnedOrganizations.objects.filter(
+            user=user, organization=OuterRef("pk")
+        )
         if search:
             q_filter &= Q(title__icontains=search)
         return (
@@ -302,9 +306,10 @@ class OrganizationsListCreateView(ListCreateAPIView):
                     When(owner=user, then=0),
                     default=1,
                     output_field=IntegerField(),
-                )
+                ),
+                pinned=Exists(pinned_subquery),
             )
-            .order_by("priority")
+            .order_by("priority", "-pinned")
             .distinct()
         )
 
@@ -1695,3 +1700,61 @@ class CouponRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     def get_object(self):
         pk = self.kwargs.get("pk")
         return self.service_class.get_detail(id=pk)
+
+
+class PinnOrganizationView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def post(self, request, *args, **kwargs):
+        org_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            organization = Organization.objects.get(pk=org_id)
+        except Organization.DoesNotExist:
+            raise ObjectNotFoundException("Not found organization")
+        has_access = Organization.objects.filter(
+            Q(id=org_id), Q(owner=user) | Q(memberships__user=user)
+        ).exists()
+
+        if not has_access:
+            raise PermissionDenied("You don't have access to pin this organization")
+
+        pinned, created = PinnedOrganizations.objects.get_or_create(
+            user=user, organization=organization
+        )
+        if not created:
+            return Response(
+                {"message": f"Organization '{organization.title}' already pinned"},
+                status=200,
+            )
+
+        return Response(
+            data={"message": f"succesfully pinned organization {organization.title}"},
+            status=200,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        org_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            organization = Organization.objects.get(pk=org_id)
+        except Organization.DoesNotExist:
+            raise ObjectNotFoundException("Not found organization")
+
+        deleted_count, _ = PinnedOrganizations.objects.filter(
+            user=user, organization=organization
+        ).delete()
+
+        if deleted_count == 0:
+            return Response(
+                {"message": f"organization '{organization.title}' was not pinned"},
+                status=200,
+            )
+
+        return Response(
+            {"message": f"Successfully unpinned '{organization.title}'"}, status=200
+        )

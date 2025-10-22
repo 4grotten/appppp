@@ -55,6 +55,7 @@ from users.models import PromoCode, User
 from users.serializers import UserShortInfoSerializer, UserInfoSerializer
 from messenger.models import MessengerChat, ChatMessage as ChatMessageModel
 
+
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneNumber
@@ -624,6 +625,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 class OrganizationListSerializer(serializers.ModelSerializer):
     image = ImageSerializer(many=False)
     role = serializers.SerializerMethodField()
+    pinned = serializers.BooleanField()
 
     def get_role(self, organization: Organization):
         user = self.context["request"].user
@@ -639,6 +641,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
             "is_deleted",
             "is_private",
             "is_banned",
+            "pinned",
             "verification_status",
             "image",
             "role",

@@ -65,10 +65,10 @@ class OrganizationServiceSerializer(serializers.ModelSerializer):
 
 class ImageJSONSerializer(serializers.Serializer):
     # name = serializers.URLField(read_only=True)
-    file = serializers.ImageField(read_only=True)
-    large = serializers.ImageField(read_only=True)
-    medium = serializers.ImageField(read_only=True)
-    small = serializers.ImageField(read_only=True)
+    file = serializers.URLField(read_only=True)
+    large = serializers.URLField(read_only=True)
+    medium = serializers.URLField(read_only=True)
+    small = serializers.URLField(read_only=True)
     # is_watermarked = serializers.BooleanField(write_only=True)
 
     # class Meta:
@@ -94,10 +94,10 @@ class OrganizationJSONServiceSerializer(serializers.Serializer):
     time_working = serializers.SerializerMethodField(read_only=True)
     id = serializers.IntegerField()
     title = serializers.CharField()
-    opens_at = serializers.DateField()
-    closes_at = serializers.DateField()
-    verification_status = serializers.BooleanField()
-    avg_check = serializers.IntegerField()
+    opens_at = serializers.TimeField()
+    closes_at = serializers.TimeField()
+    verification_status = serializers.CharField()
+    avg_check = serializers.IntegerField(allow_null=True)
     currency = serializers.CharField()
     full_location = serializers.DictField()
 

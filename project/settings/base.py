@@ -388,6 +388,7 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.process_comment_with_assistant": {"queue": "default"},
     "organizations.tasks.update_posts": {"queue": "default"},
     "organizations.tasks.create_invoice_pdf": {"queue": "default"},
+    "common.tasks.generate_image_versions": {"queue": "default"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)

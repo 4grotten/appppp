@@ -3,7 +3,9 @@ from rest_framework import serializers
 from common.serializers import ImageSerializer
 from organizations.models import Organization
 from organizations.models import Service
-from organizations.serializers.categories_serializers import OrganizationTypeSerializer
+from organizations.serializers.categories_serializers import (
+    OrganizationTypeSerializer,
+)
 from shop.models import ShopItem
 
 

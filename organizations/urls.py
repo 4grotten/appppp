@@ -115,6 +115,7 @@ from .views.organization_views import (
     RemoveCustomBannerView,
     CouponListCreateAPIView,
     CouponRetrieveUpdateAPIView,
+    PinnOrganizationView,
 )
 from .views.partnerships_views import (
     PartnershipView,
@@ -503,6 +504,11 @@ organization_urls = [
         "organizations/subscription/purchase/",
         PurchaseOrgSubscriptionView.as_view(),
         name="org_subscription_purchase",
+    ),
+    path(
+        "organizations/<int:pk>/pinn/",
+        PinnOrganizationView.as_view(),
+        name="org_pin_for_user",
     ),
 ]
 

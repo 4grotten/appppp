@@ -45,9 +45,9 @@ class HomepageOrganizationsSerializer(serializers.ModelSerializer):
         partner = self.context["partner"]
         country = self.context["country"]
         city = self.context["city"]
-        organizations = OrganizationService.get_random_organizations_in_category(
-            category=category, partner=partner, country=country, city=city
-        )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
+        # organizations = OrganizationService.get_random_organizations_in_category(
+        #     category=category, partner=partner, country=country, city=city
+        # )[:HOMEPAGE_ORGS_IN_CATEGORIES_COUNT]
         organizations = OrganizationJSONService.get_organizations_in_category(
             partner=partner, country=country, city=city, category=category
         )

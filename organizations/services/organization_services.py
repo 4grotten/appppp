@@ -1,10 +1,11 @@
 import json
 import logging
 import random
-from datetime import datetime
+from datetime import datetime, time
 from decimal import Decimal
 from pathlib import Path
 from typing import Tuple, Union
+from organizations.utils import JSONQuerySet
 
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point, GEOSGeometry
@@ -1132,6 +1133,90 @@ class OrganizationService:
     def update_add_item_date(cls, user: User, instance: Organization):
         Organization.objects.filter(id=instance.id).update(add_item_date=datetime.now())
 
+    @classmethod
+    def get_organization_in_service_json(
+        cls,
+        request,
+        service: Service,
+        country: Union[Country, None] = None,
+        city: Union[City, None] = None,
+        subcategory: Union[ItemSubcategory, None] = None,
+    ) -> list[dict]:
+        timestamp = request.META.get(
+            "HTTP_DEVICE_TIMESTAMP",
+            timezone.now().strftime("%Y-%m-%d%T%H:%M:%S"),
+        )
+        json_path = Path(settings.BASE_DIR) / "organization_maps.json"
+        try:
+            locale_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").time()
+        except ValueError:
+            raise NotAcceptableException("Valid time is required in headers")
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            organizations = json.load(f)
+
+        def base_filter(org: dict) -> bool:
+            if not org.get("is_active"):
+                return False
+            if org.get("is_deleted") or org.get("is_banned"):
+                return False
+
+            if org.get("has_delivery") != service.has_delivery:
+                return False
+            if org.get("types") and service.subcategory:
+                if not any(t.pk in org["types"] for t in service.subcategory.all()):
+                    return False
+
+            if country and org.get("country") != country.code:
+                return False
+            if city and org.get("city") != city.pk:
+                return False
+
+            if subcategory and subcategory.pk not in org.get("types", []):
+                return False
+
+            if service.is_verified and org.get("verification_status") != "verified":
+                return False
+
+            if service.is_wholesale and not org.get("is_wholesale"):
+                return False
+
+            return True
+
+        filtered = list(filter(base_filter, organizations))
+
+        def working_status(org: dict) -> int:
+            opens_at = cls._parse_time(org.get("opens_at"))
+            closes_at = cls._parse_time(org.get("closes_at"))
+
+            if opens_at == closes_at:
+                return 1
+            if opens_at <= locale_time <= closes_at:
+                return 2
+            if opens_at > closes_at:
+                if locale_time >= opens_at or locale_time <= closes_at:
+                    return 2
+            return 3
+
+        for org in filtered:
+            org["time_working"] = working_status(org)
+
+        filtered.sort(
+            key=lambda o: (
+                0 if o.get("verification_status") == "verified" else 1,
+                o["time_working"],
+            )
+        )
+
+        return JSONQuerySet(filtered)
+
+    @staticmethod
+    def _parse_time(value: str) -> time:
+        try:
+            return datetime.strptime(value, "%H:%M:%S").time()
+        except Exception:
+            return time(0, 0, 0)
+
 
 class OrgPhoneNumberService:
     model = PhoneNumber
@@ -1435,7 +1520,6 @@ class OrganizationJSONService:
 
         org_ids_set = set(org_ids)
         filtered = [org for org in data if org.get("id") in org_ids_set]
-        print(filtered)
 
         if Service.objects.get(is_discounts=True).is_without_discount:
             filtered = [org for org in filtered if org.get("discounts")]

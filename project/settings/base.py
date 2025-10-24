@@ -231,11 +231,12 @@ AWS_S3_FILE_OVERWRITE = False
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = "imagekit.cachefiles.backends.Async"
+IMAGEKIT_DEFAULT_CACHEFILE_BACKEND = "imagekit.cachefiles.backends.Celery"
 IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = "imagekit.cachefiles.strategies.Optimistic"
 IMAGEKIT_CACHEFILE_NAMER = "common.utils.imagekit_filename_generator"
 IMAGEKIT_SPEC_CACHEFILE_NAMER = IMAGEKIT_CACHEFILE_NAMER
 IMAGEKIT_CACHEFILE_DIR = "cache/images"
+
 
 CELERY_ACCEPT_CONTENT = ["json", "application/text", "pickle"]
 
@@ -410,6 +411,11 @@ if not DEBUG and JSON_LOGGING:
             }
         },
         "loggers": {
+            "": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
             "django.request": {
                 "handlers": ["console"],
                 "level": "ERROR",

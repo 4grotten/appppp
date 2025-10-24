@@ -128,17 +128,7 @@ class File(TimestampModel):
                         break
                     except:
                         continue
-        super().save(force_insert, force_update, using, update_fields)
-
-        if self.file:
-            from .tasks import generate_image_versions
-
-            for spec_id in [
-                "common:file:large",
-                "common:file:medium",
-                "common:file:small",
-            ]:
-                generate_image_versions.delay(self.file.name, spec_id)
+        super(File, self).save()
 
     class Meta:
         ordering = ("order",)

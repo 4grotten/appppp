@@ -236,6 +236,9 @@ IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = "imagekit.cachefiles.strategies.Optimistic
 IMAGEKIT_CACHEFILE_NAMER = "common.utils.imagekit_filename_generator"
 IMAGEKIT_SPEC_CACHEFILE_NAMER = IMAGEKIT_CACHEFILE_NAMER
 IMAGEKIT_CACHEFILE_DIR = "cache/images"
+IMAGEKIT_USE_CACHEFILE = True
+IMAGEKIT_CACHEFILE_BACKEND = "imagekit.cachefiles.backends.Simple"
+IMAGEKIT_CACHE_BACKEND = "default"
 
 CELERY_ACCEPT_CONTENT = ["json", "application/text", "pickle"]
 

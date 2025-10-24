@@ -10,19 +10,19 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='shopitem',
-            name='current_locations',
-        ),
+        # migrations.RemoveField(
+        #     model_name='shopitem',
+        #     name='current_locations',
+        # ),
         migrations.AddField(
             model_name='shopitem',
             name='current_locations',
             field=models.JSONField(blank=True, null=True),
         ),
-        migrations.RemoveField(
-            model_name='shopitem',
-            name='preferred_locations',
-        ),
+        # migrations.RemoveField(
+        #     model_name='shopitem',
+        #     name='preferred_locations',
+        # ),
         migrations.AddField(
             model_name='shopitem',
             name='preferred_locations',

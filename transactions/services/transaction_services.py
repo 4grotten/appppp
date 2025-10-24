@@ -3272,6 +3272,15 @@ class TransactionService:
             extra_data=extra_data
         )
 
+        sent_notification.delay(
+            recipient_id=transaction.processed_by_id,
+            sender_id=transaction.client_id,
+            mode=NOTIFICATION_MODE_RENTAL,
+            notification_type=ACTIVATE_RENTAL_TYPE,
+            organization_id=transaction.organization_id,
+            extra_data=extra_data
+        )
+
     @classmethod
     def get_pg_description_and_purchase_type(cls, transaction: Transaction):
         if transaction.type == Transaction.ASSISTANT:

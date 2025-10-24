@@ -18,4 +18,4 @@ class OrganizationTariffInvoiceAPIView(generics.GenericAPIView):
         data = self.service_class.create_invoice(
             **serializer.validated_data, user=request.user
         )
-        return Response(data={"message": "succsefull"})
+        return Response(data={"message": "successfully created invoice"}, status=200)

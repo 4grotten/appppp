@@ -1,6 +1,5 @@
 import datetime
 import random
-import math
 
 import requests
 from django.conf import settings
@@ -109,7 +108,6 @@ from organizations.serializers.query_param_serializers import (
 from organizations.serializers.service_serializers import (
     ItemServiceSerializer,
     OrganizationServiceSerializer,
-    OrganizationJSONServiceSerializer,
 )
 from organizations.serializers.coupon_serializers import (
     CouponListSerializer,
@@ -935,8 +933,7 @@ class OrganizationsInCategoryView(ListAPIView):
 
 
 class OrganizationsInServicesView(ListAPIView):
-    # serializer_class = OrganizationServiceSerializer
-    serializer_class = OrganizationJSONServiceSerializer
+    serializer_class = OrganizationServiceSerializer
     queryset = Organization.objects.all()
     filter_backends = [SearchFilter]
     search_fields = ["title"]
@@ -955,14 +952,7 @@ class OrganizationsInServicesView(ListAPIView):
             service = Service.objects.get(id=self.kwargs["pk"])
         except ObjectDoesNotExist:
             raise ObjectNotFoundException
-        # queryset = OrganizationService.get_organizations_in_service(
-        #     service=service,
-        #     country=country,
-        #     city=city,
-        #     subcategory=subcategory,
-        #     request=self.request,
-        # )
-        queryset = OrganizationService.get_organization_in_service_json(
+        queryset = OrganizationService.get_organizations_in_service(
             service=service,
             country=country,
             city=city,
@@ -976,35 +966,19 @@ class OrganizationsInServicesView(ListAPIView):
         has_limit = "limit" in request.query_params
 
         if not has_page and not has_limit:
-            # queryset = self.filter_queryset(self.get_queryset())
+            queryset = self.filter_queryset(self.get_queryset())
             serializer = self.get_serializer(queryset, many=True)
 
             return Response(serializer.data)
         else:
             # С пагинацией
-            queryset = self.get_queryset()
-            page = int(request.query_params.get("page", 1))
-            limit = int(request.query_params.get("limit", len(queryset)))
-            start = (page - 1) * limit
-            end = start + limit
-            serializer = self.get_serializer(queryset[start:end], many=True)
-            # response.data["name"] = (
-            #     Service.objects.filter(id=self.kwargs["pk"])
-            #     .values_list("name", flat=True)
-            #     .first()
-            # )
-            # return response
-            total_pages = math.ceil(len(queryset) / limit)
-            return Response(
-                {
-                    "list": serializer.data,
-                    "total_count": len(queryset),
-                    "total_pages": total_pages,
-                    "name": Service.objects.filter(id=self.kwargs["pk"])
-                    .values_list("name", flat=True)
-                    .first(),
-                }
+            response = super().list(request, *args, **kwargs)
+            response.data["name"] = (
+                Service.objects.filter(id=self.kwargs["pk"])
+                .values_list("name", flat=True)
+                .first()
             )
+            return response
 
 
 class ItemsInServiceView(ListAPIView):

@@ -23,22 +23,6 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
         )
 
 
-class OrganizationJSONTypeSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    # title = serializers.CharField(required=False, allow_null=True)
-
-    def to_representation(self, instance):
-
-        if isinstance(instance, int):
-            print(instance)
-            try:
-                org_type = OrganizationType.objects.only("id", "title").get(id=instance)
-                return {"id": org_type.id, "title": org_type.title}
-            except OrganizationType.DoesNotExist:
-                return {"id": instance, "title": None}
-        return super().to_representation(instance)
-
-
 class OrganizationCategorySerializer(serializers.ModelSerializer):
     types = OrganizationTypeSerializer(many=True)
 

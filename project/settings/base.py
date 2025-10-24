@@ -383,6 +383,7 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.add_subscribers_to_organization": {"queue": "org_subscribers"},
     "organizations.tasks.subscribe_user_to_organization": {"queue": "org_subscribers"},
     "organizations.tasks.process_comment_with_assistant": {"queue": "default"},
+    "organizations.tasks.update_posts": {"queue": "default"},
     "organizations.tasks.create_invoice_pdf": {"queue": "default"},
 }
 

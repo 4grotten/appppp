@@ -2,31 +2,55 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import permissions
+from django.http import HttpResponseRedirect
 
-from notifications.views import CustomFCMDeviceAuthorizedViewSet, FCMDeviceSettingsAPIView
+from notifications.views import (
+    CustomFCMDeviceAuthorizedViewSet,
+    FCMDeviceSettingsAPIView,
+)
 
-v1 = ([
-          path('', include('users.urls')),
-          path('', include('organizations.urls')),
-          path('', include('applications.urls')),
-          path('', include('messenger.urls')),
-          path('', include('common.urls')),
-          path('', include('transactions.urls')),
-          path('', include('shop.urls')),
-          path('', include('delivery.urls')),
-          path('', include('sms_sender.urls')),
-          path('', include('cors.urls')),
-          path('', include('stock.urls')),
-          path('notifications/', include('notifications.urls'))
-      ], 'v1')
+PORTAINER_URL = settings.PORTAINER_URL
+
+
+def portainer_login(request):
+    return HttpResponseRedirect(PORTAINER_URL)
+
+
+v1 = (
+    [
+        path("", include("users.urls")),
+        path("", include("organizations.urls")),
+        path("", include("applications.urls")),
+        path("", include("messenger.urls")),
+        path("", include("common.urls")),
+        path("", include("transactions.urls")),
+        path("", include("shop.urls")),
+        path("", include("delivery.urls")),
+        path("", include("sms_sender.urls")),
+        path("", include("cors.urls")),
+        path("", include("stock.urls")),
+        path("notifications/", include("notifications.urls")),
+    ],
+    "v1",
+)
 
 urlpatterns = [
-    path('971585333939admin/', admin.site.urls),
-    path('api/v1/', include(v1)),
-    path('api-auth/', include('rest_framework.urls')),
-    path('rest-auth/', include('rest_auth.urls')),
-    path('api/v1/devices/', CustomFCMDeviceAuthorizedViewSet.as_view({'post': 'create'}), name='create_fcm_device'),
-    path('api/v1/devicesSettings/', FCMDeviceSettingsAPIView.as_view(), name='device_settings'),
+    path("971585333939admin/portainer-login/", portainer_login, name="portainer_login"),
+    path("971585333939admin/", admin.site.urls),
+    path("api/v1/", include(v1)),
+    path("api-auth/", include("rest_framework.urls")),
+    path("rest-auth/", include("rest_auth.urls")),
+    path(
+        "api/v1/devices/",
+        CustomFCMDeviceAuthorizedViewSet.as_view({"post": "create"}),
+        name="create_fcm_device",
+    ),
+    path(
+        "api/v1/devicesSettings/",
+        FCMDeviceSettingsAPIView.as_view(),
+        name="device_settings",
+    ),
 ]
 
 if settings.DEBUG:
@@ -34,4 +58,4 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.MONITORING:
-    urlpatterns += path('', include('django_prometheus.urls')),
+    urlpatterns += (path("", include("django_prometheus.urls")),)

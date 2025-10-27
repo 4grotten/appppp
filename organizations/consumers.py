@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import decimal
+import common.services.slack as slack
 
 from stock.serializers import ShopItemSizeCountSetSerializer
 import websockets
@@ -274,6 +275,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")
+            slack.slack_ai(
+                f"[ WEBSOCKET error ] connection failed while attempt to AI socket {e}"
+            )
             await self.close()
 
     async def send_message_to_ai(self, comment):

@@ -252,6 +252,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             )
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] error handling AI response: {e}")
 
     async def handle_ai_default_response(self, parent, user):
         try:
@@ -266,12 +267,14 @@ class CommentConsumer(AsyncWebsocketConsumer):
             )
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] error handling AI response: {e}")
 
     async def connect_to_ai(self):
         try:
             ai_socket = await websockets.connect(
                 "ws://161.35.153.151:8081/ws/bot/", timeout=5
             )
+            slack.slack_ai(f"[ WEBSOCKET logs ] connecting to AI socket")
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")
@@ -292,7 +295,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 if not self.ai_socket or not self.ai_socket.open:
                     logger.error("Failed to reconnect to AI socket")
                     slack.slack_ai(
-                        f"[ WEBSOCKET error ] connection failed while attempt to AI socket"
+                        f"[ WEBSOCKET error ] reconnection failed to AI socket"
                     )
                     return
 
@@ -302,9 +305,11 @@ class CommentConsumer(AsyncWebsocketConsumer):
             logger.info("Message sent to AI successfully")
         except websockets.exceptions.ConnectionClosedError as e:
             logger.error(f"Connection to AI closed unexpectedly: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] connection to AI closed: {e}")
             await self.reconnect_ai_socket()
         except Exception as e:
             logger.error(f"Error sending message to AI: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] error sending message to AI: {e}")
             await self.reconnect_ai_socket()
 
     async def reconnect_ai_socket(self):
@@ -315,6 +320,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             self.ai_socket = await self.connect_to_ai()
         except Exception as e:
             logger.error(f"Failed to reconnect to AI socket: {e}")
+            slack.slack_ai(f"[ WEBSOCKET error ] failed reconnecting to AI socket: {e}")
 
     def extract_host(self):
         for header in self.scope["headers"]:

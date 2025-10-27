@@ -274,6 +274,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             ai_socket = await websockets.connect(
                 "ws://161.35.153.151:8081/ws/bot/", timeout=5
             )
+            slack.slack_ai(f"[ WEBSOCKET logs ] connecting to AI socket")
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")

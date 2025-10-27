@@ -1,4 +1,4 @@
-FROM python:3.9-alpine as env
+FROM python:3.9-slim-bullseye as env
 
 ARG build_version_report=none
 

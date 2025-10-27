@@ -487,3 +487,8 @@ CRYPTOCLOUD_API_KEY = config("CRYPTOCLOUD_API_KEY", default="notasecret")
 CRYPTOCLOUD_SHOP_ID = config("CRYPTOCLOUD_SHOP_ID", default="notasecret")
 
 PIGGYPAY_API_KEY = config("PIGGYPAY_API_KEY", default="notasecret")
+
+if DEBUG:
+    PORTAINER_URL = config("PORTAINER_TEST_URL")
+else:
+    PORTAINER_URL = config("PORTAINER_URL")

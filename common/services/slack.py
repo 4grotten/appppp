@@ -1,7 +1,10 @@
 import json
 
 from django.conf import settings
+import logging
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 def bot(message):
@@ -43,4 +46,6 @@ def slack_ai(message):
 
     data = {"channel": f"{channel}", "text": f"{message}"}
     data = json.dumps(data)
-    requests.post(url=slack_url, data=data, headers=headers)
+    response = requests.post(url=slack_url, data=data, headers=headers)
+    if not response.ok:
+        logger.error(f"Slack request failed: {response.status_code}, {response.text}")

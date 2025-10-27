@@ -291,6 +291,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 self.ai_socket = await self.connect_to_ai()
                 if not self.ai_socket or not self.ai_socket.open:
                     logger.error("Failed to reconnect to AI socket")
+                    slack.slack_ai(
+                        f"[ WEBSOCKET error ] connection failed while attempt to AI socket"
+                    )
                     return
 
             data = await self.prepare_data(comment)

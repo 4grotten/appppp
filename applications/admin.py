@@ -87,4 +87,4 @@ class UserAppBalanceAdmin(admin.ModelAdmin):
 @admin.register(SystemAccounts)
 class SystemAccountsAdmin(admin.ModelAdmin):
     list_display = ("username", "server")
-    search_fields = "username"
+    search_fields = ("username",)

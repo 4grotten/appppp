@@ -140,7 +140,10 @@ from .views.subscription_views import (
     OrgBlockedUsersListAPIView,
     OrgBlockedDetailsAPIView,
 )
-from .views.organization_tariff import OrganizationTariffInvoiceAPIView
+from .views.organization_tariff import (
+    OrganizationTariffInvoiceAPIView,
+    OrganizationGetInvoiceAPIView,
+)
 
 router = DefaultRouter()
 router.register("services", ServiceReadOnlySet)
@@ -499,6 +502,11 @@ organization_urls = [
         "organizations/tariff/invoice/",
         OrganizationTariffInvoiceAPIView.as_view(),
         name="organization-tariff-invoice",
+    ),
+    path(
+        "organizations/<slug:invoice_number>/invoice",
+        OrganizationGetInvoiceAPIView.as_view(),
+        name="organization-get-invoice-by-invoice-number",
     ),
     path(
         "organizations/subscription/purchase/",

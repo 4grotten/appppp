@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from organizations.models import Invoice
 
 
 class InvoiceForOwnerSerializer(serializers.Serializer):
@@ -38,3 +39,9 @@ class InvoiceCreateSerializer(serializers.Serializer):
         nested_serializer.is_valid(raise_exception=True)
         attrs["data"] = nested_serializer.validated_data
         return attrs
+
+
+class InvoiceModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = "__all__"

@@ -1,7 +1,10 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from organizations.services.invoice_service import OrganizationInvoiceService
-from organizations.serializers.invoice_serializers import InvoiceCreateSerializer
+from organizations.serializers.invoice_serializers import (
+    InvoiceCreateSerializer,
+    InvoiceModelSerializer,
+)
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -18,4 +21,25 @@ class OrganizationTariffInvoiceAPIView(generics.GenericAPIView):
         data = self.service_class.create_invoice(
             **serializer.validated_data, user=request.user
         )
-        return Response(data={"message": "successfully created invoice"}, status=200)
+        return Response(
+            data={"message": "successfully created invoice", "invoice_number": data},
+            status=200,
+        )
+
+
+class OrganizationGetInvoiceAPIView(generics.GenericAPIView):
+    serializer_class = InvoiceModelSerializer
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        invoice_number = kwargs.get("invoice_number", None)
+        if not invoice_number:
+            raise ValueError()
+
+        data = self.service_class.get_invoice_by_invoice_number(invoice_number)
+
+        serializer = self.serializer_class(data=data)
+        return Response(data=data, status=200)

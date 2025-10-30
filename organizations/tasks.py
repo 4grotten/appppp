@@ -11,6 +11,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Subquery, Q
 from django.utils.timezone import now
+from django.utils.dateparse import parse_datetime
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
@@ -47,17 +48,26 @@ def parse_instagram_to_shop_items(
         anonymous=anonymous,
     )
     for instagram in instagram_posts:
-        if not ShopItem.objects.filter(
-            created_at=instagram.get("created_at"), organization=organization
-        ):
+        print(instagram)
+        post_date = instagram.get("created_at")
+
+        if isinstance(post_date, (int, float)):
+            post_date = datetime.fromtimestamp(post_date)
+
+        elif isinstance(post_date, str):
+            post_date = parse_datetime(post_date)
+
+        if not post_date:
+            post_date = datetime.now()
+
+        if not ShopItem.objects.filter(created_at=post_date, organization=organization):
             description = instagram.pop("description")
-            created_at = instagram.pop("created_at")
             post_url = instagram.pop("post_url")
             shop_item = ShopItem.objects.create(
                 name="Instagram",
                 organization=organization,
-                created_at=created_at,
-                updated_at=created_at,
+                created_at=post_date,
+                updated_at=post_date,
                 description=description,
                 instagram_link=post_url,
             )

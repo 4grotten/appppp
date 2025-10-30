@@ -46,7 +46,6 @@ def parse_instagram_to_shop_items(
         posts_count=posts_count,
         anonymous=anonymous,
     )
-    print(instagram_posts.json())
     for instagram in instagram_posts:
         if not ShopItem.objects.filter(
             created_at=instagram.get("created_at"), organization=organization

@@ -58,3 +58,12 @@ class SubcategoryExist(APIException):
         "detail": _("Please make sure that subcategory with this name not exists"),
         "code": "A2",
     }
+
+
+class InvoiceInfoDoesNotExists(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = {
+        "message": _("Invoice info for this country does not exists"),
+        "detail": _("Please make sure that invoice info for this country exists"),
+        "code": "A3",
+    }

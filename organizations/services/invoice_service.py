@@ -151,7 +151,11 @@ class OrganizationInvoiceService:
 
     @classmethod
     def get_invoice_by_invoice_number(cls, invoice_number: str) -> Union[Invoice, None]:
-        qs = Invoice.objects.filter(invoice_number=invoice_number).first()
+        qs = (
+            Invoice.objects.filter(invoice_number=invoice_number)
+            .select_related("user", "organization_info", "subscription", "tariff")
+            .first()
+        )
         print(qs)
 
         return qs

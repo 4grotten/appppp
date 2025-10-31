@@ -8,14 +8,14 @@ MAX_ORGANIZATIONS_PER_USER = 3
 
 INSTAGRAM_POSTS_TO_PARSE = 100
 
-HOTLINK_URL = 'link'
-HOTLINK_CONTACT = 'contact'
-HOTLINK_COLLECTION = 'collection'
-HOTLINK_PARTNERS = 'partners'
+HOTLINK_URL = "link"
+HOTLINK_CONTACT = "contact"
+HOTLINK_COLLECTION = "collection"
+HOTLINK_PARTNERS = "partners"
 
-HOTLINK_URL_EXTERNAL = 'external'
-HOTLINK_URL_ITEM = 'item'
-HOTLINK_URL_ORGANIZATION = 'organization'
+HOTLINK_URL_EXTERNAL = "external"
+HOTLINK_URL_ITEM = "item"
+HOTLINK_URL_ORGANIZATION = "organization"
 
 HOTLINK_TYPES = (
     (HOTLINK_URL, HOTLINK_URL),
@@ -24,7 +24,13 @@ HOTLINK_TYPES = (
     (HOTLINK_PARTNERS, HOTLINK_PARTNERS),
 )
 
-HOTLINK_INTERNAL_LINK_DOMAINS = ('apofiz.com', 'www.apofiz.com', 'test.apofiz.com', 'www.test.apofiz.com', 'test2.apofiz.com')
+HOTLINK_INTERNAL_LINK_DOMAINS = (
+    "apofiz.com",
+    "www.apofiz.com",
+    "test.apofiz.com",
+    "www.test.apofiz.com",
+    "test2.apofiz.com",
+)
 
 
 VERIFIED = "verified"
@@ -33,17 +39,13 @@ UNDER_REVIEW = "under_review"
 VERIFICATIONS_STATUS = (
     (VERIFIED, VERIFIED),
     (NOT_VERIFIED, NOT_VERIFIED),
-    (UNDER_REVIEW, UNDER_REVIEW)
+    (UNDER_REVIEW, UNDER_REVIEW),
 )
 
 ACTIVE = "active"
 CANCELLED = "cancelled"
 TEST = "test"
-SUBSCRIPTION_STATUS = (
-    (ACTIVE, ACTIVE),
-    (CANCELLED, CANCELLED),
-    (TEST, TEST)
-)
+SUBSCRIPTION_STATUS = ((ACTIVE, ACTIVE), (CANCELLED, CANCELLED), (TEST, TEST))
 
 CARDS = "cards"
 WEB = "web"

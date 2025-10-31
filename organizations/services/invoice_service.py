@@ -1,10 +1,12 @@
 from organizations.models import RegionalTariff, Invoice
 from organizations.models import OrganizationInvoiceInfo, Organization
 from organizations.tasks import create_invoice_pdf
+from common.exceptions import InvoiceInfoDoesNotExists
 from django.forms.models import model_to_dict
 from users.models import User
 from decimal import Decimal
 import os
+from typing import Union
 from django.conf import settings
 
 
@@ -13,8 +15,10 @@ class InvoiceDataService:
 
     @staticmethod
     def get_country_invoice_data(tariff: RegionalTariff) -> dict:
-
-        invoice_info = tariff.country.invoice_info
+        try:
+            invoice_info = tariff.country.invoice_info
+        except Exception as e:
+            raise InvoiceInfoDoesNotExists
 
         data = {
             "name": invoice_info.name,
@@ -68,7 +72,7 @@ class OrganizationInvoiceService:
         organization: int,
         payment_method: str,
         user: User,
-    ) -> None:
+    ):
         if not invoice_type:
             raise ValueError("Invoice type is required")
         data["organization"] = Organization.objects.get(id=organization)
@@ -92,6 +96,8 @@ class OrganizationInvoiceService:
             invoice.invoice_number,
             context,
         )
+
+        return invoice.invoice_number
 
     @staticmethod
     def _create_invoice_object(
@@ -142,3 +148,12 @@ class OrganizationInvoiceService:
         }
 
         return context
+
+    @classmethod
+    def get_invoice_by_invoice_number(cls, invoice_number: str) -> Union[Invoice, None]:
+        qs = (
+            Invoice.objects.filter(invoice_number=invoice_number)
+            .select_related("user", "organization_info", "subscription", "tariff")
+            .first()
+        )
+        return qs

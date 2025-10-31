@@ -489,6 +489,10 @@ CRYPTOCLOUD_SHOP_ID = config("CRYPTOCLOUD_SHOP_ID", default="notasecret")
 PIGGYPAY_API_KEY = config("PIGGYPAY_API_KEY", default="notasecret")
 
 if DEBUG:
-    PORTAINER_URL = config("PORTAINER_TEST_URL")
+    PORTAINER_URL = config(
+        "PORTAINER_TEST_URL", default="https://docs.portainer.io/user/docker/templates"
+    )
 else:
-    PORTAINER_URL = config("PORTAINER_URL")
+    PORTAINER_URL = config(
+        "PORTAINER_URL", default="https://docs.portainer.io/user/docker/templates"
+    )

@@ -38,7 +38,7 @@ class CorsView(View):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         proxy_list = ProxyService.get_random_proxy_for_requests()
-        logger.debug(f"[ LOG ] got an proxies: {proxy_list}")
+        print(f"[ LOG ] got an proxies: {proxy_list}")
         proxy = proxy_list[0] if proxy_list else {}
         try:
             # Send the URL and Proxy to the second server

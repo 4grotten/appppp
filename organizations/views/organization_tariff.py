@@ -43,4 +43,4 @@ class OrganizationGetInvoiceAPIView(generics.GenericAPIView):
 
         serializer = self.serializer_class(data=data)
         serializer.is_valid()
-        return Response(data=serializer.validated_data, status=200)
+        return Response(data=serializer.data, status=200)

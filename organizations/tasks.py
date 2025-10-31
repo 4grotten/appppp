@@ -48,7 +48,6 @@ def parse_instagram_to_shop_items(
         anonymous=anonymous,
     )
     for instagram in instagram_posts:
-        print(instagram)
         post_date = instagram.get("created_at")
 
         if isinstance(post_date, (int, float)):
@@ -338,7 +337,6 @@ def update_posts():
         total_updated += count
 
     logger.info(f"Total_updated {total_updated} random shop items")
-    print(f"Total_updated {total_updated} random shop items")
 
 
 @shared_task

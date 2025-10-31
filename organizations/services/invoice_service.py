@@ -156,6 +156,4 @@ class OrganizationInvoiceService:
             .select_related("user", "organization_info", "subscription", "tariff")
             .first()
         )
-        print(qs)
-
         return qs

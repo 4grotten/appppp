@@ -35,6 +35,12 @@
             padding: 15px;
             text-transform: uppercase;
         }
+
+        .logo-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
         
         .invoice-title {
             font-size: 32px;
@@ -191,7 +197,9 @@
 <body>
     <div class="invoice-container">
         <div class="invoice-header">
+            <div class="logo-wrapper">
             <img src="{{ logo_path }}" alt="" style="width: auto; height: 30px;">
+            </div>
             <p><strong style="font-size: 16px;">{{ title }}</strong></p>
         </div>
         <div class="invoice-info">

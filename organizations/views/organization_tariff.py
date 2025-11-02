@@ -4,6 +4,7 @@ from organizations.services.invoice_service import OrganizationInvoiceService
 from organizations.serializers.invoice_serializers import (
     InvoiceCreateSerializer,
     InvoiceModelSerializer,
+    InvoiceInformationListSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 
@@ -43,3 +44,17 @@ class OrganizationGetInvoiceAPIView(generics.GenericAPIView):
 
         serializer = self.serializer_class(instance=data)
         return Response(serializer.data, status=200)
+
+
+class OrganizationGetInvoiceInformationAPIView(generics.GenericAPIView):
+    serializer_class = InvoiceInformationListSerializer
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        org_id = kwargs.get("pk")
+        qs = self.service_class.get_invoice_information(org_id, self.request.user)
+        data = self.serializer_class(instance=qs, many=True)
+        return Response(data=data, status=200)

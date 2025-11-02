@@ -58,5 +58,5 @@ class InvoiceInformationSerializer(serializers.Serializer):
     country = serializers.CharField()
     city = serializers.CharField()
     email = serializers.EmailField()
-    company_name = serializers.CharField(blank=True)
-    tax_id = serializers.CharField(blank=True)
+    company_name = serializers.CharField()
+    tax_id = serializers.CharField()

@@ -172,7 +172,7 @@ class OrganizationInvoiceService:
         return qs
 
     @classmethod
-    def get_invoice_information(cls, organization_id: int, user: User):
+    def get_invoice_informations_list(cls, organization_id: int, user: User):
         if (
             not Organization.objects.filter(id=organization_id)
             .filter(Q(owner=user) | Q(memberships__user=user))
@@ -184,5 +184,20 @@ class OrganizationInvoiceService:
         information_qs = OrganizationInvoiceInfo.objects.filter(
             organization_id=organization_id
         )
+
+        return information_qs
+
+    @classmethod
+    def get_invoice_information(cls, user, info_id):
+        if (
+            not Organization.objects.filter(invoice_info__id=info_id)
+            .filter(Q(owner=user) | Q(memberships__user=user))
+            .exists()
+        ):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        information_qs = OrganizationInvoiceInfo.objects.get(pk=info_id)
 
         return information_qs

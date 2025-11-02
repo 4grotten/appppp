@@ -50,3 +50,13 @@ class InvoiceModelSerializer(serializers.ModelSerializer):
 class InvoiceInformationListSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     full_name = serializers.CharField()
+
+
+class InvoiceInformationSerializer(serializers.Serializer):
+    full_name = serializers.CharField()
+    address = serializers.CharField()
+    country = serializers.CharField()
+    city = serializers.CharField()
+    email = serializers.EmailField()
+    company_name = serializers.CharField(null=True, blank=True)
+    tax_id = serializers.CharField(null=True, blank=True)

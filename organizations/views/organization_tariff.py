@@ -56,5 +56,5 @@ class OrganizationGetInvoiceInformationAPIView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         org_id = kwargs.get("pk")
         qs = self.service_class.get_invoice_information(org_id, self.request.user)
-        data = self.serializer_class(instance=qs, many=True)
-        return Response(data=data, status=200)
+        serializer = self.serializer_class(instance=qs, many=True)
+        return Response(data=serializer.data, status=200)

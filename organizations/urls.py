@@ -143,6 +143,7 @@ from .views.subscription_views import (
 from .views.organization_tariff import (
     OrganizationTariffInvoiceAPIView,
     OrganizationGetInvoiceAPIView,
+    OrganizationGetInvoiceInformationListAPIView,
     OrganizationGetInvoiceInformationAPIView,
 )
 
@@ -521,8 +522,13 @@ organization_urls = [
     ),
     path(
         "organizations/<int:pk>/invoice/informations",
-        OrganizationGetInvoiceInformationAPIView.as_view(),
+        OrganizationGetInvoiceInformationListAPIView.as_view(),
         name="get organization user informations",
+    ),
+    path(
+        "invoice/information/<int:pk>/",
+        OrganizationGetInvoiceInformationAPIView.as_view(),
+        name="get-information-detail-view",
     ),
 ]
 

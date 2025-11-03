@@ -67,6 +67,17 @@ class InvoiceDataService:
 class OrganizationInvoiceService:
 
     @classmethod
+    def _user_permission(cls, user, organization_id):
+        if (
+            not Organization.objects.filter(id=organization_id)
+            .filter(Q(owner=user) | Q(memberships__user=user))
+            .exists()
+        ):
+            return True
+        else:
+            return False
+
+    @classmethod
     def create_invoice(
         cls,
         invoice_type: str,
@@ -79,11 +90,7 @@ class OrganizationInvoiceService:
         if not invoice_type:
             raise ValueError("Invoice type is required")
 
-        if (
-            not Organization.objects.filter(id=organization)
-            .filter(Q(owner=user) | Q(memberships__user=user))
-            .exists()
-        ):
+        if not cls._user_permission(user, organization):
             raise PermissionDenied(
                 {"message": _("You are not an memberships of this organization")}
             )
@@ -172,18 +179,22 @@ class OrganizationInvoiceService:
         return qs
 
     @classmethod
-    def get_invoice_informations_list(cls, organization_id: int, user: User):
-        if (
-            not Organization.objects.filter(id=organization_id)
-            .filter(Q(owner=user) | Q(memberships__user=user))
-            .exists()
-        ):
+    def get_invoice_informations_list(cls, organization_id: int, user: User, info_type):
+        if not cls._user_permission(user, organization_id):
             raise PermissionDenied(
                 {"message": _("You are not an memberships of this organization")}
             )
-        information_qs = OrganizationInvoiceInfo.objects.filter(
-            organization_id=organization_id
-        )
+        if info_type.lower() == "owner":
+            information_qs = OrganizationInvoiceInfo.objects.filter(
+                organization_id=organization_id, company_name__isnull=True
+            )
+        elif info_type.lower() == "company":
+            information_qs = OrganizationInvoiceInfo.objects.filter(
+                organization_id=organization_id, company_name__isnull=False
+            ).exclude(company_name="")
+
+        else:
+            raise ValueError("You need to choose true type of invoice information")
 
         return information_qs
 
@@ -201,3 +212,33 @@ class OrganizationInvoiceService:
         information_qs = OrganizationInvoiceInfo.objects.get(pk=info_id)
 
         return information_qs
+
+    @classmethod
+    def get_invoice_list(cls, user, organization_id):
+        if not cls._user_permission(user, organization_id):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        qs = Invoice.objects.filter(
+            organization_info__organization_id=organization_id
+        ).exclude(receipt_pdf__isnull=False)
+
+        return qs
+
+    @classmethod
+    def get_invoice(cls, user, invoice_id): ...
+
+    @classmethod
+    def get_receipt_list(cls, user, organization_id):
+        if not cls._user_permission(user, organization_id):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        qs = Invoice.objects.filter(
+            organization_info__organization_id=organization_id,
+            receipt_pdf__isnull=False,
+        ).exclude(receipt_pdf="")
+
+        return qs

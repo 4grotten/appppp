@@ -1,5 +1,9 @@
 from organizations.models import RegionalTariff, Invoice
-from organizations.models import OrganizationInvoiceInfo, Organization
+from organizations.models import (
+    OrganizationInvoiceInfo,
+    Organization,
+    UserOrgSubscription,
+)
 from organizations.tasks import create_invoice_pdf
 from common.exceptions import InvoiceInfoDoesNotExists
 from rest_framework.exceptions import PermissionDenied
@@ -68,14 +72,11 @@ class OrganizationInvoiceService:
 
     @classmethod
     def _user_permission(cls, user, organization_id):
-        if (
-            not Organization.objects.filter(id=organization_id)
+        return (
+            Organization.objects.filter(id=organization_id)
             .filter(Q(owner=user) | Q(memberships__user=user))
             .exists()
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def create_invoice(
@@ -240,5 +241,13 @@ class OrganizationInvoiceService:
             organization_info__organization_id=organization_id,
             receipt_pdf__isnull=False,
         ).exclude(receipt_pdf="")
+
+        return qs
+
+    @classmethod
+    def get_active_tariff(cls, organization_id):
+        qs = UserOrgSubscription.objects.filter(
+            organization_id=organization_id, is_active=True
+        ).select_related("tariff")
 
         return qs

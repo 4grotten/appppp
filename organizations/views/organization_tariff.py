@@ -8,6 +8,7 @@ from organizations.serializers.invoice_serializers import (
     InvoiceInformationSerializer,
     InvoiceListSerializer,
     ReceiptListSerializer,
+    ActiveTariffSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 
@@ -115,5 +116,22 @@ class OrganizationReceiptListAPIView(generics.GenericAPIView):
         qs = self.service_class.get_receipt_list(request.user, org_id)
 
         serializer = self.serializer_class(instance=qs, many=True)
+
+        return Response(serializer.data, status=200)
+
+
+class OrganizationActiveTariffAPIView(generics.GenericAPIView):
+    serializer_class = ActiveTariffSerializer
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+
+        qs = self.service_class.get_active_tariff(pk)
+
+        serializer = self.serializer_class(instance=qs)
 
         return Response(serializer.data, status=200)

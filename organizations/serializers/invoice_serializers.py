@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from organizations.models import Invoice
+from organizations.models import Invoice, RegionalTariff
 
 
 class InvoiceForOwnerSerializer(serializers.Serializer):
@@ -78,3 +78,15 @@ class ReceiptListSerializer(serializers.Serializer):
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
+
+
+class RegionalTariffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegionalTariff
+        fields = ["tariff_type", "original_price", "duration_months"]
+
+
+class ActiveTariffSerializer(serializers.Serializer):
+    tariff = RegionalTariffSerializer()
+    is_active = serializers.BooleanField()
+    active_until = serializers.DateTimeField()

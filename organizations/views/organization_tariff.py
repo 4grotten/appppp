@@ -6,6 +6,8 @@ from organizations.serializers.invoice_serializers import (
     InvoiceModelSerializer,
     InvoiceInformationListSerializer,
     InvoiceInformationSerializer,
+    InvoiceListSerializer,
+    ReceiptListSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 
@@ -56,7 +58,12 @@ class OrganizationGetInvoiceInformationListAPIView(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         org_id = kwargs.get("pk")
-        qs = self.service_class.get_invoice_informations_list(org_id, self.request.user)
+        info_type = self.request.query_params.get("type")
+        if not info_type:
+            raise ValueError("type parameter is required!")
+        qs = self.service_class.get_invoice_informations_list(
+            org_id, self.request.user, info_type
+        )
         serializer = self.serializer_class(instance=qs, many=True)
         return Response(data=serializer.data, status=200)
 
@@ -77,3 +84,36 @@ class OrganizationGetInvoiceInformationAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(instance=qs)
 
         return Response(data=serializer.data, status=200)
+
+
+class OrganizationInvoiceListAPIView(generics.GenericAPIView):
+    serializer_class = InvoiceListSerializer
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        org_id = kwargs.get("pk")
+
+        qs = self.service_class.get_invoice_list(request.user, org_id)
+        serializer = self.serializer_class(instance=qs, many=True)
+
+        return Response(data=serializer.data, status=200)
+
+
+class OrganizationReceiptListAPIView(generics.GenericAPIView):
+    serializer_class = ReceiptListSerializer
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        org_id = kwargs.get("pk")
+
+        qs = self.service_class.get_receipt_list(request.user, org_id)
+
+        serializer = self.serializer_class(instance=qs, many=True)
+
+        return Response(serializer.data, status=200)

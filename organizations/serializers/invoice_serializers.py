@@ -60,3 +60,21 @@ class InvoiceInformationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     company_name = serializers.CharField()
     tax_id = serializers.CharField()
+
+
+class InvoiceListSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    invoice_number = serializers.CharField()
+    invoice_pdf = serializers.URLField()
+    invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = serializers.CharField()
+
+
+class ReceiptListSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    invoice_number = serializers.CharField()
+    receipt_pdf = serializers.URLField()
+    invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = serializers.CharField()

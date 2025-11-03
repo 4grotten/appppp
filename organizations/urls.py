@@ -145,6 +145,8 @@ from .views.organization_tariff import (
     OrganizationGetInvoiceAPIView,
     OrganizationGetInvoiceInformationListAPIView,
     OrganizationGetInvoiceInformationAPIView,
+    OrganizationInvoiceListAPIView,
+    OrganizationReceiptListAPIView,
 )
 
 router = DefaultRouter()
@@ -521,7 +523,7 @@ organization_urls = [
         name="org_pin_for_user",
     ),
     path(
-        "organizations/<int:pk>/invoice/informations",
+        "organizations/<int:pk>/invoice/informations/",
         OrganizationGetInvoiceInformationListAPIView.as_view(),
         name="get organization user informations",
     ),
@@ -529,6 +531,16 @@ organization_urls = [
         "invoice/information/<int:pk>/",
         OrganizationGetInvoiceInformationAPIView.as_view(),
         name="get-information-detail-view",
+    ),
+    path(
+        "organization/<int:pk>/invoice/list/",
+        OrganizationInvoiceListAPIView.as_view(),
+        name="get-list-of-invoices",
+    ),
+    path(
+        "organization/<int:pk>/receipt/list/",
+        OrganizationReceiptListAPIView.as_view(),
+        name="get-list-of-receipts",
     ),
 ]
 

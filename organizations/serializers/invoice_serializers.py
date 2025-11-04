@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from organizations.models import Invoice, RegionalTariff
-import boto3
-from django.conf import settings
+from organizations.utils import create_download_url
 
 
 class InvoiceForOwnerSerializer(serializers.Serializer):
@@ -49,25 +48,9 @@ class InvoiceModelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def to_representation(self, instance):
-        s3 = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_S3_REGION_NAME,
-        )
-        file_key = str(instance.invoice_pdf)
-        url = s3.generate_presigned_url(
-            ClientMethod="get_object",
-            Params={
-                "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-                "Key": file_key,
-                "ResponseContentDisposition": f'attachment; filename="{file_key.split("/")[-1]}"',
-            },
-            ExpiresIn=3600,
-        )
-
+        url = create_download_url(instance.invoice_pdf)
         data = super().to_representation(instance)
-        data["invoice_pdf"] = url
+        data["invoice_download"] = url
 
         return data
 
@@ -95,6 +78,13 @@ class InvoiceListSerializer(serializers.Serializer):
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
 
+    def to_representation(self, instance):
+        url = create_download_url(instance.invoice_pdf)
+        data = super().to_representation(instance)
+        data["invoice_download"] = url
+
+        return data
+
 
 class ReceiptListSerializer(serializers.Serializer):
     code = serializers.CharField()
@@ -103,6 +93,13 @@ class ReceiptListSerializer(serializers.Serializer):
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
+
+    def to_representation(self, instance):
+        url = create_download_url(instance.invoice_pdf)
+        data = super().to_representation(instance)
+        data["receipt_download"] = url
+
+        return data
 
 
 class RegionalTariffSerializer(serializers.ModelSerializer):

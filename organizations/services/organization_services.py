@@ -1518,6 +1518,8 @@ class OrganizationJSONService:
             q_filter &= Q(city=city)
         if country:
             q_filter &= Q(country=country)
+            if country.is_paid_subscription:
+                q_filter &= ~Q(org_subscription__isnull=False)
         if partner:
             q_filter &= Q(id__in=OrganizationService.get_organization_partners(partner))
         data = cls.get_organizations()

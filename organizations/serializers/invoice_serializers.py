@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from organizations.models import Invoice, RegionalTariff
+import boto3
+from django.conf import settings
 
 
 class InvoiceForOwnerSerializer(serializers.Serializer):
@@ -45,6 +47,29 @@ class InvoiceModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = "__all__"
+
+    def to_representation(self, instance):
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME,
+        )
+        file_key = str(instance.invoice_pdf)
+        url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={
+                "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                "key": file_key,
+                "ResponseContentDisposition": f'attachment; filename="{file_key.split("/")[-1]}"',
+            },
+            ExpiresIn=3600,
+        )
+
+        data = super().to_representation(instance)
+        data["invoice_pdf"] = url
+
+        return data
 
 
 class InvoiceInformationListSerializer(serializers.Serializer):

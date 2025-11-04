@@ -1,8 +1,15 @@
 from organizations.models import RegionalTariff, Invoice
-from organizations.models import OrganizationInvoiceInfo, Organization
+from organizations.models import (
+    OrganizationInvoiceInfo,
+    Organization,
+    UserOrgSubscription,
+)
 from organizations.tasks import create_invoice_pdf
 from common.exceptions import InvoiceInfoDoesNotExists
+from rest_framework.exceptions import PermissionDenied
+from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
+from django.db.models import Q
 from users.models import User
 from decimal import Decimal
 import os
@@ -64,6 +71,14 @@ class InvoiceDataService:
 class OrganizationInvoiceService:
 
     @classmethod
+    def _user_permission(cls, user, organization_id):
+        return (
+            Organization.objects.filter(id=organization_id)
+            .filter(Q(owner=user) | Q(memberships__user=user))
+            .exists()
+        )
+
+    @classmethod
     def create_invoice(
         cls,
         invoice_type: str,
@@ -75,7 +90,13 @@ class OrganizationInvoiceService:
     ):
         if not invoice_type:
             raise ValueError("Invoice type is required")
+
+        if not cls._user_permission(user, organization):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
         data["organization"] = Organization.objects.get(id=organization)
+
         tariff = InvoiceDataService.get_tariff(tariff_id)
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
         data = cls.get_or_create_info(data)
@@ -102,7 +123,7 @@ class OrganizationInvoiceService:
     @staticmethod
     def _create_invoice_object(
         code: str,
-        org_info: OrganizationInvoiceInfo,
+        org_info: Union[OrganizationInvoiceInfo, None],
         amount: Decimal,
         tariff: RegionalTariff,
         tax_amount: Decimal,
@@ -156,4 +177,77 @@ class OrganizationInvoiceService:
             .select_related("user", "organization_info", "subscription", "tariff")
             .first()
         )
+        return qs
+
+    @classmethod
+    def get_invoice_informations_list(cls, organization_id: int, user: User, info_type):
+        if not cls._user_permission(user, organization_id):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+        if info_type.lower() == "owner":
+            information_qs = OrganizationInvoiceInfo.objects.filter(
+                organization_id=organization_id, company_name__isnull=True
+            )
+        elif info_type.lower() == "company":
+            information_qs = OrganizationInvoiceInfo.objects.filter(
+                organization_id=organization_id, company_name__isnull=False
+            ).exclude(company_name="")
+
+        else:
+            raise ValueError("You need to choose true type of invoice information")
+
+        return information_qs
+
+    @classmethod
+    def get_invoice_information(cls, user, info_id):
+        if (
+            not Organization.objects.filter(invoice_info__id=info_id)
+            .filter(Q(owner=user) | Q(memberships__user=user))
+            .exists()
+        ):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        information_qs = OrganizationInvoiceInfo.objects.get(pk=info_id)
+
+        return information_qs
+
+    @classmethod
+    def get_invoice_list(cls, user, organization_id):
+        if not cls._user_permission(user, organization_id):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        qs = Invoice.objects.filter(
+            organization_info__organization_id=organization_id
+        ).exclude(receipt_pdf__isnull=False)
+
+        return qs
+
+    @classmethod
+    def get_invoice(cls, user, invoice_id): ...
+
+    @classmethod
+    def get_receipt_list(cls, user, organization_id):
+        if not cls._user_permission(user, organization_id):
+            raise PermissionDenied(
+                {"message": _("You are not an memberships of this organization")}
+            )
+
+        qs = Invoice.objects.filter(
+            organization_info__organization_id=organization_id,
+            receipt_pdf__isnull=False,
+        ).exclude(receipt_pdf="")
+
+        return qs
+
+    @classmethod
+    def get_active_tariff(cls, organization_id):
+        qs = UserOrgSubscription.objects.filter(
+            organization_id=organization_id, is_active=True
+        ).select_related("tariff")
+
         return qs

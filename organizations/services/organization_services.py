@@ -994,12 +994,23 @@ class OrganizationService:
         if service.is_verified:
             base_filters &= Q(verification_status=VERIFIED)
 
+        if country.is_paid_subscription:
+            base_filters &= ~Q(org_subsrciption__isnull=False)
+
         if service.is_wholesale:
             base_filters &= Q(is_wholesale=True)
         else:
             base_filters &= Q(has_license=service.has_license)
 
-        queryset = Organization.objects.filter(base_filters).distinct()
+        queryset = (
+            Organization.objects.filter(base_filters)
+            .select_related(
+                "organizations",
+                "currency",
+            )
+            .prefetch_related("types")
+            .distinct()
+        )
 
         queryset = cls._filter_by_country_and_city(queryset, country, city)
 

@@ -1005,7 +1005,7 @@ class OrganizationService:
         queryset = (
             Organization.objects.filter(base_filters)
             .select_related(
-                "organizations",
+                "image",
                 "currency",
             )
             .prefetch_related("types")

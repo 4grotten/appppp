@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from organizations.models import Invoice
+from organizations.models import Invoice, RegionalTariff
+from organizations.utils import create_download_url
 
 
 class InvoiceForOwnerSerializer(serializers.Serializer):
@@ -45,3 +46,69 @@ class InvoiceModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = "__all__"
+
+    def to_representation(self, instance):
+        url = create_download_url(instance.invoice_pdf)
+        data = super().to_representation(instance)
+        data["invoice_download"] = url
+
+        return data
+
+
+class InvoiceInformationListSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    full_name = serializers.CharField()
+
+
+class InvoiceInformationSerializer(serializers.Serializer):
+    full_name = serializers.CharField()
+    address = serializers.CharField()
+    country = serializers.CharField()
+    city = serializers.CharField()
+    email = serializers.EmailField()
+    company_name = serializers.CharField()
+    tax_id = serializers.CharField()
+
+
+class InvoiceListSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    invoice_number = serializers.CharField()
+    invoice_pdf = serializers.URLField()
+    invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = serializers.CharField()
+
+    def to_representation(self, instance):
+        url = create_download_url(instance.invoice_pdf)
+        data = super().to_representation(instance)
+        data["invoice_download"] = url
+
+        return data
+
+
+class ReceiptListSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    invoice_number = serializers.CharField()
+    receipt_pdf = serializers.URLField()
+    invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = serializers.CharField()
+
+    def to_representation(self, instance):
+        url = create_download_url(instance.invoice_pdf)
+        data = super().to_representation(instance)
+        data["receipt_download"] = url
+
+        return data
+
+
+class RegionalTariffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegionalTariff
+        fields = ["tariff_type", "original_price", "duration_months"]
+
+
+class ActiveTariffSerializer(serializers.Serializer):
+    tariff = RegionalTariffSerializer()
+    is_active = serializers.BooleanField()
+    active_until = serializers.DateTimeField()

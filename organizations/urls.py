@@ -143,6 +143,11 @@ from .views.subscription_views import (
 from .views.organization_tariff import (
     OrganizationTariffInvoiceAPIView,
     OrganizationGetInvoiceAPIView,
+    OrganizationGetInvoiceInformationListAPIView,
+    OrganizationGetInvoiceInformationAPIView,
+    OrganizationInvoiceListAPIView,
+    OrganizationReceiptListAPIView,
+    OrganizationActiveTariffAPIView,
 )
 
 router = DefaultRouter()
@@ -517,6 +522,31 @@ organization_urls = [
         "organizations/<int:pk>/pinn/",
         PinnOrganizationView.as_view(),
         name="org_pin_for_user",
+    ),
+    path(
+        "organizations/<int:pk>/invoice/informations/",
+        OrganizationGetInvoiceInformationListAPIView.as_view(),
+        name="get organization user informations",
+    ),
+    path(
+        "invoice/information/<int:pk>/",
+        OrganizationGetInvoiceInformationAPIView.as_view(),
+        name="get-information-detail-view",
+    ),
+    path(
+        "organization/<int:pk>/invoice/list/",
+        OrganizationInvoiceListAPIView.as_view(),
+        name="get-list-of-invoices",
+    ),
+    path(
+        "organization/<int:pk>/receipt/list/",
+        OrganizationReceiptListAPIView.as_view(),
+        name="get-list-of-receipts",
+    ),
+    path(
+        "organization/<int:pk>/active-tariff/",
+        OrganizationActiveTariffAPIView.as_view(),
+        name="get-org-active-tariff",
     ),
 ]
 

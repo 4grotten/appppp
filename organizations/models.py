@@ -2,7 +2,6 @@ from decimal import Decimal
 import json
 from pathlib import Path
 from django.conf import settings
-from typing import Iterable
 from django.utils import timezone
 from datetime import timedelta
 from urllib.parse import urlparse
@@ -1327,7 +1326,7 @@ class CouponUsage(TimestampModel):
 
 
 class OrganizationInvoiceInfo(TimestampModel):
-    organization = models.OneToOneField(
+    organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="invoice_info"
     )
     full_name = models.CharField(max_length=255)

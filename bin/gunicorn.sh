@@ -27,6 +27,7 @@ echo "Starting gunicorn"
 $(which gunicorn) project.wsgi \
     --workers $WORKERS_NUM \
     --bind 0.0.0.0:$PORT \
+    --reload \
     --chdir=/app \
     --timeout 600 \
     --worker-class gevent \
@@ -35,6 +36,5 @@ $(which gunicorn) project.wsgi \
     --max-requests-jitter 100 \
     --capture-output \
     --enable-stdio-inheritance \
-    --access-logfile - \
     --error-logfile -
 

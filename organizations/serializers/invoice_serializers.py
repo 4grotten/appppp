@@ -60,7 +60,7 @@ class InvoiceModelSerializer(serializers.ModelSerializer):
             ClientMethod="get_object",
             Params={
                 "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-                "key": file_key,
+                "Key": file_key,
                 "ResponseContentDisposition": f'attachment; filename="{file_key.split("/")[-1]}"',
             },
             ExpiresIn=3600,

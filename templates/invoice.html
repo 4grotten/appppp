@@ -225,12 +225,12 @@
                 <h3>Bill from</h3>
                 {% endif %}
                 <div class="info-content address-block">
-                    name:<strong>{{ country_data.name }}</strong><br>
-                    <p>address: {{ country_data.address }}</p>
-                    <p>country: {{ country_data.country }}</p>
-                    <p>city: {{ country_data.city }}</p>
-                    <p>email: {{ country_data.email }}</p>
-                    <p>tax n: {{ country_data.tax_id }}</p>
+                    Name: <strong>{{ country_data.name }}</strong><br>
+                    <p>Address: {{ country_data.address }}</p>
+                    <p>Country: {{ country_data.country }}</p>
+                    <p>City: {{ country_data.city }}</p>
+                    <p>Email: {{ country_data.email }}</p>
+                    <p>Tax No.: {{ country_data.tax_id }}</p>
                 </div>
                 {% if title == "invoice" %}
                 <h3 style="margin-top: 25px;">Invoice Details</h3>
@@ -258,10 +258,10 @@
                 <h3>Bill to</h3>
                 {% endif %}
                 <div class="info-content address-block">
-                    name: <strong>{{ data.full_name }}</strong><br>
+                    Name: <strong>{{ data.full_name }}</strong><br>
                     Street Address: {{ data.address }} <br>
-                    City: {{ data.city }} <br>
                     Country: {{ data.country }} <br>
+                    City: {{ data.city }} <br>
                     Email: {{ data.email }}
                 </div>
 
@@ -331,7 +331,7 @@
         <div class="payment-section">
             <div class="payment-method">
                 <div class="item-method">
-                    <h3>Payment method: </h3>
+                    <h3>Payment Method: </h3>
                     <h5 style="font-size: 16px;">{{ payment_method }}</h5>
                 </div>
                 {% if title == "receipt" %}

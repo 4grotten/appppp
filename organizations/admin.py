@@ -918,7 +918,7 @@ class UserOrgSubscriptionAdmin(admin.ModelAdmin):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     change_form_template = "admin/invoice_change_form.html"
-    readonly_fields = ["organization_info"]
+    raw_id_fields = ["organization_info", "user", "tariff", "subscription"]
 
     list_display = [
         "invoice_number",

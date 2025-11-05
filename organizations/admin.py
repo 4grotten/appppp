@@ -918,11 +918,18 @@ class UserOrgSubscriptionAdmin(admin.ModelAdmin):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     change_form_template = "admin/invoice_change_form.html"
+    raw_id_fields = ["organization_info", "user", "tariff", "subscription"]
 
     list_display = [
         "invoice_number",
         "invoice_pdf",
         "receipt_pdf",
+    ]
+
+    search_fields = [
+        "invoice_number",
+        "organization_info__organization__title",
+        "organization_info__organization__id",
     ]
 
     def get_urls(self):

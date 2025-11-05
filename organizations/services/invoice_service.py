@@ -241,8 +241,8 @@ class OrganizationInvoiceService:
 
         qs = Invoice.objects.filter(
             organization_info__organization_id=organization_id,
-            receipt_pdf__isnull=False,
-        ).exclude(receipt_pdf="")
+            receipt_pdf="",
+        )
 
         return qs
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from organizations.models import RegionalTariff, Invoice
 from organizations.models import (
     OrganizationInvoiceInfo,
@@ -6,6 +7,7 @@ from organizations.models import (
 )
 from organizations.tasks import create_invoice_pdf
 from common.exceptions import InvoiceInfoDoesNotExists
+from mailer.services import MailerService
 from rest_framework.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
@@ -222,8 +224,8 @@ class OrganizationInvoiceService:
             )
 
         qs = Invoice.objects.filter(
-            organization_info__organization_id=organization_id
-        ).exclude(receipt_pdf__isnull=False)
+            organization_info__organization_id=organization_id, receipt_pdf__isnull=True
+        )
 
         return qs
 
@@ -246,8 +248,23 @@ class OrganizationInvoiceService:
 
     @classmethod
     def get_active_tariff(cls, organization_id):
-        qs = UserOrgSubscription.objects.filter(
-            organization_id=organization_id, is_active=True
-        ).select_related("tariff")
+        qs = (
+            UserOrgSubscription.objects.filter(
+                organization_id=organization_id, is_active=True
+            )
+            .select_related("tariff")
+            .first()
+        )
 
         return qs
+
+    @staticmethod
+    def send_to_email(invoice_id):
+        invoice_qs = Invoice.objects.select_related("organization_info").get(
+            pk=invoice_id
+        )
+        invoice_url = invoice_qs.invoice_pdf
+        invoice_email = invoice_qs.organization_info.email
+        MailerService.send_invoice_url_email(invoice_email, invoice_url, datetime.now())
+
+        return {"message": "successfully sent"}

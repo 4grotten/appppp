@@ -28,7 +28,7 @@ class BaseEmailBuilder(ABC):
 
 
 class VerificaitonCodeEmailBuilder(BaseEmailBuilder):
-    TEMPLATE_NAME = 'temporary_code_email.html'
+    TEMPLATE_NAME = "temporary_code_email.html"
     FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
     @classmethod
@@ -43,7 +43,7 @@ class VerificaitonCodeEmailBuilder(BaseEmailBuilder):
         """
 
         context = {
-            'code': kwargs['code'],
+            "code": kwargs["code"],
         }
 
         body = cls._get_rendered_template(context)
@@ -52,14 +52,14 @@ class VerificaitonCodeEmailBuilder(BaseEmailBuilder):
             subject=VERIFICATION_CODE_EMAIL_TITLE,
             body=body,
             to=[email],
-            from_email=cls.FROM_EMAIL
+            from_email=cls.FROM_EMAIL,
         )
-        message.content_subtype = 'html'
+        message.content_subtype = "html"
         return message
 
 
 class ShadowBanEmailBuilder(BaseEmailBuilder):
-    TEMPLATE_NAME = 'email_shadow_ban.html'
+    TEMPLATE_NAME = "email_shadow_ban.html"
     FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
     @classmethod
@@ -69,30 +69,23 @@ class ShadowBanEmailBuilder(BaseEmailBuilder):
 
     @classmethod
     def build_message(cls, email: str, **kwargs) -> EmailMessage:
-
         """
         kwargs dict should contain "id" & "time" key
         """
 
-        context = {
-            'id': kwargs['org_id'],
-            'time': kwargs['send_time']
-        }
+        context = {"id": kwargs["org_id"], "time": kwargs["send_time"]}
 
         body = cls._get_rendered_template(context)
 
         message = EmailMessage(
-            subject='Теневой бан.',
-            body=body,
-            to=[email],
-            from_email=cls.FROM_EMAIL
+            subject="Теневой бан.", body=body, to=[email], from_email=cls.FROM_EMAIL
         )
-        message.content_subtype = 'html'
+        message.content_subtype = "html"
         return message
 
 
 class VerificationOrganizationsEmailBuilder(BaseEmailBuilder):
-    TEMPLATE_NAME = 'verifications_data.html'
+    TEMPLATE_NAME = "verifications_data.html"
     FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
     @classmethod
@@ -102,30 +95,26 @@ class VerificationOrganizationsEmailBuilder(BaseEmailBuilder):
 
     @classmethod
     def build_message(cls, email: str, **kwargs) -> EmailMessage:
-
         """
         kwargs dict should contain "id" & "time" key
         """
 
-        context = {
-            'id': kwargs['org_id'],
-            'time': kwargs['send_time']
-        }
+        context = {"id": kwargs["org_id"], "time": kwargs["send_time"]}
 
         body = cls._get_rendered_template(context)
 
         message = EmailMessage(
-            subject='Верификация организации',
+            subject="Верификация организации",
             body=body,
             to=[email],
-            from_email=cls.FROM_EMAIL
+            from_email=cls.FROM_EMAIL,
         )
-        message.content_subtype = 'html'
+        message.content_subtype = "html"
         return message
 
 
 class PaymentSystemOrganizationsEmailBuilder(BaseEmailBuilder):
-    TEMPLATE_NAME = 'payment_system_data.html'
+    TEMPLATE_NAME = "payment_system_data.html"
     FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
     @classmethod
@@ -135,31 +124,30 @@ class PaymentSystemOrganizationsEmailBuilder(BaseEmailBuilder):
 
     @classmethod
     def build_message(cls, email: str, **kwargs) -> EmailMessage:
-
         """
         kwargs dict should contain "id", "time" & "payment_system_name" key
         """
 
         context = {
-            'id': kwargs['org_id'],
-            'time': kwargs['send_time'],
-            'payment_system_name': kwargs['payment_system_name']
+            "id": kwargs["org_id"],
+            "time": kwargs["send_time"],
+            "payment_system_name": kwargs["payment_system_name"],
         }
 
         body = cls._get_rendered_template(context)
 
         message = EmailMessage(
-            subject='Запрос на подключение платежной системы',
+            subject="Запрос на подключение платежной системы",
             body=body,
             to=[email],
-            from_email=cls.FROM_EMAIL
+            from_email=cls.FROM_EMAIL,
         )
-        message.content_subtype = 'html'
+        message.content_subtype = "html"
         return message
 
 
 class WholesaleOrganizationsEmailBuilder(BaseEmailBuilder):
-    TEMPLATE_NAME = 'wholesale_organization.html'
+    TEMPLATE_NAME = "wholesale_organization.html"
     FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
     @classmethod
@@ -169,23 +157,48 @@ class WholesaleOrganizationsEmailBuilder(BaseEmailBuilder):
 
     @classmethod
     def build_message(cls, email: str, **kwargs) -> EmailMessage:
-
         """
         kwargs dict should contain "id", "time" key
         """
 
-        context = {
-            'id': kwargs['org_id'],
-            'time': kwargs['send_time']
-        }
+        context = {"id": kwargs["org_id"], "time": kwargs["send_time"]}
 
         body = cls._get_rendered_template(context)
 
         message = EmailMessage(
-            subject='Запрос на подключение оптовой организации',
+            subject="Запрос на подключение оптовой организации",
             body=body,
             to=[email],
-            from_email=cls.FROM_EMAIL
+            from_email=cls.FROM_EMAIL,
         )
-        message.content_subtype = 'html'
+        message.content_subtype = "html"
+        return message
+
+
+class InvoiceEmailBuilder(BaseEmailBuilder):
+    TEMPLATE_NAME = "send_invoice.html"
+    FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
+
+    @classmethod
+    def _get_rendered_template(cls, context: dict) -> Template:
+        template = loader.get_template(cls.TEMPLATE_NAME)
+        return template.render(context)
+
+    @classmethod
+    def build_message(cls, email: str, **kwargs) -> EmailMessage:
+        """
+        kwargs dict should contain "id" & "time" key
+        """
+
+        context = {"id": kwargs["invoice_url"], "time": kwargs["send_time"]}
+
+        body = cls._get_rendered_template(context)
+
+        message = EmailMessage(
+            subject="Invoice",
+            body=body,
+            to=[email],
+            from_email=cls.FROM_EMAIL,
+        )
+        message.content_subtype = "html"
         return message

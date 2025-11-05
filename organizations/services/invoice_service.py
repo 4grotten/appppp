@@ -248,9 +248,13 @@ class OrganizationInvoiceService:
 
     @classmethod
     def get_active_tariff(cls, organization_id):
-        qs = UserOrgSubscription.objects.filter(
-            organization_id=organization_id, is_active=True
-        ).select_related("tariff")
+        qs = (
+            UserOrgSubscription.objects.filter(
+                organization_id=organization_id, is_active=True
+            )
+            .select_related("tariff")
+            .first()
+        )
 
         return qs
 

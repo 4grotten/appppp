@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 from datetime import datetime
 
 from organizations.tasks import create_invoice_pdf
+from organizations.constants import SUBSCRIPTION_STATUS
 from django.shortcuts import redirect, render, get_object_or_404
 
 from common.utils import DecimalDecoder, DecimalEncoder
@@ -988,6 +989,9 @@ class InvoiceAdmin(admin.ModelAdmin):
             tariff=tariff,
             is_active=True,
         )
+        Organization.objects.filter(
+            pk=invoice_qs.organization_info.organization.pk
+        ).update(subscription_status=SUBSCRIPTION_STATUS[0])
         invoice_qs.subscription = subscription
         invoice_qs.save()
         create_invoice_pdf.delay(invoice_qs.invoice_number, context)

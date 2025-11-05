@@ -135,3 +135,18 @@ class OrganizationActiveTariffAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(instance=qs)
 
         return Response(serializer.data, status=200)
+
+
+class InvoiceSendToEmailAPIView(generics.GenericAPIView):
+    serializer_class = ...
+    service_class = OrganizationInvoiceService
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        invoice_id = kwargs.get("pk")
+
+        data = OrganizationInvoiceService.send_to_email(invoice_id)
+
+        return Response(data=data, status=200)

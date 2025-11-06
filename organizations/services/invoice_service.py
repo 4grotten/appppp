@@ -35,7 +35,7 @@ class InvoiceDataService:
             "city": invoice_info.city,
             "address": invoice_info.address,
             "email": invoice_info.email,
-            "price": tariff.original_price,
+            "price": tariff.total_price,
             "code": tariff.country.code,
             "currency": tariff.country.currency.code,
             "tariff": tariff.tariff_type,

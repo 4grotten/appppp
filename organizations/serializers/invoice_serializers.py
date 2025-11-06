@@ -114,6 +114,7 @@ class ReceiptListSerializer(serializers.Serializer):
     def to_representation(self, instance):
         url = create_download_url(instance.invoice_pdf)
         data = super().to_representation(instance)
+        data["tax_amount"] = CountryInvoiceInfo.objects.get(country=data["code"]).tax
         data["receipt_download"] = url
 
         return data

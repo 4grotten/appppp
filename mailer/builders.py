@@ -190,7 +190,7 @@ class InvoiceEmailBuilder(BaseEmailBuilder):
         kwargs dict should contain "id" & "time" key
         """
 
-        context = {"id": kwargs["invoice_url"], "time": kwargs["send_time"]}
+        context = {"invoice_url": kwargs["invoice_url"], "time": kwargs["send_time"]}
 
         body = cls._get_rendered_template(context)
 

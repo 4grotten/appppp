@@ -570,7 +570,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         is_paying_subsrciption = Country.objects.get(
-            pk=data["country"]
+            name=data["country"]["name"]
         ).is_paid_subscription
 
         if not is_paying_subsrciption:

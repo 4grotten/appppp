@@ -239,10 +239,14 @@ class OrganizationInvoiceService:
                 {"message": _("You are not an memberships of this organization")}
             )
 
-        qs = Invoice.objects.filter(
-            organization_info__organization_id=organization_id,
-            receipt_pdf__isnull=False,
-        ).exclude(receipt_pdf="")
+        qs = (
+            Invoice.objects.filter(
+                organization_info__organization_id=organization_id,
+                receipt_pdf__isnull=False,
+            )
+            .exclude(receipt_pdf="")
+            .select_related("tariff", "subscription")
+        )
 
         return qs
 

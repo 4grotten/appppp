@@ -70,6 +70,13 @@ class InvoiceInformationSerializer(serializers.Serializer):
     tax_id = serializers.CharField()
 
 
+class InvoiceTariffSerializer(serializers.Serializer):
+    tariff_type = serializers.CharField()
+    original_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    duration_months = serializers.IntegerField()
+    discount = serializers.IntegerField()
+
+
 class InvoiceListSerializer(serializers.Serializer):
     code = serializers.CharField()
     invoice_number = serializers.CharField()
@@ -77,6 +84,7 @@ class InvoiceListSerializer(serializers.Serializer):
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
+    tariff = InvoiceTariffSerializer()
 
     def to_representation(self, instance):
         url = create_download_url(instance.invoice_pdf)

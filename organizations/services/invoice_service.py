@@ -268,7 +268,7 @@ class OrganizationInvoiceService:
         invoice_qs = Invoice.objects.select_related("organization_info").get(
             pk=invoice_id
         )
-        invoice_url = invoice_qs.invoice_pdf
+        invoice_url = invoice_qs.invoice_pdf.url
         invoice_email = invoice_qs.organization_info.email
         MailerService.send_invoice_url_email(invoice_email, invoice_url, datetime.now())
 

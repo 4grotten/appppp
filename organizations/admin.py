@@ -68,6 +68,7 @@ from .models import (
     OrganizationInvoiceInfo,
 )
 from .serializers.assistant_serializers import AnswerFileSerializer
+from organizations.services.invoice_service import InvoiceDataService
 
 
 @admin.register(CashbackGroup)
@@ -955,31 +956,9 @@ class InvoiceAdmin(admin.ModelAdmin):
         logo_path = os.path.join(settings.BASE_DIR, "static", "images", "apofiz.png")
         tariff = invoice_qs.tariff
         invoice_info = invoice_qs.tariff.country.invoice_info
-        country_data = {
-            "name": invoice_info.name,
-            "country": tariff.country.name,
-            "city": invoice_info.city,
-            "address": invoice_info.address,
-            "email": invoice_info.email,
-            "price": tariff.original_price,
-            "code": tariff.country.code,
-            "currency": tariff.country.currency.code,
-            "tariff": tariff.tariff_type,
-            "tax": invoice_info.tax,
-            "tax_id": invoice_info.tax_id,
-        }
-        if country_data["tax"] == 0:
-            country_data.pop("tax")
-            country_data.pop("tax_id")
-            country_data["amount"] = country_data["price"]
-        else:
-            tax_decimal = Decimal(str(country_data["tax"])) / Decimal("100")
-            country_data["tax_amount"] = country_data["price"] * tax_decimal
-            country_data["amount"] = country_data["price"] + country_data["tax_amount"]
-            country_data["tax_amount"] = format(country_data["tax_amount"], ",.2f")
 
-        country_data["price"] = format(country_data["price"], ",.2f")
-        country_data["amount"] = format(country_data["amount"], ",.2f")
+        country_data = InvoiceDataService.get_country_invoice_data(tariff)
+
         context = {
             "country_data": country_data,
             "data": model_to_dict(invoice_qs.organization_info),
@@ -998,7 +977,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         )
         Organization.objects.filter(
             pk=invoice_qs.organization_info.organization.pk
-        ).update(subscription_status=SUBSCRIPTION_STATUS[0])
+        ).update(subscription_status=SUBSCRIPTION_STATUS[0][0])
         invoice_qs.subscription = subscription
         invoice_qs.save()
         create_invoice_pdf.delay(invoice_qs.invoice_number, context)

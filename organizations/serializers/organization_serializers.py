@@ -568,24 +568,6 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             or cryptocloud_activated
         )
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        is_paying_subsrciption = Country.objects.get(
-            name=data["country"]["name"]
-        ).is_paid_subscription
-
-        if not is_paying_subsrciption:
-            data["subscription_status"] = ("free", "free")
-        else:
-            if UserOrgSubscription.objects.filter(
-                id=data["id"], is_active=True
-            ).exists():
-                data["subscription_status"] = SUBSCRIPTION_STATUS[0]
-            else:
-                data["subscription_status"] = SUBSCRIPTION_STATUS[1]
-
-        return data
-
     class Meta:
         model = Organization
         fields = (
@@ -652,25 +634,6 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         return OrganizationService.get_user_role_in_organization(
             organization=organization, user=user
         )
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-
-        is_paying_subsrciption = Country.objects.get(
-            pk=data["country"]
-        ).is_paid_subscription
-
-        if not is_paying_subsrciption:
-            data["subscription_status"] = ("free", "free")
-
-        else:
-            if UserOrgSubscription.objects.filter(
-                id=data["id"], is_active=True
-            ).exists():
-                data["subscription_status"] = SUBSCRIPTION_STATUS[0]
-            else:
-                data["subscription_status"] = SUBSCRIPTION_STATUS[1]
-        return data
 
     class Meta:
         model = Organization

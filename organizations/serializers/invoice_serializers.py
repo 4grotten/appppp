@@ -76,7 +76,6 @@ class InvoiceTariffSerializer(serializers.Serializer):
     original_price = serializers.DecimalField(max_digits=10, decimal_places=2)
     duration_months = serializers.IntegerField()
     discount = serializers.IntegerField()
-    country = serializers.PrimaryKeyRelatedField(read_only=True)
 
 
 class InvoiceListSerializer(serializers.Serializer):
@@ -91,9 +90,7 @@ class InvoiceListSerializer(serializers.Serializer):
     def to_representation(self, instance):
         url = create_download_url(instance.invoice_pdf)
         data = super().to_representation(instance)
-        data["tax_amount"] = CountryInvoiceInfo.objects.get(
-            pk=data["tariff"]["country"]
-        ).tax
+        data["tax_amount"] = CountryInvoiceInfo.objects.get(country=data["code"]).tax
         data["invoice_download"] = url
 
         return data

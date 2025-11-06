@@ -645,6 +645,18 @@ class OrganizationListSerializer(serializers.ModelSerializer):
             organization=organization, user=user
         )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        is_paying_subsrciption = Country.objects.get(
+            pk=data["country"]
+        ).is_paid_subscription
+
+        if not is_paying_subsrciption:
+            data["subscription_status"] = ("free", "free")
+
+        return data
+
     class Meta:
         model = Organization
         fields = (

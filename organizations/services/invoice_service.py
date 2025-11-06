@@ -5,7 +5,6 @@ from organizations.models import (
     Organization,
     UserOrgSubscription,
 )
-from organizations.tasks import create_invoice_pdf
 from common.exceptions import InvoiceInfoDoesNotExists
 from mailer.services import MailerService
 from rest_framework.exceptions import PermissionDenied
@@ -90,6 +89,8 @@ class OrganizationInvoiceService:
         payment_method: str,
         user: User,
     ):
+        from organizations.tasks import create_invoice_pdf
+
         if not invoice_type:
             raise ValueError("Invoice type is required")
 

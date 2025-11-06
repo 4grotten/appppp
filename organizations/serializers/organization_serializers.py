@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.contrib.gis.geos import Point
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from organizations.constants import SUBSCRIPTION_STATUS
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
@@ -575,6 +576,13 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
 
         if not is_paying_subsrciption:
             data["subscription_status"] = ("free", "free")
+        else:
+            if UserOrgSubscription.objects.filter(
+                id=data["id"], is_active=True
+            ).exists():
+                data["subscription_status"] = SUBSCRIPTION_STATUS[0]
+            else:
+                data["subscription_status"] = SUBSCRIPTION_STATUS[1]
 
         return data
 
@@ -655,6 +663,13 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         if not is_paying_subsrciption:
             data["subscription_status"] = ("free", "free")
 
+        else:
+            if UserOrgSubscription.objects.filter(
+                id=data["id"], is_active=True
+            ).exists():
+                data["subscription_status"] = SUBSCRIPTION_STATUS[0]
+            else:
+                data["subscription_status"] = SUBSCRIPTION_STATUS[1]
         return data
 
     class Meta:

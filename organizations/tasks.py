@@ -18,6 +18,7 @@ from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import InstagramIntegration, Organization, Assistant, Coupon
+from organizations.services.invoice_service import OrganizationInvoiceService
 from shop.models import ShopItem, ItemInstagramData
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
@@ -348,6 +349,8 @@ def create_invoice_pdf(invoice_number: str, context: dict):
     invoice = Invoice.objects.get(invoice_number=invoice_number)
     if context.get("title") == "invoice":
         invoice.invoice_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
+        OrganizationInvoiceService.send_to_email(invoice.pk)
     else:
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
+        OrganizationInvoiceService.send_to_email(invoice.pk)

@@ -5,7 +5,6 @@ from organizations.models import (
     Organization,
     UserOrgSubscription,
 )
-from organizations.tasks import create_invoice_pdf
 from common.exceptions import InvoiceInfoDoesNotExists
 from mailer.services import MailerService
 from rest_framework.exceptions import PermissionDenied
@@ -35,7 +34,7 @@ class InvoiceDataService:
             "city": invoice_info.city,
             "address": invoice_info.address,
             "email": invoice_info.email,
-            "price": tariff.original_price,
+            "price": tariff.total_price,
             "code": tariff.country.code,
             "currency": tariff.country.currency.code,
             "tariff": tariff.tariff_type,
@@ -90,6 +89,8 @@ class OrganizationInvoiceService:
         payment_method: str,
         user: User,
     ):
+        from organizations.tasks import create_invoice_pdf
+
         if not invoice_type:
             raise ValueError("Invoice type is required")
 
@@ -267,7 +268,7 @@ class OrganizationInvoiceService:
         invoice_qs = Invoice.objects.select_related("organization_info").get(
             pk=invoice_id
         )
-        invoice_url = invoice_qs.invoice_pdf
+        invoice_url = invoice_qs.invoice_pdf.url
         invoice_email = invoice_qs.organization_info.email
         MailerService.send_invoice_url_email(invoice_email, invoice_url, datetime.now())
 

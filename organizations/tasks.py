@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def parse_instagram_to_shop_items(
-    organization_id: int,OrganizationInvoiceService
+    organization_id: int,
     posts_count: int = INSTAGRAM_POSTS_TO_PARSE,
     anonymous: bool = False,
 ):
@@ -354,4 +354,3 @@ def create_invoice_pdf(invoice_number: str, context: dict):
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
         OrganizationInvoiceService.send_to_email(invoice.pk)
-

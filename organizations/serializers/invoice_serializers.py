@@ -76,7 +76,7 @@ class InvoiceTariffSerializer(serializers.Serializer):
     original_price = serializers.DecimalField(max_digits=10, decimal_places=2)
     duration_months = serializers.IntegerField()
     discount = serializers.IntegerField()
-    country = serializers.PrimaryKeyRelatedField()
+    country = serializers.PrimaryKeyRelatedField(read_only=True)
 
 
 class InvoiceListSerializer(serializers.Serializer):

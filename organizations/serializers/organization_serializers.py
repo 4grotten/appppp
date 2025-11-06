@@ -662,7 +662,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
-            "is_deleted",
+            "country" "is_deleted",
             "is_private",
             "is_banned",
             "pinned",

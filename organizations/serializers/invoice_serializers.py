@@ -94,6 +94,11 @@ class InvoiceListSerializer(serializers.Serializer):
         return data
 
 
+class ReceiptSubscriptionSerializer(serializers.Serializer):
+    is_active = serializers.BooleanField()
+    active_until = serializers.DateTimeField()
+
+
 class ReceiptListSerializer(serializers.Serializer):
     code = serializers.CharField()
     invoice_number = serializers.CharField()
@@ -101,6 +106,8 @@ class ReceiptListSerializer(serializers.Serializer):
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
+    tariff = InvoiceTariffSerializer()
+    subscription = ReceiptSubscriptionSerializer()
 
     def to_representation(self, instance):
         url = create_download_url(instance.invoice_pdf)

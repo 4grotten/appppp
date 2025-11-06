@@ -33,6 +33,7 @@ from organizations.models import (
     RegionalTariff,
     UserOrgSubscription,
     OrganizationBanner,
+    Country,
 )
 from organizations.serializers.assistant_serializers import (
     OrganizationAssistantSerializer,
@@ -565,6 +566,17 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             or betapay_actiavated
             or cryptocloud_activated
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        is_paying_subsrciption = Country.objects.get(
+            pk=data["country"]
+        ).is_paid_subscription
+
+        if not is_paying_subsrciption:
+            data["subscription_status"] = ("free", "free")
+
+        return data
 
     class Meta:
         model = Organization

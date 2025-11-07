@@ -102,7 +102,7 @@ class OrganizationInvoiceService:
 
         tariff = InvoiceDataService.get_tariff(tariff_id)
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
-        data = cls.get_or_create_info(data)
+        data = cls.get_or_create_info(data, organization)
 
         invoice = OrganizationInvoiceService._create_invoice_object(
             user=user,
@@ -144,9 +144,9 @@ class OrganizationInvoiceService:
         return invoice
 
     @staticmethod
-    def get_or_create_info(user_data: dict):
+    def get_or_create_info(user_data: dict, organization_id):
         organization_info, created = OrganizationInvoiceInfo.objects.get_or_create(
-            **user_data
+            **user_data, organization_id=organization_id
         )
         return {"data": model_to_dict(organization_info), "object": organization_info}
 

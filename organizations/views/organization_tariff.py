@@ -145,7 +145,8 @@ class CreateOrganizationInfoAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid()
         data = serializer.data.get("data")
-        self.service_class.get_or_create_info(data)
+        organization_id = serializer.data.get("organization")
+        self.service_class.get_or_create_info(data, organization_id)
 
         return Response(
             data={"message": "successfully created/updated organization invoice data"},

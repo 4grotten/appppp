@@ -26,7 +26,6 @@ class ReceiptService:
                 organization_id=org_subs.organization.pk
             )
         )
-        serializer.is_valid()
 
         logo_path = os.path.join(settings.BASE_DIR, "static", "images", "apofiz.png")
 

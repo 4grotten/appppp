@@ -144,4 +144,4 @@ class ActiveTariffSerializer(serializers.Serializer):
 class OrganizationInvoiceInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationInvoiceInfo
-        fields = ["__all__"]
+        fields = "__all__"

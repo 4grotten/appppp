@@ -144,7 +144,7 @@ class CreateOrganizationInfoAPIView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid()
-        data = serializer.validated_data["data"]
+        data = serializer.data.get("data")
         self.service_class.get_or_create_info(data)
 
         return Response(

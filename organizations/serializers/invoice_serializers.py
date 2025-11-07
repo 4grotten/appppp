@@ -82,6 +82,7 @@ class InvoiceListSerializer(serializers.Serializer):
     code = serializers.CharField()
     invoice_number = serializers.CharField()
     invoice_pdf = serializers.URLField()
+    created_at = serializers.DateTimeField()
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()

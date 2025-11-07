@@ -341,7 +341,22 @@ def update_posts():
 
 
 @shared_task
-def create_invoice_pdf(invoice_number: str, context: dict):
+def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
+    if not invoice_number:
+        country_data = context.get("country_data")
+        code = country_data["code"]
+        amount = country_data["amount"]
+        tax = country_data.get("tax_amount", 0)
+        payment_method = context.get("payment_method")
+        invoice_qs = Invoice.objects.create(
+            code=code,
+            invoice_amount=amount,
+            invoice_tax=tax,
+            payment_method=payment_method,
+        )
+
+        invoice_number = invoice_qs.invoice_number
+    context["invoice_number"] = invoice_number
     html = render_to_string("invoice.html", context=context)
     pdf_bytes = HTML(string=html).write_pdf()
 
@@ -349,8 +364,8 @@ def create_invoice_pdf(invoice_number: str, context: dict):
     invoice = Invoice.objects.get(invoice_number=invoice_number)
     if context.get("title") == "invoice":
         invoice.invoice_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
-        OrganizationInvoiceService.send_to_email(invoice.pk)
+        OrganizationInvoiceService.send_to_email(invoice.pk, "invoice")
     else:
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
-        OrganizationInvoiceService.send_to_email(invoice.pk)
+        OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")

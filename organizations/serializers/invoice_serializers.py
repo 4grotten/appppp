@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from organizations.models import Invoice, RegionalTariff
+from organizations.models import Invoice, RegionalTariff, OrganizationInvoiceInfo
 from common.models import CountryInvoiceInfo
 from organizations.utils import create_download_url
 
@@ -139,3 +139,9 @@ class ActiveTariffSerializer(serializers.Serializer):
     tariff = RegionalTariffSerializer()
     is_active = serializers.BooleanField()
     active_until = serializers.DateTimeField()
+
+
+class OrganizationInvoiceInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationInvoiceInfo
+        fields = ["__all__"]

@@ -38,6 +38,7 @@ class InvoiceDataService:
             "code": tariff.country.code,
             "currency": tariff.country.currency.code,
             "tariff": tariff.tariff_type,
+            "tariff_id": tariff.pk,
             "tax": invoice_info.tax,
             "tax_id": invoice_info.tax_id,
         }

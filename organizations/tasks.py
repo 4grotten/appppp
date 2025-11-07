@@ -1,7 +1,7 @@
 import time, tracemalloc
 import random
 from decimal import Decimal
-
+from organizations.utils import clean_original_amount
 from datetime import timedelta, datetime
 from zoneinfo import ZoneInfo
 from itertools import groupby
@@ -346,8 +346,8 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
     if not invoice_number:
         country_data = context.get("country_data")
         code = country_data["code"]
-        amount = country_data["amount"]
-        tax = country_data.get("tax_amount", 0)
+        amount = clean_original_amount(str(country_data["amount"]))
+        tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
         payment_method = context.get("payment_method")
         invoice_qs = Invoice.objects.create(
             code=code,

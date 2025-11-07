@@ -18,7 +18,13 @@ from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
-from organizations.models import InstagramIntegration, Organization, Assistant, Coupon
+from organizations.models import (
+    InstagramIntegration,
+    Organization,
+    Assistant,
+    Coupon,
+    OrganizationInvoiceInfo,
+)
 from organizations.services.invoice_service import OrganizationInvoiceService
 from shop.models import ShopItem, ItemInstagramData
 from django.template.loader import render_to_string
@@ -349,11 +355,13 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         amount = clean_original_amount(str(country_data["amount"]))
         tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
         payment_method = context.get("payment_method")
+        org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
         invoice_qs = Invoice.objects.create(
             code=code,
             invoice_amount=Decimal(amount),
             invoice_tax=Decimal(tax),
             payment_method=payment_method,
+            organization_info=org_info,
         )
 
         invoice_number = invoice_qs.invoice_number

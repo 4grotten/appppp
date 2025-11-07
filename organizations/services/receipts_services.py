@@ -20,6 +20,7 @@ class ReceiptService:
     @staticmethod
     def create_receipt_from_crypto_cloud(org_subs: UserOrgSubscription):
         tariff = org_subs.tariff
+        sub_id = org_subs.pk
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
         serializer = OrganizationInvoiceInfoSerializer(
             OrganizationInvoiceInfo.objects.get(
@@ -37,6 +38,6 @@ class ReceiptService:
             "invoice_date": datetime.now().strftime("%d%m%Y"),
             "payment_method": "CryptoCloud",
             "logo_path": f"file://{logo_path}",
-            "extra_info": "",
+            "subscription_id": sub_id,
         }
         create_invoice_pdf.delay(context=context)

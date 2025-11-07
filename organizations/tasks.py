@@ -21,6 +21,7 @@ from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import (
     InstagramIntegration,
     Organization,
+    UserOrgSubscription,
     Assistant,
     Coupon,
     OrganizationInvoiceInfo,
@@ -356,6 +357,7 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         amount = clean_original_amount(str(country_data["amount"]))
         tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
         payment_method = context.get("payment_method")
+        subscription = UserOrgSubscription.objects.get(context["subscription_id"])
         org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
         tariff = RegionalTariff.objects.get(id=country_data["tariff_id"])
         invoice_qs = Invoice.objects.create(
@@ -364,6 +366,8 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
             invoice_tax=Decimal(tax),
             payment_method=payment_method,
             organization_info=org_info,
+            tariff=tariff,
+            subscription=subscription,
         )
 
         invoice_number = invoice_qs.invoice_number

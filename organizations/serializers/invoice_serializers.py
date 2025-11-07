@@ -82,6 +82,7 @@ class InvoiceListSerializer(serializers.Serializer):
     code = serializers.CharField()
     invoice_number = serializers.CharField()
     invoice_pdf = serializers.URLField()
+    created_at = serializers.DateTimeField()
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
@@ -125,7 +126,13 @@ class ReceiptListSerializer(serializers.Serializer):
 class RegionalTariffSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegionalTariff
-        fields = ["tariff_type", "original_price", "duration_months"]
+        fields = [
+            "tariff_type",
+            "original_price",
+            "duration_months",
+            "total_price",
+            "discount",
+        ]
 
 
 class ActiveTariffSerializer(serializers.Serializer):

@@ -16,6 +16,7 @@ from django.db.models import Sum, OuterRef, Subquery, F, QuerySet, Q, DecimalFie
 from django.db.models.functions import Coalesce
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from organizations.services.receipts_services import ReceiptService
 
 from common.exceptions import (
     NotAcceptableException, ObjectNotFoundException, IntegrityException, PermissionDeniedException, BadRequestException,
@@ -2710,6 +2711,7 @@ class TransactionService:
         org_subscription = transaction.org_subscription
         org_subscription.is_active = True
         org_subscription.save()
+        ReceiptService.create_receipt_from_crypto_cloud(org_subscription)
 
         organization = org_subscription.organization
         organization.subscription_status = ACTIVE

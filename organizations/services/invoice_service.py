@@ -102,7 +102,7 @@ class OrganizationInvoiceService:
 
         tariff = InvoiceDataService.get_tariff(tariff_id)
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
-        data = cls.get_or_create_info(data)
+        data = cls.get_or_create_info(data, organization)
 
         invoice = OrganizationInvoiceService._create_invoice_object(
             user=user,
@@ -144,9 +144,9 @@ class OrganizationInvoiceService:
         return invoice
 
     @staticmethod
-    def get_or_create_info(user_data: dict):
+    def get_or_create_info(user_data: dict, organization_id):
         organization_info, created = OrganizationInvoiceInfo.objects.get_or_create(
-            **user_data
+            **user_data, organization_id=organization_id
         )
         return {"data": model_to_dict(organization_info), "object": organization_info}
 
@@ -267,11 +267,14 @@ class OrganizationInvoiceService:
         return qs
 
     @staticmethod
-    def send_to_email(invoice_id):
+    def send_to_email(invoice_id, type):
         invoice_qs = Invoice.objects.select_related("organization_info").get(
             pk=invoice_id
         )
-        invoice_url = invoice_qs.invoice_pdf.url
+        if type == "invoice":
+            invoice_url = invoice_qs.invoice_pdf.url
+        elif type == "receipt":
+            invoice_url = invoice_qs.receipt_pdf.url
         invoice_email = invoice_qs.organization_info.email
         MailerService.send_invoice_url_email(invoice_email, invoice_url, datetime.now())
 

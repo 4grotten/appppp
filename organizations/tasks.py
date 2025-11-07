@@ -1,6 +1,7 @@
 import time, tracemalloc
 import random
-
+from decimal import Decimal
+from organizations.utils import clean_original_amount
 from datetime import timedelta, datetime
 from zoneinfo import ZoneInfo
 from itertools import groupby
@@ -17,7 +18,13 @@ from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
-from organizations.models import InstagramIntegration, Organization, Assistant, Coupon
+from organizations.models import (
+    InstagramIntegration,
+    Organization,
+    Assistant,
+    Coupon,
+    OrganizationInvoiceInfo,
+)
 from organizations.services.invoice_service import OrganizationInvoiceService
 from shop.models import ShopItem, ItemInstagramData
 from django.template.loader import render_to_string
@@ -341,7 +348,24 @@ def update_posts():
 
 
 @shared_task
-def create_invoice_pdf(invoice_number: str, context: dict):
+def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
+    if not invoice_number:
+        country_data = context.get("country_data")
+        code = country_data["code"]
+        amount = clean_original_amount(str(country_data["amount"]))
+        tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
+        payment_method = context.get("payment_method")
+        org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
+        invoice_qs = Invoice.objects.create(
+            code=code,
+            invoice_amount=Decimal(amount),
+            invoice_tax=Decimal(tax),
+            payment_method=payment_method,
+            organization_info=org_info,
+        )
+
+        invoice_number = invoice_qs.invoice_number
+    context["invoice_number"] = invoice_number
     html = render_to_string("invoice.html", context=context)
     pdf_bytes = HTML(string=html).write_pdf()
 
@@ -349,8 +373,8 @@ def create_invoice_pdf(invoice_number: str, context: dict):
     invoice = Invoice.objects.get(invoice_number=invoice_number)
     if context.get("title") == "invoice":
         invoice.invoice_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
-        OrganizationInvoiceService.send_to_email(invoice.pk)
+        OrganizationInvoiceService.send_to_email(invoice.pk, "invoice")
     else:
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
-        OrganizationInvoiceService.send_to_email(invoice.pk)
+        OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")

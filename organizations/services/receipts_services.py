@@ -21,17 +21,18 @@ class ReceiptService:
     def create_receipt_from_crypto_cloud(org_subs: UserOrgSubscription):
         tariff = org_subs.tariff
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
-        data = OrganizationInvoiceInfoSerializer(
+        serializer = OrganizationInvoiceInfoSerializer(
             OrganizationInvoiceInfo.objects.get(
                 organization_id=org_subs.organization.pk
             )
         )
+        serializer.is_valid()
 
         logo_path = os.path.join(settings.BASE_DIR, "static", "images", "apofiz.png")
 
         context = {
             "country_data": country_data,
-            "data": data,
+            "data": serializer.data,
             "title": "receipt",
             "invoice_number": "",
             "invoice_date": datetime.now().strftime("%d%m%Y"),

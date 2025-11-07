@@ -1,5 +1,6 @@
 import boto3
 from django.conf import settings
+from decimal import Decimal
 
 
 class JSONQuerySet(list):
@@ -31,3 +32,9 @@ def create_download_url(file_key):
     )
 
     return url
+
+
+def clean_original_amount(value: str) -> Decimal:
+    cleaned_value = value.replace(",", "").replace(" ", "")
+
+    return Decimal(cleaned_value)

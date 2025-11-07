@@ -126,7 +126,13 @@ class ReceiptListSerializer(serializers.Serializer):
 class RegionalTariffSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegionalTariff
-        fields = ["tariff_type", "original_price", "duration_months"]
+        fields = [
+            "tariff_type",
+            "original_price",
+            "duration_months",
+            "total_price",
+            "discount",
+        ]
 
 
 class ActiveTariffSerializer(serializers.Serializer):

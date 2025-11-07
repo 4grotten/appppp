@@ -225,7 +225,7 @@ class OrganizationInvoiceService:
             )
 
         qs = Invoice.objects.filter(
-            organization_info__organization_id=organization_id, receipt_pdf=""
+            organization_info__organization_id=organization_id
         ).select_related("tariff")
 
         return qs

@@ -1,5 +1,6 @@
 import time, tracemalloc
 import random
+from decimal import Decimal
 
 from datetime import timedelta, datetime
 from zoneinfo import ZoneInfo
@@ -350,8 +351,8 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         payment_method = context.get("payment_method")
         invoice_qs = Invoice.objects.create(
             code=code,
-            invoice_amount=amount,
-            invoice_tax=tax,
+            invoice_amount=Decimal(amount),
+            invoice_tax=Decimal(tax),
             payment_method=payment_method,
         )
 

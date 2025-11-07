@@ -225,7 +225,11 @@ class OrganizationInvoiceService:
             )
 
         qs = (
-            Invoice.objects.filter(organization_info__organization_id=organization_id)
+            Invoice.objects.filter(
+                organization_info__organization_id=organization_id,
+                invoice_pdf__isnull=False,
+            )
+            .exclude(invoice_pdf="")
             .select_related("tariff")
             .order_by("created_at")
         )

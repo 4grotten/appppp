@@ -22,14 +22,14 @@
         body {
             background: #ffffff;
             color: #333;
-            line-height: 1.4;
+            line-height: 1.2;
         }
 
         .page {
             width: 210mm;
             height: 297mm;
             margin: 0 auto;
-            padding: 15mm;
+            padding: 10mm;
             background: white;
             box-sizing: border-box;
             overflow: hidden;
@@ -39,14 +39,14 @@
         .invoice-container {
             margin: 0 auto;
             background: #fff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
 
         .invoice-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 10px;
+            padding: 8px;
             width: 100%;
             text-transform: uppercase;
         }
@@ -54,18 +54,18 @@
         .logo-wrapper {
             display: flex;
             justify-content: center;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .invoice-title {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
 
         .invoice-subtitle {
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0.9;
             font-weight: 400;
         }
@@ -73,62 +73,67 @@
         .invoice-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px 30px;
+            gap: 15px;
+            padding: 15px 20px;
             background: #f8fafc;
         }
 
         .info-section h3 {
             color: #4a5568;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
         }
 
         .info-content {
             background: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 6px;
             border-left: 3px solid #667eea;
+            line-height: 1.2;
+        }
+
+        .address-block br {
+            display: none;
         }
 
         .invoice-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 5px;
+            gap: 5px;
+            margin-bottom: 3px;
         }
 
         .detail-item strong {
             color: #4a5568;
             display: block;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .items-table th {
             background: #f7fafc;
-            padding: 10px 15px;
+            padding: 8px 10px;
             text-align: center;
             font-weight: 600;
             color: #4a5568;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 10px;
-            border-bottom: 2px solid #e2e8f0;
+            letter-spacing: 0.3px;
+            font-size: 9px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .items-table td {
-            padding: 10px 15px;
+            padding: 8px 10px;
             border-bottom: 1px solid #edf2f7;
         }
 
@@ -142,36 +147,36 @@
 
         .totals-section {
             background: #f8fafc;
-            padding: 15px 30px;
-            border-top: 2px solid #e2e8f0;
+            padding: 10px 20px;
+            border-top: 1px solid #e2e8f0;
         }
 
         .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
-            font-size: 14px;
+            padding: 3px 0;
+            font-size: 12px;
         }
 
         .total-final {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #2d3748;
-            border-top: 2px solid #e2e8f0;
-            padding-top: 8px;
-            margin-top: 5px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 5px;
+            margin-top: 3px;
         }
 
         .payment-section {
-            padding: 15px 30px;
+            padding: 10px 20px;
             background: white;
         }
 
         .payment-method {
             background: #f0fff4;
-            padding: 8px;
-            border-radius: 8px;
-            border-left: 4px solid #48bb78;
+            padding: 5px;
+            border-radius: 6px;
+            border-left: 3px solid #48bb78;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -200,11 +205,11 @@
 
         .status-badge {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 3px 8px;
             background: #c6f6d5;
             color: #276749;
-            border-radius: 20px;
-            font-size: 12px;
+            border-radius: 15px;
+            font-size: 10px;
             font-weight: 600;
         }
 
@@ -224,9 +229,9 @@
             <div class="invoice-header">
                 <div class="invoice-header__wrapper">
                     <div class="logo-wrapper">
-                        <img src="{{ logo_path }}" alt="" style="width: auto; height: 30px;">
+                        <img src="{{ logo_path }}" alt="" style="width: auto; height: 25px;">
                     </div>
-                    <p><strong style="font-size: 16px;">{{ title }}</strong></p>
+                    <p><strong style="font-size: 14px;">{{ title }}</strong></p>
                 </div>
             </div>
             <div class="invoice-info">
@@ -238,16 +243,16 @@
                     {% endif %}
                     <div class="info-content address-block">
                         Name: <strong>{{ country_data.name }}</strong><br>
-                        <p>Address: {{ country_data.address }}</p>
-                        <p>Country: {{ country_data.country }}</p>
-                        <p>City: {{ country_data.city }}</p>
-                        <p>Email: {{ country_data.email }}</p>
-                        <p>Tax No.: {{ country_data.tax_id }}</p>
+                        Address: {{ country_data.address }}<br>
+                        Country: {{ country_data.country }}<br>
+                        City: {{ country_data.city }}<br>
+                        Email: {{ country_data.email }}<br>
+                        Tax No.: {{ country_data.tax_id }}
                     </div>
                     {% if title == "invoice" %}
-                    <h3 style="margin-top: 15px;">Invoice Details</h3>
+                    <h3 style="margin-top: 10px;">Invoice Details</h3>
                     {% elif title == "receipt" %}
-                    <h3 style="margin-top: 15px;">Receipt Details</h3>
+                    <h3 style="margin-top: 10px;">Receipt Details</h3>
                     {% endif %}
                     <div class="info-content">
                         <div class="invoice-details">
@@ -270,12 +275,12 @@
                     {% endif %}
                     <div class="info-content address-block">
                         Name: <strong>{{ data.full_name }}</strong><br>
-                        Street Address: {{ data.address }} <br>
-                        Country: {{ data.country }} <br>
-                        City: {{ data.city }} <br>
+                        Street Address: {{ data.address }}<br>
+                        Country: {{ data.country }}<br>
+                        City: {{ data.city }}<br>
                         Email: {{ data.email }}
                     </div>
-                    <h3 style="margin-top: 15px;">Payment Info</h3>
+                    <h3 style="margin-top: 10px;">Payment Info</h3>
                     <div class="info-content">
                         <div class="invoice-details">
                             <div class="detail-item">
@@ -294,7 +299,7 @@
                     </div>
                 </div>
             </div>
-            <div style="padding: 0 30px;">
+            <div style="padding: 0 20px;">
                 <table class="items-table">
                     <thead>
                         <tr>
@@ -314,7 +319,7 @@
                             <td class="text-center">1</td>
                             <td class="text-center">{{ country_data.price }}</td>
                             {% if country_data.tax %}<td class="text-center">{{ country_data.tax }}</td> {% endif %}
-                            <td class="text-center">{{ country_data.price }}</td>
+                            <td class="text-right">{{ country_data.price }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -340,13 +345,13 @@
             <div class="payment-section">
                 <div class="payment-method">
                     <div class="item-method">
-                        <h3 style="font-size: 12px;">Payment Method: </h3>
-                        <h5 style="font-size: 14px;">{{ payment_method }}</h5>
+                        <h3 style="font-size: 11px;">Payment Method: </h3>
+                        <h5 style="font-size: 12px;">{{ payment_method }}</h5>
                     </div>
                     {% if title == "receipt" %}
                     <div class="item-status">
-                        <h3 style="font-size: 12px;">Status: </h3>
-                        <h5 style="font-size: 14px;">CONFIRMED</h5>
+                        <h3 style="font-size: 11px;">Status: </h3>
+                        <h5 style="font-size: 12px;">CONFIRMED</h5>
                     </div>
                     {% endif %}
                 </div>

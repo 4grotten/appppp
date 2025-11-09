@@ -25,6 +25,17 @@
             line-height: 1.6;
         }
 
+        .page {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            background: white;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
         .invoice-container {
             margin: 0 auto;
             background: #fff;
@@ -208,6 +219,7 @@
 </head>
 
 <body>
+    <div class="page">
     <div class="invoice-container">
         <div class="invoice-header">
             <div class="invoice-header__wrapper">
@@ -343,6 +355,7 @@
             </div>
         </div>
     </div>
+</div>
 </body>
 
 </html>

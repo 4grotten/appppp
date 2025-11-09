@@ -357,7 +357,7 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         amount = clean_original_amount(str(country_data["amount"]))
         tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
         payment_method = context.get("payment_method")
-        subscription = UserOrgSubscription.objects.get(context["subscription_id"])
+        subscription = UserOrgSubscription.objects.get(id=context["subscription_id"])
         org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
         tariff = RegionalTariff.objects.get(id=country_data["tariff_id"])
         invoice_qs = Invoice.objects.create(

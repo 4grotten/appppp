@@ -35,7 +35,7 @@ class ReceiptService:
             "data": serializer.data,
             "title": "receipt",
             "invoice_number": "",
-            "invoice_date": datetime.now().strftime("%d%m%Y"),
+            "invoice_date": datetime.now().strftime("%d-%m-%Y"),
             "payment_method": "CryptoCloud",
             "logo_path": f"file://{logo_path}",
             "subscription_id": sub_id,

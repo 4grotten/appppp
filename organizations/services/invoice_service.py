@@ -281,6 +281,8 @@ class OrganizationInvoiceService:
         elif type == "receipt":
             invoice_url = invoice_qs.receipt_pdf.url
         invoice_email = invoice_qs.organization_info.email
-        MailerService.send_invoice_url_email(invoice_email, invoice_url, datetime.now())
+        MailerService.send_invoice_url_email(
+            invoice_email, invoice_url, type, datetime.now()
+        )
 
         return {"message": "successfully sent"}

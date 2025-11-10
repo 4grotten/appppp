@@ -60,10 +60,11 @@ class MailerService:
         )
 
     @classmethod
-    def send_invoice_url_email(cls, email, invoice_url, send_time):
+    def send_invoice_url_email(cls, email, invoice_url, doc_type, send_time):
         cls._send(
             InvoiceEmailBuilder,
             email=email,
             invoice_url=invoice_url,
+            doc_type=doc_type,
             send_time=send_time,
         )

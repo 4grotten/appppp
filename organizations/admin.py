@@ -955,7 +955,6 @@ class InvoiceAdmin(admin.ModelAdmin):
         )
         logo_path = os.path.join(settings.BASE_DIR, "static", "images", "apofiz.png")
         tariff = invoice_qs.tariff
-        invoice_info = invoice_qs.tariff.country.invoice_info
 
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
 
@@ -964,7 +963,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             "data": model_to_dict(invoice_qs.organization_info),
             "title": "receipt",
             "invoice_number": invoice_qs.invoice_number,
-            "invoice_date": datetime.now().strftime("%d%m%Y"),
+            "invoice_date": datetime.now().strftime("%d-%m-%Y"),
             "payment_method": invoice_qs.payment_method,
             "logo_path": f"file://{logo_path}",
             "extra_info": "",

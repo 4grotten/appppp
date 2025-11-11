@@ -257,20 +257,22 @@
         <div class="info-block">
             <h3>{% if title == "invoice" %}Invoice from{% else %}Bill from{% endif %}</h3>
             <div class="info-content">
-                <strong>{{ country_data.name }}</strong><br>
-                {{ country_data.address }}<br>
-                {{ country_data.city }}, {{ country_data.country }}<br>
+                Name: {{ country_data.name }}<br>
+                Address: {{ country_data.address }}<br>
+                City: {{ country_data.city }}<br>
+                Country: {{ country_data.country }}<br>
                 Email: {{ country_data.email }}<br>
-                Tax ID: {{ country_data.tax_id }}
+                Tax No.: {{ country_data.tax_id }}
             </div>
         </div>
 
         <div class="info-block">
             <h3>{% if title == "invoice" %}Invoice to{% else %}Bill to{% endif %}</h3>
             <div class="info-content">
-                <strong>{{ data.full_name }}</strong><br>
-                {{ data.address }}<br>
-                {{ data.city }}, {{ data.country }}<br>
+                Name: {{ data.full_name }}<br>
+                Address: {{ data.address }}<br>
+                City: {{ data.city }}<br>
+                Country: {{ data.country }}<br>
                 Email: {{ data.email }}
             </div>
         </div>

@@ -204,6 +204,13 @@
             flex-direction: column;
             justify-content: center;
         }
+
+        .detail-item__bank-details {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
     </style>
 </head>
 
@@ -249,7 +256,9 @@
                         </div>
                         <div class="detail-item">
                             <strong>Bank Details</strong>
-                            {{ country_data.bank_details }}
+                            <p class="detail-item__bank-details">
+                                {{ country_data.bank_details }}
+                            </p>
                         </div>
                     </div>
                 </div>

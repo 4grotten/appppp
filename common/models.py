@@ -408,9 +408,10 @@ class CountryInvoiceInfo(TimestampModel):
     country = models.OneToOneField(
         Country, on_delete=models.CASCADE, related_name="invoice_info"
     )
-    tax = models.PositiveIntegerField(default=0)
-    tax_id = models.CharField(max_length=255, default="")
+    tax = models.PositiveIntegerField(default=0, null=True, blank=True)
+    tax_id = models.CharField(max_length=255, default="", null=True, blank=True)
     name = models.CharField(max_length=455)
     city = models.CharField(max_length=255, default="")
     address = models.CharField(max_length=455)
     email = models.EmailField()
+    bank_details = models.TextField(default="")

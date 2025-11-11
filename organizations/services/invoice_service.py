@@ -41,6 +41,7 @@ class InvoiceDataService:
             "tariff_id": tariff.pk,
             "tax": invoice_info.tax,
             "tax_id": invoice_info.tax_id,
+            "bank_details": invoice_info.bank_details,
         }
 
         # Рассчёт суммы с учётом налога

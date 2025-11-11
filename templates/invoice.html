@@ -59,12 +59,27 @@
             font-weight: 400;
         }
 
+        /* Оставляем .invoice-info как flex-контейнер для двух основных столбцов */
         .invoice-info {
             display: flex;
-            grid-template-columns: 1fr 1fr;
             gap: 30px;
             padding: 25px 35px;
             background: #f8fafc;
+        }
+        
+        /* НОВЫЕ СТИЛИ ДЛЯ ВНУТРЕННЕЙ ГОРИЗОНТАЛЬНОЙ СТРУКТУРЫ */
+        .combined-details-container { 
+            display: flex;
+            flex-direction: column; /* По умолчанию ставим вертикально */
+            gap: 25px; /* Вертикальный отступ между блоками */
+            width: 100%;
+        }
+
+        /* Контейнер для деталей и оплаты: устанавливаем горизонтальный поток */
+        .details-and-payment-wrapper {
+            display: flex;
+            gap: 30px;
+            width: 100%;
         }
 
         .info-section h3 {
@@ -88,6 +103,24 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-bottom: 6px;
+        }
+        
+        /* Стили для горизонтального размещения Payment Info */
+        .payment-info-small-block {
+            /* flex-grow: 1; - Удаляем, так как мы хотим, чтобы он был горизонтальным под Invoice Details */
+            margin-top: 25px; /* Отступ от блока адреса */
+        }
+        
+        /* Сетка для горизонтального расположения Payment Info */
+        .payment-details-horizontal {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px;
+        }
+        
+        /* Элемент Bank Details будет занимать 2 столбца в сетке Invoice Details */
+        .invoice-details .full-width {
+            grid-column: span 2; 
         }
 
         .detail-item strong {
@@ -239,30 +272,55 @@
                     <p>Email: {{ country_data.email }}</p>
                     <p>Tax No.: {{ country_data.tax_id }}</p>
                 </div>
-                {% if title == "invoice" %}
-                <h3 style="margin-top: 25px;">Invoice Details</h3>
-                {% elif title == "receipt" %}
-                <h3 style="margin-top: 25px;">Receipt Details</h3>
-                {% endif %}
-                <div class="info-content">
-                    <div class="invoice-details">
-                        <div class="detail-item">
-                            <strong>Invoice Number</strong>
-                            {{ invoice_number }}
+                
+                <div class="details-and-payment-wrapper">
+                    <div style="flex-grow: 1;">
+                        {% if title == "invoice" %}
+                        <h3 style="margin-top: 25px;">Invoice Details</h3>
+                        {% elif title == "receipt" %}
+                        <h3 style="margin-top: 25px;">Receipt Details</h3>
+                        {% endif %}
+                        <div class="info-content details-block">
+                            <div class="invoice-details">
+                                <div class="detail-item">
+                                    <strong>Invoice Number</strong>
+                                    {{ invoice_number }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Date Issued</strong>
+                                    {{ invoice_date }}
+                                </div>
+                                <div class="detail-item full-width">
+                                    <strong>Bank Details</strong>
+                                    <p class="detail-item__bank-details">
+                                        {{ country_data.bank_details | linebreaks }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <strong>Date Issued</strong>
-                            {{ invoice_date }}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Bank Details</strong>
-                            <p class="detail-item__bank-details">
-                                {{ country_data.bank_details | linebreaks }}
-                            </p>
+                    </div>
+
+                    <div class="payment-info-small-block">
+                        <h3 style="margin-top: 25px;">Payment Info</h3>
+                        <div class="info-content payment-content">
+                            <div class="payment-details-horizontal">
+                                <div class="detail-item">
+                                    <strong>Currency</strong>
+                                    {{ country_data.currency }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Amount Due</strong>
+                                    {{ country_data.price }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Payment Method</strong>
+                                    {{ payment_method }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
             <div class="info-section">
                 {% if title == "invoice" %}
@@ -276,24 +334,6 @@
                     Country: {{ data.country }} <br>
                     City: {{ data.city }} <br>
                     Email: {{ data.email }}
-                </div>
-
-                <h3 style="margin-top: 25px;">Payment Info</h3>
-                <div class="info-content">
-                    <div class="invoice-details">
-                        <div class="detail-item">
-                            <strong>Currency</strong>
-                            {{ country_data.currency }}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Amount Due</strong>
-                            {{ country_data.price }}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Payment Method</strong>
-                            {{ payment_method }}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

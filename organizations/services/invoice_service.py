@@ -41,6 +41,13 @@ class InvoiceDataService:
             "tariff_id": tariff.pk,
             "tax": invoice_info.tax,
             "tax_id": invoice_info.tax_id,
+            "bank": invoice_info.bank,
+            "title": invoice_info.title,
+            "account_name": invoice_info.account_name,
+            "account_number": invoice_info.account_number,
+            "iban": invoice_info.iban,
+            "swift_code": invoice_info.swift_code,
+            "routing_number": invoice_info.routing_number,
         }
 
         # Рассчёт суммы с учётом налога

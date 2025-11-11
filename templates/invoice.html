@@ -1,300 +1,365 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ title | capfirst }} - {{ invoice_number }}</title>
+    <title>{{ title|upper }} - {{ invoice_number }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-
-        /* * Устанавливаем размер страницы A4 и стандартные поля для печати (по 2 см)
-         */
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm 12mm; /* Отступы для печати */
         }
 
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            font-size: 10pt; /* 10pt - стандартный размер для печати */
-            color: #333;
-            background-color: #f4f4f4; /* Фон для предпросмотра */
+            background: #f9fbfc;
+            color: #1a202c;
             line-height: 1.5;
-            margin: 0;
-            padding: 0;
+            font-size: 13px;
         }
 
-        /* * .container - это наш лист A4.
-         * Ширина 210мм (A4) минус 40мм (поля 20мм+20мм) = 170мм
-         * Мы будем использовать padding внутри body, а контейнер сделаем 100%
-         */
         .container {
-            width: 210mm; /* A4 Ширина */
-            min-height: 297mm; /* A4 Высота (минимум) */
-            padding: 20mm; /* Поля, которые мы задали в @page */
-            margin: 10px auto; /* Центрирование на экране */
-            background: #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            /* Убираем внутренний padding, так как @page уже задал поля */
-            padding: 0; 
-        }
-
-        /* * Мы добавим внутренние отступы (padding) вручную, 
-         * чтобы они были видны и на экране, и при печати.
-         */
-        .invoice-body {
-             padding: 25mm 20mm; 
-        }
-
-        /* --- ШАПКА --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #667eea;
-        }
-        .header-left .logo {
-            width: auto;
-            height: 40px; /* Логотип чуть больше */
-            margin-bottom: 10px;
-        }
-        .header-left strong {
-            font-size: 11pt;
-        }
-        .header-left p, .bill-to p {
-            margin: 2px 0;
-            font-size: 10pt;
-            color: #555;
-        }
-
-        .header-right {
-            text-align: right;
-        }
-        .header-right h1 {
-            font-size: 24pt;
-            color: #2d3748;
-            margin: 0;
-            text-transform: uppercase;
-        }
-        .header-right p {
-            margin: 3px 0;
-            font-size: 11pt;
-        }
-
-        /* --- ИНФО О КЛИЕНТЕ --- */
-        .bill-to {
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-        .bill-to h3 {
-            margin-bottom: 10px;
-            font-size: 11pt;
-            text-transform: uppercase;
-            color: #667eea;
-            letter-spacing: 0.5px;
-        }
-        .bill-to strong {
-            font-weight: 500;
-        }
-        
-        /* --- ТАБЛИЦА СЧЕТА --- */
-        .items-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
+            max-width: 210mm;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
-        .items-table th {
+
+        /* === Заголовок === */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .header .logo {
+            height: 36px;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* === Основная информация === */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
             background: #f8fafc;
-            text-align: left;
-            padding: 12px 10px;
-            font-size: 9pt;
+        }
+
+        .info-block h3 {
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
             color: #4a5568;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .info-content {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 13px;
+        }
+
+        .info-content strong {
+            color: #2d3748;
+        }
+
+        .info-content p {
+            margin: 4px 0;
+        }
+
+        /* === Детали инвойса === */
+        .details-payment {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+            padding: 0 20px 20px;
+            background: #f8fafc;
+        }
+
+        .details-block {
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .details-grid .full {
+            grid-column: span 2;
+        }
+
+        .payment-block {
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        /* === Таблица товаров === */
+        .table-section {
+            padding: 0 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f7fafc;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
         }
-        .items-table td {
+
+        td {
             padding: 12px 10px;
             border-bottom: 1px solid #edf2f7;
             vertical-align: top;
         }
-        .items-table .text-center { text-align: center; }
-        .items-table .text-right { text-align: right; }
-        .items-table td strong {
-            font-size: 10.5pt;
-            font-weight: 500;
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* === Итоги === */
+        .totals {
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 2px solid #e2e8f0;
         }
 
-        /* --- ИТОГИ (TOTALS) --- */
-        .totals-section {
-            /* Заставим блок итогов прижаться к правому краю */
-            margin-left: auto;
-            width: 100%;
-            max-width: 300px; /* Ширина блока итогов */
-        }
         .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            font-size: 11pt;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 6px 0;
+            font-size: 14px;
         }
-        .total-row span:first-child {
-            color: #555;
-        }
-        .total-row span:last-child {
-            font-weight: 500;
-        }
+
         .total-final {
-            font-size: 14pt;
             font-weight: 700;
+            font-size: 18px;
             color: #2d3748;
-            background: #f8fafc;
-            padding: 12px;
-            margin-top: 10px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 10px;
+            margin-top: 8px;
         }
 
-        /* --- ФУТЕР (БАНК, СТАТУС) --- */
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 20px;
+        /* === Платёжная информация === */
+        .payment-status {
+            padding: 20px;
+            text-align: center;
         }
-        .footer-left h4 {
-            margin-bottom: 5px;
-            color: #4a5568;
+
+        .payment-method-box {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0fff4;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border-left: 5px solid #48bb78;
+            min-width: 260px;
         }
-        .footer-left p {
-            font-size: 9pt;
-            color: #555;
-            margin: 0;
-        }
-        .footer-right {
-            text-align: right;
-        }
-        
-        .status-badge {
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 14pt;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        .status-paid {
-            background: #c6f6d5;
+
+        .payment-method-box h4 {
+            margin: 6px 0;
             color: #276749;
-        }
-        .status-due {
-            background: #fed7d7;
-            color: #9b2c2c;
+            font-weight: 600;
         }
 
+        .status-badge {
+            display: inline-block;
+            background: #9ae6b4;
+            color: #22543d;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        /* === Адаптация под receipt === */
+        .receipt-only {
+            display: {% if title == "receipt" %}block{% else %}none{% endif %};
+        }
+
+        /* === Печать === */
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; border: none; }
+            @page { margin: 10mm; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="invoice-body">
 
-            <header class="header">
-                <div class="header-left">
-                    <img src="{{ logo_path }}" alt="Logo" class="logo">
-                    <strong style="display: block; margin-bottom: 5px;">{{ country_data.name }}</strong>
-                    <p>{{ country_data.address | linebreaksbr }}</p>
-                    <p>{{ country_data.city }}, {{ country_data.country }}</p>
-                    <p>Email: {{ country_data.email }}</p>
-                    <p>Tax No.: {{ country_data.tax_id }}</p>
-                </div>
-                <div class="header-right">
-                    {% if title == "invoice" %}
-                        <h1>INVOICE</h1>
-                    {% elif title == "receipt" %}
-                        <h1>RECEIPT</h1>
-                    {% endif %}
-                    <p><strong>Invoice Number:</strong> {{ invoice_number }}</p>
-                    <p><strong>Date Issued:</strong> {{ invoice_date }}</p>
-                </div>
-            </header>
+<div class="container">
 
-            <section class="bill-to">
-                {% if title == "invoice" %}
-                    <h3>Invoice To</h3>
-                {% elif title == "receipt" %}
-                    <h3>Bill to</h3>
-                {% endif %}
-                <p><strong>{{ data.full_name }}</strong></p>
-                <p>{{ data.address | linebreaksbr }}</p>
-                <p>{{ data.city }}, {{ data.country }}</p>
-                <p>Email: {{ data.email }}</p>
-            </section>
+    <!-- Заголовок -->
+    <div class="header">
+        {% if logo_path %}
+        <img src="{{ logo_path }}" alt="Logo" class="logo">
+        {% endif %}
+        <h1>{{ title|upper }}</h1>
+        <p>#{{ invoice_number }} | {{ invoice_date }}</p>
+    </div>
 
-            <section class="items">
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-right">Unit Price</th>
-                            {% if country_data.tax %}<th class="text-center">Tax %</th>{% endif %}
-                            <th class="text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <strong>Subscription Apofiz {{ country_data.tariff }}</strong><br>
-                                <small>Service/Product Name</small>
-                            </td>
-                            <td class="text-center">1</td>
-                            <td class="text-right">{{ country_data.price }}</td>
-                            {% if country_data.tax %}<td class="text-center">{{ country_data.tax }}%</td>{% endif %}
-                            <td class="text-right">{{ country_data.price }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
+    <!-- От кого / Кому -->
+    <div class="info-grid">
+        <div class="info-block">
+            <h3>{% if title == "invoice" %}Invoice from{% else %}Bill from{% endif %}</h3>
+            <div class="info-content">
+                <strong>{{ country_data.name }}</strong><br>
+                {{ country_data.address }}<br>
+                {{ country_data.city }}, {{ country_data.country }}<br>
+                Email: {{ country_data.email }}<br>
+                Tax ID: {{ country_data.tax_id }}
+            </div>
+        </div>
 
-            <section class="totals-section">
-                <div class="total-row">
-                    <span>Subtotal</span>
-                    <span>{{ country_data.price }} {{ country_data.currency }}</span>
-                </div>
-                {% if country_data.tax %}
-                <div class="total-row">
-                    <span>Tax ({{country_data.tax}}%)</span>
-                    <span>{{ country_data.tax_amount }} {{ country_data.currency }}</span>
-                </div>
-                {% endif %}
-                <div class="total-row total-final">
-                    <span>TOTAL</span>
-                    <span>{{ country_data.amount }} {{ country_data.currency }}</span>
-                </div>
-            </section>
-
-            <footer class="footer">
-                <div class="footer-left">
-                    <h4>Bank Details</h4>
-                    <p>{{ country_data.bank_details | linebreaksbr }}</p>
-                    <h4 style="margin-top: 15px;">Payment Method</h4>
-                    <p>{{ payment_method }}</p>
-                </div>
-                
-                <div class="footer-right">
-                    {% if title == "receipt" %}
-                        <div class="status-badge status-paid">PAID</div>
-                    {% else %}
-                        <div class="status-badge status-due">DUE</div>
-                    {% endif %}
-                </div>
-            </footer>
-
+        <div class="info-block">
+            <h3>{% if title == "invoice" %}Invoice to{% else %}Bill to{% endif %}</h3>
+            <div class="info-content">
+                <strong>{{ data.full_name }}</strong><br>
+                {{ data.address }}<br>
+                {{ data.city }}, {{ data.country }}<br>
+                Email: {{ data.email }}
+            </div>
         </div>
     </div>
+
+    <!-- Детали + Платёжная информация -->
+    <div class="details-payment">
+        <div class="details-block">
+            <h3 style="font-size:12px; margin-bottom:8px; color:#4a5568; text-transform:uppercase;">
+                {% if title == "invoice" %}Invoice Details{% else %}Receipt Details{% endif %}
+            </h3>
+            <div class="details-grid">
+                <div><strong>Invoice Number</strong><br>{{ invoice_number }}</div>
+                <div><strong>Date Issued</strong><br>{{ invoice_date }}</div>
+                <div class="full">
+                    <strong>Bank Details</strong><br>
+                    <div style="white-space: pre-line; font-size:12.5px;">{{ country_data.bank_details }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-block">
+            <h3 style="font-size:12px; margin-bottom:8px; color:#276749; text-transform:uppercase;">Payment Info</h3>
+            <div class="payment-grid">
+                <div><strong>Currency</strong><br>{{ country_data.currency }}</div>
+                <div><strong>Amount Due</strong><br>{{ country_data.price }}</div>
+                <div><strong>Method</strong><br>{{ payment_method }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица товаров -->
+    <div class="table-section">
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align:left;">Description</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-center">Unit Price</th>
+                    {% if country_data.tax %}<th class="text-center">Tax %</th>{% endif %}
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>Subscription Apofiz</strong><br>
+                        <small style="color:#718096;">{{ country_data.tariff }} Plan</small>
+                    </td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">{{ country_data.price }}</td>
+                    {% if country_data.tax %}<td class="text-center">{{ country_data.tax }}</td>{% endif %}
+                    <td class="text-right">{{ country_data.price }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Итоги -->
+    <div class="totals">
+        <div class="total-row">
+            <span>Subtotal:</span>
+            <span>{{ country_data.price }}</span>
+        </div>
+        {% if country_data.tax %}
+        <div class="total-row">
+            <span>Tax ({{ country_data.tax }}%):</span>
+            <span>{{ country_data.tax_amount }}</span>
+        </div>
+        {% endif %}
+        <div class="total-row">
+            <span>Currency:</span>
+            <span>{{ country_data.currency }}</span>
+        </div>
+        <div class="total-row total-final">
+            <span>TOTAL:</span>
+            <span>{{ country_data.amount }}</span>
+        </div>
+    </div>
+
+    <!-- Платёжный статус (только для receipt) -->
+    <div class="payment-status receipt-only">
+        <div class="payment-method-box">
+            <h4>Payment Method: {{ payment_method }}</h4>
+            <div class="status-badge">PAID & CONFIRMED</div>
+        </div>
+    </div>
+
+</div>
+
 </body>
 </html>

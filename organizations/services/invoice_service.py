@@ -233,7 +233,7 @@ class OrganizationInvoiceService:
             )
             .exclude(invoice_pdf="")
             .select_related("tariff")
-            .order_by("created_at")
+            .order_by("-created_at")
         )
 
         return qs
@@ -255,7 +255,7 @@ class OrganizationInvoiceService:
             )
             .exclude(receipt_pdf="")
             .select_related("tariff", "subscription")
-            .order_by("created_at")
+            .order_by("-created_at")
         )
 
         return qs

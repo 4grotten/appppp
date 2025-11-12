@@ -27,9 +27,20 @@ services:
       - .:/app
       - ./static:/app/static
       - ./media:/app/media
-    command: /runserver.sh
+    command: /gunicorn.sh
 
     restart: on-failure
+  
+  gemini-api:
+    build: ./gemini_service
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./gemini_service:/app
+    env_file:
+      - .env
+    restart: on-failure
+
 
   woker:
     <<: *django

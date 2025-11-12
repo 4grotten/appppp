@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException
 from schemas import GeminiAICreateImage
 from PIL import Image
 import io
-from gemini_service.settings import GEMINI_API_KEY
+from settings import GEMINI_API_KEY
 
 
 class GeminiAIService:

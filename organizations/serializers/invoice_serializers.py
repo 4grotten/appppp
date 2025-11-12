@@ -106,6 +106,7 @@ class ReceiptSubscriptionSerializer(serializers.Serializer):
 class ReceiptListSerializer(serializers.Serializer):
     code = serializers.CharField()
     invoice_number = serializers.CharField()
+    created_at = serializers.DateTimeField()
     receipt_pdf = serializers.URLField()
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)

@@ -3,11 +3,11 @@ from fastapi.exceptions import HTTPException
 from schemas import GeminiAICreateImage
 from PIL import Image
 import io
-import base64
+from gemini_service.settings import GEMINI_API_KEY
 
 
 class GeminiAIService:
-    client = Client(api_key="")
+    client = Client(api_key=GEMINI_API_KEY)
 
     @classmethod
     async def generate_from_prompt(

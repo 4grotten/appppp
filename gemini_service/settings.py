@@ -1,3 +1,3 @@
 from decouple import config
 
-GEMINI_API_KEY = config("GEMINI_API_KEY")
+GEMINI_API_KEY: str = config("GEMINI_API_KEY")

@@ -16,11 +16,12 @@ class GeminiAIService:
     def get_client(cls):
         if cls._client is None:
             proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
-            proxy = httpx.Proxy(url=proxy_url)
-            transport = httpx.Client(proxies=proxy)
+            # proxy = httpx.Proxy(url=proxy_url)
+            transport = httpx.HTTPTransport(proxy=proxy_url)
+            http_client = httpx.Client(transport=transport)
             cls._client = Client(
                 api_key=GEMINI_API_KEY,
-                http_options=types.HttpOptions(httpx_client=transport),
+                http_options=types.HttpOptions(httpx_client=http_client),
             )
         return cls._client
 

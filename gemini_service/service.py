@@ -5,11 +5,23 @@ from PIL import Image
 import io
 import os
 from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
+import httpx
 
 
 class GeminiAIService:
-    client = Client(api_key=GEMINI_API_KEY)
+    _client = None
     GEMINI_PROXY = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+
+    @classmethod
+    def get_client(cls):
+        if cls._client is None:
+            proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+            transport = httpx.Client(proxies=proxy_url)
+            cls._client = Client(
+                api_key=GEMINI_API_KEY,
+                http_options=types.HttpOptions(httpx_client=transport),
+            )
+        return cls._client
 
     @classmethod
     async def generate_from_prompt(
@@ -71,7 +83,7 @@ class GeminiAIService:
             if images_prompt:
                 prompt += " and use images on prompt to generate background and objects if its"
                 final_prompt.append(images_prompt)
-            response = cls.client.models.generate_content(
+            response = cls.get_client().models.generate_content(
                 model="gemini-2.5-flash-image",
                 contents=final_prompt,
                 config=types.GenerateContentConfig(

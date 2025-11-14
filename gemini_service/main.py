@@ -78,7 +78,7 @@ async def generate_image(
 @app.post("/api/v2/gemini/generate/prompt")
 async def generate_prompt(
     desc_type: str,
-    text: GeneratePromptScheme,
+    text: Optional[str],
     images: Optional[List[UploadFile]] = File(None),
 ):
     pivot = text.text if text.text is not None else images

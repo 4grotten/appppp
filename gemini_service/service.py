@@ -5,7 +5,6 @@ from PIL import Image
 import io
 from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
 import httpx
-from utils import translate_to_english
 
 
 class GeminiAIService:
@@ -52,29 +51,28 @@ class GeminiAIService:
                         )
 
             name = request.name or "product"
-            desc_en = await translate_to_english(request.description or "")
-            bg_en = await translate_to_english(request.background_description or "")
+            desc = request.description or ""
+            bg = request.background_description or ""
             price = request.price
-            price_desc_en = await translate_to_english(request.price_description or "")
+            price_desc = request.price_description or ""
             discount = request.discount
-            discount_desc_en = await translate_to_english(
-                request.discount_description or ""
-            )
+            discount_desc_en = request.discount_description or ""
             aspect_ratio = request.aspect_ratio
 
             prompt_parts = [
                 f"Create a professional, high-quality product image for '{name}'."
-                f"Product description: '{desc_en}'."
+                f"Product description: '{desc}'."
+                f"Don't use description and name on the image, use it only if i say so"
             ]
 
-            if bg_en:
-                prompt_parts.append(f"Background should reflect: '{bg_en}'.")
+            if bg:
+                prompt_parts.append(f"Background should reflect: '{bg}'.")
 
             if request.price_on_image and price:
                 prompt_parts.append(f"Show price: {price}")
 
-                if price_desc_en:
-                    prompt_parts.append(f" use properties:'{price_desc_en}'")
+                if price_desc:
+                    prompt_parts.append(f" use properties:'{price_desc}'")
                 prompt_parts.append(" On the image.")
 
             if request.discount_on_image and discount:
@@ -89,7 +87,6 @@ class GeminiAIService:
                     "its shape, color, texture, and details. "
                     "If background images are provided, use them as inspiration or direct background. "
                     "Combine elements naturally. Do not hallucinate new objects."
-                    "You don't need to add name and description to image"
                 )
 
             contents = []
@@ -114,10 +111,6 @@ class GeminiAIService:
                 if response.parts:
                     break
             else:
-                print(response.prompt_feedback)
-                print(response.json())
-                print(response.text)
-                print("The image was not created =(")
                 return None
 
             for part in response.parts:

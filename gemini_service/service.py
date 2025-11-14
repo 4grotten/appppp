@@ -92,7 +92,7 @@ class GeminiAIService:
                 )
 
             contents = []
-            contents.extend(images_prompt)
+            contents.extend(prompt_parts)
 
             if images_prompt:
                 contents.extend(images_prompt)

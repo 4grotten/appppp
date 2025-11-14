@@ -152,7 +152,11 @@ class GeminiAIService:
         else:
             prompt = f" proffesional {desc_type} description which will be used to generate image for gemini-2.5-flash-image"
 
-        full_text_prompt = base_prompt + prompt
+        full_text_prompt = (
+            base_prompt
+            + prompt
+            + " make text shorter don't use markdown and also you can use emojis"
+        )
 
         final_prompt = [full_text_prompt]
 

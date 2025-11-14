@@ -108,7 +108,6 @@ class GeminiAIService:
                     model="gemini-2.5-flash-image",
                     contents=contents,
                     config=types.GenerateContentConfig(
-                        response_modalities=["Image"],
                         image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
                     ),
                 )
@@ -117,6 +116,7 @@ class GeminiAIService:
             else:
                 print(response.prompt_feedback)
                 print(response.json())
+                print(response.text)
                 print("The image was not created =(")
                 return None
 

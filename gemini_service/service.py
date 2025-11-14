@@ -115,6 +115,9 @@ class GeminiAIService:
                 if response.parts:
                     break
             else:
+                print(response.prompt_feedback)
+                print(response.json())
+                print("The image was not created =(")
                 return None
 
             for part in response.parts:

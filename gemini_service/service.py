@@ -5,7 +5,7 @@ from PIL import Image
 import io
 from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
 import httpx
-from gemini_service.utils import translate_to_english
+from utils import translate_to_english
 
 
 class GeminiAIService:

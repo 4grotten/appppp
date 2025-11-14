@@ -10,12 +10,7 @@ app = FastAPI(
     redoc_url="/api/v2/redoc",
     openapi_url="/api/v2/openapi.json",
 )
-allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",  # Vite
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-]
+allowed_origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,

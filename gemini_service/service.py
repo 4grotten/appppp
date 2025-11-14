@@ -30,6 +30,7 @@ class GeminiAIService:
         cls, item_images, background_images, request: GeminiAICreateImage
     ):
         try:
+            max_retries = 3
             item_images = item_images
             background_images = background_images
 
@@ -102,18 +103,20 @@ class GeminiAIService:
                     "Maintain product accuracy. Output only the final image."
                 )
             print(prompt_parts)
-
-            response = cls.get_client().models.generate_content(
-                model="gemini-2.5-flash-image",
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    response_modalities=["Image"],
-                    image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
-                ),
-            )
-
-            if not response.parts:
+            for i in range(max_retries):
+                response = cls.get_client().models.generate_content(
+                    model="gemini-2.5-flash-image",
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["Image"],
+                        image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+                    ),
+                )
+                if response.parts:
+                    break
+            else:
                 return None
+
             for part in response.parts:
                 if part.inline_data is not None:
                     image_bytes = part.inline_data.data

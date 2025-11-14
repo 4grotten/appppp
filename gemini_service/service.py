@@ -73,7 +73,7 @@ class GeminiAIService:
 
                 if request.price_description:
                     prompt_parts.append(
-                        f" that have those properties:'{request.price_description}'"
+                        f" use properties:'{request.price_description}'"
                     )
                 prompt_parts.append(" On the image.")
 
@@ -81,7 +81,7 @@ class GeminiAIService:
                 prompt_parts.append(f"Show discount: {discount}")
                 if request.discount_description:
                     prompt_parts.append(
-                        f" that have those properties: '{request.discount_description}'"
+                        f" use properties: '{request.discount_description}'"
                     )
                 prompt_parts.append(" On the image.")
 

@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse, Response
 from schemas import GeminiAICreateImage
 from service import GeminiAIService
 from typing import List
+from utils import make_disposition
 
 app = FastAPI(
     docs_url="/api/v2/docs",
@@ -66,7 +67,5 @@ async def generate_image(
     return Response(
         content=response,
         media_type="image/jpeg",
-        headers={
-            "Content-Disposition": f"attachment; filename={request_data.name.replace(' ', '_')}.jpg"
-        },
+        headers={"Content-Disposition": make_disposition(f"{request_data.name}.png")},
     )

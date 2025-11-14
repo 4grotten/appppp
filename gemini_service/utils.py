@@ -1,4 +1,5 @@
 import httpx
+import urllib
 
 
 def _is_likely_english(text: str) -> bool:
@@ -47,3 +48,9 @@ async def translate_to_english(text: str) -> str:
     except Exception as e:
         print(f"Translation failed: {e}")
         return text
+
+
+def make_disposition(filename: str):
+    safe = "".join(c if c.isalnum() or c in "._- " else "_" for c in filename)
+    encoded = urllib.parse.quote(safe, safe="")
+    return f"attachment: filename=\"{filename}\"; filename*=utf-8''{encoded}"

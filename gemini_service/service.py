@@ -110,6 +110,7 @@ class GeminiAIService:
                     image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
                 ),
             )
+            print("Code: ", response.sdk_http_response.headers.get("code", None))
 
             for part in response.parts:
                 if part.inline_data is not None:

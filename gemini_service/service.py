@@ -156,6 +156,7 @@ class GeminiAIService:
             base_prompt
             + prompt
             + " make text shorter don't use markdown and also you can use emojis"
+            + " don't add meta information send me only what i've asked"
         )
 
         final_prompt = [full_text_prompt]

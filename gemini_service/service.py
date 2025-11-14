@@ -88,6 +88,7 @@ class GeminiAIService:
                     "its shape, color, texture, and details. "
                     "If background images are provided, use them as inspiration or direct background. "
                     "Combine elements naturally. Do not hallucinate new objects."
+                    "You don't need to add name and description to image"
                 )
 
             contents = []

@@ -110,8 +110,9 @@ class GeminiAIService:
                     image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
                 ),
             )
-            print(response.sdk_http_response.body)
 
+            if not response.parts:
+                return None
             for part in response.parts:
                 if part.inline_data is not None:
                     image_bytes = part.inline_data.data

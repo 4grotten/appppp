@@ -103,7 +103,7 @@ class GeminiAIService:
             print(prompt_parts)
 
             response = cls.get_client().models.generate_content(
-                model="gemini-2.5-pro-image",
+                model="imagen-4.0-generate-001",
                 contents=contents,
                 config=types.GenerateContentConfig(
                     response_modalities=["Image"],

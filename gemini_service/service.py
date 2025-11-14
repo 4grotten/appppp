@@ -31,8 +31,6 @@ class GeminiAIService:
         try:
             item_images = item_images
             background_images = background_images
-            final_prompt = []
-            data = {}
 
             images_prompt = []
             if item_images:
@@ -103,6 +101,7 @@ class GeminiAIService:
                     "Strictly base the generation on the provided images. "
                     "Maintain product accuracy. Output only the final image."
                 )
+            print(prompt_parts)
 
             response = cls.get_client().models.generate_content(
                 model="gemini-2.5-flash-image",

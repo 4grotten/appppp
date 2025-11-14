@@ -5,6 +5,7 @@ from PIL import Image
 import io
 from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
 import httpx
+from gemini_service.utils import translate_to_english
 
 
 class GeminiAIService:
@@ -50,37 +51,35 @@ class GeminiAIService:
                         )
 
             name = request.name or "product"
-            description = request.description or ""
-            background_description = request.background_description
+            desc_en = await translate_to_english(request.description or "")
+            bg_en = await translate_to_english(request.background_description or "")
             price = request.price
+            price_desc_en = await translate_to_english(request.price_description or "")
             discount = request.discount
+            discount_desc_en = await translate_to_english(
+                request.discount_description or ""
+            )
             aspect_ratio = request.aspect_ratio
 
             prompt_parts = [
                 f"Create a professional, high-quality product image for '{name}'."
-                f"Product description: '{description}'."
+                f"Product description: '{desc_en}'."
             ]
 
-            if background_description:
-                prompt_parts.append(
-                    f"Background should reflect: '{background_description}'."
-                )
+            if bg_en:
+                prompt_parts.append(f"Background should reflect: '{bg_en}'.")
 
             if request.price_on_image and price:
                 prompt_parts.append(f"Show price: {price}")
 
-                if request.price_description:
-                    prompt_parts.append(
-                        f" use properties:'{request.price_description}'"
-                    )
+                if price_desc_en:
+                    prompt_parts.append(f" use properties:'{price_desc_en}'")
                 prompt_parts.append(" On the image.")
 
             if request.discount_on_image and discount:
                 prompt_parts.append(f"Show discount: {discount}")
-                if request.discount_description:
-                    prompt_parts.append(
-                        f" use properties: '{request.discount_description}'"
-                    )
+                if discount_desc_en:
+                    prompt_parts.append(f" use properties: '{discount_desc_en}'")
                 prompt_parts.append(" On the image.")
 
             if images_prompt:

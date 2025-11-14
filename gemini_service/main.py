@@ -1,15 +1,28 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
 from schemas import GeminiAICreateImage
 from service import GeminiAIService
 from typing import List
-import json
-
 
 app = FastAPI(
     docs_url="/api/v2/docs",
     redoc_url="/api/v2/redoc",
     openapi_url="/api/v2/openapi.json",
+)
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",  # Vite
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    max_age=600,
 )
 
 

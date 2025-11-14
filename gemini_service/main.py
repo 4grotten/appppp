@@ -6,7 +6,11 @@ from typing import List
 import json
 
 
-app = FastAPI()
+app = FastAPI(
+    docs_url="/api/v2/docs",
+    redoc_url="/api/v2/redoc",
+    openapi_url="/api/v2/openapi.json",
+)
 
 
 @app.post("/api/v2/gemini/generate/image")

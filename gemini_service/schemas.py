@@ -15,3 +15,7 @@ class GeminiAICreateImage(BaseModel):
     discount_on_image: bool = False
     discount_description: Optional[str] = None
     aspect_ratio: str = "1:1"
+
+
+class GeneratePromptScheme(BaseModel):
+    text: Optional[str]

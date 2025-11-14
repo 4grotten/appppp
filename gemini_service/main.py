@@ -63,6 +63,16 @@ async def generate_image(
         item_images, background_images, request_data
     )
 
+    if not response:
+        return JSONResponse(
+            status_code=400, content={"message": "something went wrong"}
+        )
+
+    if not isinstance(response, bytes):
+        return JSONResponse(
+            status_code=400, content={"message": "error while trying create an image"}
+        )
+
     return Response(
         content=response,
         media_type="image/jpeg",

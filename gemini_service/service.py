@@ -130,7 +130,7 @@ class GeminiAIService:
     @classmethod
     async def generate_prompt(cls, desc_type: str, pivot: list[UploadFile] | str):
         images = []
-        if isinstance(pivot, UploadFile):
+        if isinstance(pivot, list):
             base_prompt = "Using this image generate an"
             for file in pivot:
                 try:
@@ -151,7 +151,13 @@ class GeminiAIService:
             prompt = " proffesional description which will be used to generate image and descripts image"
         else:
             prompt = f" proffesional {desc_type} description which will be used to generate image for gemini-2.5-flash-image"
-        final_prompt = [base_prompt, prompt, images]
+
+        full_text_prompt = base_prompt + prompt
+
+        final_prompt = [full_text_prompt]
+
+        if images:
+            final_prompt.extend(images)
 
         response = cls.get_client().models.generate_content(
             model="gemini-2.5-pro",

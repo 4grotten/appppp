@@ -5,6 +5,7 @@ from PIL import Image
 import io
 from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
 import httpx
+from fastapi import UploadFile
 
 
 class GeminiAIService:
@@ -124,4 +125,41 @@ class GeminiAIService:
             return image_bytes
         except Exception as e:
             print(f"Gemini error: {e}")
+            return None
+
+    @classmethod
+    async def generate_prompt(cls, desc_type: str, pivot: list[UploadFile] | str):
+        images = []
+        if isinstance(pivot, UploadFile):
+            base_prompt = "Using this image generate an"
+            for file in pivot:
+                try:
+                    image_bytes = await file.read()
+                    image = Image.open(io.BytesIO(image_bytes))
+                    if image.mode in ("RGBA", "LA", "P"):
+                        image = image.convert("RGB")
+                    images.append(image)
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=400,
+                        detail={"message": "error while trying to load a images"},
+                    )
+        else:
+            base_prompt = f"Using this description {pivot} generate an"
+
+        if desc_type == "item_description":
+            prompt = " proffesional description which will be used to generate image and descripts image"
+        else:
+            prompt = f" proffesional {desc_type} description which will be used to generate image for gemini-2.5-flash-image"
+        final_prompt = [base_prompt, prompt, images]
+
+        response = cls.get_client().models.generate_content(
+            model="gemini-2.5-pro",
+            contents=final_prompt,
+            config=types.GenerateContentConfig(response_modalities=["Text"]),
+        )
+
+        if response.text:
+            return response.text
+        else:
             return None

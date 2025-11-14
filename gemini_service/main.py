@@ -1,9 +1,9 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from schemas import GeminiAICreateImage
+from schemas import GeminiAICreateImage, GeneratePromptScheme
 from service import GeminiAIService
-from typing import List
+from typing import List, Optional
 
 app = FastAPI(
     docs_url="/api/v2/docs",
@@ -68,13 +68,23 @@ async def generate_image(
             status_code=400, content={"message": "something went wrong"}
         )
 
-    if not isinstance(response, bytes):
-        return JSONResponse(
-            status_code=400, content={"message": "error while trying create an image"}
-        )
-
     return Response(
         content=response,
         media_type="image/jpeg",
         headers={"Content-Disposition": "image.png"},
     )
+
+
+@app.post("/api/v2/gemini/generate/prompt")
+async def generate_prompt(
+    desc_type: str,
+    text: GeneratePromptScheme,
+    images: Optional[List[UploadFile]] = File(None),
+):
+    pivot = text.text if text.text is not None else images
+    response = await GeminiAIService.generate_prompt(desc_type, pivot)
+
+    if response:
+        return JSONResponse(content={"prompt": response}, status_code=200)
+    else:
+        return JSONResponse(content=None, status_code=400)

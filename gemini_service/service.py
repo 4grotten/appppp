@@ -1,4 +1,4 @@
-from google.genai import Client, types
+from google.genai import Client, types, errors
 from fastapi.exceptions import HTTPException
 from schemas import GeminiAICreateImage
 from PIL import Image
@@ -17,11 +17,11 @@ class GeminiAIService:
         if cls._client is None:
             proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
             # proxy = httpx.Proxy(url=proxy_url)
-            transport = httpx.HTTPTransport(proxy=proxy_url)
-            http_client = httpx.Client(transport=transport)
+            # transport = httpx.HTTPTransport(proxy=proxy_url)
+            # http_client = httpx.AsyncClient(transport=transport)
             cls._client = Client(
                 api_key=GEMINI_API_KEY,
-                http_options=types.HttpOptions(httpx_client=http_client),
+                http_options=types.HttpOptions(async_client_args={"proxy": proxy_url}),
             )
         return cls._client
 
@@ -100,19 +100,24 @@ class GeminiAIService:
                     "Strictly base the generation on the provided images. "
                     "Maintain product accuracy. Output only the final image."
                 )
-            print(prompt_parts)
             for i in range(max_retries):
-                response = cls.get_client().models.generate_content(
-                    model="gemini-2.5-flash-image",
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
-                    ),
-                )
-                if response.parts:
-                    break
-            else:
-                return None
+                try:
+                    response = cls.get_client().models. generate_content(
+                        model="gemini-2.5-flash-image",
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+                        ),
+                    )
+                    if response.parts:
+                        break
+                    else:
+                        return None
+                except errors.APIError as e:
+                    if e.code == 503:
+                        print(f"Error gemini return 503 -> retry {e.message}")
+                    else:
+                        return None
 
             for part in response.parts:
                 if part.inline_data is not None:
@@ -123,6 +128,7 @@ class GeminiAIService:
                     status_code=500, detail={"message": "failed to generate file"}
                 )
             return image_bytes
+
         except Exception as e:
             print(f"Gemini error: {e}")
             return None

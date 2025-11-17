@@ -21,7 +21,7 @@ class GeminiAIService:
             http_client = httpx.Client(transport=transport)
             cls._client = Client(
                 api_key=GEMINI_API_KEY,
-                http_options=types.HttpOptions(httpx_client==http_client),
+                http_options=types.HttpOptions(httpx_client=http_client),
             )
         return cls._client
 

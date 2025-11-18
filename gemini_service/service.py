@@ -3,14 +3,17 @@ from fastapi.exceptions import HTTPException
 from schemas import GeminiAICreateImage
 from PIL import Image
 import io
-from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER
+from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER, PRODUCTION
 import httpx
 from fastapi import UploadFile
 
 
 class GeminiAIService:
     _client = None
-    GEMINI_PROXY = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+    if not PRODUCTION:
+        proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+    else:
+        proxy_url = None
     PROMPT_TEMPLATES = {
         # 1. Для поля "Описание товара" (обычный текст)
         "item_description": (
@@ -30,25 +33,22 @@ class GeminiAIService:
         # 3. Для поля "Цена" (стиль текста цены)
         "price_prompt": (
             "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото. "
-            "Пользователь даст краткие пожелания (или фото), а ты преврати это в инструкцию для дизайнера. "
-            "Например: 'Крупный жирный шрифт красного цвета в правом верхнем углу'. "
-            "Ответ на русском, кратко."
+        "    Add the price AED in an elegant, modern font inside a subtle badge in the bottom-right corner. Luxury minimalistic style, 8K quality"
+            "Ответ на языке на котором запрос."
         ),
         
         # 4. Для поля "Скидка" (стиль текста скидки)
         "discount_prompt": (
             "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото. "
-            "Опиши цвет, расположение и стиль плашки или текста скидки на основе данных. "
-            "Ответ на русском, кратко."
+            "Add with % \\badge in a modern font inside a subtle badge  in the left corner. Luxury minimalistic style, 8K quality."
+            "Ответ на языке на котором запрос."
         )
     }
 
     @classmethod
     def get_client(cls):
         if cls._client is None:
-            proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
-            # proxy = httpx.Proxy(url=proxy_url)
-            transport = httpx.AsyncHTTPTransport(proxy=proxy_url)
+            transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
             http_client = httpx.AsyncClient(transport=transport)
             cls._client = Client(
                 api_key=GEMINI_API_KEY,
@@ -104,7 +104,7 @@ class GeminiAIService:
                 prompt_parts.append(f"Show price: {price} with currency {request.currency}")
 
                 if price_desc:
-                    prompt_parts.append(f" use properties:'{price_desc}'")
+                    prompt_parts.append(f" use prompt:'{price_desc}'")
                 prompt_parts.append(" On the image.")
 
             if request.discount_on_image and discount:
@@ -113,7 +113,7 @@ class GeminiAIService:
                 if request.price_with_discount:
                     prompt_parts.append(f"Show {request.price_with_discount} price it's price after discount")
                 if discount_desc_en:
-                    prompt_parts.append(f" use properties: '{discount_desc_en}'")
+                    prompt_parts.append(f" use prompt: '{discount_desc_en}'")
                 prompt_parts.append(" On the image.")
 
             if images_prompt:
@@ -184,7 +184,6 @@ class GeminiAIService:
             # Если пользователь загрузил картинки
             full_prompt_text += "Изображения товара (см. вложения)."
             contents.append(full_prompt_text)
-            print(f"Эта часть сработала!")
             for file in images:
                 try:
                     # Считываем картинку

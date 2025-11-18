@@ -174,12 +174,12 @@ class GeminiAIService:
 
         if isinstance(pivot, str):
                     # Если пользователь ввел текст (например "хочу мрачную атмосферу")
-                    full_prompt_text += f"Текст пользователя: {pivot}"
+                    full_prompt_text += f"Не добавляй мета слова только то что я попросил, Текст пользователя: {pivot}"
                     contents.append(full_prompt_text)
                 
         elif isinstance(pivot, list):
             # Если пользователь загрузил картинки
-            full_prompt_text += "Изображения товара (см. вложения)."
+            full_prompt_text += "Не добавляй мета слова только то что я попросил, Изображения товара (см. вложения)."
             contents.append(full_prompt_text)
             for file in pivot:
                 try:
@@ -196,7 +196,6 @@ class GeminiAIService:
                 except Exception:
                     continue
 
-                # 3. Отправляем запрос
         try:
             for retry in range(max_retries):
                 try:

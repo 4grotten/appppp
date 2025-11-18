@@ -182,7 +182,7 @@ class GeminiAIService:
             full_prompt_text += "Не добавляй мета слова только то что я попросил, Изображения товара (см. вложения)."
             contents.append(full_prompt_text)
             print(f"Эта часть сработала!")
-            for file in pivot:
+            for file in images:
                 try:
                     # Считываем картинку
                     # Важно: file.seek(0) может понадобиться, если файл уже читали

@@ -32,14 +32,14 @@ class GeminiAIService:
         
         # 3. Для поля "Цена" (стиль текста цены)
         "price_prompt": (
-            "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото. на 3 строки"
+            "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото.  на 3 строки без подробностей и мета описаний"
             "Add the price in without currency an elegant, modern font inside a subtle badge in the bottom-right corner. Luxury minimalistic style, 8K quality"
             "переводи на язык на котором описана сущность"
         ),
         
         # 4. Для поля "Скидка" (стиль текста скидки)
         "discount_prompt": (
-            "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото.  на 3 строки"
+            "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото.  на 3 строки без подробностей и мета описаний"
             "Add with % \\badge in a modern font inside a subtle badge  in the left corner. Luxury minimalistic style, 8K quality."
             "переводи на язык на котором описана сущность."
         )

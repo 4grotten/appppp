@@ -198,7 +198,7 @@ class GeminiAIService:
 
                 # 3. Отправляем запрос
         try:
-            for retry in max_retries:
+            for retry in range(max_retries):
                 try:
                     response = await cls.get_client().models.generate_content(
                         model="gemini-2.5-pro", # Или 1.5-pro, что у тебя доступно

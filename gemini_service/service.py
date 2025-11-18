@@ -18,11 +18,11 @@ class GeminiAIService:
             proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
             # proxy = httpx.Proxy(url=proxy_url)
             transport = httpx.HTTPTransport(proxy=proxy_url)
-            http_client = httpx.Client(transport=transport)
+            http_client = httpx.AsyncHTTPTransport(transport=transport)
             cls._client = Client(
                 api_key=GEMINI_API_KEY,
-                http_options=types.HttpOptions(httpx_client=http_client),
-            )
+                http_options=types.HttpOptions(httpx_async_client=http_client),
+            ).aio
         return cls._client
 
     @classmethod
@@ -102,7 +102,7 @@ class GeminiAIService:
                 )
             for i in range(max_retries):
                 try:
-                    response = cls.get_client().models.generate_content(
+                    response = await cls.get_client().models.generate_content(
                         model="gemini-2.5-flash-image",
                         contents=contents,
                         config=types.GenerateContentConfig(
@@ -170,7 +170,7 @@ class GeminiAIService:
         if images:
             final_prompt.extend(images)
 
-        response = cls.get_client().models.generate_content(
+        response = await cls.get_client().models.generate_content(
             model="gemini-2.5-pro",
             contents=final_prompt,
             config=types.GenerateContentConfig(response_modalities=["Text"]),

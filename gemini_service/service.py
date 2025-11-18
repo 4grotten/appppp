@@ -198,7 +198,7 @@ class GeminiAIService:
                 except Exception:
                     continue
         
-        contents.append(f" Не используй markdown!")
+        contents.append(f" Не используй markdown и не добавляй звездочек!")
 
         try:
             for retry in range(max_retries):

@@ -8,7 +8,7 @@ class GeminiAICreateImage(BaseModel):
     name: str
     description: Optional[str] = None
     background_description: Optional[str] = None
-    price: float
+    price: Optional[float] = None
     currency: Optional[str] = "KGS"
     price_with_discount: Optional[float] = None
     price_description: Optional[str] = None

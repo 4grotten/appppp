@@ -29,7 +29,7 @@ async def generate_image(
     name: str = Form(...),
     description: str = Form(None),
     background_description: str = Form(None),
-    price: float = Form(...),
+    price: float = Form(None),
     currency: str = Form(None),
     price_with_discount: float = Form(None),
     price_description: str = Form(None),

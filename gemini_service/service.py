@@ -101,7 +101,7 @@ class GeminiAIService:
                 prompt_parts.append(f"Background should reflect: '{bg}'.")
 
             if request.price_on_image and price:
-                prompt_parts.append(f"Show price: {price}")
+                prompt_parts.append(f"Show price: {price} with currency {request.currency}")
 
                 if price_desc:
                     prompt_parts.append(f" use properties:'{price_desc}'")
@@ -110,8 +110,8 @@ class GeminiAIService:
             if request.discount_on_image and discount:
                 prompt_parts.append(f"Show discount: {discount}")
 
-                if request.second_price:
-                    prompt_parts.append(f"Show {request.second_price} price it's price after discount")
+                if request.price_with_discount:
+                    prompt_parts.append(f"Show {request.price_with_discount} price it's price after discount")
                 if discount_desc_en:
                     prompt_parts.append(f" use properties: '{discount_desc_en}'")
                 prompt_parts.append(" On the image.")

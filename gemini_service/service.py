@@ -177,12 +177,12 @@ class GeminiAIService:
 
         if isinstance(pivot, str):
                     # Если пользователь ввел текст (например "хочу мрачную атмосферу")
-                    full_prompt_text += f"Не добавляй мета слова только то что я попросил, Текст пользователя: {pivot}"
+                    full_prompt_text += f"Текст пользователя: {pivot}"
                     contents.append(full_prompt_text)
                 
         if isinstance(images, list):
             # Если пользователь загрузил картинки
-            full_prompt_text += "Не добавляй мета слова только то что я попросил, Изображения товара (см. вложения)."
+            full_prompt_text += "Изображения товара (см. вложения)."
             contents.append(full_prompt_text)
             print(f"Эта часть сработала!")
             for file in images:
@@ -198,6 +198,8 @@ class GeminiAIService:
                     contents.append(image)
                 except Exception:
                     continue
+        
+        contents.append(f" Не используй markdown!")
 
         try:
             for retry in range(max_retries):

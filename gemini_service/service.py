@@ -165,7 +165,7 @@ class GeminiAIService:
             return None
 
     @classmethod
-    async def generate_prompt(cls, desc_type: str, pivot: list[UploadFile] | str):
+    async def generate_prompt(cls, desc_type: str, pivot:str, images: list[UploadFile]):
         contents = []
         max_retries = 3
         system_instruction = cls.PROMPT_TEMPLATES.get(desc_type, cls.PROMPT_TEMPLATES["item_description"])
@@ -177,7 +177,7 @@ class GeminiAIService:
                     full_prompt_text += f"Не добавляй мета слова только то что я попросил, Текст пользователя: {pivot}"
                     contents.append(full_prompt_text)
                 
-        if isinstance(pivot, list):
+        if images(images, list):
             # Если пользователь загрузил картинки
             full_prompt_text += "Не добавляй мета слова только то что я попросил, Изображения товара (см. вложения)."
             contents.append(full_prompt_text)

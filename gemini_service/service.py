@@ -185,7 +185,6 @@ class GeminiAIService:
                 try:
                     # Считываем картинку
                     # Важно: file.seek(0) может понадобиться, если файл уже читали
-                    await file.seek(0) 
                     image_bytes = await file.read()
                     image = Image.open(io.BytesIO(image_bytes))
                     
@@ -200,7 +199,7 @@ class GeminiAIService:
             for retry in range(max_retries):
                 try:
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-2.5-pro", # Или 1.5-pro, что у тебя доступно
+                        model="gemini-2.5-pro",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],

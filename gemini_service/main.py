@@ -30,7 +30,8 @@ async def generate_image(
     description: str = Form(None),
     background_description: str = Form(None),
     price: float = Form(...),
-    second_price: float = Form(None),
+    currency: str = Form(None),
+    price_with_discount: float = Form(None),
     price_description: str = Form(None),
     # FastAPI умеет преобразовывать "True"/"False" из формы в bool:
     price_on_image: bool = Form(None),
@@ -46,6 +47,7 @@ async def generate_image(
             description=description,
             background_description=background_description,
             price=price,
+            currency=currency
             second_price=second_price,
             price_description=price_description,
             price_on_image=price_on_image,

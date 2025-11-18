@@ -81,8 +81,8 @@ async def generate_prompt(
     images: Optional[List[UploadFile]] = File(None),
 ):
     data = dict()
-    data["pivot"] = text if text
-    data["images"] = images if images
+    data["pivot"] = text if text else None
+    data["images"] = images if images else None
     response = await GeminiAIService.generate_prompt(desc_type, **data)
 
     if response:

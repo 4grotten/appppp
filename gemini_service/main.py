@@ -80,8 +80,8 @@ async def generate_prompt(
     text: Optional[str] = Form(None),
     images: Optional[List[UploadFile]] = File(None),
 ):
-    pivot = text if text is not None else images
-    response = await GeminiAIService.generate_prompt(desc_type, pivot)
+    pivot = text
+    response = await GeminiAIService.generate_prompt(desc_type, pivot, images=images)
 
     if response:
         return JSONResponse(content={"prompt": response}, status_code=200)

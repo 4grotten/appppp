@@ -199,7 +199,7 @@ class GeminiAIService:
             for retry in range(max_retries):
                 try:
                     response = await cls.get_client().models.generate_content(
-                        model="gemini-2.5-pro",
+                        model="gemini-2.5-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],

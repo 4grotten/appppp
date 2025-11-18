@@ -33,7 +33,7 @@ class GeminiAIService:
         # 3. Для поля "Цена" (стиль текста цены)
         "price_prompt": (
             "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото. без лишней воды четко и ясно описать"
-        "    Add the price AED in an elegant, modern font inside a subtle badge in the bottom-right corner. Luxury minimalistic style, 8K quality"
+            "Add the price in without currency an elegant, modern font inside a subtle badge in the bottom-right corner. Luxury minimalistic style, 8K quality"
             "переводи на язык на котором описана сущность"
         ),
         

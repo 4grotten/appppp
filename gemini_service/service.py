@@ -111,7 +111,7 @@ class GeminiAIService:
                 prompt_parts.append(f"Show discount: {discount}")
 
                 if request.price_with_discount:
-                    prompt_parts.append(f"Show {request.price_with_discount} price it's price after discount")
+                    prompt_parts.append(f"Show {request.price_with_discount} price it's price after discount use it like difference between prices")
                 if discount_desc_en:
                     prompt_parts.append(f" use prompt: '{discount_desc_en}'")
                 prompt_parts.append(" On the image.")

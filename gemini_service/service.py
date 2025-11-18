@@ -11,6 +11,37 @@ from fastapi import UploadFile
 class GeminiAIService:
     _client = None
     GEMINI_PROXY = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+    PROMPT_TEMPLATES = {
+        # 1. Для поля "Описание товара" (обычный текст)
+        "item_description": (
+            "Ты — копирайтер для маркетплейса. "
+            "Твоя задача: Написать продающее, но лаконичное описание товара на основе входных данных. "
+            "Пиши на русском. Не используй маркеров (markdown), просто текст."
+        ),
+        
+        # 2. Для поля "Промт для генерации" (то, что на скрине с фотореализмом)
+        "prompt": (
+            "Ты — профессиональный промпт-инженер для нейросетей (Stable Diffusion, Midjourney). "
+            "Твоя задача: Составить детальный визуальный промпт для генерации изображения этого товара. "
+            "Включи детали: стиль (фотореализм, 8k), освещение (кинематографичное), ракурс, фон (неоновые огни, улица и т.д., если подходит). "
+            "Ответ должен быть на русском языке, в одно предложение или абзац, без лишних вступлений."
+        ),
+        
+        # 3. Для поля "Цена" (стиль текста цены)
+        "price_prompt": (
+            "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото. "
+            "Пользователь даст краткие пожелания (или фото), а ты преврати это в инструкцию для дизайнера. "
+            "Например: 'Крупный жирный шрифт красного цвета в правом верхнем углу'. "
+            "Ответ на русском, кратко."
+        ),
+        
+        # 4. Для поля "Скидка" (стиль текста скидки)
+        "discount_prompt": (
+            "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото. "
+            "Опиши цвет, расположение и стиль плашки или текста скидки на основе данных. "
+            "Ответ на русском, кратко."
+        )
+    }
 
     @classmethod
     def get_client(cls):
@@ -135,48 +166,56 @@ class GeminiAIService:
 
     @classmethod
     async def generate_prompt(cls, desc_type: str, pivot: list[UploadFile] | str):
-        images = []
-        if isinstance(pivot, list):
-            base_prompt = "Using this image generate an"
+        contents = []
+        max_retries = 3
+        system_instruction = cls.PROMPT_TEMPLATES.get(desc_type, cls.PROMPT_TEMPLATES["item_description"])
+
+        full_prompt_text = f"{system_instruction}\n\nДанные для обработки:\n"
+
+        if isinstance(pivot, str):
+                    # Если пользователь ввел текст (например "хочу мрачную атмосферу")
+                    full_prompt_text += f"Текст пользователя: {pivot}"
+                    contents.append(full_prompt_text)
+                
+        elif isinstance(pivot, list):
+            # Если пользователь загрузил картинки
+            full_prompt_text += "Изображения товара (см. вложения)."
+            contents.append(full_prompt_text)
             for file in pivot:
                 try:
+                    # Считываем картинку
+                    # Важно: file.seek(0) может понадобиться, если файл уже читали
+                    await file.seek(0) 
                     image_bytes = await file.read()
                     image = Image.open(io.BytesIO(image_bytes))
+                    
                     if image.mode in ("RGBA", "LA", "P"):
                         image = image.convert("RGB")
-                    images.append(image)
-                except Exception as e:
-                    raise HTTPException(
-                        status_code=400,
-                        detail={"message": "error while trying to load a images"},
+                        
+                    contents.append(image)
+                except Exception:
+                    continue
+
+                # 3. Отправляем запрос
+        try:
+            for retry in max_retries:
+                try:
+                    response = await cls.get_client().models.generate_content(
+                        model="gemini-2.5-pro", # Или 1.5-pro, что у тебя доступно
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["Text"],
+                            temperature=0.7, 
+                        ),
                     )
-        else:
-            base_prompt = f"Using this description {pivot} generate an"
+                    
+                    # Возвращаем чистый текст
+                    return response.text.strip() if response.text else None
+                except errors.APIError as e:
+                    if e.code == 503:
+                        print(f"The model is overloaded trying again {retry}")
 
-        if desc_type == "item_description":
-            prompt = " proffesional description which will be used to generate image and descripts image"
-        else:
-            prompt = f" proffesional {desc_type} description which will be used to generate image for gemini-2.5-flash-image"
-
-        full_text_prompt = (
-            base_prompt
-            + prompt
-            + " make text shorter don't use markdown and generate it on 'RU' language"
-            + " don't add meta information send me only what i've asked"
-        )
-
-        final_prompt = [full_text_prompt]
-
-        if images:
-            final_prompt.extend(images)
-
-        response = await cls.get_client().models.generate_content(
-            model="gemini-2.5-pro",
-            contents=final_prompt,
-            config=types.GenerateContentConfig(response_modalities=["Text"]),
-        )
-
-        if response.text:
-            return response.text
-        else:
+        except Exception as e:
+            # Тут лучше добавить логгер
+            print(f"Gemini Error: {e}")
             return None

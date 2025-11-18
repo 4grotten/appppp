@@ -47,8 +47,8 @@ async def generate_image(
             description=description,
             background_description=background_description,
             price=price,
-            currency=currency
-            second_price=second_price,
+            currency=currency,
+            price_with_discount=price_with_discount,
             price_description=price_description,
             price_on_image=price_on_image,
             discount=discount,

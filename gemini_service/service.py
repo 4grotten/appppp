@@ -177,7 +177,7 @@ class GeminiAIService:
                     full_prompt_text += f"Не добавляй мета слова только то что я попросил, Текст пользователя: {pivot}"
                     contents.append(full_prompt_text)
                 
-        if images(images, list):
+        if isinstance(images, list):
             # Если пользователь загрузил картинки
             full_prompt_text += "Не добавляй мета слова только то что я попросил, Изображения товара (см. вложения)."
             contents.append(full_prompt_text)

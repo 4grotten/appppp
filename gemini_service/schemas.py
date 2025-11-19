@@ -3,9 +3,7 @@ from typing import List, Optional
 
 
 class GeminiAICreateImage(BaseModel):
-    # item_images: List[UploadFile]
-    # background_images: List[UploadFile]
-    name: str
+    name: Optional[str] = None
     description: Optional[str] = None
     background_description: Optional[str] = None
     price: Optional[float] = None

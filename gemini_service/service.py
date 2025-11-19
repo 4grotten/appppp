@@ -160,6 +160,7 @@ class GeminiAIService:
                     if e.code == 503:
                         print(f"Error gemini return 503 -> retry {e.message}")
                     else:
+                        print(f"Gemini error: {e.code} \n\n{e.details}\n\n{e.message}")
                         return None
 
             for part in response.parts:

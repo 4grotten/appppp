@@ -26,20 +26,18 @@ async def generate_image(
     item_images: List[UploadFile] = File(None),
     background_images: List[UploadFile] = File(None),
     # Все остальные поля, принятые как Form
-    name: Optional[str] = Form(...),
-    description: Optional[str] = Form(None),
-    background_description: Optional[str] = Form(None),
-    price: Optional[float] = Form(None),
-    currency: Optional[str] = Form(None),
-    price_with_discount: Optional[float] = Form(None),
-    price_description: Optional[str] = Form(None),
+    name: Optional[str] = Form(default=None),
+    description: Optional[str] = Form(default=None),
+    background_description: Optional[str] = Form(default=None),
+    price: Optional[float] = Form(default=None),
+    currency: Optional[str] = Form(default=None),
+    price_with_discount: Optional[float] = Form(default=None),
+    price_description: Optional[str] = Form(default=None),
     # FastAPI умеет преобразовывать "True"/"False" из формы в bool:
-    price_on_image: bool = Form(None),
-    discount: Optional[int] = Form(None),
-    discount_on_image: bool = Form(None),
-    discount_description: Optional[str] = Form(
-        None
-    ),  # Используем None, если может быть пустым
+    price_on_image: bool = Form(default=False),
+    discount: Optional[int] = Form(default=None),
+    discount_on_image: bool = Form(default=False),
+    discount_description: Optional[str] = Form(default=None),
     aspect_ratio: str = Form(...),
 ):
     try:

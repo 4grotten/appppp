@@ -197,7 +197,7 @@ class GeminiAIService:
         if isinstance(pivot, str):
             # Если пользователь ввел текст (например "хочу мрачную атмосферу")
             full_prompt_text += (
-                f"так же используй язык текста, Текст пользователя: {pivot}"
+                f" так же используй язык текста, Текст пользователя: {pivot}"
             )
             contents.append(full_prompt_text)
 

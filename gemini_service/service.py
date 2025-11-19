@@ -66,14 +66,16 @@ class GeminiAIService:
     ):
         try:
             max_retries = 3
-            item_images = item_images
+            images = list()
             background_images = background_images
 
             images_prompt = []
             if background_images:
-                item_images += background_images
+                images += background_images
             if item_images:
-                for file in item_images:
+                images += item_images
+            if images:
+                for file in images:
                     try:
                         image_bytes = await file.read()
                         image = Image.open(io.BytesIO(image_bytes))

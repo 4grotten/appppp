@@ -50,7 +50,7 @@ class GeminiAIService:
     }
 
     @classmethod
-    async def get_client(cls):
+    def get_client(cls):
         if cls._client is None:
             transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
             http_client = httpx.AsyncClient(transport=transport)
@@ -58,10 +58,14 @@ class GeminiAIService:
                 api_key=GEMINI_API_KEY,
                 http_options=types.HttpOptions(httpx_async_client=http_client),
             ).aio
-            async with http_client as client:
-                resp = await client.get("https://ipinfo.io/json")
-                print(f"IP proxy: {resp.json()}")
         return cls._client
+
+    @classmethod
+    async def check_proxy_ip(cls):
+        transport = httpx.AsyncHTTPTRansport(proxy=cls.proxy_url)
+        async with httpx.AsyncClient(transport=transport) as client:
+            resp = await client.get("https://ipinfo.io/json")
+            print(f"IP from proxy: {resp.json()}")
 
     @classmethod
     async def generate_from_prompt(
@@ -138,6 +142,7 @@ class GeminiAIService:
 
             contents = []
             contents.extend(prompt_parts)
+            await cls.check_proxy_ip()
 
             if images_prompt:
                 contents.extend(images_prompt)

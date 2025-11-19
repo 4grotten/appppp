@@ -62,7 +62,7 @@ class GeminiAIService:
 
     @classmethod
     async def check_proxy_ip(cls):
-        transport = httpx.AsyncHTTPTRansport(proxy=cls.proxy_url)
+        transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
         async with httpx.AsyncClient(transport=transport) as client:
             resp = await client.get("https://ipinfo.io/json")
             print(f"IP from proxy: {resp.json()}")

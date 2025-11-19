@@ -50,7 +50,7 @@ class GeminiAIService:
     }
 
     @classmethod
-    def get_client(cls):
+    async def get_client(cls):
         if cls._client is None:
             transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
             http_client = httpx.AsyncClient(transport=transport)
@@ -58,6 +58,9 @@ class GeminiAIService:
                 api_key=GEMINI_API_KEY,
                 http_options=types.HttpOptions(httpx_async_client=http_client),
             ).aio
+            async with http_client as client:
+                resp = await client.get("https://ipinfo.io/json")
+                print(f"IP proxy: {resp.json()}")
         return cls._client
 
     @classmethod

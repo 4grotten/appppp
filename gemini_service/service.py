@@ -3,7 +3,14 @@ from fastapi.exceptions import HTTPException
 from schemas import GeminiAICreateImage
 from PIL import Image
 import io
-from settings import GEMINI_API_KEY, PROXY_PASS, PROXY_HOST, PROXY_PORT, PROXY_USER, PRODUCTION
+from settings import (
+    GEMINI_API_KEY,
+    PROXY_PASS,
+    PROXY_HOST,
+    PROXY_PORT,
+    PROXY_USER,
+    PRODUCTION,
+)
 import httpx
 from fastapi import UploadFile
 
@@ -21,7 +28,6 @@ class GeminiAIService:
             "Твоя задача: Написать продающее, но лаконичное описание товара на основе входных данных. не ограничивайся строками пиши сколько хочешь"
             "переводи на язык на котором описана сущность, подробно с использованием эмоджи и мотивацией для покупки"
         ),
-        
         # 2. Для поля "Промт для генерации" (то, что на скрине с фотореализмом)
         "prompt": (
             "Ты — профессиональный промпт-инженер для нейросетей (Stable Diffusion, Midjourney). "
@@ -29,20 +35,18 @@ class GeminiAIService:
             "Включи детали: стиль (фотореализм, 8k), освещение (кинематографичное), ракурс, фон (неоновые огни, улица и т.д., если подходит). "
             "переводи на язык на котором описана сущность, в одно предложение или абзац, без лишних вступлений."
         ),
-        
         # 3. Для поля "Цена" (стиль текста цены)
         "price_prompt": (
             "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото.  на 3 строки без подробностей и мета описаний"
             "Add the price in without currency an elegant, modern font inside a subtle badge in the bottom-right corner. Luxury minimalistic style, 8K quality"
             "переводи на язык на котором описана сущность"
         ),
-        
         # 4. Для поля "Скидка" (стиль текста скидки)
         "discount_prompt": (
             "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото.  на 3 строки без подробностей и мета описаний"
             "Add with % \\badge in a modern font inside a subtle badge  in the left corner. Luxury minimalistic style, 8K quality."
             "переводи на язык на котором описана сущность."
-        )
+        ),
     }
 
     @classmethod
@@ -66,9 +70,9 @@ class GeminiAIService:
             background_images = background_images
 
             images_prompt = []
+            if background_images:
+                item_images += background_images
             if item_images:
-                if background_images:
-                    item_images += background_images
                 for file in item_images:
                     try:
                         image_bytes = await file.read()
@@ -101,7 +105,9 @@ class GeminiAIService:
                 prompt_parts.append(f"Background should reflect: '{bg}'.")
 
             if request.price_on_image and price:
-                prompt_parts.append(f"Show price: {price} with currency {request.currency}")
+                prompt_parts.append(
+                    f"Show price: {price} with currency {request.currency}"
+                )
 
                 if price_desc:
                     prompt_parts.append(f" use prompt:'{price_desc}'")
@@ -111,7 +117,9 @@ class GeminiAIService:
                 prompt_parts.append(f"Show discount: {discount}")
 
                 if request.price_with_discount:
-                    prompt_parts.append(f"Show {request.price_with_discount} price it's price after discount use it like difference between prices")
+                    prompt_parts.append(
+                        f"Show {request.price_with_discount} price it's price after discount use it like difference between prices"
+                    )
                 if discount_desc_en:
                     prompt_parts.append(f" use prompt: '{discount_desc_en}'")
                 prompt_parts.append(" On the image.")
@@ -120,7 +128,6 @@ class GeminiAIService:
                 prompt_parts.append(
                     "Use the provided reference images to accurately render the product, "
                     "its shape, color, texture, and details. "
-                    "If background images are provided, use them as inspiration or direct background. "
                     "Combine elements naturally. Do not hallucinate new objects."
                 )
 
@@ -168,18 +175,22 @@ class GeminiAIService:
             return None
 
     @classmethod
-    async def generate_prompt(cls, desc_type: str, pivot:str, images: list[UploadFile]):
+    async def generate_prompt(
+        cls, desc_type: str, pivot: str, images: list[UploadFile]
+    ):
         contents = []
         max_retries = 3
-        system_instruction = cls.PROMPT_TEMPLATES.get(desc_type, cls.PROMPT_TEMPLATES["item_description"])
+        system_instruction = cls.PROMPT_TEMPLATES.get(
+            desc_type, cls.PROMPT_TEMPLATES["item_description"]
+        )
 
         full_prompt_text = f"{system_instruction}\n\nДанные для обработки:\n"
 
         if isinstance(pivot, str):
-                    # Если пользователь ввел текст (например "хочу мрачную атмосферу")
-                    full_prompt_text += f"Текст пользователя: {pivot}"
-                    contents.append(full_prompt_text)
-                
+            # Если пользователь ввел текст (например "хочу мрачную атмосферу")
+            full_prompt_text += f"Текст пользователя: {pivot}"
+            contents.append(full_prompt_text)
+
         if isinstance(images, list):
             # Если пользователь загрузил картинки
             full_prompt_text += "Изображения товара (см. вложения)."
@@ -190,14 +201,14 @@ class GeminiAIService:
                     # Важно: file.seek(0) может понадобиться, если файл уже читали
                     image_bytes = await file.read()
                     image = Image.open(io.BytesIO(image_bytes))
-                    
+
                     if image.mode in ("RGBA", "LA", "P"):
                         image = image.convert("RGB")
-                        
+
                     contents.append(image)
                 except Exception:
                     continue
-        
+
         contents.append(f" Не используй markdown и не добавляй звездочек!")
 
         try:
@@ -208,10 +219,10 @@ class GeminiAIService:
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_modalities=["Text"],
-                            temperature=0.7, 
+                            temperature=0.7,
                         ),
                     )
-                    
+
                     # Возвращаем чистый текст
                     return response.text.strip() if response.text else None
                 except errors.APIError as e:

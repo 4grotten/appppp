@@ -29,6 +29,16 @@ services:
       - ./media:/app/media
     command: /gunicorn.sh
     restart: always
+  gemini-api:
+    build: ./gemini_service
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./gemini_service:/app
+    env_file:
+      - ./env/production.env
+    restart: on-failure
+
 
   daphne:
     build: .

@@ -148,7 +148,7 @@ from .views.organization_tariff import (
     OrganizationInvoiceListAPIView,
     OrganizationReceiptListAPIView,
     OrganizationActiveTariffAPIView,
-    InvoiceSendToEmailAPIView,
+    CreateOrganizationInfoAPIView,
 )
 
 router = DefaultRouter()
@@ -549,7 +549,11 @@ organization_urls = [
         OrganizationActiveTariffAPIView.as_view(),
         name="get-org-active-tariff",
     ),
-    path("invoice/<int:pk>/send-invoice/", InvoiceSendToEmailAPIView.as_view()),
+    path(
+        "organization/create/invoice-info/",
+        CreateOrganizationInfoAPIView.as_view(),
+        name="create-organization-invoice-information",
+    ),
 ]
 
 membership_urls = [

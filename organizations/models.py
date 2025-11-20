@@ -351,6 +351,14 @@ class OrganizationBlacklist(TimestampModel):
         Organization, on_delete=models.CASCADE, related_name="organization_blacklist"
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "organization"),
+                name="unique_user_organization_blacklist",
+            )
+        ]
+
 
 class BlockedUser(TimestampModel):
     user = models.ForeignKey(

@@ -12,7 +12,13 @@ from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveDestroyAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.generics import (
+    GenericAPIView,
+    ListAPIView,
+    RetrieveDestroyAPIView,
+    RetrieveAPIView,
+    CreateAPIView,
+)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -20,49 +26,116 @@ from rest_framework.views import APIView
 
 from common.services.currency import CurrencyConverterService
 from common.utils import generate_new_order_id
-from project.settings.base import FREEDOMPAY_PROJECT_ID, FREEDOMPAY_RECEIVE_SECRET, FREEDOMPAY_PAYOUT_SECRET, \
-    PAYSY_API_KEY, LIBERSAVE_API_KEY, BETAPAY_API_TOKEN, CRYPTOCLOUD_SHOP_ID, CRYPTOCLOUD_API_KEY
-from common.exceptions import NotAcceptableException, PermissionDeniedException, ObjectNotFoundException
-from notifications.constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION, \
-    NOTIFICATION_TYPE_AVAILABLE_DELIVERY, NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT
+from project.settings.base import (
+    FREEDOMPAY_PROJECT_ID,
+    FREEDOMPAY_RECEIVE_SECRET,
+    FREEDOMPAY_PAYOUT_SECRET,
+    PAYSY_API_KEY,
+    LIBERSAVE_API_KEY,
+    BETAPAY_API_TOKEN,
+    CRYPTOCLOUD_SHOP_ID,
+    CRYPTOCLOUD_API_KEY,
+)
+from common.exceptions import (
+    NotAcceptableException,
+    PermissionDeniedException,
+    ObjectNotFoundException,
+)
+from notifications.constants import (
+    NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+    NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+    NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+)
 from notifications.models import Notification
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
-    PartnerWithLatestTransactionSerializer, PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
+    PartnerWithLatestTransactionSerializer,
+    PartnerWithLatestTransactionUnprocessedTransactionCountSerializer,
     PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer,
     PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer,
 )
-from organizations.serializers.query_param_serializers import OrganizationTransactionsQueryParamSerializer
+from organizations.serializers.query_param_serializers import (
+    OrganizationTransactionsQueryParamSerializer,
+)
 from organizations.services.card_services import DiscountCardService
-from organizations.services.client_status_services import OrganizationClientFinancialStatusService
+from organizations.services.client_status_services import (
+    OrganizationClientFinancialStatusService,
+)
 from organizations.services.organization_services import OrganizationService
 from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
 from shop.services.item_services import ShopItemService
 from shop.services.ticket_services import TicketService
-from transactions.models import Transaction, PayoutSystem, Balance, Recipient, TransactionFile
-from transactions.serializers.stats_serializers import TotalStatsSerializer, BalanceTotalStatsSerializer
-from transactions.serializers.transaction_serializers import (
-    PreprocessSerializer, CompleteSerializer, TransactionsSerializer, StartEndDateTransactionSerializer,
-    TransactionDetailSerializer, TransactionWithClientSerializer, OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer, OnlineOfflinePaymentCompleteSerializer, CompleteBookingSerializer,
-    OrganizationRentalTransactionWithClientSerializer, UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer, TransactionActivateSerializer, ResultURLSerializer,
-    PaymentSuccessSerializer, UserInfoTicketSerializer, TicketActivateSerializer,
-    OrganizationTicketWithClientSerializer, TransactionsTicketSerializer, TicketSerializer, PayoutSystemSerializer,
-    TransactionWithdrawalSerializer, RecipientSerializer, BalanceQueryParamSerializer,
-    TransactionWithdrawalDetailSerializer, TransactionWithdrawalSwiftSerializer, RecipientGeneralSerializer,
-    BalanceSerializer, BalanceWithUnprocessedTransactionCountSerializer, WithdrawalTypeTransactionSerializer,
-    TransactionsWithdrawalSerializer, PayoutSystemWithUnprocessedTransactionCountSerializer,
-    TransactionWithdrawalCompleteSerializer, TransactionFilesSerializer, NewInitPaymentSerializer,
-    PaymentSystemMethodSerializer
+from transactions.models import (
+    Transaction,
+    PayoutSystem,
+    Balance,
+    Recipient,
+    TransactionFile,
 )
-from shop.serializers.item_serializers import BookInfoWithClientSerializer, IsActiveTicketSerializer
+from transactions.serializers.stats_serializers import (
+    TotalStatsSerializer,
+    BalanceTotalStatsSerializer,
+)
+from transactions.serializers.transaction_serializers import (
+    PreprocessSerializer,
+    CompleteSerializer,
+    TransactionsSerializer,
+    StartEndDateTransactionSerializer,
+    TransactionDetailSerializer,
+    TransactionWithClientSerializer,
+    OnlineCompleteSerializer,
+    BookingTransactionWithClientSerializer,
+    OnlineOfflinePaymentCompleteSerializer,
+    CompleteBookingSerializer,
+    OrganizationRentalTransactionWithClientSerializer,
+    UserInfoBookingSerializer,
+    ActivateTransactionWithClientSerializer,
+    TransactionActivateSerializer,
+    ResultURLSerializer,
+    PaymentSuccessSerializer,
+    UserInfoTicketSerializer,
+    TicketActivateSerializer,
+    OrganizationTicketWithClientSerializer,
+    TransactionsTicketSerializer,
+    TicketSerializer,
+    PayoutSystemSerializer,
+    TransactionWithdrawalSerializer,
+    RecipientSerializer,
+    BalanceQueryParamSerializer,
+    TransactionWithdrawalDetailSerializer,
+    TransactionWithdrawalSwiftSerializer,
+    RecipientGeneralSerializer,
+    BalanceSerializer,
+    BalanceWithUnprocessedTransactionCountSerializer,
+    WithdrawalTypeTransactionSerializer,
+    TransactionsWithdrawalSerializer,
+    PayoutSystemWithUnprocessedTransactionCountSerializer,
+    TransactionWithdrawalCompleteSerializer,
+    TransactionFilesSerializer,
+    NewInitPaymentSerializer,
+    PaymentSystemMethodSerializer,
+)
+from shop.serializers.item_serializers import (
+    BookInfoWithClientSerializer,
+    IsActiveTicketSerializer,
+)
 from shop.models import ShopItem, Booking, Ticket
-from transactions.services.filters import TransactionFilter, TransactionRentalFilter, TransactionTicketFilter
+from transactions.services.filters import (
+    TransactionFilter,
+    TransactionRentalFilter,
+    TransactionTicketFilter,
+)
 from transactions.services.recipient_services import RecipientService, BalanceService
-from transactions.services.transaction_services import TransactionService, PaymentSystemMethodService
-from users.serializers import ProfileBriefWithPhotoSerializer, UserShortInfoSerializer, UserInfoSerializer
+from transactions.services.transaction_services import (
+    TransactionService,
+    PaymentSystemMethodService,
+)
+from users.serializers import (
+    ProfileBriefWithPhotoSerializer,
+    UserShortInfoSerializer,
+    UserInfoSerializer,
+)
 from users.services import UserService
 
 
@@ -74,43 +147,60 @@ class TransactionPreprocessView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
-        client = serializer.validated_data['client']
-        cart = serializer.validated_data.get('cart', None)
-        order_comment = serializer.validated_data.get('order_comment', None)
+        organization = serializer.validated_data["organization"]
+        client = serializer.validated_data["client"]
+        cart = serializer.validated_data.get("cart", None)
+        order_comment = serializer.validated_data.get("order_comment", None)
 
         new_transaction = TransactionService.preprocess_transaction(
-            client=client, organization=organization, cart=cart, processed_by=request.user, order_comment=order_comment
+            client=client,
+            organization=organization,
+            cart=cart,
+            processed_by=request.user,
+            order_comment=order_comment,
         )
 
-        cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
-                                                                                         organization=organization)
-        fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
-        cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
+        cumulative = (
+            OrganizationClientFinancialStatusService.get_client_cumulative_card(
+                client=client, organization=organization
+            )
+        )
+        fixed = DiscountCardService.get_fixed_discounts_of_organization(
+            organization=organization
+        )
+        cashback = DiscountCardService.get_cashback_discounts_of_organization(
+            organization=organization
+        )
 
-        accrued_cashback = OrganizationClientFinancialStatusService.get_client_accrued_cashback(
-            client=client, organization=organization
+        accrued_cashback = (
+            OrganizationClientFinancialStatusService.get_client_accrued_cashback(
+                client=client, organization=organization
+            )
         )
 
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
-        discounted_price = 0 if cart is None else CartService.get_total_prices_in_cart(cart=cart)[1]
+        discounted_price = (
+            0 if cart is None else CartService.get_total_prices_in_cart(cart=cart)[1]
+        )
 
         data = {
-            'transaction_id': new_transaction.id,
-            'purchase_id': organization.running_purchase_id,
-            'cumulative': cumulative,
-            'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
-            'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
-            'accrued_cashback': accrued_cashback,
-            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
-            'cart_amount': discounted_price,
+            "transaction_id": new_transaction.id,
+            "purchase_id": organization.running_purchase_id,
+            "cumulative": cumulative,
+            "fixed": DiscountCardBriefSerializer(fixed, many=True).data,
+            "cashback": DiscountCardBriefSerializer(cashback, many=True).data,
+            "accrued_cashback": accrued_cashback,
+            "client": ProfileBriefWithPhotoSerializer(
+                client, context={"request": request}
+            ).data,
+            "cart_amount": discounted_price,
         }
 
         return Response(data=data, status=status.HTTP_200_OK)
@@ -124,51 +214,69 @@ class TransactionBookingPreprocessView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         rental = ShopItem.objects.get(id=pk)
-        start_time = serializer.validated_data['start_time']
-        end_time = serializer.validated_data['end_time']
-        organization = serializer.validated_data['organization']
-        client = serializer.validated_data['client']
-        booking = Booking.objects.create(user=request.user,
-                                         item=rental,
-                                         organization=organization,
-                                         start_time=start_time,
-                                         end_time=end_time
-                                         )
-
-        new_transaction = TransactionService.preprocess_booking_transaction(
-            client=client, organization=organization, booking=booking, processed_by=request.user
+        start_time = serializer.validated_data["start_time"]
+        end_time = serializer.validated_data["end_time"]
+        organization = serializer.validated_data["organization"]
+        client = serializer.validated_data["client"]
+        booking = Booking.objects.create(
+            user=request.user,
+            item=rental,
+            organization=organization,
+            start_time=start_time,
+            end_time=end_time,
         )
 
-        cumulative = OrganizationClientFinancialStatusService.get_client_cumulative_card(client=client,
-                                                                                         organization=organization)
-        fixed = DiscountCardService.get_fixed_discounts_of_organization(organization=organization)
-        cashback = DiscountCardService.get_cashback_discounts_of_organization(organization=organization)
+        new_transaction = TransactionService.preprocess_booking_transaction(
+            client=client,
+            organization=organization,
+            booking=booking,
+            processed_by=request.user,
+        )
 
-        accrued_cashback = OrganizationClientFinancialStatusService.get_client_accrued_cashback(
-            client=client, organization=organization
+        cumulative = (
+            OrganizationClientFinancialStatusService.get_client_cumulative_card(
+                client=client, organization=organization
+            )
+        )
+        fixed = DiscountCardService.get_fixed_discounts_of_organization(
+            organization=organization
+        )
+        cashback = DiscountCardService.get_cashback_discounts_of_organization(
+            organization=organization
+        )
+
+        accrued_cashback = (
+            OrganizationClientFinancialStatusService.get_client_accrued_cashback(
+                client=client, organization=organization
+            )
         )
 
         if cumulative is not None:
             cumulative = DiscountCardBriefSerializer(cumulative).data
 
-        discounted_price = 0 if booking is None else BookingService.get_total_prices_in_booking(booking=booking)[1]
+        discounted_price = (
+            0
+            if booking is None
+            else BookingService.get_total_prices_in_booking(booking=booking)[1]
+        )
 
         data = {
-            'transaction_id': new_transaction.id,
-            'purchase_id': organization.running_purchase_id,
-            'cumulative': cumulative,
-            'fixed': DiscountCardBriefSerializer(fixed, many=True).data,
-            'cashback': DiscountCardBriefSerializer(cashback, many=True).data,
-            'accrued_cashback': accrued_cashback,
-            'client': ProfileBriefWithPhotoSerializer(client, context={'request': request}).data,
-            'cart_amount': discounted_price,
+            "transaction_id": new_transaction.id,
+            "purchase_id": organization.running_purchase_id,
+            "cumulative": cumulative,
+            "fixed": DiscountCardBriefSerializer(fixed, many=True).data,
+            "cashback": DiscountCardBriefSerializer(cashback, many=True).data,
+            "accrued_cashback": accrued_cashback,
+            "client": ProfileBriefWithPhotoSerializer(
+                client, context={"request": request}
+            ).data,
+            "cart_amount": discounted_price,
         }
 
         return Response(data=data, status=status.HTTP_200_OK)
@@ -182,25 +290,26 @@ class TransactionCompleteView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
+            transaction_id=serializer.validated_data["transaction_id"],
             processed_by=request.user,
-            original_amount=serializer.validated_data['original_amount'],
-            discount_percent=serializer.validated_data['discount_percent'],
-            source_card=serializer.validated_data['source_card'],
-            from_cashback=serializer.validated_data['from_cashback'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
-            cart=serializer.validated_data.get('cart', None),
+            original_amount=serializer.validated_data["original_amount"],
+            discount_percent=serializer.validated_data["discount_percent"],
+            source_card=serializer.validated_data["source_card"],
+            from_cashback=serializer.validated_data["from_cashback"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
+            cart=serializer.validated_data.get("cart", None),
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class CashierTransactionCompleteView(GenericAPIView):
@@ -211,25 +320,26 @@ class CashierTransactionCompleteView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_transaction_cashier(
-            transaction_id=serializer.validated_data['transaction_id'],
+            transaction_id=serializer.validated_data["transaction_id"],
             processed_by=request.user,
-            original_amount=serializer.validated_data['original_amount'],
-            discount_percent=serializer.validated_data['discount_percent'],
-            source_card=serializer.validated_data['source_card'],
-            from_cashback=serializer.validated_data['from_cashback'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
-            cart=serializer.validated_data.get('cart', None),
+            original_amount=serializer.validated_data["original_amount"],
+            discount_percent=serializer.validated_data["discount_percent"],
+            source_card=serializer.validated_data["source_card"],
+            from_cashback=serializer.validated_data["from_cashback"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
+            cart=serializer.validated_data.get("cart", None),
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class TransactionPayOfflineView(GenericAPIView):
@@ -240,18 +350,19 @@ class TransactionPayOfflineView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_transaction_offline(
-            transaction_id=serializer.validated_data['transaction_id']
+            transaction_id=serializer.validated_data["transaction_id"]
         )
 
-        return Response(data={
-            'message': _('Transaction successfully paid!')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully paid!")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class TransactionBookingCompleteView(GenericAPIView):
@@ -262,27 +373,30 @@ class TransactionBookingCompleteView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        transaction = Transaction.objects.get(id=serializer.validated_data['transaction_id'])
+        transaction = Transaction.objects.get(
+            id=serializer.validated_data["transaction_id"]
+        )
         booking = transaction.booking
 
         TransactionService.complete_booking_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
+            transaction_id=serializer.validated_data["transaction_id"],
             processed_by=request.user,
-            original_amount=serializer.validated_data['original_amount'],
-            discount_percent=serializer.validated_data['discount_percent'],
-            source_card=serializer.validated_data['source_card'],
-            from_cashback=serializer.validated_data['from_cashback'],
+            original_amount=serializer.validated_data["original_amount"],
+            discount_percent=serializer.validated_data["discount_percent"],
+            source_card=serializer.validated_data["source_card"],
+            from_cashback=serializer.validated_data["from_cashback"],
             booking=booking,
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class OnlineTransactionCompleteView(GenericAPIView):
@@ -292,21 +406,22 @@ class OnlineTransactionCompleteView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_online_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            transaction_id=serializer.validated_data["transaction_id"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             processed_by=request.user,
-            request=request
+            request=request,
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class WithdrawalTransactionReviewView(GenericAPIView):
@@ -316,18 +431,20 @@ class WithdrawalTransactionReviewView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         transaction = TransactionService.review_withdrawal_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
-            processed_by=request.user
+            transaction_id=serializer.validated_data["transaction_id"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
+            processed_by=request.user,
         )
 
-        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        data = TransactionWithdrawalDetailSerializer(
+            transaction, context={"request": request}
+        ).data
         return Response(data)
 
 
@@ -337,6 +454,7 @@ class TransactionFilesCreateView(CreateAPIView):
     serializer_class = TransactionFilesSerializer
     queryset = TransactionFile.objects.all()
 
+
 class WithdrawalTransactionCompleteView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionWithdrawalCompleteSerializer
@@ -344,21 +462,24 @@ class WithdrawalTransactionCompleteView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        files = serializer.validated_data.get('files', [])
-        comment = serializer.validated_data.get('comment', None)
+        files = serializer.validated_data.get("files", [])
+        comment = serializer.validated_data.get("comment", None)
         transaction = TransactionService.complete_review_withdrawal_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            files=files, comment=comment,
+            transaction_id=serializer.validated_data["transaction_id"],
+            files=files,
+            comment=comment,
             processed_by=request.user,
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
         )
 
-        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        data = TransactionWithdrawalDetailSerializer(
+            transaction, context={"request": request}
+        ).data
         return Response(data)
 
 
@@ -369,21 +490,24 @@ class WithdrawalTransactionDeclineView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        files = serializer.validated_data.get('files', [])
-        comment = serializer.validated_data.get('comment', None)
+        files = serializer.validated_data.get("files", [])
+        comment = serializer.validated_data.get("comment", None)
         transaction = TransactionService.decline_review_withdrawal_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            files=files, comment=comment,
+            transaction_id=serializer.validated_data["transaction_id"],
+            files=files,
+            comment=comment,
             processed_by=request.user,
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
         )
 
-        data = TransactionWithdrawalDetailSerializer(transaction, context={'request': request}).data
+        data = TransactionWithdrawalDetailSerializer(
+            transaction, context={"request": request}
+        ).data
         return Response(data)
 
 
@@ -394,21 +518,22 @@ class OnlinePaymentTransactionCompleteView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_online_payment_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            transaction_id=serializer.validated_data["transaction_id"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             processed_by=request.user,
-            request=request
+            request=request,
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class OnlineBookingTransactionCompleteView(GenericAPIView):
@@ -418,21 +543,22 @@ class OnlineBookingTransactionCompleteView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         TransactionService.complete_booking_online_transaction(
-            transaction_id=serializer.validated_data['transaction_id'],
-            utc_offset_minutes=serializer.validated_data.get('utc_offset_minutes'),
+            transaction_id=serializer.validated_data["transaction_id"],
+            utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             processed_by=request.user,
-            request=request
+            request=request,
         )
 
-        return Response(data={
-            'message': _('Transaction successfully completed')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully completed")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserTransactionOrganizationView(ListAPIView):
@@ -442,30 +568,33 @@ class UserTransactionOrganizationView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_transaction_organizations(
             client=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
+
 class UserWithdrawalTransactionOrganizationView(ListAPIView):
-    serializer_class = PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer
+    serializer_class = (
+        PartnerWithWithdrawalLatestTransactionUnprocessedTransactionCountSerializer
+    )
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         serializer = WithdrawalTypeTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_withdrawal_transaction_organizations(
             user=self.request.user,
-            withdrawal_type=serializer.validated_data['withdrawal_type']
+            withdrawal_type=serializer.validated_data["withdrawal_type"],
         )
 
 
@@ -476,14 +605,14 @@ class UserSaleTransactionOrganizationView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_sale_transaction_organizations(
             user=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
 
@@ -494,14 +623,14 @@ class UserRentalTransactionOrganizationView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_rental_transaction_organizations(
             client=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
 
@@ -512,14 +641,14 @@ class UserTicketTransactionOrganizationView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_ticket_transaction_organizations(
             client=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
 
@@ -530,32 +659,34 @@ class UserSaleRentalTransactionOrganizationView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_sale_rental_transaction_organizations(
             user=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
 
 class UserSaleTicketTransactionOrganizationView(ListAPIView):
-    serializer_class = PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer
+    serializer_class = (
+        PartnerWithTicketLatestTransactionUnprocessedTransactionCountSerializer
+    )
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
         return TransactionService.get_user_sale_ticket_transaction_organizations(
             user=self.request.user,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
 
@@ -565,22 +696,25 @@ class UserTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
 
-        totals = TransactionService.get_user_totals(client=request.user, currency=currency,
-                                                    organization=organization,
-                                                    start_date=serializer.validated_data.get('start'),
-                                                    end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+        totals = TransactionService.get_user_totals(
+            client=request.user,
+            currency=currency,
+            organization=organization,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -591,32 +725,37 @@ class UserBalanceTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         currency_code = settings.APP_BASE_CURRENCY
 
         balances = []
 
         for currency in [Balance.KGS, Balance.TRC]:
-            totals = TransactionService.get_user_balance_totals(currency=currency_code,
-                                                                balance_currency=currency,
-                                                                organization=organization,
-                                                                start_date=serializer.validated_data.get('start'),
-                                                                end_date=serializer.validated_data.get('end'))
-            withdrawal_totals = TransactionService.get_organization_processed_withdrawals(currency=currency_code,
-                                                                                          balance_currency=currency,
-                                                                                          organization=organization,
-                                                                                          start_date=serializer.validated_data.get('start'),
-                                                                                          end_date=serializer.validated_data.get('end'))
+            totals = TransactionService.get_user_balance_totals(
+                currency=currency_code,
+                balance_currency=currency,
+                organization=organization,
+                start_date=serializer.validated_data.get("start"),
+                end_date=serializer.validated_data.get("end"),
+            )
+            withdrawal_totals = (
+                TransactionService.get_organization_processed_withdrawals(
+                    currency=currency_code,
+                    balance_currency=currency,
+                    organization=organization,
+                    start_date=serializer.validated_data.get("start"),
+                    end_date=serializer.validated_data.get("end"),
+                )
+            )
             totals = totals - withdrawal_totals
 
             balance, created = Balance.objects.get_or_create(
-                organization=organization,
-                currency=currency
+                organization=organization, currency=currency
             )
             balance.balance_amount = totals
             balance.save()
@@ -634,27 +773,31 @@ class UserBalanceDetailTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         currency_code = settings.APP_BASE_CURRENCY
 
-        balance = BalanceService.get(id=kwargs['pk'])
+        balance = BalanceService.get(id=kwargs["pk"])
         currency = balance.currency
 
-        totals = TransactionService.get_user_balance_totals(currency=currency_code,
-                                                            balance_currency=currency,
-                                                            organization=organization,
-                                                            start_date=serializer.validated_data.get('start'),
-                                                            end_date=serializer.validated_data.get('end'))
-        withdrawal_totals = TransactionService.get_organization_processed_withdrawals(currency=currency_code,
-                                                                                      balance_currency=currency,
-                                                                                      organization=organization,
-                                                                                      start_date=serializer.validated_data.get('start'),
-                                                                                      end_date=serializer.validated_data.get('end'))
+        totals = TransactionService.get_user_balance_totals(
+            currency=currency_code,
+            balance_currency=currency,
+            organization=organization,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        withdrawal_totals = TransactionService.get_organization_processed_withdrawals(
+            currency=currency_code,
+            balance_currency=currency,
+            organization=organization,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
         totals = totals - withdrawal_totals
         balance.balance_amount = totals
         balance.save()
@@ -670,23 +813,26 @@ class PayoutSystemListAPIView(ListAPIView):
     def get_queryset(self):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        balance = serializer.validated_data['balance']
-        return balance.payout_systems.all().exclude(name='Swift')
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        balance = serializer.validated_data["balance"]
+        return balance.payout_systems.all().exclude(name="Swift")
 
 
 class SwiftPayoutSystemAPIView(APIView):
 
     def get(self, request, format=None):
-        swift_payout = PayoutSystem.objects.filter(name='Swift').first()
+        swift_payout = PayoutSystem.objects.filter(name="Swift").first()
         if swift_payout:
             serializer = PayoutSystemSerializer(swift_payout)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'Swift PayoutSystem not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Swift PayoutSystem not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class PayoutSystemDetailAPIView(RetrieveAPIView):
@@ -700,22 +846,25 @@ class UserSaleTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
 
-        totals = TransactionService.get_user_sale_totals(processed_by=request.user, currency=currency,
-                                                         organization=organization,
-                                                         start_date=serializer.validated_data.get('start'),
-                                                         end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+        totals = TransactionService.get_user_sale_totals(
+            processed_by=request.user,
+            currency=currency,
+            organization=organization,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -726,22 +875,25 @@ class UserRentalTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
-        totals = TransactionService.get_user_rental_totals(client=request.user, currency=currency,
-                                                    organization=organization,
-                                                    item=serializer.validated_data.get('item'),
-                                                    start_date=serializer.validated_data.get('start'),
-                                                    end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
+        totals = TransactionService.get_user_rental_totals(
+            client=request.user,
+            currency=currency,
+            organization=organization,
+            item=serializer.validated_data.get("item"),
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -752,22 +904,25 @@ class UserTicketTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
-        totals = TransactionService.get_user_ticket_totals(client=request.user, currency=currency,
-                                                    organization=organization,
-                                                    item=serializer.validated_data.get('item'),
-                                                    start_date=serializer.validated_data.get('start'),
-                                                    end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
+        totals = TransactionService.get_user_ticket_totals(
+            client=request.user,
+            currency=currency,
+            organization=organization,
+            item=serializer.validated_data.get("item"),
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -778,23 +933,27 @@ class UserSaleRentalTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
 
-        item = serializer.validated_data['item']
-        totals = TransactionService.get_user_sale_rental_totals(processed_by=request.user, currency=currency,
-                                                         organization=organization, item=item,
-                                                         start_date=serializer.validated_data.get('start'),
-                                                         end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+        item = serializer.validated_data["item"]
+        totals = TransactionService.get_user_sale_rental_totals(
+            processed_by=request.user,
+            currency=currency,
+            organization=organization,
+            item=item,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -805,23 +964,27 @@ class UserSaleTicketTotalsView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
         if organization is not None:
             currency = organization.currency.code
         else:
-            currency = request.META.get('HTTP_CURRENCY', settings.APP_BASE_CURRENCY)
+            currency = request.META.get("HTTP_CURRENCY", settings.APP_BASE_CURRENCY)
 
-        item = serializer.validated_data['item']
-        totals = TransactionService.get_user_sale_ticket_totals(processed_by=request.user, currency=currency,
-                                                         organization=organization, item=item,
-                                                         start_date=serializer.validated_data.get('start'),
-                                                         end_date=serializer.validated_data.get('end'))
-        totals['total_savings'] += totals['total_from_cashback']
+        item = serializer.validated_data["item"]
+        totals = TransactionService.get_user_sale_ticket_totals(
+            processed_by=request.user,
+            currency=currency,
+            organization=organization,
+            item=item,
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
+        )
+        totals["total_savings"] += totals["total_from_cashback"]
         data = TotalStatsSerializer(totals).data
         return Response(data)
 
@@ -831,10 +994,12 @@ class UserTransactionsListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_transactions(client=self.request.user, )
+        transactions = TransactionService.get_user_transactions(
+            client=self.request.user,
+        )
         return transactions
 
 
@@ -843,10 +1008,12 @@ class UserSaleTransactionsListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_sale_transactions(user=self.request.user)
+        transactions = TransactionService.get_user_sale_transactions(
+            user=self.request.user
+        )
         return transactions
 
 
@@ -855,10 +1022,12 @@ class UserRentalSaleTransactionsListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_rental_sale_transactions(user=self.request.user)
+        transactions = TransactionService.get_user_rental_sale_transactions(
+            user=self.request.user
+        )
         return transactions
 
 
@@ -867,10 +1036,12 @@ class UserTicketSaleTransactionsListView(ListAPIView):
     serializer_class = TransactionsTicketSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_ticket_sale_transactions(user=self.request.user)
+        transactions = TransactionService.get_user_ticket_sale_transactions(
+            user=self.request.user
+        )
         return transactions
 
 
@@ -879,11 +1050,13 @@ class UserSaleTransactionsDetailListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionRentalFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        item = ShopItemService.get(id=self.kwargs['pk'])
-        transactions = TransactionService.get_user_sale_transactions_detail(user=self.request.user, item=item)
+        item = ShopItemService.get(id=self.kwargs["pk"])
+        transactions = TransactionService.get_user_sale_transactions_detail(
+            user=self.request.user, item=item
+        )
         return transactions
 
 
@@ -892,11 +1065,13 @@ class UserSaleTicketTransactionsDetailListView(ListAPIView):
     serializer_class = TransactionsTicketSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionTicketFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        item = ShopItemService.get(id=self.kwargs['pk'])
-        transactions = TransactionService.get_user_sale_ticket_transactions_detail(user=self.request.user, item=item)
+        item = ShopItemService.get(id=self.kwargs["pk"])
+        transactions = TransactionService.get_user_sale_ticket_transactions_detail(
+            user=self.request.user, item=item
+        )
         return transactions
 
 
@@ -905,10 +1080,12 @@ class UserRentalTransactionsListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_rental_transactions(client=self.request.user)
+        transactions = TransactionService.get_user_rental_transactions(
+            client=self.request.user
+        )
         return transactions
 
 
@@ -917,10 +1094,12 @@ class UserTicketTransactionsListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        transactions = TransactionService.get_user_ticket_transactions(client=self.request.user)
+        transactions = TransactionService.get_user_ticket_transactions(
+            client=self.request.user
+        )
         return transactions
 
 
@@ -929,11 +1108,13 @@ class UserRentalTransactionsDetailListView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionRentalFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        item = ShopItemService.get(id=self.kwargs['pk'])
-        transactions = TransactionService.get_user_rental_transactions_detail(client=self.request.user, item=item)
+        item = ShopItemService.get(id=self.kwargs["pk"])
+        transactions = TransactionService.get_user_rental_transactions_detail(
+            client=self.request.user, item=item
+        )
         return transactions
 
 
@@ -941,8 +1122,14 @@ class UserTransactionDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk):
-        instance = TransactionService.get_transaction(transaction_id=pk, requested_by=request.user)
-        return Response(TransactionDetailSerializer(instance, context={'request': request, "user": request.user}).data)
+        instance = TransactionService.get_transaction(
+            transaction_id=pk, requested_by=request.user
+        )
+        return Response(
+            TransactionDetailSerializer(
+                instance, context={"request": request, "user": request.user}
+            ).data
+        )
 
 
 class OrganizationTransactionListView(ListAPIView):
@@ -953,22 +1140,23 @@ class OrganizationTransactionListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
-                                                      user=request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=serializer.validated_data["organization"], user=request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
         queryset = TransactionService.get_organization_transactions(
-            organization=serializer.validated_data['organization'],
-            processed_by=serializer.validated_data['processed_by'],
-            start_date=serializer.validated_data['start'],
-            end_date=serializer.validated_data['end'],
-            search_id=serializer.validated_data['search'],
-            client=serializer.validated_data['client']
+            organization=serializer.validated_data["organization"],
+            processed_by=serializer.validated_data["processed_by"],
+            start_date=serializer.validated_data["start"],
+            end_date=serializer.validated_data["end"],
+            search_id=serializer.validated_data["search"],
+            client=serializer.validated_data["client"],
         )
 
         page = self.paginate_queryset(queryset)
@@ -988,20 +1176,21 @@ class OrganizationBalanceTransactionListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
-                                                      user=request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=serializer.validated_data["organization"], user=request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
         queryset = TransactionService.get_organization_balance_all_transactions(
-            organization=serializer.validated_data['organization'],
-            start_date=serializer.validated_data['start'],
-            end_date=serializer.validated_data['end'],
-            search_id=serializer.validated_data['search'],
+            organization=serializer.validated_data["organization"],
+            start_date=serializer.validated_data["start"],
+            end_date=serializer.validated_data["end"],
+            search_id=serializer.validated_data["search"],
         )
 
         page = self.paginate_queryset(queryset)
@@ -1021,22 +1210,23 @@ class OrganizationBalanceWithdrawalTransactionListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
-                                                      user=request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=serializer.validated_data["organization"], user=request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
         queryset = TransactionService.get_organization_balance_withdrawal_transactions(
-            organization=serializer.validated_data['organization'],
-            payout_system=serializer.validated_data['payout_system'],
-            start_date=serializer.validated_data['start'],
-            end_date=serializer.validated_data['end'],
-            search_id=serializer.validated_data['search'],
-            status=serializer.validated_data['status']
+            organization=serializer.validated_data["organization"],
+            payout_system=serializer.validated_data["payout_system"],
+            start_date=serializer.validated_data["start"],
+            end_date=serializer.validated_data["end"],
+            search_id=serializer.validated_data["search"],
+            status=serializer.validated_data["status"],
         )
 
         page = self.paginate_queryset(queryset)
@@ -1056,16 +1246,19 @@ class OrganizationBalanceListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = OrganizationTransactionsQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
-                                                      user=request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=serializer.validated_data["organization"], user=request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
-        queryset = Balance.objects.filter(organization=serializer.validated_data['organization'])
+        queryset = Balance.objects.filter(
+            organization=serializer.validated_data["organization"]
+        )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -1080,7 +1273,9 @@ class TransactionWithdrawalRetrieveView(RetrieveAPIView):
     serializer_class = TransactionWithdrawalDetailSerializer
 
     def get_object(self):
-        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+        return TransactionService.get_transaction(
+            transaction_id=self.kwargs["pk"], requested_by=self.request.user
+        )
 
 
 class OrganizationBalanceRecipientListView(ListAPIView):
@@ -1091,17 +1286,18 @@ class OrganizationBalanceRecipientListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = BalanceQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        if not OrganizationService.user_can_see_stats(organization=serializer.validated_data['organization'],
-                                                      user=request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=serializer.validated_data["organization"], user=request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
         queryset = RecipientService.get_organization_balance_recipient(
-            balance=serializer.validated_data['balance']
+            balance=serializer.validated_data["balance"]
         )
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -1117,22 +1313,31 @@ class OrganizationTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     serializer_class = TransactionWithClientSerializer
 
     def get_object(self):
-        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+        return TransactionService.get_transaction(
+            transaction_id=self.kwargs["pk"], requested_by=self.request.user
+        )
 
     def perform_destroy(self, instance: Transaction):
         # ToDo: implement proper cancellation of transactions
-        if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
-            raise PermissionDeniedException(_('Permission denied'))
+        if not OrganizationService.user_can_see_stats(
+            organization=instance.organization, user=self.request.user
+        ):
+            raise PermissionDeniedException(_("Permission denied"))
 
-        TransactionService.refund_transaction(old_transaction=instance, user=self.request.user, request=self.request)
+        TransactionService.refund_transaction(
+            old_transaction=instance, user=self.request.user, request=self.request
+        )
 
         transaction.on_commit(
             lambda: Notification.objects.filter(
                 extra_data__transaction_id=instance.id,
-                type__in=[NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                          NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
-                          NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT]
-            ).delete())
+                type__in=[
+                    NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                    NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+                    NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+                ],
+            ).delete()
+        )
 
 
 class OrganizationBookingTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
@@ -1140,22 +1345,31 @@ class OrganizationBookingTransactionRetrieveDestroyView(RetrieveDestroyAPIView):
     serializer_class = BookingTransactionWithClientSerializer
 
     def get_object(self):
-        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+        return TransactionService.get_transaction(
+            transaction_id=self.kwargs["pk"], requested_by=self.request.user
+        )
 
     def perform_destroy(self, instance: Transaction):
         # ToDo: implement proper cancellation of transactions
-        if not OrganizationService.user_can_see_stats(organization=instance.organization, user=self.request.user):
-            raise PermissionDeniedException(_('Permission denied'))
+        if not OrganizationService.user_can_see_stats(
+            organization=instance.organization, user=self.request.user
+        ):
+            raise PermissionDeniedException(_("Permission denied"))
 
-        TransactionService.refund_booking_transaction(old_transaction=instance, user=self.request.user, request=self.request)
+        TransactionService.refund_booking_transaction(
+            old_transaction=instance, user=self.request.user, request=self.request
+        )
 
         transaction.on_commit(
             lambda: Notification.objects.filter(
                 extra_data__transaction_id=instance.id,
-                type__in=[NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                          NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
-                          NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT]
-            ).delete())
+                type__in=[
+                    NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                    NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+                    NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
+                ],
+            ).delete()
+        )
 
 
 class OrgFollowersTransactionsListAPIView(ListAPIView):
@@ -1163,12 +1377,14 @@ class OrgFollowersTransactionsListAPIView(ListAPIView):
     serializer_class = TransactionsSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_class = TransactionFilter
-    search_fields = ['id']
+    search_fields = ["id"]
 
     def get_queryset(self):
-        return TransactionService.get_organization_follower_transactions(organization_id=self.kwargs['organization_id'],
-                                                                         requested_by=self.request.user,
-                                                                         follower_id=self.kwargs['user_id'])
+        return TransactionService.get_organization_follower_transactions(
+            organization_id=self.kwargs["organization_id"],
+            requested_by=self.request.user,
+            follower_id=self.kwargs["user_id"],
+        )
 
 
 class UserUnprocessedTransactionCountView(APIView):
@@ -1184,7 +1400,9 @@ class UserWithdrawalTransactionCountView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        count = TransactionService.get_withdrawal_unprocessed_transactions_count(user=request.user)
+        count = TransactionService.get_withdrawal_unprocessed_transactions_count(
+            user=request.user
+        )
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
 
@@ -1194,12 +1412,19 @@ class UserWithdrawalFundsTransactionCountView(APIView):
 
     def get(self, request):
         payment_system_count = TransactionService.get_payment_system_withdrawal_unprocessed_transactions_count(
-            user=request.user)
-        individual_account_count = TransactionService.get_swift_withdrawal_unprocessed_transactions_count(
-            user=request.user)
+            user=request.user
+        )
+        individual_account_count = (
+            TransactionService.get_swift_withdrawal_unprocessed_transactions_count(
+                user=request.user
+            )
+        )
         organization_account_count = 0
-        data = dict(payment_system_count=payment_system_count, individual_account_count=individual_account_count,
-                    organization_account_count=organization_account_count)
+        data = dict(
+            payment_system_count=payment_system_count,
+            individual_account_count=individual_account_count,
+            organization_account_count=organization_account_count,
+        )
         return Response(data, status=status.HTTP_200_OK)
 
 
@@ -1207,7 +1432,9 @@ class UserRentalUnprocessedTransactionCountView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        count = TransactionService.get_rental_unprocessed_transactions_count(user=request.user)
+        count = TransactionService.get_rental_unprocessed_transactions_count(
+            user=request.user
+        )
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
 
@@ -1216,7 +1443,9 @@ class UserTicketUnprocessedTransactionCountView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        count = TransactionService.get_ticket_unprocessed_transactions_count(user=request.user)
+        count = TransactionService.get_ticket_unprocessed_transactions_count(
+            user=request.user
+        )
         data = dict(count=count)
         return Response(data, status=status.HTTP_200_OK)
 
@@ -1224,41 +1453,44 @@ class UserTicketUnprocessedTransactionCountView(APIView):
 class OrganizationUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserShortInfoSerializer
-    search_fields = ['full_name', 'username']
+    search_fields = ["full_name", "username"]
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self):
-        organization = OrganizationService.get(id=self.kwargs['pk'])
-        if not OrganizationService.user_can_see_stats(organization=organization,
-                                                      user=self.request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
-        return TransactionService.get_users_of_transactions_in_organization(organization=organization,
-                                                                            processed_by=self.request.user)
+        organization = OrganizationService.get(id=self.kwargs["pk"])
+        if not OrganizationService.user_can_see_stats(
+            organization=organization, user=self.request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
+        return TransactionService.get_users_of_transactions_in_organization(
+            organization=organization, processed_by=self.request.user
+        )
 
 
 class OrganizationRentalUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationRentalTransactionWithClientSerializer
 
-
     def list(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        rental = ShopItemService.get(id=self.kwargs['pk'])
+        rental = ShopItemService.get(id=self.kwargs["pk"])
         queryset = TransactionService.get_organization_processed_transactions(
             rental=rental,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
-        search = self.request.GET.get('search', None)
+        search = self.request.GET.get("search", None)
         if search:
-            queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
+            queryset = TransactionService.get_ordering_search_result(
+                queryset=queryset, search_word=search
+            )
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -1273,27 +1505,30 @@ class OrganizationTicketUsersTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrganizationTicketWithClientSerializer
 
-
     def list(self, request, *args, **kwargs):
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        ticket = ShopItemService.get(id=self.kwargs['pk'])
+        ticket = ShopItemService.get(id=self.kwargs["pk"])
         queryset = TransactionService.get_organization_processed_ticket_transactions(
             ticket=ticket,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
-        search = self.request.GET.get('search', None)
+        search = self.request.GET.get("search", None)
         if search:
-            queryset = TransactionService.get_ordering_search_result(queryset=queryset, search_word=search)
+            queryset = TransactionService.get_ordering_search_result(
+                queryset=queryset, search_word=search
+            )
 
-        ticket_queryset = Ticket.objects.filter(transaction__in=queryset).order_by('-updated_at')
+        ticket_queryset = Ticket.objects.filter(transaction__in=queryset).order_by(
+            "-updated_at"
+        )
         page = self.paginate_queryset(ticket_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -1310,78 +1545,90 @@ class CheckTicketInUsersView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        ticket = serializer.validated_data['item']
-        client = serializer.validated_data['client']
-        transactions = TransactionService.get_organization_processed_ticket_transactions(ticket=ticket)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        ticket = serializer.validated_data["item"]
+        client = serializer.validated_data["client"]
+        transactions = (
+            TransactionService.get_organization_processed_ticket_transactions(
+                ticket=ticket
+            )
+        )
         has_transaction = transactions.filter(client=client).exists()
 
-        return Response(data={
-            'has_transaction': has_transaction
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"has_transaction": has_transaction}, status=status.HTTP_200_OK
+        )
 
 
 class OrganizationRentalCustomerTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserShortInfoSerializer
-    search_fields = ['full_name', 'username']
+    search_fields = ["full_name", "username"]
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self):
-        rental = ShopItemService.get(id=self.kwargs['pk'])
+        rental = ShopItemService.get(id=self.kwargs["pk"])
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
 
-        if not OrganizationService.user_can_see_stats(organization=organization,
-                                                      user=self.request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=organization, user=self.request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
         transactions = TransactionService.get_organization_processed_transactions(
             rental=rental,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+            start_date=serializer.validated_data.get("start"),
+            end_date=serializer.validated_data.get("end"),
         )
 
-        return TransactionService.get_users_of_rental_or_ticket_in_organization(transactions)
+        return TransactionService.get_users_of_rental_or_ticket_in_organization(
+            transactions
+        )
 
 
 class OrganizationTicketCustomerTransactionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserShortInfoSerializer
-    search_fields = ['full_name', 'username']
+    search_fields = ["full_name", "username"]
     filter_backends = [filters.SearchFilter]
 
     def get_queryset(self):
-        ticket = ShopItemService.get(id=self.kwargs['pk'])
+        ticket = ShopItemService.get(id=self.kwargs["pk"])
         serializer = StartEndDateTransactionSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
+        organization = serializer.validated_data["organization"]
 
-        if not OrganizationService.user_can_see_stats(organization=organization,
-                                                      user=self.request.user):
-            raise NotAcceptableException(_('No rights to see stats of organization'))
+        if not OrganizationService.user_can_see_stats(
+            organization=organization, user=self.request.user
+        ):
+            raise NotAcceptableException(_("No rights to see stats of organization"))
 
-        transactions = TransactionService.get_organization_processed_ticket_transactions(
-            ticket=ticket,
-            start_date=serializer.validated_data.get('start'),
-            end_date=serializer.validated_data.get('end')
+        transactions = (
+            TransactionService.get_organization_processed_ticket_transactions(
+                ticket=ticket,
+                start_date=serializer.validated_data.get("start"),
+                end_date=serializer.validated_data.get("end"),
+            )
         )
 
-        return TransactionService.get_users_of_rental_or_ticket_in_organization(transactions)
+        return TransactionService.get_users_of_rental_or_ticket_in_organization(
+            transactions
+        )
 
 
 class RentPaymentAcceptView(GenericAPIView):
@@ -1391,18 +1638,19 @@ class RentPaymentAcceptView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        transaction_id = serializer.validated_data['transaction_id']
-        TransactionService.accept_freedompay_booking_transaction_by_user(transaction_id=transaction_id,
-                                                                         user=self.request.user,
-                                                                         request=self.request)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        transaction_id = serializer.validated_data["transaction_id"]
+        TransactionService.accept_freedompay_booking_transaction_by_user(
+            transaction_id=transaction_id, user=self.request.user, request=self.request
+        )
 
-        return Response(data={
-            'message': _('Transaction successfully paid')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully paid")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class OrderPaymentAcceptView(GenericAPIView):
@@ -1412,17 +1660,19 @@ class OrderPaymentAcceptView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        transaction_id = serializer.validated_data['transaction_id']
-        TransactionService.accept_freedompay_order_transaction_by_user(transaction_id=transaction_id,
-                                                                       user=self.request.user)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        transaction_id = serializer.validated_data["transaction_id"]
+        TransactionService.accept_freedompay_order_transaction_by_user(
+            transaction_id=transaction_id, user=self.request.user
+        )
 
-        return Response(data={
-            'message': _('Transaction successfully paid')
-        }, status=status.HTTP_200_OK)
+        return Response(
+            data={"message": _("Transaction successfully paid")},
+            status=status.HTTP_200_OK,
+        )
 
 
 class OrderPaymentRejectView(RetrieveDestroyAPIView):
@@ -1430,11 +1680,14 @@ class OrderPaymentRejectView(RetrieveDestroyAPIView):
     serializer_class = TransactionWithClientSerializer
 
     def get_object(self):
-        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+        return TransactionService.get_transaction(
+            transaction_id=self.kwargs["pk"], requested_by=self.request.user
+        )
 
     def perform_destroy(self, instance: Transaction):
-        TransactionService.reject_order_transaction_by_user(old_transaction=instance, user=self.request.user,
-                                                      request=self.request)
+        TransactionService.reject_order_transaction_by_user(
+            old_transaction=instance, user=self.request.user, request=self.request
+        )
 
 
 class RentPaymentRejectView(RetrieveDestroyAPIView):
@@ -1442,11 +1695,14 @@ class RentPaymentRejectView(RetrieveDestroyAPIView):
     serializer_class = BookingTransactionWithClientSerializer
 
     def get_object(self):
-        return TransactionService.get_transaction(transaction_id=self.kwargs['pk'], requested_by=self.request.user)
+        return TransactionService.get_transaction(
+            transaction_id=self.kwargs["pk"], requested_by=self.request.user
+        )
 
     def perform_destroy(self, instance: Transaction):
-        TransactionService.reject_booking_transaction_by_user(old_transaction=instance, user=self.request.user,
-                                                      request=self.request)
+        TransactionService.reject_booking_transaction_by_user(
+            old_transaction=instance, user=self.request.user, request=self.request
+        )
 
 
 class TransactionUserInfoView(GenericAPIView):
@@ -1456,20 +1712,21 @@ class TransactionUserInfoView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         serializer = UserInfoBookingSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        booking = serializer.validated_data['booking']
-        client = serializer.validated_data['client']
+        booking = serializer.validated_data["booking"]
+        client = serializer.validated_data["client"]
 
         try:
             transaction = Transaction.objects.get(booking=booking)
         except Transaction.DoesNotExist:
-            return Response(data={
-                'message': _('Transaction not found for this booking')
-            }, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                data={"message": _("Transaction not found for this booking")},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         if transaction.client.id != client.id:
             raise NotAcceptableException(_("Users don't match"))
@@ -1486,15 +1743,17 @@ class TransactionTicketUserInfoView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         serializer = UserInfoTicketSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        ticket = serializer.validated_data['item']
-        client = serializer.validated_data['client']
+        ticket = serializer.validated_data["item"]
+        client = serializer.validated_data["client"]
 
-        tickets = Ticket.objects.filter(item=ticket, user=client).order_by('-updated_at')
+        tickets = Ticket.objects.filter(item=ticket, user=client).order_by(
+            "-updated_at"
+        )
 
         page = self.paginate_queryset(tickets)
         if page is not None:
@@ -1503,8 +1762,8 @@ class TransactionTicketUserInfoView(GenericAPIView):
             serializer = self.get_serializer(tickets, many=True)
 
         response_data = {
-            'client': UserInfoSerializer(client).data,
-            'tickets': serializer.data,
+            "client": UserInfoSerializer(client).data,
+            "tickets": serializer.data,
         }
 
         return self.get_paginated_response(response_data)
@@ -1517,14 +1776,16 @@ class TransactionOwnTicketInfoView(ListAPIView):
     def get(self, request, *args, **kwargs):
         serializer = UserInfoTicketSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        ticket = serializer.validated_data['item']
+        ticket = serializer.validated_data["item"]
 
-        queryset = Ticket.objects.filter(item=ticket, user=request.user).order_by('-updated_at')
+        queryset = Ticket.objects.filter(item=ticket, user=request.user).order_by(
+            "-updated_at"
+        )
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -1534,6 +1795,7 @@ class TransactionOwnTicketInfoView(ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
 class TransactionTicketInfoView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = TransactionsTicketSerializer
@@ -1541,12 +1803,12 @@ class TransactionTicketInfoView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         serializer = TicketSerializer(data=request.GET)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        ticket = serializer.validated_data['ticket']
+        ticket = serializer.validated_data["ticket"]
 
         # tickets = Ticket.objects.filter(id=, user=request.user).order_by('-updated_at')
         transaction = TransactionService.get(ticket=ticket)
@@ -1562,15 +1824,14 @@ class TransactionBookingActivate(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
+        TransactionService.activate_rental(serializer.validated_data["transaction"])
 
-        TransactionService.activate_rental(serializer.validated_data['transaction'])
-
-        return Response({'message': 'Booking activated successfully'})
+        return Response({"message": "Booking activated successfully"})
 
 
 class TransactionTicketActivate(GenericAPIView):
@@ -1580,14 +1841,14 @@ class TransactionTicketActivate(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        TicketService.activate_ticket(serializer.validated_data['ticket'])
+        TicketService.activate_ticket(serializer.validated_data["ticket"])
 
-        return Response({'message': 'Ticket activated successfully'})
+        return Response({"message": "Ticket activated successfully"})
 
 
 class InitPaymentView(GenericAPIView):
@@ -1604,51 +1865,67 @@ class InitPaymentView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        base_url = 'https://test.apofiz.com/api/v1/'
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        base_url = "https://test.apofiz.com/api/v1/"
 
-        if 'localhost' in request.META['HTTP_HOST']:
-            base_url = 'http://localhost:8000/api/v1/'
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://test.apofiz.com/api/v1/'
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://apofiz.com/api/v1/'
-        if kwargs['pk'] == 1:
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                            to_currency="KGS", amount=transaction.final_amount)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        if "localhost" in request.META["HTTP_HOST"]:
+            base_url = "http://localhost:8000/api/v1/"
+        elif "test.apofiz.com" in request.META["HTTP_HOST"]:
+            base_url = "https://test.apofiz.com/api/v1/"
+        elif "apofiz.com" in request.META["HTTP_HOST"]:
+            base_url = "https://apofiz.com/api/v1/"
+        if kwargs["pk"] == 1:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="KGS",
+                amount=transaction.final_amount,
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             pg_result_url = TransactionService.get_pg_result_url(request=request)
             pg_success_url = TransactionService.get_success_url(request=request)
             pg_failure_url = TransactionService.get_failure_url(request=request)
 
             payment_data = {
-                'pg_order_id': str(transaction_id),
-                'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
-                'pg_amount': str(converted_amount),
-                'pg_description': pg_description,
-                'pg_salt': 'apofiz',
-                'pg_currency': "KGS",
+                "pg_order_id": str(transaction_id),
+                "pg_merchant_id": FREEDOMPAY_PROJECT_ID,
+                "pg_amount": str(converted_amount),
+                "pg_description": pg_description,
+                "pg_salt": "apofiz",
+                "pg_currency": "KGS",
                 # 'pg_testing_mode': '1',
-                'pg_result_url': pg_result_url,
-                'pg_success_url': pg_success_url,
-                'pg_failure_url': pg_failure_url,
-                'pg_timeout_after_payment': '5',
-                'user_id': str(self.request.user.id),
-                'purchase_type': purchase_type
+                "pg_result_url": pg_result_url,
+                "pg_success_url": pg_success_url,
+                "pg_failure_url": pg_failure_url,
+                "pg_timeout_after_payment": "5",
+                "user_id": str(self.request.user.id),
+                "purchase_type": purchase_type,
             }
 
-
-            request_for_signature = TransactionService.make_flat_params_array(payment_data)
+            request_for_signature = TransactionService.make_flat_params_array(
+                payment_data
+            )
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
-            signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
-            signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
-            payment_data['pg_sig'] = signature
-            response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+            signature_params = (
+                ["init_payment.php"]
+                + [str(value) for _, value in sorted_params]
+                + [FREEDOMPAY_RECEIVE_SECRET]
+            )
+            signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
+            payment_data["pg_sig"] = signature
+            response = requests.post(
+                "https://api.freedompay.money/init_payment.php", data=payment_data
+            )
             xml_data = response.text
             response_dict = xmltodict.parse(xml_data)
             json_string = json.dumps(response_dict)
@@ -1656,146 +1933,174 @@ class InitPaymentView(GenericAPIView):
             redirect_url = json_data["response"]["pg_redirect_url"]
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
-        elif kwargs['pk'] == 2:
-            if base_url == 'https://apofiz.com/api/v1/':
+        elif kwargs["pk"] == 2:
+            if base_url == "https://apofiz.com/api/v1/":
                 currency = "USDT"
                 chain_id = 56
-                url = 'https://api.paysy.net/orders/create_order'
-                redirect_url = f'https://paysy.net/en/orders/'
+                url = "https://api.paysy.net/orders/create_order"
+                redirect_url = f"https://paysy.net/en/orders/"
             else:
                 currency = "USDT"
                 chain_id = 5
-                url = 'https://devnet-api.paysy.net/orders/create_order'
-                redirect_url = f'https://devnet.paysy.net/en/orders/'
+                url = "https://devnet-api.paysy.net/orders/create_order"
+                redirect_url = f"https://devnet.paysy.net/en/orders/"
             # currency, chain_id = self.get_company_info(base_url=base_url)
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="USD", amount=transaction.final_amount)
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="USD",
+                amount=transaction.final_amount,
+            )
             converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.02')
+            increase = converted_amount * Decimal("0.02")
             converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            converted_amount = converted_amount.quantize(
+                Decimal("0.00"), rounding=ROUND_DOWN
+            )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             webhook = TransactionService.get_webhook_paysy(request=request)
             params = {
-                'currency': currency,
-                'chain_id': chain_id,
-                'amount': str(converted_amount),
-                'is_validation': False,
-                'any_key': str(self.request.user.id) + "|" + str(transaction_id),
-                'description': purchase_type,
-                'success_url': success_url,
-                'failure_url': failure_url,
-                'webhook': webhook,
-                'lang': 'en'
+                "currency": currency,
+                "chain_id": chain_id,
+                "amount": str(converted_amount),
+                "is_validation": False,
+                "any_key": str(self.request.user.id) + "|" + str(transaction_id),
+                "description": purchase_type,
+                "success_url": success_url,
+                "failure_url": failure_url,
+                "webhook": webhook,
+                "lang": "en",
                 # 'is_redirect': True
             }
             headers = {
-                'accept': 'application/json',
-                'X-API-Key': PAYSY_API_KEY,
-                'Content-Type': 'application/json',
+                "accept": "application/json",
+                "X-API-Key": PAYSY_API_KEY,
+                "Content-Type": "application/json",
             }
             response = requests.post(url, headers=headers, params=params)
             response_json = response.json()
 
-            order_id = response_json.get('result', {}).get('id')
+            order_id = response_json.get("result", {}).get("id")
             if order_id:
                 redirect_url = redirect_url + order_id
-                return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
-        elif kwargs['pk'] == 3:
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="EUR", amount=transaction.final_amount)
+                return Response(
+                    data={"redirect_url": redirect_url}, status=status.HTTP_200_OK
+                )
+        elif kwargs["pk"] == 3:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="EUR",
+                amount=transaction.final_amount,
+            )
             if transaction.currency.code != "EUR":
                 converted_amount = Decimal(str(converted_amount))
-                increase = converted_amount * Decimal('0.01')
+                increase = converted_amount * Decimal("0.01")
                 converted_amount += increase
-                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+                converted_amount = converted_amount.quantize(
+                    Decimal("0.00"), rounding=ROUND_DOWN
+                )
             success_url = TransactionService.get_success_url(request=request)
             currency = "EUR"
             url = "https://api.libersave.com/api/mc/payment"
-                # order_id = generate_new_order_id(str(transaction_id))
+            # order_id = generate_new_order_id(str(transaction_id))
             amount_float = float(converted_amount)
             if amount_float < 1:
                 amount_float = 1
             data = {
-                'amount': amount_float,
-                'order_id': str(transaction_id),
-                'currency': currency,
-                'redirect_url': success_url + f"/?transaction_id={transaction_id}"
+                "amount": amount_float,
+                "order_id": str(transaction_id),
+                "currency": currency,
+                "redirect_url": success_url + f"/?transaction_id={transaction_id}",
             }
             headers = {
-                'accept': 'application/json',
-                'x-api-key': LIBERSAVE_API_KEY,
-                'Content-Type': 'application/json',
+                "accept": "application/json",
+                "x-api-key": LIBERSAVE_API_KEY,
+                "Content-Type": "application/json",
             }
 
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
-            redirect_url = response_json.get('pay_url')
+            redirect_url = response_json.get("pay_url")
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
-        elif kwargs['pk'] == 4:
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="EUR", amount=transaction.final_amount)
+        elif kwargs["pk"] == 4:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="EUR",
+                amount=transaction.final_amount,
+            )
             if transaction.currency.code != "EUR":
                 converted_amount = Decimal(str(converted_amount))
-                increase = converted_amount * Decimal('0.01')
+                increase = converted_amount * Decimal("0.01")
                 converted_amount += increase
-                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+                converted_amount = converted_amount.quantize(
+                    Decimal("0.00"), rounding=ROUND_DOWN
+                )
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             webhook = TransactionService.get_webhook_betapay(request=request)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
-                transaction=transaction)
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             currency = "EUR"
-            url = 'https://api.betapay.online/api/v3/openbanking-payment'
+            url = "https://api.betapay.online/api/v3/openbanking-payment"
             amount_float = float(converted_amount)
             if amount_float < 10:
                 amount_float = 10
             data = {
-                    "merchant_id": 591,
-                    "terminal_id": 619,
-                    "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
-                    "amount": amount_float,
-                    "currency_code": currency,
-                    "callback_url": webhook,
-                    "success_url": success_url,
-                    "fail_url": failure_url
+                "merchant_id": 591,
+                "terminal_id": 619,
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
+                "amount": amount_float,
+                "currency_code": currency,
+                "callback_url": webhook,
+                "success_url": success_url,
+                "fail_url": failure_url,
             }
-            headers = {
-                "token": BETAPAY_API_TOKEN
-            }
+            headers = {"token": BETAPAY_API_TOKEN}
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
 
             # redirect_url = response_json.get('data', {}).get('"iframe_url":')
-            status_code = response_json.get('status', {}).get('code')
-            status_type = response_json.get('status', {}).get('type')
-            data_transaction_id = response_json.get('data', {}).get('transaction_id')
+            status_code = response_json.get("status", {}).get("code")
+            status_type = response_json.get("status", {}).get("type")
+            data_transaction_id = response_json.get("data", {}).get("transaction_id")
             if status_code == 200 and status_type == "success":
 
-                url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
+                url = "https://api.betapay.online/api/v3/openbanking-payment-test"
                 data = {
                     "merchant_id": 591,
                     "terminal_id": 619,
                     "transaction_id": data_transaction_id,
-                    "case": "approved"
+                    "case": "approved",
                 }
-                headers = {
-                    "token": BETAPAY_API_TOKEN
-                }
+                headers = {"token": BETAPAY_API_TOKEN}
                 response = requests.post(url, headers=headers, json=data)
                 response_json2 = response.json()
-                status_code2 = response_json2.get('status', {}).get('code')
-                data_status = response_json2.get('data', {}).get('status')
+                status_code2 = response_json2.get("status", {}).get("code")
+                data_status = response_json2.get("data", {}).get("status")
                 if status_code2 == 200 and data_status == "OK":
                     redirect_url = success_url
                     response_data = {"redirect_url": redirect_url}
@@ -1804,41 +2109,59 @@ class InitPaymentView(GenericAPIView):
                     redirect_url = failure_url
                     response_data = {"redirect_url": redirect_url}
                     return Response(data=response_data, status=status.HTTP_200_OK)
-        elif kwargs['pk'] == 5:
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="USD", amount=transaction.final_amount)
+        elif kwargs["pk"] == 5:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="USD",
+                amount=transaction.final_amount,
+            )
             converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.01')
+            increase = converted_amount * Decimal("0.01")
             converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
-                transaction=transaction)
+            converted_amount = converted_amount.quantize(
+                Decimal("0.00"), rounding=ROUND_DOWN
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             currency = "USD"
-            url = 'https://api.cryptocloud.plus/v2/invoice/create'
+            url = "https://api.cryptocloud.plus/v2/invoice/create"
             amount_float = float(converted_amount)
             data = {
                 "shop_id": CRYPTOCLOUD_SHOP_ID,
                 "amount": amount_float,
                 "currency": currency,
-                "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
                 "email": self.request.user.email,
             }
             print(data)
-            headers = {
-                "Authorization": f"Token {CRYPTOCLOUD_API_KEY}"
-            }
+            headers = {"Authorization": f"Token {CRYPTOCLOUD_API_KEY}"}
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
             if response.status_code == 200:
-                redirect_url = response_json.get('result', {}).get('link')
+                redirect_url = response_json.get("result", {}).get("link")
                 response_data = {"redirect_url": redirect_url}
                 return Response(data=response_data, status=status.HTTP_200_OK)
             else:
-                return Response(data={'error': "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    data={"error": "Something went wrong"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         else:
-            return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                data={"error": "Payment System Not Found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class NewInitPaymentView(GenericAPIView):
@@ -1856,55 +2179,73 @@ class NewInitPaymentView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        base_url = 'https://test.apofiz.com/api/v1/'
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+        base_url = "https://test.apofiz.com/api/v1/"
 
-        if 'localhost' in request.META['HTTP_HOST']:
-            base_url = 'http://localhost:8000/api/v1/'
-        elif 'test.apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://test.apofiz.com/api/v1/'
-        elif 'apofiz.com' in request.META['HTTP_HOST']:
-            base_url = 'https://apofiz.com/api/v1/'
-        transaction_id = serializer.validated_data['transaction_id']
-        payment_method_code = serializer.validated_data['payment_method_code']
-        payment_method = PaymentSystemMethodService.get(code=payment_method_code, is_active=True)
+        if "localhost" in request.META["HTTP_HOST"]:
+            base_url = "http://localhost:8000/api/v1/"
+        elif "test.apofiz.com" in request.META["HTTP_HOST"]:
+            base_url = "https://test.apofiz.com/api/v1/"
+        elif "apofiz.com" in request.META["HTTP_HOST"]:
+            base_url = "https://apofiz.com/api/v1/"
+        transaction_id = serializer.validated_data["transaction_id"]
+        payment_method_code = serializer.validated_data["payment_method_code"]
+        payment_method = PaymentSystemMethodService.get(
+            code=payment_method_code, is_active=True
+        )
 
-        if payment_method.code == 'freedom_pay':
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                            to_currency="KGS", amount=transaction.final_amount)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        if payment_method.code == "freedom_pay":
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="KGS",
+                amount=transaction.final_amount,
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             pg_result_url = TransactionService.get_pg_result_url(request=request)
             pg_success_url = TransactionService.get_success_url(request=request)
             pg_failure_url = TransactionService.get_failure_url(request=request)
 
             payment_data = {
-                'pg_order_id': str(transaction_id),
-                'pg_merchant_id': FREEDOMPAY_PROJECT_ID,
-                'pg_amount': str(converted_amount),
-                'pg_description': pg_description,
-                'pg_salt': 'apofiz',
-                'pg_currency': "KGS",
+                "pg_order_id": str(transaction_id),
+                "pg_merchant_id": FREEDOMPAY_PROJECT_ID,
+                "pg_amount": str(converted_amount),
+                "pg_description": pg_description,
+                "pg_salt": "apofiz",
+                "pg_currency": "KGS",
                 # 'pg_testing_mode': '1',
-                'pg_result_url': pg_result_url,
-                'pg_success_url': pg_success_url,
-                'pg_failure_url': pg_failure_url,
-                'pg_timeout_after_payment': '5',
-                'user_id': str(self.request.user.id),
-                'purchase_type': purchase_type
+                "pg_result_url": pg_result_url,
+                "pg_success_url": pg_success_url,
+                "pg_failure_url": pg_failure_url,
+                "pg_timeout_after_payment": "5",
+                "user_id": str(self.request.user.id),
+                "purchase_type": purchase_type,
             }
 
-
-            request_for_signature = TransactionService.make_flat_params_array(payment_data)
+            request_for_signature = TransactionService.make_flat_params_array(
+                payment_data
+            )
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
-            signature_params = ['init_payment.php'] + [str(value) for _, value in sorted_params] + [FREEDOMPAY_RECEIVE_SECRET]
-            signature = hashlib.md5(';'.join(signature_params).encode()).hexdigest()
-            payment_data['pg_sig'] = signature
-            response = requests.post('https://api.freedompay.money/init_payment.php', data=payment_data)
+            signature_params = (
+                ["init_payment.php"]
+                + [str(value) for _, value in sorted_params]
+                + [FREEDOMPAY_RECEIVE_SECRET]
+            )
+            signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
+            payment_data["pg_sig"] = signature
+            response = requests.post(
+                "https://api.freedompay.money/init_payment.php", data=payment_data
+            )
             xml_data = response.text
             response_dict = xmltodict.parse(xml_data)
             json_string = json.dumps(response_dict)
@@ -1912,146 +2253,174 @@ class NewInitPaymentView(GenericAPIView):
             redirect_url = json_data["response"]["pg_redirect_url"]
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
-        elif payment_method.code == 'paysy':
-            if base_url == 'https://apofiz.com/api/v1/':
+        elif payment_method.code == "paysy":
+            if base_url == "https://apofiz.com/api/v1/":
                 currency = "USDT"
                 chain_id = 56
-                url = 'https://api.paysy.net/orders/create_order'
-                redirect_url = f'https://paysy.net/en/orders/'
+                url = "https://api.paysy.net/orders/create_order"
+                redirect_url = f"https://paysy.net/en/orders/"
             else:
                 currency = "USDT"
                 chain_id = 5
-                url = 'https://devnet-api.paysy.net/orders/create_order'
-                redirect_url = f'https://devnet.paysy.net/en/orders/'
+                url = "https://devnet-api.paysy.net/orders/create_order"
+                redirect_url = f"https://devnet.paysy.net/en/orders/"
             # currency, chain_id = self.get_company_info(base_url=base_url)
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="USD", amount=transaction.final_amount)
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="USD",
+                amount=transaction.final_amount,
+            )
             converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.02')
+            increase = converted_amount * Decimal("0.02")
             converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+            converted_amount = converted_amount.quantize(
+                Decimal("0.00"), rounding=ROUND_DOWN
+            )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             webhook = TransactionService.get_webhook_paysy(request=request)
             params = {
-                'currency': currency,
-                'chain_id': chain_id,
-                'amount': str(converted_amount),
-                'is_validation': False,
-                'any_key': str(self.request.user.id) + "|" + str(transaction_id),
-                'description': purchase_type,
-                'success_url': success_url,
-                'failure_url': failure_url,
-                'webhook': webhook,
-                'lang': 'en'
+                "currency": currency,
+                "chain_id": chain_id,
+                "amount": str(converted_amount),
+                "is_validation": False,
+                "any_key": str(self.request.user.id) + "|" + str(transaction_id),
+                "description": purchase_type,
+                "success_url": success_url,
+                "failure_url": failure_url,
+                "webhook": webhook,
+                "lang": "en",
                 # 'is_redirect': True
             }
             headers = {
-                'accept': 'application/json',
-                'X-API-Key': PAYSY_API_KEY,
-                'Content-Type': 'application/json',
+                "accept": "application/json",
+                "X-API-Key": PAYSY_API_KEY,
+                "Content-Type": "application/json",
             }
             response = requests.post(url, headers=headers, params=params)
             response_json = response.json()
 
-            order_id = response_json.get('result', {}).get('id')
+            order_id = response_json.get("result", {}).get("id")
             if order_id:
                 redirect_url = redirect_url + order_id
-                return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
-        elif payment_method.code == 'libersave':
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="EUR", amount=transaction.final_amount)
+                return Response(
+                    data={"redirect_url": redirect_url}, status=status.HTTP_200_OK
+                )
+        elif payment_method.code == "libersave":
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="EUR",
+                amount=transaction.final_amount,
+            )
             if transaction.currency.code != "EUR":
                 converted_amount = Decimal(str(converted_amount))
-                increase = converted_amount * Decimal('0.01')
+                increase = converted_amount * Decimal("0.01")
                 converted_amount += increase
-                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+                converted_amount = converted_amount.quantize(
+                    Decimal("0.00"), rounding=ROUND_DOWN
+                )
             success_url = TransactionService.get_success_url(request=request)
             currency = "EUR"
             url = "https://api.libersave.com/api/mc/payment"
-                # order_id = generate_new_order_id(str(transaction_id))
+            # order_id = generate_new_order_id(str(transaction_id))
             amount_float = float(converted_amount)
             if amount_float < 1:
                 amount_float = 1
             data = {
-                'amount': amount_float,
-                'order_id': str(transaction_id),
-                'currency': currency,
-                'redirect_url': success_url + f"/?transaction_id={transaction_id}"
+                "amount": amount_float,
+                "order_id": str(transaction_id),
+                "currency": currency,
+                "redirect_url": success_url + f"/?transaction_id={transaction_id}",
             }
             headers = {
-                'accept': 'application/json',
-                'x-api-key': LIBERSAVE_API_KEY,
-                'Content-Type': 'application/json',
+                "accept": "application/json",
+                "x-api-key": LIBERSAVE_API_KEY,
+                "Content-Type": "application/json",
             }
 
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
-            redirect_url = response_json.get('pay_url')
+            redirect_url = response_json.get("pay_url")
             response_data = {"redirect_url": redirect_url}
             return Response(data=response_data, status=status.HTTP_200_OK)
-        elif payment_method.code == 'betapay':
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="EUR", amount=transaction.final_amount)
+        elif payment_method.code == "betapay":
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="EUR",
+                amount=transaction.final_amount,
+            )
             if transaction.currency.code != "EUR":
                 converted_amount = Decimal(str(converted_amount))
-                increase = converted_amount * Decimal('0.01')
+                increase = converted_amount * Decimal("0.01")
                 converted_amount += increase
-                converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+                converted_amount = converted_amount.quantize(
+                    Decimal("0.00"), rounding=ROUND_DOWN
+                )
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
             webhook = TransactionService.get_webhook_betapay(request=request)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
-                transaction=transaction)
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             currency = "EUR"
-            url = 'https://api.betapay.online/api/v3/openbanking-payment'
+            url = "https://api.betapay.online/api/v3/openbanking-payment"
             amount_float = float(converted_amount)
             if amount_float < 10:
                 amount_float = 10
             data = {
-                    "merchant_id": 591,
-                    "terminal_id": 619,
-                    "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
-                    "amount": amount_float,
-                    "currency_code": currency,
-                    "callback_url": webhook,
-                    "success_url": success_url,
-                    "fail_url": failure_url
+                "merchant_id": 591,
+                "terminal_id": 619,
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
+                "amount": amount_float,
+                "currency_code": currency,
+                "callback_url": webhook,
+                "success_url": success_url,
+                "fail_url": failure_url,
             }
-            headers = {
-                "token": BETAPAY_API_TOKEN
-            }
+            headers = {"token": BETAPAY_API_TOKEN}
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
 
             # redirect_url = response_json.get('data', {}).get('"iframe_url":')
-            status_code = response_json.get('status', {}).get('code')
-            status_type = response_json.get('status', {}).get('type')
-            data_transaction_id = response_json.get('data', {}).get('transaction_id')
+            status_code = response_json.get("status", {}).get("code")
+            status_type = response_json.get("status", {}).get("type")
+            data_transaction_id = response_json.get("data", {}).get("transaction_id")
             if status_code == 200 and status_type == "success":
 
-                url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
+                url = "https://api.betapay.online/api/v3/openbanking-payment-test"
                 data = {
                     "merchant_id": 591,
                     "terminal_id": 619,
                     "transaction_id": data_transaction_id,
-                    "case": "approved"
+                    "case": "approved",
                 }
-                headers = {
-                    "token": BETAPAY_API_TOKEN
-                }
+                headers = {"token": BETAPAY_API_TOKEN}
                 response = requests.post(url, headers=headers, json=data)
                 response_json2 = response.json()
-                status_code2 = response_json2.get('status', {}).get('code')
-                data_status = response_json2.get('data', {}).get('status')
+                status_code2 = response_json2.get("status", {}).get("code")
+                data_status = response_json2.get("data", {}).get("status")
                 if status_code2 == 200 and data_status == "OK":
                     redirect_url = success_url
                     response_data = {"redirect_url": redirect_url}
@@ -2060,41 +2429,58 @@ class NewInitPaymentView(GenericAPIView):
                     redirect_url = failure_url
                     response_data = {"redirect_url": redirect_url}
                     return Response(data=response_data, status=status.HTTP_200_OK)
-        elif payment_method.code == 'cryptocloud':
-            transaction_id = serializer.validated_data['transaction_id']
-            transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-            converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                                to_currency="USD", amount=transaction.final_amount)
+        elif payment_method.code == "cryptocloud":
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            converted_amount = CurrencyConverterService.convert(
+                from_currency=transaction.currency.code,
+                to_currency="USD",
+                amount=transaction.final_amount,
+            )
             converted_amount = Decimal(str(converted_amount))
-            increase = converted_amount * Decimal('0.01')
+            increase = converted_amount * Decimal("0.01")
             converted_amount += increase
-            converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
-            pg_description, purchase_type = TransactionService.get_pg_description_and_purchase_type(
-                transaction=transaction)
+            converted_amount = converted_amount.quantize(
+                Decimal("0.00"), rounding=ROUND_DOWN
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
             currency = "USD"
-            url = 'https://api.cryptocloud.plus/v2/invoice/create'
+            url = "https://api.cryptocloud.plus/v2/invoice/create"
             amount_float = float(converted_amount)
             data = {
                 "shop_id": CRYPTOCLOUD_SHOP_ID,
                 "amount": amount_float,
                 "currency": currency,
-                "order_id": str(self.request.user.id) + "|" + str(transaction_id) + "|" + str(purchase_type),
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
                 "email": self.request.user.email,
             }
-            print(data)
-            headers = {
-                "Authorization": f"Token {CRYPTOCLOUD_API_KEY}"
-            }
+            headers = {"Authorization": f"Token {CRYPTOCLOUD_API_KEY}"}
             response = requests.post(url, headers=headers, json=data)
             response_json = response.json()
             if response.status_code == 200:
-                redirect_url = response_json.get('result', {}).get('link')
+                redirect_url = response_json.get("result", {}).get("link")
                 response_data = {"redirect_url": redirect_url}
                 return Response(data=response_data, status=status.HTTP_200_OK)
             else:
-                return Response(data={'error': "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    data={"error": "Something went wrong"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         else:
-            return Response(data={'error': "Payment System Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                data={"error": "Payment System Not Found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class InitPaymentSwiftView(GenericAPIView):
@@ -2102,91 +2488,104 @@ class InitPaymentSwiftView(GenericAPIView):
     serializer_class = OnlineOfflinePaymentCompleteSerializer
 
     def get_company_info(self):
-        company_info_url = 'https://devnet-api.paysy.net/companies/get'
+        company_info_url = "https://devnet-api.paysy.net/companies/get"
 
-        headers = {
-            'accept': 'application/json',
-            'X-API-Key': PAYSY_API_KEY
-        }
+        headers = {"accept": "application/json", "X-API-Key": PAYSY_API_KEY}
 
         try:
             response = requests.get(company_info_url, headers=headers)
             if response.status_code == 200:
-                company_info = response.json().get('result', {})
-                if company_info.get('status', False):
-                    deposit_info = company_info.get('deposit', {}).get('5', {})
-                    currency = deposit_info.get('currency', 'USDT')
-                    chain_id = deposit_info.get('chain', 5)
+                company_info = response.json().get("result", {})
+                if company_info.get("status", False):
+                    deposit_info = company_info.get("deposit", {}).get("5", {})
+                    currency = deposit_info.get("currency", "USDT")
+                    chain_id = deposit_info.get("chain", 5)
                     return currency, chain_id
                 else:
                     return None, None
 
             else:
-                return 'USDT', 5
+                return "USDT", 5
 
         except Exception as e:
-            return 'USD', 5
+            return "USD", 5
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         currency, chain_id = self.get_company_info()
         if currency is None or chain_id is None:
-            return Response(data={
-                'message': _('Failed to retrieve company information from PaySy'),
-                'error': _('Company information retrieval failed')
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={
+                    "message": _("Failed to retrieve company information from PaySy"),
+                    "error": _("Company information retrieval failed"),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        transaction_id = serializer.validated_data['transaction_id']
-        transaction = TransactionService.get(id=transaction_id, is_processed=False, status=Transaction.ACCEPTED)
-        converted_amount = CurrencyConverterService.convert(from_currency=transaction.currency.code,
-                                                            to_currency="USD", amount=transaction.final_amount)
+        transaction_id = serializer.validated_data["transaction_id"]
+        transaction = TransactionService.get(
+            id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+        )
+        converted_amount = CurrencyConverterService.convert(
+            from_currency=transaction.currency.code,
+            to_currency="USD",
+            amount=transaction.final_amount,
+        )
         converted_amount = Decimal(str(converted_amount))
-        increase = converted_amount * Decimal('0.02')
+        increase = converted_amount * Decimal("0.02")
         converted_amount += increase
-        converted_amount = converted_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+        converted_amount = converted_amount.quantize(
+            Decimal("0.00"), rounding=ROUND_DOWN
+        )
 
-        _, purchase_type = TransactionService.get_pg_description_and_purchase_type(transaction=transaction)
+        _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            transaction=transaction
+        )
         success_url = TransactionService.get_success_url(request=request)
         failure_url = TransactionService.get_failure_url(request=request)
         webhook = TransactionService.get_webhook_paysy(request=request)
         params = {
-            'currency': currency,
-            'chain_id': chain_id,
-            'amount': str(converted_amount),
-            'is_validation': False,
-            'any_key': str(self.request.user.id) + "|" + str(transaction_id),
-            'description': purchase_type,
-            'success_url': success_url,
-            'failure_url': failure_url,
-            'webhook': webhook,
-            'lang': 'en'
+            "currency": currency,
+            "chain_id": chain_id,
+            "amount": str(converted_amount),
+            "is_validation": False,
+            "any_key": str(self.request.user.id) + "|" + str(transaction_id),
+            "description": purchase_type,
+            "success_url": success_url,
+            "failure_url": failure_url,
+            "webhook": webhook,
+            "lang": "en",
             # 'is_redirect': True
         }
         headers = {
-            'accept': 'application/json',
-            'X-API-Key': PAYSY_API_KEY,
-            'Content-Type': 'application/json',
+            "accept": "application/json",
+            "X-API-Key": PAYSY_API_KEY,
+            "Content-Type": "application/json",
         }
-        url = 'https://devnet-api.paysy.net/orders/create_order'
+        url = "https://devnet-api.paysy.net/orders/create_order"
         response = requests.post(url, headers=headers, params=params)
         response_json = response.json()
 
-        order_id = response_json.get('result', {}).get('id')
+        order_id = response_json.get("result", {}).get("id")
         if order_id:
-            redirect_url = f'https://devnet.paysy.net/en/orders/{order_id}'
-            return Response(data={"redirect_url": redirect_url}, status=status.HTTP_200_OK)
+            redirect_url = f"https://devnet.paysy.net/en/orders/{order_id}"
+            return Response(
+                data={"redirect_url": redirect_url}, status=status.HTTP_200_OK
+            )
         else:
-            return Response(data={
-                'message': _('Failed to retrieve order ID from PaySy response'),
-                'error': _('Order ID retrieval failed')
-            }, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(
+                data={
+                    "message": _("Failed to retrieve order ID from PaySy response"),
+                    "error": _("Order ID retrieval failed"),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class PaySyWebhookView(APIView):
@@ -2195,10 +2594,9 @@ class PaySyWebhookView(APIView):
         payload = request.data
         event_type = payload.get("event")
         order = payload.get("order")
-        any_key = order.get('any_key')
+        any_key = order.get("any_key")
         purchase_type = order.get("description")
         user_id, transaction_id = any_key.split("|")
-
 
         user_id = int(user_id)
         user = UserService.get(id=user_id)
@@ -2206,52 +2604,60 @@ class PaySyWebhookView(APIView):
         transaction = TransactionService.get(id=transaction_id)
 
         if event_type == "ORDER_COMPLETED":
-            if purchase_type == 'product':
-                TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
-                                                                               user=user)
+            if purchase_type == "product":
+                TransactionService.accept_paysy_order_transaction_by_user(
+                    transaction_id=transaction.id, user=user
+                )
 
-            elif purchase_type == 'deal':
-                TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
-            elif purchase_type == 'assistant':
-                TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
+            elif purchase_type == "deal":
+                TransactionService.complete_paysy_transaction_online(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "assistant":
+                TransactionService.accept_assistant_transaction(
+                    transaction_id=transaction.id
+                )
 
             else:
-                TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
-                                                                                 user=user,
-                                                                                 request=self.request)
+                TransactionService.accept_paysy_booking_transaction_by_user(
+                    transaction_id=transaction.id, user=user, request=self.request
+                )
             response_data = {
-                'status': 'ok',
+                "status": "ok",
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif event_type == "ORDER_CREATED":
             response_data = {
-                'status': 'ORDER_CREATED',
+                "status": "ORDER_CREATED",
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif event_type == "DEPOSIT_PENDING":
             response_data = {
-                'status': 'DEPOSIT_PENDING',
+                "status": "DEPOSIT_PENDING",
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif event_type == "DEPOSIT_CONFIRMED":
             response_data = {
-                'status': 'DEPOSIT_CONFIRMED',
+                "status": "DEPOSIT_CONFIRMED",
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif event_type == "ORDER_PAYMENT_EXPIRED":
             response_data = {
-                'status': 'ORDER_PAYMENT_EXPIRED',
+                "status": "ORDER_PAYMENT_EXPIRED",
             }
             return Response(response_data, status=status.HTTP_200_OK)
 
-        return Response({"message": "Received an unknown event type"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"message": "Received an unknown event type"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class BetaPayWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
         payload = request.data
-        order_id = payload.get('order_id')
+        order_id = payload.get("order_id")
         user_id, transaction_id, purchase_type = order_id.split("|")
         status_value = payload.get("status")
         error_code = payload.get("error_code")
@@ -2263,33 +2669,41 @@ class BetaPayWebhookView(APIView):
         transaction = TransactionService.get(id=transaction_id)
         if error_code == "":
             if status_value == "approved":
-                if purchase_type == 'product':
-                    TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
-                                                                                   user=user)
+                if purchase_type == "product":
+                    TransactionService.accept_paysy_order_transaction_by_user(
+                        transaction_id=transaction.id, user=user
+                    )
 
-                elif purchase_type == 'deal':
-                    TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
-                elif purchase_type == 'assistant':
-                    TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
+                elif purchase_type == "deal":
+                    TransactionService.complete_paysy_transaction_online(
+                        transaction_id=transaction.id
+                    )
+                elif purchase_type == "assistant":
+                    TransactionService.accept_assistant_transaction(
+                        transaction_id=transaction.id
+                    )
                 else:
-                    TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
-                                                                                     user=user,
-                                                                                     request=self.request)
+                    TransactionService.accept_paysy_booking_transaction_by_user(
+                        transaction_id=transaction.id, user=user, request=self.request
+                    )
                 response_data = {
-                    'status': 'ok',
+                    "status": "ok",
                 }
                 return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"message": "Received an unknown status"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class CryptoCloudPostbackView(APIView):
 
     def post(self, request, *args, **kwargs):
         payload = request.data
-        order_id = payload.get('order_id')
+        order_id = payload.get("order_id")
         user_id, transaction_id, purchase_type = order_id.split("|")
         status_value = payload.get("status")
 
@@ -2298,27 +2712,39 @@ class CryptoCloudPostbackView(APIView):
         transaction_id = int(transaction_id)
         transaction = TransactionService.get(id=transaction_id)
         if status_value == "success":
-            if purchase_type == 'product':
-                TransactionService.accept_paysy_order_transaction_by_user(transaction_id=transaction.id,
-                                                                               user=user)
-            elif purchase_type == 'org_subscription':
-                TransactionService.accept_org_subscription_transaction(transaction_id=transaction.id)
-            elif purchase_type == 'user_app':
-                TransactionService.accept_user_app_transaction(transaction_id=transaction.id)
-            elif purchase_type == 'deal':
-                TransactionService.complete_paysy_transaction_online(transaction_id=transaction.id)
-            elif purchase_type == 'assistant':
-                TransactionService.accept_assistant_transaction(transaction_id=transaction.id)
+            if purchase_type == "product":
+                TransactionService.accept_paysy_order_transaction_by_user(
+                    transaction_id=transaction.id, user=user
+                )
+            elif purchase_type == "org_subscription":
+                TransactionService.accept_org_subscription_transaction(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "user_app":
+                TransactionService.accept_user_app_transaction(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "deal":
+                TransactionService.complete_paysy_transaction_online(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "assistant":
+                TransactionService.accept_assistant_transaction(
+                    transaction_id=transaction.id
+                )
 
             else:
-                TransactionService.accept_paysy_booking_transaction_by_user(transaction_id=transaction.id,
-                                                                                 user=user,
-                                                                                 request=self.request)
+                TransactionService.accept_paysy_booking_transaction_by_user(
+                    transaction_id=transaction.id, user=user, request=self.request
+                )
 
-            response_data = {'message': 'Postback received'}
+            response_data = {"message": "Postback received"}
             return Response(response_data, status=status.HTTP_200_OK)
         else:
-            return Response({"message": "Received an unknown status"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Received an unknown status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class BetaPayPaymentTestView(APIView):
@@ -2330,21 +2756,18 @@ class BetaPayPaymentTestView(APIView):
         transaction_id = payload.get("transaction_id")
         case = payload.get("case")
 
-        url = 'https://api.betapay.online/api/v3/openbanking-payment-test'
+        url = "https://api.betapay.online/api/v3/openbanking-payment-test"
         data = {
-                "merchant_id": merchant_id,
-                "terminal_id": terminal_id,
-                "transaction_id": transaction_id,
-                "case": case
-                }
-        headers = {
-            "token": BETAPAY_API_TOKEN
+            "merchant_id": merchant_id,
+            "terminal_id": terminal_id,
+            "transaction_id": transaction_id,
+            "case": case,
         }
+        headers = {"token": BETAPAY_API_TOKEN}
         response = requests.post(url, headers=headers, json=data)
         response_json = response.json()
 
         return Response(response_json)
-
 
 
 class ResultURLView(APIView):
@@ -2352,59 +2775,64 @@ class ResultURLView(APIView):
         serializer = ResultURLSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            pg_order_id = validated_data.get('pg_order_id', 1)
-            pg_can_reject = validated_data.get('pg_can_reject', 0)
-            pg_result = validated_data.get('pg_result', 0)
-            pg_description = validated_data.get('pg_description', '')
-            user_id = validated_data.get('user_id')
-            purchase_type = validated_data.get('purchase_type')
+            pg_order_id = validated_data.get("pg_order_id", 1)
+            pg_can_reject = validated_data.get("pg_can_reject", 0)
+            pg_result = validated_data.get("pg_result", 0)
+            pg_description = validated_data.get("pg_description", "")
+            user_id = validated_data.get("user_id")
+            purchase_type = validated_data.get("purchase_type")
             user_id = int(user_id)
             user = UserService.get(id=user_id)
 
             if pg_result == 0:
                 response_data = {
-                    'pg_status': 'rejected',
-                    'pg_description': pg_description,
-                    'pg_salt': validated_data.get('pg_salt', ''),
-                    'pg_sig': validated_data.get('pg_sig', '')
+                    "pg_status": "rejected",
+                    "pg_description": pg_description,
+                    "pg_salt": validated_data.get("pg_salt", ""),
+                    "pg_sig": validated_data.get("pg_sig", ""),
                 }
             else:
-                if purchase_type == 'product':
-                    TransactionService.accept_freedompay_order_transaction_by_user(transaction_id=pg_order_id,
-                                                                                   user=user)
+                if purchase_type == "product":
+                    TransactionService.accept_freedompay_order_transaction_by_user(
+                        transaction_id=pg_order_id, user=user
+                    )
                     response_data = {
-                        'pg_status': 'ok',
-                        'pg_description': 'Заказ оплачен',
-                        'pg_salt': validated_data.get('pg_salt', ''),
-                        'pg_sig': validated_data.get('pg_sig', '')
+                        "pg_status": "ok",
+                        "pg_description": "Заказ оплачен",
+                        "pg_salt": validated_data.get("pg_salt", ""),
+                        "pg_sig": validated_data.get("pg_sig", ""),
                     }
-                elif purchase_type == 'deal':
-                    TransactionService.complete_freedompay_transaction_online(transaction_id=pg_order_id)
+                elif purchase_type == "deal":
+                    TransactionService.complete_freedompay_transaction_online(
+                        transaction_id=pg_order_id
+                    )
 
                     response_data = {
-                        'pg_status': 'ok',
-                        'pg_description': 'Заказ оплачен',
-                        'pg_salt': validated_data.get('pg_salt', ''),
-                        'pg_sig': validated_data.get('pg_sig', '')
+                        "pg_status": "ok",
+                        "pg_description": "Заказ оплачен",
+                        "pg_salt": validated_data.get("pg_salt", ""),
+                        "pg_sig": validated_data.get("pg_sig", ""),
                     }
-                elif purchase_type == 'assistant':
-                    TransactionService.accept_assistant_transaction(transaction_id=pg_order_id)
+                elif purchase_type == "assistant":
+                    TransactionService.accept_assistant_transaction(
+                        transaction_id=pg_order_id
+                    )
 
                     response_data = {
-                        'pg_status': 'ok',
-                        'pg_description': 'Заказ оплачен',
-                        'pg_salt': validated_data.get('pg_salt', ''),
-                        'pg_sig': validated_data.get('pg_sig', '')
+                        "pg_status": "ok",
+                        "pg_description": "Заказ оплачен",
+                        "pg_salt": validated_data.get("pg_salt", ""),
+                        "pg_sig": validated_data.get("pg_sig", ""),
                     }
                 else:
-                    TransactionService.accept_freedompay_booking_transaction_by_user(transaction_id=pg_order_id,
-                                                                                     user=user,
-                                                                                     request=self.request)
+                    TransactionService.accept_freedompay_booking_transaction_by_user(
+                        transaction_id=pg_order_id, user=user, request=self.request
+                    )
                     response_data = {
-                        'pg_status': 'ok',
-                        'pg_description': 'Заказ оплачен',
-                        'pg_salt': validated_data.get('pg_salt', ''),
-                        'pg_sig': validated_data.get('pg_sig', '')
+                        "pg_status": "ok",
+                        "pg_description": "Заказ оплачен",
+                        "pg_salt": validated_data.get("pg_salt", ""),
+                        "pg_sig": validated_data.get("pg_sig", ""),
                     }
 
             return Response(response_data, status=status.HTTP_200_OK)
@@ -2417,12 +2845,12 @@ class PaymentSuccessView(APIView):
         serializer = PaymentSuccessSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            pg_order_id = validated_data.get('pg_order_id')
-            pg_payment_id = validated_data.get('pg_payment_id')
-            pg_error_code = validated_data.get('pg_error_code')
-            pg_error_description = validated_data.get('pg_error_description')
+            pg_order_id = validated_data.get("pg_order_id")
+            pg_payment_id = validated_data.get("pg_payment_id")
+            pg_error_code = validated_data.get("pg_error_code")
+            pg_error_description = validated_data.get("pg_error_description")
 
-            return Response({'message': 'Payment successful', **validated_data})
+            return Response({"message": "Payment successful", **validated_data})
 
 
 class TransactionWithdrawalView(GenericAPIView):
@@ -2433,31 +2861,42 @@ class TransactionWithdrawalView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
-        payout_system = serializer.validated_data['payout_system']
-        balance = serializer.validated_data['balance']
-        image_id = serializer.validated_data.get('image_id', None)
-        owner_name = serializer.validated_data['owner_name']
-        card_number = serializer.validated_data['card_number']
-        transfer_amount = serializer.validated_data['transfer_amount']
-        utc_offset_minutes = serializer.validated_data.get('utc_offset_minutes')
+        organization = serializer.validated_data["organization"]
+        payout_system = serializer.validated_data["payout_system"]
+        balance = serializer.validated_data["balance"]
+        image_id = serializer.validated_data.get("image_id", None)
+        owner_name = serializer.validated_data["owner_name"]
+        card_number = serializer.validated_data["card_number"]
+        transfer_amount = serializer.validated_data["transfer_amount"]
+        utc_offset_minutes = serializer.validated_data.get("utc_offset_minutes")
 
         # create recipient service
-        recipient = RecipientService.create_recipient(payout_system=payout_system, image_id=image_id,
-                                                      owner_name=owner_name, card_number=card_number,
-                                                      transfer_amount=transfer_amount)
+        recipient = RecipientService.create_recipient(
+            payout_system=payout_system,
+            image_id=image_id,
+            owner_name=owner_name,
+            card_number=card_number,
+            transfer_amount=transfer_amount,
+        )
 
         # create transaction of withdrawal service
-        transaction = TransactionService.create_withdrawal_transaction(request=request, organization=organization, recipient=recipient,
-                                                         balance=balance, processed_by=request.user,
-                                                         utc_offset_minutes=utc_offset_minutes)
+        transaction = TransactionService.create_withdrawal_transaction(
+            request=request,
+            organization=organization,
+            recipient=recipient,
+            balance=balance,
+            processed_by=request.user,
+            utc_offset_minutes=utc_offset_minutes,
+        )
 
-        transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
+        transaction_serializer = TransactionWithdrawalDetailSerializer(
+            transaction, context={"request": request}
+        )
         return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -2469,42 +2908,53 @@ class TransactionWithdrawalSwiftView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(data={
-                'message': _('Invalid input'),
-                'errors': serializer.errors
-            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                data={"message": _("Invalid input"), "errors": serializer.errors},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
-        organization = serializer.validated_data['organization']
-        balance = serializer.validated_data['balance']
-        image_id = serializer.validated_data.get('image_id', None)
-        owner_name = serializer.validated_data['owner_name']
-        swift_bic_code = serializer.validated_data['swift_bic_code']
-        iban_account_number = serializer.validated_data['iban_account_number']
-        country = serializer.validated_data['country']
-        city = serializer.validated_data['city']
-        address = serializer.validated_data['address']
-        postcode = serializer.validated_data['postcode']
-        email = serializer.validated_data['email']
-        transfer_amount = serializer.validated_data['transfer_amount']
-        utc_offset_minutes = serializer.validated_data.get('utc_offset_minutes')
+        organization = serializer.validated_data["organization"]
+        balance = serializer.validated_data["balance"]
+        image_id = serializer.validated_data.get("image_id", None)
+        owner_name = serializer.validated_data["owner_name"]
+        swift_bic_code = serializer.validated_data["swift_bic_code"]
+        iban_account_number = serializer.validated_data["iban_account_number"]
+        country = serializer.validated_data["country"]
+        city = serializer.validated_data["city"]
+        address = serializer.validated_data["address"]
+        postcode = serializer.validated_data["postcode"]
+        email = serializer.validated_data["email"]
+        transfer_amount = serializer.validated_data["transfer_amount"]
+        utc_offset_minutes = serializer.validated_data.get("utc_offset_minutes")
 
         # create recipient swift service
-        recipient = RecipientService.create_swift_recipient(image_id=image_id,
-                                                            owner_name=owner_name, swift_bic_code=swift_bic_code,
-                                                            iban_account_number=iban_account_number, country=country,
-                                                            city=city, address=address, postcode=postcode, email=email,
-                                                            transfer_amount=transfer_amount)
+        recipient = RecipientService.create_swift_recipient(
+            image_id=image_id,
+            owner_name=owner_name,
+            swift_bic_code=swift_bic_code,
+            iban_account_number=iban_account_number,
+            country=country,
+            city=city,
+            address=address,
+            postcode=postcode,
+            email=email,
+            transfer_amount=transfer_amount,
+        )
 
         # create transaction of withdrawal service
-        transaction = TransactionService.create_withdrawal_swift_transaction(request=request, organization=organization,
-                                                                       recipient=recipient, balance=balance,
-                                                                       processed_by=request.user,
-                                                                       utc_offset_minutes=utc_offset_minutes)
+        transaction = TransactionService.create_withdrawal_swift_transaction(
+            request=request,
+            organization=organization,
+            recipient=recipient,
+            balance=balance,
+            processed_by=request.user,
+            utc_offset_minutes=utc_offset_minutes,
+        )
 
-        transaction_serializer = TransactionWithdrawalDetailSerializer(transaction, context={'request': request})
+        transaction_serializer = TransactionWithdrawalDetailSerializer(
+            transaction, context={"request": request}
+        )
         return Response(transaction_serializer.data, status=status.HTTP_201_CREATED)
-
-
 
 
 class PaymentSystemMethodListView(ListAPIView):

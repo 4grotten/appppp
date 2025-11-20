@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.contrib.gis.geos import Point
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from organizations.constants import SUBSCRIPTION_STATUS
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
@@ -33,6 +34,7 @@ from organizations.models import (
     RegionalTariff,
     UserOrgSubscription,
     OrganizationBanner,
+    Country,
 )
 from organizations.serializers.assistant_serializers import (
     OrganizationAssistantSerializer,
@@ -638,6 +640,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
+            "country",
             "is_deleted",
             "is_private",
             "is_banned",

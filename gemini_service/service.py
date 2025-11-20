@@ -93,7 +93,7 @@ class GeminiAIService:
                         )
 
             name = request.name or "product"
-            desc = request.description or ""
+            desc = request.description or None
             bg = request.background_description or ""
             price = request.price
             price_desc = request.price_description or ""
@@ -103,13 +103,13 @@ class GeminiAIService:
 
             prompt_parts = [
                 f"Create a professional, high-quality product image for '{name}'."
-                f"Product description: '{desc}'."
                 f"Don't use description and name on the image, use it only if i say so"
             ]
 
             if bg:
                 prompt_parts.append(f"Background should reflect: '{bg}'.")
-
+            else:
+                prompt_parts.append(f"Product description: '{desc}'.")
             if request.price_on_image and price:
                 prompt_parts.append(
                     f"Show price: {price} with currency {request.currency}"
@@ -139,7 +139,6 @@ class GeminiAIService:
 
             contents = []
             contents.extend(prompt_parts)
-            await cls.check_proxy_ip()
 
             if images_prompt:
                 contents.extend(images_prompt)

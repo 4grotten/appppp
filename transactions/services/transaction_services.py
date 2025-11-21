@@ -133,7 +133,6 @@ from transactions.serializers.transaction_serializers import (
 from transactions.services.stats_services import StatisticsService
 from users.models import User, ReferralTransaction, ReferralBalance
 from users.services import UserService
-from project.redis_client import redis_client
 
 
 class TransactionService:
@@ -1664,12 +1663,6 @@ class TransactionService:
                 status=Transaction.IN_PROGRESS,
             )
         )
-        cached = redis_client.get(
-            f"{current_transaction.pk}:{current_transaction.client}:{current_transaction.original_amount}"
-        )
-
-        if cached:
-            return cached
 
         organization = current_transaction.organization
 
@@ -1789,12 +1782,6 @@ class TransactionService:
 
             if org:
                 send_delivery_notifications.delay(current_transaction.id)
-
-        redis_client.set(
-            f"{current_transaction.pk}:{current_transaction.client}:{current_transaction.original_amount}",
-            current_transaction,
-            ex=60,
-        )
         return current_transaction
 
     @classmethod

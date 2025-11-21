@@ -303,26 +303,26 @@ def process_comment_with_assistant(
     )
 
 
-# @shared_task
-# def expire_coupons():
-#     coupons = Coupon.objects.filter(is_active=True, is_updating=False).select_related(
-#         "product__organization__city"
-#     )
+@shared_task
+def expire_coupons():
+    coupons = Coupon.objects.filter(is_active=True, is_updating=False).select_related(
+        "product__organization__city"
+    )
 
-#     coupons = sorted(coupons, key=lambda c: c.product.organization.city.timezone)
-#     to_expire_ids = []
+    coupons = sorted(coupons, key=lambda c: c.product.organization.city.timezone)
+    to_expire_ids = []
 
-#     for tz_name, group in groupby(
-#         coupons, key=lambda c: c.product.organization.city.timezone
-#     ):
-#         tz = ZoneInfo(tz_name)
-#         now_local = datetime.now(tz)
-#         expired_ids = [c.id for c in group if c.expire_date.astimezone(tz) < now_local]
+    for tz_name, group in groupby(
+        coupons, key=lambda c: c.product.organization.city.timezone
+    ):
+        tz = ZoneInfo(tz_name)
+        now_local = datetime.now(tz)
+        expired_ids = [c.id for c in group if c.expire_date.astimezone(tz) < now_local]
 
-#         to_expire_ids.extend(expired_ids)
+        to_expire_ids.extend(expired_ids)
 
-#     if to_expire_ids:
-#         Coupon.objects.filter(id__in=to_expire_ids).update(is_active=False)
+    if to_expire_ids:
+        Coupon.objects.filter(id__in=to_expire_ids).update(is_active=False)
 
 
 @shared_task

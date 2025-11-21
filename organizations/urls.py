@@ -114,7 +114,7 @@ from .views.organization_views import (
     AddCustomBannerView,
     RemoveCustomBannerView,
     CouponListCreateAPIView,
-    CouponRetrieveUpdateAPIView,
+    CouponRetrieveUpdateDeleteAPIView,
     PinnOrganizationView,
 )
 from .views.partnerships_views import (
@@ -759,7 +759,7 @@ coupon_urls = [
     path("coupon/", CouponListCreateAPIView.as_view(), name="list-create-coupon"),
     path(
         "coupon/<int:pk>/",
-        CouponRetrieveUpdateAPIView.as_view(),
+        CouponRetrieveUpdateDeleteAPIView.as_view(),
         name="retrieve-update-coupon",
     ),
 ]

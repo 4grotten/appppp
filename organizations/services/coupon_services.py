@@ -7,12 +7,12 @@ class CouponServiceClass:
 
     @classmethod
     def get(cls, *args, **kwargs):
-        organization_id = kwargs.pop("organization_id", None)[0]
+        organization_id = kwargs.pop("organization_id", None)
         if not organization_id:
             raise CouponException
         queryset = (
             cls.__model.objects.filter(
-                product__organization__id=organization_id, is_active=True
+                product__organization_id=organization_id, is_active=True
             )
             .select_related("product", "discount")
             .prefetch_related("product__organization", "product__images")
@@ -23,4 +23,13 @@ class CouponServiceClass:
     def create_coupon(cls, *args, **kwargs):
         coupon = cls.__model.objects.create(**kwargs)
 
+        return coupon
+
+    @classmethod
+    def get_detail(cls, id):
+        coupon = (
+            cls.__model.objects.filter(pk=id)
+            .select_related("product", "discount")
+            .first()
+        )
         return coupon

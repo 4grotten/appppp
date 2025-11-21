@@ -339,6 +339,10 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="password")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="from@yandex.ru")
 EMAIL_USE_TLS = True
 
+# redis settings
+REDIS_HOST = config("REDIS_HOST", "redis")
+REDIS_PORT = config("REDIS_PORT", 6379)
+
 FCM_DJANGO_SETTINGS = {
     "APP_VERBOSE_NAME": "Qrcode push",
     # default: _('FCM Django')

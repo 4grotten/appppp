@@ -133,6 +133,7 @@ from transactions.serializers.transaction_serializers import (
 from transactions.services.stats_services import StatisticsService
 from users.models import User, ReferralTransaction, ReferralBalance
 from users.services import UserService
+from collections import defaultdict
 
 
 class TransactionService:
@@ -1646,6 +1647,49 @@ class TransactionService:
             raise StockException(_("The product has no quantity"))
 
     @classmethod
+    def fix_cart_and_notify(
+        cls,
+        current_transaction: Transaction,
+        request,
+        processed_by: User,
+        role,
+        original_price,
+        discounted_price,
+        organization: Organization,
+        utc_offset_minutes,
+    ):
+        from shop.serializers.cart_serializers import CartSerializer
+
+        try:
+            current_transaction.is_processed = True
+
+            current_transaction.fixed_cart = (
+                CartSerializer(
+                    current_transaction.cart, context={"request": request}
+                ).data
+                if current_transaction.cart
+                else None
+            )
+            current_transaction.processed_by = processed_by
+            current_transaction.employee_role = role
+            current_transaction.employee_name = processed_by.full_name
+            current_transaction.employee_avatar = processed_by.avatar
+            current_transaction.status = Transaction.ACCEPTED
+            current_transaction.payment_status = Transaction.ACCEPTED
+            current_transaction.original_amount = original_price
+            current_transaction.savings = original_price - discounted_price
+            current_transaction.purchase_id = organization.running_purchase_id
+            current_transaction.display_time = now() + timedelta(
+                minutes=utc_offset_minutes
+            )
+
+            current_transaction.save()
+
+            OrganizationService.increment_running_purchase_id(organization=organization)
+        except IntegrityError:
+            raise IntegrityException(_("Could not complete transaction"))
+
+    @classmethod
     @transaction.atomic
     def complete_online_transaction(
         cls, request, transaction_id: int, utc_offset_minutes: int, processed_by: User
@@ -1683,51 +1727,61 @@ class TransactionService:
                 0,
             ),
         )
+        items_to_update = defaultdict(lambda: {"count": 0, "obj": None})
 
         for cart_item in current_transaction.cart.items.all():
-            if (
-                cart_item.size is not None
-                and cart_item.size in cart_item.item.available_sizes.all()
-            ):
-                cls.change_count_service(size=cart_item.size, cart_item=cart_item)
-            else:
-                cls.change_count_service(size=None, cart_item=cart_item)
+            size = cart_item.size
+            key = (cart_item.item_id, size.id, if size else None)
+            delta = cart_item.count
+
+            if key not in items_to_update:
+                try:
+                    obj = ShopItemSizeCount.objects.get(
+                        main_shop_item=cart_item.item,
+                        size=size
+                    )
+                    items_to_update[key]["obj"] = obj
+                except ShopItemSizeCount.DoesNotExist:
+                    raise StockException(_("The product has no quantity"))
+            
+            items_to_update[key]["count"] += delta
+        
+        objects_to_update = []
+        for data in items_to_update.values():
+            obj = data['obj']
+            if obj.count < data['count']:
+                raise StockException(_("Insufficient quantity in stock"))
+            obj.count -= data['count']
+            objects_to_update.append(obj)
+        
+        ShopItemSizeCount.objects.bulk_update(objects_to_update, ["count"])
+
+
+            # if (
+            #     cart_item.size is not None
+            #     and cart_item.size in cart_item.item.available_sizes.all()
+            # ):
+            #     cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+            # else:
+            #     cls.change_count_service(size=None, cart_item=cart_item)
 
         original_price = totals["original_price"]
         discounted_price = totals["discounted_price"]
         role = OrganizationService.get_user_role_in_organization(
             organization=organization, user=processed_by
         )
-        from shop.serializers.cart_serializers import CartSerializer
-
-        try:
-            current_transaction.is_processed = True
-
-            current_transaction.fixed_cart = (
-                CartSerializer(
-                    current_transaction.cart, context={"request": request}
-                ).data
-                if current_transaction.cart
-                else None
+        transaction.on_commit(
+            lambda: cls.fix_cart_and_notify(
+                current_transaction,
+                request,
+                processed_by,
+                role,
+                original_price,
+                discounted_price,
+                organization,
+                utc_offset_minutes,
             )
-            current_transaction.processed_by = processed_by
-            current_transaction.employee_role = role
-            current_transaction.employee_name = processed_by.full_name
-            current_transaction.employee_avatar = processed_by.avatar
-            current_transaction.status = Transaction.ACCEPTED
-            current_transaction.payment_status = Transaction.ACCEPTED
-            current_transaction.original_amount = original_price
-            current_transaction.savings = original_price - discounted_price
-            current_transaction.purchase_id = organization.running_purchase_id
-            current_transaction.display_time = now() + timedelta(
-                minutes=utc_offset_minutes
-            )
-
-            current_transaction.save()
-
-            OrganizationService.increment_running_purchase_id(organization=organization)
-        except IntegrityError:
-            raise IntegrityException(_("Could not complete transaction"))
+        )
 
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,

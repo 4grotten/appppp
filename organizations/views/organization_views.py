@@ -2,6 +2,7 @@ import datetime
 import random
 
 import requests
+from typing import Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -23,6 +24,7 @@ from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
     RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -1636,18 +1638,20 @@ class CouponListCreateAPIView(ListCreateAPIView):
     service_class = CouponServiceClass
     parser_classes = [MultiPartParser, FormParser]
 
-    def get_serializer_class(self):
+    def get_serializer_class(
+        self,
+    ) -> Union[CouponListSerializer, ValidateCreateCouponSerializer, None]:
         if self.request.method == "GET":
             return CouponListSerializer
         elif self.request.method == "POST":
             return ValidateCreateCouponSerializer
 
-    def get_queryset(self):
-        organization_id = self.request.query_params.get("organization_id")
+    def get_queryset(self, request):
+        organization_id = request.query_params.get("organization_id")
         return self.service_class.get(organization_id=organization_id)
 
     def get(self, request):
-        qs = self.get_queryset()
+        qs = self.get_queryset(request)
         serializer = self.get_serializer(qs, many=True)
         return Response(data=serializer.data)
 
@@ -1662,7 +1666,7 @@ class CouponListCreateAPIView(ListCreateAPIView):
         )
 
 
-class CouponRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class CouponRetrieveUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = CouponDetailSerializer
     permission_classes = [
         IsAuthenticated,

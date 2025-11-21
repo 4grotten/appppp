@@ -411,7 +411,9 @@ class OnlineTransactionCompleteView(GenericAPIView):
                 data={"message": _("Invalid input"), "errors": serializer.errors},
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
+        
         cached = redis_client.get(serializer.validated_data.get("transaction_id"))
+
         if cached:
             return Response(
                 data={"message": _("Transaction successfully completed")},
@@ -423,12 +425,6 @@ class OnlineTransactionCompleteView(GenericAPIView):
             utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             processed_by=request.user,
             request=request,
-        )
-
-        redis_client.set(
-            serializer.validated_data.get("transaction_id"),
-            serializer.validated_data["transaction_id"],
-            ex=60,
         )
         return Response(
             data={"message": _("Transaction successfully completed")},

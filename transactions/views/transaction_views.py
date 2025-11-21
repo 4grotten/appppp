@@ -137,7 +137,7 @@ from users.serializers import (
     UserInfoSerializer,
 )
 from users.services import UserService
-
+from project.redis_client import redis_client
 
 class TransactionPreprocessView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
@@ -410,6 +410,12 @@ class OnlineTransactionCompleteView(GenericAPIView):
                 data={"message": _("Invalid input"), "errors": serializer.errors},
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
+        cached = redis_client.get(f"{serializer.validated_data["transaction_id"]}")
+        if cached:
+            return Response(
+                data={"message": _("Transaction successfully completed")},
+                status=status.HTTP_200_OK,
+            )
 
         TransactionService.complete_online_transaction(
             transaction_id=serializer.validated_data["transaction_id"],
@@ -418,6 +424,7 @@ class OnlineTransactionCompleteView(GenericAPIView):
             request=request,
         )
 
+        redis_client.set(f"{serializer.validated_data["transaction_id"]}", serializer.validated_data["transaction_id"], ex=60)
         return Response(
             data={"message": _("Transaction successfully completed")},
             status=status.HTTP_200_OK,

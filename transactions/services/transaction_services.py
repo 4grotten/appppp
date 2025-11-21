@@ -1731,39 +1731,37 @@ class TransactionService:
 
         for cart_item in current_transaction.cart.items.all():
             size = cart_item.size
-            key = (cart_item.item_id, size.id, if size else None)
+            key = (cart_item.item_id, size.id if size else None)
             delta = cart_item.count
 
             if key not in items_to_update:
                 try:
                     obj = ShopItemSizeCount.objects.get(
-                        main_shop_item=cart_item.item,
-                        size=size
+                        main_shop_item=cart_item.item, size=size
                     )
                     items_to_update[key]["obj"] = obj
                 except ShopItemSizeCount.DoesNotExist:
                     raise StockException(_("The product has no quantity"))
-            
+
             items_to_update[key]["count"] += delta
-        
+
         objects_to_update = []
         for data in items_to_update.values():
-            obj = data['obj']
-            if obj.count < data['count']:
+            obj = data["obj"]
+            if obj.count < data["count"]:
                 raise StockException(_("Insufficient quantity in stock"))
-            obj.count -= data['count']
+            obj.count -= data["count"]
             objects_to_update.append(obj)
-        
+
         ShopItemSizeCount.objects.bulk_update(objects_to_update, ["count"])
 
-
-            # if (
-            #     cart_item.size is not None
-            #     and cart_item.size in cart_item.item.available_sizes.all()
-            # ):
-            #     cls.change_count_service(size=cart_item.size, cart_item=cart_item)
-            # else:
-            #     cls.change_count_service(size=None, cart_item=cart_item)
+        # if (
+        #     cart_item.size is not None
+        #     and cart_item.size in cart_item.item.available_sizes.all()
+        # ):
+        #     cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+        # else:
+        #     cls.change_count_service(size=None, cart_item=cart_item)
 
         original_price = totals["original_price"]
         discounted_price = totals["discounted_price"]

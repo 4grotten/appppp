@@ -343,7 +343,9 @@ def update_posts():
         if not items_ids:
             continue
 
-        count = ShopItem.objects.filter(id__in=items_ids).update(updated_at=now())
+        count = ShopItem.objects.filter(id__in=items_ids).update(
+            updated_at=now(), is_updated=True
+        )
         total_updated += count
 
     logger.info(f"Total_updated {total_updated} random shop items")

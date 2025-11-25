@@ -993,9 +993,9 @@ class OrganizationService:
 
         if service.is_verified:
             base_filters &= Q(verification_status=VERIFIED)
-
-        if country.is_paid_subscription:
-            base_filters &= ~Q(org_subscription__isnull=False)
+        if country:
+            if country.is_paid_subscription:
+                base_filters &= ~Q(org_subscription__isnull=False)
 
         if service.is_wholesale:
             base_filters &= Q(is_wholesale=True)

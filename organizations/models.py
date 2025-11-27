@@ -1,32 +1,32 @@
-from decimal import Decimal
 import json
-from pathlib import Path
-from django.conf import settings
-from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import TimestampModel, Currency, Country, City
+from common.models import City, Country, Currency, TimestampModel
 from common.utils import upload_file_with_unique_name
 from organizations.constants import (
-    HOTLINK_TYPES,
-    HOTLINK_URL,
+    ACTIVE,
     HOTLINK_INTERNAL_LINK_DOMAINS,
     HOTLINK_PARTNERS,
-    VERIFICATIONS_STATUS,
+    HOTLINK_TYPES,
+    HOTLINK_URL,
     NOT_VERIFIED,
-    SWITCHER_TYPE,
-    WEB,
     SUBSCRIPTION_STATUS,
-    ACTIVE,
+    SWITCHER_TYPE,
+    VERIFICATIONS_STATUS,
+    WEB,
 )
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
@@ -1297,13 +1297,6 @@ class Coupon(TimestampModel):
 
     product = models.ForeignKey(
         "shop.ShopItem",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        related_name="coupon",
-    )
-    discount = models.ForeignKey(
-        DiscountCard,
         on_delete=models.CASCADE,
         blank=True,
         null=True,

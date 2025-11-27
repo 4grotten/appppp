@@ -106,5 +106,6 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             "is_updating",
             "is_active",
             "always_active",
+            "coupon_type",
             "image",
         ]

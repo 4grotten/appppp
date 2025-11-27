@@ -1,5 +1,7 @@
-from organizations.models import Coupon
+from django.db.models import Q
+
 from common.exceptions import CouponException
+from organizations.models import Coupon
 
 
 class CouponServiceClass:
@@ -33,3 +35,17 @@ class CouponServiceClass:
             .first()
         )
         return coupon
+
+    @classmethod
+    def get_available(cls, org_id):
+        coupons = (
+            cls.__model.objects.filter(
+                Q(product__organization_id=org_id)
+                | Q(discount__organization_id=org_id),
+                is_active=True,
+            )
+            .select_related("product", "discount")
+            .prefetch_related("product__organization", "product__images")
+        )
+
+        return coupons

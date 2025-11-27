@@ -29,7 +29,6 @@ class CouponListSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = [
             "id",
-            "discount",
             "product",
             "percent",
             "description",
@@ -45,7 +44,6 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = (
             "product",
-            "discount",
             "percent",
             "description",
             "image",
@@ -60,19 +58,7 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
         coupon_type = attrs.get("coupon_type")
         always_active = attrs.get("always_active")
         expire_date = attrs.get("expire_date")
-
-        if coupon_type == "discount":
-            if not attrs.get("discount"):
-                raise serializers.ValidationError(
-                    {
-                        "discount": "discount field is required if coupon type is discount"
-                    }
-                )
-            if attrs.get("product"):
-                raise serializers.ValidationError(
-                    {"product": "Не указывайте product для купона типа discount"}
-                )
-        elif coupon_type == "product":
+        if coupon_type == "product":
             if not attrs.get("product"):
                 raise serializers.ValidationError(
                     {"product": "product field is required if coupon type is product"}
@@ -98,7 +84,6 @@ class CouponDetailSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = [
             "id",
-            "discount",
             "product",
             "percent",
             "description",

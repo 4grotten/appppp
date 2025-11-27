@@ -29,11 +29,7 @@ class CouponServiceClass:
 
     @classmethod
     def get_detail(cls, id):
-        coupon = (
-            cls.__model.objects.filter(pk=id)
-            .select_related("product", "discount")
-            .first()
-        )
+        coupon = cls.__model.objects.filter(pk=id).select_related("product").first()
         return coupon
 
     @classmethod

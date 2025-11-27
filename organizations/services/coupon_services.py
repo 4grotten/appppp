@@ -1,7 +1,7 @@
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from common.exceptions import CouponException
-from organizations.models import Coupon
+from organizations.models import Coupon, CouponUsage
 
 
 class CouponServiceClass:
@@ -16,7 +16,7 @@ class CouponServiceClass:
             cls.__model.objects.filter(
                 product__organization_id=organization_id, is_active=True
             )
-            .select_related("product", "discount")
+            .select_related("product")
             .prefetch_related("product__organization", "product__images")
         )
         return queryset
@@ -37,14 +37,16 @@ class CouponServiceClass:
         return coupon
 
     @classmethod
-    def get_available(cls, org_id):
+    def get_available(cls, org_id, user):
+        used = CouponUsage.objects.filter(user=user, coupon_id=OuterRef("id"))
         coupons = (
             cls.__model.objects.filter(
                 Q(product__organization_id=org_id)
                 | Q(discount__organization_id=org_id),
                 is_active=True,
             )
-            .select_related("product", "discount")
+            .exclude(Exists(used))
+            .select_related("product")
             .prefetch_related("product__organization", "product__images")
         )
 

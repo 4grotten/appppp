@@ -13,7 +13,8 @@ class AvailableCouponsListAPIView(GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         org_id = kwargs.get("pk")
-        coupons = self.service_class.get_available(org_id)
+        user = request.user
+        coupons = self.service_class.get_available(org_id, user)
         serializer = self.serializer_class(coupons, many=True)
 
         return Response(data=serializer.data, status=200)

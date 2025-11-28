@@ -90,4 +90,4 @@ class CouponDetailSerializer(serializers.ModelSerializer):
 
 class CalculateCouponValidateSerializer(serializers.Serializer):
     initial_amount = serializers.DecimalField(max_digits=8, decimal_places=2)
-    coupons = serializers.ListField(child=serializers.IntegerField)
+    coupons = serializers.ListField(child=serializers.IntegerField(), write_only=True)

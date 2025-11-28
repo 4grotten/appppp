@@ -70,7 +70,6 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponDetailSerializer(serializers.ModelSerializer):
-    discount = DiscountCouponSerializer()
     product = ProductCouponSerializer()
 
     class Meta:

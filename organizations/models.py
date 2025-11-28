@@ -1314,6 +1314,9 @@ class Coupon(TimestampModel):
     coupon_type = models.CharField(
         max_length=20, choices=COUPON_TYPE_CHOICES, default="product"
     )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, blank=True
+    )
 
 
 class CouponUsage(TimestampModel):

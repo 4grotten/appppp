@@ -2,7 +2,10 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from organizations.serializers.coupon_serializers import CouponDetailSerializer
+from organizations.serializers.coupon_serializers import (
+    CalculateCouponValidateSerializer,
+    CouponDetailSerializer,
+)
 from organizations.services.coupon_services import CouponServiceClass
 
 
@@ -18,3 +21,16 @@ class AvailableCouponsListAPIView(GenericAPIView):
         serializer = self.serializer_class(coupons, many=True)
 
         return Response(data=serializer.data, status=200)
+
+
+class CalculateSumOfCouponsAPIView(GenericAPIView):
+    serializer_class = CalculateCouponValidateSerializer
+    permission_classes = [IsAuthenticated]
+    service_class = CouponServiceClass
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(request.data)
+        serializer.is_valid()
+        result = self.service_class.calculate(serializer.validated_data)
+
+        return Response(data=result, status=200)

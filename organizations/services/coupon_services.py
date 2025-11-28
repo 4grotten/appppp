@@ -38,7 +38,7 @@ class CouponServiceClass:
         coupons = (
             cls.__model.objects.filter(
                 Q(product__organization_id=org_id)
-                | Q(discount__organization_id=org_id),
+                | Q(coupon_type=cls.__model.DISCOUNT),
                 is_active=True,
             )
             .exclude(Exists(used))

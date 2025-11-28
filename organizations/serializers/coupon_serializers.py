@@ -46,6 +46,7 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
             "is_active",
             "is_updating",
             "coupon_type",
+            "organization",
         )
 
     def validate(self, attrs):

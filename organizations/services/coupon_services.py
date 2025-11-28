@@ -1,6 +1,6 @@
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, OuterRef
 
 from common.exceptions import CouponException
 from organizations.models import Coupon, CouponUsage
@@ -15,11 +15,9 @@ class CouponServiceClass:
         if not organization_id:
             raise CouponException
         queryset = (
-            cls.__model.objects.filter(
-                product__organization_id=organization_id, is_active=True
-            )
+            cls.__model.objects.filter(organization_id=organization_id, is_active=True)
             .select_related("product")
-            .prefetch_related("product__organization", "product__images")
+            .prefetch_related("product__images")
         )
         return queryset
 
@@ -39,8 +37,7 @@ class CouponServiceClass:
         used = CouponUsage.objects.filter(user=user, coupon_id=OuterRef("id"))
         coupons = (
             cls.__model.objects.filter(
-                Q(product__organization_id=org_id)
-                | Q(coupon_type=cls.__model.DISCOUNT),
+                organization_id=org_id,
                 is_active=True,
             )
             .exclude(Exists(used))

@@ -16,7 +16,7 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    product = ProductCouponSerializer()
+    product = ProductCouponSerializer(required=False)
 
     class Meta:
         model = Coupon
@@ -27,6 +27,7 @@ class CouponListSerializer(serializers.ModelSerializer):
             "description",
             "expire_date",
             "image",
+            "coupon_type",
         ]
 
 

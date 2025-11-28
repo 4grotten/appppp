@@ -1,13 +1,7 @@
 from rest_framework import serializers
 
-from organizations.models import Coupon, DiscountCard
+from organizations.models import Coupon
 from shop.models import ShopItem
-
-
-class DiscountCouponSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DiscountCard
-        fields = ["type", "percent"]
 
 
 class ProductCouponSerializer(serializers.ModelSerializer):
@@ -93,3 +87,8 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             "coupon_type",
             "image",
         ]
+
+
+class CalculateCouponValidateSerializer(serializers.Serializer):
+    initial_amount = serializers.DecimalField(max_digits=8, decimal_places=2)
+    coupons = serializers.ListField(child=serializers.IntegerField)

@@ -55,18 +55,18 @@ class CouponServiceClass:
         coupons = data.pop("coupons")
         initial_amount: Decimal = data.get("initial_amount")
         final_amount = initial_amount
+        discount_sum = Decimal("0.00")
 
         coupons = (
             cls.__model.objects.filter(pk__in=coupons).order_by("coupon_type").all()
         )
-        discount_sum = Decimal("0.00")
 
         for coupon in coupons:
             discount = (final_amount * Decimal(coupon.percent)) / Decimal("100")
             discount_sum += discount
+            final_amount -= discount
 
-        final_amount -= discount_sum
         final_amount = final_amount.quantize(Decimal("0.00"), rounding=ROUND_HALF_UP)
-        result = {"discount_sum": discount_sum, "final_amount": final_amount}
 
+        result = {"discount_sum": discount_sum, "final_amount": final_amount}
         return result

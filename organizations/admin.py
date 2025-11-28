@@ -910,7 +910,7 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = [
         "product",
     ]
-    list_select_related = ("product", "discount")
+    list_select_related = ("product",)
 
 
 @admin.register(Invoice)

@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import (
     BooleanField,

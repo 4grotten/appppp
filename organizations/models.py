@@ -1306,7 +1306,7 @@ class Coupon(TimestampModel):
         validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True
     )
     description = models.CharField(max_length=300, null=True, blank=True)
-    image = models.ImageField(upload_to="coupons/")
+    image = models.URLField()
     expire_date = models.DateTimeField(null=True, blank=True)
     always_active = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

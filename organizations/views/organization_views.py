@@ -1650,7 +1650,7 @@ class CouponListCreateAPIView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        self.service_class.create_coupon(user=self.request.user, **validated_data)
+        self.service_class.create_coupon(**validated_data)
 
         return Response(
             data={"message": "succsefully created"}, status=status.HTTP_201_CREATED

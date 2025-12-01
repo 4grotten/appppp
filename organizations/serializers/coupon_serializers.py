@@ -26,7 +26,7 @@ class CouponListSerializer(serializers.ModelSerializer):
             "percent",
             "description",
             "expire_date",
-            "image",
+            "is_updatingimage",
             "coupon_type",
         ]
 

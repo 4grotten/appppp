@@ -106,7 +106,7 @@ class ShopItemService:
     def get_organization_items_queryset_for_user(
         cls, organization: Organization, user: User, search: Union[str, None]
     ) -> QuerySet:
-        base_filters = Q()
+        base_filters = Q(price_isnull=False)
         if search:
             base_filters &= Q(name__icontains=search)
 

@@ -656,7 +656,10 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(CardBackground)
 class CardBackgroundAdmin(admin.ModelAdmin):
-    pass
+    list_display = "image"
+
+    def image(self, obj):
+        return mark_safe(f'<img src="{obj.image.medium.url}">')
 
 
 @admin.register(Partnership)

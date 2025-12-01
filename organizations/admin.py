@@ -660,7 +660,7 @@ class CardBackgroundAdmin(admin.ModelAdmin):
     readonly_fields = ["card_image"]
 
     def card_image(self, obj):
-        return mark_safe(f'<img src="{obj.image.medium.url}">')
+        return mark_safe(f'<img src="{obj.image.url}">')
 
 
 @admin.register(Partnership)

@@ -656,11 +656,11 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(CardBackground)
 class CardBackgroundAdmin(admin.ModelAdmin):
-    list_display = "card_image"
+    list_display = ["card_image"]
     readonly_fields = ["card_image"]
 
     def card_image(self, obj):
-        return mark_safe(f'<img src="{obj.image.url}">')
+        return mark_safe(f'<img src="{obj.image.image_url}">')
 
 
 @admin.register(Partnership)

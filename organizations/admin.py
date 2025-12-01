@@ -656,9 +656,10 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(CardBackground)
 class CardBackgroundAdmin(admin.ModelAdmin):
-    list_display = "image"
+    list_display = "card_image"
+    readonly_fields = ["card_image"]
 
-    def image(self, obj):
+    def card_image(self, obj):
         return mark_safe(f'<img src="{obj.image.medium.url}">')
 
 

@@ -1,5 +1,3 @@
-from decimal import ROUND_HALF_UP, Decimal
-
 from django.db.models import Exists, OuterRef
 
 from common.exceptions import CouponException
@@ -49,24 +47,22 @@ class CouponServiceClass:
 
     @classmethod
     def calculate(cls, data: dict):
-        coupons = data.pop("coupons")
-        initial_amount: Decimal = data.get("initial_amount")
-        final_amount = initial_amount
-        discount_sum = Decimal("0.00")
-
-        coupons = (
-            cls.__model.objects.filter(pk__in=coupons).order_by("coupon_type").all()
+        coupons_list = data.pop("coupons")
+        coupons_qs = (
+            cls.__model.objects.filter(id__in=coupons_list)
+            .select_related("product")
+            .all()
         )
+        discount_sum = 0
 
-        for coupon in coupons:
-            discount = (final_amount * Decimal(coupon.percent)) / Decimal("100")
-            discount_sum += discount
-            final_amount -= discount
+        for coupon in coupons_qs:
+            if coupon.coupon_type == cls.__model.PRODUCT:
+                discount_sum += coupon.product.price / (coupon.percent * 100)
+            if coupon.coupon_type == cls.__model.DISCOUNT:
+                discount = coupon.percent
+                return {"discount": discount}
 
-        final_amount = final_amount.quantize(Decimal("0.00"), rounding=ROUND_HALF_UP)
-
-        result = {"discount_sum": discount_sum, "final_amount": final_amount}
-        return result
+        return {"discount": discount_sum}
 
     @classmethod
     def get_list(cls, org_id: int, user):

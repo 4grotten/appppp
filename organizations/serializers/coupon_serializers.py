@@ -90,6 +90,14 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             "image",
         ]
 
+    def update(self, instance, validated_data):
+        product_data = validated_data.pop("product", None)
+
+        if product_data:
+            instance.product_id = product_data.get("id")
+
+        return super().update(instance, validated_data)
+
 
 class CalculateCouponValidateSerializer(serializers.Serializer):
     coupons = serializers.ListField(child=serializers.IntegerField(), write_only=True)

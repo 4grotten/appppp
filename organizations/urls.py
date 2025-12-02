@@ -35,6 +35,7 @@ from .views.category_views import CategoryDetailAPIView
 from .views.coupon_views import (
     AvailableCouponsListAPIView,
     CalculateSumOfCouponsAPIView,
+    CouponsListForUsersAPIView,
 )
 from .views.discount_views import DiscountsBulkDeleteView, DiscountsBulkUpdateView
 from .views.hotlink_views import (
@@ -776,6 +777,11 @@ coupon_urls = [
         "coupons/calculate/",
         CalculateSumOfCouponsAPIView.as_view(),
         name="calculate-sum-of-coupons",
+    ),
+    path(
+        "coupons/<int:pk>/list/",
+        CouponsListForUsersAPIView.as_view(),
+        name="coupons-list-for-user",
     ),
 ]
 

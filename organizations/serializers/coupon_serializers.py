@@ -74,12 +74,16 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
 
 class CouponDetailSerializer(serializers.ModelSerializer):
     product = ProductCouponSerializer()
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.all(), write_only=True
+    )
 
     class Meta:
         model = Coupon
         fields = [
             "id",
             "product",
+            "product_id",
             "percent",
             "description",
             "expire_date",
@@ -89,14 +93,6 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             "coupon_type",
             "image",
         ]
-
-    def update(self, instance, validated_data):
-        product_data = validated_data.pop("product", None)
-
-        if product_data:
-            instance.product_id = product_data.get("id")
-
-        return super().update(instance, validated_data)
 
 
 class CalculateCouponValidateSerializer(serializers.Serializer):

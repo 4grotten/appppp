@@ -73,7 +73,7 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponDetailSerializer(serializers.ModelSerializer):
-    product = ProductCouponSerializer()
+    product = ProductCouponSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=ShopItem.objects.all(), write_only=True
     )

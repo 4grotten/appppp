@@ -67,3 +67,14 @@ class CouponServiceClass:
 
         result = {"discount_sum": discount_sum, "final_amount": final_amount}
         return result
+
+    @classmethod
+    def get_list(cls, org_id: int, user):
+        qs = (
+            cls.__model.objects.filter(organization_id=org_id)
+            .annotate(used=Exists(CouponUsage.objects.filter(coupon=OuterRef("pk"))))
+            .prefetch_related("coupon_usage")
+            .order_by("used")
+        )
+
+        return qs

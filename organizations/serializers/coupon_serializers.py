@@ -93,3 +93,32 @@ class CouponDetailSerializer(serializers.ModelSerializer):
 
 class CalculateCouponValidateSerializer(serializers.Serializer):
     coupons = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+
+
+class CouponListForUserSerializer(serializers.ModelSerializer):
+    product = ProductCouponSerializer()
+    used_on = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            "id",
+            "product",
+            "percent",
+            "description",
+            "expire_date",
+            "is_updating",
+            "is_active",
+            "always_active",
+            "coupon_type",
+            "used",
+            "used_on",
+            "image",
+        ]
+
+    def get_used_on(self, obj):
+        if obj.used:
+            coupon_usage = obj.coupon_usage.first()
+            return coupon_usage.created_at
+        else:
+            return None

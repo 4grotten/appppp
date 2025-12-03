@@ -340,7 +340,7 @@ def update_posts():
             .values("id", "name")[:10]
         )
 
-        if not items_ids:
+        if not items:
             continue
         items_ids = [item.get("id") for item in items]
         count = ShopItem.objects.filter(id__in=items_ids).update(

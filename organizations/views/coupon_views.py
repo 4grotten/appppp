@@ -42,7 +42,7 @@ class CouponsListForUsersAPIView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     service_class = CouponServiceClass
 
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         org_id = kwargs.get("pk")
         user = request.user
         queryset = self.service_class.get_list(org_id, user)

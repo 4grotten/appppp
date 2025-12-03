@@ -1,13 +1,7 @@
 from rest_framework import serializers
 
-from organizations.models import Coupon, DiscountCard
+from organizations.models import Coupon
 from shop.models import ShopItem
-
-
-class DiscountCouponSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DiscountCard
-        fields = ["type", "percent"]
 
 
 class ProductCouponSerializer(serializers.ModelSerializer):
@@ -22,19 +16,19 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    discount = DiscountCouponSerializer()
-    product = ProductCouponSerializer()
+    product = ProductCouponSerializer(required=False)
 
     class Meta:
         model = Coupon
         fields = [
             "id",
-            "discount",
             "product",
             "percent",
             "description",
             "expire_date",
+            "is_updating",
             "image",
+            "coupon_type",
         ]
 
 
@@ -45,7 +39,6 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = (
             "product",
-            "discount",
             "percent",
             "description",
             "image",
@@ -54,25 +47,14 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
             "is_active",
             "is_updating",
             "coupon_type",
+            "organization",
         )
 
     def validate(self, attrs):
         coupon_type = attrs.get("coupon_type")
         always_active = attrs.get("always_active")
         expire_date = attrs.get("expire_date")
-
-        if coupon_type == "discount":
-            if not attrs.get("discount"):
-                raise serializers.ValidationError(
-                    {
-                        "discount": "discount field is required if coupon type is discount"
-                    }
-                )
-            if attrs.get("product"):
-                raise serializers.ValidationError(
-                    {"product": "Не указывайте product для купона типа discount"}
-                )
-        elif coupon_type == "product":
+        if coupon_type == "product":
             if not attrs.get("product"):
                 raise serializers.ValidationError(
                     {"product": "product field is required if coupon type is product"}
@@ -91,14 +73,48 @@ class ValidateCreateCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponDetailSerializer(serializers.ModelSerializer):
-    discount = DiscountCouponSerializer()
-    product = ProductCouponSerializer()
+    product = ProductCouponSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=ShopItem.objects.all(), write_only=True, required=False
+    )
 
     class Meta:
         model = Coupon
         fields = [
             "id",
-            "discount",
+            "product",
+            "product_id",
+            "percent",
+            "description",
+            "expire_date",
+            "is_updating",
+            "is_active",
+            "always_active",
+            "coupon_type",
+            "image",
+        ]
+
+    def update(self, instance, validated_data):
+        product = validated_data.pop("product_id", None)
+        if product is not None:
+            instance.product = product
+
+        return super().update(instance, validated_data)
+
+
+class CalculateCouponValidateSerializer(serializers.Serializer):
+    coupons = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+
+
+class CouponListForUserSerializer(serializers.ModelSerializer):
+    product = ProductCouponSerializer()
+    used = serializers.BooleanField(read_only=True, required=False)
+    used_on = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            "id",
             "product",
             "percent",
             "description",
@@ -106,5 +122,15 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             "is_updating",
             "is_active",
             "always_active",
+            "coupon_type",
+            "used",
+            "used_on",
             "image",
         ]
+
+    def get_used_on(self, obj):
+        if obj.used:
+            coupon_usage = obj.coupon_usage.first()
+            return coupon_usage.created_at
+        else:
+            return None

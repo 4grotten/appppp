@@ -1,152 +1,144 @@
 import datetime
 import random
+from typing import Union
 
 import requests
-from typing import Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction, IntegrityError
-from django.db.models import Q, Case, When, IntegerField, OuterRef, Exists
+from django.db import IntegrityError, transaction
+from django.db.models import Case, Exists, IntegerField, OuterRef, Q, When
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, generics
+from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView,
-    ListAPIView,
-    RetrieveAPIView,
-    GenericAPIView,
-    UpdateAPIView,
     CreateAPIView,
     DestroyAPIView,
+    GenericAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import (
+    IntegrityException,
     NotAcceptableException,
     ObjectNotFoundException,
-    IntegrityException,
 )
-from common.utils import method_permission_classes
 from common.services import slack
+from common.utils import method_permission_classes
 from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
-from organizations.constants import UNDER_REVIEW, TEST
+from organizations.constants import TEST, UNDER_REVIEW
 from organizations.models import (
-    Organization,
-    OrganizationCategory,
-    OrganizationType,
-    InstagramIntegration,
-    Service,
-    OrganizationComplaint,
-    OrganizationBlacklist,
     BlockedUser,
-    Subscription,
-    UserAssistant,
-    RegionalTariff,
-    PaymentSystemMethod,
-    OrganizationBanner,
+    InstagramIntegration,
+    Organization,
+    OrganizationBlacklist,
+    OrganizationCategory,
+    OrganizationComplaint,
+    OrganizationType,
     PinnedOrganizations,
+    RegionalTariff,
+    Service,
+    Subscription,
 )
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer,
     HomepageOrganizationsSerializer,
-    OrganizationWithDiscountsSerializer,
+    OrganizationCategorySerializer,
     OrganizationTypeSerializer,
+    OrganizationWithDiscountsSerializer,
 )
-
+from organizations.serializers.coupon_serializers import (
+    CouponDetailSerializer,
+    CouponListSerializer,
+    ValidateCreateCouponSerializer,
+)
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
-    OrganizationListSerializer,
-    OrganizationCreateSerializer,
-    OrganizationDetailedSerializer,
-    OrganizationUpdateSerializer,
-    OrgPhoneNumberSerializer,
-    OrgPhoneNumberEditSerializer,
-    OrgSocialNetworkContactSerializer,
-    OrgSocialNetworkEditSerializer,
-    OrganizationSerializer,
-    OrgMessageSerializer,
-    OrgMessageCreateSerializer,
-    SubscriptionsMessageSerializer,
-    OrganizationWithImageSerializer,
+    BlockedUserSerializer,
+    DeliverySettingsUpdateSerializer,
     InstagramIntegrationCreateUpdateSerializer,
     InstagramIntegrationLinkSerializer,
-    DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer,
-    OrgVerificationsSerializer,
-    OrganizationComplaintSerializer,
+    OrganizationBannerCreateSerializer,
+    OrganizationBannerSerializer,
     OrganizationBlacklistSerializer,
-    BlockedUserSerializer,
+    OrganizationComplaintSerializer,
+    OrganizationCreateSerializer,
+    OrganizationDetailedSerializer,
     OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer,
-    PaymentSystemSerializer,
-    OrgPaymentSystemConfirmationSerializer,
+    OrganizationListSerializer,
     OrganizationMapsListSerializer,
     OrganizationNameListSerializer,
-    RegionalTariffSerializer,
+    OrganizationSerializer,
+    OrganizationTitleSerializer,
+    OrganizationTwoGisCreateSerializer,
+    OrganizationUpdateSerializer,
+    OrganizationWithImageSerializer,
+    OrgMessageCreateSerializer,
+    OrgMessageSerializer,
+    OrgPaymentSystemConfirmationSerializer,
+    OrgPhoneNumberEditSerializer,
+    OrgPhoneNumberSerializer,
+    OrgSocialNetworkContactSerializer,
+    OrgSocialNetworkEditSerializer,
+    OrgVerificationsSerializer,
+    PaymentSystemSerializer,
     PurchaseOrgSubscriptionSerializer,
-    OrganizationBannerSerializer,
-    OrganizationBannerCreateSerializer,
+    RegionalTariffSerializer,
+    SubscriptionsMessageSerializer,
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer,
+    CountryQueryParamSerializer,
     OrganizationAndCategorySerializer,
     OrganizationCoutrySerializer,
     OrganizationMapsLocationSerializer,
-    OrganizationQueryParamSerializer,
     OrganizationNumSubsQueryParamSerializer,
-    CountryQueryParamSerializer,
+    PartnerQueryParamSerializer,
 )
 from organizations.serializers.service_serializers import (
-    ItemServiceSerializer,
     OrganizationServiceSerializer,
 )
-from organizations.serializers.coupon_serializers import (
-    CouponListSerializer,
-    ValidateCreateCouponSerializer,
-    CouponDetailSerializer,
-)
-
 from organizations.services.categories_services import OrganizationCategoryService
-from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
+from organizations.services.coupon_services import CouponServiceClass
+from organizations.services.google_maps_services import TwoGisService
 from organizations.services.organization_services import (
     ItemService,
+    OrganizationBannerService,
+    OrganizationInstagramIntegrationService,
     OrganizationService,
+    OrgMessageService,
     OrgPhoneNumberService,
     OrgSocialNetworkContactService,
-    OrgMessageService,
-    OrganizationInstagramIntegrationService,
-    OrganizationBannerService,
 )
 from organizations.services.subscription_services import (
     SubscriptionService,
     UserOrgSubscriptionService,
 )
 from organizations.services.verifications_service import (
-    VerificationService,
     PaymentSystemConfirmationService,
+    VerificationService,
 )
-from organizations.services.coupon_services import CouponServiceClass
 from organizations.tasks import (
-    parse_instagram_to_shop_items,
     add_subscribers_to_organization,
+    parse_instagram_to_shop_items,
 )
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
-from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.serializers import FollowerOrClientSerializer, UserShortInfoSerializer
 from users.services import UserService
 
 User = get_user_model()
@@ -1636,7 +1628,6 @@ class CouponListCreateAPIView(ListCreateAPIView):
         IsAuthenticated,
     ]
     service_class = CouponServiceClass
-    parser_classes = [MultiPartParser, FormParser]
 
     def get_serializer_class(
         self,
@@ -1659,7 +1650,7 @@ class CouponListCreateAPIView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        self.service_class.create_coupon(user=self.request.user, **validated_data)
+        self.service_class.create_coupon(**validated_data)
 
         return Response(
             data={"message": "succsefully created"}, status=status.HTTP_201_CREATED

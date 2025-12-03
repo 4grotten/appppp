@@ -108,6 +108,7 @@ class CalculateCouponValidateSerializer(serializers.Serializer):
 
 class CouponListForUserSerializer(serializers.ModelSerializer):
     product = ProductCouponSerializer()
+    used = serializers.BooleanField(read_only=True, required=False)
     used_on = serializers.SerializerMethodField()
 
     class Meta:

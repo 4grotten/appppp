@@ -351,7 +351,7 @@ def update_posts():
         ]
         total_updated += count
 
-    msg = f"```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"
+    msg = f"updated posts with organizations\n\n```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"
     bot(msg)
 
     logger.info(f"Total_updated {total_updated} random shop items")

@@ -1,40 +1,43 @@
-import time, tracemalloc
+import json
+import logging
 import random
+import time
+from datetime import datetime, timedelta
 from decimal import Decimal
-from organizations.utils import clean_original_amount
-from datetime import timedelta, datetime
-from zoneinfo import ZoneInfo
 from itertools import groupby
+from zoneinfo import ZoneInfo
 
 import requests
 from celery import shared_task
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Subquery, Q
-from django.utils.timezone import now
+from django.db.models import Subquery
+from django.template.loader import render_to_string
 from django.utils.dateparse import parse_datetime
+from django.utils.timezone import now
+from weasyprint import HTML
+
+from common.services.slack import bot
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import (
-    InstagramIntegration,
-    Organization,
-    UserOrgSubscription,
     Assistant,
     Coupon,
+    InstagramIntegration,
+    Invoice,
+    Organization,
     OrganizationInvoiceInfo,
     RegionalTariff,
+    UserOrgSubscription,
 )
 from organizations.services.invoice_service import OrganizationInvoiceService
-from shop.models import ShopItem, ItemInstagramData
-from django.template.loader import render_to_string
-from django.core.files.base import ContentFile
-from weasyprint import HTML
+from organizations.utils import clean_original_amount
+from shop.models import ItemInstagramData, ShopItem
 from users.models import User
-from organizations.models import Invoice
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -225,8 +228,8 @@ def update_login_device_settings():
 
 @shared_task
 def subscribe_user_to_organization(organization_id, user_id):
-    from organizations.services.subscription_services import SubscriptionService
     from organizations.services.organization_services import OrganizationService
+    from organizations.services.subscription_services import SubscriptionService
     from users.models import User
 
     organization = OrganizationService.get(pk=organization_id)
@@ -240,9 +243,6 @@ def subscribe_user_to_organization(organization_id, user_id):
 
 @shared_task
 def add_subscribers_to_organization(organization_id, num_members):
-    from organizations.services.subscription_services import SubscriptionService
-    from organizations.services.organization_services import OrganizationService
-
     users = (
         User.objects.filter(
             is_active=True, full_name__isnull=False, avatar__isnull=False
@@ -327,26 +327,32 @@ def expire_coupons():
 
 @shared_task
 def update_posts():
-    organizations_ids = Organization.objects.filter(update_posts=True).values_list(
-        "id", flat=True
+    organizations_ids = Organization.objects.filter(update_posts=True).values(
+        "id", "title"
     )
     total_updated = 0
+    updated_posts = dict()
 
     for org_id in organizations_ids:
-
         items_ids = (
-            ShopItem.objects.filter(organization__id=org_id)
+            ShopItem.objects.filter(organization__id=org_id.get("id"))
             .order_by("?")
-            .values_list("id", flat=True)[:10]
+            .values("id", "name")[:10]
         )
 
         if not items_ids:
             continue
 
         count = ShopItem.objects.filter(id__in=items_ids).update(
-            updated_at=now(), is_updated=True
+            updated_at=now(), is_updated=True, removed_at=None
         )
+        updated_posts[org_id.get("title", None)] = [
+            item.get("name", None) for item in items_ids
+        ]
         total_updated += count
+
+    msg = f"```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"
+    bot(msg)
 
     logger.info(f"Total_updated {total_updated} random shop items")
 

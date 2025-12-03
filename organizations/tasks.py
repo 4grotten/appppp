@@ -334,7 +334,7 @@ def update_posts():
     updated_posts = dict()
 
     for org_id in organizations_ids:
-        items_ids = (
+        items = (
             ShopItem.objects.filter(organization__id=org_id.get("id"))
             .order_by("?")
             .values("id", "name")[:10]
@@ -342,12 +342,12 @@ def update_posts():
 
         if not items_ids:
             continue
-
+        items_ids = [item.get("id") for item in items]
         count = ShopItem.objects.filter(id__in=items_ids).update(
             updated_at=now(), is_updated=True, removed_at=None
         )
         updated_posts[org_id.get("title", None)] = [
-            item.get("name", None) for item in items_ids
+            item.get("name", None) for item in items
         ]
         total_updated += count
 

@@ -30,7 +30,7 @@ class CalculateSumOfCouponsAPIView(GenericAPIView):
     service_class = CouponServiceClass
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid()
         result = self.service_class.calculate(serializer.validated_data)
 

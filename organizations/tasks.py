@@ -334,21 +334,21 @@ def update_posts():
     updated_posts = dict()
 
     for org_id in organizations_ids:
-        items = (
-            ShopItem.objects.filter(organization__id=org_id.get("id"))
-            .order_by("?")
-            .values("id", "name")[:10]
-        )
+        items = ShopItem.objects.filter(organization__id=org_id.get("id")).order_by(
+            "?"
+        )[:10]
 
         if not items:
             continue
-        items_ids = [item.get("id") for item in items]
-        count = ShopItem.objects.filter(id__in=items_ids).update(
-            updated_at=now(), is_updated=True, removed_at=None
-        )
-        updated_posts[org_id.get("title", None)] = [
-            item.get("name", None) for item in items
-        ]
+        count = 0
+        # items_ids = [item.pk for item in items]
+        for item in items:
+            item.is_updated = True
+            item.updated_at = datetime.now()
+            time.sleep(1)
+            count += 1
+
+        updated_posts[org_id.get("title", None)] = [item.name for item in items]
         total_updated += count
 
     msg = f"updated posts with organizations\n\n```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"

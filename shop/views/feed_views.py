@@ -128,7 +128,7 @@ class OrganizationItemListView(FeedView):
             organization=serializer.validated_data["organization"],
             user=self.request.user,
             search=None,
-        ).order_by("-updated_at", "price")
+        )
         search = self.request.GET.get("search", None)
         if search:
             qs = ShopItemService.get_ordering_search_result(

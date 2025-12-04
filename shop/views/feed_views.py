@@ -112,6 +112,17 @@ class FeedView(ListAPIView):
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
+    filter_backends = (
+        DjangoFilterBackend,
+        FeedItemOrderingFilter,
+        SearchFilter,
+    )
+    filterset_fields = (
+        "subcategory",
+        "subcategory__category",
+        "organization__country",
+        "organization__city",
+    )
     ordering_fields = ["updated_at", "price"]
 
     def get_queryset(self):

@@ -131,10 +131,14 @@ class OrganizationHotlinkShopItems(ListAPIView):
 
     def get_queryset(self):
         organization = OrganizationService.get(id=self.kwargs["pk"])
-        search = self.request.query_params.get("search", None)
+        search = self.request.query_params.get("search", None)  # type: ignore
+        subcategory_id = self.request.query_params.get("subcategory_id", None)  # type: ignore
 
         return ShopItemService.get_organization_items_queryset_for_user(
-            organization=organization, user=self.request.user, search=search
+            organization=organization,
+            user=self.request.user,
+            search=search,
+            subcategory_id=subcategory_id,
         ).order_by("-updated_at")
 
 

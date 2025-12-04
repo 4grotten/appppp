@@ -112,7 +112,7 @@ class FeedView(ListAPIView):
 class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
-    # ordering = ["-updated_at", "price"]
+    ordering_fields = ["updated_at", "price"]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)

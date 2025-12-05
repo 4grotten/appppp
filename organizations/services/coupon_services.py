@@ -47,7 +47,7 @@ class CouponServiceClass:
 
     @classmethod
     def calculate(cls, data: dict):
-        coupons_list = data.pop("coupons")
+        coupons_list = data["coupons"]
         coupons_qs = (
             cls.__model.objects.filter(id__in=coupons_list)
             .select_related("product")

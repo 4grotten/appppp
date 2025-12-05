@@ -56,15 +56,15 @@ class CouponServiceClass:
             .all()
         )
         discount_sum = 0
+        discount_percent = 0
 
         for coupon in coupons_qs:
             if coupon.coupon_type == cls.__model.PRODUCT:
                 discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
             if coupon.coupon_type == cls.__model.DISCOUNT:
-                discount = coupon.percent
-                return {"discount": discount}
+                discount_percent = coupon.percent
 
-        return {"discount": discount_sum}
+        return {"discount_sum": discount_sum, "discount_perc": discount_percent}
 
     @classmethod
     def get_list(cls, org_id: int, user):

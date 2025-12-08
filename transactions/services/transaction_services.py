@@ -717,7 +717,7 @@ class TransactionService:
                         output_field=FloatField(),
                     )
                 )
-                .aaggregate(total_sum=Sum("discounted_price"))
+                .aggregate(total_sum=Sum("discounted_price"))
             )
             current_transaction.discount_coupon = percent if percent else None
             current_transaction.product_coupon = discount_sum["total_sum"] or 0

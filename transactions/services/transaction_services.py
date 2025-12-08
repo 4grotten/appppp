@@ -639,6 +639,7 @@ class TransactionService:
                     CouponUsage(
                         coupon_id=coupon_id,
                         user=current_transaction.client,
+                        transaction=current_transaction,
                         is_used=True,
                     )
                 )

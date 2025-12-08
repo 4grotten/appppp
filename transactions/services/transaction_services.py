@@ -1657,7 +1657,9 @@ class TransactionService:
         cls, request, transaction_id: int, utc_offset_minutes: int, processed_by: User
     ) -> Transaction:
         current_transaction = (
-            Transaction.objects.select_related("organization", "cart", "client")
+            Transaction.objects.select_related(
+                "organization", "cart", "client", "currency"
+            )
             .prefetch_related(
                 "cart__items", "cart__items__item", "cart__items__item__available_sizes"
             )
@@ -1678,7 +1680,8 @@ class TransactionService:
 
         redis_client.set(str(transaction_id), transaction_id, ex=60)
 
-        totals = current_transaction.cart.items.aggregate(
+        items_queryset = current_transaction.cart.items.all()
+        totals = items_queryset.aggregate(
             original_price=Coalesce(
                 Sum(F("count") * F("item__price"), output_field=DecimalField()), 0
             ),
@@ -1690,33 +1693,61 @@ class TransactionService:
                 0,
             ),
         )
-
-        for cart_item in current_transaction.cart.items.all():
-            if (
-                cart_item.size is not None
-                and cart_item.size in cart_item.item.available_sizes.all()
-            ):
-                cls.change_count_service(size=cart_item.size, cart_item=cart_item)
-            else:
-                cls.change_count_service(size=None, cart_item=cart_item)
-
         original_price = totals["original_price"]
         discounted_price = totals["discounted_price"]
+        size_updates = []
+
+        for cart_item in items_queryset:
+            size = cart_item.size
+            item_size_count = next(
+                (s for s in cart_item.item.available_sizes.all() if s.size == size),
+                None,
+            )
+
+            if item_size_count:
+                new_count = item_size_count.count - cart_item.count
+                if new_count < 0:
+                    raise StockException(_("Insufficient quantity in stock"))
+                item_size_count.count = new_count
+                size_updates.append(item_size_count)
+            else:
+                raise StockException(_("The product has not quantity"))
+
+        if size_updates:
+            ShopItemSizeCount.objects.bulk_update(size_updates, ["count"])
+
+        # for cart_item in current_transaction.cart.items.all():
+        #     if (
+        #         cart_item.size is not None
+        #         and cart_item.size in cart_item.item.available_sizes.all()
+        #     ):
+        #         cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+        #     else:
+        #         cls.change_count_service(size=None, cart_item=cart_item)
+
+        # original_price = totals["original_price"]
+        # discounted_price = totals["discounted_price"]
         role = OrganizationService.get_user_role_in_organization(
             organization=organization, user=processed_by
         )
         from shop.serializers.cart_serializers import CartSerializer
 
+        fixed_cart = (
+            CartSerializer(current_transaction.cart, context={"request": request}).data
+            if current_transaction.cart
+            else None
+        )
         try:
             current_transaction.is_processed = True
 
-            current_transaction.fixed_cart = (
-                CartSerializer(
-                    current_transaction.cart, context={"request": request}
-                ).data
-                if current_transaction.cart
-                else None
-            )
+            # current_transaction.fixed_cart = (
+            #     CartSerializer(
+            #         current_transaction.cart, context={"request": request}
+            #     ).data
+            #     if current_transaction.cart
+            #     else None
+            # )
+            current_transaction.fixed_cart = fixed_cart
             current_transaction.processed_by = processed_by
             current_transaction.employee_role = role
             current_transaction.employee_name = processed_by.full_name
@@ -1729,12 +1760,32 @@ class TransactionService:
             current_transaction.display_time = now() + timedelta(
                 minutes=utc_offset_minutes
             )
+            try:
+                current_transaction.save(
+                    update_fields=[
+                        "is_processed",
+                        "fixed_cart",
+                        "processed_by",
+                        "employee_role",
+                        "employee_name",
+                        "employee_avatar",
+                        "status",
+                        "payment_status",
+                        "original_amount",
+                        "savings",
+                        "purchase_id",
+                        "display_time",
+                    ]
+                )
+            except IntegrityError:
+                raise IntegrityException(_("Could not complete transaction"))
 
-            current_transaction.save()
-
-            OrganizationService.increment_running_purchase_id(organization=organization)
+            # OrganizationService.increment_running_purchase_id(organization=organization)
         except IntegrityError:
             raise IntegrityException(_("Could not complete transaction"))
+        Organization.objects.filter(id=organization.pk).update(
+            running_purchase_id=F("running_purchase_id") + 1
+        )
 
         client_status = OrganizationClientFinancialStatusService.get_or_create(
             user=current_transaction.client,

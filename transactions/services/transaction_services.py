@@ -9,7 +9,9 @@ from django.db.models import (
     Case,
     Count,
     DecimalField,
+    ExpressionWrapper,
     F,
+    FloatField,
     IntegerField,
     Max,
     OuterRef,
@@ -100,6 +102,7 @@ from notifications.tasks import (
 )
 from organizations.constants import ACTIVE
 from organizations.models import (
+    Coupon,
     CouponUsage,
     DiscountCard,
     Membership,
@@ -694,6 +697,30 @@ class TransactionService:
             )
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
+            percent = (
+                Coupon.objects.filter(
+                    coupon_usage__transaction_id=current_transaction.pk,
+                    coupon_type=Coupon.DISCOUNT,
+                )
+                .values_list("percent", flat=True)
+                .first()
+            )
+            discount_sum = (
+                Coupon.objects.filter(
+                    coupon_usage__transaction_id=current_transaction.pk,
+                    coupon_type=Coupon.PRODUCT,
+                )
+                .annotate(
+                    discounted_price=ExpressionWrapper(
+                        F("product__price")
+                        - (F("product__price") * F("percent") / 100),
+                        output_field=FloatField(),
+                    )
+                )
+                .aaggregate(total_sum=Sum("discounted_price"))
+            )
+            current_transaction.discount_coupon = percent if percent else None
+            current_transaction.product_coupon = discount_sum["total_sum"] or 0
             current_transaction.status = Transaction.ACCEPTED
             current_transaction.delivery_type = Transaction.CART_CHECKOUT
             current_transaction.purchase_id = organization.running_purchase_id

@@ -551,6 +551,8 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             "delivery_info",
             "organization",
             "order_comment",
+            "product_coupon",
+            "discount_coupon",
         )
 
 

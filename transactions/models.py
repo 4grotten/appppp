@@ -112,7 +112,9 @@ class Transaction(TimestampModel):
         UserApp, on_delete=models.PROTECT, null=True, related_name="transactions"
     )
     discount_coupon = models.IntegerField(null=True, blank=True)
-    product_coupon = models.FloatField(null=True, blank=True)
+    product_coupon = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
 
     employee_name = models.CharField(max_length=255, null=True, blank=True)
     employee_role = models.CharField(max_length=255, null=True)

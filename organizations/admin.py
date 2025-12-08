@@ -32,6 +32,7 @@ from .models import (
     ChatMessage,
     CommonItemsGroup,
     Coupon,
+    CouponUsage,
     CumulativeGroup,
     DiscountCard,
     Hotlink,
@@ -999,3 +1000,10 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
     list_select_related = [
         "organization",
     ]
+
+
+@admin.register(CouponUsage)
+class CouponUsageAdmin(admin.ModelAdmin):
+    list_display = ["user", "coupon", "is_used"]
+
+    list_select_related = ["user", "coupon", "transaction"]

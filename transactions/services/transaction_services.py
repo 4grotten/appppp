@@ -1711,7 +1711,8 @@ class TransactionService:
                 item_size_count.count = new_count
                 size_updates.append(item_size_count)
             else:
-                raise StockException(_("The product has not quantity"))
+                continue
+                # raise StockException(_("The product has not quantity"))
 
         if size_updates:
             ShopItemSizeCount.objects.bulk_update(size_updates, ["count"])

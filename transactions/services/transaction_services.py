@@ -674,8 +674,7 @@ class TransactionService:
             )
             .annotate(
                 discounted_price=ExpressionWrapper(
-                    F("product__price")
-                    - (F("product__price") * F("percent") / Decimal(100)),
+                    (F("product__price") * F("percent") / Decimal(100)),
                     output_field=DecimalField(max_digits=10, decimal_places=2),
                 )
             )

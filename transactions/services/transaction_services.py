@@ -667,7 +667,32 @@ class TransactionService:
         if not transaction_cart == cart:
             raise NotAcceptableException(_("Transaction and cart do not match"))
 
-        total_savings = (original_amount * discount_percent) / 100
+        discount_sum = (
+            Coupon.objects.filter(
+                coupon_usage__transaction_id=current_transaction.pk,
+                coupon_type=Coupon.PRODUCT,
+            )
+            .annotate(
+                discounted_price=ExpressionWrapper(
+                    (F("product__price") * F("percent") / Decimal(100)),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                )
+            )
+            .aggregate(total_sum=Sum("discounted_price"))
+        )
+        original_amount -= discount_sum["total_sum"] or 0
+        percent = (
+            Coupon.objects.filter(
+                coupon_usage__transaction_id=current_transaction.pk,
+                coupon_type=Coupon.DISCOUNT,
+            )
+            .values_list("percent", flat=True)
+            .first()
+        )
+        if percent:
+            total_savings = (original_amount * (discount_percent + percent)) / 100
+        else:
+            total_savings = (original_amount * discount_percent) / 100
 
         if cart is not None:
             items_price, discounted_items = CartService.get_total_prices_in_cart(
@@ -696,28 +721,7 @@ class TransactionService:
             )
             current_transaction.from_cashback = from_cashback
             current_transaction.source_card = source_card
-            percent = (
-                Coupon.objects.filter(
-                    coupon_usage__transaction_id=current_transaction.pk,
-                    coupon_type=Coupon.DISCOUNT,
-                )
-                .values_list("percent", flat=True)
-                .first()
-            )
-            discount_sum = (
-                Coupon.objects.filter(
-                    coupon_usage__transaction_id=current_transaction.pk,
-                    coupon_type=Coupon.PRODUCT,
-                )
-                .annotate(
-                    discounted_price=ExpressionWrapper(
-                        F("product__price")
-                        - (F("product__price") * F("percent") / Decimal(100)),
-                        output_field=DecimalField(max_digits=10, decimal_places=2),
-                    )
-                )
-                .aggregate(total_sum=Sum("discounted_price"))
-            )
+
             current_transaction.discount_coupon = percent if percent else None
             current_transaction.product_coupon = discount_sum["total_sum"] or 0
             current_transaction.status = Transaction.ACCEPTED

@@ -680,7 +680,7 @@ class TransactionService:
             )
             .aggregate(total_sum=Sum("discounted_price"))
         )
-        original_amount -= discount_sum["total_sum"] or 0
+        temp_amount = original_amount - discount_sum["total_sum"] or 0
         percent = (
             Coupon.objects.filter(
                 coupon_usage__transaction_id=current_transaction.pk,
@@ -690,9 +690,9 @@ class TransactionService:
             .first()
         )
         if percent:
-            total_savings = (original_amount * (discount_percent + percent)) / 100
+            total_savings = (temp_amount * (discount_percent + percent)) / 100
         else:
-            total_savings = (original_amount * discount_percent) / 100
+            total_savings = (temp_amount * discount_percent) / 100
 
         if cart is not None:
             items_price, discounted_items = CartService.get_total_prices_in_cart(
@@ -707,7 +707,7 @@ class TransactionService:
             original_amount = items_price
             total_savings = total_savings + (items_price - discounted_items)
 
-        amount_to_pay = original_amount - total_savings
+        amount_to_pay = temp_amount - total_savings
         if amount_to_pay < from_cashback:
             raise NotAcceptableException(
                 _("Cashback amount is greater than original amount")

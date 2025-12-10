@@ -191,8 +191,6 @@ class Transaction(TimestampModel):
         self.final_amount = (
             self.original_amount - self.savings - self.from_cashback - self.fee_amount
         )
-        if self.product_coupon:
-            self.final_amount -= self.product_coupon
         super().save(*args, **kwargs)
 
 

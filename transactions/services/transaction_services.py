@@ -617,7 +617,7 @@ class TransactionService:
         from_cashback: Decimal,
         utc_offset_minutes: int,
         cart: Union[Cart, None] = None,
-        coupons_list=Union[list[int], None],
+        coupons_list: Union[list[int], None] = None,
     ) -> Transaction:
         current_transaction = cls.get(
             id=transaction_id,
@@ -680,7 +680,7 @@ class TransactionService:
             )
             .aggregate(total_sum=Sum("discounted_price"))
         )
-        temp_amount = original_amount - discount_sum["total_sum"] or 0
+        temp_amount = original_amount - (discount_sum["total_sum"] or 0)
         percent = (
             Coupon.objects.filter(
                 coupon_usage__transaction_id=current_transaction.pk,

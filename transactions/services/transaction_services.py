@@ -400,6 +400,7 @@ class TransactionService:
             .values_list("percent", flat=True)
             .first()
         )
+        print(percent)
 
         if percent:
             total_savings = (temp_amount * (discount_percent + percent)) / 100
@@ -407,6 +408,7 @@ class TransactionService:
             total_savings = (temp_amount * discount_percent) / 100
 
         if discount_sum["total_sum"] is not None:
+            print(discount_sum["total_sum"])
             total_savings += discount_sum["total_sum"]
 
         if cart is not None:

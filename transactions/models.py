@@ -189,7 +189,11 @@ class Transaction(TimestampModel):
 
     def save(self, *args, **kwargs):
         self.final_amount = (
-            self.original_amount - self.savings - self.from_cashback - self.fee_amount
+            self.original_amount
+            - self.savings
+            - self.from_cashback
+            - self.fee_amount
+            - self.product_coupon
         )
         super().save(*args, **kwargs)
 

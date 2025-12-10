@@ -54,6 +54,7 @@ class NotificationService:
                 type=notification_type,
                 extra_data=extra_data,
             )
+            print(f"[ LOG ] sending notification to {notification.recipient}")
             Notification.send_notification(
                 user=notification.recipient,
                 title=notification.title,

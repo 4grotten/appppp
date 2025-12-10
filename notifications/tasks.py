@@ -367,6 +367,10 @@ def sent_notification(
     )
 
 
+def get_organization_small_image(organization: Organization):
+    return organization.image.medium.url if organization.image else None
+
+
 def user_can_send_message(organization_id: int, user: User) -> bool:
     try:
         organization = Organization.objects.get(id=organization_id)
@@ -381,9 +385,12 @@ def user_can_send_message(organization_id: int, user: User) -> bool:
     return membership.role.can_send_message
 
 
+def get_item_small_image(item: ShopItem):
+    return item.images.first().medium.url if item else None
+
+
 @shared_task
 def send_notification(
-    cls,
     user: str,
     title: str,
     title_ru: str,
@@ -408,15 +415,13 @@ def send_notification(
         user = User.objects.get(id=user)
     organization_image = (
         (
-            cls.get_organization_small_image(organization=organization)
+            get_organization_small_image(organization=organization)
             if organization
             else None
         ),
     )
     image = (
-        cls.get_item_small_image(item=item)
-        if type == "new_comment"
-        else organization_image
+        get_item_small_image(item=item) if type == "new_comment" else organization_image
     )
     if not NotificationSetting.objects.filter(user=user).exists():
         return
@@ -468,7 +473,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),
@@ -486,7 +491,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),
@@ -504,7 +509,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),
@@ -522,7 +527,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),
@@ -540,7 +545,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),
@@ -557,7 +562,7 @@ def send_notification(
         "image": str(image),
         "type": str(type),
         "icon": (
-            str(cls.get_organization_small_image(organization=organization))
+            str(get_organization_small_image(organization=organization))
             if organization
             else ""
         ),

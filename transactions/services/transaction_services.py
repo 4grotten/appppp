@@ -1773,26 +1773,49 @@ class TransactionService:
                 0,
             ),
         )
-        original_price = totals["original_price"]
-        discounted_price = totals["discounted_price"]
+        items = current_transaction.cart.items.all()
+        original_price = Decimal(0)
+        discounted_price = Decimal(0)
         size_updates = []
 
-        for cart_item in items_queryset:
-            size = cart_item.size
-            item_size_count = next(
-                (s for s in cart_item.item.available_sizes.all() if s.size == size),
+        for cart_item in items:
+            p_price = cart_item.item.price or 0
+            p_discount = cart_item.item.discounted_price or 0
+
+            original_price += p_price * cart_item.count
+            discounted_price += p_discount * cart_item.count
+            target_size_obj = next(
+                (
+                    s
+                    for s in cart_item.item.available_sizes.all()
+                    if s.size == cart_item.size
+                ),
                 None,
             )
 
-            if item_size_count:
-                new_count = item_size_count.count - cart_item.count
+            if target_size_obj:
+                new_count = target_size_obj.count - cart_item.count
+
                 if new_count < 0:
-                    raise StockException(_("Insufficient quantity in stock"))
-                item_size_count.count = new_count
-                size_updates.append(item_size_count)
-            else:
-                continue
-                # raise StockException(_("The product has not quantity"))
+                    raise StockException(_("Insuficcient quantity in stock"))
+                target_size_obj.count = new_count
+                size_updates.append(target_size_obj)
+
+            # size = cart_item.size
+            # item_size_count = next(
+            #     (s for s in cart_item.item.available_sizes.all() if s.size == size),
+            #     None,
+            # )
+
+            # if item_size_count:
+            #     new_count = item_size_count.count - cart_item.count
+            #     if new_count < 0:
+            #         raise StockException(_("Insufficient quantity in stock"))
+            #     item_size_count.count = new_count
+            #     size_updates.append(item_size_count)
+            # else:
+            #     continue
+            #     # raise StockException(_("The product has not quantity"))
 
         if size_updates:
             ShopItemSizeCount.objects.bulk_update(size_updates, ["count"])
@@ -1808,13 +1831,21 @@ class TransactionService:
 
         # original_price = totals["original_price"]
         # discounted_price = totals["discounted_price"]
+
         role = OrganizationService.get_user_role_in_organization(
             organization=organization, user=processed_by
         )
+        serializer_context = {
+            "request": request,
+            "precalculated_totals": {
+                "original_price": original_price,
+                "discounted_price": discounted_price,
+            },
+        }
         from shop.serializers.cart_serializers import CartSerializer
 
         fixed_cart = (
-            CartSerializer(current_transaction.cart, context={"request": request}).data
+            CartSerializer(current_transaction.cart, context=serializer_context).data
             if current_transaction.cart
             else None
         )

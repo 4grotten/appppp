@@ -1,6 +1,7 @@
 import hashlib
 import json
 from decimal import ROUND_DOWN, Decimal
+from time import time
 
 import requests
 import xmltodict
@@ -400,6 +401,7 @@ class OnlineTransactionCompleteView(GenericAPIView):
     serializer_class = OnlineCompleteSerializer
 
     def post(self, request, *args, **kwargs):
+        start = time()
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -421,6 +423,8 @@ class OnlineTransactionCompleteView(GenericAPIView):
             processed_by=request.user,
             request=request,
         )
+        total_time = time() - start
+        print(f"[TOTAL VIEW TIME]: {total_time:.4f} sec")
         return Response(
             data={"message": _("Transaction successfully completed")},
             status=status.HTTP_200_OK,

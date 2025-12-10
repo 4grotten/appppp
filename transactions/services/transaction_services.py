@@ -1761,18 +1761,18 @@ class TransactionService:
         redis_client.set(str(transaction_id), transaction_id, ex=60)
 
         items_queryset = current_transaction.cart.items.all()
-        totals = items_queryset.aggregate(
-            original_price=Coalesce(
-                Sum(F("count") * F("item__price"), output_field=DecimalField()), 0
-            ),
-            discounted_price=Coalesce(
-                Sum(
-                    F("count") * F("item__discounted_price"),
-                    output_field=DecimalField(),
-                ),
-                0,
-            ),
-        )
+        # totals = items_queryset.aggregate(
+        #     original_price=Coalesce(
+        #         Sum(F("count") * F("item__price"), output_field=DecimalField()), 0
+        #     ),
+        #     discounted_price=Coalesce(
+        #         Sum(
+        #             F("count") * F("item__discounted_price"),
+        #             output_field=DecimalField(),
+        #         ),
+        #         0,
+        #     ),
+        # )
         items = current_transaction.cart.items.all()
         original_price = Decimal(0)
         discounted_price = Decimal(0)

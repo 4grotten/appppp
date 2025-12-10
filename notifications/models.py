@@ -3,7 +3,6 @@ from django.db import models
 from fcm_django.models import FCMDevice
 
 from common.models import TimestampModel
-from notifications.tasks import send_notification
 from organizations.models import Organization
 from shop.models import ShopItem
 
@@ -93,6 +92,7 @@ class Notification(TimestampModel):
                 self.title_zh = self.title
                 self.description_zh = self.description
         super().save(*args, **kwargs)
+        from notifications.tasks import send_notification
 
         send_notification.delay(
             user=self.recipient.pk,

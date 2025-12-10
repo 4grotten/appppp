@@ -18,7 +18,6 @@ from notifications.constants import (
     NOTIFICATION_MODE_TICKET,
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
 )
-from notifications.models import NotificationSetting
 from notifications.services import NotificationService
 from organizations.models import Membership, Organization
 from shop.models import Cart, ShopItem
@@ -403,6 +402,8 @@ def send_notification(
     extra_data=None,
     item=None,
 ):
+    from notifications.models import NotificationSetting
+
     if user:
         user = User.objects.get(id=user)
     organization_image = (

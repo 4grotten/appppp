@@ -326,6 +326,7 @@ class TransactionService:
         from_cashback: Decimal,
         utc_offset_minutes: int,
         cart: Union[Cart, None] = None,
+        coupons_ids: Union[list, None] = None,
     ) -> Transaction:
         current_transaction = cls.get(
             id=transaction_id,
@@ -343,6 +344,20 @@ class TransactionService:
             )
         ):
             raise NotAcceptableException(_("Client cannot use this card"))
+
+        if coupons_ids:
+            coupon_usage = list()
+            for coupon_id in coupons_ids:
+                coupon_usage.append(
+                    CouponUsage(
+                        coupon_id=coupon_id,
+                        user=current_transaction.client,
+                        transaction=current_transaction,
+                        is_used=True,
+                    )
+                )
+
+            CouponUsage.objects.bulk_create(coupon_usage)
 
         cashback_percent = 0
         if source_card is not None and source_card.type == DiscountCard.CASHBACK:
@@ -363,7 +378,36 @@ class TransactionService:
         if not transaction_cart == cart:
             raise NotAcceptableException(_("Transaction and cart do not match"))
 
-        total_savings = (original_amount * discount_percent) / 100
+        discount_sum = (
+            Coupon.objects.filter(
+                coupon_usage__transaction_id=current_transaction.pk,
+                coupon_type=Coupon.PRODUCT,
+            )
+            .annotate(
+                discounted_price=ExpressionWrapper(
+                    (F("product__price") * F("percent") / Decimal(100)),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                )
+            )
+            .aggregate(total_sum=Sum("discounted_price"))
+        )
+        temp_amount = original_amount - (discount_sum["total_sum"] or 0)
+        percent = (
+            Coupon.objects.filter(
+                coupon_usage__transaction_id=current_transaction.pk,
+                coupon_type=Coupon.DISCOUNT,
+            )
+            .values_list("percent", flat=True)
+            .first()
+        )
+
+        if percent:
+            total_savings = (temp_amount * (discount_percent + percent)) / 100
+        else:
+            total_savings = (temp_amount * discount_percent) / 100
+
+        if discount_sum["total_sum"] is not None:
+            total_savings += discount_sum["total_sum"]
 
         if cart is not None:
             items_price, discounted_items = CartService.get_total_prices_in_cart(
@@ -408,6 +452,8 @@ class TransactionService:
             current_transaction.display_time = now() + timedelta(
                 minutes=utc_offset_minutes
             )
+            current_transaction.discount_coupon = percent if percent else None
+            current_transaction.product_coupon = discount_sum["total_sum"] or 0
 
             OrganizationService.increment_running_purchase_id(organization=organization)
 

@@ -1943,18 +1943,16 @@ class TransactionService:
                     currency=current_transaction.currency.code,
                 ),
             )
+            if current_transaction.delivery_type != Transaction.SELF_PICKUP and org:
+                send_delivery_notifications.delay(current_transaction.pk)
+
+        org = (
+            Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
+            .filter(is_delivery_service=True, country=organization.country)
+            .exists()
+        )
 
         transaction.on_commit(send_notification_after_commit)
-        if current_transaction.delivery_type != Transaction.SELF_PICKUP:
-            org = (
-                Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
-                .filter(is_delivery_service=True, country=organization.country)
-                .exists()
-            )
-
-            if org:
-                send_delivery_notifications.delay(current_transaction.id)
-
         return current_transaction
 
     @classmethod

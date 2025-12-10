@@ -1326,6 +1326,13 @@ class CouponUsage(TimestampModel):
     coupon = models.ForeignKey(
         Coupon, on_delete=models.CASCADE, related_name="coupon_usage"
     )
+    transaction = models.ForeignKey(
+        "transactions.Transaction",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="coupon_usage",
+    )
     is_used = models.BooleanField(default=True)
 
 

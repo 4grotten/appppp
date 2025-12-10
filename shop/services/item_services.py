@@ -104,11 +104,22 @@ class ShopItemService:
 
     @classmethod
     def get_organization_items_queryset_for_user(
-        cls, organization: Organization, user: User, search: Union[str, None]
+        cls,
+        organization: Organization,
+        user: User,
+        search: Union[str, None],
+        subcategory_id: Union[str, None],
+        without_price: Union[bool, None] = None,
     ) -> QuerySet:
         base_filters = Q()
         if search:
             base_filters &= Q(name__icontains=search)
+
+        if subcategory_id:
+            base_filters &= Q(subcategory_id=subcategory_id)
+
+        if without_price:
+            base_filters &= Q(price__isnull=False)
 
         can_see_own_unpublished = (
             user.is_authenticated

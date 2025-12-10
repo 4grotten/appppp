@@ -365,16 +365,16 @@ class TransactionsTicketSerializer(serializers.ModelSerializer):
         )
 
 
-class OnlineCompleteSerializer(serializers.ModelSerializer):
+class OnlineCompleteSerializer(serializers.Serializer):
     transaction_id = serializers.IntegerField(required=True)
     utc_offset_minutes = serializers.IntegerField(min_value=-720, max_value=840)
 
-    class Meta:
-        model = Transaction
-        fields = (
-            "transaction_id",
-            "utc_offset_minutes",
-        )
+    # class Meta:
+    #     model = Transaction
+    #     fields = (
+    #         "transaction_id",
+    #         "utc_offset_minutes",
+    #     )
 
 
 class TransactionWithdrawalCompleteSerializer(serializers.ModelSerializer):
@@ -551,6 +551,8 @@ class TransactionWithClientSerializer(TransactionDetailSerializer):
             "delivery_info",
             "organization",
             "order_comment",
+            "product_coupon",
+            "discount_coupon",
         )
 
 

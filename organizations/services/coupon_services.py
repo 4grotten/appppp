@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db.models import Exists, OuterRef
 
 from common.exceptions import CouponException
@@ -47,22 +49,22 @@ class CouponServiceClass:
 
     @classmethod
     def calculate(cls, data: dict):
-        coupons_list = data.pop("coupons")
+        coupons_list = data["coupons"]
         coupons_qs = (
             cls.__model.objects.filter(id__in=coupons_list)
             .select_related("product")
             .all()
         )
         discount_sum = 0
+        discount_percent = 0
 
         for coupon in coupons_qs:
             if coupon.coupon_type == cls.__model.PRODUCT:
-                discount_sum += coupon.product.price / (coupon.percent * 100)
+                discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
             if coupon.coupon_type == cls.__model.DISCOUNT:
-                discount = coupon.percent
-                return {"discount": discount}
+                discount_percent = coupon.percent
 
-        return {"discount": discount_sum}
+        return {"discount_sum": discount_sum, "discount_perc": discount_percent}
 
     @classmethod
     def get_list(cls, org_id: int, user):

@@ -128,6 +128,7 @@ class OrganizationItemListView(FeedView):
             organization=serializer.validated_data["organization"],
             user=self.request.user,
             search=None,
+            subcategory_id=None,
         ).order_by("-updated_at")
         search = self.request.GET.get("search", None)
         if search:

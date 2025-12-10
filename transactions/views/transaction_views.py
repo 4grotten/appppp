@@ -298,6 +298,7 @@ class TransactionCompleteView(GenericAPIView):
             from_cashback=serializer.validated_data["from_cashback"],
             utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             cart=serializer.validated_data.get("cart", None),
+            coupons_ids=serializer.validated_data.get("coupons_ids", None),
         )
 
         return Response(

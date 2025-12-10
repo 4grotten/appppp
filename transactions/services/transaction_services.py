@@ -694,6 +694,9 @@ class TransactionService:
         else:
             total_savings = (temp_amount * discount_percent) / 100
 
+        if discount_sum["total_sum"] is not None:
+            total_savings += discount_sum["total_sum"]
+
         if cart is not None:
             items_price, discounted_items = CartService.get_total_prices_in_cart(
                 cart=cart

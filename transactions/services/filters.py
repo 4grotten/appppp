@@ -1,8 +1,10 @@
+import time
 from datetime import timedelta
 
 import django_filters
 from django.utils.translation import gettext_lazy as _
-from django_filters import rest_framework as filters, Filter
+from django_filters import Filter
+from django_filters import rest_framework as filters
 
 from common.exceptions import ValidationException
 from transactions.models import Transaction
@@ -15,17 +17,18 @@ class MultipleListFilter(Filter):
         if not value:
             return qs
 
-        self.lookup_expr = 'in'
-        values = value.split(',')
+        self.lookup_expr = "in"
+        values = value.split(",")
 
         if len(values) > self.MAX_LIMIT:
-            raise ValidationException(_('Max number of ids should be less than equal 20'))
+            raise ValidationException(
+                _("Max number of ids should be less than equal 20")
+            )
 
         return super(MultipleListFilter, self).filter(qs, values).distinct()
 
 
 class EndFilter(django_filters.DateFilter):
-
     def filter(self, qs, value):
         if value:
             value = value + timedelta(days=1)
@@ -34,27 +37,42 @@ class EndFilter(django_filters.DateFilter):
 
 class TransactionFilter(filters.FilterSet):
     organization = MultipleListFilter()
-    start = filters.DateFilter(field_name="updated_at", lookup_expr='gte')
-    end = EndFilter(field_name="updated_at", lookup_expr='lt')
+    start = filters.DateFilter(field_name="updated_at", lookup_expr="gte")
+    end = EndFilter(field_name="updated_at", lookup_expr="lt")
 
     class Meta:
         model = Transaction
-        fields = ('organization_id', 'start', 'end')
+        fields = ("organization_id", "start", "end")
 
 
 class TransactionRentalFilter(filters.FilterSet):
-    start = filters.DateFilter(field_name="updated_at", lookup_expr='gte')
-    end = EndFilter(field_name="updated_at", lookup_expr='lt')
+    start = filters.DateFilter(field_name="updated_at", lookup_expr="gte")
+    end = EndFilter(field_name="updated_at", lookup_expr="lt")
 
     class Meta:
         model = Transaction
-        fields = ('start', 'end')
+        fields = ("start", "end")
 
 
 class TransactionTicketFilter(filters.FilterSet):
-    start = filters.DateFilter(field_name="updated_at", lookup_expr='gte')
-    end = EndFilter(field_name="updated_at", lookup_expr='lt')
+    start = filters.DateFilter(field_name="updated_at", lookup_expr="gte")
+    end = EndFilter(field_name="updated_at", lookup_expr="lt")
 
     class Meta:
         model = Transaction
-        fields = ('start', 'end')
+        fields = ("start", "end")
+
+
+class Timer:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        self.start_time = time.time()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        end_time = time.time()
+        duration = end_time - self.start_time
+
+        print(f"[ PERFOMANCE ] {self.name}: {duration:.4f} sec")

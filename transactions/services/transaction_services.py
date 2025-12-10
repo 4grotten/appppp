@@ -131,6 +131,8 @@ from transactions.services.stats_services import StatisticsService
 from users.models import ReferralBalance, ReferralTransaction, User
 from users.services import UserService
 
+from .filters import Timer
+
 
 class TransactionService:
     @classmethod
@@ -1736,223 +1738,235 @@ class TransactionService:
     def complete_online_transaction(
         cls, request, transaction_id: int, utc_offset_minutes: int, processed_by: User
     ) -> Transaction:
-        current_transaction = (
-            Transaction.objects.select_related(
-                "organization", "cart", "client", "currency"
-            )
-            .prefetch_related(
-                "cart__items", "cart__items__item", "cart__items__item__available_sizes"
-            )
-            .get(
-                id=transaction_id,
-                is_processed=False,
-                type=Transaction.ONLINE,
-                status=Transaction.IN_PROGRESS,
-            )
-        )
-
-        organization = current_transaction.organization
-
-        if not OrganizationService.user_can_sell(
-            organization=organization, user=processed_by
-        ):
-            raise NotAcceptableException(_("No rights to sell in this organization"))
-
-        redis_client.set(str(transaction_id), transaction_id, ex=60)
-
-        items_queryset = current_transaction.cart.items.all()
-        # totals = items_queryset.aggregate(
-        #     original_price=Coalesce(
-        #         Sum(F("count") * F("item__price"), output_field=DecimalField()), 0
-        #     ),
-        #     discounted_price=Coalesce(
-        #         Sum(
-        #             F("count") * F("item__discounted_price"),
-        #             output_field=DecimalField(),
-        #         ),
-        #         0,
-        #     ),
-        # )
-        items = current_transaction.cart.items.all()
-        original_price = Decimal(0)
-        discounted_price = Decimal(0)
-        size_updates = []
-
-        for cart_item in items:
-            p_price = cart_item.item.price or 0
-            p_discount = cart_item.item.discounted_price or 0
-
-            original_price += p_price * cart_item.count
-            discounted_price += p_discount * cart_item.count
-            target_size_obj = next(
-                (
-                    s
-                    for s in cart_item.item.available_sizes.all()
-                    if s.size == cart_item.size
-                ),
-                None,
+        with Timer("1. Load transaction & prefetch"):
+            current_transaction = (
+                Transaction.objects.select_related(
+                    "organization", "cart", "client", "currency"
+                )
+                .prefetch_related(
+                    "cart__items",
+                    "cart__items__item",
+                    "cart__items__item__available_sizes",
+                )
+                .get(
+                    id=transaction_id,
+                    is_processed=False,
+                    type=Transaction.ONLINE,
+                    status=Transaction.IN_PROGRESS,
+                )
             )
 
-            if target_size_obj:
-                new_count = target_size_obj.count - cart_item.count
+            organization = current_transaction.organization
 
-                if new_count < 0:
-                    raise StockException(_("Insuficcient quantity in stock"))
-                target_size_obj.count = new_count
-                size_updates.append(target_size_obj)
+            if not OrganizationService.user_can_sell(
+                organization=organization, user=processed_by
+            ):
+                raise NotAcceptableException(
+                    _("No rights to sell in this organization")
+                )
+        with Timer("2. Redis set"):
+            redis_client.set(str(transaction_id), transaction_id, ex=60)
 
-            # size = cart_item.size
-            # item_size_count = next(
-            #     (s for s in cart_item.item.available_sizes.all() if s.size == size),
-            #     None,
+        with Timer("3. Stock Logic & price calc"):
+            items_queryset = current_transaction.cart.items.all()
+            # totals = items_queryset.aggregate(
+            #     original_price=Coalesce(
+            #         Sum(F("count") * F("item__price"), output_field=DecimalField()), 0
+            #     ),
+            #     discounted_price=Coalesce(
+            #         Sum(
+            #             F("count") * F("item__discounted_price"),
+            #             output_field=DecimalField(),
+            #         ),
+            #         0,
+            #     ),
             # )
+            items = current_transaction.cart.items.all()
+            original_price = Decimal(0)
+            discounted_price = Decimal(0)
+            size_updates = []
 
-            # if item_size_count:
-            #     new_count = item_size_count.count - cart_item.count
-            #     if new_count < 0:
-            #         raise StockException(_("Insufficient quantity in stock"))
-            #     item_size_count.count = new_count
-            #     size_updates.append(item_size_count)
-            # else:
-            #     continue
-            #     # raise StockException(_("The product has not quantity"))
+            for cart_item in items:
+                p_price = cart_item.item.price or 0
+                p_discount = cart_item.item.discounted_price or 0
 
-        if size_updates:
-            ShopItemSizeCount.objects.bulk_update(size_updates, ["count"])
+                original_price += p_price * cart_item.count
+                discounted_price += p_discount * cart_item.count
+                target_size_obj = next(
+                    (
+                        s
+                        for s in cart_item.item.available_sizes.all()
+                        if s.size == cart_item.size
+                    ),
+                    None,
+                )
 
-        # for cart_item in current_transaction.cart.items.all():
-        #     if (
-        #         cart_item.size is not None
-        #         and cart_item.size in cart_item.item.available_sizes.all()
-        #     ):
-        #         cls.change_count_service(size=cart_item.size, cart_item=cart_item)
-        #     else:
-        #         cls.change_count_service(size=None, cart_item=cart_item)
+                if target_size_obj:
+                    new_count = target_size_obj.count - cart_item.count
 
-        # original_price = totals["original_price"]
-        # discounted_price = totals["discounted_price"]
+                    if new_count < 0:
+                        raise StockException(_("Insuficcient quantity in stock"))
+                    target_size_obj.count = new_count
+                    size_updates.append(target_size_obj)
+
+                # size = cart_item.size
+                # item_size_count = next(
+                #     (s for s in cart_item.item.available_sizes.all() if s.size == size),
+                #     None,
+                # )
+
+                # if item_size_count:
+                #     new_count = item_size_count.count - cart_item.count
+                #     if new_count < 0:
+                #         raise StockException(_("Insufficient quantity in stock"))
+                #     item_size_count.count = new_count
+                #     size_updates.append(item_size_count)
+                # else:
+                #     continue
+                #     # raise StockException(_("The product has not quantity"))
+
+            if size_updates:
+                ShopItemSizeCount.objects.bulk_update(size_updates, ["count"])
+
+            # for cart_item in current_transaction.cart.items.all():
+            #     if (
+            #         cart_item.size is not None
+            #         and cart_item.size in cart_item.item.available_sizes.all()
+            #     ):
+            #         cls.change_count_service(size=cart_item.size, cart_item=cart_item)
+            #     else:
+            #         cls.change_count_service(size=None, cart_item=cart_item)
+
+            # original_price = totals["original_price"]
+            # discounted_price = totals["discounted_price"]
 
         role = OrganizationService.get_user_role_in_organization(
             organization=organization, user=processed_by
         )
-        serializer_context = {
-            "request": request,
-            "precalculated_totals": {
-                "original_price": original_price,
-                "discounted_price": discounted_price,
-            },
-        }
-        from shop.serializers.cart_serializers import CartSerializer
 
-        fixed_cart = (
-            CartSerializer(current_transaction.cart, context=serializer_context).data
-            if current_transaction.cart
-            else None
-        )
-        try:
-            current_transaction.is_processed = True
+        with Timer("4. CartSerializer Serialization"):
+            serializer_context = {
+                "request": request,
+                "precalculated_totals": {
+                    "original_price": original_price,
+                    "discounted_price": discounted_price,
+                },
+            }
+            from shop.serializers.cart_serializers import CartSerializer
 
-            # current_transaction.fixed_cart = (
-            #     CartSerializer(
-            #         current_transaction.cart, context={"request": request}
-            #     ).data
-            #     if current_transaction.cart
-            #     else None
-            # )
-            current_transaction.fixed_cart = fixed_cart
-            current_transaction.processed_by = processed_by
-            current_transaction.employee_role = role
-            current_transaction.employee_name = processed_by.full_name
-            current_transaction.employee_avatar = processed_by.avatar
-            current_transaction.status = Transaction.ACCEPTED
-            current_transaction.payment_status = Transaction.ACCEPTED
-            current_transaction.original_amount = original_price
-            current_transaction.savings = original_price - discounted_price
-            current_transaction.purchase_id = organization.running_purchase_id
-            current_transaction.display_time = now() + timedelta(
-                minutes=utc_offset_minutes
+            fixed_cart = (
+                CartSerializer(
+                    current_transaction.cart, context=serializer_context
+                ).data
+                if current_transaction.cart
+                else None
             )
+        with Timer("5. Transaction save"):
             try:
-                current_transaction.save(
-                    update_fields=[
-                        "is_processed",
-                        "fixed_cart",
-                        "processed_by",
-                        "employee_role",
-                        "employee_name",
-                        "employee_avatar",
-                        "status",
-                        "payment_status",
-                        "original_amount",
-                        "savings",
-                        "purchase_id",
-                        "display_time",
-                    ]
+                current_transaction.is_processed = True
+
+                # current_transaction.fixed_cart = (
+                #     CartSerializer(
+                #         current_transaction.cart, context={"request": request}
+                #     ).data
+                #     if current_transaction.cart
+                #     else None
+                # )
+                current_transaction.fixed_cart = fixed_cart
+                current_transaction.processed_by = processed_by
+                current_transaction.employee_role = role
+                current_transaction.employee_name = processed_by.full_name
+                current_transaction.employee_avatar = processed_by.avatar
+                current_transaction.status = Transaction.ACCEPTED
+                current_transaction.payment_status = Transaction.ACCEPTED
+                current_transaction.original_amount = original_price
+                current_transaction.savings = original_price - discounted_price
+                current_transaction.purchase_id = organization.running_purchase_id
+                current_transaction.display_time = now() + timedelta(
+                    minutes=utc_offset_minutes
                 )
+                try:
+                    current_transaction.save(
+                        update_fields=[
+                            "is_processed",
+                            "fixed_cart",
+                            "processed_by",
+                            "employee_role",
+                            "employee_name",
+                            "employee_avatar",
+                            "status",
+                            "payment_status",
+                            "original_amount",
+                            "savings",
+                            "purchase_id",
+                            "display_time",
+                        ]
+                    )
+                except IntegrityError:
+                    raise IntegrityException(_("Could not complete transaction"))
+
+                # OrganizationService.increment_running_purchase_id(organization=organization)
             except IntegrityError:
                 raise IntegrityException(_("Could not complete transaction"))
-
-            # OrganizationService.increment_running_purchase_id(organization=organization)
-        except IntegrityError:
-            raise IntegrityException(_("Could not complete transaction"))
-        Organization.objects.filter(id=organization.pk).update(
-            running_purchase_id=F("running_purchase_id") + 1
-        )
-
-        client_status = OrganizationClientFinancialStatusService.get_or_create(
-            user=current_transaction.client,
-            organization=current_transaction.organization,
-        )
-        OrganizationClientFinancialStatusService.update_client_cumulative_card(
-            client_status=client_status
-        )
-
-        transaction.on_commit(
-            lambda: Notification.objects.filter(
-                Q(extra_data__transaction_id=current_transaction.id)
-                & (Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))
-            ).delete()
-        )
-
-        def send_notification_after_commit():
-            sent_notification.delay(
-                recipient_id=current_transaction.client_id,
-                sender_id=current_transaction.processed_by_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                notification_type=ACCEPT_ORDER_CLIENT_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(
-                    transaction_id=current_transaction.id,
-                    total_price=current_transaction.final_amount,
-                    discount_percent=0,
-                    currency=current_transaction.currency.code,
-                ),
+            Organization.objects.filter(id=organization.pk).update(
+                running_purchase_id=F("running_purchase_id") + 1
             )
 
-            send_notifications_organization_members.delay(
-                members_organization_id=current_transaction.organization_id,
-                mode=NOTIFICATION_MODE_PRODUCT,
-                sender_id=current_transaction.client_id,
-                with_permissions=dict(can_edit_organization=True),
-                notification_type=ACCEPT_ORDER_TYPE,
-                organization_id=current_transaction.organization_id,
-                extra_data=dict(
-                    transaction_id=current_transaction.id,
-                    total_price=current_transaction.final_amount,
-                    discount_percent=0,
-                    currency=current_transaction.currency.code,
-                ),
+        with Timer("6. Loyalty logic"):
+            client_status = OrganizationClientFinancialStatusService.get_or_create(
+                user=current_transaction.client,
+                organization=current_transaction.organization,
             )
-            if current_transaction.delivery_type != Transaction.SELF_PICKUP and org:
-                send_delivery_notifications.delay(current_transaction.pk)
+            OrganizationClientFinancialStatusService.update_client_cumulative_card(
+                client_status=client_status
+            )
+        with Timer("7. Notifications"):
+            transaction.on_commit(
+                lambda: Notification.objects.filter(
+                    Q(extra_data__transaction_id=current_transaction.id)
+                    & (Q(type=REQUEST_ORDER_TYPE) | Q(type=REQUEST_ORDER_CLIENT_TYPE))
+                ).delete()
+            )
 
-        org = (
-            Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
-            .filter(is_delivery_service=True, country=organization.country)
-            .exists()
-        )
+            def send_notification_after_commit():
+                sent_notification.delay(
+                    recipient_id=current_transaction.client_id,
+                    sender_id=current_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=current_transaction.id,
+                        total_price=current_transaction.final_amount,
+                        discount_percent=0,
+                        currency=current_transaction.currency.code,
+                    ),
+                )
 
-        transaction.on_commit(send_notification_after_commit)
+                send_notifications_organization_members.delay(
+                    members_organization_id=current_transaction.organization_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    sender_id=current_transaction.client_id,
+                    with_permissions=dict(can_edit_organization=True),
+                    notification_type=ACCEPT_ORDER_TYPE,
+                    organization_id=current_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=current_transaction.id,
+                        total_price=current_transaction.final_amount,
+                        discount_percent=0,
+                        currency=current_transaction.currency.code,
+                    ),
+                )
+                if current_transaction.delivery_type != Transaction.SELF_PICKUP and org:
+                    send_delivery_notifications.delay(current_transaction.pk)
+
+            org = (
+                Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
+                .filter(is_delivery_service=True, country=organization.country)
+                .exists()
+            )
+
+            transaction.on_commit(send_notification_after_commit)
         return current_transaction
 
     @classmethod

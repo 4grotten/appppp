@@ -288,7 +288,6 @@ class TransactionCompleteView(GenericAPIView):
                 data={"message": _("Invalid input"), "errors": serializer.errors},
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
-        print(serializer.validated_data.get("coupons_ids", None))
 
         TransactionService.complete_transaction(
             transaction_id=serializer.validated_data["transaction_id"],

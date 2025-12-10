@@ -1914,35 +1914,37 @@ class TransactionService:
             ).delete()
         )
 
-        sent_notification.delay(
-            recipient_id=current_transaction.client_id,
-            sender_id=current_transaction.processed_by_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
-            notification_type=ACCEPT_ORDER_CLIENT_TYPE,
-            organization_id=current_transaction.organization_id,
-            extra_data=dict(
-                transaction_id=current_transaction.id,
-                total_price=current_transaction.final_amount,
-                discount_percent=0,
-                currency=current_transaction.currency.code,
-            ),
-        )
+        def send_notification_after_commit():
+            sent_notification.delay(
+                recipient_id=current_transaction.client_id,
+                sender_id=current_transaction.processed_by_id,
+                mode=NOTIFICATION_MODE_PRODUCT,
+                notification_type=ACCEPT_ORDER_CLIENT_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(
+                    transaction_id=current_transaction.id,
+                    total_price=current_transaction.final_amount,
+                    discount_percent=0,
+                    currency=current_transaction.currency.code,
+                ),
+            )
 
-        send_notifications_organization_members.delay(
-            members_organization_id=current_transaction.organization_id,
-            mode=NOTIFICATION_MODE_PRODUCT,
-            sender_id=current_transaction.client_id,
-            with_permissions=dict(can_edit_organization=True),
-            notification_type=ACCEPT_ORDER_TYPE,
-            organization_id=current_transaction.organization_id,
-            extra_data=dict(
-                transaction_id=current_transaction.id,
-                total_price=current_transaction.final_amount,
-                discount_percent=0,
-                currency=current_transaction.currency.code,
-            ),
-        )
+            send_notifications_organization_members.delay(
+                members_organization_id=current_transaction.organization_id,
+                mode=NOTIFICATION_MODE_PRODUCT,
+                sender_id=current_transaction.client_id,
+                with_permissions=dict(can_edit_organization=True),
+                notification_type=ACCEPT_ORDER_TYPE,
+                organization_id=current_transaction.organization_id,
+                extra_data=dict(
+                    transaction_id=current_transaction.id,
+                    total_price=current_transaction.final_amount,
+                    discount_percent=0,
+                    currency=current_transaction.currency.code,
+                ),
+            )
 
+        transaction.on_commit(send_notification_after_commit)
         if current_transaction.delivery_type != Transaction.SELF_PICKUP:
             org = (
                 Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))

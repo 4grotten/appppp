@@ -1,14 +1,11 @@
 import json
 import os
-from distutils.util import strtobool
 
 import firebase_admin
 from corsheaders.defaults import default_headers
-from decouple import config, Csv
+from decouple import Csv, config
 from django.utils.translation import gettext_lazy as _
 from firebase_admin import credentials
-from kombu.serialization import registry
-from celery.schedules import crontab
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -367,7 +364,8 @@ FCM_DRY_RUN_ENABLE = config("FCM_DRY_RUN_ENABLE", default=True, cast=bool)
 
 HOST_URL = config("DJANGO_HOST_URL", default="https://apofiz.com/media/")
 CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
-CELERY_RESULT_BACKEND = "rpc://"
+CELERY_RESULT_BACKEND = None
+CELERY_IGNORE_RESULT = True
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},

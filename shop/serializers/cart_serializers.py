@@ -1,26 +1,25 @@
-from django.db.models import Q, Sum
+from django.db.models import Q
 from rest_framework import serializers
 
 from common.models import File
-from common.serializers import ImageSerializer, CountrySerializer, CitySerializer
-from delivery.models import DeliveryInfo, DeliveryActionHistory
+from common.serializers import CitySerializer, CountrySerializer, ImageSerializer
+from delivery.models import DeliveryInfo
 from organizations.models import Organization
 from organizations.serializers.organization_serializers import (
-    OrganizationShortInfoWithCurrencySerializer,
-    OrganizationInCartDetailsSerializer,
     OrganizationDetailedSerializer,
     OrganizationInBookingDetailsSerializer,
+    OrganizationInCartDetailsSerializer,
+    OrganizationShortInfoWithCurrencySerializer,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.models import ShopItem, Cart, CartItem, Booking
+from shop.models import Booking, Cart, CartItem, ShopItem
 from shop.serializers.item_serializers import (
-    ItemInCartSerializer,
-    ItemInBookingSerializer,
     BookingItemRentalRetrieveSerializer,
+    ItemInCartSerializer,
 )
-from shop.services.cart_services import CartService
 from shop.services.booking_services import BookingService
-from stock.models import SizeFormat, ShopItemSizeCount
+from shop.services.cart_services import CartService
+from stock.models import SizeFormat
 from stock.serializers import OnlySizeFormatSerializer
 
 
@@ -30,28 +29,43 @@ class CartItemSerializer(serializers.ModelSerializer):
     quantity_in_stock = serializers.SerializerMethodField()
     has_in_stock = serializers.SerializerMethodField()
 
+    def _get_size_obj(self, cart_item):
+        if hasattr(cart_item.item, "available_sizes"):
+            for size_obj in cart_item.item.available_sizes.all():
+                if size_obj.size == cart_item.size:
+                    return size_obj
+        return None
+
     def get_has_in_stock(self, item: CartItem):
-        if ShopItemSizeCount.objects.filter(
-            main_shop_item=item.item, size=item.size
-        ).exists():
-            return (
-                ShopItemSizeCount.objects.get(
-                    main_shop_item=item.item, size=item.size
-                ).count
-                > 0
-            )
-        else:
-            return True
+        size_obj = self._get_size_obj(item)
+        if size_obj:
+            return size_obj.count > 0
+        return True
+        # if ShopItemSizeCount.objects.filter(
+        #     main_shop_item=item.item, size=item.size
+        # ).exists():
+        #     return (
+        #         ShopItemSizeCount.objects.get(
+        #             main_shop_item=item.item, size=item.size
+        #         ).count
+        #         > 0
+        #     )
+        # else:
+        #     return True
 
     def get_quantity_in_stock(self, item: CartItem):
-        if ShopItemSizeCount.objects.filter(
-            main_shop_item=item.item, size=item.size
-        ).exists():
-            return ShopItemSizeCount.objects.get(
-                main_shop_item=item.item, size=item.size
-            ).count
-        else:
-            return None
+        size_obj = self._get_size_obj(item)
+        if size_obj:
+            return size_obj.count
+        return None
+        # if ShopItemSizeCount.objects.filter(
+        #     main_shop_item=item.item, size=item.size
+        # ).exists():
+        #     return ShopItemSizeCount.objects.get(
+        #         main_shop_item=item.item, size=item.size
+        #     ).count
+        # else:
+        #     return None
 
     class Meta:
         model = CartItem
@@ -70,6 +84,9 @@ class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True)
 
     def get_totals(self, cart: Cart) -> dict:
+        if self.context.get("precalculated_totals"):
+            return self.context["precalculated_totals"]
+
         original_price, discounted_price = CartService.get_total_prices_in_cart(
             cart=cart
         )

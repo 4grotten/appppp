@@ -413,6 +413,8 @@ def send_notification(
 
     if user:
         user = User.objects.get(id=user)
+    if organization:
+        organization = Organization.objects.get(id=organization)
     organization_image = (
         (
             get_organization_small_image(organization=organization)

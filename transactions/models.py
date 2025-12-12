@@ -1,3 +1,6 @@
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -192,6 +195,13 @@ class Transaction(TimestampModel):
             self.original_amount - self.savings - self.from_cashback - self.fee_amount
         )
         super().save(*args, **kwargs)
+
+    def __getattribute__(self, name: str) -> Any:
+        if name == "final_amount":
+            value = super().__getattribute__("final_amount")
+            value = Decimal(value)
+            return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return super().__getattribute__(name)
 
 
 class PayoutSystem(models.Model):

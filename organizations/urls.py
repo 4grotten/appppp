@@ -1,9 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from views.ai_description import GenerateDescriptionChatGPTAPIView
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 
+from .views.ai_description import GenerateDescriptionChatGPTAPIView
 from .views.assistant_views import (
     AnswerFileCreateView,
     AssistantChatReadMessages,

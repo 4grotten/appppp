@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +13,11 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         # 1. Валидация входных данных
+        if settings.DEBUG:
+            proxy_url = f"socks5://{settings.PROXY_USER}:{settings.PROXY_PASS}@{settings.PROXY_HOST}:{settings.PROXY_PORT}"
+            proxies = {"http": proxy_url, "https": proxy_url}
+        else:
+            proxies = None
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -38,12 +44,12 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
         # поэтому "Target Language: ru-RU" сработает корректно.
         system_prompt = (
             f"Act as a professional SMM copywriter and brand specialist. "
-            f"Task: Create a professional and engaging description for an organization's social media profile. "
+            f"Task: Create a professional and engaging description for an organization's media profile. "
             f"Target Language: {language}.\n\n"
             "Guidelines:\n"
             "1. Tone: Professional yet approachable, trustworthy, and modern.\n"
             "2. Length: Medium (3-5 sentences).\n"
-            "3. Content: If details are provided, rewrite them to be catchy. If missing, infer likely industry from the Name.\n"
+            "3. Content: If details are provided, rewrite them to be catchy and don't use hashtags. If missing, infer likely industry from the Name.\n"
         )
 
         user_prompt = (
@@ -63,7 +69,9 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
 
         try:
             # 4. Отправка запроса
-            response = requests.post(url, json=payload, headers=headers)
+            response = requests.post(
+                url, json=payload, headers=headers, proxies=proxies
+            )
             response.raise_for_status()
 
             response_json = response.json()

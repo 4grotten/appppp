@@ -200,7 +200,6 @@ class Transaction(TimestampModel):
         if name == "final_amount":
             value = super().__getattribute__("final_amount")
             value = Decimal(value)
-            print(f"it's works: {value}")
             return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return super().__getattribute__(name)
 

@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 
+from .views.ai_description import GenerateDescriptionChatGPTAPIView
 from .views.assistant_views import (
     AnswerFileCreateView,
     AssistantChatReadMessages,
@@ -559,6 +560,11 @@ organization_urls = [
         "organization/create/invoice-info/",
         CreateOrganizationInfoAPIView.as_view(),
         name="create-organization-invoice-information",
+    ),
+    path(
+        "organization/create/description",
+        GenerateDescriptionChatGPTAPIView.as_view(),
+        name="create-organization-description-with-ai",
     ),
 ]
 

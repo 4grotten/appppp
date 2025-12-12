@@ -508,6 +508,12 @@ CRYPTOCLOUD_API_KEY = config("CRYPTOCLOUD_API_KEY", default="notasecret")
 CRYPTOCLOUD_SHOP_ID = config("CRYPTOCLOUD_SHOP_ID", default="notasecret")
 
 PIGGYPAY_API_KEY = config("PIGGYPAY_API_KEY", default="notasecret")
+PROXY_USER = "gemini_proxy"
+PROXY_PASS = config("PROXY_PASS", None)
+PROXY_HOST = config("PROXY_HOST", None)
+PROXY_PORT = "1080"
+PRODUCTION = config("PRODUCTION", False, cast=bool)
+
 
 if DEBUG:
     PORTAINER_URL = config(

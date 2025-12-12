@@ -71,8 +71,9 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
 
             return Response({"result": ai_content}, status=200)
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
             # Можно добавить логирование (logger.error(e))
+            print(e)
             return Response(
                 {"error": "Failed to connect to AI provider"},
                 status=503,

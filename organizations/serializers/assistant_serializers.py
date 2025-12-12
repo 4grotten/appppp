@@ -413,3 +413,4 @@ class CreateDescriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Validation error: name or description not entered one of those must be entered"
             )
+        return super().validate(attrs=attrs)

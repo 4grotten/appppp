@@ -1,11 +1,21 @@
-from rest_framework import serializers
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 from common.models import File
 from common.serializers import ImageSerializer
-from organizations.models import Assistant, Organization, Answer, AnswerFile, Question, Plan, ChatMessage, Chat, \
-    UserAssistant, BlockedUser
+from organizations.models import (
+    Answer,
+    AnswerFile,
+    Assistant,
+    BlockedUser,
+    Chat,
+    ChatMessage,
+    Organization,
+    Plan,
+    Question,
+    UserAssistant,
+)
 from organizations.services.assistant_services import AssistantService
 from organizations.services.organization_services import OrganizationService
 from users.models import User
@@ -17,35 +27,41 @@ class AnswerFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnswerFile
-        fields = ('id', 'file', 'name')
-        read_only_fields = ('name',)
+        fields = ("id", "file", "name")
+        read_only_fields = ("name",)
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
 
 
 class AssistantCreateSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(required=True, queryset=Organization.objects.all())
+    organization = serializers.PrimaryKeyRelatedField(
+        required=True, queryset=Organization.objects.all()
+    )
 
     class Meta:
         model = Assistant
-        fields = ('id', 'organization', 'name', 'gender', 'position', 'image')
+        fields = ("id", "organization", "name", "gender", "position", "image")
 
     def validate_organization(self, organization):
         if AssistantService.exists_for_organization(organization=organization):
-            raise serializers.ValidationError(_('Assistant already exists in this organization.'))
+            raise serializers.ValidationError(
+                _("Assistant already exists in this organization.")
+            )
         return organization
 
 
 class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
-    files = serializers.PrimaryKeyRelatedField(queryset=AnswerFile.objects.all(), many=True, required=False)
+    files = serializers.PrimaryKeyRelatedField(
+        queryset=AnswerFile.objects.all(), many=True, required=False
+    )
 
     class Meta:
         model = Answer
-        fields = ('id', 'assistant', 'question', 'text', 'files')
+        fields = ("id", "assistant", "question", "text", "files")
 
     def create(self, validated_data):
-        files = validated_data.pop('files', [])
+        files = validated_data.pop("files", [])
         answer = Answer.objects.create(**validated_data)
         answer.files.set(files)
         return answer
@@ -54,7 +70,7 @@ class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
 class OrganizationAssistantSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)
     image_id = serializers.PrimaryKeyRelatedField(
-        queryset=File.objects.all(), source='image', write_only=True, required=False
+        queryset=File.objects.all(), source="image", write_only=True, required=False
     )
     is_assistant_active = serializers.SerializerMethodField()
     active_until = serializers.SerializerMethodField()
@@ -63,47 +79,77 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assistant
-        fields = ('id', 'organization', 'name', 'gender', 'position', 'image', 'image_id', 'is_assistant_active',
-                  'active_until', 'is_enabled', 'plans')
-        read_only_fields = ('organization', )
+        fields = (
+            "id",
+            "organization",
+            "name",
+            "gender",
+            "position",
+            "image",
+            "image_id",
+            "is_assistant_active",
+            "active_until",
+            "is_enabled",
+            "plans",
+        )
+        read_only_fields = ("organization",)
 
     def get_active_until(self, assistant):
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
+        user_assistants = UserAssistant.objects.filter(
+            assistant=assistant, is_active=True
+        )
         if user_assistants.exists():
-            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-            return longest_active_user_assistant.active_until.isoformat() if longest_active_user_assistant.active_until else None
+            longest_active_user_assistant = user_assistants.order_by(
+                "-active_until"
+            ).first()
+            return (
+                longest_active_user_assistant.active_until.isoformat()
+                if longest_active_user_assistant.active_until
+                else None
+            )
         return None
 
     def get_is_assistant_active(self, assistant):
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
+        user_assistants = UserAssistant.objects.filter(
+            assistant=assistant, is_active=True
+        )
         if user_assistants.exists():
-            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
-            user_assistants.exclude(id=longest_active_user_assistant.id).update(is_active=False)
+            longest_active_user_assistant = user_assistants.order_by(
+                "-active_until"
+            ).first()
+            user_assistants.exclude(id=longest_active_user_assistant.id).update(
+                is_active=False
+            )
 
-            is_assistant_active = longest_active_user_assistant.active_until and longest_active_user_assistant.active_until > timezone.now()
+            is_assistant_active = (
+                longest_active_user_assistant.active_until
+                and longest_active_user_assistant.active_until > timezone.now()
+            )
             return is_assistant_active
         return False
 
     def get_plans(self, assistant):
-        user_assistants = UserAssistant.objects.filter(assistant=assistant, is_active=True)
+        user_assistants = UserAssistant.objects.filter(
+            assistant=assistant, is_active=True
+        )
         if user_assistants.exists():
-            longest_active_user_assistant = user_assistants.order_by('-active_until').first()
+            longest_active_user_assistant = user_assistants.order_by(
+                "-active_until"
+            ).first()
             plans = longest_active_user_assistant.plans
-            return list(plans.values_list('id', flat=True)) if plans else []
+            return list(plans.values_list("id", flat=True)) if plans else []
         return []
-
-
 
 
 class OrganizationAssistantUpdateSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
-        queryset=File.objects.all(), source='image', write_only=True, required=False
+        queryset=File.objects.all(), source="image", write_only=True, required=False
     )
 
     class Meta:
         model = Assistant
-        fields = ('id', 'organization', 'name', 'gender', 'position', 'image_id')
-        read_only_fields = ('organization', )
+        fields = ("id", "organization", "name", "gender", "position", "image_id")
+        read_only_fields = ("organization",)
 
 
 class OrganizationAssistantAnswerRetrieveSerializer(serializers.ModelSerializer):
@@ -111,19 +157,21 @@ class OrganizationAssistantAnswerRetrieveSerializer(serializers.ModelSerializer)
 
     class Meta:
         model = Answer
-        fields = ('id', 'assistant', 'question', 'text', 'files')
+        fields = ("id", "assistant", "question", "text", "files")
 
 
 class OrganizationAssistantAnswerUpdateSerializer(serializers.ModelSerializer):
-    files = serializers.PrimaryKeyRelatedField(queryset=AnswerFile.objects.all(), many=True, required=False)
+    files = serializers.PrimaryKeyRelatedField(
+        queryset=AnswerFile.objects.all(), many=True, required=False
+    )
 
     class Meta:
         model = Answer
-        fields = ('id', 'assistant', 'question', 'text', 'files')
+        fields = ("id", "assistant", "question", "text", "files")
 
     def update(self, instance, validated_data):
-        files_data = validated_data.pop('files', [])
-        instance.text = validated_data.get('text', instance.text)
+        files_data = validated_data.pop("files", [])
+        instance.text = validated_data.get("text", instance.text)
         if files_data is not None:
             instance.files.clear()
             for file_data in files_data:
@@ -143,32 +191,46 @@ class QuestionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'ordering', 'created_at', 'updated_at', 'is_filled', 'answer']
+        fields = [
+            "id",
+            "text",
+            "ordering",
+            "created_at",
+            "updated_at",
+            "is_filled",
+            "answer",
+        ]
 
     def get_answer(self, question: Question):
-        assistant = self.context.get('assistant')
+        assistant = self.context.get("assistant")
         answer = Answer.objects.filter(question=question, assistant=assistant).last()
         if answer:
             return OrganizationAssistantAnswerRetrieveSerializer(answer).data
         return None
 
     def get_is_filled(self, question: Question):
-        assistant = self.context.get('assistant')
+        assistant = self.context.get("assistant")
         return Answer.objects.filter(question=question, assistant=assistant).exists()
 
 
 class PlanSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Plan
-        fields = ('id', 'name', 'description', 'additional_name', 'price', 'currency', 'is_best_choice')
+        fields = (
+            "id",
+            "name",
+            "description",
+            "additional_name",
+            "price",
+            "currency",
+            "is_best_choice",
+        )
 
 
 class AssistantSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Assistant
-        fields = ('id', 'name', 'gender', 'position', 'image')
+        fields = ("id", "name", "gender", "position", "image")
 
 
 class PurchaseAssistantSerializer(serializers.Serializer):
@@ -184,26 +246,35 @@ class ChatSerializerQueryParam(serializers.Serializer):
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
-
     def get_organization(self, chat: Chat):
-        user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=user):
-            if OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=chat.user):
-                from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
-                return OrganizationWithTypeImageSerializer(chat.assistant.organization).data
+        user = self.context["request"].user
+        if not OrganizationService.user_can_edit_organization(
+            organization=chat.assistant.organization, user=user
+        ):
+            if OrganizationService.user_can_edit_organization(
+                organization=chat.assistant.organization, user=chat.user
+            ):
+                from organizations.serializers.organization_serializers import (
+                    OrganizationWithTypeImageSerializer,
+                )
+
+                return OrganizationWithTypeImageSerializer(
+                    chat.assistant.organization
+                ).data
         return None
 
     class Meta:
         model = ChatMessage
-        fields = ('id', 'chat', 'parent', 'sender', 'text')
+        fields = ("id", "chat", "parent", "sender", "text")
+
 
 class ChatUserInfoSerializer(serializers.ModelSerializer):
     avatar = ImageSerializer()
 
-
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'avatar', 'username')
+        fields = ("id", "full_name", "avatar", "username")
+
 
 class ChatSerializer(serializers.ModelSerializer):
     user = UserShortInfoSerializer()
@@ -214,36 +285,59 @@ class ChatSerializer(serializers.ModelSerializer):
     is_my_chat = serializers.SerializerMethodField()
 
     def get_can_comment(self, chat: Chat) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=chat.assistant.organization.id,
-                                                       user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=chat.assistant.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
     def get_organization(self, chat: Chat):
-        user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=user):
-            if OrganizationService.user_can_edit_organization(organization=chat.assistant.organization, user=chat.user):
-                from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
-                return OrganizationWithTypeImageSerializer(chat.assistant.organization).data
+        user = self.context["request"].user
+        if not OrganizationService.user_can_edit_organization(
+            organization=chat.assistant.organization, user=user
+        ):
+            if OrganizationService.user_can_edit_organization(
+                organization=chat.assistant.organization, user=chat.user
+            ):
+                from organizations.serializers.organization_serializers import (
+                    OrganizationWithTypeImageSerializer,
+                )
+
+                return OrganizationWithTypeImageSerializer(
+                    chat.assistant.organization
+                ).data
         return None
 
     def get_user_role(self, chat: Chat):
         return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
 
     def get_is_my_chat(self, chat: Chat):
-        user = self.context['request'].user
+        user = self.context["request"].user
         return chat.user == user
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'organization', 'user_role', 'chat_by_org_user', 'can_comment',
-                  'is_my_chat')
+        fields = (
+            "id",
+            "user",
+            "assistant",
+            "organization",
+            "user_role",
+            "chat_by_org_user",
+            "can_comment",
+            "is_my_chat",
+        )
 
 
 class ChatByOrgUserSerializer(serializers.Serializer):
     chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all())
     chat_by_org_user = serializers.BooleanField()
+
 
 class ToggleAssistantSerializer(serializers.Serializer):
     assistant = serializers.PrimaryKeyRelatedField(queryset=Assistant.objects.all())
@@ -251,10 +345,9 @@ class ToggleAssistantSerializer(serializers.Serializer):
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ChatMessage
-        fields = ('chat', 'text')
+        fields = ("chat", "text")
 
 
 class ChatListSerializer(serializers.ModelSerializer):
@@ -266,15 +359,22 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'user', 'assistant', 'chat_by_org_user', 'last_message',
-                  'last_message_created_at', 'unread_messages_count')
+        fields = (
+            "id",
+            "user",
+            "assistant",
+            "chat_by_org_user",
+            "last_message",
+            "last_message_created_at",
+            "unread_messages_count",
+        )
 
     def get_last_message(self, chat: Chat):
-        last_message = chat.chat_messages.order_by('-created_at').first()
+        last_message = chat.chat_messages.order_by("-created_at").first()
         return last_message.text if last_message else None
 
     def get_last_message_created_at(self, chat: Chat):
-        last_message = chat.chat_messages.order_by('-created_at').first()
+        last_message = chat.chat_messages.order_by("-created_at").first()
         return last_message.created_at if last_message else None
 
     def get_unread_messages_count(self, chat: Chat):
@@ -286,18 +386,30 @@ class ChatSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'chat_by_org_user', 'can_comment')
+        fields = ("id", "chat_by_org_user", "can_comment")
 
     def get_can_comment(self, chat: Chat) -> bool:
-        if self.context['request'].user:
-            user = self.context['request'].user
-            blocked_users = BlockedUser.objects.filter(organization_id=chat.assistant.organization.id,
-                                                       user=user.id).values_list('user_id', flat=True).distinct()
+        if self.context["request"].user:
+            user = self.context["request"].user
+            blocked_users = (
+                BlockedUser.objects.filter(
+                    organization_id=chat.assistant.organization.id, user=user.id
+                )
+                .values_list("user_id", flat=True)
+                .distinct()
+            )
             return not BlockedUser.objects.filter(user_id__in=blocked_users).exists()
 
 
+class CreateDescriptionSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
 
+    def validate(self, attrs):
+        name = attrs.get("name")
+        description = attrs.get("description")
 
-
-
-
+        if not name and not description:
+            raise serializers.ValidationError(
+                "Validation error: name or description not entered one of those must be entered"
+            )

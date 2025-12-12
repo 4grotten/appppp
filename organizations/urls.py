@@ -1,5 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from views.ai_description import GenerateDescriptionChatGPTAPIView
 
 from transactions.views.transaction_views import OrgFollowersTransactionsListAPIView
 
@@ -559,6 +560,11 @@ organization_urls = [
         "organization/create/invoice-info/",
         CreateOrganizationInfoAPIView.as_view(),
         name="create-organization-invoice-information",
+    ),
+    path(
+        "organization/create/description",
+        GenerateDescriptionChatGPTAPIView.as_view(),
+        name="create-organization-description-with-ai",
     ),
 ]
 

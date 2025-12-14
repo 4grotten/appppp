@@ -2189,7 +2189,7 @@ class InitPaymentView(GenericAPIView):
                 "merchantCallback"
                 "https://test.apofiz.com/organizations/",
                 "customerEmail:": "kirolkuro@gmail.com",
-                "bankInfo": 
+                "bankInfo": "bankInfo",
             }
 
         else:
@@ -2798,6 +2798,7 @@ class BetaPayPaymentTestView(APIView):
         response_json = response.json()
 
         return Response(response_json)
+
 
 class MaalyPayPaymentTestView(APIView):
     def post(self, request, *args, **kwargs):

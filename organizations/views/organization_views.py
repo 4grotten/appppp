@@ -207,13 +207,18 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
             payment_system_name = "PaySy"
         elif payment_system_id == 3:
             payment_system_name = "Crypto Box"
+        elif payment_system_id == 6:
+            payment_system_name = "Maaly pay"
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
-        PaymentSystemConfirmationService.create(
-            organization, **serializer.validated_data
+        data = PaymentSystemConfirmationService.create(
+            organization,
+            **serializer.validated_data,  # type: ignore
         )
 
+        if payment_system_id == 6:
+            return Response(data=data, status=status.HTTP_201_CREATED)
         apofiz_email = settings.EMAIL_HOST_USER
         MailerService.send_payment_verification_email(
             email=apofiz_email,
@@ -1428,6 +1433,14 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
                     "is_active": organization.cryptocloud_activated,
                 }
             )
+        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+            confirmed_payment_systems.append(
+                {
+                    "id": 6,
+                    "name": "Maalypay в AED",
+                    "is_active": organization.maaly_pay_activated,
+                }
+            )
 
         return confirmed_payment_systems
 
@@ -1463,6 +1476,16 @@ class PaymentSystemListView(generics.ListAPIView):
         if not organization.betapay_confirmed:
             available_payment_systems.append(
                 {"id": 4, "name": "Betapay в EUR", "is_available": False}
+            )
+
+        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": True}
+            )
+
+        elif not organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": False}
             )
 
         return available_payment_systems

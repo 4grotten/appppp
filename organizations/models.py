@@ -97,6 +97,15 @@ class OrganizationBanner(TimestampModel):
         return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
 
 
+class CouponBanners(TimestampModel):
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, null=True, blank=True
+    )
+    organization = models.ForeignKey(
+        "Organization", on_delete=models.CASCADE, null=True, blank=True
+    )
+
+
 class Organization(TimestampModel):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="owned_organizations"

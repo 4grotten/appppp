@@ -67,6 +67,7 @@ from organizations.serializers.coupon_serializers import (
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     BlockedUserSerializer,
+    CouponBannersSerializer,
     DeliverySettingsUpdateSerializer,
     InstagramIntegrationCreateUpdateSerializer,
     InstagramIntegrationLinkSerializer,
@@ -1600,6 +1601,32 @@ class OrganizationBannerListView(ListAPIView):
         ):
             raise NotAcceptableException(_("No rights to edit organization"))
         return OrganizationService.get_organization_banners(organization=organization)
+
+
+class OrganizationCouponBannerListCreateAPIView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Получаем ID из URL
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        # Проверяем права
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def perform_create(self, serializer):
+        organization = self._get_organization()
+        # Сохраняем, явно передавая организацию
+        serializer.save(organization=organization)
 
 
 class AddCustomBannerView(APIView):

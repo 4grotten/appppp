@@ -18,6 +18,7 @@ from messenger.models import ChatMessage as ChatMessageModel
 from organizations.models import (
     BlockedUser,
     ChatMessage,
+    CouponBanners,
     InstagramIntegration,
     Membership,
     Message,
@@ -78,6 +79,25 @@ class OrganizationBannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationBanner
         fields = ("id", "image", "is_default")
+
+
+class CouponBannersSerializer(serializers.ModelSerializer):
+    # На уровне валидации и записи это поле принимает ID
+    image = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), allow_null=True
+    )
+
+    class Meta:
+        model = CouponBanners
+        fields = ("id", "image")
+
+    # Магия: подменяем ID на полноценный объект при чтении (GET/Response)
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.image:
+            # Используем твой готовый ImageSerializer для отображения
+            representation["image"] = ImageSerializer(instance.image).data
+        return representation
 
 
 class OrganizationSerializer(serializers.ModelSerializer):

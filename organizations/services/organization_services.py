@@ -66,6 +66,7 @@ from organizations.constants import (
     VERIFIED,
 )
 from organizations.models import (
+    CouponBanners,
     DiscountCard,
     InstagramIntegration,
     Membership,
@@ -360,6 +361,10 @@ class OrganizationService:
             )
             .order_by("sort_order", "-created_at")
         )
+
+    @classmethod
+    def get_coupons_banners(cls, organization: Organization) -> QuerySet:
+        return CouponBanners.objects.filter(organization=organization)
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):

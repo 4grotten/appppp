@@ -4,7 +4,18 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from organizations.models import Service
-from .models import File, Currency, Country, City, Version, Languages, MessageText, FileVideo, LinkApp
+
+from .models import (
+    City,
+    Country,
+    Currency,
+    File,
+    FileVideo,
+    Languages,
+    LinkApp,
+    MessageText,
+    Version,
+)
 
 
 class CurrencyConversionSerializer(serializers.Serializer):
@@ -18,11 +29,12 @@ class ShadowBanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MessageText
-        fields = ['id', 'name', 'body', 'is_under_review']
+        fields = ["id", "name", "body", "is_under_review"]
 
 
 class ImageSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
+    file_type = serializers.CharField(required=False)
     large = serializers.ImageField(read_only=True)
     medium = serializers.ImageField(read_only=True)
     small = serializers.ImageField(read_only=True)
@@ -30,8 +42,17 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('id', 'file', 'name', 'large', 'medium', 'small', 'is_watermarked',)
-        read_only_fields = ('name',)
+        fields = (
+            "id",
+            "file",
+            "name",
+            "large",
+            "medium",
+            "small",
+            "is_watermarked",
+            "file_type",
+        )
+        read_only_fields = ("name",)
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
@@ -42,7 +63,7 @@ class FileSmallImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('file', 'small')
+        fields = ("file", "small")
 
 
 class SmallImageSerializer(serializers.ModelSerializer):
@@ -50,18 +71,20 @@ class SmallImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('small',)
+        fields = ("small",)
 
 
 class VideoSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField()
 
     def get_thumbnail(self, obj):
-        return 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(obj.thumbnail.file)
+        return "https://apofiz-media.s3.eu-central-1.amazonaws.com/" + str(
+            obj.thumbnail.file
+        )
 
     class Meta:
         model = FileVideo
-        fields = ('id', 'video', 'thumbnail')
+        fields = ("id", "video", "thumbnail")
 
 
 class ImageFromUrlSerializer(serializers.ModelSerializer):
@@ -75,8 +98,17 @@ class ImageFromUrlSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('id', 'name', 'large', 'medium', 'small', 'is_watermarked', 'image_url', 'file')
-        read_only_fields = ('name',)
+        fields = (
+            "id",
+            "name",
+            "large",
+            "medium",
+            "small",
+            "is_watermarked",
+            "image_url",
+            "file",
+        )
+        read_only_fields = ("name",)
 
     def get_name(self, obj):
         return obj.file.name.split("/")[-1]
@@ -91,20 +123,25 @@ class VideoFromUrlSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileVideo
-        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'video_url', 'video')
-        read_only_fields = ('name',)
+        fields = ("id", "name", "thumbnail", "thumbnail_url", "video_url", "video")
+        read_only_fields = ("name",)
 
     def get_name(self, obj):
         return obj.video.name.split("/")[-1]
 
     def get_thumbnail(self, obj):
-        return 'https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(obj.thumbnail.file)
+        return "https://apofiz-media.s3.eu-central-1.amazonaws.com/" + str(
+            obj.thumbnail.file
+        )
 
 
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Currency
-        fields = ('code', 'name',)
+        fields = (
+            "code",
+            "name",
+        )
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -112,43 +149,55 @@ class CountrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Country
-        fields = ('code', 'name', 'flag', 'currency')
+        fields = ("code", "name", "flag", "currency")
 
 
 class CitySerializer(serializers.ModelSerializer):
-    country_code = serializers.CharField(source='country.code')
+    country_code = serializers.CharField(source="country.code")
 
     class Meta:
         model = City
-        fields = ('id', 'name', 'country_code', 'postal',)
+        fields = (
+            "id",
+            "name",
+            "country_code",
+            "postal",
+        )
 
 
 class CountryResumeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Country
-        fields = ('code', 'name', 'name_ru', 'name_tr',)
-        read_only_fields = ['name_ru', 'name_tr']
+        fields = (
+            "code",
+            "name",
+            "name_ru",
+            "name_tr",
+        )
+        read_only_fields = ["name_ru", "name_tr"]
+
 
 class CityResumeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = City
-        fields = ('id', 'name', 'name_ru', 'name_tr')
-        read_only_fields = ['name_ru', 'name_tr']
+        fields = ("id", "name", "name_ru", "name_tr")
+        read_only_fields = ["name_ru", "name_tr"]
 
 
 class CountryCityQueryParamSerializer(serializers.Serializer):
-    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), default=None)
+    country = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.all(), default=None
+    )
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), default=None)
 
 
 class ServiceCountryCityQueryParamSerializer(CountryCityQueryParamSerializer):
-    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all(), default=None)
+    service = serializers.PrimaryKeyRelatedField(
+        queryset=Service.objects.all(), default=None
+    )
 
 
 class TimezoneField(serializers.Field):
-
     def to_representation(self, obj):
         return six.text_type(obj)
 
@@ -163,8 +212,8 @@ class TimezoneField(serializers.Field):
 
 class FileRelatedField(serializers.RelatedField):
     default_error_messages = {
-        'invalid': _('A valid integer is required.'),
-        'not_found': _('File does not exist.')
+        "invalid": _("A valid integer is required."),
+        "not_found": _("File does not exist."),
     }
 
     def to_representation(self, value):
@@ -172,7 +221,7 @@ class FileRelatedField(serializers.RelatedField):
             url = value.file.url
         except AttributeError:
             return None
-        request = self.context.get('request', None)
+        request = self.context.get("request", None)
         if request is not None:
             return request.build_absolute_uri(url)
         return url
@@ -182,15 +231,15 @@ class FileRelatedField(serializers.RelatedField):
             pk = int(data)
             return self.get_queryset().get(pk=pk)
         except ValueError:
-            self.fail('invalid')
+            self.fail("invalid")
         except File.DoesNotExist:
-            self.fail('not_found')
+            self.fail("not_found")
 
 
 class VersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Version
-        fields = ('device', 'version', 'force_update')
+        fields = ("device", "version", "force_update")
 
 
 class LanguagesListSerializer(serializers.ModelSerializer):
@@ -198,10 +247,10 @@ class LanguagesListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Languages
-        fields = ('code', 'national_language', 'flag')
+        fields = ("code", "national_language", "flag")
 
 
 class LinkAppSerializer(serializers.ModelSerializer):
     class Meta:
         model = LinkApp
-        fields = ('name_link',)
+        fields = ("name_link",)

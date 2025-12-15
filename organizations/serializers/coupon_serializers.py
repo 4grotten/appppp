@@ -129,8 +129,6 @@ class CouponListForUserSerializer(serializers.ModelSerializer):
         ]
 
     def get_used_on(self, obj):
-        if obj.used:
-            coupon_usage = obj.coupon_usage.first()
-            return coupon_usage.created_at
-        else:
-            return None
+        if obj.used and hasattr(obj, "user_coupon_usage") and obj.user_coupon_usage:
+            return obj.user_coupon_usage[0].created_at
+        return None

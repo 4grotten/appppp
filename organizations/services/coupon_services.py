@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Prefetch
 
 from common.exceptions import CouponException
 from organizations.models import Coupon, CouponUsage
@@ -60,9 +60,15 @@ class CouponServiceClass:
 
         for coupon in coupons_qs:
             if coupon.coupon_type == cls.__model.PRODUCT:
-                discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
+                if (
+                    coupon.product
+                    and coupon.product.price
+                    and coupon.percent is not None
+                ):
+                    discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
             if coupon.coupon_type == cls.__model.DISCOUNT:
-                discount_percent = coupon.percent
+                if coupon.percent is not None:
+                    discount_percent = coupon.percent
 
         return {"discount_sum": discount_sum, "discount_perc": discount_percent}
 
@@ -75,8 +81,15 @@ class CouponServiceClass:
                     CouponUsage.objects.filter(coupon=OuterRef("pk"), user=user)
                 )
             )
-            .prefetch_related("coupon_usage")
+            .prefetch_related(
+                Prefetch(
+                    "coupon_usage",
+                    queryset=CouponUsage.objects.filter(user=user),
+                    to_attr="user_coupon_usage",
+                )
+            )
             .order_by("used")
         )
+        print(qs.query)
 
         return qs

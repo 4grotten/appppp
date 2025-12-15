@@ -364,7 +364,9 @@ class OrganizationService:
 
     @classmethod
     def get_coupons_banners(cls, organization: Organization) -> QuerySet:
-        return CouponBanners.objects.filter(organization=organization)
+        return CouponBanners.objects.filter(organization=organization).order_by(
+            "-created_at"
+        )
 
     @classmethod
     def set_location(cls, organization, longitude, latitude, address):

@@ -54,10 +54,6 @@ class TimestampModel(models.Model):
 
 
 class File(TimestampModel):
-    class FileType(models.TextChoices):
-        organization = ("organization", "organization")
-        coupon = ("coupon", "coupon")
-
     is_watermarked = models.BooleanField(default=False, editable=False)
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
@@ -65,9 +61,6 @@ class File(TimestampModel):
         upload_to=upload_file_with_unique_name,
         help_text=_("Image that you want to store"),
         max_length=1000,
-    )
-    file_type = models.CharField(
-        max_length=50, choices=FileType.choices, default=FileType.organization
     )
 
     image_url = models.URLField(null=True, blank=True, max_length=1000)

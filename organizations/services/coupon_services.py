@@ -88,7 +88,7 @@ class CouponServiceClass:
                     to_attr="user_coupon_usage",
                 )
             )
-            .order_by("used")
+            .order_by("used", "-updated_at", "-created_at")
         )
         print(qs.query)
 

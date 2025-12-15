@@ -1,27 +1,26 @@
-import os
-import requests
 import logging
-from urllib import request
-from PIL import Image
+import os
 from io import BytesIO
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from urllib import request
+
+import requests
 from django.contrib.gis.db.models import PointField
 from django.core.files import File as Files
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from imagekit import register
 from imagekit.models import ImageSpecField
+from PIL import Image
 
 from common.constants import DEVICE_TYPES, MESSAGE_TYPE
-from common.processors import ResizeWatermarkedSpec, MobileWallpaper
+from common.processors import MobileWallpaper, ResizeWatermarkedSpec
 from common.utils import (
-    upload_file_with_unique_name,
     upload_file_video_with_unique_name,
+    upload_file_with_unique_name,
 )
-from django.core.exceptions import ValidationError
-from django_resized import ResizedImageField
 
 
 class LargeWatermarkedSpec(ResizeWatermarkedSpec):
@@ -55,6 +54,10 @@ class TimestampModel(models.Model):
 
 
 class File(TimestampModel):
+    class FileType(models.TextChoices):
+        organization = ("organization", "organization")
+        coupon = ("coupon", "coupon")
+
     is_watermarked = models.BooleanField(default=False, editable=False)
     order = models.PositiveSmallIntegerField(default=0, editable=False)
 
@@ -62,6 +65,9 @@ class File(TimestampModel):
         upload_to=upload_file_with_unique_name,
         help_text=_("Image that you want to store"),
         max_length=1000,
+    )
+    file_type = models.CharField(
+        max_length=50, choices=FileType.choices, default=FileType.organization
     )
 
     image_url = models.URLField(null=True, blank=True, max_length=1000)

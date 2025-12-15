@@ -1343,6 +1343,9 @@ class Coupon(TimestampModel):
         Organization, on_delete=models.CASCADE, null=True, blank=True
     )
 
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
+
 
 class CouponUsage(TimestampModel):
     user = models.ForeignKey(

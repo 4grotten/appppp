@@ -41,6 +41,7 @@ from .models import (
     HotlinkCollectionSubcategory,
     InstagramIntegration,
     Invoice,
+    MaalyPayOrganizationPaymentSystem,
     Membership,
     Message,
     Organization,
@@ -1009,3 +1010,10 @@ class CouponUsageAdmin(admin.ModelAdmin):
     list_display = ["user", "coupon", "is_used"]
 
     list_select_related = ["user", "coupon", "transaction"]
+
+
+@admin.register(MaalyPayOrganizationPaymentSystem)
+class MaalyPayAdmin(admin.ModelAdmin):
+    list_display = ["organization", "merchant_id"]
+
+    list_select_related = ["organization"]

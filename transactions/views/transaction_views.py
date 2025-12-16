@@ -2197,6 +2197,7 @@ class InitPaymentView(GenericAPIView):
                 "Authorization": f"Bearer {payment_data.api_key}",
                 "Content-Type": "application/json",
             }
+            print(headers)
 
             response = requests.post(url=url, data=payload, headers=headers)
             redirect_url = response.json().get("CheckoutUrl")

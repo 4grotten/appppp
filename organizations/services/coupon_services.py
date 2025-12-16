@@ -4,6 +4,7 @@ from django.db.models import Exists, OuterRef, Prefetch
 
 from common.exceptions import CouponException
 from organizations.models import Coupon, CouponUsage
+from transactions.models import Transaction
 
 
 class CouponServiceClass:
@@ -33,19 +34,28 @@ class CouponServiceClass:
         return coupon
 
     @classmethod
-    def get_available(cls, org_id, user):
-        used = CouponUsage.objects.filter(user=user, coupon_id=OuterRef("id"))
-        coupons = (
-            cls.__model.objects.filter(
-                organization_id=org_id,
-                is_active=True,
+    def get_available(cls, org_id, transaction_id):
+        transaction = Transaction.objects.get(id=transaction_id)
+        qs = (
+            cls.__model.objects.filter(organization_id=org_id)
+            .annotate(
+                used=Exists(
+                    CouponUsage.objects.filter(
+                        coupon=OuterRef("pk"), user=transaction.client
+                    )
+                )
             )
-            .exclude(Exists(used))
-            .select_related("product")
-            .prefetch_related("product__organization", "product__images")
+            .prefetch_related(
+                Prefetch(
+                    "coupon_usage",
+                    queryset=CouponUsage.objects.filter(user=transaction.client),
+                    to_attr="user_coupon_usage",
+                )
+            )
+            .order_by("used", "-updated_at", "-created_at")
         )
 
-        return coupons
+        return qs
 
     @classmethod
     def calculate(cls, data: dict):

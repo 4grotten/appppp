@@ -1,47 +1,43 @@
-import re
-
+from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
-from datetime import timedelta
-from django.utils import timezone
 
-from django.contrib.gis.geos import Point
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from organizations.constants import SUBSCRIPTION_STATUS
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from common.models import File
 from common.serializers import (
-    ImageSerializer,
-    CountrySerializer,
     CitySerializer,
+    CountrySerializer,
     FileSmallImageSerializer,
+    ImageSerializer,
 )
+from messenger.models import ChatMessage as ChatMessageModel
 from organizations.models import (
-    PhoneNumber,
-    SocialNetworkContact,
-    Organization,
-    Message,
-    Membership,
-    InstagramIntegration,
-    OrganizationVerificationUsers,
-    OrganizationComplaint,
-    OrganizationBlacklist,
     BlockedUser,
-    OrganizationPaymentSystemUsers,
     ChatMessage,
-    RegionalTariff,
-    UserOrgSubscription,
+    CouponBanners,
+    InstagramIntegration,
+    Membership,
+    Message,
+    Organization,
     OrganizationBanner,
-    Country,
+    OrganizationBlacklist,
+    OrganizationComplaint,
+    OrganizationVerificationUsers,
+    PhoneNumber,
+    RegionalTariff,
+    SocialNetworkContact,
+    UserOrgSubscription,
 )
 from organizations.serializers.assistant_serializers import (
     OrganizationAssistantSerializer,
 )
 from organizations.serializers.card_serializers import (
-    DiscountGroupSerializer,
     DiscountCardSerializer,
+    DiscountGroupSerializer,
 )
 from organizations.serializers.categories_serializers import OrganizationTypeSerializer
 from organizations.services.card_services import DiscountCardService
@@ -54,8 +50,7 @@ from organizations.services.subscription_services import SubscriptionService
 from shop.models import ShopItem, Ticket
 from transactions.models import Transaction
 from users.models import PromoCode, User
-from users.serializers import UserShortInfoSerializer, UserInfoSerializer
-from messenger.models import MessengerChat, ChatMessage as ChatMessageModel
+from users.serializers import UserInfoSerializer, UserShortInfoSerializer
 
 
 class OrgPhoneNumberSerializer(serializers.ModelSerializer):
@@ -84,6 +79,25 @@ class OrganizationBannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationBanner
         fields = ("id", "image", "is_default")
+
+
+class CouponBannersSerializer(serializers.ModelSerializer):
+    # На уровне валидации и записи это поле принимает ID
+    image = serializers.PrimaryKeyRelatedField(
+        queryset=File.objects.all(), allow_null=True
+    )
+
+    class Meta:
+        model = CouponBanners
+        fields = ("id", "image")
+
+    # Магия: подменяем ID на полноценный объект при чтении (GET/Response)
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.image:
+            # Используем твой готовый ImageSerializer для отображения
+            representation["image"] = ImageSerializer(instance.image).data
+        return representation
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -119,7 +133,6 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class OrganizationBlacklistSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = OrganizationBlacklist
         fields = ["organization"]
@@ -130,7 +143,6 @@ class OrganizationBlacklistSerializer(serializers.ModelSerializer):
 
 
 class BlockedUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BlockedUser
         fields = ["id", "user", "organization"]
@@ -657,7 +669,6 @@ class OrganizationListSerializer(serializers.ModelSerializer):
 
 
 class OrganizationNameListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Organization
         fields = ("id", "title")
@@ -1203,12 +1214,17 @@ class OrgVerificationsSerializer(serializers.ModelSerializer):
         fields = ("username", "phone_number", "email")
 
 
-class OrgPaymentSystemConfirmationSerializer(serializers.ModelSerializer):
+class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     payment_system_id = serializers.IntegerField(required=False)
+    username = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    merchant_id = serializers.CharField(required=False)
+    api_key = serializers.CharField(required=False)
 
-    class Meta:
-        model = OrganizationPaymentSystemUsers
-        fields = ("username", "phone_number", "email", "payment_system_id")
+    # class Meta:
+    #     model = OrganizationPaymentSystemUsers
+    #     fields = ("username", "phone_number", "email", "payment_system_id")
 
 
 class PaymentSystemSerializer(serializers.Serializer):
@@ -1219,7 +1235,6 @@ class PaymentSystemSerializer(serializers.Serializer):
 
 
 class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Organization
         fields = ("id",)

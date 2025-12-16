@@ -67,6 +67,7 @@ from organizations.serializers.coupon_serializers import (
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
     BlockedUserSerializer,
+    CouponBannersSerializer,
     DeliverySettingsUpdateSerializer,
     InstagramIntegrationCreateUpdateSerializer,
     InstagramIntegrationLinkSerializer,
@@ -207,13 +208,18 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
             payment_system_name = "PaySy"
         elif payment_system_id == 3:
             payment_system_name = "Crypto Box"
+        elif payment_system_id == 6:
+            payment_system_name = "Maaly pay"
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
-        PaymentSystemConfirmationService.create(
-            organization, **serializer.validated_data
+        data = PaymentSystemConfirmationService.create(
+            organization,
+            **serializer.validated_data,  # type: ignore
         )
 
+        if payment_system_id == 6:
+            return Response(data=data, status=status.HTTP_201_CREATED)
         apofiz_email = settings.EMAIL_HOST_USER
         MailerService.send_payment_verification_email(
             email=apofiz_email,
@@ -1428,6 +1434,14 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
                     "is_active": organization.cryptocloud_activated,
                 }
             )
+        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+            confirmed_payment_systems.append(
+                {
+                    "id": 6,
+                    "name": "Maalypay в AED",
+                    "is_active": organization.maaly_pay_activated,
+                }
+            )
 
         return confirmed_payment_systems
 
@@ -1463,6 +1477,16 @@ class PaymentSystemListView(generics.ListAPIView):
         if not organization.betapay_confirmed:
             available_payment_systems.append(
                 {"id": 4, "name": "Betapay в EUR", "is_available": False}
+            )
+
+        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": True}
+            )
+
+        elif not organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": False}
             )
 
         return available_payment_systems
@@ -1577,6 +1601,32 @@ class OrganizationBannerListView(ListAPIView):
         ):
             raise NotAcceptableException(_("No rights to edit organization"))
         return OrganizationService.get_organization_banners(organization=organization)
+
+
+class OrganizationCouponBannerListCreateAPIView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Получаем ID из URL
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        # Проверяем права
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def perform_create(self, serializer):
+        organization = self._get_organization()
+        # Сохраняем, явно передавая организацию
+        serializer.save(organization=organization)
 
 
 class AddCustomBannerView(APIView):

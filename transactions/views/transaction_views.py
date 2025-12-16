@@ -34,6 +34,7 @@ from notifications.constants import (
     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
 )
 from notifications.models import Notification
+from organizations.models import MaalyPayOrganizationPaymentSystem
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer,
@@ -1866,6 +1867,7 @@ class InitPaymentView(GenericAPIView):
     3 - Libersave
     4 - Betapay
     5 - CryptoCloud
+    6 - MaalyPay
     """
 
     def post(self, request, *args, **kwargs):
@@ -2162,6 +2164,48 @@ class InitPaymentView(GenericAPIView):
                     data={"error": "Something went wrong"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        elif kwargs["pk"] == 6:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
+            payment_data = MaalyPayOrganizationPaymentSystem.objects.filter(
+                organization=transaction.organization
+            ).first()
+            if not payment_data:
+                raise NotImplementedError()
+            suffix = "api/v1/"
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
+            url = "https://maalyportal.com/api/omerch/create-payment-request"
+            payload = {
+                "merchantId": int(payment_data.merchant_id),
+                "fiatAmount": str(float(transaction.final_amount)),
+                "currency": transaction.currency.code,
+                "description": pg_description + " " + purchase_type,
+                "merchantTxId": f"test-transaction-{transaction.pk}",
+                "merchantCallback": base_url + "payment-success/",
+                "customerEmail": transaction.client.email
+                if transaction.client.email
+                else "unknwown@gmail.com",
+            }
+            headers = {
+                "Authorization": f"Bearer {payment_data.api_key}",
+                "Content-Type": "application/json",
+            }
+            print(headers)
+
+            response = requests.post(url=url, json=payload, headers=headers)
+            print(response.text)
+            redirect_url = response.json().get("CheckoutUrl")
+
+            return Response(data={"redirect_url": redirect_url})
+
         else:
             return Response(
                 data={"error": "Payment System Not Found"},
@@ -2768,6 +2812,13 @@ class BetaPayPaymentTestView(APIView):
         response_json = response.json()
 
         return Response(response_json)
+
+
+class MaalyPayPaymentTestView(APIView):
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        print(payload)
+        return Response(data={"data": "success"}, status=200)
 
 
 class ResultURLView(APIView):

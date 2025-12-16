@@ -1,9 +1,10 @@
 from decimal import Decimal
 
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Prefetch
 
 from common.exceptions import CouponException
 from organizations.models import Coupon, CouponUsage
+from transactions.models import Transaction
 
 
 class CouponServiceClass:
@@ -18,7 +19,7 @@ class CouponServiceClass:
             cls.__model.objects.filter(organization_id=organization_id, is_active=True)
             .select_related("product")
             .prefetch_related("product__images")
-        ).order_by("-created_at")
+        ).order_by("-updated_at", "-created_at")
         return queryset
 
     @classmethod
@@ -33,19 +34,28 @@ class CouponServiceClass:
         return coupon
 
     @classmethod
-    def get_available(cls, org_id, user):
-        used = CouponUsage.objects.filter(user=user, coupon_id=OuterRef("id"))
-        coupons = (
-            cls.__model.objects.filter(
-                organization_id=org_id,
-                is_active=True,
+    def get_available(cls, org_id, transaction_id):
+        transaction = Transaction.objects.get(id=transaction_id)
+        qs = (
+            cls.__model.objects.filter(organization_id=org_id)
+            .annotate(
+                used=Exists(
+                    CouponUsage.objects.filter(
+                        coupon=OuterRef("pk"), user=transaction.client
+                    )
+                )
             )
-            .exclude(Exists(used))
-            .select_related("product")
-            .prefetch_related("product__organization", "product__images")
+            .prefetch_related(
+                Prefetch(
+                    "coupon_usage",
+                    queryset=CouponUsage.objects.filter(user=transaction.client),
+                    to_attr="user_coupon_usage",
+                )
+            )
+            .order_by("used", "-updated_at", "-created_at")
         )
 
-        return coupons
+        return qs
 
     @classmethod
     def calculate(cls, data: dict):
@@ -60,9 +70,15 @@ class CouponServiceClass:
 
         for coupon in coupons_qs:
             if coupon.coupon_type == cls.__model.PRODUCT:
-                discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
+                if (
+                    coupon.product
+                    and coupon.product.price
+                    and coupon.percent is not None
+                ):
+                    discount_sum += coupon.product.price * Decimal(coupon.percent / 100)
             if coupon.coupon_type == cls.__model.DISCOUNT:
-                discount_percent = coupon.percent
+                if coupon.percent is not None:
+                    discount_percent = coupon.percent
 
         return {"discount_sum": discount_sum, "discount_perc": discount_percent}
 
@@ -75,8 +91,15 @@ class CouponServiceClass:
                     CouponUsage.objects.filter(coupon=OuterRef("pk"), user=user)
                 )
             )
-            .prefetch_related("coupon_usage")
-            .order_by("used")
+            .prefetch_related(
+                Prefetch(
+                    "coupon_usage",
+                    queryset=CouponUsage.objects.filter(user=user),
+                    to_attr="user_coupon_usage",
+                )
+            )
+            .order_by("used", "-updated_at", "-created_at")
         )
+        print(qs.query)
 
         return qs

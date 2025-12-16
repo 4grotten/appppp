@@ -97,6 +97,15 @@ class OrganizationBanner(TimestampModel):
         return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
 
 
+class CouponBanners(TimestampModel):
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, null=True, blank=True
+    )
+    organization = models.ForeignKey(
+        "Organization", on_delete=models.CASCADE, null=True, blank=True
+    )
+
+
 class Organization(TimestampModel):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="owned_organizations"
@@ -202,6 +211,9 @@ class Organization(TimestampModel):
     cryptocloud_activated = models.BooleanField(
         default=False, help_text=_("Activated in this organization")
     )
+    maaly_pay_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
 
     payment_systems_activated = models.BooleanField(
         default=False, help_text=_("All payment systems are activated")
@@ -223,6 +235,9 @@ class Organization(TimestampModel):
         default=False, help_text=_("Available in this organization")
     )
     cryptocloud_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    maaly_pay_confirmed = models.BooleanField(
         default=False, help_text=_("Available in this organization")
     )
 
@@ -424,6 +439,16 @@ class OrganizationPaymentSystemUsers(TimestampModel):
     class Meta:
         verbose_name = _("Users data for payment settings of organization")
         verbose_name_plural = _("Users data for payment settings of organization")
+
+
+class MaalyPayOrganizationPaymentSystem(TimestampModel):
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="maaly_pay_info",
+    )
+    api_key = models.CharField(max_length=420)
+    merchant_id = models.CharField(max_length=420)
 
 
 class PhoneNumber(TimestampModel):
@@ -1317,6 +1342,9 @@ class Coupon(TimestampModel):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, null=True, blank=True
     )
+
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
 
 
 class CouponUsage(TimestampModel):

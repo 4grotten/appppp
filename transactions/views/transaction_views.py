@@ -2190,7 +2190,7 @@ class InitPaymentView(GenericAPIView):
                 "description": pg_description + " " + purchase_type,
                 "merchantTxId": f"test-transaction#{transaction.pk}",
                 "merchantCallback": base_url,
-                "customerEmail:": "kirolkuro@gmail.com",
+                "customerEmail": "kirolkuro@gmail.com",
             }
             print(payment_data.api_key)
             headers = {
@@ -2199,7 +2199,7 @@ class InitPaymentView(GenericAPIView):
             }
             print(headers)
 
-            response = requests.post(url=url, data=payload, headers=headers)
+            response = requests.post(url=url, json=payload, headers=headers)
             redirect_url = response.json().get("CheckoutUrl")
 
             return Response(data={"redirect_url": redirect_url})

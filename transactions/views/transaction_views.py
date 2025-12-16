@@ -2186,11 +2186,13 @@ class InitPaymentView(GenericAPIView):
             payload = {
                 "merchantId": int(payment_data.merchant_id),
                 "fiatAmount": str(float(transaction.final_amount)),
-                "currency": "AED",
+                "currency": transaction.currency.code,
                 "description": pg_description + " " + purchase_type,
                 "merchantTxId": f"test-transaction-{transaction.pk}",
                 "merchantCallback": base_url + "payment-success/",
-                "customerEmail": "kirolkuro@gmail.com",
+                "customerEmail": transaction.client.email
+                if transaction.client.email
+                else "unknwown@gmail.com",
             }
             headers = {
                 "Authorization": f"Bearer {payment_data.api_key}",

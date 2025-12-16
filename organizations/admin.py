@@ -1015,5 +1015,10 @@ class CouponUsageAdmin(admin.ModelAdmin):
 @admin.register(MaalyPayOrganizationPaymentSystem)
 class MaalyPayAdmin(admin.ModelAdmin):
     list_display = ["organization", "merchant_id"]
+    autocomplete_fields = [
+        "organization",
+    ]
 
-    list_select_related = ["organization"]
+    list_select_related = [
+        "organization",
+    ]

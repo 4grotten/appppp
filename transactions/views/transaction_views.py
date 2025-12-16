@@ -2194,6 +2194,7 @@ class InitPaymentView(GenericAPIView):
             }
             paylod_json = json.dumps(payload)
             print(payload)
+            print(paylod_json)
             print(payment_data.api_key)
             headers = {
                 "Authorization": f"Bearer {payment_data.api_key}",

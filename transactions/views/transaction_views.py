@@ -2185,9 +2185,9 @@ class InitPaymentView(GenericAPIView):
             url = "https://maalyportal.com/api/omerch/create-payment-request"
             payload = {
                 "merchantId": int(payment_data.merchant_id),
-                "fiatAmount": str(transaction.final_amount),
+                "fiatAmount": str(int(transaction.final_amount)),
                 "currency": "AED",
-                "description": pg_description + " " + purchase_type,
+                "description": "Test product",
                 "merchantTxId": f"test-transaction-{transaction.pk}",
                 "merchantCallback": base_url,
                 "customerEmail": "kirolkuro@gmail.com",

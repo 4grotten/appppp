@@ -2189,7 +2189,7 @@ class InitPaymentView(GenericAPIView):
                 "currency": "AED",
                 "description": pg_description + " " + purchase_type,
                 "merchantTxId": f"test-transaction-{transaction.pk}",
-                "merchantCallback": base_url,
+                "merchantCallback": base_url + "payment-success/",
                 "customerEmail": "kirolkuro@gmail.com",
             }
             headers = {

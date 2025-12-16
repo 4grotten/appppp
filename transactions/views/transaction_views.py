@@ -2179,18 +2179,24 @@ class InitPaymentView(GenericAPIView):
             ).first()
             if not payment_data:
                 raise NotImplementedError()
+            suffix = "api/v1"
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
             url = "https://maalyportal.com/api/omerch/create-payment-request"
             payload = {
                 "merchantId": payment_data.merchant_id,
                 "fiatAmount": transaction.final_amount,
                 "currency": "AED",
                 "description": pg_description + " " + purchase_type,
-                "merchantTxId": f"test-transaction#{transaction.pk}"
-                "merchantCallback"
-                "https://test.apofiz.com/organizations/",
+                "merchantTxId": f"test-transaction#{transaction.pk}",
+                "merchantCallback": base_url,
                 "customerEmail:": "kirolkuro@gmail.com",
-                "bankInfo": "bankInfo",
             }
+            headers = {"Authorization": f"Bearer {payment_data.api_key}"}
+
+            redirect_url = requests.post(url=url, data=payload, headers=headers)
+
+            return Response(data={"redirect_url": redirect_url})
 
         else:
             return Response(

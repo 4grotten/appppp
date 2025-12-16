@@ -2188,7 +2188,7 @@ class InitPaymentView(GenericAPIView):
                 "fiatAmount": str(transaction.final_amount),
                 "currency": "AED",
                 "description": pg_description + " " + purchase_type,
-                "merchantTxId": f"test-transaction#{transaction.pk}",
+                "merchantTxId": f"test-transaction-{transaction.pk}",
                 "merchantCallback": base_url,
                 "customerEmail": "kirolkuro@gmail.com",
             }

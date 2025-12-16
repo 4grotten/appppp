@@ -2189,7 +2189,7 @@ class InitPaymentView(GenericAPIView):
                 "currency": "AED",
                 "description": "Test product",
                 "merchantTxId": f"test-transaction-{transaction.pk}",
-                "merchantCallback": base_url,
+                "merchantCallback": "https://test.apofiz.com/",
                 "customerEmail": "kirolkuro@gmail.com",
             }
             paylod_json = json.dumps(payload)

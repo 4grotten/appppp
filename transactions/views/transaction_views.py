@@ -2193,6 +2193,7 @@ class InitPaymentView(GenericAPIView):
                 "customerEmail": "kirolkuro@gmail.com",
             }
             paylod_json = json.dumps(payload)
+            print(payload)
             print(payment_data.api_key)
             headers = {
                 "Authorization": f"Bearer {payment_data.api_key}",

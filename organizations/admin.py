@@ -910,6 +910,8 @@ class CouponAdmin(admin.ModelAdmin):
         "always_active",
         "is_active",
         "is_updating",
+        "created_at",
+        "updated_at",
     )
     list_filter = ("is_active", "product", "percent")
     search_fields = [

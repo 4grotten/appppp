@@ -18,7 +18,7 @@ class CouponServiceClass:
             cls.__model.objects.filter(organization_id=organization_id, is_active=True)
             .select_related("product")
             .prefetch_related("product__images")
-        ).order_by("-created_at")
+        ).order_by("-updated_atg", "-created_at")
         return queryset
 
     @classmethod

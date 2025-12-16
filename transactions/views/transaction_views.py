@@ -2201,6 +2201,7 @@ class InitPaymentView(GenericAPIView):
             print(headers)
 
             response = requests.post(url=url, json=paylod_json, headers=headers)
+            print(response.text)
             redirect_url = response.json().get("CheckoutUrl")
 
             return Response(data={"redirect_url": redirect_url})

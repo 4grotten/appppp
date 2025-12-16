@@ -2192,6 +2192,7 @@ class InitPaymentView(GenericAPIView):
                 "merchantCallback": base_url,
                 "customerEmail": "kirolkuro@gmail.com",
             }
+            paylod_json = json.dumps(payload)
             print(payment_data.api_key)
             headers = {
                 "Authorization": f"Bearer {payment_data.api_key}",
@@ -2199,7 +2200,7 @@ class InitPaymentView(GenericAPIView):
             }
             print(headers)
 
-            response = requests.post(url=url, json=payload, headers=headers)
+            response = requests.post(url=url, json=paylod_json, headers=headers)
             redirect_url = response.json().get("CheckoutUrl")
 
             return Response(data={"redirect_url": redirect_url})

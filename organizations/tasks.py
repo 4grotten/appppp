@@ -392,3 +392,188 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
+
+
+@shared_task(bind=True, max_retries=60, default_retry_delay=10)
+def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
+    # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
+    # так как services и models часто ссылаются на tasks.
+    import logging
+
+    import requests
+    from django.db import transaction
+    from django.db.models import Q
+
+    from notifications.constants import (
+        ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+        ACCEPT_ORDER_PAYMENT_TYPE,
+        ACCEPT_ORDER_TYPE,
+        ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
+        NOTIFICATION_MODE_PRODUCT,
+        NOTIFICATION_MODE_SYSTEM,
+        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+    )
+    from notifications.models import Notification
+    from notifications.tasks import (
+        send_delivery_notitication_to_organization_or_client,
+        sent_notification,
+    )
+    from organizations.models import Organization
+    from transactions.models import Transaction
+
+    logger = logging.getLogger(__name__)
+
+    url = f"https://maalyportal.com/api/omerch/check-online-transaction-merch/{merchant_tx_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response_data = response.json()
+        status_text = response_data.get("status")
+    except Exception as e:
+        logger.error(f"MaalyPay connection error: {e}")
+        # Если ошибка сети, пробуем снова
+        raise self.retry()
+
+    # Список статусов, означающих, что платеж еще в процессе
+    # Если статус такой - перезапускаем задачу через 10 секунд
+    pending_statuses = [
+        "not initiated by customer yet",
+        "pending",
+        "processing",
+        "created",
+    ]
+
+    if status_text in pending_statuses:
+        raise self.retry()
+
+    # Проверяем успешный статус
+    # (Обычно это "Success", "Paid" или "Approved", уточните точное слово в доке MaalyPay)
+    if status_text in ["Success", "Paid", "Approved", "completed", "success"]:
+        try:
+            with transaction.atomic():
+                # Блокируем строку транзакции, чтобы избежать двойной обработки
+                old_transaction = Transaction.objects.select_for_update().get(
+                    id=transaction_id
+                )
+
+                # Если уже обработана - выходим
+                if old_transaction.is_processed:
+                    return "Already processed"
+
+                # === ОСНОВНАЯ ЛОГИКА (без Balance) ===
+
+                # Мы НЕ создаем Balance и НЕ пополняем его, так как деньги у мерчанта.
+                # Просто фиксируем факт оплаты в системе.
+
+                old_transaction.payment_status = Transaction.ACCEPTED
+                old_transaction.is_processed = True
+                # payment_info оставляем пустым или ставим заглушку, т.к. баланс не участвует
+                old_transaction.payment_info = None
+                old_transaction.save()
+
+                # Удаляем уведомления о необходимости подтвердить заказ (т.к. он оплачен и принят)
+                if old_transaction.type == Transaction.ONLINE:
+                    transaction.on_commit(
+                        lambda: Notification.objects.filter(
+                            Q(extra_data__transaction_id=old_transaction.id)
+                            & (
+                                Q(type=ACCEPT_ORDER_TYPE)
+                                | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE)
+                            )
+                        ).delete()
+                    )
+
+                # === УВЕДОМЛЕНИЯ (Как в accept_freedompay...) ===
+
+                discount_percent = old_transaction.discount_percent
+
+                # 1. Уведомление Продавцу (Processed By / Recipient)
+                sent_notification.delay(
+                    recipient_id=old_transaction.processed_by_id,
+                    sender_id=old_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(
+                            old_transaction.final_amount
+                        ),  # decimal в str для json
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                # 2. Уведомление Клиенту (Client)
+                sent_notification.delay(
+                    recipient_id=old_transaction.client_id,
+                    sender_id=old_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(old_transaction.final_amount),
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                # 3. Логика Доставки
+                organization = old_transaction.organization
+                has_delivery_service = (
+                    Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
+                    .filter(is_delivery_service=True, country=organization.country)
+                    .exists()
+                )
+
+                if (
+                    has_delivery_service
+                    and hasattr(old_transaction, "cart")
+                    and old_transaction.cart
+                ):
+                    try:
+                        # Уведомляем владельца организации
+                        send_delivery_notitication_to_organization_or_client(
+                            old_transaction.cart.organization.owner,
+                            old_transaction.cart.id,
+                            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                            mode=NOTIFICATION_MODE_SYSTEM,
+                        )
+
+                        # Уведомляем сотрудников с правами
+                        organization_members = list(
+                            old_transaction.cart.organization.memberships.filter(
+                                Q(role__can_edit_organization=True)
+                                | Q(role__can_see_stats=True)
+                                | Q(role__can_deliver=True)
+                            )
+                        )
+                        for member in organization_members:
+                            send_delivery_notitication_to_organization_or_client(
+                                member.user,
+                                old_transaction.cart.id,
+                                NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                mode=NOTIFICATION_MODE_SYSTEM,
+                            )
+                    except Exception as e:
+                        logger.exception(f"Error sending delivery notifications: {e}")
+
+            return f"Transaction {transaction_id} completed successfully via MaalyPay"
+
+        except Transaction.DoesNotExist:
+            logger.error(f"Transaction {transaction_id} not found")
+            return "Transaction not found"
+        except Exception as e:
+            logger.exception(f"Error processing MaalyPay transaction db update: {e}")
+            # Если упала база данных, пробуем еще раз
+            raise self.retry()
+
+    elif status_text in ["Failed", "Rejected", "Canceled", "error"]:
+        logger.info(
+            f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
+        )
+        return f"Transaction failed: {status_text}"
+
+    return f"Unknown status: {status_text}"

@@ -394,7 +394,7 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
 
 
-@shared_task(bind=True, max_retries=60, default_retry_delay=10)
+@shared_task(bind=True, max_retries=30, default_retry_delay=60)
 def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
     # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
     # так как services и models часто ссылаются на tasks.
@@ -437,19 +437,14 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
 
     # Список статусов, означающих, что платеж еще в процессе
     # Если статус такой - перезапускаем задачу через 10 секунд
-    pending_statuses = [
-        "not initiated by customer yet",
-        "pending",
-        "processing",
-        "created",
-    ]
+    pending_statuses = ["not initiated by customer yet"]
 
     if status_text in pending_statuses:
         raise self.retry()
 
     # Проверяем успешный статус
     # (Обычно это "Success", "Paid" или "Approved", уточните точное слово в доке MaalyPay)
-    if status_text in ["Success", "Paid", "Approved", "completed", "success"]:
+    if status_text:
         try:
             with transaction.atomic():
                 # Блокируем строку транзакции, чтобы избежать двойной обработки
@@ -570,10 +565,11 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
             # Если упала база данных, пробуем еще раз
             raise self.retry()
 
-    elif status_text in ["Failed", "Rejected", "Canceled", "error"]:
+    else:
         logger.info(
             f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
         )
+        raise self.retry()
         return f"Transaction failed: {status_text}"
 
     return f"Unknown status: {status_text}"

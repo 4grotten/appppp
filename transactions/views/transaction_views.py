@@ -50,6 +50,7 @@ from organizations.services.client_status_services import (
     OrganizationClientFinancialStatusService,
 )
 from organizations.services.organization_services import OrganizationService
+from organizations.tasks import fetch_maalypay_status
 from project.redis_client import redis_client
 from project.settings.base import (
     BETAPAY_API_TOKEN,
@@ -2198,11 +2199,15 @@ class InitPaymentView(GenericAPIView):
                 "Authorization": f"Bearer {payment_data.api_key}",
                 "Content-Type": "application/json",
             }
-            print(headers)
 
             response = requests.post(url=url, json=payload, headers=headers)
-            print(response.text)
             redirect_url = response.json().get("CheckoutUrl")
+            if redirect_url:
+                fetch_maalypay_status.delay(
+                    merchant_tx_id=payload["merchantTxId"],
+                    api_key=payment_data.api_key,
+                    transaction_id=transaction.pk,
+                )
 
             return Response(data={"redirect_url": redirect_url})
 

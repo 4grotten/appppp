@@ -24,6 +24,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
     UpdateAPIView,
+    get_object_or_404,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -1627,6 +1628,41 @@ class OrganizationCouponBannerListCreateAPIView(ListCreateAPIView):
         organization = self._get_organization()
         # Сохраняем, явно передавая организацию
         serializer.save(organization=organization)
+
+
+class OrganizationCouponBannerDetailView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Логика проверки прав на организацию остается такой же
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        # Получаем организацию и фильтруем баннеры только этой организации
+        # Это гарантирует, что нельзя удалить чужой баннер, зная его ID
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def get_object(self):
+        # Берем queryset, который уже отфильтрован по организации
+        queryset = self.get_queryset()
+
+        # Получаем ID самого баннера из URL.
+        # Предполагаем, что в urls.py параметр назван 'banner_id'
+        banner_id = self.kwargs.get("banner_id")
+
+        # Ищем объект или возвращаем 404
+        obj = get_object_or_404(queryset, id=banner_id)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class AddCustomBannerView(APIView):

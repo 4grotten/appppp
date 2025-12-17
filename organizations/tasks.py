@@ -394,7 +394,7 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
 
 
-@shared_task(bind=True, max_retries=60, default_retry_delay=10)
+@shared_task(bind=True, max_retries=30, default_retry_delay=60)
 def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
     # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
     # так как services и models часто ссылаются на tasks.
@@ -437,12 +437,7 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
 
     # Список статусов, означающих, что платеж еще в процессе
     # Если статус такой - перезапускаем задачу через 10 секунд
-    pending_statuses = [
-        "not initiated by customer yet",
-        "pending",
-        "processing",
-        "created",
-    ]
+    pending_statuses = ["not initiated by customer yet", True, False]
 
     if status_text in pending_statuses:
         raise self.retry()

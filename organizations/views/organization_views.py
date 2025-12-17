@@ -1484,7 +1484,7 @@ class PaymentSystemListView(generics.ListAPIView):
                 {"id": 6, "name": "Maalypay в AED", "is_available": True}
             )
 
-        elif not organization.maaly_pay_confirmed:
+        if not organization.maaly_pay_confirmed:
             available_payment_systems.append(
                 {"id": 6, "name": "Maalypay в AED", "is_available": False}
             )

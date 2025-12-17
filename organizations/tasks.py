@@ -437,14 +437,14 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
 
     # Список статусов, означающих, что платеж еще в процессе
     # Если статус такой - перезапускаем задачу через 10 секунд
-    pending_statuses = ["not initiated by customer yet", True, False]
+    pending_statuses = ["not initiated by customer yet"]
 
     if status_text in pending_statuses:
         raise self.retry()
 
     # Проверяем успешный статус
     # (Обычно это "Success", "Paid" или "Approved", уточните точное слово в доке MaalyPay)
-    if status_text in ["Success", "Paid", "Approved", "completed", "success"]:
+    if status_text:
         try:
             with transaction.atomic():
                 # Блокируем строку транзакции, чтобы избежать двойной обработки
@@ -565,10 +565,11 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
             # Если упала база данных, пробуем еще раз
             raise self.retry()
 
-    elif status_text in ["Failed", "Rejected", "Canceled", "error"]:
+    else:
         logger.info(
             f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
         )
+        raise self.retry()
         return f"Transaction failed: {status_text}"
 
     return f"Unknown status: {status_text}"

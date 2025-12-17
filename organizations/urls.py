@@ -97,6 +97,7 @@ from .views.organization_views import (
     OrganizationBlackListDestroyView,
     OrganizationClientDetailsAPIView,
     OrganizationComplaintCreateView,
+    OrganizationCouponBannerDetailView,
     OrganizationCouponBannerListCreateAPIView,
     OrganizationCreationLimitView,
     OrganizationFollowersCountAPIView,
@@ -321,6 +322,11 @@ organization_urls = [
     path(
         "organizations/<int:pk>/coupons/banners",
         OrganizationCouponBannerListCreateAPIView.as_view(),
+    ),
+    path(
+        "organizations/<int:pk>/coupons/banners/<int:banner_id>/",
+        OrganizationCouponBannerDetailView.as_view(),
+        name="org-banner-detail",
     ),
     path(
         "organizations/banners/<int:pk>/",

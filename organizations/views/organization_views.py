@@ -43,6 +43,7 @@ from organizations.constants import TEST, UNDER_REVIEW
 from organizations.models import (
     BlockedUser,
     InstagramIntegration,
+    MaalyPayOrganizationPaymentSystem,
     Organization,
     OrganizationBlacklist,
     OrganizationCategory,
@@ -1435,11 +1436,13 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
                     "is_active": organization.cryptocloud_activated,
                 }
             )
-        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+        if MaalyPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).exists():
             confirmed_payment_systems.append(
                 {
                     "id": 6,
-                    "name": "Maalypay в AED",
+                    "name": "MaalyPay в AED или USD",
                     "is_active": organization.maaly_pay_activated,
                 }
             )

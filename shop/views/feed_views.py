@@ -238,7 +238,7 @@ class PinShopItemView(APIView):
             raise ObjectNotFoundException("Shop item not found")
 
         pinned, created = PinnedShopItem.objects.get_or_create(
-            user=user, shop_item=shop_item
+            user=user, item=shop_item
         )
 
         if not created:
@@ -262,7 +262,7 @@ class PinShopItemView(APIView):
             raise ObjectNotFoundException("Shop item not found")
 
         deleted_count, _ = PinnedShopItem.objects.filter(
-            user=user, shop_item=shop_item
+            user=user, item=shop_item
         ).delete()
 
         if deleted_count == 0:

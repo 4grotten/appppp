@@ -98,15 +98,15 @@ class FeedView(ListAPIView):
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
             qs = qs.filter(price_filter)
 
-        if user.is_authenticated:
-            pinned_subquery = PinnedShopItem.objects.filter(
-                user=user, item=OuterRef("pk")
-            )
-            qs = qs.annotate(is_pinned=Exists(pinned_subquery))
-        else:
-            qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
+        # if user.is_authenticated:
+        #     pinned_subquery = PinnedShopItem.objects.filter(
+        #         user=user, item=OuterRef("pk")
+        #     )
+        #     qs = qs.annotate(is_pinned=Exists(pinned_subquery))
+        # else:
+        #     qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
-        qs = qs.order_by("-is_pinned", "-updated_at")
+        qs = qs.order_by("-updated_at")
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

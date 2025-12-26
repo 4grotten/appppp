@@ -840,6 +840,21 @@ files = [
 ]
 
 [[package]]
+name = "django-jazzmin"
+version = "2.6.2"
+description = "Drop-in theme for django admin, that utilises AdminLTE 3 & Bootstrap 4 to make yo' admin look jazzy"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "django_jazzmin-2.6.2-py3-none-any.whl", hash = "sha256:f7eb509b8a2e92260c2e836dc856fc9ca8888e572094201f9021d7b620bb96b2"},
+    {file = "django_jazzmin-2.6.2.tar.gz", hash = "sha256:2bfc33c4e6d59ee647930402d372692ae3514ea45940040eb7f50b481f6ef53b"},
+]
+
+[package.dependencies]
+django = ">=3"
+
+[[package]]
 name = "django-map-widgets"
 version = "0.3.0"
 description = "Map widgets for Django PostGIS fields"
@@ -3826,4 +3841,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "b5455e0bb9a26a955e3867d8bf3887e5ba614a442be5190a0e290a291eab1a70"
+content-hash = "407f82ff1fa5cdcab7ba8c22be82fc9160d7494dce97fea9cf4aeb88c0fce3c0"

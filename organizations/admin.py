@@ -188,27 +188,18 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     change_form_template = "admin/organization_change_form.html"
-    list_select_related = True
+    list_select_related = ("owner", "country", "city", "currency")
     formfield_overrides = {models.PointField: {"widget": GooglePointFieldWidget}}
     list_display_links = ("id", "title")
     list_display = (
         "id",
         "title",
         "owner",
-        "currency",
         "country",
         "city",
         "subscription_status",
         "is_active",
         "is_banned",
-        "is_private",
-        "update_posts",
-        "cashback_group",
-        "cumulative_group",
-        "items_group",
-        "is_delivery_service",
-        "add_item_date",
-        "avg_check",
     )
     list_filter = (
         "is_active",
@@ -503,10 +494,6 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
         "title",
         "category",
         "is_adult",
-        "title_ru",
-        "title_tr",
-        "title_de",
-        "title_zh",
     )
     list_filter = ("category",)
     search_fields = (
@@ -519,13 +506,7 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
 
 @admin.register(OrganizationCategory)
 class OrganizationCategoryAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "name_ru",
-        "name_tr",
-        "name_de",
-        "name_zh",
-    )
+    list_display = ("name",)
     search_fields = ("name",)
 
 
@@ -760,11 +741,6 @@ class ServiceAdmin(admin.ModelAdmin):
         "preview",
         "ordering",
         "name",
-        "name_ru",
-        "name_en",
-        "name_tr",
-        "name_de",
-        "name_zh",
     )
     list_filter = ("name",)
     search_fields = (
@@ -872,7 +848,6 @@ class RegionalTariffAdmin(admin.ModelAdmin):
     total_price_display.short_description = "Total Price"
 
 
-@admin.register(PaymentSystemMethod)
 class PaymentSystemMethodAdmin(admin.ModelAdmin):
     list_display = ("name", "is_active", "code")
     list_filter = ("name", "is_active", "code")
@@ -1015,7 +990,6 @@ class CouponUsageAdmin(admin.ModelAdmin):
     list_select_related = ["user", "coupon", "transaction"]
 
 
-@admin.register(MaalyPayOrganizationPaymentSystem)
 class MaalyPayAdmin(admin.ModelAdmin):
     list_display = ["organization", "merchant_id"]
     autocomplete_fields = [
@@ -1027,7 +1001,27 @@ class MaalyPayAdmin(admin.ModelAdmin):
     ]
 
 
-@admin.register(RegionalPaymentSystemSettings)
+class AllowedOrganizationInline(admin.TabularInline):
+    """Инлайн для организаций-исключений"""
+    model = RegionalPaymentSystemSettings.allowed_organizations.through
+    extra = 0
+    verbose_name = "Организация с доступом"
+    verbose_name_plural = "Организации с доступом (Overrides)"
+    raw_id_fields = ('organization',)
+
+
+class PaymentSystemMethodInline(admin.StackedInline):
+    """Инлайн для методов платежных систем"""
+    model = PaymentSystemMethod
+    extra = 0
+    fields = ('name', 'code', 'is_active')
+    readonly_fields = ('code',)
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
     """Админка для управления доступностью платёжных систем по регионам"""
 
@@ -1037,7 +1031,6 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
         'is_enabled_in_region',
         'is_available_for_request',
         'get_override_count',
-        'created_at',
     )
 
     list_filter = (
@@ -1061,9 +1054,9 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
 
     autocomplete_fields = ('country',)
 
-    filter_horizontal = ('allowed_organizations',)
-
     ordering = ('country__code', 'payment_system_id')
+
+    inlines = [AllowedOrganizationInline]
 
     fieldsets = (
         ('Основная информация', {
@@ -1072,11 +1065,6 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
         ('Настройки доступности', {
             'fields': ('is_enabled_in_region', 'is_available_for_request'),
             'description': 'Управление доступностью платёжной системы в регионе'
-        }),
-        ('Исключения (Overrides)', {
-            'fields': ('allowed_organizations',),
-            'description': 'Организации-исключения: для них платежка доступна даже если отключена в регионе',
-            'classes': ('collapse',),
         }),
     )
 

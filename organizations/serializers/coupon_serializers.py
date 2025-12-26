@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from organizations.models import Coupon
+from organizations.models import Coupon, DiscountCard
 from shop.models import ShopItem
 
 

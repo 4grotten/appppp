@@ -1,14 +1,11 @@
 import json
 import os
-from distutils.util import strtobool
 
 import firebase_admin
 from corsheaders.defaults import default_headers
-from decouple import config, Csv
+from decouple import Csv, config
 from django.utils.translation import gettext_lazy as _
 from firebase_admin import credentials
-from kombu.serialization import registry
-from celery.schedules import crontab
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -339,6 +336,10 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="password")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="from@yandex.ru")
 EMAIL_USE_TLS = True
 
+# redis settings
+REDIS_HOST = config("REDIS_HOST", "redis")
+REDIS_PORT = config("REDIS_PORT", 6379)
+
 FCM_DJANGO_SETTINGS = {
     "APP_VERBOSE_NAME": "Qrcode push",
     # default: _('FCM Django')
@@ -363,7 +364,8 @@ FCM_DRY_RUN_ENABLE = config("FCM_DRY_RUN_ENABLE", default=True, cast=bool)
 
 HOST_URL = config("DJANGO_HOST_URL", default="https://apofiz.com/media/")
 CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
-CELERY_RESULT_BACKEND = "rpc://"
+CELERY_RESULT_BACKEND = None
+CELERY_IGNORE_RESULT = True
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},
@@ -386,6 +388,7 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.process_comment_with_assistant": {"queue": "default"},
     "organizations.tasks.update_posts": {"queue": "default"},
     "organizations.tasks.create_invoice_pdf": {"queue": "default"},
+    "organizations.tasks.fetch_maalypay_status": {"queue": "default"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)
@@ -506,6 +509,12 @@ CRYPTOCLOUD_API_KEY = config("CRYPTOCLOUD_API_KEY", default="notasecret")
 CRYPTOCLOUD_SHOP_ID = config("CRYPTOCLOUD_SHOP_ID", default="notasecret")
 
 PIGGYPAY_API_KEY = config("PIGGYPAY_API_KEY", default="notasecret")
+PROXY_USER = "gemini_proxy"
+PROXY_PASS = config("PROXY_PASS", None)
+PROXY_HOST = config("PROXY_HOST", None)
+PROXY_PORT = "1080"
+PRODUCTION = config("PRODUCTION", False, cast=bool)
+
 
 if DEBUG:
     PORTAINER_URL = config(

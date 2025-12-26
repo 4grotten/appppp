@@ -1,52 +1,40 @@
 import hashlib
 import json
-from decimal import Decimal, ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal
+from time import time
 
-import xmltodict
-import xml.etree.ElementTree as ET
 import requests
+import xmltodict
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Case, When, Value, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, filters
+from rest_framework import filters, status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
+    CreateAPIView,
     GenericAPIView,
     ListAPIView,
-    RetrieveDestroyAPIView,
     RetrieveAPIView,
-    CreateAPIView,
+    RetrieveDestroyAPIView,
 )
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.services.currency import CurrencyConverterService
-from common.utils import generate_new_order_id
-from project.settings.base import (
-    FREEDOMPAY_PROJECT_ID,
-    FREEDOMPAY_RECEIVE_SECRET,
-    FREEDOMPAY_PAYOUT_SECRET,
-    PAYSY_API_KEY,
-    LIBERSAVE_API_KEY,
-    BETAPAY_API_TOKEN,
-    CRYPTOCLOUD_SHOP_ID,
-    CRYPTOCLOUD_API_KEY,
-)
 from common.exceptions import (
     NotAcceptableException,
     PermissionDeniedException,
-    ObjectNotFoundException,
 )
+from common.services.currency import CurrencyConverterService
 from notifications.constants import (
-    NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
     NOTIFICATION_TYPE_AVAILABLE_DELIVERY,
+    NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
 )
 from notifications.models import Notification
+from organizations.models import MaalyPayOrganizationPaymentSystem
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer,
@@ -62,79 +50,88 @@ from organizations.services.client_status_services import (
     OrganizationClientFinancialStatusService,
 )
 from organizations.services.organization_services import OrganizationService
-from shop.services.cart_services import CartService
-from shop.services.booking_services import BookingService
-from shop.services.item_services import ShopItemService
-from shop.services.ticket_services import TicketService
-from transactions.models import (
-    Transaction,
-    PayoutSystem,
-    Balance,
-    Recipient,
-    TransactionFile,
+from organizations.tasks import fetch_maalypay_status
+from project.redis_client import redis_client
+from project.settings.base import (
+    BETAPAY_API_TOKEN,
+    CRYPTOCLOUD_API_KEY,
+    CRYPTOCLOUD_SHOP_ID,
+    FREEDOMPAY_PROJECT_ID,
+    FREEDOMPAY_RECEIVE_SECRET,
+    LIBERSAVE_API_KEY,
+    PAYSY_API_KEY,
 )
-from transactions.serializers.stats_serializers import (
-    TotalStatsSerializer,
-    BalanceTotalStatsSerializer,
-)
-from transactions.serializers.transaction_serializers import (
-    PreprocessSerializer,
-    CompleteSerializer,
-    TransactionsSerializer,
-    StartEndDateTransactionSerializer,
-    TransactionDetailSerializer,
-    TransactionWithClientSerializer,
-    OnlineCompleteSerializer,
-    BookingTransactionWithClientSerializer,
-    OnlineOfflinePaymentCompleteSerializer,
-    CompleteBookingSerializer,
-    OrganizationRentalTransactionWithClientSerializer,
-    UserInfoBookingSerializer,
-    ActivateTransactionWithClientSerializer,
-    TransactionActivateSerializer,
-    ResultURLSerializer,
-    PaymentSuccessSerializer,
-    UserInfoTicketSerializer,
-    TicketActivateSerializer,
-    OrganizationTicketWithClientSerializer,
-    TransactionsTicketSerializer,
-    TicketSerializer,
-    PayoutSystemSerializer,
-    TransactionWithdrawalSerializer,
-    RecipientSerializer,
-    BalanceQueryParamSerializer,
-    TransactionWithdrawalDetailSerializer,
-    TransactionWithdrawalSwiftSerializer,
-    RecipientGeneralSerializer,
-    BalanceSerializer,
-    BalanceWithUnprocessedTransactionCountSerializer,
-    WithdrawalTypeTransactionSerializer,
-    TransactionsWithdrawalSerializer,
-    PayoutSystemWithUnprocessedTransactionCountSerializer,
-    TransactionWithdrawalCompleteSerializer,
-    TransactionFilesSerializer,
-    NewInitPaymentSerializer,
-    PaymentSystemMethodSerializer,
-)
+from shop.models import Booking, ShopItem, Ticket
 from shop.serializers.item_serializers import (
     BookInfoWithClientSerializer,
     IsActiveTicketSerializer,
 )
-from shop.models import ShopItem, Booking, Ticket
+from shop.services.booking_services import BookingService
+from shop.services.cart_services import CartService
+from shop.services.item_services import ShopItemService
+from shop.services.ticket_services import TicketService
+from transactions.models import (
+    Balance,
+    PayoutSystem,
+    Recipient,
+    Transaction,
+    TransactionFile,
+)
+from transactions.serializers.stats_serializers import (
+    BalanceTotalStatsSerializer,
+    TotalStatsSerializer,
+)
+from transactions.serializers.transaction_serializers import (
+    ActivateTransactionWithClientSerializer,
+    BalanceQueryParamSerializer,
+    BalanceWithUnprocessedTransactionCountSerializer,
+    BookingTransactionWithClientSerializer,
+    CompleteBookingSerializer,
+    CompleteSerializer,
+    NewInitPaymentSerializer,
+    OnlineCompleteSerializer,
+    OnlineOfflinePaymentCompleteSerializer,
+    OrganizationRentalTransactionWithClientSerializer,
+    OrganizationTicketWithClientSerializer,
+    PaymentSuccessSerializer,
+    PaymentSystemMethodSerializer,
+    PayoutSystemSerializer,
+    PayoutSystemWithUnprocessedTransactionCountSerializer,
+    PreprocessSerializer,
+    RecipientGeneralSerializer,
+    ResultURLSerializer,
+    StartEndDateTransactionSerializer,
+    TicketActivateSerializer,
+    TicketSerializer,
+    TransactionActivateSerializer,
+    TransactionDetailSerializer,
+    TransactionFilesSerializer,
+    TransactionsSerializer,
+    TransactionsTicketSerializer,
+    TransactionsWithdrawalSerializer,
+    TransactionWithClientSerializer,
+    TransactionWithdrawalCompleteSerializer,
+    TransactionWithdrawalDetailSerializer,
+    TransactionWithdrawalSerializer,
+    TransactionWithdrawalSwiftSerializer,
+    UserInfoBookingSerializer,
+    UserInfoTicketSerializer,
+    WithdrawalTypeTransactionSerializer,
+)
 from transactions.services.filters import (
     TransactionFilter,
     TransactionRentalFilter,
     TransactionTicketFilter,
 )
-from transactions.services.recipient_services import RecipientService, BalanceService
+from transactions.services.recipient_services import BalanceService, RecipientService
 from transactions.services.transaction_services import (
-    TransactionService,
     PaymentSystemMethodService,
+    TransactionService,
 )
 from users.serializers import (
     ProfileBriefWithPhotoSerializer,
-    UserShortInfoSerializer,
     UserInfoSerializer,
+    UserShortInfoSerializer,
 )
 from users.services import UserService
 
@@ -304,6 +301,7 @@ class TransactionCompleteView(GenericAPIView):
             from_cashback=serializer.validated_data["from_cashback"],
             utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             cart=serializer.validated_data.get("cart", None),
+            coupons_ids=serializer.validated_data.get("coupons_ids", None),
         )
 
         return Response(
@@ -334,6 +332,7 @@ class CashierTransactionCompleteView(GenericAPIView):
             from_cashback=serializer.validated_data["from_cashback"],
             utc_offset_minutes=serializer.validated_data.get("utc_offset_minutes"),
             cart=serializer.validated_data.get("cart", None),
+            coupons_list=serializer.validated_data.get("coupons_ids", None),
         )
 
         return Response(
@@ -404,11 +403,20 @@ class OnlineTransactionCompleteView(GenericAPIView):
     serializer_class = OnlineCompleteSerializer
 
     def post(self, request, *args, **kwargs):
+        start = time()
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(
                 data={"message": _("Invalid input"), "errors": serializer.errors},
                 status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+
+        cached = redis_client.get(serializer.validated_data.get("transaction_id"))
+
+        if cached:
+            return Response(
+                data={"message": _("Transaction successfully completed")},
+                status=status.HTTP_200_OK,
             )
 
         TransactionService.complete_online_transaction(
@@ -417,7 +425,8 @@ class OnlineTransactionCompleteView(GenericAPIView):
             processed_by=request.user,
             request=request,
         )
-
+        total_time = time() - start
+        print(f"[TOTAL VIEW TIME]: {total_time:.4f} sec")
         return Response(
             data={"message": _("Transaction successfully completed")},
             status=status.HTTP_200_OK,
@@ -822,7 +831,6 @@ class PayoutSystemListAPIView(ListAPIView):
 
 
 class SwiftPayoutSystemAPIView(APIView):
-
     def get(self, request, format=None):
         swift_payout = PayoutSystem.objects.filter(name="Swift").first()
         if swift_payout:
@@ -1860,6 +1868,7 @@ class InitPaymentView(GenericAPIView):
     3 - Libersave
     4 - Betapay
     5 - CryptoCloud
+    6 - MaalyPay
     """
 
     def post(self, request, *args, **kwargs):
@@ -1938,12 +1947,12 @@ class InitPaymentView(GenericAPIView):
                 currency = "USDT"
                 chain_id = 56
                 url = "https://api.paysy.net/orders/create_order"
-                redirect_url = f"https://paysy.net/en/orders/"
+                redirect_url = "https://paysy.net/en/orders/"
             else:
                 currency = "USDT"
                 chain_id = 5
                 url = "https://devnet-api.paysy.net/orders/create_order"
-                redirect_url = f"https://devnet.paysy.net/en/orders/"
+                redirect_url = "https://devnet.paysy.net/en/orders/"
             # currency, chain_id = self.get_company_info(base_url=base_url)
             transaction_id = serializer.validated_data["transaction_id"]
             transaction = TransactionService.get(
@@ -2088,7 +2097,6 @@ class InitPaymentView(GenericAPIView):
             status_type = response_json.get("status", {}).get("type")
             data_transaction_id = response_json.get("data", {}).get("transaction_id")
             if status_code == 200 and status_type == "success":
-
                 url = "https://api.betapay.online/api/v3/openbanking-payment-test"
                 data = {
                     "merchant_id": 591,
@@ -2157,6 +2165,52 @@ class InitPaymentView(GenericAPIView):
                     data={"error": "Something went wrong"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        elif kwargs["pk"] == 6:
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
+            payment_data = MaalyPayOrganizationPaymentSystem.objects.filter(
+                organization=transaction.organization
+            ).first()
+            if not payment_data:
+                raise NotImplementedError()
+            suffix = "api/v1/"
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
+            url = "https://maalyportal.com/api/omerch/create-payment-request"
+            payload = {
+                "merchantId": int(payment_data.merchant_id),
+                "fiatAmount": str(float(transaction.final_amount)),
+                "currency": transaction.currency.code,
+                "description": pg_description + " " + purchase_type,
+                "merchantTxId": f"test-transaction-{transaction.pk}",
+                "merchantCallback": base_url + "payment-success/",
+                "customerEmail": transaction.client.email
+                if transaction.client.email
+                else "unknwown@gmail.com",
+            }
+            headers = {
+                "Authorization": f"Bearer {payment_data.api_key}",
+                "Content-Type": "application/json",
+            }
+
+            response = requests.post(url=url, json=payload, headers=headers)
+            redirect_url = response.json().get("CheckoutUrl")
+            if redirect_url:
+                fetch_maalypay_status.delay(
+                    merchant_tx_id=payload["merchantTxId"],
+                    api_key=payment_data.api_key,
+                    transaction_id=transaction.pk,
+                )
+
+            return Response(data={"redirect_url": redirect_url})
+
         else:
             return Response(
                 data={"error": "Payment System Not Found"},
@@ -2258,12 +2312,12 @@ class NewInitPaymentView(GenericAPIView):
                 currency = "USDT"
                 chain_id = 56
                 url = "https://api.paysy.net/orders/create_order"
-                redirect_url = f"https://paysy.net/en/orders/"
+                redirect_url = "https://paysy.net/en/orders/"
             else:
                 currency = "USDT"
                 chain_id = 5
                 url = "https://devnet-api.paysy.net/orders/create_order"
-                redirect_url = f"https://devnet.paysy.net/en/orders/"
+                redirect_url = "https://devnet.paysy.net/en/orders/"
             # currency, chain_id = self.get_company_info(base_url=base_url)
             transaction_id = serializer.validated_data["transaction_id"]
             transaction = TransactionService.get(
@@ -2408,7 +2462,6 @@ class NewInitPaymentView(GenericAPIView):
             status_type = response_json.get("status", {}).get("type")
             data_transaction_id = response_json.get("data", {}).get("transaction_id")
             if status_code == 200 and status_type == "success":
-
                 url = "https://api.betapay.online/api/v3/openbanking-payment-test"
                 data = {
                     "merchant_id": 591,
@@ -2507,7 +2560,7 @@ class InitPaymentSwiftView(GenericAPIView):
             else:
                 return "USDT", 5
 
-        except Exception as e:
+        except Exception:
             return "USD", 5
 
     def post(self, request, *args, **kwargs):
@@ -2589,7 +2642,6 @@ class InitPaymentSwiftView(GenericAPIView):
 
 
 class PaySyWebhookView(APIView):
-
     def post(self, request, *args, **kwargs):
         payload = request.data
         event_type = payload.get("event")
@@ -2654,7 +2706,6 @@ class PaySyWebhookView(APIView):
 
 
 class BetaPayWebhookView(APIView):
-
     def post(self, request, *args, **kwargs):
         payload = request.data
         order_id = payload.get("order_id")
@@ -2700,7 +2751,6 @@ class BetaPayWebhookView(APIView):
 
 
 class CryptoCloudPostbackView(APIView):
-
     def post(self, request, *args, **kwargs):
         payload = request.data
         order_id = payload.get("order_id")
@@ -2748,7 +2798,6 @@ class CryptoCloudPostbackView(APIView):
 
 
 class BetaPayPaymentTestView(APIView):
-
     def post(self, request, *args, **kwargs):
         payload = request.data
         merchant_id = payload.get("merchant_id")
@@ -2768,6 +2817,13 @@ class BetaPayPaymentTestView(APIView):
         response_json = response.json()
 
         return Response(response_json)
+
+
+class MaalyPayPaymentTestView(APIView):
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        print(payload)
+        return Response(data={"data": "success"}, status=200)
 
 
 class ResultURLView(APIView):

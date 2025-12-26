@@ -36,4 +36,8 @@ app.conf.beat_schedule = {
         "task": "organizations.tasks.update_posts",
         "schedule": crontab(minute=0, hour=0),
     },
+    "delete-expired-coupons": {
+        "task": "organizations.tasks.expire_coupons",
+        "schedule": crontab(minute=0, hour=0),
+    },
 }

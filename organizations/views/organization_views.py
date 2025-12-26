@@ -1,150 +1,147 @@
 import datetime
 import random
+from typing import Union
 
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction, IntegrityError
-from django.db.models import Q, Case, When, IntegerField, OuterRef, Exists
+from django.db import IntegrityError, transaction
+from django.db.models import Case, Exists, IntegerField, OuterRef, Q, When
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, generics
+from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import (
-    ListCreateAPIView,
-    ListAPIView,
-    RetrieveAPIView,
-    GenericAPIView,
-    UpdateAPIView,
     CreateAPIView,
     DestroyAPIView,
+    GenericAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
+    get_object_or_404,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import (
+    IntegrityException,
     NotAcceptableException,
     ObjectNotFoundException,
-    IntegrityException,
 )
-from common.utils import method_permission_classes
 from common.services import slack
+from common.utils import method_permission_classes
 from instagram_parsers.services.proxy_services import ProxyService
 from mailer.services import MailerService
-from organizations.constants import UNDER_REVIEW, TEST
+from organizations.constants import TEST, UNDER_REVIEW
 from organizations.models import (
-    Organization,
-    OrganizationCategory,
-    OrganizationType,
-    InstagramIntegration,
-    Service,
-    OrganizationComplaint,
-    OrganizationBlacklist,
     BlockedUser,
-    Subscription,
-    UserAssistant,
-    RegionalTariff,
-    PaymentSystemMethod,
-    OrganizationBanner,
+    InstagramIntegration,
+    MaalyPayOrganizationPaymentSystem,
+    Organization,
+    OrganizationBlacklist,
+    OrganizationCategory,
+    OrganizationComplaint,
+    OrganizationType,
     PinnedOrganizations,
+    RegionalTariff,
+    Service,
+    Subscription,
 )
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
-    OrganizationCategorySerializer,
     HomepageOrganizationsSerializer,
-    OrganizationWithDiscountsSerializer,
+    OrganizationCategorySerializer,
     OrganizationTypeSerializer,
+    OrganizationWithDiscountsSerializer,
 )
-
+from organizations.serializers.coupon_serializers import (
+    CouponDetailSerializer,
+    CouponListSerializer,
+    ValidateCreateCouponSerializer,
+)
 from organizations.serializers.misc_serializers import LocationSerializer
 from organizations.serializers.organization_serializers import (
-    OrganizationListSerializer,
-    OrganizationCreateSerializer,
-    OrganizationDetailedSerializer,
-    OrganizationUpdateSerializer,
-    OrgPhoneNumberSerializer,
-    OrgPhoneNumberEditSerializer,
-    OrgSocialNetworkContactSerializer,
-    OrgSocialNetworkEditSerializer,
-    OrganizationSerializer,
-    OrgMessageSerializer,
-    OrgMessageCreateSerializer,
-    SubscriptionsMessageSerializer,
-    OrganizationWithImageSerializer,
+    BlockedUserSerializer,
+    CouponBannersSerializer,
+    DeliverySettingsUpdateSerializer,
     InstagramIntegrationCreateUpdateSerializer,
     InstagramIntegrationLinkSerializer,
-    DeliverySettingsUpdateSerializer,
-    OrganizationTitleSerializer,
-    OrgVerificationsSerializer,
-    OrganizationComplaintSerializer,
+    OrganizationBannerCreateSerializer,
+    OrganizationBannerSerializer,
     OrganizationBlacklistSerializer,
-    BlockedUserSerializer,
+    OrganizationComplaintSerializer,
+    OrganizationCreateSerializer,
+    OrganizationDetailedSerializer,
     OrganizationGoogleMapsCreateSerializer,
-    OrganizationTwoGisCreateSerializer,
-    PaymentSystemSerializer,
-    OrgPaymentSystemConfirmationSerializer,
+    OrganizationListSerializer,
     OrganizationMapsListSerializer,
     OrganizationNameListSerializer,
-    RegionalTariffSerializer,
+    OrganizationSerializer,
+    OrganizationTitleSerializer,
+    OrganizationTwoGisCreateSerializer,
+    OrganizationUpdateSerializer,
+    OrganizationWithImageSerializer,
+    OrgMessageCreateSerializer,
+    OrgMessageSerializer,
+    OrgPaymentSystemConfirmationSerializer,
+    OrgPhoneNumberEditSerializer,
+    OrgPhoneNumberSerializer,
+    OrgSocialNetworkContactSerializer,
+    OrgSocialNetworkEditSerializer,
+    OrgVerificationsSerializer,
+    PaymentSystemSerializer,
     PurchaseOrgSubscriptionSerializer,
-    OrganizationBannerSerializer,
-    OrganizationBannerCreateSerializer,
+    RegionalTariffSerializer,
+    SubscriptionsMessageSerializer,
 )
 from organizations.serializers.query_param_serializers import (
-    PartnerQueryParamSerializer,
+    CountryQueryParamSerializer,
     OrganizationAndCategorySerializer,
     OrganizationCoutrySerializer,
     OrganizationMapsLocationSerializer,
-    OrganizationQueryParamSerializer,
     OrganizationNumSubsQueryParamSerializer,
-    CountryQueryParamSerializer,
+    PartnerQueryParamSerializer,
 )
 from organizations.serializers.service_serializers import (
-    ItemServiceSerializer,
     OrganizationServiceSerializer,
 )
-from organizations.serializers.coupon_serializers import (
-    CouponListSerializer,
-    ValidateCreateCouponSerializer,
-    CouponDetailSerializer,
-)
-
 from organizations.services.categories_services import OrganizationCategoryService
-from organizations.services.google_maps_services import GoogleMapsService, TwoGisService
+from organizations.services.coupon_services import CouponServiceClass
+from organizations.services.google_maps_services import TwoGisService
 from organizations.services.organization_services import (
     ItemService,
+    OrganizationBannerService,
+    OrganizationInstagramIntegrationService,
     OrganizationService,
+    OrgMessageService,
     OrgPhoneNumberService,
     OrgSocialNetworkContactService,
-    OrgMessageService,
-    OrganizationInstagramIntegrationService,
-    OrganizationBannerService,
 )
 from organizations.services.subscription_services import (
     SubscriptionService,
     UserOrgSubscriptionService,
 )
 from organizations.services.verifications_service import (
-    VerificationService,
     PaymentSystemConfirmationService,
+    VerificationService,
 )
-from organizations.services.coupon_services import CouponServiceClass
 from organizations.tasks import (
-    parse_instagram_to_shop_items,
     add_subscribers_to_organization,
+    parse_instagram_to_shop_items,
 )
 from shop.filters import FeedItemFilter, FeedItemOrderingFilter
 from shop.models import ShopItem
 from shop.serializers.item_serializers import ItemFeedSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
-from users.serializers import UserShortInfoSerializer, FollowerOrClientSerializer
+from users.serializers import FollowerOrClientSerializer, UserShortInfoSerializer
 from users.services import UserService
 
 User = get_user_model()
@@ -213,13 +210,18 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
             payment_system_name = "PaySy"
         elif payment_system_id == 3:
             payment_system_name = "Crypto Box"
+        elif payment_system_id == 6:
+            payment_system_name = "Maaly pay"
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
-        PaymentSystemConfirmationService.create(
-            organization, **serializer.validated_data
+        data = PaymentSystemConfirmationService.create(
+            organization,
+            **serializer.validated_data,  # type: ignore
         )
 
+        if payment_system_id == 6:
+            return Response(data=data, status=status.HTTP_201_CREATED)
         apofiz_email = settings.EMAIL_HOST_USER
         MailerService.send_payment_verification_email(
             email=apofiz_email,
@@ -1434,6 +1436,16 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
                     "is_active": organization.cryptocloud_activated,
                 }
             )
+        if MaalyPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).exists():
+            confirmed_payment_systems.append(
+                {
+                    "id": 6,
+                    "name": "MaalyPay в AED или USD",
+                    "is_active": organization.maaly_pay_activated,
+                }
+            )
 
         return confirmed_payment_systems
 
@@ -1469,6 +1481,16 @@ class PaymentSystemListView(generics.ListAPIView):
         if not organization.betapay_confirmed:
             available_payment_systems.append(
                 {"id": 4, "name": "Betapay в EUR", "is_available": False}
+            )
+
+        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": True}
+            )
+
+        elif not organization.maaly_pay_confirmed:
+            available_payment_systems.append(
+                {"id": 6, "name": "Maalypay в AED", "is_available": False}
             )
 
         return available_payment_systems
@@ -1585,6 +1607,67 @@ class OrganizationBannerListView(ListAPIView):
         return OrganizationService.get_organization_banners(organization=organization)
 
 
+class OrganizationCouponBannerListCreateAPIView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Получаем ID из URL
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        # Проверяем права
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def perform_create(self, serializer):
+        organization = self._get_organization()
+        # Сохраняем, явно передавая организацию
+        serializer.save(organization=organization)
+
+
+class OrganizationCouponBannerDetailView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Логика проверки прав на организацию остается такой же
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        # Получаем организацию и фильтруем баннеры только этой организации
+        # Это гарантирует, что нельзя удалить чужой баннер, зная его ID
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def get_object(self):
+        # Берем queryset, который уже отфильтрован по организации
+        queryset = self.get_queryset()
+
+        # Получаем ID самого баннера из URL.
+        # Предполагаем, что в urls.py параметр назван 'banner_id'
+        banner_id = self.kwargs.get("banner_id")
+
+        # Ищем объект или возвращаем 404
+        obj = get_object_or_404(queryset, id=banner_id)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
 class AddCustomBannerView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -1634,20 +1717,21 @@ class CouponListCreateAPIView(ListCreateAPIView):
         IsAuthenticated,
     ]
     service_class = CouponServiceClass
-    parser_classes = [MultiPartParser, FormParser]
 
-    def get_serializer_class(self):
+    def get_serializer_class(
+        self,
+    ) -> Union[CouponListSerializer, ValidateCreateCouponSerializer, None]:
         if self.request.method == "GET":
             return CouponListSerializer
         elif self.request.method == "POST":
             return ValidateCreateCouponSerializer
 
-    def get_queryset(self):
-        organization_id = self.request.query_params.get("organization_id")
+    def get_queryset(self, request):
+        organization_id = request.query_params.get("organization_id")
         return self.service_class.get(organization_id=organization_id)
 
     def get(self, request):
-        qs = self.get_queryset()
+        qs = self.get_queryset(request)
         serializer = self.get_serializer(qs, many=True)
         return Response(data=serializer.data)
 
@@ -1655,14 +1739,14 @@ class CouponListCreateAPIView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        self.service_class.create_coupon(user=self.request.user, **validated_data)
+        self.service_class.create_coupon(**validated_data)
 
         return Response(
             data={"message": "succsefully created"}, status=status.HTTP_201_CREATED
         )
 
 
-class CouponRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class CouponRetrieveUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = CouponDetailSerializer
     permission_classes = [
         IsAuthenticated,

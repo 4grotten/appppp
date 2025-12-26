@@ -2,96 +2,93 @@ import json
 import logging
 import random
 from datetime import datetime, time
-from decimal import Decimal
 from pathlib import Path
 from typing import Tuple, Union
-from organizations.utils import JSONQuerySet
 
-from django.contrib.gis.db.models.functions import Distance
-from django.contrib.gis.geos import Point, GEOSGeometry
-from django.contrib.gis.measure import D
-from django.db import transaction, IntegrityError
+from django.conf import settings
+from django.contrib.gis.geos import Point
+from django.db import IntegrityError, transaction
 from django.db.models import (
-    QuerySet,
-    Count,
-    Q,
-    F,
-    Value,
-    ExpressionWrapper,
     Case,
-    When,
-    IntegerField,
-    TimeField,
     CharField,
+    Count,
     Exists,
+    ExpressionWrapper,
+    F,
+    IntegerField,
     OuterRef,
+    Q,
+    QuerySet,
+    TimeField,
+    Value,
+    When,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 
 from common.exceptions import (
-    ObjectNotFoundException,
-    ValidationException,
+    BadRequestException,
     IntegrityException,
     NotAcceptableException,
+    ObjectNotFoundException,
     PermissionDeniedException,
-    BadRequestException,
+    ValidationException,
 )
-from common.models import Country, City, File, Currency
-from common.utils import zoom_to_radius, DecimalEncoder, DecimalDecoder
+from common.models import City, Country, Currency, File
+from common.utils import DecimalDecoder, DecimalEncoder
 from instagram_parsers.parsers.get_id import get_username_from_instagram_url
 from instagram_parsers.parsers.user_info import get_instagram_user_info
-from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import (
-    NOTIFICATION_MODE_SYSTEM,
     NEW_ORGANIZATION,
     NEW_ORGANIZATION_TITLE,
-    ORGANIZATION_MESSAGE_TYPE,
     NOTIFICATION_MODE_PERSONAL,
-    ORGANIZATION_OWN_TYPE,
-    ORGANIZATION_GAVE_TYPE,
+    NOTIFICATION_MODE_SYSTEM,
     ORGANIZATION_GAVE_DESCRIPTION,
+    ORGANIZATION_GAVE_TYPE,
     ORGANIZATION_MESSAGE_SENDER_TYPE,
+    ORGANIZATION_MESSAGE_TYPE,
+    ORGANIZATION_OWN_TYPE,
 )
 from notifications.tasks import (
+    send_notifications_organization_members,
     send_notifications_to_all_users,
     sent_notification,
-    send_notifications_organization_members,
 )
 from organizations.constants import (
+    ACTIVE,
     HOMEPAGE_BANNERS_COUNT,
+    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD,
     HOMEPAGE_MIN_PARTNERS_THRESHOLD,
     HOMEPAGE_PARTNERS_COUNT,
-    HOMEPAGE_MIN_ORDERED_PARTNERS_THRESHOLD,
     MAX_ORGANIZATIONS_PER_USER,
-    VERIFIED,
     TEST,
-    ACTIVE,
+    VERIFIED,
 )
 from organizations.models import (
-    Organization,
-    OrganizationCategory,
-    PhoneNumber,
-    SocialNetworkContact,
-    Message,
-    Subscription,
-    Membership,
-    Role,
-    Partnership,
-    InstagramIntegration,
-    Service,
-    OrganizationType,
-    UserAssistant,
-    OrganizationBanner,
+    CouponBanners,
     DiscountCard,
+    InstagramIntegration,
+    Membership,
+    Message,
+    Organization,
+    OrganizationBanner,
+    OrganizationCategory,
+    OrganizationType,
+    Partnership,
+    PhoneNumber,
+    Role,
+    Service,
+    SocialNetworkContact,
+    Subscription,
+    UserAssistant,
 )
 from organizations.services.membership_services import MembershipService
 from organizations.tasks import (
     delete_not_updated_posts_from_instagram,
     parse_instagram_to_shop_items,
 )
+from organizations.utils import JSONQuerySet
 from shop.models import ItemSubcategory, ShopItem
 from transactions.models import Transaction
 from users.models import User
@@ -363,6 +360,12 @@ class OrganizationService:
                 )
             )
             .order_by("sort_order", "-created_at")
+        )
+
+    @classmethod
+    def get_coupons_banners(cls, organization: Organization) -> QuerySet:
+        return CouponBanners.objects.filter(organization=organization).order_by(
+            "-created_at"
         )
 
     @classmethod
@@ -937,7 +940,6 @@ class OrganizationService:
         city: Union[City, None] = None,
         type: Union[OrganizationType, None] = None,
     ) -> QuerySet:
-
         queryset = (
             Organization.objects.filter(
                 is_active=True,
@@ -972,7 +974,6 @@ class OrganizationService:
         city: Union[City, None] = None,
         subcategory: Union[ItemSubcategory, None] = None,
     ) -> QuerySet:
-
         timestamp = request.META.get(
             "HTTP_DEVICE_TIMESTAMP", timezone.now().strftime("%Y-%m-%dT%H:%M:%S")
         )
@@ -993,9 +994,9 @@ class OrganizationService:
 
         if service.is_verified:
             base_filters &= Q(verification_status=VERIFIED)
-
-        if country.is_paid_subscription:
-            base_filters &= ~Q(org_subscription__isnull=False)
+        if country:
+            if country.is_paid_subscription:
+                base_filters &= ~Q(org_subscription__isnull=False)
 
         if service.is_wholesale:
             base_filters &= Q(is_wholesale=True)
@@ -1534,7 +1535,7 @@ class OrganizationJSONService:
         org_ids_set = set(org_ids)
         filtered = [org for org in data if org.get("id") in org_ids_set]
 
-        if Service.objects.get(is_discounts=True).is_without_discount:
+        if Service.objects.get(is_discounts=True).is_without_discount and not partner:
             filtered = [org for org in filtered if org.get("discounts")]
 
         random.shuffle(filtered)

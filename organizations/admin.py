@@ -1,74 +1,74 @@
 import json
 import os
+from datetime import datetime
 from pathlib import Path
-from django.urls import path
-from django.shortcuts import redirect
-from decimal import Decimal
+
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.gis.db import models
+from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import path
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.conf import settings
 from mapwidgets.widgets import GooglePointFieldWidget
-from django.forms.models import model_to_dict
-from datetime import datetime
-
-from organizations.tasks import create_invoice_pdf
-from organizations.constants import SUBSCRIPTION_STATUS
-from django.shortcuts import redirect, render, get_object_or_404
 
 from common.utils import DecimalDecoder, DecimalEncoder
+from organizations.constants import SUBSCRIPTION_STATUS
+from organizations.services.invoice_service import InvoiceDataService
+from organizations.tasks import create_invoice_pdf
 from shop.models import ItemSubcategory, ShopItem
+
 from .models import (
-    Organization,
-    OrganizationType,
-    OrganizationCategory,
-    PhoneNumber,
-    SocialNetworkContact,
-    Role,
-    Membership,
-    DiscountCard,
-    Subscription,
-    OrganizationClientFinancialStatus,
-    CardBackground,
-    Partnership,
-    Banner,
-    Message,
-    Attendance,
-    CashbackGroup,
-    CumulativeGroup,
-    InstagramIntegration,
-    CommonItemsGroup,
-    Hotlink,
-    OrganizationPromo,
-    PromoSubscriber,
-    PromoEditLog,
-    HotlinkCollectionItem,
-    HotlinkCollectionSubcategory,
-    HotlinkCollectionLink,
-    Service,
-    OrganizationVerificationUsers,
-    OrganizationBlacklist,
-    BlockedUser,
-    OrganizationPaymentSystemUsers,
-    Question,
-    Assistant,
     Answer,
     AnswerFile,
-    Plan,
-    UserAssistant,
+    Assistant,
+    Attendance,
+    Banner,
+    BlockedUser,
+    CardBackground,
+    CashbackGroup,
     Chat,
     ChatMessage,
-    RegionalTariff,
-    PaymentSystemMethod,
-    OrganizationBanner,
-    UserOrgSubscription,
+    CommonItemsGroup,
     Coupon,
+    CouponUsage,
+    CumulativeGroup,
+    DiscountCard,
+    Hotlink,
+    HotlinkCollectionItem,
+    HotlinkCollectionLink,
+    HotlinkCollectionSubcategory,
+    InstagramIntegration,
     Invoice,
+    MaalyPayOrganizationPaymentSystem,
+    Membership,
+    Message,
+    Organization,
+    OrganizationBanner,
+    OrganizationBlacklist,
+    OrganizationCategory,
+    OrganizationClientFinancialStatus,
     OrganizationInvoiceInfo,
+    OrganizationPaymentSystemUsers,
+    OrganizationPromo,
+    OrganizationType,
+    OrganizationVerificationUsers,
+    Partnership,
+    PaymentSystemMethod,
+    PhoneNumber,
+    Plan,
+    PromoEditLog,
+    PromoSubscriber,
+    Question,
+    RegionalTariff,
+    Role,
+    Service,
+    SocialNetworkContact,
+    Subscription,
+    UserAssistant,
+    UserOrgSubscription,
 )
-from .serializers.assistant_serializers import AnswerFileSerializer
-from organizations.services.invoice_service import InvoiceDataService
 
 
 @admin.register(CashbackGroup)
@@ -658,7 +658,11 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(CardBackground)
 class CardBackgroundAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["card_image"]
+    readonly_fields = ["card_image"]
+
+    def card_image(self, obj):
+        return mark_safe(f'<img src="{obj.image.medium.url}">')
 
 
 @admin.register(Partnership)
@@ -897,23 +901,24 @@ class UserOrgSubscriptionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("user", "organization", "tariff", "transaction")
 
 
-# @admin.register(Coupon)
-# class CouponAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "product",
-#         "discount",
-#         "percent",
-#         "image",
-#         "expire_date",
-#         "always_active",
-#         "is_active",
-#         "is_updating",
-#     )
-#     list_filter = ("is_active", "product", "percent")
-#     search_fields = [
-#         "product",
-#     ]
-#     list_select_related = ("product", "discount")
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = (
+        "product",
+        "percent",
+        "image",
+        "expire_date",
+        "always_active",
+        "is_active",
+        "is_updating",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("is_active", "product", "percent")
+    search_fields = [
+        "product",
+    ]
+    list_select_related = ("product",)
 
 
 @admin.register(Invoice)
@@ -993,6 +998,25 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         "city",
         "address",
         "email",
+    ]
+
+    list_select_related = [
+        "organization",
+    ]
+
+
+@admin.register(CouponUsage)
+class CouponUsageAdmin(admin.ModelAdmin):
+    list_display = ["user", "coupon", "is_used"]
+
+    list_select_related = ["user", "coupon", "transaction"]
+
+
+@admin.register(MaalyPayOrganizationPaymentSystem)
+class MaalyPayAdmin(admin.ModelAdmin):
+    list_display = ["organization", "merchant_id"]
+    autocomplete_fields = [
+        "organization",
     ]
 
     list_select_related = [

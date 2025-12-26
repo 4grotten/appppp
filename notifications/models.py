@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from fcm_django.models import FCMDevice
@@ -5,22 +6,21 @@ from firebase_admin.messaging import Message
 
 from common.models import TimestampModel
 from organizations.models import Organization
-from django.conf import settings
-
 from shop.models import ShopItem
+
 from .constants import (
-    get_titles_descriptions_from_type,
     NOTIFICATION_MODE_DISCOUNT,
-    NOTIFICATION_MODES,
-    NOTIFICATION_MODE_SYSTEM,
     NOTIFICATION_MODE_PARTNER,
-    NOTIFICATION_TYPES,
-    SYSTEM_TYPE,
     NOTIFICATION_MODE_PERSONAL,
     NOTIFICATION_MODE_PRODUCT,
     NOTIFICATION_MODE_RENTAL,
-    NOTIFICATION_MODE_TICKET,
     NOTIFICATION_MODE_RESUME,
+    NOTIFICATION_MODE_SYSTEM,
+    NOTIFICATION_MODE_TICKET,
+    NOTIFICATION_MODES,
+    NOTIFICATION_TYPES,
+    SYSTEM_TYPE,
+    get_titles_descriptions_from_type,
 )
 
 User = get_user_model()
@@ -103,25 +103,25 @@ class Notification(TimestampModel):
                 self.description_zh = self.description
         super().save(*args, **kwargs)
 
-        self.send_notification(
-            user=self.recipient,
-            type=self.type,
-            title=self.title,
-            title_ru=self.title_ru,
-            title_de=self.title_de,
-            title_tr=self.title_tr,
-            title_zh=self.title_zh,
-            description=self.description,
-            description_ru=self.description_ru,
-            description_de=self.description_de,
-            description_tr=self.description_tr,
-            description_zh=self.description_zh,
-            mode=self.mode,
-            notification_id=self.id,
-            organization=self.organization,
-            item=self.item,
-            extra_data=self.extra_data,
-        )
+        # self.send_notification(
+        #     user=self.recipient,
+        #     type=self.type,
+        #     title=self.title,
+        #     title_ru=self.title_ru,
+        #     title_de=self.title_de,
+        #     title_tr=self.title_tr,
+        #     title_zh=self.title_zh,
+        #     description=self.description,
+        #     description_ru=self.description_ru,
+        #     description_de=self.description_de,
+        #     description_tr=self.description_tr,
+        #     description_zh=self.description_zh,
+        #     mode=self.mode,
+        #     notification_id=self.id,
+        #     organization=self.organization,
+        #     item=self.item,
+        #     extra_data=self.extra_data,
+        # )
 
     @classmethod
     def send_notification(

@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import FCMDevice
 
-from common.exceptions import ObjectNotFoundException, IntegrityException
+from common.exceptions import IntegrityException, ObjectNotFoundException
+
 from .constants import NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION
 from .models import Notification, NotificationSetting, SettingsToToken
 
@@ -22,15 +23,25 @@ class NotificationService:
         try:
             return cls.model.objects.get(**filters)
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException(_('Notification not found'))
+            raise ObjectNotFoundException(_("Notification not found"))
 
     @classmethod
     def filter(cls, **filters):
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def create_notification(cls, recipient, mode, title, description, notification_type, organization=None, item=None,
-                            sender=None, extra_data=None):
+    def create_notification(
+        cls,
+        recipient,
+        mode,
+        title,
+        description,
+        notification_type,
+        organization=None,
+        item=None,
+        sender=None,
+        extra_data=None,
+    ):
         try:
             notification, created = cls.model.objects.get_or_create(
                 recipient=recipient,
@@ -41,32 +52,55 @@ class NotificationService:
                 organization=organization,
                 item=item,
                 type=notification_type,
-                extra_data=extra_data
+                extra_data=extra_data,
             )
-
+            print(f"[ LOG ] sending notification to {notification.recipient}")
+            Notification.send_notification(
+                user=notification.recipient,
+                title=notification.title,
+                title_ru=notification.title_ru,
+                title_de=notification.title_de,
+                title_tr=notification.title_tr,
+                title_zh=notification.title_zh,
+                description=notification.description,
+                description_ru=notification.description_ru,
+                description_de=notification.description_de,
+                description_tr=notification.description_tr,
+                description_zh=notification.description_zh,
+                notification_id=notification.id,
+                mode=notification.mode,
+                type=notification.type,
+                organization=notification.organization,
+                extra_data=notification.extra_data,
+                item=notification.item,
+            )
             return notification
         except Exception as e:
-            raise IntegrityException(_('Error while creating notification: {e}').format(e=str(e)))
+            raise IntegrityException(
+                _("Error while creating notification: {e}").format(e=str(e))
+            )
 
     @classmethod
     def get_own_notifications(cls, user: User):
-        return cls.filter(
-            recipient=user
-        ).exclude(
-            Q(type='new_organization') & Q(organization__isnull=True)
-        ).exclude(
-            type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            created_at__lt=timezone.now() - timedelta(hours=2)
+        return (
+            cls.filter(recipient=user)
+            .exclude(Q(type="new_organization") & Q(organization__isnull=True))
+            .exclude(
+                type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                created_at__lt=timezone.now() - timedelta(hours=2),
+            )
         )
 
     @classmethod
     def get_user_notifications_count(cls, user: User):
-        return cls.filter(
-            is_read=False, recipient=user
-        ).exclude(
-            type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-            created_at__lt=timezone.now() - timedelta(hours=2)
-        ).count()
+        return (
+            cls.filter(is_read=False, recipient=user)
+            .exclude(
+                type=NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                created_at__lt=timezone.now() - timedelta(hours=2),
+            )
+            .count()
+        )
 
     @classmethod
     def do_read_notifications(cls, user: User):
@@ -82,30 +116,34 @@ class NotificationSettingService:
             settings, _ = NotificationSetting.objects.get_or_create(user=user)
             return settings
         except IntegrityError:
-            raise IntegrityException(_('Settings not found'))
+            raise IntegrityException(_("Settings not found"))
 
     @classmethod
     def filter(cls, **filters):
         return cls.model.objects.filter(**filters)
 
     @classmethod
-    def update(cls, notification_setting: NotificationSetting, discount_notifications: bool = None,
-               private_notifications: bool = None, organization_notifications: bool = None,
-               product_notifications: bool = None):
-
-        if not (discount_notifications is None):
+    def update(
+        cls,
+        notification_setting: NotificationSetting,
+        discount_notifications: bool = None,
+        private_notifications: bool = None,
+        organization_notifications: bool = None,
+        product_notifications: bool = None,
+    ):
+        if discount_notifications is not None:
             notification_setting.discount_notifications = discount_notifications
-        if not (private_notifications is None):
+        if private_notifications is not None:
             notification_setting.private_notifications = private_notifications
-        if not (organization_notifications is None):
+        if organization_notifications is not None:
             notification_setting.organization_notifications = organization_notifications
-        if not (product_notifications is None):
+        if product_notifications is not None:
             notification_setting.product_notifications = product_notifications
         try:
             notification_setting.save()
             return notification_setting
         except Exception as e:
-            raise IntegrityException(_('Can not update: {e}').format(e=str(e)))
+            raise IntegrityException(_("Can not update: {e}").format(e=str(e)))
 
 
 class FCMDeviceSettingsService:
@@ -115,12 +153,15 @@ class FCMDeviceSettingsService:
     def create(cls, registration_id: str, language: str, user: User):
         try:
             fcm_device = FCMDevice.objects.get(registration_id=registration_id)
-            notification_settings, _ = NotificationSetting.objects.get_or_create(user=user)
+            notification_settings, _ = NotificationSetting.objects.get_or_create(
+                user=user
+            )
             notification_settings.fcm_device.add(fcm_device)
-            device_settings, _ = cls.model.objects.get_or_create(fcm_device=fcm_device,
-                                                                 notification_settings=notification_settings)
+            device_settings, _ = cls.model.objects.get_or_create(
+                fcm_device=fcm_device, notification_settings=notification_settings
+            )
             device_settings.language = language
             device_settings.save()
         except cls.model.DoesNotExist:
-            raise ObjectNotFoundException(_('Device not found'))
+            raise ObjectNotFoundException(_("Device not found"))
         return device_settings

@@ -1,32 +1,32 @@
-from decimal import Decimal
 import json
-from pathlib import Path
-from django.conf import settings
-from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import TimestampModel, Currency, Country, City
+from common.models import City, Country, Currency, TimestampModel
 from common.utils import upload_file_with_unique_name
 from organizations.constants import (
-    HOTLINK_TYPES,
-    HOTLINK_URL,
+    ACTIVE,
     HOTLINK_INTERNAL_LINK_DOMAINS,
     HOTLINK_PARTNERS,
-    VERIFICATIONS_STATUS,
+    HOTLINK_TYPES,
+    HOTLINK_URL,
     NOT_VERIFIED,
-    SWITCHER_TYPE,
-    WEB,
     SUBSCRIPTION_STATUS,
-    ACTIVE,
+    SWITCHER_TYPE,
+    VERIFICATIONS_STATUS,
+    WEB,
 )
 from organizations.managers import ActiveOrganizationManager, OrganizationManager
 from users.constants import GENDER_CHOICES
@@ -95,6 +95,15 @@ class OrganizationBanner(TimestampModel):
 
     def __str__(self):
         return f"{'Default' if self.is_default else 'Custom'} banner {self.pk}"
+
+
+class CouponBanners(TimestampModel):
+    image = models.ForeignKey(
+        "common.File", on_delete=models.CASCADE, null=True, blank=True
+    )
+    organization = models.ForeignKey(
+        "Organization", on_delete=models.CASCADE, null=True, blank=True
+    )
 
 
 class Organization(TimestampModel):
@@ -202,6 +211,9 @@ class Organization(TimestampModel):
     cryptocloud_activated = models.BooleanField(
         default=False, help_text=_("Activated in this organization")
     )
+    maaly_pay_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
 
     payment_systems_activated = models.BooleanField(
         default=False, help_text=_("All payment systems are activated")
@@ -223,6 +235,9 @@ class Organization(TimestampModel):
         default=False, help_text=_("Available in this organization")
     )
     cryptocloud_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    maaly_pay_confirmed = models.BooleanField(
         default=False, help_text=_("Available in this organization")
     )
 
@@ -424,6 +439,16 @@ class OrganizationPaymentSystemUsers(TimestampModel):
     class Meta:
         verbose_name = _("Users data for payment settings of organization")
         verbose_name_plural = _("Users data for payment settings of organization")
+
+
+class MaalyPayOrganizationPaymentSystem(TimestampModel):
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="maaly_pay_info",
+    )
+    api_key = models.CharField(max_length=420)
+    merchant_id = models.CharField(max_length=420)
 
 
 class PhoneNumber(TimestampModel):
@@ -1302,18 +1327,11 @@ class Coupon(TimestampModel):
         null=True,
         related_name="coupon",
     )
-    discount = models.ForeignKey(
-        DiscountCard,
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        related_name="coupon",
-    )
     percent = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True
     )
     description = models.CharField(max_length=300, null=True, blank=True)
-    image = models.ImageField(upload_to="coupons/")
+    image = models.URLField()
     expire_date = models.DateTimeField(null=True, blank=True)
     always_active = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -1321,6 +1339,12 @@ class Coupon(TimestampModel):
     coupon_type = models.CharField(
         max_length=20, choices=COUPON_TYPE_CHOICES, default="product"
     )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
 
 
 class CouponUsage(TimestampModel):
@@ -1329,6 +1353,13 @@ class CouponUsage(TimestampModel):
     )
     coupon = models.ForeignKey(
         Coupon, on_delete=models.CASCADE, related_name="coupon_usage"
+    )
+    transaction = models.ForeignKey(
+        "transactions.Transaction",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="coupon_usage",
     )
     is_used = models.BooleanField(default=True)
 

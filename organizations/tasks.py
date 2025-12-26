@@ -1,40 +1,43 @@
-import time, tracemalloc
+import json
+import logging
 import random
+import time
+from datetime import datetime, timedelta
 from decimal import Decimal
-from organizations.utils import clean_original_amount
-from datetime import timedelta, datetime
-from zoneinfo import ZoneInfo
 from itertools import groupby
+from zoneinfo import ZoneInfo
 
 import requests
 from celery import shared_task
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Subquery, Q
-from django.utils.timezone import now
+from django.db.models import Subquery
+from django.template.loader import render_to_string
 from django.utils.dateparse import parse_datetime
+from django.utils.timezone import now
+from weasyprint import HTML
+
+from common.services.slack import bot
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
 from notifications.constants import NEW_COMMENT_TYPE
 from notifications.models import Notification
 from organizations.constants import INSTAGRAM_POSTS_TO_PARSE
 from organizations.models import (
-    InstagramIntegration,
-    Organization,
-    UserOrgSubscription,
     Assistant,
     Coupon,
+    InstagramIntegration,
+    Invoice,
+    Organization,
     OrganizationInvoiceInfo,
     RegionalTariff,
+    UserOrgSubscription,
 )
 from organizations.services.invoice_service import OrganizationInvoiceService
-from shop.models import ShopItem, ItemInstagramData
-from django.template.loader import render_to_string
-from django.core.files.base import ContentFile
-from weasyprint import HTML
+from organizations.utils import clean_original_amount
+from shop.models import ItemInstagramData, ShopItem
 from users.models import User
-from organizations.models import Invoice
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -225,8 +228,8 @@ def update_login_device_settings():
 
 @shared_task
 def subscribe_user_to_organization(organization_id, user_id):
-    from organizations.services.subscription_services import SubscriptionService
     from organizations.services.organization_services import OrganizationService
+    from organizations.services.subscription_services import SubscriptionService
     from users.models import User
 
     organization = OrganizationService.get(pk=organization_id)
@@ -240,9 +243,6 @@ def subscribe_user_to_organization(organization_id, user_id):
 
 @shared_task
 def add_subscribers_to_organization(organization_id, num_members):
-    from organizations.services.subscription_services import SubscriptionService
-    from organizations.services.organization_services import OrganizationService
-
     users = (
         User.objects.filter(
             is_active=True, full_name__isnull=False, avatar__isnull=False
@@ -303,48 +303,56 @@ def process_comment_with_assistant(
     )
 
 
-# @shared_task
-# def expire_coupons():
-#     coupons = Coupon.objects.filter(is_active=True, is_updating=False).select_related(
-#         "product__organization__city"
-#     )
+@shared_task
+def expire_coupons():
+    coupons = Coupon.objects.filter(is_active=True, is_updating=False).select_related(
+        "product__organization__city"
+    )
 
-#     coupons = sorted(coupons, key=lambda c: c.product.organization.city.timezone)
-#     to_expire_ids = []
+    coupons = sorted(coupons, key=lambda c: c.product.organization.city.timezone)
+    to_expire_ids = []
 
-#     for tz_name, group in groupby(
-#         coupons, key=lambda c: c.product.organization.city.timezone
-#     ):
-#         tz = ZoneInfo(tz_name)
-#         now_local = datetime.now(tz)
-#         expired_ids = [c.id for c in group if c.expire_date.astimezone(tz) < now_local]
+    for tz_name, group in groupby(
+        coupons, key=lambda c: c.product.organization.city.timezone
+    ):
+        tz = ZoneInfo(tz_name)
+        now_local = datetime.now(tz)
+        expired_ids = [c.id for c in group if c.expire_date.astimezone(tz) < now_local]
 
-#         to_expire_ids.extend(expired_ids)
+        to_expire_ids.extend(expired_ids)
 
-#     if to_expire_ids:
-#         Coupon.objects.filter(id__in=to_expire_ids).update(is_active=False)
+    if to_expire_ids:
+        Coupon.objects.filter(id__in=to_expire_ids).update(is_active=False)
 
 
 @shared_task
 def update_posts():
-    organizations_ids = Organization.objects.filter(update_posts=True).values_list(
-        "id", flat=True
+    organizations_ids = Organization.objects.filter(update_posts=True).values(
+        "id", "title"
     )
     total_updated = 0
+    updated_posts = dict()
 
     for org_id in organizations_ids:
+        items = ShopItem.objects.filter(organization__id=org_id.get("id")).order_by(
+            "?"
+        )[:10]
 
-        items_ids = (
-            ShopItem.objects.filter(organization__id=org_id)
-            .order_by("?")
-            .values_list("id", flat=True)[:10]
-        )
-
-        if not items_ids:
+        if not items:
             continue
+        count = 0
+        # items_ids = [item.pk for item in items]
+        for item in items:
+            item.is_updated = True
+            item.updated_at = datetime.now()
+            time.sleep(1)
+            count += 1
 
-        count = ShopItem.objects.filter(id__in=items_ids).update(updated_at=now())
+        updated_posts[org_id.get("title", None)] = [item.name for item in items]
         total_updated += count
+
+    msg = f"updated posts with organizations\n\n```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"
+    bot(msg)
 
     logger.info(f"Total_updated {total_updated} random shop items")
 
@@ -384,3 +392,184 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
+
+
+@shared_task(bind=True, max_retries=30, default_retry_delay=60)
+def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
+    # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
+    # так как services и models часто ссылаются на tasks.
+    import logging
+
+    import requests
+    from django.db import transaction
+    from django.db.models import Q
+
+    from notifications.constants import (
+        ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+        ACCEPT_ORDER_PAYMENT_TYPE,
+        ACCEPT_ORDER_TYPE,
+        ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
+        NOTIFICATION_MODE_PRODUCT,
+        NOTIFICATION_MODE_SYSTEM,
+        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+    )
+    from notifications.models import Notification
+    from notifications.tasks import (
+        send_delivery_notitication_to_organization_or_client,
+        sent_notification,
+    )
+    from organizations.models import Organization
+    from transactions.models import Transaction
+
+    logger = logging.getLogger(__name__)
+
+    url = f"https://maalyportal.com/api/omerch/check-online-transaction-merch/{merchant_tx_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response_data = response.json()
+        status_text = response_data.get("status")
+    except Exception as e:
+        logger.error(f"MaalyPay connection error: {e}")
+        # Если ошибка сети, пробуем снова
+        raise self.retry()
+
+    # Список статусов, означающих, что платеж еще в процессе
+    # Если статус такой - перезапускаем задачу через 10 секунд
+    pending_statuses = ["not initiated by customer yet"]
+
+    if status_text in pending_statuses:
+        raise self.retry()
+
+    # Проверяем успешный статус
+    # (Обычно это "Success", "Paid" или "Approved", уточните точное слово в доке MaalyPay)
+    if status_text:
+        try:
+            with transaction.atomic():
+                # Блокируем строку транзакции, чтобы избежать двойной обработки
+                old_transaction = Transaction.objects.select_for_update().get(
+                    id=transaction_id
+                )
+
+                # Если уже обработана - выходим
+                if old_transaction.is_processed:
+                    return "Already processed"
+
+                # === ОСНОВНАЯ ЛОГИКА (без Balance) ===
+
+                # Мы НЕ создаем Balance и НЕ пополняем его, так как деньги у мерчанта.
+                # Просто фиксируем факт оплаты в системе.
+
+                old_transaction.payment_status = Transaction.ACCEPTED
+                old_transaction.is_processed = True
+                # payment_info оставляем пустым или ставим заглушку, т.к. баланс не участвует
+                old_transaction.payment_info = None
+                old_transaction.save()
+
+                # Удаляем уведомления о необходимости подтвердить заказ (т.к. он оплачен и принят)
+                if old_transaction.type == Transaction.ONLINE:
+                    transaction.on_commit(
+                        lambda: Notification.objects.filter(
+                            Q(extra_data__transaction_id=old_transaction.id)
+                            & (
+                                Q(type=ACCEPT_ORDER_TYPE)
+                                | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE)
+                            )
+                        ).delete()
+                    )
+
+                # === УВЕДОМЛЕНИЯ (Как в accept_freedompay...) ===
+
+                discount_percent = old_transaction.discount_percent
+
+                # 1. Уведомление Продавцу (Processed By / Recipient)
+                sent_notification.delay(
+                    recipient_id=old_transaction.processed_by_id,
+                    sender_id=old_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(
+                            old_transaction.final_amount
+                        ),  # decimal в str для json
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                # 2. Уведомление Клиенту (Client)
+                sent_notification.delay(
+                    recipient_id=old_transaction.client_id,
+                    sender_id=old_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(old_transaction.final_amount),
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                # 3. Логика Доставки
+                organization = old_transaction.organization
+                has_delivery_service = (
+                    Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
+                    .filter(is_delivery_service=True, country=organization.country)
+                    .exists()
+                )
+
+                if (
+                    has_delivery_service
+                    and hasattr(old_transaction, "cart")
+                    and old_transaction.cart
+                ):
+                    try:
+                        # Уведомляем владельца организации
+                        send_delivery_notitication_to_organization_or_client(
+                            old_transaction.cart.organization.owner,
+                            old_transaction.cart.id,
+                            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                            mode=NOTIFICATION_MODE_SYSTEM,
+                        )
+
+                        # Уведомляем сотрудников с правами
+                        organization_members = list(
+                            old_transaction.cart.organization.memberships.filter(
+                                Q(role__can_edit_organization=True)
+                                | Q(role__can_see_stats=True)
+                                | Q(role__can_deliver=True)
+                            )
+                        )
+                        for member in organization_members:
+                            send_delivery_notitication_to_organization_or_client(
+                                member.user,
+                                old_transaction.cart.id,
+                                NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                                mode=NOTIFICATION_MODE_SYSTEM,
+                            )
+                    except Exception as e:
+                        logger.exception(f"Error sending delivery notifications: {e}")
+
+            return f"Transaction {transaction_id} completed successfully via MaalyPay"
+
+        except Transaction.DoesNotExist:
+            logger.error(f"Transaction {transaction_id} not found")
+            return "Transaction not found"
+        except Exception as e:
+            logger.exception(f"Error processing MaalyPay transaction db update: {e}")
+            # Если упала база данных, пробуем еще раз
+            raise self.retry()
+
+    else:
+        logger.info(
+            f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
+        )
+        raise self.retry()
+        return f"Transaction failed: {status_text}"
+
+    return f"Unknown status: {status_text}"

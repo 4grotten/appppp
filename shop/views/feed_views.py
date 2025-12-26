@@ -1,3 +1,4 @@
+
 from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,60 +8,91 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticate
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.constants import HOTLINK_COLLECTION, TEST
-from organizations.models import OrganizationBlacklist, Organization
-from organizations.serializers.query_param_serializers import OrganizationQueryParamSerializer
+from organizations.models import Organization, OrganizationBlacklist
+from organizations.serializers.query_param_serializers import (
+    OrganizationQueryParamSerializer,
+)
 from organizations.services.hotlink_services import HotlinkService
-from shop.filters import FeedItemFilter, FeedItemOrderingFilter, FeedItemFilterWithoutOrganization
+
+from shop.filters import (
+    FeedItemFilter,
+    FeedItemFilterWithoutOrganization,
+    FeedItemOrderingFilter,
+)
+
+from shop.serializers.item_serializers import (
+    ItemFeedSerializer,
+    RentalTicketListSerializer,
+    StartDateTimeSerializer,
+    SubscriptionItemSerializer,
+)
+
 from shop.models import ShopItem, PinnedShopItem
-from shop.serializers.item_serializers import ItemFeedSerializer, StartDateTimeSerializer, SubscriptionItemSerializer, \
-    RentalTicketListSerializer
 from shop.services.item_services import ShopItemService
 
 
 class FeedView(ListAPIView):
     serializer_class = ItemFeedSerializer
-    filter_backends = (DjangoFilterBackend, FeedItemOrderingFilter, SearchFilter,)
-    filterset_fields = ('subcategory', 'subcategory__category', 'organization__country', 'organization__city',)
-    ordering_fields = ['updated_at', 'price']
-    search_fields = ('article', 'id', 'name', 'description',)
+    filter_backends = (
+        DjangoFilterBackend,
+        FeedItemOrderingFilter,
+        SearchFilter,
+    )
+    filterset_fields = (
+        "subcategory",
+        "subcategory__category",
+        "organization__country",
+        "organization__city",
+    )
+    ordering_fields = ["updated_at", "price"]
+    search_fields = (
+        "article",
+        "id",
+        "name",
+        "description",
+    )
     filter_class = FeedItemFilter
 
     def get_queryset(self):
-        search = self.request.GET.get('search', None)
+        search = self.request.GET.get("search", None)
         user = self.request.user
 
-        base_exclude_filter = Q(
-            organization__is_banned=True
-        ) | Q(
-            organization__is_deleted=True
-        ) | Q(
-            organization__is_private=True
-        ) | Q(
-            organization__subscription_status=TEST
+        base_exclude_filter = (
+            Q(organization__is_banned=True)
+            | Q(organization__is_deleted=True)
+            | Q(organization__is_private=True)
+            | Q(organization__subscription_status=TEST)
         )
 
         if user.is_authenticated:
             organizations = Organization.objects.all()
-            blacklist = OrganizationBlacklist.objects.filter(
-                user=self.request.user,
-                organization__in=organizations
-            ).values_list('organization_id', flat=True).distinct()
+            blacklist = (
+                OrganizationBlacklist.objects.filter(
+                    user=self.request.user, organization__in=organizations
+                )
+                .values_list("organization_id", flat=True)
+                .distinct()
+            )
 
             base_exclude_filter |= Q(organization_id__in=blacklist)
 
         qs = ShopItem.objects.exclude(base_exclude_filter)
 
-        if search and search[0] == '#':
+        if search and search[0] == "#":
             qs = qs.filter(is_published=True)
         elif search:
             qs = qs.filter(is_published=True)
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
         else:
             qs = qs.filter(is_published=True)
 
-        category_filter = self.request.GET.get('category', None)
+
+        category_filter = self.request.GET.get("category", None)
         if not category_filter:
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
             qs = qs.filter(price_filter)
@@ -80,14 +112,16 @@ class FeedView(ListAPIView):
     def list(self, request, *args, **kwargs):
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Validation Error'))
-        self.serializer_class(context={'request': self.request})
+            raise NotAcceptableException(_("Validation Error"))
+        self.serializer_class(context={"request": self.request})
         response = super().list(request, args, kwargs)
-        start_time = serializer.validated_data['start_time']
+        start_time = serializer.validated_data["start_time"]
         if start_time:
-            response.data['has_new'] = ShopItemService.feed_has_new_items(timestamp=start_time)
+            response.data["has_new"] = ShopItemService.feed_has_new_items(
+                timestamp=start_time
+            )
         else:
-            response.data['has_new'] = False
+            response.data["has_new"] = False
         return response
 
 
@@ -99,83 +133,107 @@ class OrganizationItemListView(FeedView):
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Valid organization is required in query parameters'))
-        organization = serializer.validated_data['organization']
+            raise NotAcceptableException(
+                _("Valid organization is required in query parameters")
+            )
+        organization = serializer.validated_data["organization"]
         if organization.is_deleted:
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
-            organization=serializer.validated_data['organization'], user=self.request.user
-        ).order_by('-updated_at')
-        search = self.request.GET.get('search', None)
+            organization=serializer.validated_data["organization"],
+            user=self.request.user,
+            search=None,
+            subcategory_id=None,
+        ).order_by("-updated_at")
+        search = self.request.GET.get("search", None)
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
-        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
+        return ShopItemService.annotate_likes_and_bookmarks(
+            queryset=qs, user=self.request.user
+        )
 
 
 class OrganizationRentalListView(ListAPIView):
     serializer_class = RentalTicketListSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ['name']
+    search_fields = ["name"]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Valid organization is required in query parameters'))
-        organization = serializer.validated_data['organization']
+            raise NotAcceptableException(
+                _("Valid organization is required in query parameters")
+            )
+        organization = serializer.validated_data["organization"]
         if organization.is_deleted:
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_rentals_queryset_for_user(
-            organization=serializer.validated_data['organization'], user=self.request.user
-        ).order_by('-updated_at')
-        search = self.request.GET.get('search', None)
+            organization=serializer.validated_data["organization"],
+            user=self.request.user,
+        ).order_by("-updated_at")
+        search = self.request.GET.get("search", None)
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
         return qs
 
 
 class OrganizationTicketListView(ListAPIView):
     serializer_class = RentalTicketListSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ['name']
+    search_fields = ["name"]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Valid organization is required in query parameters'))
-        organization = serializer.validated_data['organization']
+            raise NotAcceptableException(
+                _("Valid organization is required in query parameters")
+            )
+        organization = serializer.validated_data["organization"]
         if organization.is_deleted:
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_tickets_queryset_for_user(
-            organization=serializer.validated_data['organization'], user=self.request.user
-        ).order_by('-updated_at')
-        search = self.request.GET.get('search', None)
+            organization=serializer.validated_data["organization"],
+            user=self.request.user,
+        ).order_by("-updated_at")
+        search = self.request.GET.get("search", None)
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
         return qs
 
 
 class OrganizationOwnTicketListView(ListAPIView):
     serializer_class = RentalTicketListSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ['name']
+    search_fields = ["name"]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Valid organization is required in query parameters'))
-        organization = serializer.validated_data['organization']
+            raise NotAcceptableException(
+                _("Valid organization is required in query parameters")
+            )
+        organization = serializer.validated_data["organization"]
         if organization.is_deleted:
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_own_tickets_queryset_for_user(
-            organization=serializer.validated_data['organization'], user=self.request.user
-        ).order_by('-updated_at')
-        search = self.request.GET.get('search', None)
+            organization=serializer.validated_data["organization"],
+            user=self.request.user,
+        ).order_by("-updated_at")
+        search = self.request.GET.get("search", None)
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
         return qs
 
 
@@ -185,23 +243,30 @@ class SubscriptionItemListView(FeedView):
     # ordering = ['-updated_at', ]
 
     def get_queryset(self):
-        qs = ShopItemService.get_items_of_subscribed_organizations(user=self.request.user).order_by('-updated_at')
-        search = self.request.GET.get('search', None)
+        qs = ShopItemService.get_items_of_subscribed_organizations(
+            user=self.request.user
+        ).order_by("-updated_at")
+        search = self.request.GET.get("search", None)
         if search:
-            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
-        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+            qs = ShopItemService.get_ordering_search_result(
+                queryset=qs, search_word=search
+            )
+        return ShopItemService.annotate_likes_and_bookmarks(
+            queryset=qs, user=self.request.user
+        )
 
     def list(self, request, *args, **kwargs):
         serializer = StartDateTimeSerializer(data=request.GET)
         if not serializer.is_valid():
-            raise NotAcceptableException(_('Validation Error'))
+            raise NotAcceptableException(_("Validation Error"))
         response = super().list(request, args, kwargs)
-        start_time = serializer.validated_data['start_time']
+        start_time = serializer.validated_data["start_time"]
         if start_time:
-            response.data['has_new'] = ShopItemService.subscription_has_new_items(timestamp=start_time,
-                                                                                  user=request.user)
+            response.data["has_new"] = ShopItemService.subscription_has_new_items(
+                timestamp=start_time, user=request.user
+            )
         else:
-            response.data['has_new'] = False
+            response.data["has_new"] = False
         return response
 
 
@@ -209,18 +274,20 @@ class HotlinkCollectionItemListView(ListAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = SubscriptionItemSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('subcategory',)
+    filterset_fields = ("subcategory",)
 
     def list(self, request, *args, **kwargs):
-        hotlink = HotlinkService.get(id=self.kwargs['pk'], link_type=HOTLINK_COLLECTION)
+        hotlink = HotlinkService.get(id=self.kwargs["pk"], link_type=HOTLINK_COLLECTION)
         qs = ShopItemService.get_items_in_hotlink_collection(hotlink=hotlink)
-        queryset = ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+        queryset = ShopItemService.annotate_likes_and_bookmarks(
+            queryset=qs, user=self.request.user
+        )
         queryset = self.filter_queryset(queryset)
 
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         response = self.get_paginated_response(serializer.data)
-        response.data['collection_title'] = hotlink.content
+        response.data["collection_title"] = hotlink.content
 
         return response
 

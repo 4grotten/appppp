@@ -398,7 +398,6 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
 def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
     # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
     # так как services и models часто ссылаются на tasks.
-    import logging
 
     import requests
     from django.db import transaction
@@ -421,7 +420,7 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
     from organizations.models import Organization
     from transactions.models import Transaction
 
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
     url = f"https://maalyportal.com/api/omerch/check-online-transaction-merch/{merchant_tx_id}"
     headers = {"Authorization": f"Bearer {api_key}"}

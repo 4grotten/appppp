@@ -16,7 +16,9 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    product = ProductCouponSerializer(required=False)
+    discount = DiscountCouponSerializer()
+    product = ProductCouponSerializer()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Coupon
@@ -29,7 +31,17 @@ class CouponListSerializer(serializers.ModelSerializer):
             "is_updating",
             "image",
             "coupon_type",
+            "currency",
         ]
+
+        def get_currency(self, obj):
+            if obj.product and obj.product.currency:
+                return {
+                    "id": obj.product.currency.id,
+                    "name": getattr(obj.product.currency, 'name', str(obj.product.currency)),
+                    "code": getattr(obj.product.currency, 'code', None)
+                }
+            return None
 
 
 class ValidateCreateCouponSerializer(serializers.ModelSerializer):

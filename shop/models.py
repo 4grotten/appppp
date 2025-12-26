@@ -485,6 +485,7 @@ class CommentComplaint(TimestampModel):
         ]
 
 
+
 class PinnedShopItem(TimestampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pinned_shop_items')
     item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='pinned_users')
@@ -498,8 +499,3 @@ class PinnedShopItem(TimestampModel):
         # constraints = (
         #     models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_pin'),
         # )
-
-
-
-
-

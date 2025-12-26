@@ -1,12 +1,13 @@
-from django.db.models import Q
+
+from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from django.db.models import OuterRef, Exists, Value, BooleanField
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.constants import HOTLINK_COLLECTION, TEST
@@ -15,18 +16,21 @@ from organizations.serializers.query_param_serializers import (
     OrganizationQueryParamSerializer,
 )
 from organizations.services.hotlink_services import HotlinkService
+
 from shop.filters import (
     FeedItemFilter,
     FeedItemFilterWithoutOrganization,
     FeedItemOrderingFilter,
 )
-from shop.models import ShopItem, PinnedShopItem
+
 from shop.serializers.item_serializers import (
     ItemFeedSerializer,
     RentalTicketListSerializer,
     StartDateTimeSerializer,
     SubscriptionItemSerializer,
 )
+
+from shop.models import ShopItem, PinnedShopItem
 from shop.services.item_services import ShopItemService
 
 
@@ -87,6 +91,7 @@ class FeedView(ListAPIView):
         else:
             qs = qs.filter(is_published=True)
 
+
         category_filter = self.request.GET.get("category", None)
         if not category_filter:
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
@@ -96,15 +101,13 @@ class FeedView(ListAPIView):
             pinned_subquery = PinnedShopItem.objects.filter(
                 user=user, shop_item=OuterRef("pk")
             )
-            qs = qs.annotate(pinned=Exists(pinned_subquery))
+            qs = qs.annotate(is_pinned=Exists(pinned_subquery))
         else:
-            qs = qs.annotate(pinned=Value(False, output_field=BooleanField()))
+            qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
-        qs = qs.order_by("-pinned", "-updated_at")
+        qs = qs.order_by("-is_pinned", "-updated_at")
 
-        return ShopItemService.annotate_likes_and_bookmarks(
-            queryset=qs, user=self.request.user
-        )
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):
         serializer = StartDateTimeSerializer(data=request.GET)
@@ -302,7 +305,7 @@ class PinShopItemView(APIView):
             raise ObjectNotFoundException("Shop item not found")
 
         pinned, created = PinnedShopItem.objects.get_or_create(
-            user=user, shop_item=shop_item
+            user=user, item=shop_item
         )
 
         if not created:
@@ -326,7 +329,7 @@ class PinShopItemView(APIView):
             raise ObjectNotFoundException("Shop item not found")
 
         deleted_count, _ = PinnedShopItem.objects.filter(
-            user=user, shop_item=shop_item
+            user=user, item=shop_item
         ).delete()
 
         if deleted_count == 0:
@@ -338,3 +341,4 @@ class PinShopItemView(APIView):
         return Response(
             {"message": f"Successfully unpinned '{shop_item.name}'"}, status=200
         )
+

@@ -1232,6 +1232,7 @@ class ItemFeedSerializer(ItemListSerializer):
     ticket_period = TicketPeriodSerializer()
     citizenship = CountryResumeSerializer(many=True)
     education = EducationSerializer(many=True)
+    is_pinned = serializers.BooleanField(read_only=True)
     current_locations = serializers.SerializerMethodField()
     preferred_locations = serializers.SerializerMethodField()
     own_resume = serializers.SerializerMethodField()

@@ -34,7 +34,6 @@ from notifications.constants import (
     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
 )
 from notifications.models import Notification
-from organizations.models import MaalyPayOrganizationPaymentSystem
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer,
@@ -49,6 +48,7 @@ from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import (
     OrganizationClientFinancialStatusService,
 )
+from organizations.services.maalypay_service import MaalyPayService
 from organizations.services.organization_services import OrganizationService
 from organizations.tasks import fetch_maalypay_status
 from project.redis_client import redis_client
@@ -2170,46 +2170,65 @@ class InitPaymentView(GenericAPIView):
             transaction = TransactionService.get(
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
+
             pg_description, purchase_type = (
                 TransactionService.get_pg_description_and_purchase_type(
                     transaction=transaction
                 )
             )
-            payment_data = MaalyPayOrganizationPaymentSystem.objects.filter(
-                organization=transaction.organization
-            ).first()
-            if not payment_data:
-                raise NotImplementedError()
-            suffix = "api/v1/"
-            if base_url.endswith(suffix):
-                base_url = base_url[: -len(suffix)]
-            url = "https://maalyportal.com/api/omerch/create-payment-request"
-            payload = {
-                "merchantId": int(payment_data.merchant_id),
-                "fiatAmount": str(float(transaction.final_amount)),
-                "currency": transaction.currency.code,
-                "description": pg_description + " " + purchase_type,
-                "merchantTxId": f"test-transaction-{transaction.pk}",
-                "merchantCallback": base_url + "payment-success/",
-                "customerEmail": transaction.client.email
-                if transaction.client.email
-                else "unknwown@gmail.com",
-            }
-            headers = {
-                "Authorization": f"Bearer {payment_data.api_key}",
-                "Content-Type": "application/json",
-            }
 
-            response = requests.post(url=url, json=payload, headers=headers)
-            redirect_url = response.json().get("CheckoutUrl")
-            if redirect_url:
-                fetch_maalypay_status.delay(
-                    merchant_tx_id=payload["merchantTxId"],
-                    api_key=payment_data.api_key,
-                    transaction_id=transaction.pk,
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            return Response(data={"redirect_url": redirect_url})
+            payment_config = MaalyPayService.get_config(transaction.organization)
+
+            if not payment_config:
+                return Response(
+                    data={"error": "MaalyPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            callback_base = base_url
+            if callback_base.endswith("api/v1/"):
+                callback_base = callback_base[:-7]
+
+            merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
+            callback_url = (
+                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
+            )
+
+            checkout_url = MaalyPayService.create_payment(
+                api_key=payment_config.api_key,
+                merchant_id=int(payment_config.merchant_id),
+                amount=str(transaction.final_amount),
+                currency=transaction.currency.code,
+                description=f"{pg_description} {purchase_type}".strip(),
+                merchant_tx_id=merchant_tx_id,
+                callback_url=callback_url,
+                customer_email=transaction.client.email or "noemail@placeholder.local",
+            )
+
+            if not checkout_url:
+                return Response(
+                    data={
+                        "error": "Failed to create MaalyPay payment. Please try again."
+                    },
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            fetch_maalypay_status.delay(
+                merchant_tx_id=merchant_tx_id,
+                api_key=payment_config.api_key,
+                transaction_id=transaction.pk,
+            )
+
+            return Response(
+                data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
 
         else:
             return Response(
@@ -2228,6 +2247,7 @@ class NewInitPaymentView(GenericAPIView):
     3 - Libersave
     4 - Betapay
     5 - CryptoCloud
+    6 - MaalyPay
     """
 
     def post(self, request, *args, **kwargs):
@@ -2529,6 +2549,70 @@ class NewInitPaymentView(GenericAPIView):
                     data={"error": "Something went wrong"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        elif payment_method.code == "maalypay":
+            from organizations.services.maalypay_service import MaalyPayService
+
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+
+            pg_description, purchase_type = (
+                TransactionService.get_pg_description_and_purchase_type(
+                    transaction=transaction
+                )
+            )
+
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment_config = MaalyPayService.get_config(transaction.organization)
+
+            if not payment_config:
+                return Response(
+                    data={"error": "MaalyPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            callback_base = base_url
+            if callback_base.endswith("api/v1/"):
+                callback_base = callback_base[:-7]
+
+            merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
+            callback_url = (
+                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
+            )
+
+            checkout_url = MaalyPayService.create_payment(
+                api_key=payment_config.api_key,
+                merchant_id=int(payment_config.merchant_id),
+                amount=str(transaction.final_amount),
+                currency=transaction.currency.code,
+                description=f"{pg_description} {purchase_type}".strip(),
+                merchant_tx_id=merchant_tx_id,
+                callback_url=callback_url,
+                customer_email=transaction.client.email or "noemail@placeholder.local",
+            )
+
+            if not checkout_url:
+                return Response(
+                    data={"error": "Failed to create MaalyPay payment"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            fetch_maalypay_status.delay(
+                merchant_tx_id=merchant_tx_id,
+                api_key=payment_config.api_key,
+                transaction_id=transaction.pk,
+            )
+
+            return Response(
+                data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
                 data={"error": "Payment System Not Found"},
@@ -2819,11 +2903,54 @@ class BetaPayPaymentTestView(APIView):
         return Response(response_json)
 
 
-class MaalyPayPaymentTestView(APIView):
+class MaalyPayResultView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        from organizations.services.maalypay_service import MaalyPayService
+
+        tx_id = request.GET.get("tx")
+
+        if not tx_id:
+            return Response(
+                {"error": "Missing transaction ID"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            transaction = Transaction.objects.select_related("organization").get(
+                id=tx_id
+            )
+        except Transaction.DoesNotExist:
+            return Response(
+                {"error": "Transaction not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not transaction.is_processed:
+            config = MaalyPayService.get_config(transaction.organization)
+
+            if config:
+                merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.id)
+                if MaalyPayService.is_paid(config.api_key, merchant_tx_id):
+                    transaction.is_processed = True
+                    transaction.payment_status = Transaction.ACCEPTED
+                    transaction.save(
+                        update_fields=["is_processed", "payment_status", "updated_at"]
+                    )
+
+        return Response(
+            {
+                "transaction_id": transaction.id,
+                "status": "completed" if transaction.is_processed else "pending",
+                "is_processed": transaction.is_processed,
+            }
+        )
+
     def post(self, request, *args, **kwargs):
-        payload = request.data
-        print(payload)
-        return Response(data={"data": "success"}, status=200)
+        print(f"MaalyPay callback POST received: {request.data}")
+        return Response({"status": "ok"}, status=200)
 
 
 class ResultURLView(APIView):
@@ -2931,7 +3058,6 @@ class TransactionWithdrawalView(GenericAPIView):
         transfer_amount = serializer.validated_data["transfer_amount"]
         utc_offset_minutes = serializer.validated_data.get("utc_offset_minutes")
 
-        # create recipient service
         recipient = RecipientService.create_recipient(
             payout_system=payout_system,
             image_id=image_id,
@@ -2940,7 +3066,6 @@ class TransactionWithdrawalView(GenericAPIView):
             transfer_amount=transfer_amount,
         )
 
-        # create transaction of withdrawal service
         transaction = TransactionService.create_withdrawal_transaction(
             request=request,
             organization=organization,

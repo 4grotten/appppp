@@ -26,11 +26,21 @@ class Umai:
 
     login_url = 'https://umai.kg/api/auth/local'
 
-    umai_wallet = UmaiWallet.objects.last()
-    if umai_wallet:
-        password = umai_wallet.password
-        wallet = umai_wallet.wallet
-        version = umai_wallet.version
+    # Lazy initialization - will be set when first accessed
+    _umai_wallet = None
+    password = None
+    wallet = None
+    version = None
+
+    @classmethod
+    def _init_wallet_data(cls):
+        """Initialize wallet data from database if not already done"""
+        if cls._umai_wallet is None:
+            cls._umai_wallet = UmaiWallet.objects.last()
+            if cls._umai_wallet:
+                cls.password = cls._umai_wallet.password
+                cls.wallet = cls._umai_wallet.wallet
+                cls.version = cls._umai_wallet.version
 
     request_headers = {
         "Host": "umai.kg",
@@ -46,6 +56,9 @@ class Umai:
     }
 
     def __init__(self, phone_number, wallet=None):
+        # Initialize wallet data from database if not already done
+        self._init_wallet_data()
+
         self.amount = wallet.amount
         self.phone_number = phone_number.replace('+996', '0')
         self.token = self.get_token()

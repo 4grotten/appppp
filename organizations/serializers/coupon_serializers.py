@@ -22,7 +22,7 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    discount = DiscountCouponSerializer()
+    # discount = DiscountCouponSerializer()
     product = ProductCouponSerializer()
     # currency = serializers.SerializerMethodField()
 

@@ -99,7 +99,7 @@ class FeedView(ListAPIView):
 
         if user.is_authenticated:
             pinned_subquery = PinnedShopItem.objects.filter(
-                user=user, shop_item=OuterRef("pk")
+                user=user, item=OuterRef("pk")
             )
             qs = qs.annotate(is_pinned=Exists(pinned_subquery))
         else:

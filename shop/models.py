@@ -138,6 +138,7 @@ class ShopItem(models.Model):
     current_locations = models.JSONField(null=True, blank=True)
     preferred_locations = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)
+    is_pinned = models.BooleanField(default=False, verbose_name="Закреплен в организации")
 
 
     @property

@@ -1448,3 +1448,69 @@ class PinnedOrganizations(TimestampModel):
         db_table = "pinned_organizations"
         verbose_name = "Pinned organizations"
         ordering = ["created_at"]
+
+
+class RegionalPaymentSystemSettings(TimestampModel):
+
+    country = models.ForeignKey(
+        Country, on_delete=models.CASCADE, related_name="regional_payment_settings"
+    )
+
+    payment_system_id = models.PositiveSmallIntegerField(
+        choices=[
+            (1, "FreedomPay"),
+            (2, "PaySy"),
+            (3, "Libersave"),
+            (4, "Betapay"),
+            (5, "CryptoCloud"),
+            (6, "MaalyPay"),
+        ],
+        help_text="ID платежной системы (совместим с существующим кодом)",
+    )
+
+    is_enabled_in_region = models.BooleanField(
+        default=True, help_text="Платежка доступна в этом регионе"
+    )
+
+    is_available_for_request = models.BooleanField(
+        default=True, help_text="Организации могут запрашивать подключение"
+    )
+
+    allowed_organizations = models.ManyToManyField(
+        "Organization",
+        blank=True,
+        related_name="payment_system_overrides",
+        help_text="Организации-исключения: для них платежка доступна даже если отключена в регионе",
+    )
+
+    class Meta:
+        unique_together = ("country", "payment_system_id")
+        verbose_name = "Regional Payment System Setting"
+        verbose_name_plural = "Regional Payment System Settings"
+
+    def __str__(self):
+        return f"{self.country.code} - {self.get_payment_system_id_display()}"
+
+    @property
+    def org_confirmed_field(self):
+        mapping = {
+            1: "freedompay_confirmed",
+            2: "paysy_confirmed",
+            3: "libersave_confirmed",
+            4: "betapay_confirmed",
+            5: "cryptocloud_confirmed",
+            6: "maaly_pay_confirmed",
+        }
+        return mapping.get(self.payment_system_id)
+
+    @property
+    def org_activated_field(self):
+        mapping = {
+            1: "freedompay_activated",
+            2: "paysy_activated",
+            3: "libersave_activated",
+            4: "betapay_activated",
+            5: "cryptocloud_activated",
+            6: "maaly_pay_activated",
+        }
+        return mapping.get(self.payment_system_id)

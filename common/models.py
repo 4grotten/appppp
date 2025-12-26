@@ -338,8 +338,9 @@ class UmaiWallet(TimestampModel, SingletonModel):
 
     @property
     def is_accepted(self):
-        if self.activate and self.start_time <= timezone.now() <= self.end_time:
-            return True
+        if self.activate and self.start_time and self.end_time:
+            if self.start_time <= timezone.now() <= self.end_time:
+                return True
         return False
 
     class Meta:

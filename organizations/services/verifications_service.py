@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import BadRequestException
@@ -35,20 +37,19 @@ class VerificationService:
 
 
 class PaymentSystemConfirmationService:
-    """Сервис для подключения платёжных систем к организации"""
 
     model = OrganizationPaymentSystemUsers
 
     @classmethod
     def create(
         cls,
-        organization: Organization | None = None,
-        username: str | None = None,
-        phone_number: str | None = None,
-        email: str | None = None,
-        payment_system_id: int | None = None,
-        merchant_id: str | None = None,
-        api_key: str | None = None,
+        organization: Optional[Organization] = None,
+        username: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        email: Optional[str] = None,
+        payment_system_id: Optional[int] = None,
+        merchant_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ):
         if payment_system_id == 6:
             if organization is None:

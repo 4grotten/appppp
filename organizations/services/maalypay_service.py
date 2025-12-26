@@ -16,10 +16,10 @@ class MaalyPayOrderStatus(TypedDict):
     fiatAmount: str
     status: bool
     filledAmount: str
-    txHash: str | None
-    network: str | None
-    asset: str | None
-    txLink: str | None
+    txHash: Optional[str]
+    network: Optional[str]
+    asset: Optional[str]
+    txLink: Optional[str]
 
 
 class MaalyPayService:

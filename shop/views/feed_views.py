@@ -4,8 +4,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django.db.models import OuterRef, Exists, Value, BooleanField
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-from common.exceptions import NotAcceptableException
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.constants import HOTLINK_COLLECTION, TEST
 from organizations.models import Organization, OrganizationBlacklist
 from organizations.serializers.query_param_serializers import (
@@ -17,7 +20,7 @@ from shop.filters import (
     FeedItemFilterWithoutOrganization,
     FeedItemOrderingFilter,
 )
-from shop.models import ShopItem
+from shop.models import ShopItem, PinnedShopItem
 from shop.serializers.item_serializers import (
     ItemFeedSerializer,
     RentalTicketListSerializer,
@@ -82,12 +85,22 @@ class FeedView(ListAPIView):
                 queryset=qs, search_word=search
             )
         else:
-            qs = qs.filter(is_published=True).order_by("-updated_at")
+            qs = qs.filter(is_published=True)
 
         category_filter = self.request.GET.get("category", None)
         if not category_filter:
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
             qs = qs.filter(price_filter)
+
+        if user.is_authenticated:
+            pinned_subquery = PinnedShopItem.objects.filter(
+                user=user, shop_item=OuterRef("pk")
+            )
+            qs = qs.annotate(pinned=Exists(pinned_subquery))
+        else:
+            qs = qs.annotate(pinned=Value(False, output_field=BooleanField()))
+
+        qs = qs.order_by("-pinned", "-updated_at")
 
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=qs, user=self.request.user
@@ -274,3 +287,54 @@ class HotlinkCollectionItemListView(ListAPIView):
         response.data["collection_title"] = hotlink.content
 
         return response
+
+
+class PinShopItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            shop_item = ShopItem.objects.get(pk=item_id)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException("Shop item not found")
+
+        pinned, created = PinnedShopItem.objects.get_or_create(
+            user=user, shop_item=shop_item
+        )
+
+        if not created:
+            return Response(
+                {"message": f"Item '{shop_item.name}' already pinned"},
+                status=200,
+            )
+
+        return Response(
+            data={"message": f"Successfully pinned item {shop_item.name}"},
+            status=200,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            shop_item = ShopItem.objects.get(pk=item_id)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException("Shop item not found")
+
+        deleted_count, _ = PinnedShopItem.objects.filter(
+            user=user, shop_item=shop_item
+        ).delete()
+
+        if deleted_count == 0:
+            return Response(
+                {"message": f"Item '{shop_item.name}' was not pinned"},
+                status=200,
+            )
+
+        return Response(
+            {"message": f"Successfully unpinned '{shop_item.name}'"}, status=200
+        )

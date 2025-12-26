@@ -16,7 +16,7 @@ from shop.views.comment_views import CommentItemListCreateView, \
     ItemChangeCommentsDisabledView, UploadUserThemeImageView, CommentChatListCreateView, AssistantCommentChatCreateView
 from shop.views.feed_views import (
     FeedView, OrganizationItemListView, SubscriptionItemListView, HotlinkCollectionItemListView,
-    OrganizationRentalListView, OrganizationTicketListView, OrganizationOwnTicketListView
+    OrganizationRentalListView, OrganizationTicketListView, OrganizationOwnTicketListView, PinShopItemView
 )
 from shop.views.item_views import (
     ItemCreateView, ItemRentalCreateView, ItemRetrieveUpdateDestroyView, ItemChangePublishedStatusView,
@@ -113,6 +113,7 @@ urlpatterns = [
     path('search/resumes/', SuggestSearchResume.as_view(), name='suggest_resumes'),
 
     path('shop/feed/', FeedView.as_view(), name='shop_feed'),
+    path('shop-items/<int:pk>/pin/', PinShopItemView.as_view(), name='pin-shop-item'),
     path('search/item/', SuggestSearchItem.as_view(), name='suggest_item'),
     path('shop/organization_items/', OrganizationItemListView.as_view(), name='organization_items'),
     path('shop/organization_rentals/', OrganizationRentalListView.as_view(), name='organization_rentals'),

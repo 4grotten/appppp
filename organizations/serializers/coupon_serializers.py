@@ -7,7 +7,10 @@ from shop.models import ShopItem
 class DiscountCouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiscountCard
-        fields = ["type", "percent"]
+        fields = [
+            "type",
+            "percent",
+        ]
 
 
 class ProductCouponSerializer(serializers.ModelSerializer):

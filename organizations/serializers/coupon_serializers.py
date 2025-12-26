@@ -4,6 +4,15 @@ from organizations.models import Coupon
 from shop.models import ShopItem
 
 
+class DiscountCouponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiscountCard
+        fields = [
+            "type",
+            "percent",
+        ]
+
+
 class ProductCouponSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
 
@@ -17,7 +26,7 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 class CouponListSerializer(serializers.ModelSerializer):
     # discount = DiscountCouponSerializer()
-    product = ProductCouponSerializer(required=False)
+    product = ProductCouponSerializer()
     # currency = serializers.SerializerMethodField()
 
     class Meta:

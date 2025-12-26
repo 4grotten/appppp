@@ -41,7 +41,7 @@ class CouponListSerializer(serializers.ModelSerializer):
             "is_updating",
             "image",
             "coupon_type",
-            "discount",
+            # "discount",
             # "currency",
         ]
 

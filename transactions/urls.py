@@ -13,7 +13,7 @@ from transactions.views.transaction_views import (
     CheckTicketInUsersView,
     CryptoCloudPostbackView,
     InitPaymentView,
-    MaalyPayPaymentTestView,
+    MaalyPayResultView,
     NewInitPaymentView,
     OnlineBookingTransactionCompleteView,
     OnlinePaymentTransactionCompleteView,
@@ -443,9 +443,9 @@ urlpatterns = [
     ),
     # MaalyPay
     path(
-        "transactions/result/maalypay/",
-        MaalyPayPaymentTestView.as_view(),
-        name="maalypay_webhook",
+        "transactions/maalypay/result/",
+        MaalyPayResultView.as_view(),
+        name="maalypay-result",
     ),
     # balance
     path(

@@ -270,6 +270,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "libersave_activated",
                     "betapay_activated",
                     "cryptocloud_activated",
+                    "maaly_pay_activated",
                     "payment_systems_activated",
                     "payment_with_confirmation",
                     "freedompay_confirmed",
@@ -277,6 +278,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "libersave_confirmed",
                     "betapay_confirmed",
                     "cryptocloud_confirmed",
+                    "maaly_pay_confirmed",
                 )
             },
         ),

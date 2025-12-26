@@ -29,6 +29,7 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv(), default="*")
 # Application definition
 
 INSTALLED_APPS = [
+    "jazzmin",
     "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     "notifications",
     "shop.apps.ShopConfig",
     "instagram_parsers.apps.InstagramParsersConfig",
+    "payments.apps.PaymentsConfig",
     "sms_sender.apps.SmsSenderConfig",
     "stock.apps.StockConfig",
     "applications",
@@ -524,3 +526,99 @@ else:
     PORTAINER_URL = config(
         "PORTAINER_URL", default="https://docs.portainer.io/user/docker/templates"
     )
+
+
+# Jazzmin settings
+JAZZMIN_SETTINGS = {
+    "site_title": "Apofiz Admin",
+    "site_header": "Apofiz",
+    "site_brand": "Apofiz",
+    "welcome_sign": "Добро пожаловать в админ-панель Apofiz",
+    "copyright": "Apofiz",
+    "search_model": "users.User",
+    "user_avatar": None,
+
+    # Top Menu
+    "topmenu_links": [
+        {"name": "Главная", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {
+            "name": "Системный монитор",
+            "url": "portainer_login",
+            "icon": "fas fa-rocket",
+            "new_window": True,
+        },
+    ],
+
+    # User Menu
+    "usermenu_links": [
+        {"model": "users.user"}
+    ],
+
+    # Side Menu - отключена для оптимизации производительности
+    "show_sidebar": False,
+    "navigation_expanded": False,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["users", "organizations", "shop", "transactions", "instagram_parsers", "payments"],
+
+    # Custom links for grouping
+    "custom_links": {
+        "instagram_parsers": [{
+            "name": "Item Instagram Datas",
+            "url": "admin:shop_iteminstagramdata_changelist",
+            "permissions": ["shop.view_iteminstagramdata"]
+        }]
+    },
+
+    # Icons - только для основных разделов приложений
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "users": "fas fa-user",
+        "organizations": "fas fa-building",
+        "shop": "fas fa-shopping-bag",
+        "transactions": "fas fa-exchange-alt",
+        "instagram_parsers": "fab fa-instagram",
+        "payments": "fas fa-credit-card",
+    },
+
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    # UI Tweaks
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+    "language_chooser": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-success",
+    "accent": "accent-teal",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-success",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}

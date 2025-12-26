@@ -15,17 +15,18 @@ class DiscountCouponSerializer(serializers.ModelSerializer):
 
 class ProductCouponSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
+    currency_code = serializers.CharField(source='currency.code', read_only=True)
 
     class Meta:
         model = ShopItem
-        fields = ["id", "name", "description", "price", "images"]
+        fields = ["id", "name", "description", "price", "images","currency_code"]
 
     def get_images(self, obj):
         return [img.file.url for img in obj.images.all()]
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    # discount = DiscountCouponSerializer()
+    discount = DiscountCouponSerializer()
     product = ProductCouponSerializer()
     # currency = serializers.SerializerMethodField()
 
@@ -40,6 +41,7 @@ class CouponListSerializer(serializers.ModelSerializer):
             "is_updating",
             "image",
             "coupon_type",
+            "discount",
             # "currency",
         ]
 

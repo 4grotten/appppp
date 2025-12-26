@@ -69,9 +69,9 @@ class FeedView(ListAPIView):
             pinned_subquery = PinnedShopItem.objects.filter(
                 user=user, shop_item=OuterRef("pk")
             )
-            qs = qs.annotate(pinned=Exists(pinned_subquery))
+            qs = qs.annotate(is_pinned=Exists(pinned_subquery))
         else:
-            qs = qs.annotate(pinned=Value(False, output_field=BooleanField()))
+            qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
         qs = qs.order_by("-is_pinned", "-updated_at")
 

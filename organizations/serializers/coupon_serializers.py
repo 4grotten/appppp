@@ -16,8 +16,8 @@ class ProductCouponSerializer(serializers.ModelSerializer):
 
 
 class CouponListSerializer(serializers.ModelSerializer):
-    discount = DiscountCouponSerializer()
-    product = ProductCouponSerializer()
+    # discount = DiscountCouponSerializer()
+    product = ProductCouponSerializer(required=False)
     # currency = serializers.SerializerMethodField()
 
     class Meta:

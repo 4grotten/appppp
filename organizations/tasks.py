@@ -399,9 +399,21 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
     # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
     # так как services и models часто ссылаются на tasks.
 
+    import logging
     import requests
     from django.db import transaction
     from django.db.models import Q
+
+    logger = logging.getLogger(__name__)
+
+    logger.info(
+        "[MaalyPay Task] Starting status check",
+        extra={
+            "merchant_tx_id": merchant_tx_id,
+            "transaction_id": transaction_id,
+            "retry_count": self.request.retries,
+        }
+    )
 
     from notifications.constants import (
         ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
@@ -426,17 +438,44 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
     try:
         response = requests.get(url, headers=headers, timeout=15)
         response_data = response.json()
-        status_text = response_data.get("status")
+        status_value = response_data.get("status")
     except Exception as e:
         print(f"MaalyPay connection error: {e}")
         raise self.retry()
 
-    pending_statuses = ["not initiated by customer yet"]
+    # Universal status handling: supports both boolean and string formats
+    # String pending statuses (legacy format)
+    pending_statuses = ["not initiated by customer yet", "pending", "in_progress"]
 
-    if status_text in pending_statuses:
+    # Determine if payment is confirmed based on type
+    is_paid = False
+    should_retry = False
+
+    if isinstance(status_value, bool):
+        # Boolean format: True = paid, False = not paid yet
+        is_paid = status_value
+        should_retry = not status_value
+    elif isinstance(status_value, str):
+        # String format: check against pending statuses
+        status_lower = status_value.lower()
+        if status_lower in pending_statuses:
+            should_retry = True
+        elif status_lower in ["completed", "success", "paid", "confirmed"]:
+            is_paid = True
+        else:
+            # Unknown status string, treat as not paid and retry
+            print(f"MaalyPay: Unknown status string '{status_value}', retrying...")
+            should_retry = True
+    else:
+        # None or unexpected type - retry
+        print(f"MaalyPay: Invalid status type {type(status_value)}, retrying...")
         raise self.retry()
 
-    if status_text:
+    if should_retry:
+        print(f"MaalyPay: Transaction {merchant_tx_id} not paid yet (status: {status_value}), retrying...")
+        raise self.retry()
+
+    if is_paid:
         try:
             with transaction.atomic():
                 old_transaction = Transaction.objects.select_for_update().get(
@@ -446,10 +485,24 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
                 if old_transaction.is_processed:
                     return "Already processed"
 
+                # Collect payment external data before saving
+                payment_external_data = {}
+                if response_data.get("txHash"):
+                    payment_external_data["txHash"] = response_data.get("txHash")
+                if response_data.get("network"):
+                    payment_external_data["network"] = response_data.get("network")
+                if response_data.get("asset"):
+                    payment_external_data["asset"] = response_data.get("asset")
+                if response_data.get("txLink"):
+                    payment_external_data["txLink"] = response_data.get("txLink")
+
                 old_transaction.payment_status = Transaction.ACCEPTED
                 old_transaction.is_processed = True
-                old_transaction.payment_info = None
+                old_transaction.payment_info = payment_external_data if payment_external_data else None
                 old_transaction.save()
+
+                if payment_external_data:
+                    print(f"MaalyPay: Stored blockchain data (txHash: {payment_external_data.get('txHash', 'N/A')[:10]}...) for transaction {transaction_id}")
 
                 if old_transaction.type == Transaction.ONLINE:
                     transaction.on_commit(
@@ -529,6 +582,19 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
                     except Exception as e:
                         print(f"Error sending delivery notifications: {e}")
 
+                # Generate receipt if this is an org_subscription transaction
+                if old_transaction.type == Transaction.ORG_SUBSCRIPTION:
+                    try:
+                        from organizations.services.receipts_services import ReceiptService
+
+                        org_subscription = old_transaction.org_subscription
+                        if org_subscription:
+                            ReceiptService.create_receipt_from_maalypay(org_subscription)
+                            print(f"MaalyPay: Receipt generated for subscription {org_subscription.pk}")
+                    except Exception as e:
+                        print(f"MaalyPay: Error generating receipt: {e}")
+                        # Don't fail the whole transaction if receipt fails
+
             return f"Transaction {transaction_id} completed successfully via MaalyPay"
 
         except Transaction.DoesNotExist:
@@ -538,11 +604,6 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
             print(f"Error processing MaalyPay transaction db update: {e}")
             raise self.retry()
 
-    else:
-        print(
-            f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
-        )
-        raise self.retry()
-        return f"Transaction failed: {status_text}"
-
-    return f"Unknown status: {status_text}"
+    # If we reach here, payment was not confirmed
+    print(f"MaalyPay: Transaction {merchant_tx_id} payment not confirmed (status: {status_value})")
+    return f"Payment not confirmed: {status_value}"

@@ -449,6 +449,12 @@ class MaalyPayOrganizationPaymentSystem(TimestampModel):
     )
     api_key = models.CharField(max_length=420)
     merchant_id = models.CharField(max_length=420)
+    bank_info = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Bank account information (IBAN, account number, etc.)",
+    )
 
 
 class PhoneNumber(TimestampModel):

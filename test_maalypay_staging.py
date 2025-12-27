@@ -294,8 +294,16 @@ class MaalyPayStagingTest:
 
         # Step 4: Test status check (if real API)
         if payment_created and self.use_real_api:
-            input("\n⏸️  Press Enter after completing payment to check status...")
-            self.test_status_check()
+            print("\n⏸️  Payment URL created successfully!")
+            print("   Complete the payment in your browser using the URL above.")
+            print("\n📊 To check payment status after completion, run:")
+            print(f"   docker exec backend_django_1 python test_maalypay_staging.py --check-status {self.transaction.id}")
+            print("\n   OR use Django shell:")
+            print("   docker exec backend_django_1 python manage.py shell")
+            print("   >>> from transactions.models import Transaction")
+            print(f"   >>> tx = Transaction.objects.get(id={self.transaction.id})")
+            print("   >>> print(tx.payment_status, tx.payment_info)")
+            # Skip interactive input - Docker doesn't support it well
 
         # Step 5: Cleanup
         if not self.use_real_api:

@@ -137,8 +137,8 @@ class MaalyPayStagingTest:
                 type=Transaction.ORG_SUBSCRIPTION,
                 payment_status=Transaction.IN_PROGRESS,
                 is_processed=False,
-                original_amount=Decimal("10.00"),  # Small test amount
-                final_amount=Decimal("10.00"),
+                original_amount=Decimal("1.00"),  # Small test amount
+                final_amount=Decimal("1.00"),
                 currency=currency,
             )
 

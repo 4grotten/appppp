@@ -2910,6 +2910,10 @@ class MaalyPayResultView(APIView):
     permission_classes = []
 
     def get(self, request, *args, **kwargs):
+        """
+        MaalyPay redirect callback - treat as successful payment.
+        User completing payment and getting redirected = payment successful.
+        """
         tx_id = request.GET.get("tx")
 
         if not tx_id:
@@ -2919,7 +2923,7 @@ class MaalyPayResultView(APIView):
             )
 
         try:
-            transaction = Transaction.objects.select_related("organization", "client").get(
+            transaction = Transaction.objects.select_related("organization").get(
                 id=tx_id
             )
         except Transaction.DoesNotExist:
@@ -2928,72 +2932,19 @@ class MaalyPayResultView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if transaction.is_processed:
-            return Response(
-                {
-                    "transaction_id": transaction.id,
-                    "status": "completed",
-                    "is_processed": True,
-                    "message": "Payment already processed"
-                }
-            )
-        try:
-            user = transaction.client
+        # If not already processed, mark as accepted
+        if not transaction.is_processed:
+            transaction.is_processed = True
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.save(update_fields=["is_processed", "payment_status", "updated_at"])
 
-            if transaction.type == Transaction.ONLINE:
-                TransactionService.accept_paysy_order_transaction_by_user(
-                    transaction_id=transaction.id, user=user
-                )
-            elif transaction.type == Transaction.ORG_SUBSCRIPTION:
-                TransactionService.accept_org_subscription_transaction(
-                    transaction_id=transaction.id
-                )
-            elif transaction.type == Transaction.USER_APP:
-                TransactionService.accept_user_app_transaction(
-                    transaction_id=transaction.id
-                )
-            elif transaction.type == Transaction.DEAL:
-                TransactionService.complete_paysy_transaction_online(
-                    transaction_id=transaction.id
-                )
-            elif transaction.type == Transaction.ASSISTANT:
-                TransactionService.accept_assistant_transaction(
-                    transaction_id=transaction.id
-                )
-            elif transaction.type == Transaction.BOOKING:
-                TransactionService.accept_paysy_booking_transaction_by_user(
-                    transaction_id=transaction.id, user=user, request=request
-                )
-            else:
-                transaction.is_processed = True
-                transaction.payment_status = Transaction.ACCEPTED
-                transaction.save(update_fields=["is_processed", "payment_status", "updated_at"])
-
-            return Response(
-                {
-                    "transaction_id": transaction.id,
-                    "status": "completed",
-                    "is_processed": True,
-                    "message": "Payment successful"
-                },
-                status=status.HTTP_200_OK
-            )
-
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(
-                f"[MaalyPay] Error processing transaction {transaction.id}: {e}",
-                exc_info=True
-            )
-            return Response(
-                {
-                    "error": "Failed to process payment",
-                    "transaction_id": transaction.id,
-                    "details": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return Response(
+            {
+                "transaction_id": transaction.id,
+                "status": "completed",
+                "is_processed": transaction.is_processed,
+            }
+        )
 
     def post(self, request, *args, **kwargs):
         """Handle MaalyPay webhook callback (if they send one)"""

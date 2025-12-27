@@ -441,20 +441,73 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
         response_data = response.json()
         status_value = response_data.get("status")
     except Exception as e:
-        print(f"MaalyPay connection error: {e}")
+        logger.error(
+            "[MaalyPay Task] Connection error, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "error": str(e),
+                "retry_count": self.request.retries,
+            }
+        )
         raise self.retry()
 
-    is_paid = True
+    # Universal check: Support both boolean and string status values (legacy compatibility)
+    # According to MaalyPay developers:
+    # - status: false/"false"/pending = payment not completed
+    # - status: true/"true"/success = full payment received
+    is_paid = False
+    should_retry = False
 
-    logger.info(
-        "[MaalyPay Task] Treating payment as successful",
-        extra={
-            "merchant_tx_id": merchant_tx_id,
-            "transaction_id": transaction_id,
-            "status_value": status_value,
-            "status_type": type(status_value).__name__,
-        }
-    )
+    if isinstance(status_value, bool):
+        # Boolean value
+        is_paid = status_value
+        should_retry = not status_value
+    elif isinstance(status_value, str):
+        # String value - check for success/true
+        status_lower = status_value.lower()
+        if status_lower in ("true", "success", "completed", "confirmed"):
+            is_paid = True
+        else:
+            # Pending or other status - retry
+            should_retry = True
+    else:
+        # Unknown type - retry
+        logger.warning(
+            "[MaalyPay Task] Unknown status type, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "status_value": status_value,
+                "status_type": type(status_value).__name__,
+            }
+        )
+        should_retry = True
+
+    if is_paid:
+        logger.info(
+            "[MaalyPay Task] Payment CONFIRMED",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "status": status_value,
+                "txHash": response_data.get("txHash"),
+                "filledAmount": response_data.get("filledAmount"),
+                "retry_count": self.request.retries,
+            }
+        )
+    elif should_retry:
+        logger.info(
+            "[MaalyPay Task] Payment NOT confirmed yet, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "status": status_value,
+                "retry_count": self.request.retries,
+                "max_retries": 30,
+            }
+        )
+        # Retry in 60 seconds
+        raise self.retry()
 
     if is_paid:
         try:

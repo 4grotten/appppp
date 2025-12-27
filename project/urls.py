@@ -69,6 +69,7 @@ if settings.DEBUG:
             ),
             public=True,
             permission_classes=(permissions.AllowAny,),
+            authentication_classes=[],
         )
 
         urlpatterns += [

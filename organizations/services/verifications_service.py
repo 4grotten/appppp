@@ -50,6 +50,7 @@ class PaymentSystemConfirmationService:
         payment_system_id: Optional[int] = None,
         merchant_id: Optional[str] = None,
         api_key: Optional[str] = None,
+        bank_info: Optional[str] = None,
     ):
         if payment_system_id == 6:
             if organization is None:
@@ -67,6 +68,7 @@ class PaymentSystemConfirmationService:
                 organization=organization,
                 merchant_id=merchant_id,
                 api_key=api_key,
+                bank_info=bank_info,
             )
 
         if organization is None:

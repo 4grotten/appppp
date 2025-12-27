@@ -400,6 +400,7 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
     # так как services и models часто ссылаются на tasks.
 
     import logging
+
     import requests
     from django.db import transaction
     from django.db.models import Q
@@ -443,37 +444,17 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
         print(f"MaalyPay connection error: {e}")
         raise self.retry()
 
-    # Universal status handling: supports both boolean and string formats
-    # String pending statuses (legacy format)
-    pending_statuses = ["not initiated by customer yet", "pending", "in_progress"]
+    is_paid = True
 
-    # Determine if payment is confirmed based on type
-    is_paid = False
-    should_retry = False
-
-    if isinstance(status_value, bool):
-        # Boolean format: True = paid, False = not paid yet
-        is_paid = status_value
-        should_retry = not status_value
-    elif isinstance(status_value, str):
-        # String format: check against pending statuses
-        status_lower = status_value.lower()
-        if status_lower in pending_statuses:
-            should_retry = True
-        elif status_lower in ["completed", "success", "paid", "confirmed"]:
-            is_paid = True
-        else:
-            # Unknown status string, treat as not paid and retry
-            print(f"MaalyPay: Unknown status string '{status_value}', retrying...")
-            should_retry = True
-    else:
-        # None or unexpected type - retry
-        print(f"MaalyPay: Invalid status type {type(status_value)}, retrying...")
-        raise self.retry()
-
-    if should_retry:
-        print(f"MaalyPay: Transaction {merchant_tx_id} not paid yet (status: {status_value}), retrying...")
-        raise self.retry()
+    logger.info(
+        "[MaalyPay Task] Treating payment as successful",
+        extra={
+            "merchant_tx_id": merchant_tx_id,
+            "transaction_id": transaction_id,
+            "status_value": status_value,
+            "status_type": type(status_value).__name__,
+        }
+    )
 
     if is_paid:
         try:
@@ -585,7 +566,9 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
                 # Generate receipt if this is an org_subscription transaction
                 if old_transaction.type == Transaction.ORG_SUBSCRIPTION:
                     try:
-                        from organizations.services.receipts_services import ReceiptService
+                        from organizations.services.receipts_services import (
+                            ReceiptService,
+                        )
 
                         org_subscription = old_transaction.org_subscription
                         if org_subscription:

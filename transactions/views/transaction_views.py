@@ -2209,6 +2209,7 @@ class InitPaymentView(GenericAPIView):
                 merchant_tx_id=merchant_tx_id,
                 callback_url=callback_url,
                 customer_email=transaction.client.email or "noemail@placeholder.local",
+                bank_info=payment_config.bank_info,
             )
 
             if not checkout_url:
@@ -2595,6 +2596,7 @@ class NewInitPaymentView(GenericAPIView):
                 merchant_tx_id=merchant_tx_id,
                 callback_url=callback_url,
                 customer_email=transaction.client.email or "noemail@placeholder.local",
+                bank_info=payment_config.bank_info,
             )
 
             if not checkout_url:

@@ -1221,6 +1221,7 @@ class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     merchant_id = serializers.CharField(required=False)
     api_key = serializers.CharField(required=False)
+    bank_info = serializers.CharField(required=False, allow_blank=True)
 
     # class Meta:
     #     model = OrganizationPaymentSystemUsers

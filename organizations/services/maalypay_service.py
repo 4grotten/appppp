@@ -153,6 +153,13 @@ class MaalyPayService:
             extra={"payload": json.dumps(safe_payload, indent=2)}
         )
 
+        # Temporary debug output for troubleshooting
+        print(f"[MaalyPay DEBUG] Sending request to: {url}")
+        print(f"[MaalyPay DEBUG] Merchant ID: {merchant_id} (type: {type(merchant_id).__name__})")
+        print(f"[MaalyPay DEBUG] Amount: {amount} (type: {type(amount).__name__})")
+        print(f"[MaalyPay DEBUG] Currency: {currency}")
+        print(f"[MaalyPay DEBUG] Payload: {json.dumps(payload, indent=2)}")
+
         try:
             response = requests.post(
                 url, json=payload, headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, timeout=cls.TIMEOUT
@@ -167,6 +174,12 @@ class MaalyPayService:
             )
 
             if response.status_code != 200:
+                # Temporary debug output for troubleshooting
+                print(f"[MaalyPay DEBUG] Status Code: {response.status_code}")
+                print(f"[MaalyPay DEBUG] Response: {response.text}")
+                print(f"[MaalyPay DEBUG] Merchant TX ID: {merchant_tx_id}")
+                print(f"[MaalyPay DEBUG] Request Payload: {json.dumps(payload, indent=2)}")
+
                 logger.error(
                     "[MaalyPay] Payment creation failed - non-200 status",
                     extra={

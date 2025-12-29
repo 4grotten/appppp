@@ -63,7 +63,7 @@ from project.settings.base import (
     LIBERSAVE_API_KEY,
     PAYSY_API_KEY,
 )
-from shop.models import Booking, ShopItem, Ticket
+from shop.models import Booking, Cart, ShopItem, Ticket
 from shop.serializers.item_serializers import (
     BookInfoWithClientSerializer,
     IsActiveTicketSerializer,
@@ -2173,11 +2173,32 @@ class InitPaymentView(GenericAPIView):
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
 
-            pg_description, purchase_type = (
-                TransactionService.get_pg_description_and_purchase_type(
-                    transaction=transaction
+            # Build MaalyPay description based on whether cart exists
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    # Scenario 2: With cart - show item titles and quantities
+                    items_desc = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    maalypay_description = items_desc
+                else:
+                    # Empty cart - fall back to organization info
+                    client_name = (
+                        transaction.client.full_name
+                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                        or "Клиент"
+                    )
+                    maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
+            except (Cart.DoesNotExist, AttributeError):
+                # Scenario 1: No cart - show organization, order number, client name
+                client_name = (
+                    transaction.client.full_name
+                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                    or "Клиент"
                 )
-            )
+                maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
 
             if not transaction.organization:
                 return Response(
@@ -2207,7 +2228,7 @@ class InitPaymentView(GenericAPIView):
                 merchant_id=int(payment_config.merchant_id),
                 amount=str(transaction.final_amount),
                 currency=transaction.currency.code,
-                description=f"{pg_description} {purchase_type}".strip(),
+                description=maalypay_description,
                 merchant_tx_id=merchant_tx_id,
                 callback_url=callback_url,
                 customer_email=transaction.client.email or "noemail@placeholder.local",
@@ -2560,11 +2581,32 @@ class NewInitPaymentView(GenericAPIView):
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
 
-            pg_description, purchase_type = (
-                TransactionService.get_pg_description_and_purchase_type(
-                    transaction=transaction
+            # Build MaalyPay description based on whether cart exists
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    # Scenario 2: With cart - show item titles and quantities
+                    items_desc = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    maalypay_description = items_desc
+                else:
+                    # Empty cart - fall back to organization info
+                    client_name = (
+                        transaction.client.full_name
+                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                        or "Клиент"
+                    )
+                    maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
+            except (Cart.DoesNotExist, AttributeError):
+                # Scenario 1: No cart - show organization, order number, client name
+                client_name = (
+                    transaction.client.full_name
+                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                    or "Клиент"
                 )
-            )
+                maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
 
             if not transaction.organization:
                 return Response(
@@ -2594,7 +2636,7 @@ class NewInitPaymentView(GenericAPIView):
                 merchant_id=int(payment_config.merchant_id),
                 amount=str(transaction.final_amount),
                 currency=transaction.currency.code,
-                description=f"{pg_description} {purchase_type}".strip(),
+                description=maalypay_description,
                 merchant_tx_id=merchant_tx_id,
                 callback_url=callback_url,
                 customer_email=transaction.client.email or "noemail@placeholder.local",

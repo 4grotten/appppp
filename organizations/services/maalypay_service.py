@@ -77,7 +77,8 @@ class MaalyPayService:
                     raise BadRequestException("You've already add this payment method")
 
                 organization.maaly_pay_activated = True  # type: ignore
-                organization.save(update_fields=["maaly_pay_activated"])  # type: ignore
+                organization.maaly_pay_confirmed = True  # type: ignore
+                organization.save(update_fields=["maaly_pay_activated", "maaly_pay_confirmed"])  # type: ignore
 
                 logger.info(
                     f"[MaalyPay] Connected to organization",

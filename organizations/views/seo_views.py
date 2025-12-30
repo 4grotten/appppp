@@ -16,7 +16,12 @@ def org_detail(request, pk):
     # Get image URL
     image_url = "https://apofiz.com/static/assets/logo192.png"
     if organization and organization.image and organization.image.file:
-        image_url = f"https://apofiz.com{organization.image.file.url}"
+        file_url = organization.image.file.url
+        # Check if URL is already absolute (S3) or relative (local)
+        if file_url.startswith('http'):
+            image_url = file_url
+        else:
+            image_url = f"https://apofiz.com{file_url}"
 
     context = {
         'organization': organization,

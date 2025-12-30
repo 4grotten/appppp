@@ -2171,6 +2171,11 @@ class InitPaymentView(GenericAPIView):
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
 
+            # Получаем purchase_type для callback обработки
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
+
             # Build MaalyPay description based on whether cart exists
             try:
                 cart = transaction.cart

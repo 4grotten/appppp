@@ -2217,14 +2217,8 @@ class InitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            callback_base = base_url
-            if callback_base.endswith("api/v1/"):
-                callback_base = callback_base[:-7]
-
             merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
-            callback_url = (
-                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
-            )
+            callback_url = f"{base_url}transactions/maalypay/result/?tx={transaction.pk}"
 
             # Получаем URL для редиректа (на основе текущего request)
             success_url = TransactionService.get_success_url(request=request)
@@ -2641,14 +2635,8 @@ class NewInitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            callback_base = base_url
-            if callback_base.endswith("api/v1/"):
-                callback_base = callback_base[:-7]
-
             merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
-            callback_url = (
-                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
-            )
+            callback_url = f"{base_url}transactions/maalypay/result/?tx={transaction.pk}"
 
             # Получаем URL для редиректа (на основе текущего request)
             success_url = TransactionService.get_success_url(request=request)

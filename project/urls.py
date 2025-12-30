@@ -1,14 +1,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include, re_path
-from rest_framework import permissions
 from django.http import HttpResponseRedirect
+from django.urls import include, path, re_path
+from rest_framework import permissions
 
 from notifications.views import (
     CustomFCMDeviceAuthorizedViewSet,
     FCMDeviceSettingsAPIView,
 )
+from organizations.views.seo_views import org_detail
 
 PORTAINER_URL = settings.PORTAINER_URL
 
@@ -38,6 +39,8 @@ v1 = (
 urlpatterns = [
     path("971585333939admin/portainer-login/", portainer_login, name="portainer_login"),
     path("971585333939admin/", admin.site.urls),
+    # SEO route for social media link previews (Telegram, Facebook, etc.)
+    path("organizations/<int:pk>/", org_detail, name="org_seo"),
     path("api/v1/", include(v1)),
     path("api-auth/", include("rest_framework.urls")),
     path("rest-auth/", include("rest_auth.urls")),
@@ -58,8 +61,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
     try:
-        from drf_yasg.views import get_schema_view
         from drf_yasg import openapi
+        from drf_yasg.views import get_schema_view
 
         schema_view = get_schema_view(
             openapi.Info(

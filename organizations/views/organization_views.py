@@ -24,6 +24,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
     UpdateAPIView,
+    get_object_or_404,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -42,6 +43,7 @@ from organizations.constants import TEST, UNDER_REVIEW
 from organizations.models import (
     BlockedUser,
     InstagramIntegration,
+    MaalyPayOrganizationPaymentSystem,
     Organization,
     OrganizationBlacklist,
     OrganizationCategory,
@@ -681,6 +683,9 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 5:
             organization.cryptocloud_activated = is_active
             organization.save()
+        elif id == 6:
+            organization.maaly_pay_activated = is_active
+            organization.save()
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
@@ -688,6 +693,43 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
             {"message": _("Activation status successfully updated.")},
             status=status.HTTP_200_OK,
         )
+
+
+class MaalyPayConfigView(RetrieveAPIView):
+    """
+    GET endpoint to retrieve MaalyPay configuration (merchant_id, api_key, bank_info)
+    for a specific organization.
+
+    URL: /organizations/{pk}/payment_systems/maalypay/config/
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+
+        if not OrganizationService.user_can_edit_organization(
+            user=request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No rights to view this organization"))
+
+        config = MaalyPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).first()
+
+        if not config:
+            return Response(
+                {"detail": "MaalyPay not configured for this organization"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        from organizations.serializers.organization_serializers import MaalyPayConfigSerializer
+
+        serializer = MaalyPayConfigSerializer(config)
+        response_data = serializer.data
+        response_data['is_active'] = organization.maaly_pay_activated
+        response_data['is_confirmed'] = organization.maaly_pay_confirmed
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class DeliverySettingsView(UpdateAPIView):
@@ -1385,65 +1427,30 @@ class UnblockUserDestroyView(DestroyAPIView):
 
 
 class OrganizationPaymentSystemListView(generics.ListAPIView):
+    """Список подключённых платежек организации - с учётом региональных настроек"""
     serializer_class = PaymentSystemSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        organization_id = self.kwargs.get("pk")
+        from organizations.services.regional_payment_service import (
+            RegionalPaymentSystemService,
+        )
 
+        organization_id = self.kwargs.get("pk")
         organization = OrganizationService.get(id=organization_id)
 
-        confirmed_payment_systems = []
-        if organization.freedompay_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 1,
-                    "name": "FreedomPay оплата в KGS",
-                    "is_active": organization.freedompay_activated,
-                }
-            )
-        if organization.paysy_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 2,
-                    "name": "PaySy в USD",
-                    "is_active": organization.paysy_activated,
-                }
-            )
-        if organization.libersave_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 3,
-                    "name": "Libersave в EUR",
-                    "is_active": organization.libersave_activated,
-                }
-            )
-        if organization.betapay_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 4,
-                    "name": "Betapay в EUR",
-                    "is_active": organization.betapay_activated,
-                }
-            )
-        if organization.cryptocloud_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 5,
-                    "name": "CryptoCloud в USD",
-                    "is_active": organization.cryptocloud_activated,
-                }
-            )
-        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
-            confirmed_payment_systems.append(
-                {
-                    "id": 6,
-                    "name": "Maalypay в AED",
-                    "is_active": organization.maaly_pay_activated,
-                }
-            )
+        # Используем новый сервис для получения подтверждённых платежек
+        confirmed_systems = RegionalPaymentSystemService.get_confirmed_for_organization(organization)
 
-        return confirmed_payment_systems
+        # Форматируем для совместимости с существующим API
+        return [
+            {
+                "id": ps['id'],
+                "name": f"{ps['name']} в {ps['currency']}",
+                "is_active": ps['is_active'],
+            }
+            for ps in confirmed_systems
+        ]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1452,44 +1459,34 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
 
 
 class PaymentSystemListView(generics.ListAPIView):
+    """Список доступных платежек для подключения - с учётом региональных настроек"""
     serializer_class = PaymentSystemSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        from organizations.services.regional_payment_service import (
+            RegionalPaymentSystemService,
+        )
+
         organization_id = self.request.query_params.get("organization_id", None)
         if organization_id is None:
             return []
 
         organization = OrganizationService.get(pk=organization_id)
-        available_payment_systems = []
-        if not organization.freedompay_confirmed:
-            available_payment_systems.append(
-                {"id": 1, "name": "FreedomPay оплата в KGS", "is_available": True}
-            )
-        if not organization.paysy_confirmed:
-            available_payment_systems.append(
-                {"id": 2, "name": "PaySy в TRC", "is_available": False}
-            )
-        if not organization.libersave_confirmed:
-            available_payment_systems.append(
-                {"id": 3, "name": "Libersave в EUR", "is_available": False}
-            )
-        if not organization.betapay_confirmed:
-            available_payment_systems.append(
-                {"id": 4, "name": "Betapay в EUR", "is_available": False}
-            )
 
-        if organization.country.code == "AE" or organization.maaly_pay_confirmed:
-            available_payment_systems.append(
-                {"id": 6, "name": "Maalypay в AED", "is_available": True}
-            )
+        # Используем новый сервис для получения доступных платежек
+        available_systems = RegionalPaymentSystemService.get_available_for_organization(organization)
 
-        elif not organization.maaly_pay_confirmed:
-            available_payment_systems.append(
-                {"id": 6, "name": "Maalypay в AED", "is_available": False}
-            )
-
-        return available_payment_systems
+        # Фильтруем только те, что ещё не подключены и можно запросить
+        return [
+            {
+                "id": ps['id'],
+                "name": f"{ps['name']} в {ps['currency']}",
+                "is_available": ps['is_available_for_request']
+            }
+            for ps in available_systems
+            if not ps['is_confirmed']  # Только не подключённые
+        ]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1627,6 +1624,41 @@ class OrganizationCouponBannerListCreateAPIView(ListCreateAPIView):
         organization = self._get_organization()
         # Сохраняем, явно передавая организацию
         serializer.save(organization=organization)
+
+
+class OrganizationCouponBannerDetailView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CouponBannersSerializer
+
+    def _get_organization(self):
+        # Логика проверки прав на организацию остается такой же
+        pk = self.kwargs.get("pk") or self.kwargs.get("pk ")
+        organization = OrganizationService.get(id=pk)
+
+        if not OrganizationService.user_can_edit_organization(
+            user=self.request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No right to edit organization"))
+        return organization
+
+    def get_queryset(self):
+        # Получаем организацию и фильтруем баннеры только этой организации
+        # Это гарантирует, что нельзя удалить чужой баннер, зная его ID
+        organization = self._get_organization()
+        return OrganizationService.get_coupons_banners(organization=organization)
+
+    def get_object(self):
+        # Берем queryset, который уже отфильтрован по организации
+        queryset = self.get_queryset()
+
+        # Получаем ID самого баннера из URL.
+        # Предполагаем, что в urls.py параметр назван 'banner_id'
+        banner_id = self.kwargs.get("banner_id")
+
+        # Ищем объект или возвращаем 404
+        obj = get_object_or_404(queryset, id=banner_id)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class AddCustomBannerView(APIView):

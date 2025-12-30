@@ -1,22 +1,42 @@
 from rest_framework import serializers
 
-from organizations.models import Coupon
+from organizations.models import Coupon, DiscountCard
 from shop.models import ShopItem
+
+
+class DiscountCouponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiscountCard
+        fields = [
+            "type",
+            "percent",
+        ]
 
 
 class ProductCouponSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = ShopItem
-        fields = ["id", "name", "description", "price", "images"]
+        fields = ["id", "name", "description", "price", "images", "currency"]
 
     def get_images(self, obj):
         return [img.file.url for img in obj.images.all()]
 
+    def get_currency(self, obj):
+        if obj.organization and obj.organization.currency_id:
+            return obj.organization.currency_id
+        if obj.currency_id:
+            return obj.currency_id
+
+        return "KGS"
+
 
 class CouponListSerializer(serializers.ModelSerializer):
-    product = ProductCouponSerializer(required=False)
+    # discount = DiscountCouponSerializer()
+    product = ProductCouponSerializer()
+    # currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Coupon
@@ -29,7 +49,18 @@ class CouponListSerializer(serializers.ModelSerializer):
             "is_updating",
             "image",
             "coupon_type",
+            # "discount",
+            # "currency",
         ]
+
+        # def get_currency(self, obj):
+        #     if obj.product and obj.product.currency:
+        #         return {
+        #             "id": obj.product.currency.id,
+        #             "name": getattr(obj.product.currency, 'name', str(obj.product.currency)),
+        #             "code": getattr(obj.product.currency, 'code', None)
+        #         }
+        #     return None
 
 
 class ValidateCreateCouponSerializer(serializers.ModelSerializer):

@@ -52,6 +52,8 @@ django-xff = "*"
 django-elasticsearch-dsl-drf = "*"
 twilio = "==7.5.0"
 transliterate = "*"
+redis = "*"
+django-jazzmin = "*"
 
 [dev-packages]
 coverage = "*"

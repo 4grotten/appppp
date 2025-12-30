@@ -89,7 +89,7 @@ services:
   celery_beat:
     <<: *django
     ports: [ ]
-    command: celery -A project beat --schedule /app/beat.db --loglevel=INFO
+    command: sh -c "rm -f /app/celerybeat.pid && celery -A project beat --schedule /app/beat.db --loglevel=INFO --pidfile=/app/celerybeat.pid"
     env_file: ./env/production.env
 
   postgres:

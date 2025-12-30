@@ -1,29 +1,37 @@
-from django.db.models import Q
+
+from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from common.exceptions import NotAcceptableException
+
+from common.exceptions import NotAcceptableException, ObjectNotFoundException
 from organizations.constants import HOTLINK_COLLECTION, TEST
 from organizations.models import Organization, OrganizationBlacklist
 from organizations.serializers.query_param_serializers import (
     OrganizationQueryParamSerializer,
 )
 from organizations.services.hotlink_services import HotlinkService
+
 from shop.filters import (
     FeedItemFilter,
     FeedItemFilterWithoutOrganization,
     FeedItemOrderingFilter,
 )
-from shop.models import ShopItem
+
 from shop.serializers.item_serializers import (
     ItemFeedSerializer,
     RentalTicketListSerializer,
     StartDateTimeSerializer,
     SubscriptionItemSerializer,
 )
+
+from shop.models import ShopItem, PinnedShopItem
 from shop.services.item_services import ShopItemService
 
 
@@ -82,16 +90,25 @@ class FeedView(ListAPIView):
                 queryset=qs, search_word=search
             )
         else:
-            qs = qs.filter(is_published=True).order_by("-updated_at")
+            qs = qs.filter(is_published=True)
+
 
         category_filter = self.request.GET.get("category", None)
         if not category_filter:
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
             qs = qs.filter(price_filter)
 
-        return ShopItemService.annotate_likes_and_bookmarks(
-            queryset=qs, user=self.request.user
-        )
+        # if user.is_authenticated:
+        #     pinned_subquery = PinnedShopItem.objects.filter(
+        #         user=user, item=OuterRef("pk")
+        #     )
+        #     qs = qs.annotate(is_pinned=Exists(pinned_subquery))
+        # else:
+        #     qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
+
+        qs = qs.order_by("-updated_at")
+
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
     def list(self, request, *args, **kwargs):
         serializer = StartDateTimeSerializer(data=request.GET)
@@ -129,12 +146,15 @@ class OrganizationItemListView(FeedView):
             user=self.request.user,
             search=None,
             subcategory_id=None,
-        ).order_by("-updated_at")
+        )
         search = self.request.GET.get("search", None)
         if search:
             qs = ShopItemService.get_ordering_search_result(
                 queryset=qs, search_word=search
             )
+
+        qs = qs.order_by("-is_pinned", "-updated_at")
+
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=qs, user=self.request.user
         )
@@ -274,3 +294,77 @@ class HotlinkCollectionItemListView(ListAPIView):
         response.data["collection_title"] = hotlink.content
 
         return response
+
+
+class PinShopItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            shop_item = ShopItem.objects.get(pk=item_id)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException("Shop item not found")
+
+        pinned, created = PinnedShopItem.objects.get_or_create(
+            user=user, item=shop_item
+        )
+
+        if not created:
+            return Response(
+                {"message": f"Item '{shop_item.name}' already pinned"},
+                status=200,
+            )
+
+        return Response(
+            data={"message": f"Successfully pinned item {shop_item.name}"},
+            status=200,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+
+        try:
+            shop_item = ShopItem.objects.get(pk=item_id)
+        except ShopItem.DoesNotExist:
+            raise ObjectNotFoundException("Shop item not found")
+
+        deleted_count, _ = PinnedShopItem.objects.filter(
+            user=user, item=shop_item
+        ).delete()
+
+        if deleted_count == 0:
+            return Response(
+                {"message": f"Item '{shop_item.name}' was not pinned"},
+                status=200,
+            )
+
+        return Response(
+            {"message": f"Successfully unpinned '{shop_item.name}'"}, status=200
+        )
+
+
+class PinOrganizationItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+        item = get_object_or_404(ShopItem, pk=item_id)
+
+        if not item.organization:
+            raise PermissionDenied("Item does not belong to any organization")
+
+        if item.organization.owner != user:
+            raise PermissionDenied("Only the organization owner can pin items")
+        item.is_pinned = not item.is_pinned
+        item.save()
+
+        status_text = "pinned" if item.is_pinned else "unpinned"
+        return Response(
+            {"message": f"Item successfully {status_text}", "is_pinned": item.is_pinned},
+            status=200
+        )

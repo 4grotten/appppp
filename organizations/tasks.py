@@ -18,6 +18,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from weasyprint import HTML
 
+from common.models import FileVideo, File
 from common.services.slack import bot
 from instagram_parsers.models import LoginDevice
 from instagram_parsers.parsers import parser
@@ -84,21 +85,21 @@ def parse_instagram_to_shop_items(
                 instagram_link=post_url,
             )
             for data in instagram.get("data"):
-                # if data.get('video_url'):
-                #     thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
-                #     video = FileVideo.objects.create(video_url=data.get('video_url'),
-                #                                      thumbnail=thumbnail)
-                #     ItemInstagramData.objects.create(item=shop_item,
-                #                                      thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                #                                          thumbnail),
-                #                                      video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                #                                          video))
-                # else:
-                ItemInstagramData.objects.create(
-                    item=shop_item,
-                    thumbnail_url=data.get("thumbnail_url"),
-                    video_url=data.get("video_url"),
-                )
+                if data.get('video_url'):
+                    thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
+                    video = FileVideo.objects.create(video_url=data.get('video_url'),
+                                                     thumbnail=thumbnail)
+                    ItemInstagramData.objects.create(item=shop_item,
+                                                     thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                                                         thumbnail),
+                                                     video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
+                                                         video))
+                else:
+                    ItemInstagramData.objects.create(
+                        item=shop_item,
+                        thumbnail_url=data.get("thumbnail_url"),
+                        video_url=data.get("video_url"),
+                    )
 
             if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):
                 shop_item.removed_at = mix_content_expired_time
@@ -392,3 +393,306 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         file_name = f"receipt_{file_name}"
         invoice.receipt_pdf.save(file_name, ContentFile(pdf_bytes), save=True)
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
+
+
+@shared_task(bind=True, max_retries=30, default_retry_delay=60)
+def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
+    # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
+    # так как services и models часто ссылаются на tasks.
+
+    import logging
+
+    import requests
+    from django.db import transaction
+    from django.db.models import Q
+
+    logger = logging.getLogger(__name__)
+
+    logger.info(
+        "[MaalyPay Task] Starting status check",
+        extra={
+            "merchant_tx_id": merchant_tx_id,
+            "transaction_id": transaction_id,
+            "retry_count": self.request.retries,
+        }
+    )
+
+    from notifications.constants import (
+        ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+        ACCEPT_ORDER_PAYMENT_TYPE,
+        ACCEPT_ORDER_TYPE,
+        ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
+        NOTIFICATION_MODE_PRODUCT,
+        NOTIFICATION_MODE_SYSTEM,
+        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+    )
+    from notifications.models import Notification
+    from notifications.tasks import (
+        send_delivery_notitication_to_organization_or_client,
+        sent_notification,
+    )
+    from organizations.models import Organization
+    from transactions.models import Transaction
+
+    url = f"https://maalyportal.com/api/omerch/check-online-transaction-merch/{merchant_tx_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response_data = response.json()
+        status_value = response_data.get("status")
+    except Exception as e:
+        logger.error(
+            "[MaalyPay Task] Connection error, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "error": str(e),
+                "retry_count": self.request.retries,
+            }
+        )
+        raise self.retry()
+
+    # Universal check: Support both boolean and string status values (legacy compatibility)
+    # According to MaalyPay developers:
+    # - status: false/"false"/pending = payment not completed
+    # - status: true/"true"/success = full payment received
+    is_paid = False
+    should_retry = False
+
+    if isinstance(status_value, bool):
+        # Boolean value
+        is_paid = status_value
+        should_retry = not status_value
+    elif isinstance(status_value, str):
+        # String value - check for success/true
+        status_lower = status_value.lower()
+        if status_lower in ("true", "success", "completed", "confirmed"):
+            is_paid = True
+        else:
+            # Pending or other status - retry
+            should_retry = True
+    else:
+        # Unknown type - retry
+        logger.warning(
+            "[MaalyPay Task] Unknown status type, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "status_value": status_value,
+                "status_type": type(status_value).__name__,
+            }
+        )
+        should_retry = True
+
+    if is_paid:
+        logger.info(
+            "[MaalyPay Task] Payment CONFIRMED",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "status": status_value,
+                "txHash": response_data.get("txHash"),
+                "filledAmount": response_data.get("filledAmount"),
+                "retry_count": self.request.retries,
+            }
+        )
+    elif should_retry:
+        logger.info(
+            "[MaalyPay Task] Payment NOT confirmed yet, will retry",
+            extra={
+                "merchant_tx_id": merchant_tx_id,
+                "transaction_id": transaction_id,
+                "status": status_value,
+                "retry_count": self.request.retries,
+                "max_retries": 30,
+            }
+        )
+        # Retry in 60 seconds
+        raise self.retry()
+
+    if is_paid:
+        try:
+            old_transaction = Transaction.objects.select_for_update().get(
+                id=transaction_id
+            )
+        except Transaction.DoesNotExist:
+            logger.error(
+                "[MaalyPay Task] Transaction not found",
+                extra={"transaction_id": transaction_id}
+            )
+            return "Transaction not found"
+
+        if old_transaction.is_processed:
+            logger.info(
+                "[MaalyPay Task] Transaction already processed",
+                extra={"transaction_id": transaction_id}
+            )
+            return "Already processed"
+
+        # Collect payment external data before saving
+        payment_external_data = {}
+        if response_data.get("txHash"):
+            payment_external_data["txHash"] = response_data.get("txHash")
+        if response_data.get("network"):
+            payment_external_data["network"] = response_data.get("network")
+        if response_data.get("asset"):
+            payment_external_data["asset"] = response_data.get("asset")
+        if response_data.get("txLink"):
+            payment_external_data["txLink"] = response_data.get("txLink")
+
+        # CRITICAL: Update transaction status in atomic block
+        try:
+            with transaction.atomic():
+                old_transaction.payment_status = Transaction.ACCEPTED
+                old_transaction.is_processed = True
+                old_transaction.payment_info = payment_external_data if payment_external_data else None
+                old_transaction.save()
+
+                logger.info(
+                    "[MaalyPay Task] Transaction status updated",
+                    extra={
+                        "transaction_id": transaction_id,
+                        "has_blockchain_data": bool(payment_external_data),
+                    }
+                )
+
+                if old_transaction.type == Transaction.ONLINE:
+                    transaction.on_commit(
+                        lambda: Notification.objects.filter(
+                            Q(extra_data__transaction_id=old_transaction.id)
+                            & (
+                                Q(type=ACCEPT_ORDER_TYPE)
+                                | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE)
+                            )
+                        ).delete()
+                    )
+
+                discount_percent = old_transaction.discount_percent
+
+                sent_notification.delay(
+                    recipient_id=old_transaction.processed_by_id,
+                    sender_id=old_transaction.client_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(old_transaction.final_amount),
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                sent_notification.delay(
+                    recipient_id=old_transaction.client_id,
+                    sender_id=old_transaction.processed_by_id,
+                    mode=NOTIFICATION_MODE_PRODUCT,
+                    notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
+                    organization_id=old_transaction.organization_id,
+                    extra_data=dict(
+                        transaction_id=old_transaction.id,
+                        total_price=str(old_transaction.final_amount),
+                        discount_percent=discount_percent,
+                        currency=old_transaction.currency.code,
+                    ),
+                )
+
+                organization = old_transaction.organization
+                has_delivery_service = (
+                    Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
+                    .filter(is_delivery_service=True, country=organization.country)
+                    .exists()
+                )
+
+        except Exception as e:
+            logger.error(
+                "[MaalyPay Task] CRITICAL: Failed to update transaction status",
+                extra={
+                    "transaction_id": transaction_id,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True
+            )
+            # Don't retry - transaction state might be inconsistent
+            raise
+
+        # Post-processing (non-critical): Send notifications and generate receipts
+        # These happen AFTER transaction is committed, so failures don't affect payment status
+        try:
+            if (
+                has_delivery_service
+                and hasattr(old_transaction, "cart")
+                and old_transaction.cart
+            ):
+                try:
+                    send_delivery_notitication_to_organization_or_client(
+                        old_transaction.cart.organization.owner,
+                        old_transaction.cart.id,
+                        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                        mode=NOTIFICATION_MODE_SYSTEM,
+                    )
+
+                    organization_members = list(
+                        old_transaction.cart.organization.memberships.filter(
+                            Q(role__can_edit_organization=True)
+                            | Q(role__can_see_stats=True)
+                            | Q(role__can_deliver=True)
+                        )
+                    )
+                    for member in organization_members:
+                        send_delivery_notitication_to_organization_or_client(
+                            member.user,
+                            old_transaction.cart.id,
+                            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                            mode=NOTIFICATION_MODE_SYSTEM,
+                        )
+                except Exception as e:
+                    logger.warning(
+                        "[MaalyPay Task] Failed to send delivery notifications",
+                        extra={
+                            "transaction_id": transaction_id,
+                            "error": str(e),
+                        },
+                        exc_info=True
+                    )
+
+            # Generate receipt if this is an org_subscription transaction
+            if old_transaction.type == Transaction.ORG_SUBSCRIPTION:
+                try:
+                    from organizations.services.receipts_services import (
+                        ReceiptService,
+                    )
+
+                    org_subscription = old_transaction.org_subscription
+                    if org_subscription:
+                        ReceiptService.create_receipt_from_maalypay(org_subscription)
+                        logger.info(
+                            "[MaalyPay Task] Receipt generated",
+                            extra={"subscription_id": org_subscription.pk}
+                        )
+                except Exception as e:
+                    logger.warning(
+                        "[MaalyPay Task] Failed to generate receipt",
+                        extra={
+                            "transaction_id": transaction_id,
+                            "error": str(e),
+                        },
+                        exc_info=True
+                    )
+        except Exception as e:
+            # Catch-all for post-processing errors - don't let them break the task
+            logger.error(
+                "[MaalyPay Task] Error in post-processing",
+                extra={
+                    "transaction_id": transaction_id,
+                    "error": str(e),
+                },
+                exc_info=True
+            )
+
+        return f"Transaction {transaction_id} completed successfully via MaalyPay"
+
+    # If we reach here, payment was not confirmed
+    print(f"MaalyPay: Transaction {merchant_tx_id} payment not confirmed (status: {status_value})")
+    return f"Payment not confirmed: {status_value}"

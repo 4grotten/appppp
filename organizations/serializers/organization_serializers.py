@@ -444,6 +444,19 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     is_wholesale_in_request = serializers.SerializerMethodField()
     all_unread_messages_count = serializers.SerializerMethodField(allow_null=True)
     unread_chat_count = serializers.SerializerMethodField(allow_null=True)
+    maaly_pay_config = serializers.SerializerMethodField(allow_null=True)
+
+    def get_maaly_pay_config(self, organization: Organization):
+        """Get MaalyPay configuration if exists"""
+        try:
+            from organizations.models import MaalyPayOrganizationPaymentSystem
+            config = MaalyPayOrganizationPaymentSystem.objects.filter(
+                organization=organization
+            ).first()
+            if config:
+                return MaalyPayConfigSerializer(config).data
+        except Exception:
+            return None
 
     def get_unread_chat_count(self, organization: Organization):
         organization_id = organization.id
@@ -632,6 +645,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             "all_unread_messages_count",
             "subscription_status",
             "unread_chat_count",
+            "maaly_pay_config",
         )
         read_only_fields = ["verification_status", "need_add_item"]
 
@@ -1221,10 +1235,18 @@ class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     merchant_id = serializers.CharField(required=False)
     api_key = serializers.CharField(required=False)
+    bank_info = serializers.CharField(required=False, allow_blank=True)
 
     # class Meta:
     #     model = OrganizationPaymentSystemUsers
     #     fields = ("username", "phone_number", "email", "payment_system_id")
+
+
+class MaalyPayConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        from organizations.models import MaalyPayOrganizationPaymentSystem
+        model = MaalyPayOrganizationPaymentSystem
+        fields = ('merchant_id', 'api_key', 'bank_info')
 
 
 class PaymentSystemSerializer(serializers.Serializer):

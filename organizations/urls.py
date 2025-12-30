@@ -97,6 +97,7 @@ from .views.organization_views import (
     OrganizationBlackListDestroyView,
     OrganizationClientDetailsAPIView,
     OrganizationComplaintCreateView,
+    OrganizationCouponBannerDetailView,
     OrganizationCouponBannerListCreateAPIView,
     OrganizationCreationLimitView,
     OrganizationFollowersCountAPIView,
@@ -106,6 +107,7 @@ from .views.organization_views import (
     OrganizationPartnersFollowersCountAPIView,
     OrganizationPaymentSystemListView,
     OrganizationPaymentSystemsActivationDetailView,
+    MaalyPayConfigView,
     OrganizationPaymentSystemsActivationView,
     OrganizationRetrieveUpdateView,
     OrganizationsGoogleMapsCreateView,
@@ -323,6 +325,11 @@ organization_urls = [
         OrganizationCouponBannerListCreateAPIView.as_view(),
     ),
     path(
+        "organizations/<int:pk>/coupons/banners/<int:banner_id>/",
+        OrganizationCouponBannerDetailView.as_view(),
+        name="org-banner-detail",
+    ),
+    path(
         "organizations/banners/<int:pk>/",
         RemoveCustomBannerView.as_view(),
         name="organization-banners-delete",
@@ -356,6 +363,11 @@ organization_urls = [
         "organizations/<int:pk>/payment_systems/activation/detail/",
         OrganizationPaymentSystemsActivationDetailView.as_view(),
         name="organization_payment_systems_activation_detail",
+    ),
+    path(
+        "organizations/<int:pk>/payment_systems/maalypay/config/",
+        MaalyPayConfigView.as_view(),
+        name="maalypay_config",
     ),
     path(
         "organizations/payment_systems/",

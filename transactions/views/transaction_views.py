@@ -7,6 +7,8 @@ import requests
 import xmltodict
 from django.conf import settings
 from django.db import transaction
+from django.shortcuts import redirect as django_redirect
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
@@ -34,7 +36,6 @@ from notifications.constants import (
     NOTIFICATION_TYPE_SENT_TO_DELIVERY_BY_ORGANIZATION_FOR_CLIENT,
 )
 from notifications.models import Notification
-from organizations.models import MaalyPayOrganizationPaymentSystem
 from organizations.serializers.card_serializers import DiscountCardBriefSerializer
 from organizations.serializers.organization_serializers import (
     PartnerWithLatestTransactionSerializer,
@@ -49,7 +50,9 @@ from organizations.services.card_services import DiscountCardService
 from organizations.services.client_status_services import (
     OrganizationClientFinancialStatusService,
 )
+from organizations.services.maalypay_service import MaalyPayService
 from organizations.services.organization_services import OrganizationService
+from organizations.tasks import fetch_maalypay_status
 from project.redis_client import redis_client
 from project.settings.base import (
     BETAPAY_API_TOKEN,
@@ -60,7 +63,7 @@ from project.settings.base import (
     LIBERSAVE_API_KEY,
     PAYSY_API_KEY,
 )
-from shop.models import Booking, ShopItem, Ticket
+from shop.models import Booking, Cart, ShopItem, Ticket
 from shop.serializers.item_serializers import (
     BookInfoWithClientSerializer,
     IsActiveTicketSerializer,
@@ -1926,7 +1929,7 @@ class InitPaymentView(GenericAPIView):
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
             signature_params = (
                 ["init_payment.php"]
-                + [str(value) for _, value in sorted_params]
+                + [str(value) for __, value in sorted_params]
                 + [FREEDOMPAY_RECEIVE_SECRET]
             )
             signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
@@ -1969,7 +1972,7 @@ class InitPaymentView(GenericAPIView):
                 Decimal("0.00"), rounding=ROUND_DOWN
             )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             success_url = TransactionService.get_success_url(request=request)
@@ -2169,42 +2172,87 @@ class InitPaymentView(GenericAPIView):
             transaction = TransactionService.get(
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
-            pg_description, purchase_type = (
-                TransactionService.get_pg_description_and_purchase_type(
-                    transaction=transaction
+
+            # Build MaalyPay description based on whether cart exists
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    # Scenario 2: With cart - show item titles and quantities
+                    items_desc = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    maalypay_description = items_desc
+                else:
+                    # Empty cart - fall back to organization info
+                    client_name = (
+                        transaction.client.full_name
+                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                        or "Клиент"
+                    )
+                    maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+            except (Cart.DoesNotExist, AttributeError):
+                # Scenario 1: No cart - show organization, order number, client name
+                client_name = (
+                    transaction.client.full_name
+                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                    or "Клиент"
                 )
+                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment_config = MaalyPayService.get_config(transaction.organization)
+
+            if not payment_config:
+                return Response(
+                    data={"error": "MaalyPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            callback_base = base_url
+            if callback_base.endswith("api/v1/"):
+                callback_base = callback_base[:-7]
+
+            merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
+            callback_url = (
+                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
             )
-            payment_data = MaalyPayOrganizationPaymentSystem.objects.filter(
-                organization=transaction.organization
-            ).first()
-            if not payment_data:
-                raise NotImplementedError()
-            suffix = "api/v1/"
-            if base_url.endswith(suffix):
-                base_url = base_url[: -len(suffix)]
-            url = "https://maalyportal.com/api/omerch/create-payment-request"
-            payload = {
-                "merchantId": int(payment_data.merchant_id),
-                "fiatAmount": str(float(transaction.final_amount)),
-                "currency": transaction.currency.code,
-                "description": pg_description + " " + purchase_type,
-                "merchantTxId": f"test-transaction-{transaction.pk}",
-                "merchantCallback": base_url + "payment-success/",
-                "customerEmail": transaction.client.email
-                if transaction.client.email
-                else "unknwown@gmail.com",
-            }
-            headers = {
-                "Authorization": f"Bearer {payment_data.api_key}",
-                "Content-Type": "application/json",
-            }
-            print(headers)
 
-            response = requests.post(url=url, json=payload, headers=headers)
-            print(response.text)
-            redirect_url = response.json().get("CheckoutUrl")
+            checkout_url = MaalyPayService.create_payment(
+                api_key=payment_config.api_key,
+                merchant_id=int(payment_config.merchant_id),
+                amount=str(transaction.final_amount),
+                currency=transaction.currency.code,
+                description=maalypay_description,
+                merchant_tx_id=merchant_tx_id,
+                callback_url=callback_url,
+                customer_email=transaction.client.email or "noemail@placeholder.local",
+                bank_info=payment_config.bank_info,
+            )
 
-            return Response(data={"redirect_url": redirect_url})
+            if not checkout_url:
+                return Response(
+                    data={
+                        "error": "Failed to create MaalyPay payment. Please try again."
+                    },
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            fetch_maalypay_status.delay(
+                merchant_tx_id=merchant_tx_id,
+                api_key=payment_config.api_key,
+                transaction_id=transaction.pk,
+            )
+
+            return Response(
+                data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
 
         else:
             return Response(
@@ -2223,6 +2271,7 @@ class NewInitPaymentView(GenericAPIView):
     3 - Libersave
     4 - Betapay
     5 - CryptoCloud
+    6 - MaalyPay
     """
 
     def post(self, request, *args, **kwargs):
@@ -2287,7 +2336,7 @@ class NewInitPaymentView(GenericAPIView):
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
             signature_params = (
                 ["init_payment.php"]
-                + [str(value) for _, value in sorted_params]
+                + [str(value) for __, value in sorted_params]
                 + [FREEDOMPAY_RECEIVE_SECRET]
             )
             signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
@@ -2330,7 +2379,7 @@ class NewInitPaymentView(GenericAPIView):
                 Decimal("0.00"), rounding=ROUND_DOWN
             )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             success_url = TransactionService.get_success_url(request=request)
@@ -2524,6 +2573,92 @@ class NewInitPaymentView(GenericAPIView):
                     data={"error": "Something went wrong"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        elif payment_method.code == "maalypay":
+            from organizations.services.maalypay_service import MaalyPayService
+
+            transaction_id = serializer.validated_data["transaction_id"]
+            transaction = TransactionService.get(
+                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+
+            # Build MaalyPay description based on whether cart exists
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    # Scenario 2: With cart - show item titles and quantities
+                    items_desc = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    maalypay_description = items_desc
+                else:
+                    # Empty cart - fall back to organization info
+                    client_name = (
+                        transaction.client.full_name
+                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                        or "Клиент"
+                    )
+                    maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+            except (Cart.DoesNotExist, AttributeError):
+                # Scenario 1: No cart - show organization, order number, client name
+                client_name = (
+                    transaction.client.full_name
+                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                    or "Клиент"
+                )
+                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment_config = MaalyPayService.get_config(transaction.organization)
+
+            if not payment_config:
+                return Response(
+                    data={"error": "MaalyPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            callback_base = base_url
+            if callback_base.endswith("api/v1/"):
+                callback_base = callback_base[:-7]
+
+            merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
+            callback_url = (
+                f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
+            )
+
+            checkout_url = MaalyPayService.create_payment(
+                api_key=payment_config.api_key,
+                merchant_id=int(payment_config.merchant_id),
+                amount=str(transaction.final_amount),
+                currency=transaction.currency.code,
+                description=maalypay_description,
+                merchant_tx_id=merchant_tx_id,
+                callback_url=callback_url,
+                customer_email=transaction.client.email or "noemail@placeholder.local",
+                bank_info=payment_config.bank_info,
+            )
+
+            if not checkout_url:
+                return Response(
+                    data={"error": "Failed to create MaalyPay payment"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            fetch_maalypay_status.delay(
+                merchant_tx_id=merchant_tx_id,
+                api_key=payment_config.api_key,
+                transaction_id=transaction.pk,
+            )
+
+            return Response(
+                data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
                 data={"error": "Payment System Not Found"},
@@ -2814,11 +2949,302 @@ class BetaPayPaymentTestView(APIView):
         return Response(response_json)
 
 
-class MaalyPayPaymentTestView(APIView):
+class MaalyPayResultView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        """
+        MaalyPay redirect after user completes payment on their portal.
+
+        Strategy:
+        1. Check MaalyPay API immediately for payment data (txHash, filledAmount)
+        2. If payment data exists -> user DID pay -> process immediately
+        3. If no payment data yet -> return "processing" -> wait for POST webhook
+        4. This prevents both: fake payments AND bad UX from waiting for webhook
+        """
+        import logging
+
+        from organizations.services.maalypay_service import MaalyPayService
+
+        logger = logging.getLogger(__name__)
+
+        tx_id = request.GET.get("tx")
+
+        if not tx_id:
+            return Response(
+                {"error": "Missing transaction ID"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            transaction = Transaction.objects.select_related(
+                "organization"
+            ).get(id=tx_id)
+        except Transaction.DoesNotExist:
+            return Response(
+                {"error": "Transaction not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        logger.info(
+            "[MaalyPay Redirect] User redirected from payment portal",
+            extra={
+                "transaction_id": transaction.id,
+                "current_status": transaction.payment_status,
+                "is_processed": transaction.is_processed,
+            }
+        )
+
+        # If already processed, return success
+        if transaction.is_processed:
+            return Response(
+                {
+                    "transaction_id": transaction.id,
+                    "status": "completed",
+                    "is_processed": True,
+                    "message": "Payment already confirmed"
+                }
+            )
+
+        # Check MaalyPay API for payment confirmation
+        config = MaalyPayService.get_config(transaction.organization)
+        if not config:
+            logger.error(
+                f"[MaalyPay Redirect] No MaalyPay config for org {transaction.organization.id}"
+            )
+            return Response(
+                {"error": "Payment system not configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.id)
+        payment_status = MaalyPayService.check_status(config.api_key, merchant_tx_id)
+
+        logger.info(
+            "[MaalyPay Redirect] Checked payment status from API",
+            extra={
+                "transaction_id": transaction.id,
+                "merchant_tx_id": merchant_tx_id,
+                "api_response": payment_status,
+            }
+        )
+
+        # STRICT CHECK: Only accept payment if MaalyPay confirms status: true
+        # According to MaalyPay developers:
+        # - status: false = payment not completed (user didn't pay OR partial payment)
+        # - status: true = full payment received, txHash available
+        is_payment_confirmed = False
+
+        if payment_status:
+            status_value = payment_status.get("status")
+
+            # CRITICAL: Only process if status is explicitly True
+            if status_value is True:
+                is_payment_confirmed = True
+                logger.info(
+                    "[MaalyPay Redirect] Payment CONFIRMED by MaalyPay - status: true",
+                    extra={
+                        "transaction_id": transaction.id,
+                        "status": status_value,
+                        "txHash": payment_status.get("txHash"),
+                        "filledAmount": payment_status.get("filledAmount"),
+                        "fiatAmount": payment_status.get("fiatAmount"),
+                    }
+                )
+            else:
+                logger.info(
+                    "[MaalyPay Redirect] Payment NOT confirmed - status: false",
+                    extra={
+                        "transaction_id": transaction.id,
+                        "status": status_value,
+                        "filledAmount": payment_status.get("filledAmount"),
+                        "note": "User may have started payment but not completed, or partial payment"
+                    }
+                )
+
+        if is_payment_confirmed:
+            logger.info(
+                "[MaalyPay Redirect] Processing payment immediately (evidence found)",
+                extra={
+                    "transaction_id": transaction.id,
+                    "filled_amount": payment_status.get("filledAmount") if payment_status else None,
+                    "tx_hash": payment_status.get("txHash") if payment_status else None,
+                }
+            )
+
+            from django.db import transaction as db_transaction
+
+            try:
+                with db_transaction.atomic():
+                    locked_transaction = Transaction.objects.select_for_update().get(id=tx_id)
+
+                    if locked_transaction.is_processed:
+                        logger.info(
+                            "[MaalyPay Redirect] Transaction already processed (likely by webhook)",
+                            extra={"transaction_id": tx_id}
+                        )
+                        from transactions.services.transaction_services import (
+                            TransactionService,
+                        )
+                        success_url = TransactionService.get_success_url(request)
+                        return django_redirect(f"{success_url}?transaction_id={tx_id}")
+
+                    locked_transaction.is_processed = True
+                    locked_transaction.payment_status = Transaction.ACCEPTED
+
+                    if payment_status:
+                        locked_transaction.payment_external_data = {
+                            "maalypay_status": payment_status,
+                            "confirmed_at": str(timezone.now()),
+                            "confirmed_via": "redirect_check"
+                        }
+
+                    locked_transaction.save(
+                        update_fields=["is_processed", "payment_status", "payment_external_data", "updated_at"]
+                    )
+
+                    logger.info(
+                        "[MaalyPay Redirect] Transaction updated successfully",
+                        extra={"transaction_id": tx_id}
+                    )
+            except Exception as e:
+                logger.error(
+                    "[MaalyPay Redirect] Failed to update transaction",
+                    extra={"transaction_id": tx_id, "error": str(e)},
+                    exc_info=True
+                )
+
+            from transactions.services.transaction_services import TransactionService
+            success_url = TransactionService.get_success_url(request)
+            logger.info(
+                f"[MaalyPay Redirect] Redirecting to success page: {success_url}",
+                extra={"transaction_id": tx_id}
+            )
+            return django_redirect(f"{success_url}?transaction_id={tx_id}")
+
+        logger.info(
+            "[MaalyPay Redirect] No payment evidence yet, waiting for webhook",
+            extra={"transaction_id": transaction.id}
+        )
+
+        from transactions.services.transaction_services import TransactionService
+        success_url = TransactionService.get_success_url(request)
+        logger.info(
+            f"[MaalyPay Redirect] Redirecting to processing page: {success_url}",
+            extra={"transaction_id": transaction.id}
+        )
+        return django_redirect(f"{success_url}?transaction_id={transaction.id}&status=processing")
+
     def post(self, request, *args, **kwargs):
-        payload = request.data
-        print(payload)
-        return Response(data={"data": "success"}, status=200)
+
+        import logging
+        logger = logging.getLogger(__name__)
+
+        logger.info(
+            "[MaalyPay Webhook] POST callback received",
+            extra={
+                "data": request.data,
+                "query_params": dict(request.GET),
+            }
+        )
+
+        tx_id = None
+        merchant_tx_id = request.data.get("merchantTxId") or request.GET.get("merchantTxId")
+
+        if merchant_tx_id:
+            if isinstance(merchant_tx_id, str) and "apofiz-" in merchant_tx_id:
+                tx_id = merchant_tx_id.replace("apofiz-", "")
+                logger.info(f"[MaalyPay Webhook] Extracted tx_id: {tx_id}")
+
+        if not tx_id:
+            tx_id = request.GET.get("tx") or request.data.get("tx")
+
+        if not tx_id:
+            logger.error(
+                "[MaalyPay Webhook] No transaction ID in webhook",
+                extra={"data": request.data}
+            )
+            return Response({"status": "ok"}, status=200)  # Return 200 to avoid retries
+
+        try:
+            transaction = Transaction.objects.select_for_update().select_related(
+                "organization"
+            ).get(id=tx_id)
+
+            if transaction.is_processed:
+                logger.info(f"[MaalyPay Webhook] Transaction {tx_id} already processed")
+                return Response({"status": "ok"}, status=200)
+
+            from organizations.services.maalypay_service import MaalyPayService
+
+            config = MaalyPayService.get_config(transaction.organization)
+            if not config:
+                logger.error(
+                    f"[MaalyPay Webhook] No MaalyPay config for org {transaction.organization.id}"
+                )
+                return Response({"status": "ok"}, status=200)
+
+            merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.id)
+            payment_status = MaalyPayService.check_status(config.api_key, merchant_tx_id)
+
+            logger.info(
+                "[MaalyPay Webhook] Verified payment status via API",
+                extra={
+                    "transaction_id": transaction.id,
+                    "api_response": payment_status,
+                }
+            )
+
+            if not payment_status or payment_status.get("status") is not True:
+                logger.warning(
+                    "[MaalyPay Webhook] Webhook received but API status is not true!",
+                    extra={
+                        "transaction_id": transaction.id,
+                        "api_status": payment_status.get("status") if payment_status else None,
+                        "webhook_data": request.data,
+                    }
+                )
+                return Response({"status": "ok"}, status=200)
+
+            transaction.is_processed = True
+            transaction.payment_status = Transaction.ACCEPTED
+
+            transaction.payment_external_data = {  # type: ignore
+                "webhook_received_at": str(timezone.now()),
+                "webhook_data": request.data,
+                "api_verification": payment_status,
+                "confirmed_via": "webhook"
+            }
+
+            transaction.save(
+                update_fields=["is_processed", "payment_status", "payment_external_data", "updated_at"]
+            )
+
+            logger.info(
+                f"[MaalyPay Webhook] Transaction {tx_id} processed successfully via webhook",
+                extra={
+                    "status": payment_status.get("status"),
+                    "txHash": payment_status.get("txHash"),
+                }
+            )
+
+            return Response({"status": "ok"}, status=200)
+
+        except Transaction.DoesNotExist:
+            logger.error(f"[MaalyPay Webhook] Transaction {tx_id} not found")
+            return Response({"status": "ok"}, status=200)
+        except Exception as e:
+            logger.critical(
+                f"[MaalyPay Webhook] CRITICAL ERROR processing transaction {tx_id}: {e}",
+                extra={
+                    "transaction_id": tx_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                },
+                exc_info=True
+            )
+            return Response({"status": "ok"}, status=200)
 
 
 class ResultURLView(APIView):
@@ -2926,7 +3352,6 @@ class TransactionWithdrawalView(GenericAPIView):
         transfer_amount = serializer.validated_data["transfer_amount"]
         utc_offset_minutes = serializer.validated_data.get("utc_offset_minutes")
 
-        # create recipient service
         recipient = RecipientService.create_recipient(
             payout_system=payout_system,
             image_id=image_id,
@@ -2935,7 +3360,6 @@ class TransactionWithdrawalView(GenericAPIView):
             transfer_amount=transfer_amount,
         )
 
-        # create transaction of withdrawal service
         transaction = TransactionService.create_withdrawal_transaction(
             request=request,
             organization=organization,

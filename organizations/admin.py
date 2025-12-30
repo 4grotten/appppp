@@ -61,6 +61,7 @@ from .models import (
     PromoEditLog,
     PromoSubscriber,
     Question,
+    RegionalPaymentSystemSettings,
     RegionalTariff,
     Role,
     Service,
@@ -92,7 +93,7 @@ class OrganizationBlacklistAdmin(admin.ModelAdmin):
 
 
 @admin.register(BlockedUser)
-class OrganizationBlacklistAdmin(admin.ModelAdmin):
+class BlockedUserAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "organization",
@@ -187,27 +188,18 @@ class OrganizationPaymentSystemUsersInLine(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     change_form_template = "admin/organization_change_form.html"
-    list_select_related = True
+    list_select_related = ("owner", "country", "city", "currency")
     formfield_overrides = {models.PointField: {"widget": GooglePointFieldWidget}}
     list_display_links = ("id", "title")
     list_display = (
         "id",
         "title",
         "owner",
-        "currency",
         "country",
         "city",
         "subscription_status",
         "is_active",
         "is_banned",
-        "is_private",
-        "update_posts",
-        "cashback_group",
-        "cumulative_group",
-        "items_group",
-        "is_delivery_service",
-        "add_item_date",
-        "avg_check",
     )
     list_filter = (
         "is_active",
@@ -270,6 +262,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "libersave_activated",
                     "betapay_activated",
                     "cryptocloud_activated",
+                    "maaly_pay_activated",
                     "payment_systems_activated",
                     "payment_with_confirmation",
                     "freedompay_confirmed",
@@ -277,6 +270,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "libersave_confirmed",
                     "betapay_confirmed",
                     "cryptocloud_confirmed",
+                    "maaly_pay_confirmed",
                 )
             },
         ),
@@ -324,7 +318,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         large = f"https://apofiz-media.s3.amazonaws.com/{obj.image.large}"
         medium = f"https://apofiz-media.s3.amazonaws.com/{obj.image.medium}"
         types = form.cleaned_data.get("types")
-        types_list = [type.id for type in types]
+        types_list = [type.id for type in types] if types else []
 
         from organizations.serializers.organization_serializers import (
             OrganizationMapsListSerializer,
@@ -500,10 +494,6 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
         "title",
         "category",
         "is_adult",
-        "title_ru",
-        "title_tr",
-        "title_de",
-        "title_zh",
     )
     list_filter = ("category",)
     search_fields = (
@@ -516,13 +506,7 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
 
 @admin.register(OrganizationCategory)
 class OrganizationCategoryAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "name_ru",
-        "name_tr",
-        "name_de",
-        "name_zh",
-    )
+    list_display = ("name",)
     search_fields = ("name",)
 
 
@@ -752,16 +736,11 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
 
 
 @admin.register(Service)
-class OrganizationAdmin(admin.ModelAdmin):
+class ServiceAdmin(admin.ModelAdmin):
     list_display = (
         "preview",
         "ordering",
         "name",
-        "name_ru",
-        "name_en",
-        "name_tr",
-        "name_de",
-        "name_zh",
     )
     list_filter = ("name",)
     search_fields = (
@@ -816,7 +795,7 @@ class UserAssistantAdmin(admin.ModelAdmin):
 
 
 @admin.register(Plan)
-class AssistantAdmin(admin.ModelAdmin):
+class PlanAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("name",)
 
@@ -869,8 +848,7 @@ class RegionalTariffAdmin(admin.ModelAdmin):
     total_price_display.short_description = "Total Price"
 
 
-@admin.register(PaymentSystemMethod)
-class RegionalTariffAdmin(admin.ModelAdmin):
+class PaymentSystemMethodAdmin(admin.ModelAdmin):
     list_display = ("name", "is_active", "code")
     list_filter = ("name", "is_active", "code")
     search_fields = ("name", "code")
@@ -1012,7 +990,6 @@ class CouponUsageAdmin(admin.ModelAdmin):
     list_select_related = ["user", "coupon", "transaction"]
 
 
-@admin.register(MaalyPayOrganizationPaymentSystem)
 class MaalyPayAdmin(admin.ModelAdmin):
     list_display = ["organization", "merchant_id"]
     autocomplete_fields = [
@@ -1022,3 +999,83 @@ class MaalyPayAdmin(admin.ModelAdmin):
     list_select_related = [
         "organization",
     ]
+
+
+class AllowedOrganizationInline(admin.TabularInline):
+    """Инлайн для организаций-исключений"""
+    model = RegionalPaymentSystemSettings.allowed_organizations.through
+    extra = 0
+    verbose_name = "Организация с доступом"
+    verbose_name_plural = "Организации с доступом (Overrides)"
+    raw_id_fields = ('organization',)
+
+
+class PaymentSystemMethodInline(admin.StackedInline):
+    """Инлайн для методов платежных систем"""
+    model = PaymentSystemMethod
+    extra = 0
+    fields = ('name', 'code', 'is_active')
+    readonly_fields = ('code',)
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
+    """Админка для управления доступностью платёжных систем по регионам"""
+
+    list_display = (
+        'country',
+        'get_payment_system_name',
+        'is_enabled_in_region',
+        'is_available_for_request',
+        'get_override_count',
+    )
+
+    list_filter = (
+        'country',
+        'payment_system_id',
+        'is_enabled_in_region',
+        'is_available_for_request',
+    )
+
+    list_editable = (
+        'is_enabled_in_region',
+        'is_available_for_request',
+    )
+
+    search_fields = (
+        'country__name',
+        'country__code',
+    )
+
+    list_select_related = ('country',)
+
+    autocomplete_fields = ('country',)
+
+    ordering = ('country__code', 'payment_system_id')
+
+    inlines = [AllowedOrganizationInline]
+
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('country', 'payment_system_id')
+        }),
+        ('Настройки доступности', {
+            'fields': ('is_enabled_in_region', 'is_available_for_request'),
+            'description': 'Управление доступностью платёжной системы в регионе'
+        }),
+    )
+
+    def get_payment_system_name(self, obj):
+        """Отображение названия платёжной системы"""
+        return obj.get_payment_system_id_display()
+    get_payment_system_name.short_description = 'Платёжная система'
+    get_payment_system_name.admin_order_field = 'payment_system_id'
+
+    def get_override_count(self, obj):
+        """Количество организаций-исключений"""
+        count = obj.allowed_organizations.count()
+        return f"{count} орг." if count > 0 else "—"
+    get_override_count.short_description = 'Исключения'

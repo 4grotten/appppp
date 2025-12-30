@@ -138,6 +138,7 @@ class ShopItem(models.Model):
     current_locations = models.JSONField(null=True, blank=True)
     preferred_locations = models.JSONField(null=True, blank=True)
     links = models.JSONField(null=True, blank=True)
+    is_pinned = models.BooleanField(default=False, verbose_name="Закреплен в организации")
 
 
     @property
@@ -483,3 +484,19 @@ class CommentComplaint(TimestampModel):
         constraints = [
             models.UniqueConstraint(fields=('user', 'comment'), name='unique_comment_complaint_from_user')
         ]
+
+
+
+class PinnedShopItem(TimestampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pinned_shop_items')
+    item = models.ForeignKey(ShopItem, on_delete=models.CASCADE, related_name='pinned_users')
+
+    def __str__(self):
+        return f'{self.user} pinned {self.item.name}'
+
+    class Meta:
+        verbose_name = 'Pinned Shop Item'
+        verbose_name_plural = 'Pinned Shop Items'
+        # constraints = (
+        #     models.constraints.UniqueConstraint(fields=('user', 'item'), name='unique_user_item_pin'),
+        # )

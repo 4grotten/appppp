@@ -260,7 +260,7 @@ class TransactionService:
             cart.save()
             for cart_item in instance.cart.items.all():
                 if cart_item.item.purchase_type == ShopItem.TICKET:
-                    for _ in range(cart_item.count):
+                    for _i in range(cart_item.count):
                         Ticket.objects.create(
                             user=client,
                             organization=instance.organization,

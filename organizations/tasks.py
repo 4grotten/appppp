@@ -512,32 +512,49 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
 
     if is_paid:
         try:
+            old_transaction = Transaction.objects.select_for_update().get(
+                id=transaction_id
+            )
+        except Transaction.DoesNotExist:
+            logger.error(
+                "[MaalyPay Task] Transaction not found",
+                extra={"transaction_id": transaction_id}
+            )
+            return "Transaction not found"
+
+        if old_transaction.is_processed:
+            logger.info(
+                "[MaalyPay Task] Transaction already processed",
+                extra={"transaction_id": transaction_id}
+            )
+            return "Already processed"
+
+        # Collect payment external data before saving
+        payment_external_data = {}
+        if response_data.get("txHash"):
+            payment_external_data["txHash"] = response_data.get("txHash")
+        if response_data.get("network"):
+            payment_external_data["network"] = response_data.get("network")
+        if response_data.get("asset"):
+            payment_external_data["asset"] = response_data.get("asset")
+        if response_data.get("txLink"):
+            payment_external_data["txLink"] = response_data.get("txLink")
+
+        # CRITICAL: Update transaction status in atomic block
+        try:
             with transaction.atomic():
-                old_transaction = Transaction.objects.select_for_update().get(
-                    id=transaction_id
-                )
-
-                if old_transaction.is_processed:
-                    return "Already processed"
-
-                # Collect payment external data before saving
-                payment_external_data = {}
-                if response_data.get("txHash"):
-                    payment_external_data["txHash"] = response_data.get("txHash")
-                if response_data.get("network"):
-                    payment_external_data["network"] = response_data.get("network")
-                if response_data.get("asset"):
-                    payment_external_data["asset"] = response_data.get("asset")
-                if response_data.get("txLink"):
-                    payment_external_data["txLink"] = response_data.get("txLink")
-
                 old_transaction.payment_status = Transaction.ACCEPTED
                 old_transaction.is_processed = True
                 old_transaction.payment_info = payment_external_data if payment_external_data else None
                 old_transaction.save()
 
-                if payment_external_data:
-                    print(f"MaalyPay: Stored blockchain data (txHash: {payment_external_data.get('txHash', 'N/A')[:10]}...) for transaction {transaction_id}")
+                logger.info(
+                    "[MaalyPay Task] Transaction status updated",
+                    extra={
+                        "transaction_id": transaction_id,
+                        "has_blockchain_data": bool(payment_external_data),
+                    }
+                )
 
                 if old_transaction.type == Transaction.ONLINE:
                     transaction.on_commit(
@@ -587,59 +604,94 @@ def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_i
                     .exists()
                 )
 
-                if (
-                    has_delivery_service
-                    and hasattr(old_transaction, "cart")
-                    and old_transaction.cart
-                ):
-                    try:
+        except Exception as e:
+            logger.error(
+                "[MaalyPay Task] CRITICAL: Failed to update transaction status",
+                extra={
+                    "transaction_id": transaction_id,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True
+            )
+            # Don't retry - transaction state might be inconsistent
+            raise
+
+        # Post-processing (non-critical): Send notifications and generate receipts
+        # These happen AFTER transaction is committed, so failures don't affect payment status
+        try:
+            if (
+                has_delivery_service
+                and hasattr(old_transaction, "cart")
+                and old_transaction.cart
+            ):
+                try:
+                    send_delivery_notitication_to_organization_or_client(
+                        old_transaction.cart.organization.owner,
+                        old_transaction.cart.id,
+                        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
+                        mode=NOTIFICATION_MODE_SYSTEM,
+                    )
+
+                    organization_members = list(
+                        old_transaction.cart.organization.memberships.filter(
+                            Q(role__can_edit_organization=True)
+                            | Q(role__can_see_stats=True)
+                            | Q(role__can_deliver=True)
+                        )
+                    )
+                    for member in organization_members:
                         send_delivery_notitication_to_organization_or_client(
-                            old_transaction.cart.organization.owner,
+                            member.user,
                             old_transaction.cart.id,
                             NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
                             mode=NOTIFICATION_MODE_SYSTEM,
                         )
+                except Exception as e:
+                    logger.warning(
+                        "[MaalyPay Task] Failed to send delivery notifications",
+                        extra={
+                            "transaction_id": transaction_id,
+                            "error": str(e),
+                        },
+                        exc_info=True
+                    )
 
-                        organization_members = list(
-                            old_transaction.cart.organization.memberships.filter(
-                                Q(role__can_edit_organization=True)
-                                | Q(role__can_see_stats=True)
-                                | Q(role__can_deliver=True)
-                            )
+            # Generate receipt if this is an org_subscription transaction
+            if old_transaction.type == Transaction.ORG_SUBSCRIPTION:
+                try:
+                    from organizations.services.receipts_services import (
+                        ReceiptService,
+                    )
+
+                    org_subscription = old_transaction.org_subscription
+                    if org_subscription:
+                        ReceiptService.create_receipt_from_maalypay(org_subscription)
+                        logger.info(
+                            "[MaalyPay Task] Receipt generated",
+                            extra={"subscription_id": org_subscription.pk}
                         )
-                        for member in organization_members:
-                            send_delivery_notitication_to_organization_or_client(
-                                member.user,
-                                old_transaction.cart.id,
-                                NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                mode=NOTIFICATION_MODE_SYSTEM,
-                            )
-                    except Exception as e:
-                        print(f"Error sending delivery notifications: {e}")
-
-                # Generate receipt if this is an org_subscription transaction
-                if old_transaction.type == Transaction.ORG_SUBSCRIPTION:
-                    try:
-                        from organizations.services.receipts_services import (
-                            ReceiptService,
-                        )
-
-                        org_subscription = old_transaction.org_subscription
-                        if org_subscription:
-                            ReceiptService.create_receipt_from_maalypay(org_subscription)
-                            print(f"MaalyPay: Receipt generated for subscription {org_subscription.pk}")
-                    except Exception as e:
-                        print(f"MaalyPay: Error generating receipt: {e}")
-                        # Don't fail the whole transaction if receipt fails
-
-            return f"Transaction {transaction_id} completed successfully via MaalyPay"
-
-        except Transaction.DoesNotExist:
-            print(f"Transaction {transaction_id} not found")
-            return "Transaction not found"
+                except Exception as e:
+                    logger.warning(
+                        "[MaalyPay Task] Failed to generate receipt",
+                        extra={
+                            "transaction_id": transaction_id,
+                            "error": str(e),
+                        },
+                        exc_info=True
+                    )
         except Exception as e:
-            print(f"Error processing MaalyPay transaction db update: {e}")
-            raise self.retry()
+            # Catch-all for post-processing errors - don't let them break the task
+            logger.error(
+                "[MaalyPay Task] Error in post-processing",
+                extra={
+                    "transaction_id": transaction_id,
+                    "error": str(e),
+                },
+                exc_info=True
+            )
+
+        return f"Transaction {transaction_id} completed successfully via MaalyPay"
 
     # If we reach here, payment was not confirmed
     print(f"MaalyPay: Transaction {merchant_tx_id} payment not confirmed (status: {status_value})")

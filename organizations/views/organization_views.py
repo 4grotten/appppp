@@ -683,6 +683,9 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 5:
             organization.cryptocloud_activated = is_active
             organization.save()
+        elif id == 6:
+            organization.maaly_pay_activated = is_active
+            organization.save()
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
@@ -690,6 +693,43 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
             {"message": _("Activation status successfully updated.")},
             status=status.HTTP_200_OK,
         )
+
+
+class MaalyPayConfigView(RetrieveAPIView):
+    """
+    GET endpoint to retrieve MaalyPay configuration (merchant_id, api_key, bank_info)
+    for a specific organization.
+
+    URL: /organizations/{pk}/payment_systems/maalypay/config/
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+
+        if not OrganizationService.user_can_edit_organization(
+            user=request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No rights to view this organization"))
+
+        config = MaalyPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).first()
+
+        if not config:
+            return Response(
+                {"detail": "MaalyPay not configured for this organization"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        from organizations.serializers.organization_serializers import MaalyPayConfigSerializer
+
+        serializer = MaalyPayConfigSerializer(config)
+        response_data = serializer.data
+        response_data['is_active'] = organization.maaly_pay_activated
+        response_data['is_confirmed'] = organization.maaly_pay_confirmed
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class DeliverySettingsView(UpdateAPIView):
@@ -1392,7 +1432,9 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        from organizations.services.regional_payment_service import RegionalPaymentSystemService
+        from organizations.services.regional_payment_service import (
+            RegionalPaymentSystemService,
+        )
 
         organization_id = self.kwargs.get("pk")
         organization = OrganizationService.get(id=organization_id)
@@ -1422,7 +1464,9 @@ class PaymentSystemListView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        from organizations.services.regional_payment_service import RegionalPaymentSystemService
+        from organizations.services.regional_payment_service import (
+            RegionalPaymentSystemService,
+        )
 
         organization_id = self.request.query_params.get("organization_id", None)
         if organization_id is None:

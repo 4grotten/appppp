@@ -2,8 +2,9 @@
 from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -97,15 +98,15 @@ class FeedView(ListAPIView):
             price_filter = Q(price__isnull=False) | Q(salary_from__isnull=False)
             qs = qs.filter(price_filter)
 
-        if user.is_authenticated:
-            pinned_subquery = PinnedShopItem.objects.filter(
-                user=user, shop_item=OuterRef("pk")
-            )
-            qs = qs.annotate(is_pinned=Exists(pinned_subquery))
-        else:
-            qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
+        # if user.is_authenticated:
+        #     pinned_subquery = PinnedShopItem.objects.filter(
+        #         user=user, item=OuterRef("pk")
+        #     )
+        #     qs = qs.annotate(is_pinned=Exists(pinned_subquery))
+        # else:
+        #     qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
-        qs = qs.order_by("-is_pinned", "-updated_at")
+        qs = qs.order_by("-updated_at")
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
@@ -145,12 +146,15 @@ class OrganizationItemListView(FeedView):
             user=self.request.user,
             search=None,
             subcategory_id=None,
-        ).order_by("-updated_at")
+        )
         search = self.request.GET.get("search", None)
         if search:
             qs = ShopItemService.get_ordering_search_result(
                 queryset=qs, search_word=search
             )
+
+        qs = qs.order_by("-is_pinned", "-updated_at")
+
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=qs, user=self.request.user
         )
@@ -342,3 +346,25 @@ class PinShopItemView(APIView):
             {"message": f"Successfully unpinned '{shop_item.name}'"}, status=200
         )
 
+
+class PinOrganizationItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        item_id = self.kwargs.get("pk")
+        user = self.request.user
+        item = get_object_or_404(ShopItem, pk=item_id)
+
+        if not item.organization:
+            raise PermissionDenied("Item does not belong to any organization")
+
+        if item.organization.owner != user:
+            raise PermissionDenied("Only the organization owner can pin items")
+        item.is_pinned = not item.is_pinned
+        item.save()
+
+        status_text = "pinned" if item.is_pinned else "unpinned"
+        return Response(
+            {"message": f"Item successfully {status_text}", "is_pinned": item.is_pinned},
+            status=200
+        )

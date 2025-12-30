@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     "daphne",
 ]
 
+if DEBUG:
+    INSTALLED_APPS += ['drf_yasg']
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

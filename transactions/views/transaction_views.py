@@ -2226,11 +2226,17 @@ class InitPaymentView(GenericAPIView):
                 f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
             )
 
-            # Сохраняем purchase_type и user_id в payment_info для использования в callback
+            # Получаем URL для редиректа (на основе текущего request)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+
+            # Сохраняем purchase_type, user_id и URL редиректа в payment_info
             transaction.payment_info = {
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
                 "merchant_tx_id": merchant_tx_id,
+                "success_url": success_url,
+                "failure_url": failure_url,
             }
             transaction.save(update_fields=["payment_info"])
 
@@ -2644,11 +2650,17 @@ class NewInitPaymentView(GenericAPIView):
                 f"{callback_base}transactions/maalypay/result/?tx={transaction.pk}"
             )
 
-            # Сохраняем purchase_type и user_id в payment_info для использования в callback
+            # Получаем URL для редиректа (на основе текущего request)
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+
+            # Сохраняем purchase_type, user_id и URL редиректа в payment_info
             transaction.payment_info = {
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
                 "merchant_tx_id": merchant_tx_id,
+                "success_url": success_url,
+                "failure_url": failure_url,
             }
             transaction.save(update_fields=["payment_info"])
 
@@ -3017,25 +3029,23 @@ class MaalyPayResultView(APIView):
 
         from organizations.services.maalypay_service import MaalyPayService
 
-        logger = logging.getLogger(__name__)
-
         tx_id = request.GET.get("tx")
 
-        # Определяем URL для редиректа
-        base_host = request.META.get("HTTP_HOST", "apofiz.com")
-        if "test.apofiz.com" in base_host or "localhost" in base_host:
-            success_url = "https://test.apofiz.com/payment-success"
-            failure_url = "https://test.apofiz.com/payment-failure"
-        else:
-            success_url = "https://apofiz.com/payment-success"
-            failure_url = "https://apofiz.com/payment-failure"
+        # Fallback URL (если payment_info не содержит URL)
+        default_success = "https://apofiz.com/payment-success"
+        default_failure = "https://apofiz.com/payment-failure"
 
         if not tx_id:
-            return redirect(failure_url)
+            return redirect(default_failure)
 
         transaction = Transaction.objects.select_related("organization", "client").filter(id=tx_id).first()
         if not transaction:
-            return redirect(failure_url)
+            return redirect(default_failure)
+
+        # Берём URL из payment_info (сохранённые при создании платежа)
+        payment_info = transaction.payment_info or {}
+        success_url = payment_info.get("success_url", default_success)
+        failure_url = payment_info.get("failure_url", default_failure)
 
         # Если уже обработана - редирект на success
         if transaction.is_processed:
@@ -3052,7 +3062,7 @@ class MaalyPayResultView(APIView):
             self._process_successful_payment(transaction, user)
             return redirect(success_url)
 
-        # Оплата ещё не завершена - показываем pending страницу или редирект на failure
+        # Оплата ещё не завершена - редирект на failure
         return redirect(failure_url)
 
     def post(self, request, *args, **kwargs):

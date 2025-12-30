@@ -1,14 +1,14 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework import permissions
 from django.http import HttpResponseRedirect
+from django.urls import include, path
 
 from notifications.views import (
     CustomFCMDeviceAuthorizedViewSet,
     FCMDeviceSettingsAPIView,
 )
+from organizations.views.seo_views import org_detail
 
 PORTAINER_URL = settings.PORTAINER_URL
 
@@ -38,6 +38,8 @@ v1 = (
 urlpatterns = [
     path("971585333939admin/portainer-login/", portainer_login, name="portainer_login"),
     path("971585333939admin/", admin.site.urls),
+    # SEO route for social media link previews (Telegram, Facebook, etc.)
+    path("organizations/<int:pk>/", org_detail, name="org_seo"),
     path("api/v1/", include(v1)),
     path("api-auth/", include("rest_framework.urls")),
     path("rest-auth/", include("rest_auth.urls")),

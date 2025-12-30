@@ -1929,7 +1929,7 @@ class InitPaymentView(GenericAPIView):
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
             signature_params = (
                 ["init_payment.php"]
-                + [str(value) for _, value in sorted_params]
+                + [str(value) for __, value in sorted_params]
                 + [FREEDOMPAY_RECEIVE_SECRET]
             )
             signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
@@ -1972,7 +1972,7 @@ class InitPaymentView(GenericAPIView):
                 Decimal("0.00"), rounding=ROUND_DOWN
             )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             success_url = TransactionService.get_success_url(request=request)
@@ -2336,7 +2336,7 @@ class NewInitPaymentView(GenericAPIView):
             sorted_params = sorted(request_for_signature.items(), key=lambda x: x[0])
             signature_params = (
                 ["init_payment.php"]
-                + [str(value) for _, value in sorted_params]
+                + [str(value) for __, value in sorted_params]
                 + [FREEDOMPAY_RECEIVE_SECRET]
             )
             signature = hashlib.md5(";".join(signature_params).encode()).hexdigest()
@@ -2379,7 +2379,7 @@ class NewInitPaymentView(GenericAPIView):
                 Decimal("0.00"), rounding=ROUND_DOWN
             )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             success_url = TransactionService.get_success_url(request=request)

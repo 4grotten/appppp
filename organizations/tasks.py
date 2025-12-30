@@ -394,155 +394,104 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         OrganizationInvoiceService.send_to_email(invoice.pk, "receipt")
 
 
-@shared_task(bind=True, max_retries=30, default_retry_delay=60)
-def fetch_maalypay_status(self, merchant_tx_id: str, api_key: str, transaction_id: int):
-    # Импорты делаем внутри функции, чтобы избежать циклической зависимости (Circular Import),
-    # так как services и models часто ссылаются на tasks.
+@shared_task(bind=True, max_retries=60, default_retry_delay=30)
+def fetch_maalypay_status(
+    self,
+    merchant_tx_id: str,
+    api_key: str,
+    transaction_id: int,
+    purchase_type: str = "deal",
+    user_id: int = None,
+):
+    """
+    Celery task для проверки статуса оплаты в MaalyPay.
 
+    Логика API MaalyPay:
+    - status=False + "not initiated by customer yet" - клиент ещё не начал оплату
+    - status=False + filledAmount < fiatAmount - частичная оплата
+    - status=True - оплата завершена (filledAmount >= fiatAmount)
+
+    Для USDT/USDC рекомендуется проверять через 20-30 секунд после callback.
+    """
     import requests
-    from django.db import transaction
-    from django.db.models import Q
 
-    from notifications.constants import (
-        ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
-        ACCEPT_ORDER_PAYMENT_TYPE,
-        ACCEPT_ORDER_TYPE,
-        ACCEPTED_ONLINE_ORDER_CLIENT_TYPE,
-        NOTIFICATION_MODE_PRODUCT,
-        NOTIFICATION_MODE_SYSTEM,
-        NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-    )
-    from notifications.models import Notification
-    from notifications.tasks import (
-        send_delivery_notitication_to_organization_or_client,
-        sent_notification,
-    )
-    from organizations.models import Organization
     from transactions.models import Transaction
+    from transactions.services.transaction_services import TransactionService
+    from users.services.user_services import UserService
 
     url = f"https://maalyportal.com/api/omerch/check-online-transaction-merch/{merchant_tx_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
 
+    print(f"MaalyPay: Checking status for {merchant_tx_id}, attempt {self.request.retries + 1}")
+
     try:
         response = requests.get(url, headers=headers, timeout=15)
         response_data = response.json()
-        status_text = response_data.get("status")
+        print(f"MaalyPay API response: {response_data}")
     except Exception as e:
         print(f"MaalyPay connection error: {e}")
-        raise self.retry()
+        raise self.retry(countdown=30)
 
-    pending_statuses = ["not initiated by customer yet"]
+    # Проверяем статус - True означает успешную оплату
+    status_value = response_data.get("status")
+    filled_amount = response_data.get("filledAmount", "0")
+    fiat_amount = response_data.get("fiatAmount", "0")
 
-    if status_text in pending_statuses:
-        raise self.retry()
+    # Если status=True - оплата завершена успешно
+    if status_value is True:
+        print(f"MaalyPay: Payment completed for {merchant_tx_id}")
 
-    if status_text:
-        try:
-            with transaction.atomic():
-                old_transaction = Transaction.objects.select_for_update().get(
-                    id=transaction_id
-                )
-
-                if old_transaction.is_processed:
-                    return "Already processed"
-
-                old_transaction.payment_status = Transaction.ACCEPTED
-                old_transaction.is_processed = True
-                old_transaction.payment_info = None
-                old_transaction.save()
-
-                if old_transaction.type == Transaction.ONLINE:
-                    transaction.on_commit(
-                        lambda: Notification.objects.filter(
-                            Q(extra_data__transaction_id=old_transaction.id)
-                            & (
-                                Q(type=ACCEPT_ORDER_TYPE)
-                                | Q(type=ACCEPTED_ONLINE_ORDER_CLIENT_TYPE)
-                            )
-                        ).delete()
-                    )
-
-                discount_percent = old_transaction.discount_percent
-
-                sent_notification.delay(
-                    recipient_id=old_transaction.processed_by_id,
-                    sender_id=old_transaction.client_id,
-                    mode=NOTIFICATION_MODE_PRODUCT,
-                    notification_type=ACCEPT_ORDER_PAYMENT_TYPE,
-                    organization_id=old_transaction.organization_id,
-                    extra_data=dict(
-                        transaction_id=old_transaction.id,
-                        total_price=str(old_transaction.final_amount),
-                        discount_percent=discount_percent,
-                        currency=old_transaction.currency.code,
-                    ),
-                )
-
-                sent_notification.delay(
-                    recipient_id=old_transaction.client_id,
-                    sender_id=old_transaction.processed_by_id,
-                    mode=NOTIFICATION_MODE_PRODUCT,
-                    notification_type=ACCEPT_ORDER_PAYMENT_CLIENT_TYPE,
-                    organization_id=old_transaction.organization_id,
-                    extra_data=dict(
-                        transaction_id=old_transaction.id,
-                        total_price=str(old_transaction.final_amount),
-                        discount_percent=discount_percent,
-                        currency=old_transaction.currency.code,
-                    ),
-                )
-
-                organization = old_transaction.organization
-                has_delivery_service = (
-                    Organization.objects.exclude(Q(is_banned=True) | Q(is_deleted=True))
-                    .filter(is_delivery_service=True, country=organization.country)
-                    .exists()
-                )
-
-                if (
-                    has_delivery_service
-                    and hasattr(old_transaction, "cart")
-                    and old_transaction.cart
-                ):
-                    try:
-                        send_delivery_notitication_to_organization_or_client(
-                            old_transaction.cart.organization.owner,
-                            old_transaction.cart.id,
-                            NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                            mode=NOTIFICATION_MODE_SYSTEM,
-                        )
-
-                        organization_members = list(
-                            old_transaction.cart.organization.memberships.filter(
-                                Q(role__can_edit_organization=True)
-                                | Q(role__can_see_stats=True)
-                                | Q(role__can_deliver=True)
-                            )
-                        )
-                        for member in organization_members:
-                            send_delivery_notitication_to_organization_or_client(
-                                member.user,
-                                old_transaction.cart.id,
-                                NOTIFICATION_TYPE_AVAILABLE_DELIVERY_ORGANIZATION,
-                                mode=NOTIFICATION_MODE_SYSTEM,
-                            )
-                    except Exception as e:
-                        print(f"Error sending delivery notifications: {e}")
-
-            return f"Transaction {transaction_id} completed successfully via MaalyPay"
-
-        except Transaction.DoesNotExist:
+        # Проверяем, не обработана ли уже транзакция
+        tx = Transaction.objects.filter(id=transaction_id).first()
+        if not tx:
             print(f"Transaction {transaction_id} not found")
             return "Transaction not found"
-        except Exception as e:
-            print(f"Error processing MaalyPay transaction db update: {e}")
-            raise self.retry()
 
-    else:
-        print(
-            f"MaalyPay transaction {merchant_tx_id} failed with status: {status_text}"
-        )
-        raise self.retry()
-        return f"Transaction failed: {status_text}"
+        if tx.is_processed:
+            print(f"Transaction {transaction_id} already processed")
+            return "Already processed"
 
-    return f"Unknown status: {status_text}"
+        # Получаем user для обработки
+        user = None
+        if user_id:
+            user = UserService.get(id=user_id)
+        elif tx.client_id:
+            user = tx.client
+
+        # Вызываем соответствующий метод TransactionService
+        # (все уведомления отправляются внутри этих методов)
+        if purchase_type == "product":
+            TransactionService.accept_paysy_order_transaction_by_user(
+                transaction_id=tx.id, user=user
+            )
+        elif purchase_type == "org_subscription":
+            TransactionService.accept_org_subscription_transaction(
+                transaction_id=tx.id
+            )
+        elif purchase_type == "user_app":
+            TransactionService.accept_user_app_transaction(
+                transaction_id=tx.id
+            )
+        elif purchase_type == "deal":
+            TransactionService.complete_paysy_transaction_online(
+                transaction_id=tx.id
+            )
+        elif purchase_type == "assistant":
+            TransactionService.accept_assistant_transaction(
+                transaction_id=tx.id
+            )
+        elif purchase_type == "rent":
+            TransactionService.accept_paysy_booking_transaction_by_user(
+                transaction_id=tx.id, user=user, request=None
+            )
+        else:
+            # Fallback - помечаем как обработанную напрямую
+            tx.is_processed = True
+            tx.payment_status = Transaction.ACCEPTED
+            tx.save(update_fields=["is_processed", "payment_status", "updated_at"])
+
+        return f"Transaction {transaction_id} completed successfully via MaalyPay"
+
+    # Если status=False - оплата ещё не завершена
+    print(f"MaalyPay: Payment pending for {merchant_tx_id}, status={status_value}, filled={filled_amount}/{fiat_amount}")
+    raise self.retry(countdown=30)

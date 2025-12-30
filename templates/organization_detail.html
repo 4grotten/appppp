@@ -14,16 +14,20 @@
     <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
             integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
             crossorigin=""></script>
- {% if organization %}
-        <meta property="og:title" content={{ organization.title }}/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content="Apofiz"/>
+    {% if organization %}
+        <title>{{ organization.title }} - Apofiz</title>
+        <meta property="og:title" content="{{ organization.title }}"/>
         <meta property="og:description" content="{{ description }}"/>
-        <meta property="og:image" content="https://apofiz.com{{ organization.image.file.url }}"/>
-        <title>{{ organization.title }}</title>
+        <meta property="og:image" content="{{ image_url }}"/>
+        <meta property="og:url" content="{{ og_url }}"/>
     {% else %}
         <title>Apofiz</title>
         <meta property="og:title" content="Apofiz - Социально-торговая сеть"/>
-        <meta property="og:description" content="Все именно так, мы с большой любовью создали простое и очень важное социальное приложение для Всех, кто ценит время, деньги и главное поставленные цели. Tеперь каждый сможет получать скидки, накапливать реальные деньги, покупать и конечно продавать не только товары, но и все виды услуг. Вам больше не надо открывать интернет - магазин, искать новых клиентов, запускать и тратить деньги на продвижение своего сайта или приложения. Мы сделали торговый онлайн инструмент, в котором есть всё для Вас. Вам будут доступны не только система лояльности своим и новым клиентам, теперь вы сможете управлять, получать всю статистику в режиме онлайн, не только о продажах и скидках вашей организации, но и всё о своих сотрудниках, мир на Вашей ладони."/>
+        <meta property="og:description" content="Вам больше не надо открывать интернет-магазин, искать новых клиентов, запускать и тратить деньги на продвижение своего сайта."/>
         <meta property="og:image" content="https://apofiz.com/static/assets/logo192.png"/>
+        <meta property="og:url" content="https://apofiz.com"/>
     {% endif %}
     <link href="https://apofiz.com/static/0.css" rel="stylesheet">
 </head>

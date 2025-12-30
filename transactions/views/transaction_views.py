@@ -2198,7 +2198,7 @@ class InitPaymentView(GenericAPIView):
                     or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
                     or "Клиент"
                 )
-                maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
+                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
 
             if not transaction.organization:
                 return Response(
@@ -2606,7 +2606,7 @@ class NewInitPaymentView(GenericAPIView):
                     or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
                     or "Клиент"
                 )
-                maalypay_description = f"{transaction.organization.name} №{transaction.purchase_id or ''} {client_name}".strip()
+                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
 
             if not transaction.organization:
                 return Response(

@@ -455,6 +455,12 @@ class MaalyPayOrganizationPaymentSystem(TimestampModel):
         blank=True,
         help_text="Bank account information (IBAN, account number, etc.)",
     )
+    currencies = models.ManyToManyField(
+        Currency,
+        blank=True,
+        related_name="maalypay_configs",
+        help_text="Supported currencies. Empty = all currencies supported.",
+    )
 
 
 class PhoneNumber(TimestampModel):

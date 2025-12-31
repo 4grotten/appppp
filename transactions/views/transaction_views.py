@@ -2600,7 +2600,7 @@ class NewInitPaymentView(GenericAPIView):
                 or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
                 or "Клиент"
             )
-            order_number = f"№{transaction.purchase_id}" if transaction.purchase_id else ""
+            order_number = f"№{transaction_id}"
             org_title = transaction.organization.title if transaction.organization else ""
 
             try:

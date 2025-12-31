@@ -84,21 +84,24 @@ def parse_instagram_to_shop_items(
                 description=description,
                 instagram_link=post_url,
             )
-            for data in instagram.get("data"):
-                if data.get('video_url'):
-                    thumbnail = File.objects.create(image_url=data.get('thumbnail_url'))
-                    video = FileVideo.objects.create(video_url=data.get('video_url'),
-                                                     thumbnail=thumbnail)
-                    ItemInstagramData.objects.create(item=shop_item,
-                                                     thumbnail_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                                                         thumbnail),
-                                                     video_url='https://apofiz-media.s3.eu-central-1.amazonaws.com/' + str(
-                                                         video))
+            for media_data in instagram.get("data", []):
+                v_url = media_data.get("video_url")
+                t_url = media_data.get("thumbnail_url")
+
+                if v_url:
+                    thumb_obj = File.objects.create(image_url=t_url)
+                    video_obj = FileVideo.objects.create(video_url=v_url, thumbnail=thumb_obj)
+
+                    ItemInstagramData.objects.create(
+                        item=shop_item,
+                        thumbnail_url=t_url,
+                        video_url=v_url
+                    )
                 else:
                     ItemInstagramData.objects.create(
                         item=shop_item,
-                        thumbnail_url=data.get("thumbnail_url"),
-                        video_url=data.get("video_url"),
+                        thumbnail_url=t_url,
+                        video_url=None
                     )
 
             if ShopItem.objects.filter(id=shop_item.id, instagram_data__video_url=None):

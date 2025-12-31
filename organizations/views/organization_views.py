@@ -1484,8 +1484,10 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
                     # Слишком много валют - показываем первые 3 и количество
                     currencies_str = ', '.join(currencies[:3])
                     name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                elif ps['currency']:
+                    # Нет currencies в конфиге - используем дефолт
+                    name = f"{ps['name']} в {ps['currency']}"
                 else:
-                    # Все валюты поддерживаются
                     name = ps['name']
             elif ps['currency']:
                 name = f"{ps['name']} в {ps['currency']}"
@@ -1541,6 +1543,9 @@ class PaymentSystemListView(generics.ListAPIView):
                 elif currencies and len(currencies) > 5:
                     currencies_str = ', '.join(currencies[:3])
                     name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                elif ps['currency']:
+                    # Нет currencies в конфиге - используем дефолт
+                    name = f"{ps['name']} в {ps['currency']}"
                 else:
                     name = ps['name']
             elif ps['currency']:

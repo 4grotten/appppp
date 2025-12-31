@@ -34,10 +34,10 @@ class RegionalPaymentSystemService:
         },
         6: {
             'name': 'MaalyPay',
-            'currency': None,  # Динамическая валюта - берется из конфига организации
+            'currency': 'AED',  # Дефолт для UI. Реальная валюта берётся из transaction.currency при оплате
             'confirmed_field': 'maaly_pay_confirmed',
             'activated_field': 'maaly_pay_activated',
-            'multi_currency': True,  # Поддерживает множественные валюты
+            'multi_currency': True,  # Поддерживает множественные валюты (через currencies в конфиге)
         },
     }
 

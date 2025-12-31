@@ -1473,10 +1473,20 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         # Форматируем для совместимости с существующим API
         result = []
         for ps in confirmed_systems:
-            # Для систем с множественными валютами показываем все валюты
-            if ps.get('multi_currency') and ps.get('currencies'):
-                currencies_str = ', '.join(ps['currencies'])
-                name = f"{ps['name']} ({currencies_str})"
+            # Для систем с множественными валютами
+            if ps.get('multi_currency'):
+                currencies = ps.get('currencies', [])
+                if currencies and len(currencies) <= 5:
+                    # Показываем до 5 валют
+                    currencies_str = ', '.join(currencies)
+                    name = f"{ps['name']} ({currencies_str})"
+                elif currencies and len(currencies) > 5:
+                    # Слишком много валют - показываем первые 3 и количество
+                    currencies_str = ', '.join(currencies[:3])
+                    name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                else:
+                    # Все валюты поддерживаются
+                    name = ps['name']
             elif ps['currency']:
                 name = f"{ps['name']} в {ps['currency']}"
             else:
@@ -1522,10 +1532,17 @@ class PaymentSystemListView(generics.ListAPIView):
             if ps['is_confirmed']:  # Только не подключённые
                 continue
 
-            # Для систем с множественными валютами показываем все валюты
-            if ps.get('multi_currency') and ps.get('currencies'):
-                currencies_str = ', '.join(ps['currencies'])
-                name = f"{ps['name']} ({currencies_str})"
+            # Для систем с множественными валютами
+            if ps.get('multi_currency'):
+                currencies = ps.get('currencies', [])
+                if currencies and len(currencies) <= 5:
+                    currencies_str = ', '.join(currencies)
+                    name = f"{ps['name']} ({currencies_str})"
+                elif currencies and len(currencies) > 5:
+                    currencies_str = ', '.join(currencies[:3])
+                    name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                else:
+                    name = ps['name']
             elif ps['currency']:
                 name = f"{ps['name']} в {ps['currency']}"
             else:

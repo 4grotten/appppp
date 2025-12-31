@@ -2167,9 +2167,38 @@ class InitPaymentView(GenericAPIView):
                 )
         elif kwargs["pk"] == 6:
             transaction_id = serializer.validated_data["transaction_id"]
-            transaction = TransactionService.get(
-                id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
-            )
+
+            print(f"[MaalyPay] Starting payment for transaction_id={transaction_id}")
+
+            try:
+                transaction = TransactionService.get(
+                    id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+                )
+            except Exception as e:
+                # Диагностика: проверяем реальное состояние транзакции
+                print(f"[MaalyPay] Error getting transaction: {e}")
+                tx = Transaction.objects.filter(id=transaction_id).first()
+                if tx:
+                    print(f"[MaalyPay] Transaction {transaction_id} exists but not available:")
+                    print(f"[MaalyPay]   status={tx.status}, is_processed={tx.is_processed}")
+                    if tx.is_processed:
+                        return Response(
+                            data={"error": "Эта транзакция уже оплачена"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        return Response(
+                            data={"error": f"Транзакция недоступна для оплаты (статус: {tx.status})"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    print(f"[MaalyPay] Transaction {transaction_id} not found")
+                    return Response(
+                        data={"error": "Транзакция не найдена"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+
+            print(f"[MaalyPay] Got transaction: status={transaction.status}, is_processed={transaction.is_processed}")
 
             # Получаем purchase_type для callback обработки
             _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
@@ -3039,7 +3068,11 @@ class MaalyPayResultView(APIView):
         if not config:
             return redirect(failure_url)
 
-        merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.id)
+        # Берём merchant_tx_id из payment_info (там сохранён при создании платежа)
+        merchant_tx_id = payment_info.get("merchant_tx_id")
+        if not merchant_tx_id:
+            return redirect(failure_url)
+
         if MaalyPayService.is_paid(config.api_key, merchant_tx_id):
             user = transaction.client
             self._process_successful_payment(transaction, user)
@@ -3056,15 +3089,24 @@ class MaalyPayResultView(APIView):
         merchant_tx_id = request.data.get("merchantTxId") or request.data.get("merchant_tx_id")
 
         if not merchant_tx_id:
+            # Если merchant_tx_id нет в данных, пробуем взять из query параметра tx
             tx_id = request.GET.get("tx")
             if tx_id:
-                merchant_tx_id = MaalyPayService.generate_merchant_tx_id(tx_id)
+                # Ищем транзакцию и берём merchant_tx_id из payment_info
+                tx = Transaction.objects.filter(id=tx_id).first()
+                if tx and tx.payment_info:
+                    merchant_tx_id = tx.payment_info.get("merchant_tx_id")
 
         if not merchant_tx_id:
             return Response({"status": "ok", "message": "No transaction ID"}, status=200)
 
+        # Парсим transaction_id из формата apofiz-{id} или apofiz-{id}-{timestamp}
         if merchant_tx_id.startswith("apofiz-"):
-            transaction_id = int(merchant_tx_id.replace("apofiz-", ""))
+            parts = merchant_tx_id.split("-")
+            if len(parts) >= 2:
+                transaction_id = int(parts[1])
+            else:
+                return Response({"status": "ok", "message": "Invalid merchant_tx_id format"}, status=200)
         else:
             return Response({"status": "ok", "message": "Invalid merchant_tx_id format"}, status=200)
 

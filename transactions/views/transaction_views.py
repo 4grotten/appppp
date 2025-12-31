@@ -2594,32 +2594,30 @@ class NewInitPaymentView(GenericAPIView):
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
 
-            # Build MaalyPay description based on whether cart exists
+            # Получаем имя клиента
+            client_name = (
+                transaction.client.full_name
+                or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                or "Клиент"
+            )
+            order_number = f"№{transaction.purchase_id}" if transaction.purchase_id else ""
+            org_title = transaction.organization.title if transaction.organization else ""
+
             try:
                 cart = transaction.cart
                 cart_items = cart.items.all()
                 if cart_items.exists():
-                    # Scenario 2: With cart - show item titles and quantities
-                    items_desc = ", ".join(
-                        f"{item.item.name} x{item.count}" for item in cart_items
+                    # Формируем красивое описание с заголовком и товарами
+                    header = f"{org_title} — {order_number} — {client_name}".replace("  ", " ").strip(" —")
+                    separator = "─" * 40
+                    items_list = "\n".join(
+                        f"• {item.item.name} x{item.count}" for item in cart_items
                     )
-                    maalypay_description = items_desc
+                    maalypay_description = f"{header}\n{separator}\n{items_list}"
                 else:
-                    # Empty cart - fall back to organization info
-                    client_name = (
-                        transaction.client.full_name
-                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
-                        or "Клиент"
-                    )
-                    maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+                    maalypay_description = f"{org_title} {order_number} {client_name}".replace("  ", " ").strip()
             except (Cart.DoesNotExist, AttributeError):
-                # Scenario 1: No cart - show organization, order number, client name
-                client_name = (
-                    transaction.client.full_name
-                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
-                    or "Клиент"
-                )
-                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+                maalypay_description = f"{org_title} {order_number} {client_name}".replace("  ", " ").strip()
 
             if not transaction.organization:
                 return Response(
@@ -2638,11 +2636,9 @@ class NewInitPaymentView(GenericAPIView):
             merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
             callback_url = f"{base_url}transactions/maalypay/result/?tx={transaction.pk}"
 
-            # Получаем URL для редиректа (на основе текущего request)
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
 
-            # Сохраняем purchase_type, user_id и URL редиректа в payment_info
             transaction.payment_info = {
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
@@ -3006,7 +3002,6 @@ class MaalyPayResultView(APIView):
                 transaction_id=transaction.id, user=user, request=None
             )
         else:
-            # Fallback - просто помечаем как обработанную
             transaction.is_processed = True
             transaction.payment_status = Transaction.ACCEPTED
             transaction.save(update_fields=["is_processed", "payment_status", "updated_at"])
@@ -3019,7 +3014,6 @@ class MaalyPayResultView(APIView):
 
         tx_id = request.GET.get("tx")
 
-        # Fallback URL (если payment_info не содержит URL)
         default_success = "https://apofiz.com/payment-success"
         default_failure = "https://apofiz.com/payment-failure"
 
@@ -3030,16 +3024,13 @@ class MaalyPayResultView(APIView):
         if not transaction:
             return redirect(default_failure)
 
-        # Берём URL из payment_info (сохранённые при создании платежа)
         payment_info = transaction.payment_info or {}
         success_url = payment_info.get("success_url", default_success)
         failure_url = payment_info.get("failure_url", default_failure)
 
-        # Если уже обработана - редирект на success
         if transaction.is_processed:
             return redirect(success_url)
 
-        # Проверяем статус в MaalyPay
         config = MaalyPayService.get_config(transaction.organization)
         if not config:
             return redirect(failure_url)
@@ -3050,7 +3041,6 @@ class MaalyPayResultView(APIView):
             self._process_successful_payment(transaction, user)
             return redirect(success_url)
 
-        # Оплата ещё не завершена - редирект на failure
         return redirect(failure_url)
 
     def post(self, request, *args, **kwargs):
@@ -3059,11 +3049,9 @@ class MaalyPayResultView(APIView):
 
         print(f"MaalyPay callback POST received: {request.data}")
 
-        # MaalyPay может отправлять данные о транзакции
         merchant_tx_id = request.data.get("merchantTxId") or request.data.get("merchant_tx_id")
 
         if not merchant_tx_id:
-            # Пробуем получить tx из query params
             tx_id = request.GET.get("tx")
             if tx_id:
                 merchant_tx_id = MaalyPayService.generate_merchant_tx_id(tx_id)
@@ -3071,7 +3059,6 @@ class MaalyPayResultView(APIView):
         if not merchant_tx_id:
             return Response({"status": "ok", "message": "No transaction ID"}, status=200)
 
-        # Извлекаем transaction_id из merchant_tx_id (формат: apofiz-{id})
         if merchant_tx_id.startswith("apofiz-"):
             transaction_id = int(merchant_tx_id.replace("apofiz-", ""))
         else:
@@ -3085,7 +3072,6 @@ class MaalyPayResultView(APIView):
         if not config:
             return Response({"status": "ok", "message": "No config"}, status=200)
 
-        # Проверяем статус оплаты
         if MaalyPayService.is_paid(config.api_key, merchant_tx_id):
             user = transaction.client
             self._process_successful_payment(transaction, user)
@@ -3249,7 +3235,6 @@ class TransactionWithdrawalSwiftView(GenericAPIView):
         transfer_amount = serializer.validated_data["transfer_amount"]
         utc_offset_minutes = serializer.validated_data.get("utc_offset_minutes")
 
-        # create recipient swift service
         recipient = RecipientService.create_swift_recipient(
             image_id=image_id,
             owner_name=owner_name,
@@ -3263,7 +3248,6 @@ class TransactionWithdrawalSwiftView(GenericAPIView):
             transfer_amount=transfer_amount,
         )
 
-        # create transaction of withdrawal service
         transaction = TransactionService.create_withdrawal_swift_transaction(
             request=request,
             organization=organization,

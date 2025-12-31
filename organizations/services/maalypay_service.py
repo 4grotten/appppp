@@ -336,4 +336,6 @@ class MaalyPayService:
 
     @classmethod
     def generate_merchant_tx_id(cls, transaction_id: int) -> str:
-        return f"apofiz-{transaction_id}"
+        import time
+        timestamp = int(time.time())
+        return f"apofiz-{transaction_id}-{timestamp}"

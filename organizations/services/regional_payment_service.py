@@ -34,11 +34,27 @@ class RegionalPaymentSystemService:
         },
         6: {
             'name': 'MaalyPay',
-            'currency': 'AED',
+            'currency': 'AED',  # Дефолт для UI. Реальная валюта берётся из transaction.currency при оплате
             'confirmed_field': 'maaly_pay_confirmed',
-            'activated_field': 'maaly_pay_activated'
+            'activated_field': 'maaly_pay_activated',
+            'multi_currency': True,  # Поддерживает множественные валюты (через currencies в конфиге)
         },
     }
+
+    @classmethod
+    def _get_maalypay_currencies(cls, organization) -> list:
+        """Получает список валют из конфига MaalyPay организации.
+
+        Возвращает пустой список если валюты не указаны (означает все валюты поддерживаются).
+        """
+        from organizations.models import MaalyPayOrganizationPaymentSystem
+        config = MaalyPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).prefetch_related('currencies').first()
+        if config:
+            return list(config.currencies.values_list('code', flat=True))
+        # Пустой список = все валюты поддерживаются
+        return []
 
     @classmethod
     def get_model(cls):
@@ -87,13 +103,21 @@ class RegionalPaymentSystemService:
             is_activated = getattr(organization, ps_info['activated_field'], False)
             can_request = cls.is_available_for_request(country, ps_id)
 
+            # Для систем с multi_currency получаем валюты из конфига
+            if ps_info.get('multi_currency'):
+                currencies = cls._get_maalypay_currencies(organization)
+            else:
+                currencies = [ps_info['currency']] if ps_info['currency'] else []
+
             result.append({
                 'id': ps_id,
                 'name': ps_info['name'],
-                'currency': ps_info['currency'],
+                'currency': ps_info['currency'],  # Для обратной совместимости
+                'currencies': currencies,  # Новое поле - список валют
                 'is_confirmed': is_confirmed,
                 'is_activated': is_activated,
                 'is_available_for_request': can_request and not is_confirmed,
+                'multi_currency': ps_info.get('multi_currency', False),
             })
 
         return result
@@ -114,11 +138,19 @@ class RegionalPaymentSystemService:
 
             is_activated = getattr(organization, ps_info['activated_field'], False)
 
+            # Для систем с multi_currency получаем валюты из конфига
+            if ps_info.get('multi_currency'):
+                currencies = cls._get_maalypay_currencies(organization)
+            else:
+                currencies = [ps_info['currency']] if ps_info['currency'] else []
+
             result.append({
                 'id': ps_id,
                 'name': ps_info['name'],
-                'currency': ps_info['currency'],
+                'currency': ps_info['currency'],  # Для обратной совместимости
+                'currencies': currencies,  # Новое поле - список валют
                 'is_active': is_activated,
+                'multi_currency': ps_info.get('multi_currency', False),
             })
 
         return result

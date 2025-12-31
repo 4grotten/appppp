@@ -697,7 +697,7 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
 
 class MaalyPayConfigView(RetrieveAPIView):
     """
-    GET endpoint to retrieve MaalyPay configuration (merchant_id, api_key, bank_info)
+    GET/PATCH endpoint to retrieve/update MaalyPay configuration
     for a specific organization.
 
     URL: /organizations/{pk}/payment_systems/maalypay/config/
@@ -714,7 +714,7 @@ class MaalyPayConfigView(RetrieveAPIView):
 
         config = MaalyPayOrganizationPaymentSystem.objects.filter(
             organization=organization
-        ).first()
+        ).prefetch_related('currencies').first()
 
         if not config:
             return Response(
@@ -730,6 +730,34 @@ class MaalyPayConfigView(RetrieveAPIView):
         response_data['is_confirmed'] = organization.maaly_pay_confirmed
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        """Update MaalyPay currencies for organization."""
+        from organizations.services.maalypay_service import MaalyPayService
+
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+
+        if not OrganizationService.user_can_edit_organization(
+            user=request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No rights to edit this organization"))
+
+        currencies = request.data.get('currencies', [])
+        if not isinstance(currencies, list):
+            return Response(
+                {"detail": "currencies must be a list of currency codes"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        updated_currencies = MaalyPayService.update_currencies(
+            organization=organization,
+            currencies=currencies,
+        )
+
+        return Response(
+            {"currencies": updated_currencies},
+            status=status.HTTP_200_OK
+        )
 
 
 class DeliverySettingsView(UpdateAPIView):
@@ -1443,14 +1471,37 @@ class OrganizationPaymentSystemListView(generics.ListAPIView):
         confirmed_systems = RegionalPaymentSystemService.get_confirmed_for_organization(organization)
 
         # Форматируем для совместимости с существующим API
-        return [
-            {
+        result = []
+        for ps in confirmed_systems:
+            # Для систем с множественными валютами
+            if ps.get('multi_currency'):
+                currencies = ps.get('currencies', [])
+                if currencies and len(currencies) <= 5:
+                    # Показываем до 5 валют
+                    currencies_str = ', '.join(currencies)
+                    name = f"{ps['name']} ({currencies_str})"
+                elif currencies and len(currencies) > 5:
+                    # Слишком много валют - показываем первые 3 и количество
+                    currencies_str = ', '.join(currencies[:3])
+                    name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                elif ps['currency']:
+                    # Нет currencies в конфиге - используем дефолт
+                    name = f"{ps['name']} в {ps['currency']}"
+                else:
+                    name = ps['name']
+            elif ps['currency']:
+                name = f"{ps['name']} в {ps['currency']}"
+            else:
+                name = ps['name']
+
+            result.append({
                 "id": ps['id'],
-                "name": f"{ps['name']} в {ps['currency']}",
+                "name": name,
                 "is_active": ps['is_active'],
-            }
-            for ps in confirmed_systems
-        ]
+                "currencies": ps.get('currencies', []),
+                "multi_currency": ps.get('multi_currency', False),
+            })
+        return result
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1478,15 +1529,38 @@ class PaymentSystemListView(generics.ListAPIView):
         available_systems = RegionalPaymentSystemService.get_available_for_organization(organization)
 
         # Фильтруем только те, что ещё не подключены и можно запросить
-        return [
-            {
+        result = []
+        for ps in available_systems:
+            if ps['is_confirmed']:  # Только не подключённые
+                continue
+
+            # Для систем с множественными валютами
+            if ps.get('multi_currency'):
+                currencies = ps.get('currencies', [])
+                if currencies and len(currencies) <= 5:
+                    currencies_str = ', '.join(currencies)
+                    name = f"{ps['name']} ({currencies_str})"
+                elif currencies and len(currencies) > 5:
+                    currencies_str = ', '.join(currencies[:3])
+                    name = f"{ps['name']} ({currencies_str} +{len(currencies)-3})"
+                elif ps['currency']:
+                    # Нет currencies в конфиге - используем дефолт
+                    name = f"{ps['name']} в {ps['currency']}"
+                else:
+                    name = ps['name']
+            elif ps['currency']:
+                name = f"{ps['name']} в {ps['currency']}"
+            else:
+                name = ps['name']
+
+            result.append({
                 "id": ps['id'],
-                "name": f"{ps['name']} в {ps['currency']}",
-                "is_available": ps['is_available_for_request']
-            }
-            for ps in available_systems
-            if not ps['is_confirmed']  # Только не подключённые
-        ]
+                "name": name,
+                "is_available": ps['is_available_for_request'],
+                "currencies": ps.get('currencies', []),
+                "multi_currency": ps.get('multi_currency', False),
+            })
+        return result
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

@@ -2176,32 +2176,33 @@ class InitPaymentView(GenericAPIView):
                 transaction=transaction
             )
 
+            # Получаем имя клиента
+            client_name = (
+                transaction.client.full_name
+                or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                or "Клиент"
+            )
+            order_number = f"№{transaction_id}"
+            org_title = transaction.organization.title if transaction.organization else ""
+
             # Build MaalyPay description based on whether cart exists
             try:
                 cart = transaction.cart
                 cart_items = cart.items.all()
                 if cart_items.exists():
-                    # Scenario 2: With cart - show item titles and quantities
-                    items_desc = ", ".join(
+                    # Формируем красивое описание: заголовок :: товары
+                    header = f"{org_title} — {order_number} — {client_name}".replace("  ", " ").strip(" —")
+                    items_list = ", ".join(
                         f"{item.item.name} x{item.count}" for item in cart_items
                     )
-                    maalypay_description = items_desc
+                    maalypay_description = f"{header} :: {items_list}"
                 else:
-                    # Empty cart - fall back to organization info
-                    client_name = (
-                        transaction.client.full_name
-                        or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
-                        or "Клиент"
-                    )
-                    maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+                    maalypay_description = f"{org_title} {order_number} {client_name}".replace("  ", " ").strip()
             except (Cart.DoesNotExist, AttributeError):
-                # Scenario 1: No cart - show organization, order number, client name
-                client_name = (
-                    transaction.client.full_name
-                    or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
-                    or "Клиент"
-                )
-                maalypay_description = f"{transaction.organization.title} №{transaction.purchase_id or ''} {client_name}".strip()
+                maalypay_description = f"{org_title} {order_number} {client_name}".replace("  ", " ").strip()
+
+            print(f"[MaalyPay DEBUG] org_title={org_title}, order_number={order_number}, client_name={client_name}")
+            print(f"[MaalyPay DEBUG] maalypay_description={maalypay_description}")
 
             if not transaction.organization:
                 return Response(

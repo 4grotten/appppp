@@ -2607,13 +2607,12 @@ class NewInitPaymentView(GenericAPIView):
                 cart = transaction.cart
                 cart_items = cart.items.all()
                 if cart_items.exists():
-                    # Формируем красивое описание с заголовком и товарами
+                    # Формируем красивое описание: заголовок | товары
                     header = f"{org_title} — {order_number} — {client_name}".replace("  ", " ").strip(" —")
-                    separator = "─" * 40
-                    items_list = "\n".join(
-                        f"• {item.item.name} x{item.count}" for item in cart_items
+                    items_list = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
                     )
-                    maalypay_description = f"{header}\n{separator}\n{items_list}"
+                    maalypay_description = f"{header} | {items_list}"
                 else:
                     maalypay_description = f"{org_title} {order_number} {client_name}".replace("  ", " ").strip()
             except (Cart.DoesNotExist, AttributeError):

@@ -13,31 +13,37 @@ from instagram_parsers.services.proxy_services import InstagramClientService
 logger = logging.getLogger(__name__)
 
 
+def extract_media_urls(item):
+    video_url = item.get("video_url")
+    if not video_url and item.get("video_versions"):
+        video_url = item["video_versions"][0].get("url")
+
+    thumbnail_url = item.get("thumbnail_url")
+    if not thumbnail_url:
+        image_versions = item.get("image_versions2") or item.get("image_versions")
+        if image_versions:
+            candidates = image_versions.get("candidates", [])
+            if candidates:
+                thumbnail_url = candidates[0].get("url")
+            elif isinstance(image_versions, list) and len(image_versions) > 0:
+                thumbnail_url = image_versions[0].get("url")
+
+    return {
+        "thumbnail_url": thumbnail_url,
+        "video_url": video_url,
+        "pk": str(item.get("pk")),
+    }
+
 def get_data_from_post(dict_list):
-    data_s = list()
-    if dict_list["resources"]:
-        for resource in dict_list["resources"]:
-            if resource.get("video_url"):
-                video_url = str(resource.get("video_url"))
-            else:
-                video_url = None
-            data = dict(
-                thumbnail_url=str(resource.get("thumbnail_url")),
-                video_url=video_url,
-                pk=str((resource.get("pk"))),
-            )
-            data_s.append(data.copy())
+    data_s = []
+
+    resources = dict_list.get("resources", [])
+    if resources:
+        for res in resources:
+            data_s.append(extract_media_urls(res))
     else:
-        if dict_list.get("video_url"):
-            video_url = str(dict_list.get("video_url"))
-        else:
-            video_url = None
-        data = dict(
-            thumbnail_url=str(dict_list.get("thumbnail_url")),
-            video_url=video_url,
-            pk=str((dict_list.get("pk"))),
-        )
-        data_s.append(data.copy())
+        data_s.append(extract_media_urls(dict_list))
+
     return data_s
 
 

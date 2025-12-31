@@ -43,18 +43,18 @@ class RegionalPaymentSystemService:
 
     @classmethod
     def _get_maalypay_currencies(cls, organization) -> list:
-        """Получает список валют из конфига MaalyPay организации."""
+        """Получает список валют из конфига MaalyPay организации.
+
+        Возвращает пустой список если валюты не указаны (означает все валюты поддерживаются).
+        """
         from organizations.models import MaalyPayOrganizationPaymentSystem
         config = MaalyPayOrganizationPaymentSystem.objects.filter(
             organization=organization
         ).prefetch_related('currencies').first()
         if config:
-            currencies = list(config.currencies.values_list('code', flat=True))
-            if currencies:
-                return currencies
-        # По умолчанию - все валюты из базы если конфиг не задан или пустой
-        from common.models import Currency
-        return list(Currency.objects.values_list('code', flat=True))
+            return list(config.currencies.values_list('code', flat=True))
+        # Пустой список = все валюты поддерживаются
+        return []
 
     @classmethod
     def get_model(cls):

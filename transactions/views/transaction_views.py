@@ -2218,6 +2218,9 @@ class InitPaymentView(GenericAPIView):
             merchant_tx_id = MaalyPayService.generate_merchant_tx_id(transaction.pk)
             callback_url = f"{base_url}transactions/maalypay/result/?tx={transaction.pk}"
 
+            print(f"[MaalyPay VIEW] merchant_tx_id={merchant_tx_id}")
+            print(f"[MaalyPay VIEW] transaction.pk={transaction.pk}, status={transaction.status}, is_processed={transaction.is_processed}")
+
             # Получаем URL для редиректа (на основе текущего request)
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
@@ -2232,6 +2235,8 @@ class InitPaymentView(GenericAPIView):
             }
             transaction.save(update_fields=["payment_info"])
 
+            print(f"[MaalyPay VIEW] Calling create_payment with amount={transaction.final_amount}, currency={transaction.currency.code}")
+
             checkout_url = MaalyPayService.create_payment(
                 api_key=payment_config.api_key,
                 merchant_id=int(payment_config.merchant_id),
@@ -2243,6 +2248,8 @@ class InitPaymentView(GenericAPIView):
                 customer_email=transaction.client.email or "noemail@placeholder.local",
                 bank_info=payment_config.bank_info,
             )
+
+            print(f"[MaalyPay VIEW] checkout_url result: {checkout_url}")
 
             if not checkout_url:
                 return Response(

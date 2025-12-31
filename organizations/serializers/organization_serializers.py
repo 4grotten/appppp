@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import NotAcceptableException, ObjectNotFoundException
-from common.models import File
+from common.models import Currency, File
 from common.serializers import (
     CitySerializer,
     CountrySerializer,
@@ -1236,6 +1236,11 @@ class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     merchant_id = serializers.CharField(required=False)
     api_key = serializers.CharField(required=False)
     bank_info = serializers.CharField(required=False, allow_blank=True)
+    currencies = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="List of currency codes (e.g., ['AED', 'USD', 'EUR'])"
+    )
 
     # class Meta:
     #     model = OrganizationPaymentSystemUsers
@@ -1243,10 +1248,17 @@ class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
 
 
 class MaalyPayConfigSerializer(serializers.ModelSerializer):
+    currencies = serializers.SlugRelatedField(
+        many=True,
+        slug_field='code',
+        queryset=Currency.objects.all(),
+        required=False,
+    )
+
     class Meta:
         from organizations.models import MaalyPayOrganizationPaymentSystem
         model = MaalyPayOrganizationPaymentSystem
-        fields = ('merchant_id', 'api_key', 'bank_info')
+        fields = ('merchant_id', 'api_key', 'bank_info', 'currencies')
 
 
 class PaymentSystemSerializer(serializers.Serializer):
@@ -1254,6 +1266,8 @@ class PaymentSystemSerializer(serializers.Serializer):
     name = serializers.CharField()
     is_available = serializers.BooleanField(required=False)
     is_active = serializers.BooleanField(required=False)
+    currencies = serializers.ListField(child=serializers.CharField(), required=False)
+    multi_currency = serializers.BooleanField(required=False)
 
 
 class ShopItemSubcategoryOrganizationSerializer(serializers.ModelSerializer):

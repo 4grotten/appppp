@@ -47,12 +47,38 @@ class MaalyPayService:
         ).exists()
 
     @classmethod
+    def update_currencies(
+        cls,
+        organization: Organization,
+        currencies: list,
+    ) -> list:
+        """Обновляет список поддерживаемых валют для MaalyPay организации."""
+        config = cls.get_config(organization)
+        if not config:
+            raise BadRequestException(_("MaalyPay is not configured for this organization"))
+
+        from common.models import Currency
+        currency_objects = Currency.objects.filter(code__in=currencies)
+        config.currencies.set(currency_objects)
+
+        logger.info(
+            f"[MaalyPay] Updated currencies for organization",
+            extra={
+                "org_id": organization.id,
+                "currencies": currencies,
+            }
+        )
+
+        return list(config.currencies.values_list('code', flat=True))
+
+    @classmethod
     def connect_to_organization(
         cls,
         organization: Organization,
         merchant_id: str,
         api_key: str,
         bank_info: Optional[str] = None,
+        currencies: Optional[list] = None,
     ) -> dict:
         if not merchant_id or not api_key:
             raise BadRequestException(_("merchant_id and api_key are required"))
@@ -76,6 +102,12 @@ class MaalyPayService:
                 if not created:
                     raise BadRequestException("You've already add this payment method")
 
+                # Добавляем валюты если указаны
+                if currencies:
+                    from common.models import Currency
+                    currency_objects = Currency.objects.filter(code__in=currencies)
+                    config.currencies.set(currency_objects)
+
                 organization.maaly_pay_activated = True  # type: ignore
                 organization.maaly_pay_confirmed = True  # type: ignore
                 organization.save(update_fields=["maaly_pay_activated", "maaly_pay_confirmed"])  # type: ignore
@@ -87,12 +119,15 @@ class MaalyPayService:
                         "org_title": organization.title,
                         "merchant_id": merchant_id,
                         "has_bank_info": bool(bank_info),
+                        "currencies": currencies,
                     }
                 )
 
                 result = {"merchant_id": merchant_id, "api_key": api_key, "created": True}
                 if bank_info:
                     result["bank_info"] = bank_info
+                if currencies:
+                    result["currencies"] = currencies
                 return result
         except IntegrityError as e:
             logger.error(

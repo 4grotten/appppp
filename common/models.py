@@ -63,7 +63,7 @@ class File(TimestampModel):
         max_length=1000,
     )
 
-    image_url = models.URLField(null=True, blank=True, max_length=1000)
+    image_url = models.URLField(null=True, blank=True, max_length=5000)
 
     large = ImageSpecField(source="file", id="common:file:large")
     medium = ImageSpecField(source="file", id="common:file:medium")
@@ -149,7 +149,7 @@ class FileVideo(TimestampModel):
         max_length=1000,
     )
 
-    video_url = models.URLField(null=True, blank=True, max_length=1000)
+    video_url = models.URLField(null=True, blank=True, max_length=5000)
 
     @property
     def name(self):

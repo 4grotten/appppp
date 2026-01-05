@@ -65,8 +65,8 @@ class RegionalPaymentSystemService:
     def is_enabled_in_region(cls, country, payment_system_id: int, organization=None) -> bool:
         model = cls.get_model()
         setting = model.objects.filter(
-            country=country,
-            payment_system_id=payment_system_id
+            payment_system_id=payment_system_id,
+            countries=country
         ).prefetch_related('allowed_organizations').first()
 
         if setting is None:
@@ -81,8 +81,8 @@ class RegionalPaymentSystemService:
     def is_available_for_request(cls, country, payment_system_id: int) -> bool:
         model = cls.get_model()
         setting = model.objects.filter(
-            country=country,
-            payment_system_id=payment_system_id
+            payment_system_id=payment_system_id,
+            countries=country
         ).first()
 
         if setting is None:

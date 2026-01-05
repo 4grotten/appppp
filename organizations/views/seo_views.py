@@ -7,7 +7,8 @@ def org_detail(request, pk):
     organization = OrganizationService.get(pk=pk)
 
     context = {
-        'organization': organization
+        'organization': organization,
+        'description': organization.description[:200] if organization.description else ''
     }
 
     return render(request, 'organization_detail.html', context)

@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('organizations', '0169_maalypayorganizationpaymentsystem_currencies'),
+        ('common', '__first__'),
     ]
 
     operations = [
@@ -41,7 +42,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='Страны, для которых применяются эти настройки',
                 related_name='regional_payment_settings_new',
-                to='organizations.Country'
+                to='common.Country'
             ),
         ),
 
@@ -68,7 +69,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 help_text='Страны, для которых применяются эти настройки',
                 related_name='regional_payment_settings',
-                to='organizations.Country'
+                to='common.Country'
             ),
         ),
     ]

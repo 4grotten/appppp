@@ -1026,15 +1026,14 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
     """Админка для управления доступностью платёжных систем по регионам"""
 
     list_display = (
-        'country',
         'get_payment_system_name',
+        'get_countries_list',
         'is_enabled_in_region',
         'is_available_for_request',
         'get_override_count',
     )
 
     list_filter = (
-        'country',
         'payment_system_id',
         'is_enabled_in_region',
         'is_available_for_request',
@@ -1046,21 +1045,19 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        'country__name',
-        'country__code',
+        'countries__name',
+        'countries__code',
     )
 
-    list_select_related = ('country',)
-
-    autocomplete_fields = ('country',)
-
-    ordering = ('country__code', 'payment_system_id')
+    ordering = ('payment_system_id',)
 
     inlines = [AllowedOrganizationInline]
 
+    filter_horizontal = ('countries', 'allowed_organizations')
+
     fieldsets = (
         ('Основная информация', {
-            'fields': ('country', 'payment_system_id')
+            'fields': ('payment_system_id', 'countries')
         }),
         ('Настройки доступности', {
             'fields': ('is_enabled_in_region', 'is_available_for_request'),
@@ -1073,6 +1070,19 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
         return obj.get_payment_system_id_display()
     get_payment_system_name.short_description = 'Платёжная система'
     get_payment_system_name.admin_order_field = 'payment_system_id'
+
+    def get_countries_list(self, obj):
+        """Отображение списка стран"""
+        countries = obj.countries.all()
+        count = countries.count()
+        if count == 0:
+            return "—"
+        elif count <= 3:
+            return ", ".join([c.code for c in countries])
+        else:
+            first_three = ", ".join([c.code for c in countries[:3]])
+            return f"{first_three}... (+{count-3})"
+    get_countries_list.short_description = 'Страны'
 
     def get_override_count(self, obj):
         """Количество организаций-исключений"""

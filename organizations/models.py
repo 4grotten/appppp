@@ -1464,10 +1464,6 @@ class PinnedOrganizations(TimestampModel):
 
 class RegionalPaymentSystemSettings(TimestampModel):
 
-    country = models.ForeignKey(
-        Country, on_delete=models.CASCADE, related_name="regional_payment_settings"
-    )
-
     payment_system_id = models.PositiveSmallIntegerField(
         choices=[
             (1, "FreedomPay"),
@@ -1480,8 +1476,16 @@ class RegionalPaymentSystemSettings(TimestampModel):
         help_text="ID платежной системы (совместим с существующим кодом)",
     )
 
+    countries = models.ManyToManyField(
+        Country,
+        blank=True,
+        related_name="regional_payment_settings",
+        help_text="Страны, для которых применяются эти настройки",
+    )
+
     is_enabled_in_region = models.BooleanField(
-        default=True, help_text="Платежка доступна в этом регионе"
+        default=True,
+        help_text="Платежка доступна в указанных странах",
     )
 
     is_available_for_request = models.BooleanField(
@@ -1496,12 +1500,18 @@ class RegionalPaymentSystemSettings(TimestampModel):
     )
 
     class Meta:
-        unique_together = ("country", "payment_system_id")
         verbose_name = "Regional Payment System Setting"
         verbose_name_plural = "Regional Payment System Settings"
 
     def __str__(self):
-        return f"{self.country.code} - {self.get_payment_system_id_display()}"
+        countries_count = self.countries.count()
+        if countries_count == 0:
+            countries_str = "нет стран"
+        elif countries_count == 1:
+            countries_str = self.countries.first().code
+        else:
+            countries_str = f"{countries_count} стран"
+        return f"{self.get_payment_system_id_display()} ({countries_str})"
 
     @property
     def org_confirmed_field(self):

@@ -3,12 +3,13 @@ import logging
 import random
 import time
 
+import requests
 from googletrans import Translator
 from googletrans.constants import DEFAULT_SERVICE_URLS
+from httpx import Proxy, URLLib3Transport
+
 from common.services.slack import bot_2
 from instagram_parsers.services.proxy_services import ProxyService
-from httpx import Proxy, URLLib3Transport
-import requests
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
@@ -125,15 +126,23 @@ class GoogleTranslator:
 class GPTTranslator:
     @classmethod
     def translate(cls, text, lang):
+        from common.models import ChatGPTSettings
+
+        # Получаем настройки ChatGPT из базы данных
+        chatgpt_settings = ChatGPTSettings.get_settings()
+
+        if not chatgpt_settings.is_active or not chatgpt_settings.api_key:
+            logging.warning("ChatGPT is not configured or disabled, returning original text")
+            return text
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer sk-proj-0p6Vt7kqzskVbaUtLFftT3BlbkFJix0thXqnXi7kmmF1jI4a",
+            "Authorization": f"Bearer {chatgpt_settings.api_key}",
         }
         logging.debug(f"Headers: {headers}")
 
         payload = {
-            "model": "gpt-3.5-turbo",
+            "model": chatgpt_settings.model,
             "messages": [
                 {
                     "role": "system",

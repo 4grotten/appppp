@@ -156,5 +156,33 @@ class RegionalPaymentSystemService:
         return result
 
     @classmethod
+    def get_available_for_ai(cls) -> list:
+        """
+        Возвращает список платёжных систем, доступных для оплаты AI ассистента.
+        Фильтрует по флагу is_available_for_ai=True.
+        """
+        model = cls.get_model()
+        result = []
+
+        # Получаем ID платёжек с is_available_for_ai=True
+        ai_enabled_ids = set(
+            model.objects.filter(is_available_for_ai=True)
+            .values_list('payment_system_id', flat=True)
+        )
+
+        for ps_id, ps_info in cls.PAYMENT_SYSTEMS.items():
+            if ps_id not in ai_enabled_ids:
+                continue
+
+            result.append({
+                'id': ps_id,
+                'name': ps_info['name'],
+                'currency': ps_info['currency'],
+                'multi_currency': ps_info.get('multi_currency', False),
+            })
+
+        return result
+
+    @classmethod
     def get_payment_system_info(cls, payment_system_id: int) -> dict:
         return cls.PAYMENT_SYSTEMS.get(payment_system_id)

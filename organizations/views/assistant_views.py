@@ -1,22 +1,35 @@
-from django.db.models import Max, Case, When, Value, BooleanField
-from rest_framework import status, generics
+from django.db.models import BooleanField, Case, Max, Value, When
+from django.utils.translation import gettext_lazy as _
+from rest_framework import generics, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied
-
-from django.utils.translation import gettext_lazy as _
 
 from common.exceptions import NotAcceptableException
-from common.pagination import GeneralPagination
-from organizations.models import Answer, AnswerFile, Question, Assistant, Plan, Chat, ChatMessage
-from organizations.serializers.assistant_serializers import AssistantCreateSerializer, \
-    OrganizationAssistantAnswerCreateSerializer, AnswerFileSerializer, OrganizationAssistantAnswerRetrieveSerializer, \
-    QuestionListSerializer, QuestionListQueryParamSerializer, OrganizationAssistantSerializer, \
-    PlanSerializer, AssistantSerializer, PurchaseAssistantSerializer, MessageCreateSerializer, ChatSerializerQueryParam, \
-    ChatSerializer, ChatMessageSerializer, ChatListSerializer, ChatByOrgUserSerializer, ToggleAssistantSerializer
-from organizations.services.assistant_services import AssistantService, AnswerService, ChatService, ChatMessageService
+from organizations.models import Answer, AnswerFile, Assistant, Chat, Plan, Question
+from organizations.serializers.assistant_serializers import (
+    AnswerFileSerializer,
+    AssistantCreateSerializer,
+    ChatByOrgUserSerializer,
+    ChatListSerializer,
+    ChatSerializer,
+    ChatSerializerQueryParam,
+    OrganizationAssistantAnswerCreateSerializer,
+    OrganizationAssistantAnswerRetrieveSerializer,
+    OrganizationAssistantSerializer,
+    PlanSerializer,
+    PurchaseAssistantSerializer,
+    QuestionListQueryParamSerializer,
+    QuestionListSerializer,
+    ToggleAssistantSerializer,
+)
+from organizations.services.assistant_services import (
+    AnswerService,
+    AssistantService,
+    ChatService,
+)
 from organizations.services.organization_services import OrganizationService
 from shop.services.comment_services import CommentService
 
@@ -171,7 +184,8 @@ class PurchaseAssistantView(generics.CreateAPIView):
         return Response(
             {
                 "message": _("Success"),
-                "transaction_id": user_assistant.transaction_id
+                "transaction_id": user_assistant.transaction_id,
+                "organization_id": assistant.organization.id
             }
         )
 

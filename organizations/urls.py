@@ -66,6 +66,7 @@ from .views.organization_promo_views import (
     OrganizationTypesWithActivePromosView,
 )
 from .views.organization_tariff import (
+    AIPaymentSystemsListAPIView,
     CreateOrganizationInfoAPIView,
     OrganizationActiveTariffAPIView,
     OrganizationGetInvoiceAPIView,
@@ -89,6 +90,7 @@ from .views.organization_views import (
     InstagramIntegrationCreateRetrieveAPIView,
     InstagramParseLastDataAPIView,
     ItemsInServiceView,
+    MaalyPayConfigView,
     MyOrganizationsListCreateView,
     MyOrganizationsWithCanEditListCreateView,
     OrganizationAllTypesListView,
@@ -107,7 +109,6 @@ from .views.organization_views import (
     OrganizationPartnersFollowersCountAPIView,
     OrganizationPaymentSystemListView,
     OrganizationPaymentSystemsActivationDetailView,
-    MaalyPayConfigView,
     OrganizationPaymentSystemsActivationView,
     OrganizationRetrieveUpdateView,
     OrganizationsGoogleMapsCreateView,
@@ -577,6 +578,11 @@ organization_urls = [
         "organization/create/invoice-info/",
         CreateOrganizationInfoAPIView.as_view(),
         name="create-organization-invoice-information",
+    ),
+    path(
+        "ai/payment-systems/",
+        AIPaymentSystemsListAPIView.as_view(),
+        name="ai-payment-systems-list",
     ),
     path(
         "organization/create/description",

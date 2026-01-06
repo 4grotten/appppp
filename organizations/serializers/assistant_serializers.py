@@ -402,15 +402,15 @@ class ChatSettingsSerializer(serializers.ModelSerializer):
 
 
 class CreateDescriptionSerializer(serializers.Serializer):
-    name = serializers.CharField(required=False)
-    description = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, attrs):
-        name = attrs.get("name")
-        description = attrs.get("description")
+        name = attrs.get("name", "").strip()
+        description = attrs.get("description", "").strip()
 
         if not name and not description:
             raise serializers.ValidationError(
-                "Validation error: name or description not entered one of those must be entered"
+                "At least one field (name or description) must be filled"
             )
-        return super().validate(attrs=attrs)
+        return attrs

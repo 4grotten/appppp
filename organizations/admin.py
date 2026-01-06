@@ -41,7 +41,6 @@ from .models import (
     HotlinkCollectionSubcategory,
     InstagramIntegration,
     Invoice,
-    MaalyPayOrganizationPaymentSystem,
     Membership,
     Message,
     Organization,
@@ -1030,6 +1029,7 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
         'get_countries_list',
         'is_enabled_in_region',
         'is_available_for_request',
+        'is_available_for_ai',
         'get_override_count',
     )
 
@@ -1037,11 +1037,13 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
         'payment_system_id',
         'is_enabled_in_region',
         'is_available_for_request',
+        'is_available_for_ai',
     )
 
     list_editable = (
         'is_enabled_in_region',
         'is_available_for_request',
+        'is_available_for_ai',
     )
 
     search_fields = (
@@ -1053,14 +1055,18 @@ class RegionalPaymentSystemSettingsAdmin(admin.ModelAdmin):
 
     inlines = [AllowedOrganizationInline]
 
-    filter_horizontal = ('countries', 'allowed_organizations')
+    filter_horizontal = ('countries',)
 
     fieldsets = (
         ('Основная информация', {
-            'fields': ('payment_system_id', 'countries')
+            'fields': ('payment_system_id',)
+        }),
+        ('Страны (Countries)', {
+            'fields': ('countries',),
+            'description': 'Страны, для которых применяются эти настройки'
         }),
         ('Настройки доступности', {
-            'fields': ('is_enabled_in_region', 'is_available_for_request'),
+            'fields': ('is_enabled_in_region', 'is_available_for_request', 'is_available_for_ai'),
             'description': 'Управление доступностью платёжной системы в регионе'
         }),
     )

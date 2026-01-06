@@ -331,28 +331,38 @@ def expire_coupons():
 
 @shared_task
 def update_posts():
-    organizations_ids = Organization.objects.filter(update_posts=True).values(
+    organizations = Organization.objects.filter(update_posts=True).values(
         "id", "title"
     )
     total_updated = 0
     updated_posts = dict()
+    now = datetime.now()
 
-    for org_id in organizations_ids:
-        items = ShopItem.objects.filter(organization__id=org_id.get("id")).order_by(
-            "?"
-        )[:10]
+    for org in organizations:
+        org_id = org.get("id")
+        org_title = org.get("title", "Unknown")
 
-        if not items:
+        # Собираем 10 случайных ID постов организации
+        item_ids = list(
+            ShopItem.objects.filter(organization__id=org_id)
+            .order_by("?")
+            .values_list("id", flat=True)[:10]
+        )
+
+        if not item_ids:
             continue
-        count = 0
-        # items_ids = [item.pk for item in items]
-        for item in items:
-            item.is_updated = True
-            item.updated_at = datetime.now()
-            time.sleep(1)
-            count += 1
 
-        updated_posts[org_id.get("title", None)] = [item.name for item in items]
+        # Одним запросом обновляем все посты с одинаковым timestamp
+        count = ShopItem.objects.filter(id__in=item_ids).update(
+            is_updated=True,
+            updated_at=now
+        )
+
+        # Получаем названия для отчёта
+        item_names = list(
+            ShopItem.objects.filter(id__in=item_ids).values_list("name", flat=True)
+        )
+        updated_posts[org_title] = item_names
         total_updated += count
 
     msg = f"updated posts with organizations\n\n```{json.dumps(updated_posts, ensure_ascii=False, indent=2)}```"

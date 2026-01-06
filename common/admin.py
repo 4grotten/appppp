@@ -240,6 +240,7 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
         "is_active",
         "model",
         "temperature",
+        "max_tokens",
         "api_key_masked",
         "updated_at",
     ]
@@ -251,6 +252,10 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
         ("API Configuration", {
             "fields": ("api_key", "model", "temperature"),
             "description": "Настройки подключения к OpenAI ChatGPT API"
+        }),
+        ("Generation Parameters", {
+            "fields": ("max_tokens", ("min_sentences", "max_sentences"), ("min_words", "max_words")),
+            "description": "Параметры генерации текста: длина ответа и количество предложений/слов"
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),

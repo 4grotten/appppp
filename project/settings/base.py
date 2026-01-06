@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 ]
 
 if DEBUG:
-    INSTALLED_APPS += ['drf_yasg']
+    pass  # INSTALLED_APPS += ['drf_yasg']  # Temporarily disabled - module not installed
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

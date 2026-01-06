@@ -1,16 +1,17 @@
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from organizations.services.invoice_service import OrganizationInvoiceService
+
 from organizations.serializers.invoice_serializers import (
+    ActiveTariffSerializer,
     InvoiceCreateSerializer,
-    InvoiceModelSerializer,
     InvoiceInformationListSerializer,
     InvoiceInformationSerializer,
     InvoiceListSerializer,
+    InvoiceModelSerializer,
     ReceiptListSerializer,
-    ActiveTariffSerializer,
 )
-from rest_framework.permissions import IsAuthenticated
+from organizations.services.invoice_service import OrganizationInvoiceService
 
 
 class OrganizationTariffInvoiceAPIView(generics.GenericAPIView):
@@ -152,3 +153,20 @@ class CreateOrganizationInfoAPIView(generics.GenericAPIView):
             data={"message": "successfully created/updated organization invoice data"},
             status=200,
         )
+
+
+class AIPaymentSystemsListAPIView(generics.GenericAPIView):
+    """
+    Возвращает список платёжных систем, доступных для оплаты AI ассистента.
+    Фильтрует по флагу is_available_for_ai=True в админке.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        from organizations.services.regional_payment_service import (
+            RegionalPaymentSystemService,
+        )
+
+        payment_systems = RegionalPaymentSystemService.get_available_for_ai()
+
+        return Response(data=payment_systems, status=200)

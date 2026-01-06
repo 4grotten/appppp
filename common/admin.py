@@ -2,25 +2,27 @@ from django.contrib import admin
 from django.contrib.gis.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets import GooglePointFieldWidget
+
 from common.forms import CountryAdminForm
 
 from .models import (
-    File,
-    Country,
-    Currency,
-    City,
-    Version,
-    OpenExchangeRates,
-    Languages,
-    UmaiWallet,
-    MessageText,
-    FileVideo,
-    CommentsWallpaper,
-    LinkApp,
-    SmsServices,
     BlockedIps,
-    TemporaryCodeSwitcher,
+    ChatGPTSettings,
+    City,
+    CommentsWallpaper,
+    Country,
     CountryInvoiceInfo,
+    Currency,
+    File,
+    FileVideo,
+    Languages,
+    LinkApp,
+    MessageText,
+    OpenExchangeRates,
+    SmsServices,
+    TemporaryCodeSwitcher,
+    UmaiWallet,
+    Version,
 )
 
 
@@ -229,3 +231,44 @@ class CountryInvoiceInfoAdmin(admin.ModelAdmin):
     list_select_related = [
         "country",
     ]
+
+
+@admin.register(ChatGPTSettings)
+class ChatGPTSettingsAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "is_active",
+        "model",
+        "temperature",
+        "api_key_masked",
+        "updated_at",
+    ]
+    readonly_fields = ["created_at", "updated_at"]
+    fieldsets = (
+        (None, {
+            "fields": ("is_active",)
+        }),
+        ("API Configuration", {
+            "fields": ("api_key", "model", "temperature"),
+            "description": "Настройки подключения к OpenAI ChatGPT API"
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
+
+    def api_key_masked(self, obj):
+        """Показывает замаскированный API ключ для безопасности."""
+        if obj.api_key:
+            return f"{obj.api_key[:10]}...{obj.api_key[-4:]}"
+        return "Not set"
+    api_key_masked.short_description = "API Key"
+
+    def has_add_permission(self, request):
+        # Разрешаем добавление только если нет записей
+        return not ChatGPTSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Запрещаем удаление singleton
+        return False

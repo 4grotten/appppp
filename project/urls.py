@@ -29,6 +29,7 @@ v1 = (
         path("", include("sms_sender.urls")),
         path("", include("cors.urls")),
         path("", include("stock.urls")),
+        path("", include("instagram_parsers.urls")),
         path("notifications/", include("notifications.urls")),
     ],
     "v1",

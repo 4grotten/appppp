@@ -30,3 +30,14 @@ class LoginDevice(TimestampModel):
 
     def __str__(self):
         return f'{self.updated_at.date()}'
+
+
+class InstagramApi(TimestampModel):
+    username = models.CharField(max_length=255, null=True, blank=True)
+    password = models.CharField(max_length=255, null=True, blank=True)
+    api_key = models.CharField(max_length=255, null=True, blank=True)
+    proxy = models.ForeignKey(Proxy, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=False, help_text='This instagram_api non active, please update settings')
+
+    def __str__(self):
+        return f'{self.username}'

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from instagram_parsers.models import Proxy, LoginDevice
+from instagram_parsers.models import Proxy, LoginDevice,InstagramApi
 from instagram_parsers.parsers import parser
 
 
@@ -30,3 +30,16 @@ class LoginDeviceAdmin(admin.ModelAdmin):
             obj.settings = parser.get_settings_login_device(obj.username, obj.password, proxy=proxy)
             obj.for_getting_username = True
         super().save_model(request, obj, form, change)
+
+
+
+@admin.register(InstagramApi)
+class InstagramApiAdmin(admin.ModelAdmin):
+    list_display = ('id', 'username', 'password', 'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
+
+    # def save_model(self, request, obj, form, change):
+    #     if not obj.api_key:
+    #         proxy = f'http://{obj.proxy.login}:{obj.proxy.password}@{obj.proxy.http_s}'
+    #         obj.api_key = parser.get_api_key(obj.username, obj.password, proxy=proxy)
+    #         obj.is_active = True
+    #     super().save_model(request, obj, form, change)

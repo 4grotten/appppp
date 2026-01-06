@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('common', '0063_chatgptsettings'),
+        ('common', '0064_chatgptsettings'),
     ]
 
     operations = [

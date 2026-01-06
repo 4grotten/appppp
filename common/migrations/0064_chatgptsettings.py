@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('common', '0062_remove_file_file_type'),
+        ('common', '0063_auto_20260101_1827'),
     ]
 
     operations = [

@@ -68,8 +68,9 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
             f"Target Language: {language}.\n\n"
             "Guidelines:\n"
             "1. Tone: Professional yet approachable, trustworthy, and modern.\n"
-            "2. Length: Medium (3-5 sentences).\n"
+            f"2. Length: Detailed ({chatgpt_settings.min_sentences}-{chatgpt_settings.max_sentences} sentences, approximately {chatgpt_settings.min_words}-{chatgpt_settings.max_words} words).\n"
             "3. Content: If details are provided, rewrite them to be catchy and don't use hashtags. If missing, infer likely industry from the Name.\n"
+            "4. Structure: Start with a hook, describe services/values, end with a call to action or unique selling point.\n"
         )
 
         user_prompt = (
@@ -85,6 +86,7 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": chatgpt_settings.temperature,
+            "max_tokens": chatgpt_settings.max_tokens,
         }
 
         try:

@@ -415,3 +415,93 @@ class CountryInvoiceInfo(TimestampModel):
     address = models.CharField(max_length=455)
     email = models.EmailField()
     bank_details = models.TextField(default="")
+
+
+class ChatGPTSettings(TimestampModel, SingletonModel):
+    """
+    Singleton model для хранения настроек ChatGPT API.
+    Позволяет динамически менять API ключ через админку.
+    """
+    api_key = models.CharField(
+        max_length=255,
+        verbose_name=_("OpenAI API Key"),
+        help_text=_("API ключ для доступа к ChatGPT. Формат: sk-proj-...")
+    )
+    model = models.CharField(
+        max_length=50,
+        default="gpt-3.5-turbo",
+        verbose_name=_("Модель GPT"),
+        help_text=_("Модель для использования (gpt-3.5-turbo, gpt-4, gpt-4o-mini и т.д.)")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Активен"),
+        help_text=_("Включить/выключить интеграцию с ChatGPT")
+    )
+    temperature = models.FloatField(
+        default=0.9,
+        validators=[MinValueValidator(0.0), MaxValueValidator(2.0)],
+        verbose_name=_("Temperature"),
+        help_text=_("Уровень креативности ответов (0.0 - 2.0)")
+    )
+    max_tokens = models.PositiveIntegerField(
+        default=500,
+        validators=[MinValueValidator(50), MaxValueValidator(4000)],
+        verbose_name=_("Max Tokens"),
+        help_text=_("Максимальное количество токенов в ответе (50-4000). 500 токенов ≈ 350-400 слов")
+    )
+    min_sentences = models.PositiveIntegerField(
+        default=6,
+        validators=[MinValueValidator(1), MaxValueValidator(20)],
+        verbose_name=_("Мин. предложений"),
+        help_text=_("Минимальное количество предложений в описании")
+    )
+    max_sentences = models.PositiveIntegerField(
+        default=10,
+        validators=[MinValueValidator(1), MaxValueValidator(30)],
+        verbose_name=_("Макс. предложений"),
+        help_text=_("Максимальное количество предложений в описании")
+    )
+    min_words = models.PositiveIntegerField(
+        default=150,
+        validators=[MinValueValidator(20), MaxValueValidator(1000)],
+        verbose_name=_("Мин. слов"),
+        help_text=_("Примерное минимальное количество слов в описании")
+    )
+    max_words = models.PositiveIntegerField(
+        default=250,
+        validators=[MinValueValidator(50), MaxValueValidator(2000)],
+        verbose_name=_("Макс. слов"),
+        help_text=_("Примерное максимальное количество слов в описании")
+    )
+
+    def __str__(self):
+        return f"ChatGPT Settings (Active: {self.is_active})"
+
+    @classmethod
+    def get_settings(cls):
+        """Получить настройки ChatGPT. Создает запись по умолчанию, если её нет."""
+        settings, created = cls.objects.get_or_create(
+            defaults={
+                'api_key': '',
+                'model': 'gpt-3.5-turbo',
+                'is_active': True,
+                'temperature': 0.9,
+                'max_tokens': 500,
+                'min_sentences': 6,
+                'max_sentences': 10,
+                'min_words': 150,
+                'max_words': 250,
+            }
+        )
+        return settings
+
+    @classmethod
+    def get_api_key(cls):
+        """Получить API ключ."""
+        settings = cls.get_settings()
+        return settings.api_key if settings.is_active else None
+
+    class Meta:
+        verbose_name = _("ChatGPT Settings")
+        verbose_name_plural = _("ChatGPT Settings")

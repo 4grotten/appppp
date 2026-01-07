@@ -1492,6 +1492,11 @@ class RegionalPaymentSystemSettings(TimestampModel):
         default=True, help_text="Организации могут запрашивать подключение"
     )
 
+    is_available_for_ai = models.BooleanField(
+        default=False,
+        help_text="Платежка доступна для оплаты AI ассистента (отображается независимо от привязки к организации)",
+    )
+
     allowed_organizations = models.ManyToManyField(
         "Organization",
         blank=True,

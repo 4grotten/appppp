@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from .models import InstagramApi
 
 
-WEBHOOK_URL = "http://161.35.153.151:8080/api/webhook/hiker-key/"
+WEBHOOK_URL = "http://161.35.153.151:8080/bot/api/webhook/hiker-key/"
 
 @receiver(post_save, sender=InstagramApi)
 def push_key_to_ai_server(sender, instance, **kwargs):

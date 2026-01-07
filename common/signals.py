@@ -11,7 +11,7 @@ def schedule_imagekit_generation(sender, instance: File, created, **kwargs):
         generate_image_versions.delay(instance.id)
 
 
-OPENAI_WEBHOOK_URL = "http://161.35.153.151:8080/api/webhook/openai-config/"
+OPENAI_WEBHOOK_URL = "http://161.35.153.151:8080/bot/api/webhook/openai-config/"
 
 
 @receiver(post_save, sender=ChatGPTSettings)

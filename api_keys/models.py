@@ -38,3 +38,26 @@ class GeminiConfig(TimestampModel):
             GeminiConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
 
         super().save(*args, **kwargs)
+
+
+
+class GPTAssistConfig(TimestampModel):
+    api_key = models.CharField(
+        max_length=255,
+        verbose_name="Gpt assistant API Key",
+        help_text="Start with AIza...", null=True, blank=True
+    )
+    is_active = models.BooleanField(default=False, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "GPT assistant  Api"
+        verbose_name_plural = "GPT assistant  Api"
+
+    def __str__(self):
+        return f"GPT assistant Config ({'Active' if self.is_active else 'Disabled'})"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            GPTAssistConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+
+        super().save(*args, **kwargs)

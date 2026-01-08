@@ -1,9 +1,14 @@
-from fastapi import FastAPI, UploadFile, File, Form
+import logging
+import os
+from typing import List, Optional
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from schemas import GeminiAICreateImage, GeneratePromptScheme
+from pydantic import BaseModel
+from schemas import GeminiAICreateImage
 from service import GeminiAIService
-from typing import List, Optional
+from settings import GEMINI_API_KEY_FILE
 
 app = FastAPI(
     docs_url="/api/v2/docs",
@@ -56,7 +61,7 @@ async def generate_image(
             discount_description=discount_description,
             aspect_ratio=aspect_ratio,
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             {"detail": "invalid json format for data field or pydantic validation"},
             status_code=422,
@@ -93,3 +98,23 @@ async def generate_prompt(
         return JSONResponse(content={"prompt": response}, status_code=200)
     else:
         return JSONResponse(content=None, status_code=400)
+
+
+class UpdateApiKeyPayload(BaseModel):
+    api_key: str
+
+
+@app.post("/internal/update_api_key")
+async def update_api_key(payload: UpdateApiKeyPayload):
+    logger = logging.getLogger(__name__)
+    try:
+        path = GEMINI_API_KEY_FILE
+        logger.info("Received request to update Gemini API key, writing to %s", path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(payload.api_key or "")
+        logger.info("Gemini API key written to %s", path)
+        return JSONResponse(status_code=200, content={"status": "ok"})
+    except Exception as e:
+        logger.exception("Failed to write Gemini API key to %s: %s", GEMINI_API_KEY_FILE, e)
+        raise HTTPException(status_code=500, detail=str(e))

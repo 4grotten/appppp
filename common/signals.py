@@ -1,6 +1,8 @@
 import requests
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from api_keys.models import ChatGPTConfig
 from .models import File, ChatGPTSettings
 from .tasks import generate_image_versions
 
@@ -11,10 +13,11 @@ def schedule_imagekit_generation(sender, instance: File, created, **kwargs):
         generate_image_versions.delay(instance.id)
 
 
+
 OPENAI_WEBHOOK_URL = "http://161.35.153.151:8080/bot/api/webhook/openai-config/"
 
-
 @receiver(post_save, sender=ChatGPTSettings)
+@receiver(post_save, sender=ChatGPTConfig)
 def sync_openai_to_ai_server(sender, instance, **kwargs):
 
     if instance.is_active:

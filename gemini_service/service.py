@@ -14,6 +14,8 @@ from settings import (
 import httpx
 from fastapi import UploadFile
 
+from api_keys.models import GeminiConfig
+
 
 class GeminiAIService:
     _client = None
@@ -47,11 +49,17 @@ class GeminiAIService:
 
     @classmethod
     def get_client(cls):
+        config = GeminiConfig.objects.filter(is_active=True).order_by('-updated_at').first()
+        if config:
+            api_key = config.api_key
+        else:
+            raise HTTPException(status_code=400, detail={"message": "no active gemini api_key"})
+
         if cls._client is None:
             transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
             http_client = httpx.AsyncClient(transport=transport)
             cls._client = Client(
-                api_key=GEMINI_API_KEY,
+                api_key=api_key,
                 http_options=types.HttpOptions(httpx_async_client=http_client),
             ).aio
         return cls._client

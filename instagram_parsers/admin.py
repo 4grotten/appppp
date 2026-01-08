@@ -32,10 +32,10 @@ class LoginDeviceAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-
-@admin.register(InstagramApi)
-class InstagramApiAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'password', 'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
+#
+# @admin.register(InstagramApi)
+# class InstagramApiAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'username', 'password', 'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
 
     # def save_model(self, request, obj, form, change):
     #     if not obj.api_key:

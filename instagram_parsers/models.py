@@ -41,3 +41,9 @@ class InstagramApi(TimestampModel):
 
     def __str__(self):
         return f'{self.username}'
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            InstagramApi.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+
+        super().save(*args, **kwargs)

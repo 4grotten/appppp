@@ -8,6 +8,7 @@ import xmltodict
 from django.conf import settings
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.filters import SearchFilter

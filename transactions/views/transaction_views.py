@@ -7,7 +7,6 @@ import requests
 import xmltodict
 from django.conf import settings
 from django.db import transaction
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
@@ -2309,7 +2308,7 @@ class InitPaymentView(GenericAPIView):
 
             transaction_id = serializer.validated_data["transaction_id"]
             print(f"\n{'='*60}")
-            print(f"[ZinaPay DEBUG] === INIT PAYMENT START ===")
+            print("[ZinaPay DEBUG] === INIT PAYMENT START ===")
             print(f"[ZinaPay DEBUG] transaction_id={transaction_id}")
             print(f"[ZinaPay DEBUG] base_url={base_url}")
 
@@ -2349,7 +2348,7 @@ class InitPaymentView(GenericAPIView):
                 print(f"[ZinaPay DEBUG] api_token: {config.api_token[:20]}...")
 
             if not config:
-                print(f"[ZinaPay DEBUG] ERROR: ZinaPay not configured!")
+                print("[ZinaPay DEBUG] ERROR: ZinaPay not configured!")
                 return Response(
                     data={"error": "ZinaPay is not configured for this organization"},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -2359,7 +2358,7 @@ class InitPaymentView(GenericAPIView):
 
             try:
                 ZinaPayService.validate_currency(transaction.currency.code)
-                print(f"[ZinaPay DEBUG] currency validation: OK")
+                print("[ZinaPay DEBUG] currency validation: OK")
             except BadRequestException as e:
                 print(f"[ZinaPay DEBUG] ERROR: currency validation failed: {e}")
                 return Response(
@@ -2411,7 +2410,7 @@ class InitPaymentView(GenericAPIView):
             print(f"[ZinaPay DEBUG] amount_fils={amount_fils} (original: {transaction.final_amount})")
             print(f"[ZinaPay DEBUG] message={message}")
 
-            print(f"[ZinaPay DEBUG] Calling ZinaPay API create_payment_intent...")
+            print("[ZinaPay DEBUG] Calling ZinaPay API create_payment_intent...")
             result = ZinaPayService.create_payment_intent(
                 api_token=config.api_token,
                 amount=amount_fils,
@@ -2423,13 +2422,13 @@ class InitPaymentView(GenericAPIView):
             )
 
             if not result:
-                print(f"[ZinaPay DEBUG] ERROR: create_payment_intent returned None!")
+                print("[ZinaPay DEBUG] ERROR: create_payment_intent returned None!")
                 return Response(
                     data={"error": "Failed to create ZinaPay payment. Please try again."},
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
 
-            print(f"[ZinaPay DEBUG] ZinaPay API response:")
+            print("[ZinaPay DEBUG] ZinaPay API response:")
             print(f"[ZinaPay DEBUG]   payment_intent_id={result.get('id')}")
             print(f"[ZinaPay DEBUG]   redirect_url={result.get('redirect_url')}")
             print(f"[ZinaPay DEBUG]   status={result.get('status')}")
@@ -2444,8 +2443,8 @@ class InitPaymentView(GenericAPIView):
             }
             transaction.save(update_fields=["payment_info"])
 
-            print(f"[ZinaPay DEBUG] Transaction payment_info saved")
-            print(f"[ZinaPay DEBUG] === INIT PAYMENT SUCCESS ===")
+            print("[ZinaPay DEBUG] Transaction payment_info saved")
+            print("[ZinaPay DEBUG] === INIT PAYMENT SUCCESS ===")
             print(f"{'='*60}\n")
 
             return Response(

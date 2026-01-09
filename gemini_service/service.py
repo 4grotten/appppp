@@ -1,18 +1,19 @@
-from google.genai import Client, types, errors
-from fastapi.exceptions import HTTPException
-from schemas import GeminiAICreateImage
-from PIL import Image
 import io
-from settings import (
-    GEMINI_API_KEY,
-    PROXY_PASS,
-    PROXY_HOST,
-    PROXY_PORT,
-    PROXY_USER,
-    PRODUCTION,
-)
+
 import httpx
 from fastapi import UploadFile
+from fastapi.exceptions import HTTPException
+from google.genai import Client, errors, types
+from PIL import Image
+from schemas import GeminiAICreateImage
+from settings import (
+    PRODUCTION,
+    PROXY_HOST,
+    PROXY_PASS,
+    PROXY_PORT,
+    PROXY_USER,
+    get_gemini_api_key,
+)
 
 
 class GeminiAIService:
@@ -22,24 +23,20 @@ class GeminiAIService:
     else:
         proxy_url = None
     PROMPT_TEMPLATES = {
-        # 1. Для поля "Описание товара" (обычный текст)
         "item_description": (
             "Ты — копирайтер для маркетплейса. "
             "Твоя задача: Написать продающее, но лаконичное описание товара на основе входных данных. не ограничивайся строками пиши сколько хочешь"
             "подробно с использованием эмоджи и мотивацией для покупки"
         ),
-        # 2. Для поля "Промт для генерации" (то, что на скрине с фотореализмом)
         "prompt": (
             "Ты — профессиональный промпт-инженер для нейросетей (gemini imagen). "
             "Твоя задача: Составить детальный визуальный промпт для генерации изображения этого товара. "
             "Включи детали: стиль (фотореализм, 8k), освещение (кинематографичное), ракурс, фон. "
             "в одно предложение или абзац, без лишних вступлений."
         ),
-        # 3. Для поля "Цена" (стиль текста цены)
         "price_prompt": (
             "Твоя задача: Описать стилистику текста для отображения ЦЕНЫ на фото.  на 3 строки без подробностей и мета описаний, не используй звездочки"
         ),
-        # 4. Для поля "Скидка" (стиль текста скидки)
         "discount_prompt": (
             "Твоя задача: Описать стилистику текста для отображения СКИДКИ на фото.  на 3 строки без подробностей и мета описаний, не используй звездочки"
         ),
@@ -47,14 +44,13 @@ class GeminiAIService:
 
     @classmethod
     def get_client(cls):
-        if cls._client is None:
-            transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
-            http_client = httpx.AsyncClient(transport=transport)
-            cls._client = Client(
-                api_key=GEMINI_API_KEY,
-                http_options=types.HttpOptions(httpx_async_client=http_client),
-            ).aio
-        return cls._client
+        api_key = get_gemini_api_key()
+        transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
+        http_client = httpx.AsyncClient(transport=transport)
+        return Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(httpx_async_client=http_client),
+        ).aio
 
     @classmethod
     async def check_proxy_ip(cls):
@@ -86,7 +82,7 @@ class GeminiAIService:
                         if image.mode in ("RGBA", "LA", "P"):
                             image = image.convert("RGB")
                         images_prompt.append(image)
-                    except Exception as e:
+                    except Exception:
                         raise HTTPException(
                             status_code=400,
                             detail={"message": "error while trying to load a images"},
@@ -218,7 +214,7 @@ class GeminiAIService:
                 except Exception:
                     continue
 
-        contents.append(f" Не используй markdown и не добавляй звездочек!")
+        contents.append(" Не используй markdown и не добавляй звездочек!")
 
         try:
             for retry in range(max_retries):

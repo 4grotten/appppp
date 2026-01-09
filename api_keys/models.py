@@ -1,8 +1,14 @@
+import logging
+import os
+import threading
+
+import requests
 from django.db import models
+
+from common.models import ChatGPTSettings, TimestampModel
 
 # Create your models here.
 from instagram_parsers.models import InstagramApi
-from common.models import ChatGPTSettings, TimestampModel
 
 
 class InstagramConfig(InstagramApi):
@@ -36,10 +42,47 @@ class GeminiConfig(TimestampModel):
         return f"Gemini Config ({'Active' if self.is_active else 'Disabled'})"
 
     def save(self, *args, **kwargs):
+        old = None
+        if self.pk:
+            try:
+                old = GeminiConfig.objects.get(pk=self.pk)
+            except GeminiConfig.DoesNotExist:
+                old = None
+
         if self.is_active:
             GeminiConfig.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
 
         super().save(*args, **kwargs)
+
+        key_changed = False
+        if old is None and self.api_key:
+            key_changed = True
+        elif old and (old.api_key != (self.api_key or "")):
+            key_changed = True
+
+        if key_changed and self.is_active and self.api_key:
+            logger = logging.getLogger(__name__)
+
+            def _send():
+                webhook = os.environ.get(
+                    "GEMINI_SERVICE_WEBHOOK_URL",
+                    "http://gemini-api:8002/internal/update_api_key",
+                )
+                try:
+                    logger.info("Sending updated Gemini API key to %s", webhook)
+                    resp = requests.post(webhook, json={"api_key": self.api_key}, timeout=5)
+                    if resp.ok:
+                        logger.info("Successfully updated Gemini API key (status %s)", resp.status_code)
+                    else:
+                        logger.warning(
+                            "Failed to update Gemini API key: status=%s body=%s",
+                            resp.status_code,
+                            resp.text,
+                        )
+                except Exception as e:
+                    logger.exception("Error sending Gemini API key to %s: %s", webhook, e)
+
+            threading.Thread(target=_send, daemon=True).start()
 
 
 

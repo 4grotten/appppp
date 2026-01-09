@@ -1,5 +1,6 @@
 
-from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField
+from django.db.models import Q, Case, When, Value, IntegerField, OuterRef, Exists, BooleanField, F
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
@@ -106,7 +107,7 @@ class FeedView(ListAPIView):
         # else:
         #     qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
-        qs = qs.order_by("-is_pinned","-updated_at")
+        qs = qs.order_by("-updated_at")
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 
@@ -153,7 +154,7 @@ class OrganizationItemListView(FeedView):
                 queryset=qs, search_word=search
             )
 
-        qs = qs.order_by("-is_pinned", "-updated_at")
+        qs = qs.order_by(F('pinned_at').desc(nulls_last=True), '-updated_at')
 
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=qs, user=self.request.user
@@ -361,6 +362,17 @@ class PinOrganizationItemView(APIView):
         if item.organization.owner != user:
             raise PermissionDenied("Only the organization owner can pin items")
         item.is_pinned = not item.is_pinned
+
+        if item.is_pinned:
+            item.is_pinned = False
+            item.pinned_at = None
+            status_text = "unpinned"
+        else:
+
+            item.is_pinned = True
+            item.pinned_at = timezone.now()
+            status_text = "pinned"
+
         item.save()
 
         status_text = "pinned" if item.is_pinned else "unpinned"

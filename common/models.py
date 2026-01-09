@@ -418,10 +418,6 @@ class CountryInvoiceInfo(TimestampModel):
 
 
 class ChatGPTSettings(TimestampModel, SingletonModel):
-    """
-    Singleton model для хранения настроек ChatGPT API.
-    Позволяет динамически менять API ключ через админку.
-    """
     api_key = models.CharField(
         max_length=255,
         verbose_name=_("OpenAI API Key"),
@@ -480,7 +476,6 @@ class ChatGPTSettings(TimestampModel, SingletonModel):
 
     @classmethod
     def get_settings(cls):
-        """Получить настройки ChatGPT. Создает запись по умолчанию, если её нет."""
         settings, created = cls.objects.get_or_create(
             defaults={
                 'api_key': '',

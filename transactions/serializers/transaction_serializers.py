@@ -1147,3 +1147,179 @@ class UserAppTransactionSerializer(serializers.ModelSerializer):
             "purchase_type",
             "icon_type",
         )
+
+
+# ==================== ZinaPay POS Terminal Serializers ====================
+
+
+class ZinaPayPOSCreateSerializer(serializers.Serializer):
+    """
+    Serializer for creating POS terminal payment (merchant generates QR code).
+
+    Used for "phone as terminal" mode where merchant enters amount
+    and generates QR code for customer to scan and pay.
+    """
+    amount = serializers.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        required=True,
+        help_text="Payment amount (minimum 0.01)"
+    )
+    currency = serializers.CharField(
+        max_length=3,
+        required=True,
+        help_text="Currency code (AED, USD, EUR, etc.)"
+    )
+    organization_id = serializers.IntegerField(
+        required=True,
+        help_text="ID of merchant organization"
+    )
+    note = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="Optional payment note/description"
+    )
+    generate_qr = serializers.BooleanField(
+        default=True,
+        required=False,
+        help_text="Generate QR code (default: True)"
+    )
+
+    def validate_organization_id(self, value):
+        """Validate that organization exists and has ZinaPay configured."""
+        try:
+            org = Organization.objects.get(id=value)
+        except Organization.DoesNotExist:
+            raise serializers.ValidationError(_("Organization not found"))
+
+        from organizations.services.zinapay_service import ZinaPayService
+        if not ZinaPayService.is_configured(org):
+            raise serializers.ValidationError(
+                _("ZinaPay is not configured for this organization")
+            )
+
+        if not org.zina_pay_activated:
+            raise serializers.ValidationError(
+                _("ZinaPay is not activated for this organization")
+            )
+
+        return value
+
+    def validate_currency(self, value):
+        """Validate currency code is supported by ZinaPay."""
+        from common.exceptions import BadRequestException
+        from organizations.services.zinapay_service import ZinaPayService
+
+        currency_code = value.upper()
+
+        try:
+            ZinaPayService.validate_currency(currency_code)
+        except BadRequestException as e:
+            raise serializers.ValidationError(str(e))
+
+        return currency_code
+
+
+class ZinaPayPreprocessSerializer(serializers.Serializer):
+    """
+    Serializer for preprocessing ZinaPay transaction.
+
+    Creates a transaction before payment initialization.
+    Similar to standard PreprocessSerializer but with ZinaPay-specific validation.
+    """
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=True,
+        help_text="Organization ID"
+    )
+    client = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Client user ID (optional, defaults to current user)"
+    )
+    cart = serializers.PrimaryKeyRelatedField(
+        queryset=Cart.objects.filter(is_open=True),
+        required=False,
+        allow_null=True,
+        help_text="Cart ID (optional)"
+    )
+    order_comment = serializers.CharField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Order comment/note"
+    )
+    currency = serializers.CharField(
+        required=True,
+        help_text="Currency code (AED, USD, etc.)"
+    )
+
+    def validate_organization(self, value):
+        """Validate that organization exists and has ZinaPay configured."""
+        from organizations.services.zinapay_service import ZinaPayService
+
+        if not ZinaPayService.is_configured(value):
+            raise serializers.ValidationError(
+                _("ZinaPay is not configured for this organization")
+            )
+
+        if not value.zina_pay_activated:
+            raise serializers.ValidationError(
+                _("ZinaPay is not activated for this organization")
+            )
+
+        return value
+
+    def validate_currency(self, value):
+        """Validate currency code is supported by ZinaPay."""
+        from common.exceptions import BadRequestException
+        from organizations.services.zinapay_service import ZinaPayService
+
+        currency_code = value.upper()
+
+        try:
+            ZinaPayService.validate_currency(currency_code)
+        except BadRequestException as e:
+            raise serializers.ValidationError(str(e))
+
+        return currency_code
+
+
+class ZinaPayTransactionStatusSerializer(serializers.Serializer):
+    """
+    Serializer for checking transaction payment status.
+
+    Used by POS terminal to poll payment status and display
+    confirmation to merchant.
+    """
+    transaction_id = serializers.IntegerField(required=True)
+
+
+class ZinaPayPOSResponseSerializer(serializers.Serializer):
+    """Response for POS terminal payment creation."""
+    transaction_id = serializers.IntegerField(
+        help_text="Created transaction ID"
+    )
+    redirect_url = serializers.URLField(
+        help_text="ZinaPay payment URL (for QR code or direct link)"
+    )
+    qr_code_base64 = serializers.CharField(
+        required=False,
+        allow_null=True,
+        help_text="Base64-encoded QR code image (data:image/png;base64,...)"
+    )
+    amount = serializers.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        help_text="Payment amount"
+    )
+    currency = serializers.CharField(
+        max_length=3,
+        help_text="Currency code"
+    )
+    payment_mode = serializers.CharField(
+        help_text="Payment mode (p2p or pos)"
+    )

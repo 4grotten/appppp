@@ -70,6 +70,7 @@ weasyprint = "^66.0"
 redis = "4.6.0"
 django-jazzmin = "^2.6.0"
 drf-yasg = "1.20.0"
+qrcode = {extras = ["pil"], version = "^7.4"}
 
 [tool.poetry.group.dev.dependencies]
 

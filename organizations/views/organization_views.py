@@ -212,6 +212,8 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
             payment_system_name = "Crypto Box"
         elif payment_system_id == 6:
             payment_system_name = "Maaly pay"
+        elif payment_system_id == 7:
+            payment_system_name = "ZinaPay"
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
@@ -220,7 +222,8 @@ class OrgPaymentSystemConfirmation(CreateAPIView):
             **serializer.validated_data,  # type: ignore
         )
 
-        if payment_system_id == 6:
+        # Direct API integration systems return config immediately
+        if payment_system_id in (6, 7):
             return Response(data=data, status=status.HTTP_201_CREATED)
         apofiz_email = settings.EMAIL_HOST_USER
         MailerService.send_payment_verification_email(
@@ -686,6 +689,9 @@ class OrganizationPaymentSystemsActivationDetailView(RetrieveUpdateAPIView):
         elif id == 6:
             organization.maaly_pay_activated = is_active
             organization.save()
+        elif id == 7:
+            organization.zina_pay_activated = is_active
+            organization.save()
         else:
             raise NotAcceptableException(_("Unknown Payment System"))
 
@@ -750,6 +756,73 @@ class MaalyPayConfigView(RetrieveAPIView):
             )
 
         updated_currencies = MaalyPayService.update_currencies(
+            organization=organization,
+            currencies=currencies,
+        )
+
+        return Response(
+            {"currencies": updated_currencies},
+            status=status.HTTP_200_OK
+        )
+
+
+class ZinaPayConfigView(RetrieveAPIView):
+    """
+    GET/PATCH endpoint to retrieve/update ZinaPay configuration
+    for a specific organization.
+
+    URL: /organizations/{pk}/payment_systems/zinapay/config/
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+
+        if not OrganizationService.user_can_edit_organization(
+            user=request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No rights to view this organization"))
+
+        from organizations.models import ZinaPayOrganizationPaymentSystem
+
+        config = ZinaPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).prefetch_related('currencies').first()
+
+        if not config:
+            return Response(
+                {"detail": "ZinaPay not configured for this organization"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        from organizations.serializers.organization_serializers import ZinaPayConfigSerializer
+
+        serializer = ZinaPayConfigSerializer(config)
+        response_data = serializer.data
+        response_data['is_active'] = organization.zina_pay_activated
+        response_data['is_confirmed'] = organization.zina_pay_confirmed
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        """Update ZinaPay currencies for organization."""
+        from organizations.services.zinapay_service import ZinaPayService
+
+        organization = OrganizationService.get(id=self.kwargs['pk'])
+
+        if not OrganizationService.user_can_edit_organization(
+            user=request.user, organization=organization
+        ):
+            raise NotAcceptableException(_("No rights to edit this organization"))
+
+        currencies = request.data.get('currencies', [])
+        if not isinstance(currencies, list):
+            return Response(
+                {"detail": "currencies must be a list of currency codes"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        updated_currencies = ZinaPayService.update_currencies(
             organization=organization,
             currencies=currencies,
         )

@@ -1,12 +1,12 @@
 from django.contrib import admin
 
-from api_keys.models import GeminiConfig, GPTAssistConfig
+from api_keys.models import GeminiConfig, GPTAssistConfig, InstagramConfig, ChatGPTConfig
 from instagram_parsers.models import InstagramApi
 from common.models import ChatGPTSettings
 # Register your models here.
 
 
-@admin.register(ChatGPTSettings)
+@admin.register(ChatGPTConfig)
 class ChatGPTSettingsAdmin(admin.ModelAdmin):
     list_display = [
         "id",
@@ -52,7 +52,7 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(InstagramApi)
+@admin.register(InstagramConfig)
 class InstagramApiAdmin(admin.ModelAdmin):
     list_display = ('id', 'username', 'password', 'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
 

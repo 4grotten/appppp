@@ -14,12 +14,14 @@ from instagram_parsers.models import InstagramApi
 class InstagramConfig(InstagramApi):
     class Meta:
         proxy = True
+        app_label = 'api_keys'
         verbose_name = "Instagram Api"
         verbose_name_plural = "Instagram Api"
 
 class ChatGPTConfig(ChatGPTSettings):
     class Meta:
         proxy = True
+        app_label = 'api_keys'
         verbose_name = "ChatGpt Description Api"
         verbose_name_plural = "ChatGpt Description Api"
 

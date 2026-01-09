@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "cors",
     "channels",
     "daphne",
+    "api_keys.apps.ApiKeysConfig"
 ]
 
 if DEBUG:

@@ -33,6 +33,9 @@ class GeminiConfig(TimestampModel):
         help_text="Start with AIza...", null=True, blank=True
     )
     is_active = models.BooleanField(default=False, null=True, blank=True)
+    link = models.CharField(max_length=255, null=True, blank=True)
+    login = models.CharField(max_length=255, null=True, blank=True)
+    password = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         verbose_name = "Gemini Api"
@@ -93,6 +96,9 @@ class GPTAssistConfig(TimestampModel):
         help_text="Start with AIza...", null=True, blank=True
     )
     is_active = models.BooleanField(default=False, null=True, blank=True)
+    link = models.CharField(max_length=255, null=True, blank=True)
+    login = models.CharField(max_length=255, null=True, blank=True)
+    password = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         verbose_name = "GPT assistant  Api"

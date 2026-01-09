@@ -60,6 +60,10 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
 class InstagramApiAdmin(admin.ModelAdmin):
     list_display = ('id', 'username',  'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
     fieldsets = (
+        ("API Key", {
+            "fields": ("api_key", 'is_active'),
+            "description": "API Key for Instagram"
+        }),
     ("Account Login", {
         "fields": ("link", "login", "password"),
         "description": "Данные аккаунта"
@@ -77,7 +81,12 @@ class InstagramApiAdmin(admin.ModelAdmin):
 @admin.register(GeminiConfig)
 class GeminiConfigAdmin(admin.ModelAdmin):
     list_display = ('api_key','is_active', 'created_at', 'updated_at')
+
     fieldsets = (
+        ("API Key", {
+            "fields": ("api_key",'is_active'),
+            "description": "API Key for Gemini"
+        }),
         ("Account Login", {
             "fields": ("link", "login", "password"),
             "description": "Данные аккаунта"
@@ -89,6 +98,10 @@ class GeminiConfigAdmin(admin.ModelAdmin):
 class GPTAssistConfigAdmin(admin.ModelAdmin):
     list_display = ('api_key', 'is_active', 'created_at', 'updated_at')
     fieldsets = (
+        ("API Key", {
+            "fields": ("api_key",'is_active'),
+            "description": "API Key for Gemini"
+        }),
         ("Account Login", {
             "fields": ("link", "login", "password"),
             "description": "Данные аккаунта"

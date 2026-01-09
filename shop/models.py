@@ -93,6 +93,7 @@ class ShopItem(models.Model):
         (TICKET, TICKET),
         (RESUME, RESUME)
     )
+    pinned_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='shop_items',

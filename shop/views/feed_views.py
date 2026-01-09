@@ -106,7 +106,7 @@ class FeedView(ListAPIView):
         # else:
         #     qs = qs.annotate(is_pinned=Value(False, output_field=BooleanField()))
 
-        qs = qs.order_by("-updated_at")
+        qs = qs.order_by("-is_pinned","-updated_at")
 
         return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
 

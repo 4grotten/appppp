@@ -445,6 +445,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     all_unread_messages_count = serializers.SerializerMethodField(allow_null=True)
     unread_chat_count = serializers.SerializerMethodField(allow_null=True)
     maaly_pay_config = serializers.SerializerMethodField(allow_null=True)
+    zina_pay_config = serializers.SerializerMethodField(allow_null=True)
 
     def get_maaly_pay_config(self, organization: Organization):
         """Get MaalyPay configuration if exists"""
@@ -455,6 +456,18 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             ).first()
             if config:
                 return MaalyPayConfigSerializer(config).data
+        except Exception:
+            return None
+
+    def get_zina_pay_config(self, organization: Organization):
+        """Get ZinaPay configuration if exists"""
+        try:
+            from organizations.models import ZinaPayOrganizationPaymentSystem
+            config = ZinaPayOrganizationPaymentSystem.objects.filter(
+                organization=organization
+            ).first()
+            if config:
+                return ZinaPayConfigSerializer(config).data
         except Exception:
             return None
 
@@ -646,6 +659,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             "subscription_status",
             "unread_chat_count",
             "maaly_pay_config",
+            "zina_pay_config",
         )
         read_only_fields = ["verification_status", "need_add_item"]
 

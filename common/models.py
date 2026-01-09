@@ -474,6 +474,9 @@ class ChatGPTSettings(TimestampModel, SingletonModel):
         verbose_name=_("Макс. слов"),
         help_text=_("Примерное максимальное количество слов в описании")
     )
+    link = models.CharField(max_length=255, null=True, blank=True)
+    login = models.CharField(max_length=255, null=True, blank=True)
+    password = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"ChatGPT Settings (Active: {self.is_active})"

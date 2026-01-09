@@ -38,6 +38,9 @@ class InstagramApi(TimestampModel):
     api_key = models.CharField(max_length=255, null=True, blank=True)
     proxy = models.ForeignKey(Proxy, on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=False, help_text='This instagram_api non active, please update settings')
+    link = models.CharField(max_length=255, null=True, blank=True)
+    login = models.CharField(max_length=255, null=True, blank=True)
+
 
     def __str__(self):
         return f'{self.username}'

@@ -54,6 +54,7 @@ twilio = "==7.5.0"
 transliterate = "*"
 redis = "*"
 django-jazzmin = "*"
+qrcode = {extras = ["pil"], version = "*"}
 
 [dev-packages]
 coverage = "*"

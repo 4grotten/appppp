@@ -13,7 +13,6 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # 0. Получаем настройки ChatGPT из базы данных
         chatgpt_settings = ChatGPTSettings.get_settings()
 
         if not chatgpt_settings.is_active:
@@ -36,32 +35,27 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
         #     proxies = {"http": proxy_url, "https": proxy_url}
         # else:
         #     proxies = None
-        proxies = None  # Прокси отключен для тестирования
+        proxies = None
 
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # 2. Получение языка из заголовка Accept-Language
-        # Пример заголовка: "ru-RU,ru;q=0.9,en-US;q=0.8"
+
         accept_language = request.headers.get("Accept-Language", "ru")
 
-        # Берем только первую часть до запятой (самый приоритетный язык)
-        # Например, из "ru-RU,ru;q=0.9" получим "ru-RU"
+
         language = accept_language.split(",")[0]
 
         name = data.get("name", "Unknown Organization")  # type: ignore
         description = data.get("description", "")  # type: ignore
 
-        # 3. Подготовка запроса к OpenAI
         url = "https://api.openai.com/v1/chat/completions"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
         }
 
-        # ChatGPT отлично понимает коды языков (ru, en-US, de),
-        # поэтому "Target Language: ru-RU" сработает корректно.
         system_prompt = (
             f"Act as a professional SMM copywriter and brand specialist. "
             f"Task: Create a professional and engaging description for an organization's media profile. "
@@ -90,7 +84,6 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
         }
 
         try:
-            # 4. Отправка запроса
             print(f"\n{'='*60}")
             print("📤 ОТПРАВКА К CHATGPT API")
             print(f"{'='*60}")
@@ -109,7 +102,6 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
             response_json = response.json()
             ai_content = response_json["choices"][0]["message"]["content"]
 
-            # Логируем ответ
             print(f"\n{'='*60}")
             print("📥 ОТВЕТ ОТ CHATGPT API")
             print(f"{'='*60}")
@@ -121,7 +113,6 @@ class GenerateDescriptionChatGPTAPIView(GenericAPIView):
             return Response({"result": ai_content}, status=200)
 
         except requests.exceptions.RequestException as e:
-            # Можно добавить логирование (logger.error(e))
             print(f"\n❌ ОШИБКА ChatGPT API: {e}")
             return Response(
                 {"error": "Failed to connect to AI provider"},

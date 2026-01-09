@@ -52,6 +52,8 @@ class PaymentSystemConfirmationService:
         api_key: Optional[str] = None,
         bank_info: Optional[str] = None,
         currencies: Optional[list] = None,
+        api_token: Optional[str] = None,
+        webhook_secret: Optional[str] = None,
     ):
         if payment_system_id == 6:
             if organization is None:
@@ -70,6 +72,25 @@ class PaymentSystemConfirmationService:
                 merchant_id=merchant_id,
                 api_key=api_key,
                 bank_info=bank_info,
+                currencies=currencies,
+            )
+
+        if payment_system_id == 7:
+            if organization is None:
+                raise BadRequestException(
+                    _("Organization is required for this payment system")
+                )
+            if api_token is None:
+                raise BadRequestException(
+                    _("api_token is required for ZinaPay")
+                )
+
+            from organizations.services.zinapay_service import ZinaPayService
+
+            return ZinaPayService.connect_to_organization(
+                organization=organization,
+                api_token=api_token,
+                webhook_secret=webhook_secret,
                 currencies=currencies,
             )
 

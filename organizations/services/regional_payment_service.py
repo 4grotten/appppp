@@ -39,6 +39,13 @@ class RegionalPaymentSystemService:
             'activated_field': 'maaly_pay_activated',
             'multi_currency': True,  # Поддерживает множественные валюты (через currencies в конфиге)
         },
+        7: {
+            'name': 'ZinaPay',
+            'currency': 'AED',  # Дефолт для UI. Реальная валюта берётся из transaction.currency при оплате
+            'confirmed_field': 'zina_pay_confirmed',
+            'activated_field': 'zina_pay_activated',
+            'multi_currency': True,  # Поддерживает AED, USD, EUR, GBP, SAR, QAR, INR, BHD, KWD, OMR
+        },
     }
 
     @classmethod
@@ -54,6 +61,30 @@ class RegionalPaymentSystemService:
         if config:
             return list(config.currencies.values_list('code', flat=True))
         # Пустой список = все валюты поддерживаются
+        return []
+
+    @classmethod
+    def _get_zinapay_currencies(cls, organization) -> list:
+        """Получает список валют из конфига ZinaPay организации.
+
+        Возвращает пустой список если валюты не указаны (означает все валюты поддерживаются).
+        """
+        from organizations.models import ZinaPayOrganizationPaymentSystem
+        config = ZinaPayOrganizationPaymentSystem.objects.filter(
+            organization=organization
+        ).prefetch_related('currencies').first()
+        if config:
+            return list(config.currencies.values_list('code', flat=True))
+        # Пустой список = все валюты поддерживаются
+        return []
+
+    @classmethod
+    def _get_currencies_for_system(cls, organization, ps_id: int) -> list:
+        """Получает список валют для указанной платёжной системы."""
+        if ps_id == 6:  # MaalyPay
+            return cls._get_maalypay_currencies(organization)
+        elif ps_id == 7:  # ZinaPay
+            return cls._get_zinapay_currencies(organization)
         return []
 
     @classmethod
@@ -105,7 +136,7 @@ class RegionalPaymentSystemService:
 
             # Для систем с multi_currency получаем валюты из конфига
             if ps_info.get('multi_currency'):
-                currencies = cls._get_maalypay_currencies(organization)
+                currencies = cls._get_currencies_for_system(organization, ps_id)
             else:
                 currencies = [ps_info['currency']] if ps_info['currency'] else []
 
@@ -140,7 +171,7 @@ class RegionalPaymentSystemService:
 
             # Для систем с multi_currency получаем валюты из конфига
             if ps_info.get('multi_currency'):
-                currencies = cls._get_maalypay_currencies(organization)
+                currencies = cls._get_currencies_for_system(organization, ps_id)
             else:
                 currencies = [ps_info['currency']] if ps_info['currency'] else []
 

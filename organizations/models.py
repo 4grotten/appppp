@@ -214,6 +214,9 @@ class Organization(TimestampModel):
     maaly_pay_activated = models.BooleanField(
         default=False, help_text=_("Activated in this organization")
     )
+    zina_pay_activated = models.BooleanField(
+        default=False, help_text=_("Activated in this organization")
+    )
 
     payment_systems_activated = models.BooleanField(
         default=False, help_text=_("All payment systems are activated")
@@ -238,6 +241,9 @@ class Organization(TimestampModel):
         default=False, help_text=_("Available in this organization")
     )
     maaly_pay_confirmed = models.BooleanField(
+        default=False, help_text=_("Available in this organization")
+    )
+    zina_pay_confirmed = models.BooleanField(
         default=False, help_text=_("Available in this organization")
     )
 
@@ -461,6 +467,42 @@ class MaalyPayOrganizationPaymentSystem(TimestampModel):
         related_name="maalypay_configs",
         help_text="Supported currencies. Empty = all currencies supported.",
     )
+
+
+class ZinaPayOrganizationPaymentSystem(TimestampModel):
+    """
+    Configuration for ZinaPay payment system integration.
+    ZinaPay is a UAE-based payment gateway supporting multiple currencies.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="zina_pay_info",
+    )
+    api_token = models.CharField(
+        max_length=500,
+        help_text="Bearer token from ZinaPay dashboard",
+    )
+    webhook_secret = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        help_text="Secret for HMAC webhook signature verification",
+    )
+    currencies = models.ManyToManyField(
+        Currency,
+        blank=True,
+        related_name="zinapay_configs",
+        help_text="Supported currencies. Empty = all currencies supported.",
+    )
+
+    class Meta:
+        verbose_name = "ZinaPay Organization Payment System"
+        verbose_name_plural = "ZinaPay Organization Payment Systems"
+
+    def __str__(self):
+        return f"ZinaPay config for {self.organization.title}"
 
 
 class PhoneNumber(TimestampModel):
@@ -1472,6 +1514,7 @@ class RegionalPaymentSystemSettings(TimestampModel):
             (4, "Betapay"),
             (5, "CryptoCloud"),
             (6, "MaalyPay"),
+            (7, "ZinaPay"),
         ],
         help_text="ID платежной системы (совместим с существующим кодом)",
     )
@@ -1527,6 +1570,7 @@ class RegionalPaymentSystemSettings(TimestampModel):
             4: "betapay_confirmed",
             5: "cryptocloud_confirmed",
             6: "maaly_pay_confirmed",
+            7: "zina_pay_confirmed",
         }
         return mapping.get(self.payment_system_id)
 
@@ -1539,5 +1583,6 @@ class RegionalPaymentSystemSettings(TimestampModel):
             4: "betapay_activated",
             5: "cryptocloud_activated",
             6: "maaly_pay_activated",
+            7: "zina_pay_activated",
         }
         return mapping.get(self.payment_system_id)

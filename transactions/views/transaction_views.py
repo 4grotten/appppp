@@ -24,6 +24,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.exceptions import (
+    BadRequestException,
     NotAcceptableException,
     PermissionDeniedException,
 )
@@ -1869,6 +1870,7 @@ class InitPaymentView(GenericAPIView):
     4 - Betapay
     5 - CryptoCloud
     6 - MaalyPay
+    7 - ZinaPay
     """
 
     def post(self, request, *args, **kwargs):
@@ -2175,7 +2177,6 @@ class InitPaymentView(GenericAPIView):
                     id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
                 )
             except Exception as e:
-                # Диагностика: проверяем реальное состояние транзакции
                 print(f"[MaalyPay] Error getting transaction: {e}")
                 tx = Transaction.objects.filter(id=transaction_id).first()
                 if tx:
@@ -2255,13 +2256,13 @@ class InitPaymentView(GenericAPIView):
             failure_url = TransactionService.get_failure_url(request=request)
 
             # Сохраняем purchase_type, user_id и URL редиректа в payment_info
-            transaction.payment_info = {
+            transaction.payment_info = json.dumps({
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
                 "merchant_tx_id": merchant_tx_id,
                 "success_url": success_url,
                 "failure_url": failure_url,
-            }
+            })
             transaction.save(update_fields=["payment_info"])
 
             print(f"[MaalyPay VIEW] Calling create_payment with amount={transaction.final_amount}, currency={transaction.currency.code}")
@@ -2298,6 +2299,156 @@ class InitPaymentView(GenericAPIView):
 
             return Response(
                 data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
+
+        elif kwargs["pk"] == 7:
+            # ZinaPay
+            from organizations.services.zinapay_service import ZinaPayService
+
+            transaction_id = serializer.validated_data["transaction_id"]
+            print(f"\n{'='*60}")
+            print(f"[ZinaPay DEBUG] === INIT PAYMENT START ===")
+            print(f"[ZinaPay DEBUG] transaction_id={transaction_id}")
+            print(f"[ZinaPay DEBUG] base_url={base_url}")
+
+            try:
+                transaction = TransactionService.get(
+                    id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+                )
+            except Exception:
+                tx = Transaction.objects.filter(id=transaction_id).first()
+                if tx:
+                    if tx.is_processed:
+                        return Response(
+                            data={"error": "This transaction is already paid"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        return Response(
+                            data={"error": f"Transaction not available for payment (status: {tx.status})"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        data={"error": "Transaction not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            config = ZinaPayService.get_config(transaction.organization)
+            print(f"[ZinaPay DEBUG] org_id={transaction.organization.id}, org_title={transaction.organization.title}")
+            print(f"[ZinaPay DEBUG] config found: {config is not None}")
+            if config:
+                print(f"[ZinaPay DEBUG] api_token: {config.api_token[:20]}...")
+
+            if not config:
+                print(f"[ZinaPay DEBUG] ERROR: ZinaPay not configured!")
+                return Response(
+                    data={"error": "ZinaPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            print(f"[ZinaPay DEBUG] currency={transaction.currency.code}, amount={transaction.final_amount}")
+
+            try:
+                ZinaPayService.validate_currency(transaction.currency.code)
+                print(f"[ZinaPay DEBUG] currency validation: OK")
+            except BadRequestException as e:
+                print(f"[ZinaPay DEBUG] ERROR: currency validation failed: {e}")
+                return Response(
+                    data={"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
+            print(f"[ZinaPay DEBUG] purchase_type={purchase_type}")
+
+            # Build detailed payment description
+            client_name = (
+                transaction.client.full_name
+                or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                or "Client"
+            )
+            order_number = f"#{transaction.id}"
+            org_title = transaction.organization.title if transaction.organization else ""
+
+            # Try to include cart items in description
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    header = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+                    items_list = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    message = f"{header} | {items_list}"
+                else:
+                    message = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+            except (Cart.DoesNotExist, AttributeError):
+                message = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+            callback_url = f"{base_url}transactions/zinapay/result/?tx={transaction.id}"
+
+            print(f"[ZinaPay DEBUG] success_url={success_url}")
+            print(f"[ZinaPay DEBUG] failure_url={failure_url}")
+            print(f"[ZinaPay DEBUG] callback_url={callback_url}")
+
+            amount_fils = ZinaPayService.convert_to_fils(
+                transaction.final_amount,
+                transaction.currency.code
+            )
+            print(f"[ZinaPay DEBUG] amount_fils={amount_fils} (original: {transaction.final_amount})")
+            print(f"[ZinaPay DEBUG] message={message}")
+
+            print(f"[ZinaPay DEBUG] Calling ZinaPay API create_payment_intent...")
+            result = ZinaPayService.create_payment_intent(
+                api_token=config.api_token,
+                amount=amount_fils,
+                currency_code=transaction.currency.code,
+                success_url=callback_url,
+                cancel_url=callback_url,
+                failure_url=callback_url,
+                message=message,
+            )
+
+            if not result:
+                print(f"[ZinaPay DEBUG] ERROR: create_payment_intent returned None!")
+                return Response(
+                    data={"error": "Failed to create ZinaPay payment. Please try again."},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            print(f"[ZinaPay DEBUG] ZinaPay API response:")
+            print(f"[ZinaPay DEBUG]   payment_intent_id={result.get('id')}")
+            print(f"[ZinaPay DEBUG]   redirect_url={result.get('redirect_url')}")
+            print(f"[ZinaPay DEBUG]   status={result.get('status')}")
+
+            transaction.payment_info = {
+                "payment_mode": ZinaPayService.MODE_P2P,
+                "purchase_type": purchase_type,
+                "user_id": self.request.user.id,
+                "zinapay_payment_intent_id": result["id"],
+                "success_url": success_url,
+                "failure_url": failure_url,
+            }
+            transaction.save(update_fields=["payment_info"])
+
+            print(f"[ZinaPay DEBUG] Transaction payment_info saved")
+            print(f"[ZinaPay DEBUG] === INIT PAYMENT SUCCESS ===")
+            print(f"{'='*60}\n")
+
+            return Response(
+                data={"redirect_url": result["redirect_url"]},
                 status=status.HTTP_200_OK,
             )
 
@@ -2628,7 +2779,6 @@ class NewInitPaymentView(GenericAPIView):
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
 
-            # Получаем имя клиента
             client_name = (
                 transaction.client.full_name
                 or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
@@ -2641,7 +2791,6 @@ class NewInitPaymentView(GenericAPIView):
                 cart = transaction.cart
                 cart_items = cart.items.all()
                 if cart_items.exists():
-                    # Формируем описание: Org • №ID • Client | товары
                     header = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
                     items_list = ", ".join(
                         f"{item.item.name} x{item.count}" for item in cart_items
@@ -2672,13 +2821,13 @@ class NewInitPaymentView(GenericAPIView):
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
 
-            transaction.payment_info = {
+            transaction.payment_info = json.dumps({
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
                 "merchant_tx_id": merchant_tx_id,
                 "success_url": success_url,
                 "failure_url": failure_url,
-            }
+            })
             transaction.save(update_fields=["payment_info"])
 
             checkout_url = MaalyPayService.create_payment(
@@ -2709,6 +2858,140 @@ class NewInitPaymentView(GenericAPIView):
 
             return Response(
                 data={"redirect_url": checkout_url},
+                status=status.HTTP_200_OK,
+            )
+        elif payment_method.code == "zinapay":
+            from organizations.services.zinapay_service import ZinaPayService
+
+            transaction_id = serializer.validated_data["transaction_id"]
+
+            try:
+                transaction = TransactionService.get(
+                    id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+                )
+            except Exception:
+                tx = Transaction.objects.filter(id=transaction_id).first()
+                if tx:
+                    if tx.is_processed:
+                        return Response(
+                            data={"error": "This transaction is already paid"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        return Response(
+                            data={"error": f"Transaction unavailable for payment (status: {tx.status})"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        data={"error": "Transaction not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+
+            if not transaction.organization:
+                return Response(
+                    data={"error": "Transaction organization is not set"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            config = ZinaPayService.get_config(transaction.organization)
+            if not config:
+                return Response(
+                    data={"error": "ZinaPay is not configured for this organization"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                ZinaPayService.validate_currency(transaction.currency.code)
+            except BadRequestException as e:
+                return Response(
+                    data={"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Get purchase_type for callback processing
+            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
+
+            # Build detailed payment description (with cart items if available)
+            client_name = (
+                transaction.client.full_name
+                or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
+                or "Client"
+            )
+            order_number = f"#{transaction.id}"
+            org_title = transaction.organization.title if transaction.organization else ""
+
+            # Try to include cart items in description
+            try:
+                cart = transaction.cart
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    header = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+                    items_list = ", ".join(
+                        f"{item.item.name} x{item.count}" for item in cart_items
+                    )
+                    message = f"{header} | {items_list}"
+                else:
+                    message = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+            except (Cart.DoesNotExist, AttributeError):
+                message = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
+
+            # Get redirect URLs for user
+            success_url = TransactionService.get_success_url(request=request)
+            failure_url = TransactionService.get_failure_url(request=request)
+
+            # Callback URL for webhook (using base_url)
+            callback_url = f"{base_url}transactions/zinapay/result/?tx={transaction.id}"
+
+            # Convert amount to fils (100 AED = 10000 fils)
+            amount_fils = ZinaPayService.convert_to_fils(
+                transaction.final_amount,
+                transaction.currency.code
+            )
+
+            # Create Payment Intent (P2P mode)
+            result = ZinaPayService.create_payment_intent(
+                api_token=config.api_token,
+                amount=amount_fils,
+                currency_code=transaction.currency.code,
+                success_url=callback_url,
+                cancel_url=callback_url,
+                failure_url=callback_url,
+                message=message,
+            )
+
+            if not result:
+                return Response(
+                    data={"error": "Failed to create ZinaPay payment. Please try again."},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            # Save payment_intent_id and other info
+            transaction.payment_info = {
+                "payment_mode": ZinaPayService.MODE_P2P,  # P2P mode: user pays through app
+                "purchase_type": purchase_type,
+                "user_id": self.request.user.id,
+                "zinapay_payment_intent_id": result["id"],
+                "success_url": success_url,
+                "failure_url": failure_url,
+            }
+            transaction.save(update_fields=["payment_info"])
+
+            logger.info(
+                "[ZinaPay P2P] Payment intent created from NewInitPaymentView",
+                extra={
+                    "transaction_id": transaction.id,
+                    "payment_intent_id": result["id"],
+                    "amount": str(transaction.final_amount),
+                    "currency": transaction.currency.code,
+                    "purchase_type": purchase_type,
+                }
+            )
+
+            return Response(
+                data={"redirect_url": result["redirect_url"]},
                 status=status.HTTP_200_OK,
             )
         else:

@@ -34,6 +34,10 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
             "fields": ("created_at", "updated_at"),
             "classes": ("collapse",)
         }),
+        ("Account Login", {
+            "fields": ("link","login","password"),
+            "description": "Данные аккаунта"
+        }),
     )
 
     def api_key_masked(self, obj):
@@ -54,7 +58,13 @@ class ChatGPTSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(InstagramConfig)
 class InstagramApiAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'password', 'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
+    list_display = ('id', 'username',  'api_key', 'proxy', 'is_active','created_at', 'updated_at',)
+    fieldsets = (
+    ("Account Login", {
+        "fields": ("link", "login", "password"),
+        "description": "Данные аккаунта"
+    }),
+    )
 
     # def save_model(self, request, obj, form, change):
     #     if not obj.api_key:
@@ -67,8 +77,20 @@ class InstagramApiAdmin(admin.ModelAdmin):
 @admin.register(GeminiConfig)
 class GeminiConfigAdmin(admin.ModelAdmin):
     list_display = ('api_key','is_active', 'created_at', 'updated_at')
+    fieldsets = (
+        ("Account Login", {
+            "fields": ("link", "login", "password"),
+            "description": "Данные аккаунта"
+        }),
+    )
 
 
 @admin.register(GPTAssistConfig)
 class GPTAssistConfigAdmin(admin.ModelAdmin):
     list_display = ('api_key', 'is_active', 'created_at', 'updated_at')
+    fieldsets = (
+        ("Account Login", {
+            "fields": ("link", "login", "password"),
+            "description": "Данные аккаунта"
+        }),
+    )

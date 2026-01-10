@@ -8,7 +8,7 @@ from transactions.views.stat_views import (
 )
 from transactions.views.zinapay_views import (
     # ZinaPayPOSCreateView,  # POS временно отключен
-    # ZinaPayPreprocessView,  # Используем стандартный /transactions/preprocess/
+    ZinaPayPreprocessView,
     # ZinaPayTransactionStatusView,  # POS временно отключен
     ZinaPayWebhookView,
 )
@@ -454,12 +454,11 @@ urlpatterns = [
         name="maalypay-result",
     ),
     # ZinaPay
-    # Preprocess: используем стандартный /transactions/preprocess/
-    # path(
-    #     "transactions/zinapay/preprocess/",
-    #     ZinaPayPreprocessView.as_view(),
-    #     name="zinapay-preprocess",
-    # ),
+    path(
+        "transactions/zinapay/preprocess/",
+        ZinaPayPreprocessView.as_view(),
+        name="zinapay-preprocess",
+    ),
     path(
         "transactions/zinapay/result/",
         ZinaPayWebhookView.as_view(),

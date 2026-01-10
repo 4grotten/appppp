@@ -445,6 +445,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     all_unread_messages_count = serializers.SerializerMethodField(allow_null=True)
     unread_chat_count = serializers.SerializerMethodField(allow_null=True)
     maaly_pay_config = serializers.SerializerMethodField(allow_null=True)
+    zina_pay_config = serializers.SerializerMethodField(allow_null=True)
 
     def get_maaly_pay_config(self, organization: Organization):
         """Get MaalyPay configuration if exists"""
@@ -455,6 +456,18 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             ).first()
             if config:
                 return MaalyPayConfigSerializer(config).data
+        except Exception:
+            return None
+
+    def get_zina_pay_config(self, organization: Organization):
+        """Get ZinaPay configuration if exists"""
+        try:
+            from organizations.models import ZinaPayOrganizationPaymentSystem
+            config = ZinaPayOrganizationPaymentSystem.objects.filter(
+                organization=organization
+            ).first()
+            if config:
+                return ZinaPayConfigSerializer(config).data
         except Exception:
             return None
 
@@ -646,6 +659,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             "subscription_status",
             "unread_chat_count",
             "maaly_pay_config",
+            "zina_pay_config",
         )
         read_only_fields = ["verification_status", "need_add_item"]
 
@@ -1233,9 +1247,14 @@ class OrgPaymentSystemConfirmationSerializer(serializers.Serializer):
     username = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
+    # MaalyPay fields
     merchant_id = serializers.CharField(required=False)
     api_key = serializers.CharField(required=False)
     bank_info = serializers.CharField(required=False, allow_blank=True)
+    # ZinaPay fields
+    api_token = serializers.CharField(required=False)
+    webhook_secret = serializers.CharField(required=False, allow_blank=True)
+    # Common multi-currency field
     currencies = serializers.ListField(
         child=serializers.CharField(),
         required=False,
@@ -1259,6 +1278,25 @@ class MaalyPayConfigSerializer(serializers.ModelSerializer):
         from organizations.models import MaalyPayOrganizationPaymentSystem
         model = MaalyPayOrganizationPaymentSystem
         fields = ('merchant_id', 'api_key', 'bank_info', 'currencies')
+
+
+class ZinaPayConfigSerializer(serializers.ModelSerializer):
+    """Serializer for ZinaPay payment system configuration."""
+    currencies = serializers.SlugRelatedField(
+        many=True,
+        slug_field='code',
+        queryset=Currency.objects.all(),
+        required=False,
+    )
+
+    class Meta:
+        from organizations.models import ZinaPayOrganizationPaymentSystem
+        model = ZinaPayOrganizationPaymentSystem
+        fields = ('api_token', 'webhook_secret', 'currencies')
+        extra_kwargs = {
+            'api_token': {'write_only': True},
+            'webhook_secret': {'write_only': True},
+        }
 
 
 class PaymentSystemSerializer(serializers.Serializer):

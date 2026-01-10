@@ -10,7 +10,14 @@ from .tasks import generate_image_versions
 @receiver(post_save, sender=File)
 def schedule_imagekit_generation(sender, instance: File, created, **kwargs):
     if created and instance.file:
-        generate_image_versions.delay(instance.id)
+        specs = [
+            "common:file:large",
+            "common:file:medium",
+            "common:file:small"
+        ]
+
+        for spec in specs:
+            generate_image_versions.delay(instance.file.name, spec)
 
 
 

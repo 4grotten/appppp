@@ -1,4 +1,15 @@
 from organizations.models import (
+    ZinaPayOrganizationPaymentSystem as OriginalZinaPayOrganizationPaymentSystem,
+)
+
+
+class ZinaPayOrganizationPaymentSystem(OriginalZinaPayOrganizationPaymentSystem):
+    """Настройки ZinaPay для организаций (proxy)"""
+    class Meta:
+        proxy = True
+        verbose_name = "Настройки ZinaPay для организации"
+        verbose_name_plural = "ZinaPay - Настройки организаций"
+from organizations.models import (
     MaalyPayOrganizationPaymentSystem as OriginalMaalyPayOrganizationPaymentSystem,
 )
 from organizations.models import (

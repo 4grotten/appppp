@@ -137,6 +137,7 @@ from .views.organization_views import (
     SetOrganizationLocationAPIView,
     SubscriptionsMessageListAPIView,
     UnblockUserDestroyView,
+    ZinaPayConfigView,
 )
 from .views.partnerships_views import (
     HomepageBannersView,
@@ -369,6 +370,11 @@ organization_urls = [
         "organizations/<int:pk>/payment_systems/maalypay/config/",
         MaalyPayConfigView.as_view(),
         name="maalypay_config",
+    ),
+    path(
+        "organizations/<int:pk>/payment_systems/zinapay/config/",
+        ZinaPayConfigView.as_view(),
+        name="zinapay_config",
     ),
     path(
         "organizations/payment_systems/",

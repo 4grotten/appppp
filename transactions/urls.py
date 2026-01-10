@@ -6,12 +6,6 @@ from transactions.views.stat_views import (
     OrganizationTransactionCalendarView,
     PartnersTotalStatsView,
 )
-from transactions.views.zinapay_views import (
-    # ZinaPayPOSCreateView,  # POS временно отключен
-    ZinaPayPreprocessView,
-    # ZinaPayTransactionStatusView,  # POS временно отключен
-    ZinaPayWebhookView,
-)
 from transactions.views.transaction_views import (
     BetaPayPaymentTestView,
     BetaPayWebhookView,
@@ -95,6 +89,9 @@ from transactions.views.transaction_views import (
     WithdrawalTransactionCompleteView,
     WithdrawalTransactionDeclineView,
     WithdrawalTransactionReviewView,
+)
+from transactions.views.zinapay_views import (
+    ZinaPayWebhookView,
 )
 
 urlpatterns = [
@@ -453,12 +450,7 @@ urlpatterns = [
         MaalyPayResultView.as_view(),
         name="maalypay-result",
     ),
-    # ZinaPay
-    path(
-        "transactions/zinapay/preprocess/",
-        ZinaPayPreprocessView.as_view(),
-        name="zinapay-preprocess",
-    ),
+
     path(
         "transactions/zinapay/result/",
         ZinaPayWebhookView.as_view(),
@@ -469,18 +461,7 @@ urlpatterns = [
         ZinaPayWebhookView.as_view(),
         name="zinapay-callback",
     ),
-    # ZinaPay POS Terminal - временно отключено
-    # path(
-    #     "transactions/zinapay/pos/create/",
-    #     ZinaPayPOSCreateView.as_view(),
-    #     name="zinapay-pos-create",
-    # ),
-    # path(
-    #     "transactions/zinapay/status/",
-    #     ZinaPayTransactionStatusView.as_view(),
-    #     name="zinapay-transaction-status",
-    # ),
-    # balance
+
     path(
         "balances/",
         OrganizationBalanceListView.as_view(),

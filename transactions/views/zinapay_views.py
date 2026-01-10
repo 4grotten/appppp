@@ -90,10 +90,10 @@ class ZinaPayWebhookView(APIView):
         print(f"[ZinaPay DEBUG] allowed IPs: {ZinaPayService.ALLOWED_IPS}")
 
         if not ZinaPayService.is_allowed_ip(client_ip):
-            print(f"[ZinaPay DEBUG] WARNING: IP not whitelisted!")
+            print("[ZinaPay DEBUG] WARNING: IP not whitelisted!")
             return Response({"status": "ok", "message": "IP not whitelisted"}, status=200)
 
-        print(f"[ZinaPay DEBUG] IP check: OK")
+        print("[ZinaPay DEBUG] IP check: OK")
 
         event = request.data.get("event")
         data = request.data.get("data", {})
@@ -130,7 +130,7 @@ class ZinaPayWebhookView(APIView):
             return Response({"status": "ok", "message": "Transaction not found"})
 
         if transaction.is_processed:
-            print(f"[ZinaPay DEBUG] Transaction already processed, skipping")
+            print("[ZinaPay DEBUG] Transaction already processed, skipping")
             return Response({"status": "ok", "message": "Already processed"})
 
         config = ZinaPayService.get_config(transaction.organization)
@@ -140,22 +140,22 @@ class ZinaPayWebhookView(APIView):
 
         if config.webhook_secret:
             signature = request.headers.get("X-Hmac-Signature", "")
-            print(f"[ZinaPay DEBUG] Verifying HMAC signature...")
+            print("[ZinaPay DEBUG] Verifying HMAC signature...")
             if not ZinaPayService.verify_webhook_signature(
                 raw_body,
                 signature,
                 config.webhook_secret
             ):
-                print(f"[ZinaPay DEBUG] ERROR: Invalid HMAC signature!")
+                print("[ZinaPay DEBUG] ERROR: Invalid HMAC signature!")
                 return Response({"status": "ok", "message": "Signature verification failed"})
-            print(f"[ZinaPay DEBUG] HMAC signature: OK")
+            print("[ZinaPay DEBUG] HMAC signature: OK")
 
         print(f"[ZinaPay DEBUG] Processing status: {zinapay_status}")
 
         if zinapay_status == ZinaPayService.STATUS_COMPLETED:
-            print(f"[ZinaPay DEBUG] Status is COMPLETED, verifying with API...")
+            print("[ZinaPay DEBUG] Status is COMPLETED, verifying with API...")
             if not ZinaPayService.is_completed(config.api_token, payment_intent_id):
-                print(f"[ZinaPay DEBUG] ERROR: API status verification failed!")
+                print("[ZinaPay DEBUG] ERROR: API status verification failed!")
                 logger.error(
                     "[ZinaPay] Status mismatch - API says not completed",
                     extra={
@@ -166,9 +166,9 @@ class ZinaPayWebhookView(APIView):
                 )
                 return Response({"status": "ok", "message": "Status verification failed"})
 
-            print(f"[ZinaPay DEBUG] API verification: OK, processing payment...")
+            print("[ZinaPay DEBUG] API verification: OK, processing payment...")
             self._process_successful_payment(transaction, transaction.client)
-            print(f"[ZinaPay DEBUG] Payment processed successfully!")
+            print("[ZinaPay DEBUG] Payment processed successfully!")
 
             logger.info(
                 "[ZinaPay] Webhook processed successfully",
@@ -190,10 +190,10 @@ class ZinaPayWebhookView(APIView):
             )
             transaction.payment_status = Transaction.REJECTED
             transaction.save(update_fields=["payment_status", "updated_at"])
-            print(f"[ZinaPay DEBUG] Transaction marked as REJECTED")
+            print("[ZinaPay DEBUG] Transaction marked as REJECTED")
 
         elif zinapay_status == ZinaPayService.STATUS_CANCELED:
-            print(f"[ZinaPay DEBUG] Status is CANCELED")
+            print("[ZinaPay DEBUG] Status is CANCELED")
             logger.info(
                 "[ZinaPay] Payment cancelled",
                 extra={
@@ -202,7 +202,7 @@ class ZinaPayWebhookView(APIView):
                 }
             )
 
-        print(f"[ZinaPay DEBUG] === WEBHOOK POST COMPLETE ===")
+        print("[ZinaPay DEBUG] === WEBHOOK POST COMPLETE ===")
         print(f"{'='*60}\n")
         return Response({"status": "ok"})
 
@@ -243,7 +243,7 @@ class ZinaPayWebhookView(APIView):
             print(f"[ZinaPay DEBUG] Searched by payment_intent_id, found: {transaction is not None}")
 
         if not transaction:
-            print(f"[ZinaPay DEBUG] ERROR: Transaction not found! Redirecting to failure")
+            print("[ZinaPay DEBUG] ERROR: Transaction not found! Redirecting to failure")
             logger.warning(
                 "[ZinaPay] Transaction not found on GET redirect",
                 extra={"payment_intent_id": payment_intent_id, "tx_id": tx_id}
@@ -262,12 +262,12 @@ class ZinaPayWebhookView(APIView):
         print(f"[ZinaPay DEBUG] failure_url: {failure_url}")
 
         if transaction.is_processed:
-            print(f"[ZinaPay DEBUG] Already processed, redirecting to success")
+            print("[ZinaPay DEBUG] Already processed, redirecting to success")
             return redirect(success_url)
 
         config = ZinaPayService.get_config(transaction.organization)
         if not config:
-            print(f"[ZinaPay DEBUG] ERROR: No ZinaPay config for org! Redirecting to failure")
+            print("[ZinaPay DEBUG] ERROR: No ZinaPay config for org! Redirecting to failure")
             return redirect(failure_url)
 
         if not payment_intent_id:
@@ -275,18 +275,18 @@ class ZinaPayWebhookView(APIView):
             print(f"[ZinaPay DEBUG] Got payment_intent_id from payment_info: {payment_intent_id}")
 
         if not payment_intent_id:
-            print(f"[ZinaPay DEBUG] ERROR: No payment_intent_id! Redirecting to failure")
+            print("[ZinaPay DEBUG] ERROR: No payment_intent_id! Redirecting to failure")
             return redirect(failure_url)
 
-        print(f"[ZinaPay DEBUG] Checking payment status with ZinaPay API...")
+        print("[ZinaPay DEBUG] Checking payment status with ZinaPay API...")
         if ZinaPayService.is_completed(config.api_token, payment_intent_id):
-            print(f"[ZinaPay DEBUG] API says COMPLETED, processing payment...")
+            print("[ZinaPay DEBUG] API says COMPLETED, processing payment...")
             self._process_successful_payment(transaction, transaction.client)
-            print(f"[ZinaPay DEBUG] Payment processed! Redirecting to success")
+            print("[ZinaPay DEBUG] Payment processed! Redirecting to success")
             print(f"{'='*60}\n")
             return redirect(success_url)
 
-        print(f"[ZinaPay DEBUG] Payment not completed, redirecting to failure")
+        print("[ZinaPay DEBUG] Payment not completed, redirecting to failure")
         print(f"{'='*60}\n")
         return redirect(failure_url)
 
@@ -480,11 +480,13 @@ class ZinaPayPreprocessView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
         organization = serializer.validated_data["organization"]
         client = serializer.validated_data.get("client") or request.user
         cart = serializer.validated_data.get("cart", None)
         order_comment = serializer.validated_data.get("order_comment", None)
         currency_code = serializer.validated_data["currency"]
+        amount = serializer.validated_data["amount"]
 
         from common.models import Currency
         try:
@@ -507,7 +509,8 @@ class ZinaPayPreprocessView(GenericAPIView):
 
         new_transaction.currency = currency
         new_transaction.status = Transaction.ACCEPTED
-        new_transaction.save(update_fields=["currency", "status"])
+        new_transaction.original_amount = amount
+        new_transaction.save(update_fields=["currency", "status", "original_amount"])
 
         logger.info(
             "[ZinaPay] Transaction preprocessed",

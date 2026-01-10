@@ -16,7 +16,6 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from common.utils import DecimalDecoder, DecimalEncoder
 from organizations.constants import SUBSCRIPTION_STATUS
 from organizations.services.invoice_service import InvoiceDataService
-from organizations.tasks import create_invoice_pdf
 from shop.models import ItemSubcategory, ShopItem
 
 from .models import (
@@ -931,6 +930,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def activate_subscription(self, request, invoice_id):
+        from organizations.tasks import create_invoice_pdf
         invoice_qs = (
             Invoice.objects.select_related(
                 "organization_info", "user", "tariff__country"

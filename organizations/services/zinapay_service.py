@@ -116,13 +116,24 @@ class ZinaPayService:
         }
 
         try:
+            print(f"[ZinaPay API] Creating payment intent:")
+            print(f"[ZinaPay API] URL: {url}")
+            print(f"[ZinaPay API] Payload: {payload}")
+            print(f"[ZinaPay API] Token: {api_token[:20]}..." if api_token else "[ZinaPay API] Token: None")
+
             response = requests.post(
                 url, json=payload, headers=headers, timeout=cls.TIMEOUT
             )
+
+            print(f"[ZinaPay API] Response status: {response.status_code}")
+            print(f"[ZinaPay API] Response body: {response.text}")
+
             response.raise_for_status()
             return response.json()
         except Exception as e:
             logger.error(f"[ZinaPay] Create Intent Failed: {e}", exc_info=True)
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"[ZinaPay API] Error response: {e.response.text}")
             return None
 
     @classmethod

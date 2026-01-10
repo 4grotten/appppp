@@ -46,20 +46,15 @@ RUN apt-get update && \
 
 WORKDIR /app
 RUN pip3 install setuptools
-RUN pip3 install poetry
+RUN pip3 install pipx && pipx install poetry && pipx ensurepath
+ENV PATH="/root/.local/bin:$PATH"
 
 COPY ./pyproject.toml /app
 COPY ./poetry.lock /app
 
-#COPY ./Pipfile /app/
-#COPY ./Pipfile.lock /app/
-#RUN pip install pipenv
-#RUN pipenv install --system --deploy
-
 RUN pip install --upgrade pip
-RUN poetry self update
 RUN poetry config virtualenvs.create false && \
-    poetry install
+    poetry install --no-root
 
 COPY . /app/
 COPY ./bin/gunicorn.sh ./bin/entrypoint.sh ./bin/celery_worker.sh ./bin/runserver.sh /

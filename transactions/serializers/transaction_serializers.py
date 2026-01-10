@@ -1256,6 +1256,13 @@ class ZinaPayPreprocessSerializer(serializers.Serializer):
         required=True,
         help_text="Currency code (AED, USD, etc.)"
     )
+    amount = serializers.DecimalField(
+        required=True,
+        max_digits=12,
+        decimal_places=2,
+        min_value=0.01,
+        help_text="Payment amount"
+    )
 
     def validate_organization(self, value):
         """Validate that organization exists and has ZinaPay configured."""

@@ -1,24 +1,24 @@
-from organizations.models import (
-    UserOrgSubscription,
-    RegionalTariff,
-    OrganizationInvoiceInfo,
-)
-from users.models import User
-from common.models import Country, CountryInvoiceInfo
+import os
 from datetime import datetime
-from organizations.services.invoice_service import InvoiceDataService
+
+from django.conf import settings
+
+from organizations.models import (
+    OrganizationInvoiceInfo,
+    UserOrgSubscription,
+)
 from organizations.serializers.invoice_serializers import (
     OrganizationInvoiceInfoSerializer,
 )
-import os
-from django.conf import settings
-from organizations.tasks import create_invoice_pdf
+from organizations.services.invoice_service import InvoiceDataService
 
 
 class ReceiptService:
 
     @staticmethod
     def create_receipt_from_crypto_cloud(org_subs: UserOrgSubscription):
+        from organizations.tasks import create_invoice_pdf
+
         tariff = org_subs.tariff
         sub_id = org_subs.pk
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
@@ -46,6 +46,8 @@ class ReceiptService:
     def create_receipt_from_management_as_crypto_cloud(
         org_subs: UserOrgSubscription, inv_org_info: OrganizationInvoiceInfo
     ):
+        from organizations.tasks import create_invoice_pdf
+
         tariff = org_subs.tariff
         sub_id = org_subs.pk
         country_data = InvoiceDataService.get_country_invoice_data(tariff)
@@ -67,6 +69,8 @@ class ReceiptService:
 
     @staticmethod
     def create_receipt_from_maalypay(org_subs: UserOrgSubscription):
+        from organizations.tasks import create_invoice_pdf
+
         """
         Generate receipt for MaalyPay payment.
 

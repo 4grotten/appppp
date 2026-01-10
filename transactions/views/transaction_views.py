@@ -2202,7 +2202,7 @@ class InitPaymentView(GenericAPIView):
             print(f"[MaalyPay] Got transaction: status={transaction.status}, is_processed={transaction.is_processed}")
 
             # Получаем purchase_type для callback обработки
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
 
@@ -2366,7 +2366,7 @@ class InitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             print(f"[ZinaPay DEBUG] purchase_type={purchase_type}")
@@ -2909,7 +2909,7 @@ class NewInitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
 
@@ -3054,7 +3054,7 @@ class InitPaymentSwiftView(GenericAPIView):
             Decimal("0.00"), rounding=ROUND_DOWN
         )
 
-        _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+        __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
             transaction=transaction
         )
         success_url = TransactionService.get_success_url(request=request)

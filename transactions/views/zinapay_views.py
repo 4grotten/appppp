@@ -506,7 +506,8 @@ class ZinaPayPreprocessView(GenericAPIView):
         )
 
         new_transaction.currency = currency
-        new_transaction.save(update_fields=["currency"])
+        new_transaction.status = Transaction.ACCEPTED
+        new_transaction.save(update_fields=["currency", "status"])
 
         logger.info(
             "[ZinaPay] Transaction preprocessed",

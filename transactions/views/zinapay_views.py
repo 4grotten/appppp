@@ -22,11 +22,31 @@ class ZinaPayWebhookView(APIView):
             TransactionService.accept_paysy_order_transaction_by_user(
                 transaction_id=transaction.id, user=user
             )
+        elif purchase_type == "org_subscription":
+            TransactionService.accept_org_subscription_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "user_app":
+            TransactionService.accept_user_app_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "deal":
+            TransactionService.complete_paysy_transaction_online(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "assistant":
+            TransactionService.accept_assistant_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "rent":
+            TransactionService.accept_paysy_booking_transaction_by_user(
+                transaction_id=transaction.id, user=user, request=None
+            )
         else:
             if not transaction.is_processed:
                 transaction.is_processed = True
                 transaction.payment_status = Transaction.ACCEPTED
-                transaction.save()
+                transaction.save(update_fields=["is_processed", "payment_status", "updated_at"])
 
     def post(self, request, *args, **kwargs):
         ip = ZinaPayService.get_client_ip(request)

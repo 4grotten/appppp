@@ -1395,6 +1395,7 @@ class ItemFeedSerializer(ItemListSerializer):
             "own_resume",
             "is_comments_disabled",
             "is_pinned",
+            "pinned_at"
         )
         read_only_fields = ["name_lang", "description_lang"]
 

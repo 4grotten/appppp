@@ -361,7 +361,6 @@ class PinOrganizationItemView(APIView):
 
         if item.organization.owner != user:
             raise PermissionDenied("Only the organization owner can pin items")
-        item.is_pinned = not item.is_pinned
 
         if item.is_pinned:
             item.is_pinned = False
@@ -380,3 +379,5 @@ class PinOrganizationItemView(APIView):
             {"message": f"Item successfully {status_text}", "is_pinned": item.is_pinned},
             status=200
         )
+
+

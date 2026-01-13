@@ -115,7 +115,6 @@ from organizations.services.client_status_services import (
 from organizations.services.cumulative_group_services import CumulativeGroupService
 from organizations.services.membership_services import MembershipService
 from organizations.services.organization_services import OrganizationService
-from organizations.services.receipts_services import ReceiptService
 from project.redis_client import redis_client
 from shop.models import Booking, Cart, ShopItem, Ticket
 from shop.services.booking_services import BookingService
@@ -4010,6 +4009,8 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def accept_org_subscription_transaction(cls, transaction_id: Transaction):
+        from organizations.services.receipts_services import ReceiptService
+
         transaction = cls.get(
             id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
         )

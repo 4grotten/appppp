@@ -1,49 +1,4 @@
 from django.contrib import admin
-
-from payments.models import ZinaPayOrganizationPaymentSystem
-
-
-class ZinaPayOrgInline(admin.TabularInline):
-    """Инлайн для настроек ZinaPay организаций"""
-    model = ZinaPayOrganizationPaymentSystem
-    extra = 0
-    verbose_name = "Настройки ZinaPay для организации"
-    verbose_name_plural = "Настройки ZinaPay для организаций"
-    fields = ('organization', 'api_token', 'webhook_secret')
-    raw_id_fields = ('organization',)
-    readonly_fields = ('api_token',)
-
-
-# Регистрируем отдельно настройки ZinaPay для организаций
-@admin.register(ZinaPayOrganizationPaymentSystem)
-class ZinaPayOrganizationAdmin(admin.ModelAdmin):
-    """Админка для настроек ZinaPay организаций"""
-    list_display = ['organization', 'api_token', 'get_currencies']
-    search_fields = ['organization__name', 'api_token']
-    autocomplete_fields = ['organization']
-    list_select_related = ['organization']
-    filter_horizontal = ('currencies',)
-
-    fieldsets = (
-        ('Организация', {
-            'fields': ('organization',),
-        }),
-        ('Настройки ZinaPay', {
-            'fields': ('api_token', 'webhook_secret'),
-        }),
-        ('Валюты', {
-            'fields': ('currencies',),
-            'description': 'Поддерживаемые валюты. Пусто = все валюты поддерживаются.'
-        }),
-    )
-
-    def get_currencies(self, obj):
-        currencies = obj.currencies.all()
-        if currencies.exists():
-            return ', '.join([c.code for c in currencies[:5]])
-        return 'Все валюты'
-    get_currencies.short_description = 'Валюты'
-from django.contrib import admin
 from django.db.models import QuerySet
 
 from organizations.admin import (
@@ -60,6 +15,7 @@ from payments.models import (
     MaalyPaySettings,
     PaymentSystemMethod,
     PaySySettings,
+    ZinaPayOrganizationPaymentSystem,
 )
 
 
@@ -217,3 +173,45 @@ class MaalyPayOrganizationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(PaymentSystemMethod, PaymentSystemMethodAdmin)
+
+
+
+class ZinaPayOrgInline(admin.TabularInline):
+    """Инлайн для настроек ZinaPay организаций"""
+    model = ZinaPayOrganizationPaymentSystem
+    extra = 0
+    verbose_name = "Настройки ZinaPay для организации"
+    verbose_name_plural = "Настройки ZinaPay для организаций"
+    fields = ('organization', 'api_token', 'webhook_secret')
+    raw_id_fields = ('organization',)
+    readonly_fields = ('api_token',)
+
+
+@admin.register(ZinaPayOrganizationPaymentSystem)
+class ZinaPayOrganizationAdmin(admin.ModelAdmin):
+    """Админка для настроек ZinaPay организаций"""
+    list_display = ['organization', 'api_token', 'get_currencies']
+    search_fields = ['organization__name', 'api_token']
+    autocomplete_fields = ['organization']
+    list_select_related = ['organization']
+    filter_horizontal = ('currencies',)
+
+    fieldsets = (
+        ('Организация', {
+            'fields': ('organization',),
+        }),
+        ('Настройки ZinaPay', {
+            'fields': ('api_token', 'webhook_secret'),
+        }),
+        ('Валюты', {
+            'fields': ('currencies',),
+            'description': 'Поддерживаемые валюты. Пусто = все валюты поддерживаются.'
+        }),
+    )
+
+    def get_currencies(self, obj):
+        currencies = obj.currencies.all()
+        if currencies.exists():
+            return ', '.join([c.code for c in currencies[:5]])
+        return 'Все валюты'
+    get_currencies.short_description = 'Валюты'

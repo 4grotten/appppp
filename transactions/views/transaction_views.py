@@ -2202,7 +2202,7 @@ class InitPaymentView(GenericAPIView):
             print(f"[MaalyPay] Got transaction: status={transaction.status}, is_processed={transaction.is_processed}")
 
             # Получаем purchase_type для callback обработки
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
 
@@ -2366,7 +2366,7 @@ class InitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
             print(f"[ZinaPay DEBUG] purchase_type={purchase_type}")
@@ -2909,12 +2909,10 @@ class NewInitPaymentView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Get purchase_type for callback processing
-            _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
                 transaction=transaction
             )
 
-            # Build detailed payment description (with cart items if available)
             client_name = (
                 transaction.client.full_name
                 or f"{transaction.client.first_name or ''} {transaction.client.last_name or ''}".strip()
@@ -2923,7 +2921,6 @@ class NewInitPaymentView(GenericAPIView):
             order_number = f"#{transaction.id}"
             org_title = transaction.organization.title if transaction.organization else ""
 
-            # Try to include cart items in description
             try:
                 cart = transaction.cart
                 cart_items = cart.items.all()
@@ -2938,20 +2935,16 @@ class NewInitPaymentView(GenericAPIView):
             except (Cart.DoesNotExist, AttributeError):
                 message = f"{org_title} • {order_number} • {client_name}".replace("  ", " ").strip(" •")
 
-            # Get redirect URLs for user
             success_url = TransactionService.get_success_url(request=request)
             failure_url = TransactionService.get_failure_url(request=request)
 
-            # Callback URL for webhook (using base_url)
             callback_url = f"{base_url}transactions/zinapay/result/?tx={transaction.id}"
 
-            # Convert amount to fils (100 AED = 10000 fils)
             amount_fils = ZinaPayService.convert_to_fils(
                 transaction.final_amount,
                 transaction.currency.code
             )
 
-            # Create Payment Intent (P2P mode)
             result = ZinaPayService.create_payment_intent(
                 api_token=config.api_token,
                 amount=amount_fils,
@@ -2964,30 +2957,29 @@ class NewInitPaymentView(GenericAPIView):
 
             if not result:
                 return Response(
-                    data={"error": "Failed to create ZinaPay payment. Please try again."},
+                    data={"error": "Failed to create ZinaPay payment"},
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
 
-            # Save payment_intent_id and other info
+            payment_intent_id = result["id"]
+
             transaction.payment_info = {
-                "payment_mode": ZinaPayService.MODE_P2P,  # P2P mode: user pays through app
+                "payment_mode": ZinaPayService.MODE_P2P,
                 "purchase_type": purchase_type,
                 "user_id": self.request.user.id,
-                "zinapay_payment_intent_id": result["id"],
+                "zinapay_payment_intent_id": payment_intent_id,
                 "success_url": success_url,
                 "failure_url": failure_url,
             }
             transaction.save(update_fields=["payment_info"])
 
-            logger.info(
-                "[ZinaPay P2P] Payment intent created from NewInitPaymentView",
-                extra={
-                    "transaction_id": transaction.id,
-                    "payment_intent_id": result["id"],
-                    "amount": str(transaction.final_amount),
-                    "currency": transaction.currency.code,
-                    "purchase_type": purchase_type,
-                }
+
+            from organizations.tasks import fetch_zinapay_status
+            transaction.on_commit(
+                lambda: fetch_zinapay_status.delay(
+                    transaction_id=transaction.id,
+                    payment_intent_id=payment_intent_id
+                )
             )
 
             return Response(
@@ -3062,7 +3054,7 @@ class InitPaymentSwiftView(GenericAPIView):
             Decimal("0.00"), rounding=ROUND_DOWN
         )
 
-        _, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+        __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
             transaction=transaction
         )
         success_url = TransactionService.get_success_url(request=request)

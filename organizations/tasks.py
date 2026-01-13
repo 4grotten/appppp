@@ -36,8 +36,11 @@ from organizations.models import (
     UserOrgSubscription,
 )
 from organizations.services.invoice_service import OrganizationInvoiceService
+from organizations.services.zinapay_service import ZinaPayService
 from organizations.utils import clean_original_amount
 from shop.models import ItemInstagramData, ShopItem
+from transactions.models import Transaction
+from transactions.services.transaction_services import TransactionService
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -417,16 +420,7 @@ def fetch_maalypay_status(
     purchase_type: str = "deal",
     user_id: int = None,
 ):
-    """
-    Celery task для проверки статуса оплаты в MaalyPay.
 
-    Логика API MaalyPay:
-    - status=False + "not initiated by customer yet" - клиент ещё не начал оплату
-    - status=False + filledAmount < fiatAmount - частичная оплата
-    - status=True - оплата завершена (filledAmount >= fiatAmount)
-
-    Для USDT/USDC рекомендуется проверять через 20-30 секунд после callback.
-    """
     import requests
     from users.services.user_services import UserService
 
@@ -446,16 +440,13 @@ def fetch_maalypay_status(
         print(f"MaalyPay connection error: {e}")
         raise self.retry(countdown=30)
 
-    # Проверяем статус - True означает успешную оплату
     status_value = response_data.get("status")
     filled_amount = response_data.get("filledAmount", "0")
     fiat_amount = response_data.get("fiatAmount", "0")
 
-    # Если status=True - оплата завершена успешно
     if status_value is True:
         print(f"MaalyPay: Payment completed for {merchant_tx_id}")
 
-        # Проверяем, не обработана ли уже транзакция
         tx = Transaction.objects.filter(id=transaction_id).first()
         if not tx:
             print(f"Transaction {transaction_id} not found")
@@ -465,15 +456,12 @@ def fetch_maalypay_status(
             print(f"Transaction {transaction_id} already processed")
             return "Already processed"
 
-        # Получаем user для обработки
         user = None
         if user_id:
             user = UserService.get(id=user_id)
         elif tx.client_id:
             user = tx.client
 
-        # Вызываем соответствующий метод TransactionService
-        # (все уведомления отправляются внутри этих методов)
         if purchase_type == "product":
             TransactionService.accept_paysy_order_transaction_by_user(
                 transaction_id=tx.id, user=user
@@ -499,13 +487,83 @@ def fetch_maalypay_status(
                 transaction_id=tx.id, user=user, request=None
             )
         else:
-            # Fallback - помечаем как обработанную напрямую
             tx.is_processed = True
             tx.payment_status = Transaction.ACCEPTED
             tx.save(update_fields=["is_processed", "payment_status", "updated_at"])
 
         return f"Transaction {transaction_id} completed successfully via MaalyPay"
 
-    # Если status=False - оплата ещё не завершена
     print(f"MaalyPay: Payment pending for {merchant_tx_id}, status={status_value}, filled={filled_amount}/{fiat_amount}")
     raise self.retry(countdown=30)
+
+@shared_task(bind=True, max_retries=60, default_retry_delay=10)
+def fetch_zinapay_status(self, transaction_id: int, payment_intent_id: str):
+    try:
+        transaction = Transaction.objects.select_related("organization", "client").get(id=transaction_id)
+    except Transaction.DoesNotExist:
+        logger.error(f"[ZinaPay Polling] Transaction {transaction_id} not found")
+        return
+
+    if transaction.is_processed:
+        return f"Transaction {transaction_id} already processed"
+
+    config = ZinaPayService.get_config(transaction.organization)
+    if not config:
+        logger.error(f"[ZinaPay Polling] Config not found for org {transaction.organization.id}")
+        return
+
+    payment_data = ZinaPayService.get_payment_intent(config.api_token, payment_intent_id)
+
+    if not payment_data:
+        logger.warning(f"[ZinaPay Polling] Failed to fetch data for {payment_intent_id}")
+        raise self.retry()
+
+    status_value = payment_data.get("status")
+
+    logger.info(
+        f"[ZinaPay Polling] Tx {transaction_id}: status={status_value}",
+        extra={"transaction_id": transaction_id, "ziina_status": status_value}
+    )
+
+    if status_value == "completed":
+        user = transaction.client
+        payment_info = transaction.payment_info or {}
+        purchase_type = payment_info.get("purchase_type", "deal")
+
+        if purchase_type == "product":
+            TransactionService.accept_paysy_order_transaction_by_user(
+                transaction_id=transaction.id, user=user
+            )
+        elif purchase_type == "org_subscription":
+            TransactionService.accept_org_subscription_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "user_app":
+            TransactionService.accept_user_app_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "deal":
+            TransactionService.complete_paysy_transaction_online(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "assistant":
+            TransactionService.accept_assistant_transaction(
+                transaction_id=transaction.id
+            )
+        elif purchase_type == "rent":
+            TransactionService.accept_paysy_booking_transaction_by_user(
+                transaction_id=transaction.id, user=user, request=None
+            )
+        else:
+            transaction.is_processed = True
+            transaction.payment_status = Transaction.ACCEPTED
+            transaction.save(update_fields=["is_processed", "payment_status", "updated_at"])
+
+        return f"Transaction {transaction_id} completed successfully via ZinaPay Polling"
+
+    elif status_value in ["failed", "canceled"]:
+        transaction.payment_status = Transaction.REJECTED
+        transaction.save(update_fields=["payment_status", "updated_at"])
+        return f"Transaction {transaction_id} failed/canceled"
+
+    raise self.retry()

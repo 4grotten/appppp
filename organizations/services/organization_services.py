@@ -84,10 +84,6 @@ from organizations.models import (
     UserAssistant,
 )
 from organizations.services.membership_services import MembershipService
-from organizations.tasks import (
-    delete_not_updated_posts_from_instagram,
-    parse_instagram_to_shop_items,
-)
 from organizations.utils import JSONQuerySet
 from shop.models import ItemSubcategory, ShopItem
 from transactions.models import Transaction
@@ -1306,6 +1302,7 @@ class OrganizationInstagramIntegrationService:
 
     @classmethod
     def create(cls, organization: Organization, url: str, host) -> InstagramIntegration:
+        from organizations.tasks import parse_instagram_to_shop_items
         try:
             username = get_username_from_instagram_url(url)
             user_info = get_instagram_user_info(username, host)
@@ -1332,6 +1329,7 @@ class OrganizationInstagramIntegrationService:
     @classmethod
     def delete(cls, organization: Organization):
         try:
+            from organizations.tasks import delete_not_updated_posts_from_instagram
             insta = InstagramIntegration.objects.get(organization=organization)
             insta.delete()
             transaction.on_commit(

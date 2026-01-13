@@ -4,7 +4,9 @@ from pathlib import Path
 from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
-from .models import ShopItem, UserAssistant, Assistant
+
+from organizations.models import Assistant, UserAssistant
+from shop.models import ShopItem
 
 
 class AssistantDataService:

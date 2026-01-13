@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from organizations.models import Organization
-from .services.assistant_data_service import AssistantDataService
+from shop.services.assistant_data_service import AssistantDataService
 
 
 class Command(BaseCommand):
@@ -21,9 +21,9 @@ class Command(BaseCommand):
 
             total_checked += 1
 
-            if AssistantJSONService.is_assistant_active(org):
+            if AssistantDataService.is_assistant_active(org):
                 try:
-                    AssistantJSONService.update_organization_json(org)
+                    AssistantDataService.update_organization_json(org)
                     files_created += 1
                     self.stdout.write(self.style.SUCCESS(f"[{files_created}/{limit}] OK: {org.title}"))
                 except Exception as e:

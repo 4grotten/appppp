@@ -16,5 +16,5 @@ def update_assistant_json_task(organization_id):
 def cleanup_expired_assistants_files():
     organizations = Organization.objects.filter(assistant__isnull=False)
     for org in organizations:
-        if not AssistantJSONService.is_assistant_active(org):
-             AssistantJSONService.delete_json(org)
+        if not AssistantDataService.is_assistant_active(org):
+             AssistantDataService.delete_organization_json(org)

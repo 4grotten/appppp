@@ -1,10 +1,11 @@
 from .telegram import TelegramBotService
-from .whatsapp import WhatsAppServiceFactory, WAHAService
+from .whatsapp import WhatsAppBotService, WhatsAppServiceFactory, WAHAService
 from .assistant import BotAssistantService
 from .bot_factory import BotFactoryService
 
 __all__ = [
     "TelegramBotService",
+    "WhatsAppBotService",
     "WhatsAppServiceFactory",
     "WAHAService",
     "BotAssistantService",

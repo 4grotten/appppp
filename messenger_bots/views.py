@@ -3,6 +3,7 @@ import logging
 import hmac
 import hashlib
 import re
+from typing import Optional
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
@@ -187,7 +188,7 @@ class WAHAWebhookView(View):
 
         return hmac.compare_digest(expected, signature)
 
-    def _extract_org_id_from_session(self, session_name: str) -> int | None:
+    def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:
         """Extract organization ID from session name (e.g., 'org_123' -> 123)."""
         if not session_name:
             return None

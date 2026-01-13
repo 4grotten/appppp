@@ -2,6 +2,7 @@ from .base import WhatsAppMessage, WhatsAppResponse, WhatsAppServiceInterface
 from .factory import WhatsAppServiceFactory
 from .twilio_wa import TwilioWhatsAppService
 from .waha import WAHAService
+from .cloud import WhatsAppBotService
 
 __all__ = [
     "WhatsAppServiceInterface",
@@ -10,4 +11,5 @@ __all__ = [
     "WAHAService",
     "TwilioWhatsAppService",
     "WhatsAppServiceFactory",
+    "WhatsAppBotService",
 ]

@@ -62,7 +62,7 @@ class Command(BaseCommand):
             try:
                 AssistantDataService.update_organization_json(org)
                 # Проверим, создался ли файл
-                file_path = AssistantDataService.get_file_path(org)
+                file_path = AssistantDataService._get_file_path(org)
                 if file_path.exists():
                     print(f"✅ УСПЕХ! Файл создан: {file_path}")
                     print(f"   Размер файла: {file_path.stat().st_size} байт")

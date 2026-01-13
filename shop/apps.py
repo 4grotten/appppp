@@ -15,3 +15,5 @@ class ShopConfig(AppConfig):
                 return None
 
             Translator.raise_Exception = raise_Exception
+
+        import shop.signals

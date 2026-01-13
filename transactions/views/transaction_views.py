@@ -3238,9 +3238,21 @@ class BetaPayWebhookView(APIView):
 class CryptoCloudPostbackView(APIView):
     def post(self, request, *args, **kwargs):
         payload = request.data
+        print(f"[CryptoCloud] Webhook received: {payload}")
+
         order_id = payload.get("order_id")
-        user_id, transaction_id, purchase_type = order_id.split("|")
+        if not order_id:
+            print(f"[CryptoCloud] ERROR: No order_id in payload")
+            return Response({"error": "Missing order_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id, transaction_id, purchase_type = order_id.split("|")
+        except ValueError as e:
+            print(f"[CryptoCloud] ERROR: Invalid order_id format: {order_id}, error: {e}")
+            return Response({"error": "Invalid order_id format"}, status=status.HTTP_400_BAD_REQUEST)
+
         status_value = payload.get("status")
+        print(f"[CryptoCloud] Processing: user_id={user_id}, transaction_id={transaction_id}, purchase_type={purchase_type}, status={status_value}")
 
         user_id = int(user_id)
         user = UserService.get(id=user_id)
@@ -3264,9 +3276,11 @@ class CryptoCloudPostbackView(APIView):
                     transaction_id=transaction.id
                 )
             elif purchase_type == "assistant":
+                print(f"[CryptoCloud] Activating assistant subscription for transaction_id={transaction.id}")
                 TransactionService.accept_assistant_transaction(
                     transaction_id=transaction.id
                 )
+                print(f"[CryptoCloud] Assistant subscription activated successfully")
 
             else:
                 TransactionService.accept_paysy_booking_transaction_by_user(

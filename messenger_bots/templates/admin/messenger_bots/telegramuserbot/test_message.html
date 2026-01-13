@@ -1,0 +1,43 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Test Message{% endblock %}
+{% block header_title %}Send Test Message{% endblock %}
+
+{% block action_content %}
+<div class="info-message">
+    Send a test message to verify the userbot is working correctly.
+    You can send to any user, group, or channel the userbot has access to.
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <p>
+        <label for="id_chat">{{ form.chat.label }}</label><br>
+        {{ form.chat }}
+        <br><small>{{ form.chat.help_text }}</small>
+    </p>
+
+    <p>
+        <label for="id_message">{{ form.message.label }}</label><br>
+        {{ form.message }}
+        <br><small>{{ form.message.help_text }}</small>
+    </p>
+
+    {% if form.errors %}
+    <div class="error-message">
+        {{ form.errors }}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+        <input type="submit" value="Send Message" class="default">
+        <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}" class="cancel">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block form_actions %}{% endblock %}

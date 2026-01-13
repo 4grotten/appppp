@@ -1,0 +1,56 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Check Connection{% endblock %}
+{% block header_title %}Connection Status{% endblock %}
+
+{% block action_content %}
+{% if result.connected %}
+    {% if result.authorized %}
+    <div class="success-message">
+        <strong>Connected and Authorized!</strong>
+    </div>
+
+    {% if result.user_info %}
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0; font-weight: bold;">User ID</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">{{ result.user_info.id }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0; font-weight: bold;">First Name</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">{{ result.user_info.first_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0; font-weight: bold;">Last Name</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">{{ result.user_info.last_name|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0; font-weight: bold;">Username</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e0e0e0;">@{{ result.user_info.username|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Phone</td>
+            <td style="padding: 8px;">{{ result.user_info.phone|default:"-" }}</td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% else %}
+    <div class="error-message">
+        <strong>Connected but NOT Authorized</strong><br>
+        Session is invalid or expired. Please re-authenticate.
+    </div>
+    {% endif %}
+{% else %}
+<div class="error-message">
+    <strong>Connection Failed</strong><br>
+    {{ result.error }}
+</div>
+{% endif %}
+
+<details style="margin-top: 20px;">
+    <summary style="cursor: pointer; color: #666;">Raw Response (Debug)</summary>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">{{ result_json }}</pre>
+</details>
+{% endblock %}

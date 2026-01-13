@@ -511,12 +511,11 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
 
     actions = ["reset_daily_counter", "reset_auth_state"]
 
-    @admin.action(description="Reset daily bot creation counter")
     def reset_daily_counter(self, request, queryset):
         updated = queryset.update(bots_created_today=0)
         self.message_user(request, f"Reset counter for {updated} userbot(s).")
+    reset_daily_counter.short_description = "Reset daily bot creation counter"
 
-    @admin.action(description="Reset authentication state (for re-auth)")
     def reset_auth_state(self, request, queryset):
         for userbot in queryset:
             userbot.reset_auth_state()
@@ -526,6 +525,7 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
             f"Reset authentication state for {queryset.count()} userbot(s). "
             "They need to be re-authenticated."
         )
+    reset_auth_state.short_description = "Reset authentication state (for re-auth)"
 
 
 @admin.register(BotCreationRequest)

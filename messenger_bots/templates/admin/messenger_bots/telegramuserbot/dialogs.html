@@ -1,0 +1,60 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Dialogs{% endblock %}
+{% block header_title %}Recent Dialogs{% endblock %}
+
+{% block action_content %}
+{% if result.success %}
+    {% if dialogs %}
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f5f5f5;">
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Name</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Type</th>
+                <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Unread</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dialog in dialogs %}
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                    <strong>{{ dialog.name }}</strong>
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                    {% if dialog.is_user %}
+                        <span style="color: #007bff;">User</span>
+                    {% elif dialog.is_group %}
+                        <span style="color: #28a745;">Group</span>
+                    {% elif dialog.is_channel %}
+                        <span style="color: #6f42c1;">Channel</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">
+                    {% if dialog.unread_count > 0 %}
+                        <span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ dialog.unread_count }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; font-family: monospace; font-size: 12px;">
+                    {{ dialog.id }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No dialogs found.</p>
+    {% endif %}
+{% else %}
+<div class="error-message">
+    <strong>Error:</strong> {{ result.error }}
+</div>
+{% endif %}
+{% endblock %}

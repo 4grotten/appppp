@@ -67,7 +67,8 @@ INSTALLED_APPS = [
     "cors",
     "channels",
     "daphne",
-    "api_keys.apps.ApiKeysConfig"
+    "api_keys.apps.ApiKeysConfig",
+    "messenger_bots.apps.MessengerBotsConfig",
 ]
 
 if DEBUG:
@@ -496,6 +497,9 @@ GOOGLE_MAP_API_KEY = "AIzaSyA0bvvniHRGe7tLKYupkWSf1_b31mdMlFA"
 
 OPENAI_API_KEY = config("OPENAI_API_KEY", default="notasecret")
 
+# AI Assistant service URL
+AI_ASSISTANT_URL = config("AI_ASSISTANT_URL", default="http://ai_assistant:8001")
+
 # FreedomPay settings
 # Project_id
 FREEDOMPAY_PROJECT_ID = config("FREEDOMPAY_PROJECT_ID", default="notasecret")
@@ -519,6 +523,12 @@ PROXY_PASS = config("PROXY_PASS", None)
 PROXY_HOST = config("PROXY_HOST", None)
 PROXY_PORT = "1080"
 PRODUCTION = config("PRODUCTION", False, cast=bool)
+
+# WAHA Configuration (WhatsApp HTTP API)
+WAHA_BASE_URL = config("WAHA_BASE_URL", default="http://waha:3000")
+WAHA_API_KEY = config("WAHA_API_KEY", default="notasecret")
+WAHA_WEBHOOK_SECRET = config("WAHA_WEBHOOK_SECRET", default="notasecret")
+BACKEND_URL = config("BACKEND_URL", default="https://api.appofiz.com")
 
 
 if DEBUG:

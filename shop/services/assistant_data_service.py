@@ -14,7 +14,7 @@ class AssistantDataService:
     DATA_DIR = Path(settings.MEDIA_ROOT) / "assistants_data"
 
     @classmethod
-    def _get_file_path(cls, organization):
+    def get_file_path(cls, organization):
         cls.DATA_DIR.mkdir(parents=True, exist_ok=True)
 
         safe_title = slugify(organization.title) or "org"

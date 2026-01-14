@@ -48,6 +48,25 @@ def userbot_send_code_task(userbot_id: int):
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
+def userbot_resend_code_sms_task(userbot_id: int):
+    logger.info(f"[USERBOT_TASK] resend_code_sms started for userbot_id={userbot_id}")
+
+    try:
+        userbot = TelegramUserbot.objects.get(id=userbot_id)
+    except TelegramUserbot.DoesNotExist:
+        logger.error(f"[USERBOT_TASK] Userbot {userbot_id} not found")
+        return {"success": False, "error": "Userbot not found"}
+
+    from messenger_bots.services.bot_factory import UserbotAuthService
+
+    service = UserbotAuthService(userbot)
+    result = _run_async(service.resend_code_sms())
+
+    logger.info(f"[USERBOT_TASK] resend_code_sms result: {result}")
+    return result
+
+
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
 def userbot_verify_code_task(userbot_id: int, code: str):
     logger.info(f"[USERBOT_TASK] verify_code started for userbot_id={userbot_id}")
 

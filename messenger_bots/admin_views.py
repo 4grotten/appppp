@@ -22,6 +22,7 @@ from messenger_bots.tasks import (
     userbot_check_connection_task,
     userbot_get_dialogs_task,
     userbot_logout_task,
+    userbot_resend_code_sms_task,
     userbot_send_code_task,
     userbot_send_test_message_task,
     userbot_verify_2fa_task,
@@ -158,6 +159,39 @@ class UserbotVerifyCodeView(UserbotAuthBaseView):
                 messages.error(request, f"Error: {str(e)}")
 
         return render(request, self.template_name, self.get_context(form=form))
+
+
+class UserbotResendCodeSMSView(UserbotAuthBaseView):
+    """Resend verification code via SMS."""
+
+    def post(self, request, pk):
+        if self.userbot.auth_state != UserbotAuthState.CODE_SENT:
+            messages.warning(request, "Please send verification code first.")
+            return HttpResponseRedirect(
+                reverse(
+                    "admin:messenger_bots_userbot_send_code", args=[self.userbot.pk]
+                )
+            )
+
+        try:
+            task = userbot_resend_code_sms_task.delay(self.userbot.pk)
+            result = task.get(timeout=CELERY_TASK_TIMEOUT)
+
+            if result.get("success"):
+                messages.success(request, result.get("message"))
+            else:
+                messages.error(request, f"Error: {result.get('error')}")
+
+        except CeleryTimeoutError:
+            logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+            messages.error(request, "Operation timed out. Please try again.")
+        except Exception as e:
+            logger.error(f"Celery task error: {e}", exc_info=True)
+            messages.error(request, f"Error: {str(e)}")
+
+        return HttpResponseRedirect(
+            reverse("admin:messenger_bots_userbot_verify_code", args=[self.userbot.pk])
+        )
 
 
 class UserbotVerify2FAView(UserbotAuthBaseView):

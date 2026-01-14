@@ -59,7 +59,6 @@ services:
     depends_on:
       - django
     volumes:
-      - ./media:/app/media
       - .:/app
     restart: on-failure
 

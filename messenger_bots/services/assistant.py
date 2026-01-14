@@ -122,10 +122,10 @@ class BotAssistantService:
 
             items = ShopItem.objects.filter(
                 organization=organization,
-                is_active=True,
-                is_deleted=False,
-            ).select_related("category", "subcategory").only(
-                "title", "description", "price", "category__title", "subcategory__title"
+                is_published=True,
+                removed_at__isnull=True,
+            ).select_related("subcategory").only(
+                "name", "description", "price", "subcategory__name"
             )[:50]
 
             if not items:
@@ -133,7 +133,7 @@ class BotAssistantService:
 
             items_list = []
             for item in items:
-                item_str = f"- {item.title}"
+                item_str = f"- {item.name}"
                 if item.price:
                     item_str += f" ({item.price} {organization.currency_id})"
                 if item.description:
@@ -250,9 +250,9 @@ class BotAssistantService:
                 "Authorization": f"Bearer {api_key}",
             }
             payload = {
-                "model": "gpt-3.5-turbo",
+                "model": "gpt-4o-mini",
                 "messages": messages,
-                "max_tokens": 500,
+                "max_tokens": 300,
             }
 
             logger.debug(f"[AI_ASSISTANT] Sending request to OpenAI API...")

@@ -203,56 +203,162 @@ class UserbotAuthService:
             if self.client:
                 await self.client.disconnect()
 
-    async def resend_code_sms(self) -> Dict[str, Any]:
-        """Resend verification code via SMS."""
-        if not self.userbot.phone_code_hash:
-            return {
-                "success": False,
-                "error": "No code was sent. Please send code first.",
-            }
-
+    async def qr_login_start(self) -> Dict[str, Any]:
+        """
+        Start QR code login process.
+        Returns a URL that should be encoded as QR code for user to scan.
+        """
         try:
             self.client = self._create_client()
             await self.client.connect()
 
-            # Resend code via SMS
-            sent_code = await self.client.send_code_request(
-                self.userbot.phone_number,
-                force_sms=True
-            )
+            # Check if already authorized
+            if await self.client.is_user_authorized():
+                self.userbot.session_string = self.client.session.save()
+                self.userbot.is_authenticated = True
+                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
+                self.userbot.auth_state_message = "Already authenticated!"
+                await _save_model(self.userbot, update_fields=[
+                    "session_string", "is_authenticated", "auth_state", "auth_state_message"
+                ])
+                return {
+                    "success": True,
+                    "already_authenticated": True,
+                    "message": "Already authenticated!",
+                }
 
-            # Extract delivery type info from Telegram response
-            code_type = type(sent_code.type).__name__
-            next_type = type(sent_code.next_type).__name__ if sent_code.next_type else None
-            timeout = getattr(sent_code, 'timeout', None)
+            # Start QR login
+            qr_login = await self.client.qr_login()
 
             logger.info(
-                f"[USERBOT_AUTH] SMS resend response for {self.userbot.phone_number}: "
-                f"type={code_type}, next_type={next_type}, timeout={timeout}, "
-                f"hash_exists={bool(sent_code.phone_code_hash)}"
+                f"[USERBOT_AUTH] QR login started for {self.userbot.phone_number}: "
+                f"url={qr_login.url[:50]}..., expires={qr_login.expires}"
             )
 
-            # Update phone_code_hash (it may change)
-            self.userbot.phone_code_hash = sent_code.phone_code_hash
-            self.userbot.auth_state_message = f"SMS sent to {self.userbot.phone_number}. Enter the code."
-            await _save_model(self.userbot, update_fields=["phone_code_hash", "auth_state_message"])
+            # Update userbot state
+            self.userbot.auth_state = UserbotAuthState.CODE_SENT
+            self.userbot.auth_state_message = "Scan QR code with Telegram app to login."
+            self.userbot.last_error = None
+            await _save_model(self.userbot, update_fields=[
+                "auth_state", "auth_state_message", "last_error"
+            ])
 
             return {
                 "success": True,
-                "message": f"SMS sent to {self.userbot.phone_number}",
-                "telegram_response": {
-                    "code_type": code_type,
-                    "next_type": next_type,
-                    "timeout": timeout,
-                    "phone_code_hash_received": bool(sent_code.phone_code_hash),
-                },
+                "qr_url": qr_login.url,
+                "expires": qr_login.expires.isoformat() if qr_login.expires else None,
+                "message": "QR code generated. Scan with Telegram app.",
+                "next_step": "qr_wait",
             }
 
         except FloodWaitError as e:
             error_msg = f"Too many requests. Wait {e.seconds} seconds before trying again."
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
             self.userbot.last_error = error_msg
-            await _save_model(self.userbot, update_fields=["last_error"])
+            await _save_model(self.userbot, update_fields=[
+                "auth_state", "auth_state_message", "last_error"
+            ])
             return {"success": False, "error": error_msg}
+
+        except Exception as e:
+            error_msg = str(e)
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=[
+                "auth_state", "auth_state_message", "last_error"
+            ])
+            return {"success": False, "error": error_msg}
+
+        finally:
+            if self.client:
+                await self.client.disconnect()
+
+    async def qr_login_wait(self, timeout: int = 60) -> Dict[str, Any]:
+        """
+        Wait for user to scan QR code.
+        This should be called after qr_login_start.
+        """
+        try:
+            self.client = self._create_client()
+            await self.client.connect()
+
+            # Check if already authorized (user may have scanned)
+            if await self.client.is_user_authorized():
+                self.userbot.session_string = self.client.session.save()
+                self.userbot.is_authenticated = True
+                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
+                self.userbot.auth_state_message = "Successfully authenticated via QR!"
+                self.userbot.last_error = None
+                await _save_model(self.userbot, update_fields=[
+                    "session_string", "is_authenticated", "auth_state",
+                    "auth_state_message", "last_error"
+                ])
+
+                me = await self.client.get_me()
+                return {
+                    "success": True,
+                    "message": "Successfully authenticated via QR!",
+                    "user_info": {
+                        "id": me.id,
+                        "first_name": me.first_name,
+                        "username": me.username,
+                    },
+                }
+
+            # Start QR login and wait
+            qr_login = await self.client.qr_login()
+
+            logger.info(
+                f"[USERBOT_AUTH] Waiting for QR scan for {self.userbot.phone_number}, "
+                f"timeout={timeout}s"
+            )
+
+            try:
+                # Wait for user to scan QR
+                user = await asyncio.wait_for(qr_login.wait(), timeout=timeout)
+
+                # Success!
+                self.userbot.session_string = self.client.session.save()
+                self.userbot.is_authenticated = True
+                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
+                self.userbot.auth_state_message = f"Successfully authenticated as {user.first_name}!"
+                self.userbot.last_error = None
+                await _save_model(self.userbot, update_fields=[
+                    "session_string", "is_authenticated", "auth_state",
+                    "auth_state_message", "last_error"
+                ])
+
+                return {
+                    "success": True,
+                    "message": f"Successfully authenticated as {user.first_name}!",
+                    "user_info": {
+                        "id": user.id,
+                        "first_name": user.first_name,
+                        "username": user.username,
+                    },
+                }
+
+            except asyncio.TimeoutError:
+                # QR expired or not scanned
+                return {
+                    "success": False,
+                    "expired": True,
+                    "error": "QR code expired. Please generate a new one.",
+                }
+
+        except SessionPasswordNeededError:
+            # 2FA is enabled - need password
+            self.userbot.auth_state = UserbotAuthState.AWAITING_2FA
+            self.userbot.auth_state_message = "2FA is enabled. Enter your password to continue."
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message"])
+            return {
+                "success": False,
+                "needs_2fa": True,
+                "message": "2FA is enabled. Please enter your password.",
+                "next_step": "verify_2fa",
+            }
 
         except Exception as e:
             error_msg = str(e)

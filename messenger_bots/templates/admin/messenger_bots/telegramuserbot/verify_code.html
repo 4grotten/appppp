@@ -36,15 +36,15 @@
     </div>
 </form>
 
-<form method="post" action="{% url 'admin:messenger_bots_userbot_resend_code_sms' userbot.pk %}" style="margin-top: 15px;">
-    {% csrf_token %}
-    <div class="info-message" style="background: #e3f2fd; padding: 10px; border-radius: 5px;">
-        <strong>Didn't receive the code?</strong><br>
-        <small>If the code was sent to Telegram app but you don't have access, you can request SMS instead.</small>
-        <br><br>
-        <input type="submit" value="Resend as SMS" style="background: #1976d2; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 3px;">
-    </div>
-</form>
+<div class="info-message" style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-top: 15px;">
+    <strong>Didn't receive the code?</strong><br>
+    <small>If the code was sent to Telegram app but you don't have access, try QR code login instead.</small>
+    <br><br>
+    <a href="{% url 'admin:messenger_bots_userbot_qr_login' userbot.pk %}"
+       style="background: #28a745; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 3px; text-decoration: none; display: inline-block;">
+       Try QR Code Login
+    </a>
+</div>
 {% endblock %}
 
 {% block form_actions %}{% endblock %}

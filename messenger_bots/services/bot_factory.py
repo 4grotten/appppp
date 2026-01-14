@@ -275,16 +275,16 @@ class UserbotAuthService:
             if self.client:
                 await self.client.disconnect()
 
-    async def qr_login_wait(self, timeout: int = 60) -> Dict[str, Any]:
+    async def qr_login_check(self) -> Dict[str, Any]:
         """
-        Wait for user to scan QR code.
-        This should be called after qr_login_start.
+        Check if user has scanned QR code and is now authorized.
+        This only checks authorization status, doesn't generate new QR.
         """
         try:
             self.client = self._create_client()
             await self.client.connect()
 
-            # Check if already authorized (user may have scanned)
+            # Check if authorized (user scanned QR)
             if await self.client.is_user_authorized():
                 self.userbot.session_string = self.client.session.save()
                 self.userbot.is_authenticated = True
@@ -297,9 +297,13 @@ class UserbotAuthService:
                 ])
 
                 me = await self.client.get_me()
+                logger.info(
+                    f"[USERBOT_AUTH] QR auth successful for {self.userbot.phone_number}: "
+                    f"user={me.first_name} (@{me.username})"
+                )
                 return {
                     "success": True,
-                    "message": "Successfully authenticated via QR!",
+                    "message": f"Successfully authenticated as {me.first_name}!",
                     "user_info": {
                         "id": me.id,
                         "first_name": me.first_name,
@@ -307,46 +311,15 @@ class UserbotAuthService:
                     },
                 }
 
-            # Start QR login and wait
-            qr_login = await self.client.qr_login()
-
+            # Not yet authorized - user hasn't scanned
             logger.info(
-                f"[USERBOT_AUTH] Waiting for QR scan for {self.userbot.phone_number}, "
-                f"timeout={timeout}s"
+                f"[USERBOT_AUTH] QR check for {self.userbot.phone_number}: not yet authorized"
             )
-
-            try:
-                # Wait for user to scan QR
-                user = await asyncio.wait_for(qr_login.wait(), timeout=timeout)
-
-                # Success!
-                self.userbot.session_string = self.client.session.save()
-                self.userbot.is_authenticated = True
-                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
-                self.userbot.auth_state_message = f"Successfully authenticated as {user.first_name}!"
-                self.userbot.last_error = None
-                await _save_model(self.userbot, update_fields=[
-                    "session_string", "is_authenticated", "auth_state",
-                    "auth_state_message", "last_error"
-                ])
-
-                return {
-                    "success": True,
-                    "message": f"Successfully authenticated as {user.first_name}!",
-                    "user_info": {
-                        "id": user.id,
-                        "first_name": user.first_name,
-                        "username": user.username,
-                    },
-                }
-
-            except asyncio.TimeoutError:
-                # QR expired or not scanned
-                return {
-                    "success": False,
-                    "expired": True,
-                    "error": "QR code expired. Please generate a new one.",
-                }
+            return {
+                "success": False,
+                "not_scanned": True,
+                "error": "QR code not scanned yet. Please scan and try again.",
+            }
 
         except SessionPasswordNeededError:
             # 2FA is enabled - need password

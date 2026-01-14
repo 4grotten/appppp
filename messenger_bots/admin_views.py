@@ -22,8 +22,8 @@ from messenger_bots.tasks import (
     userbot_check_connection_task,
     userbot_get_dialogs_task,
     userbot_logout_task,
+    userbot_qr_login_check_task,
     userbot_qr_login_start_task,
-    userbot_qr_login_wait_task,
     userbot_send_code_task,
     userbot_send_test_message_task,
     userbot_verify_2fa_task,
@@ -204,9 +204,9 @@ class UserbotQRLoginView(UserbotAuthBaseView):
             return HttpResponseRedirect(self.get_admin_url())
 
     def post(self, request, pk):
-        """Check if QR was scanned (wait for confirmation)."""
+        """Check if QR was scanned."""
         try:
-            task = userbot_qr_login_wait_task.delay(self.userbot.pk, timeout=30)
+            task = userbot_qr_login_check_task.delay(self.userbot.pk)
             result = task.get(timeout=CELERY_TASK_TIMEOUT)
 
             if result.get("success"):
@@ -226,15 +226,9 @@ class UserbotQRLoginView(UserbotAuthBaseView):
                         args=[self.userbot.pk],
                     )
                 )
-            elif result.get("expired"):
+            elif result.get("not_scanned"):
                 messages.warning(
-                    request, "QR code expired. Generating a new one..."
-                )
-                return HttpResponseRedirect(
-                    reverse(
-                        "admin:messenger_bots_userbot_qr_login",
-                        args=[self.userbot.pk],
-                    )
+                    request, "QR code not scanned yet. Please scan and try again."
                 )
             else:
                 messages.error(request, f"Error: {result.get('error')}")

@@ -67,10 +67,10 @@ def userbot_qr_login_start_task(userbot_id: int):
     return result
 
 
-@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
-def userbot_qr_login_wait_task(userbot_id: int, timeout: int = 60):
-    """Wait for user to scan QR code."""
-    logger.info(f"[USERBOT_TASK] qr_login_wait started for userbot_id={userbot_id}")
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
+def userbot_qr_login_check_task(userbot_id: int):
+    """Check if user has scanned QR code."""
+    logger.info(f"[USERBOT_TASK] qr_login_check started for userbot_id={userbot_id}")
 
     try:
         userbot = TelegramUserbot.objects.get(id=userbot_id)
@@ -81,9 +81,9 @@ def userbot_qr_login_wait_task(userbot_id: int, timeout: int = 60):
     from messenger_bots.services.bot_factory import UserbotAuthService
 
     service = UserbotAuthService(userbot)
-    result = _run_async(service.qr_login_wait(timeout=timeout))
+    result = _run_async(service.qr_login_check())
 
-    logger.info(f"[USERBOT_TASK] qr_login_wait result: {result}")
+    logger.info(f"[USERBOT_TASK] qr_login_check result: {result}")
     return result
 
 

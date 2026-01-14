@@ -376,8 +376,9 @@ FCM_DRY_RUN_ENABLE = config("FCM_DRY_RUN_ENABLE", default=True, cast=bool)
 
 HOST_URL = config("DJANGO_HOST_URL", default="https://apofiz.com/media/")
 CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
-CELERY_RESULT_BACKEND = None
-CELERY_IGNORE_RESULT = True
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+CELERY_IGNORE_RESULT = False
+CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},

@@ -57,8 +57,6 @@ services:
     env_file: ./env/test.env
     depends_on:
       - django
-    volumes:
-      - ./media:/app/media
 
   postgres:
     image: mdillon/postgis:10

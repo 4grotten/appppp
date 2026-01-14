@@ -6,6 +6,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.files.storage import default_storage
 
 from organizations.models import Assistant, UserAssistant, Question, Answer, AnswerFile
 from shop.models import ShopItem
@@ -13,8 +14,8 @@ from shop.models import ShopItem
 
 class AssistantDataService:
 
-    DATA_DIR = Path(settings.MEDIA_ROOT) / "assistants_data"
-    RELATIVE_URL_PATH = "assistants_data"
+    # DATA_DIR = Path(settings.MEDIA_ROOT) / "assistants_data"
+    FOLDER_NAME = "assistants_data"
 
     @classmethod
     def _get_filename(cls, organization):
@@ -22,21 +23,22 @@ class AssistantDataService:
         return f"{safe_title}_{organization.id}.json"
 
     @classmethod
-    def _get_file_path(cls, organization):
-        cls.DATA_DIR.mkdir(parents=True, exist_ok=True)
-        return cls.DATA_DIR / cls._get_filename(organization)
+    def _get_storage_path(cls, organization):
+
+        filename = cls._get_filename(organization)
+        return f"{cls.FOLDER_NAME}/{filename}"
     
     @classmethod
     def get_file_url(cls, organization):
-        """Возвращает полную ссылку на файл для AI сервера"""
+
         if not cls.is_assistant_active(organization):
             return None
         
-        filename = cls._get_filename(organization)
-        file_path = cls.DATA_DIR / filename
+        path = cls._get_storage_path(organization)
         
-        if file_path.exists():
-            return f"{settings.SITE_URL}{settings.MEDIA_URL}{cls.RELATIVE_URL_PATH}/{filename}"
+        if default_storage.exists(path):
+            return default_storage.url(path)
+            
         return None
 
 
@@ -61,10 +63,13 @@ class AssistantDataService:
     @classmethod
     def update_organization_json(cls, organization):
 
-        if not cls.is_assistant_active(organization):
-            cls.delete_organization_json(organization)
-            return
+        path = cls._get_storage_path(organization)
 
+        if not cls.is_assistant_active(organization):
+            if default_storage.exists(path):
+                default_storage.delete(path)
+            return
+        
         items = ShopItem.objects.filter(
             organization=organization,
             is_published=True,
@@ -90,14 +95,15 @@ class AssistantDataService:
             data_list.append(item_data)
 
 
-        file_path = cls._get_file_path(organization)
+        json_str = json.dumps(data_list, ensure_ascii=False, indent=2)
+        file_content = ContentFile(json_str.encode('utf-8'))
 
-        try:
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(data_list, f, ensure_ascii=False, indent=2)
-            print(f"JSON updated for {organization.title}: {file_path}")
-        except Exception as e:
-            print(f"Error writing JSON for assistant: {e}")
+        if default_storage.exists(path):
+            default_storage.delete(path)
+        
+
+        default_storage.save(path, file_content)
+        print(f"✅ S3 JSON updated: {path}")
 
     @classmethod
     def delete_organization_json(cls, organization):

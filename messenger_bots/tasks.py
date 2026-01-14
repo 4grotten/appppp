@@ -28,7 +28,7 @@ def _run_async(coro):
         loop.close()
 
 
-@shared_task(time_limit=120, soft_time_limit=100)
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
 def userbot_send_code_task(userbot_id: int):
     logger.info(f"[USERBOT_TASK] send_code started for userbot_id={userbot_id}")
 
@@ -47,7 +47,7 @@ def userbot_send_code_task(userbot_id: int):
     return result
 
 
-@shared_task(time_limit=120, soft_time_limit=100)
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
 def userbot_verify_code_task(userbot_id: int, code: str):
     logger.info(f"[USERBOT_TASK] verify_code started for userbot_id={userbot_id}")
 
@@ -66,7 +66,7 @@ def userbot_verify_code_task(userbot_id: int, code: str):
     return result
 
 
-@shared_task(time_limit=120, soft_time_limit=100)
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
 def userbot_verify_2fa_task(userbot_id: int, password: str):
     logger.info(f"[USERBOT_TASK] verify_2fa started for userbot_id={userbot_id}")
 
@@ -85,7 +85,7 @@ def userbot_verify_2fa_task(userbot_id: int, password: str):
     return result
 
 
-@shared_task(time_limit=60, soft_time_limit=50)
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
 def userbot_check_connection_task(userbot_id: int):
     logger.info(f"[USERBOT_TASK] check_connection started for userbot_id={userbot_id}")
 
@@ -104,7 +104,7 @@ def userbot_check_connection_task(userbot_id: int):
     return result
 
 
-@shared_task(time_limit=60, soft_time_limit=50)
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
 def userbot_logout_task(userbot_id: int):
     logger.info(f"[USERBOT_TASK] logout started for userbot_id={userbot_id}")
 
@@ -123,7 +123,7 @@ def userbot_logout_task(userbot_id: int):
     return result
 
 
-@shared_task(time_limit=60, soft_time_limit=50)
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
 def userbot_get_dialogs_task(userbot_id: int, limit: int = 30):
     logger.info(f"[USERBOT_TASK] get_dialogs started for userbot_id={userbot_id}")
 
@@ -144,7 +144,7 @@ def userbot_get_dialogs_task(userbot_id: int, limit: int = 30):
     return result
 
 
-@shared_task(time_limit=60, soft_time_limit=50)
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
 def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
     logger.info(f"[USERBOT_TASK] send_test_message started for userbot_id={userbot_id}")
 

@@ -235,12 +235,14 @@ class UserbotAuthService:
                 f"url={qr_login.url[:50]}..., expires={qr_login.expires}"
             )
 
-            # Update userbot state
+            # CRITICAL: Save session_string so qr_login_check() can reconnect
+            # with the same session that generated the QR code
+            self.userbot.session_string = self.client.session.save()
             self.userbot.auth_state = UserbotAuthState.CODE_SENT
             self.userbot.auth_state_message = "Scan QR code with Telegram app to login."
             self.userbot.last_error = None
             await _save_model(self.userbot, update_fields=[
-                "auth_state", "auth_state_message", "last_error"
+                "session_string", "auth_state", "auth_state_message", "last_error"
             ])
 
             return {

@@ -186,6 +186,50 @@ class UserbotAuthService:
             if self.client:
                 await self.client.disconnect()
 
+    async def resend_code_sms(self) -> Dict[str, Any]:
+        """Resend verification code via SMS."""
+        if not self.userbot.phone_code_hash:
+            return {
+                "success": False,
+                "error": "No code was sent. Please send code first.",
+            }
+
+        try:
+            self.client = self._create_client()
+            await self.client.connect()
+
+            # Resend code via SMS
+            sent_code = await self.client.send_code_request(
+                self.userbot.phone_number,
+                force_sms=True
+            )
+
+            # Update phone_code_hash (it may change)
+            self.userbot.phone_code_hash = sent_code.phone_code_hash
+            self.userbot.auth_state_message = f"SMS sent to {self.userbot.phone_number}. Enter the code."
+            await _save_model(self.userbot, update_fields=["phone_code_hash", "auth_state_message"])
+
+            return {
+                "success": True,
+                "message": f"SMS sent to {self.userbot.phone_number}",
+            }
+
+        except FloodWaitError as e:
+            error_msg = f"Too many requests. Wait {e.seconds} seconds before trying again."
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=["last_error"])
+            return {"success": False, "error": error_msg}
+
+        except Exception as e:
+            error_msg = str(e)
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=["last_error"])
+            return {"success": False, "error": error_msg}
+
+        finally:
+            if self.client:
+                await self.client.disconnect()
+
     async def verify_code(self, code: str) -> Dict[str, Any]:
         """Step 2: Verify the code sent to phone."""
         if not self.userbot.phone_code_hash:

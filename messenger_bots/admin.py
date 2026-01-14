@@ -18,6 +18,7 @@ from messenger_bots.models import (
 from messenger_bots.admin_views import (
     UserbotSendCodeView,
     UserbotVerifyCodeView,
+    UserbotResendCodeSMSView,
     UserbotVerify2FAView,
     UserbotCheckConnectionView,
     UserbotLogoutView,
@@ -327,6 +328,11 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
                 "<int:pk>/verify-code/",
                 self.admin_site.admin_view(UserbotVerifyCodeView.as_view()),
                 name="messenger_bots_userbot_verify_code",
+            ),
+            path(
+                "<int:pk>/resend-code-sms/",
+                self.admin_site.admin_view(UserbotResendCodeSMSView.as_view()),
+                name="messenger_bots_userbot_resend_code_sms",
             ),
             path(
                 "<int:pk>/verify-2fa/",

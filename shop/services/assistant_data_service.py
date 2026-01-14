@@ -15,7 +15,7 @@ from shop.models import ShopItem
 class AssistantDataService:
 
     # DATA_DIR = Path(settings.MEDIA_ROOT) / "assistants_data"
-    RELATIVE_URL_PATH = "assistants_data"
+    FOLDER_NAME = "assistants_data"
 
     @classmethod
     def _get_filename(cls, organization):

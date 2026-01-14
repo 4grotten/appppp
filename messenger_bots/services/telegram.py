@@ -432,14 +432,14 @@ class TelegramBotService:
     ) -> str:
         """Show product categories."""
         try:
-            from shop.models import Category
+            from shop.models import ItemSubcategory
 
-            categories = Category.objects.filter(
+            categories = ItemSubcategory.objects.filter(
                 organization=telegram_bot.organization,
-                is_active=True,
-            ).values("id", "title")[:10]
+            ).values("id", "name")[:10]
 
-            categories_list = list(categories)
+            # Rename 'name' to 'title' for keyboard compatibility
+            categories_list = [{"id": c["id"], "title": c["name"]} for c in categories]
 
             if not categories_list:
                 # No categories, show products directly
@@ -475,11 +475,12 @@ class TelegramBotService:
 
             products = ShopItem.objects.filter(
                 organization=telegram_bot.organization,
-                is_active=True,
-                is_deleted=False,
-            ).values("id", "title", "price")[:10]
+                is_published=True,
+                removed_at__isnull=True,
+            ).values("id", "name", "price")[:10]
 
-            products_list = list(products)
+            # Rename 'name' to 'title' for keyboard compatibility
+            products_list = [{"id": p["id"], "title": p["name"], "price": p["price"]} for p in products]
 
             if not products_list:
                 from messenger_bots.services.assistant import BotAssistantService
@@ -512,21 +513,22 @@ class TelegramBotService:
         category_id: int,
         language: str,
     ) -> str:
-        """Show products in a category."""
+        """Show products in a category (subcategory)."""
         try:
-            from shop.models import ShopItem, Category
+            from shop.models import ShopItem, ItemSubcategory
 
-            category = Category.objects.filter(id=category_id).first()
-            category_name = category.title if category else ""
+            category = ItemSubcategory.objects.filter(id=category_id).first()
+            category_name = category.name if category else ""
 
             products = ShopItem.objects.filter(
                 organization=telegram_bot.organization,
-                category_id=category_id,
-                is_active=True,
-                is_deleted=False,
-            ).values("id", "title", "price")[:10]
+                subcategory_id=category_id,
+                is_published=True,
+                removed_at__isnull=True,
+            ).values("id", "name", "price")[:10]
 
-            products_list = list(products)
+            # Rename 'name' to 'title' for keyboard compatibility
+            products_list = [{"id": p["id"], "title": p["name"], "price": p["price"]} for p in products]
 
             if not products_list:
                 from messenger_bots.services.assistant import BotAssistantService
@@ -560,7 +562,7 @@ class TelegramBotService:
             product = ShopItem.objects.filter(
                 id=product_id,
                 organization=telegram_bot.organization,
-            ).select_related("category").first()
+            ).select_related("subcategory").prefetch_related("images").first()
 
             if not product:
                 return ""
@@ -569,7 +571,7 @@ class TelegramBotService:
             currency = telegram_bot.organization.currency_id or ""
             price_str = f"<b>{product.price} {currency}</b>" if product.price else ""
 
-            text = f"<b>{product.title}</b>\n\n"
+            text = f"<b>{product.name}</b>\n\n"
             if product.description:
                 text += f"{product.description}\n\n"
             if price_str:
@@ -583,23 +585,25 @@ class TelegramBotService:
             keyboard = {
                 "inline_keyboard": [[{
                     "text": back_text.get(language, back_text["ru"]),
-                    "callback_data": f"{cls.CALLBACK_CATEGORY}{product.category_id}" if product.category_id else cls.CALLBACK_CATALOG,
+                    "callback_data": f"{cls.CALLBACK_CATEGORY}{product.subcategory_id}" if product.subcategory_id else cls.CALLBACK_CATALOG,
                 }]]
             }
 
-            # Send photo if available
-            if product.image:
+            # Send photo if available (images is ManyToMany)
+            first_image = product.images.first()
+            if first_image:
                 # Get image URL
-                image_url = product.image.url if hasattr(product.image, 'url') else str(product.image)
-                if not image_url.startswith("http"):
-                    # Construct full URL
-                    base_url = getattr(settings, "MEDIA_URL", "/media/")
-                    image_url = f"{base_url}{image_url}".replace("//", "/")
+                image_url = first_image.file.url if hasattr(first_image, 'file') and first_image.file else None
+                if image_url:
+                    if not image_url.startswith("http"):
+                        # Construct full URL
+                        base_url = getattr(settings, "MEDIA_URL", "/media/")
+                        image_url = f"{base_url}{image_url}".replace("//", "/")
 
-                # Try to send photo
-                result = service.send_photo(chat_id, image_url, caption=text, reply_markup=keyboard)
-                if result:
-                    return text
+                    # Try to send photo
+                    result = service.send_photo(chat_id, image_url, caption=text, reply_markup=keyboard)
+                    if result:
+                        return text
 
             # Fallback to text message
             service.send_message(chat_id, text, reply_markup=keyboard)

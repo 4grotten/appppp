@@ -1,0 +1,37 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Verify 2FA{% endblock %}
+{% block header_title %}Enter 2FA Password{% endblock %}
+
+{% block action_content %}
+<div class="info-message">
+    <strong>Step 3 of 3:</strong> Your Telegram account has Two-Factor Authentication enabled.
+    Please enter your 2FA password to complete authentication.
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <p>
+        <label for="id_password">{{ form.password.label }}</label><br>
+        {{ form.password }}
+        <br><small>{{ form.password.help_text }}</small>
+    </p>
+
+    {% if form.errors %}
+    <div class="error-message">
+        {{ form.errors }}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+        <input type="submit" value="Verify Password" class="default">
+        <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}" class="cancel">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block form_actions %}{% endblock %}

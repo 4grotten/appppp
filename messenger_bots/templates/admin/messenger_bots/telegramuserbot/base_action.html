@@ -1,0 +1,135 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .userbot-action-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .userbot-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .userbot-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+    .userbot-info {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    .userbot-info p {
+        margin: 5px 0;
+    }
+    .userbot-info .label {
+        font-weight: bold;
+        color: #666;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .status-authenticated {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-not-authenticated {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .form-actions {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .form-actions a.cancel {
+        margin-left: 10px;
+        color: #666;
+    }
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+    .info-message {
+        background: #cce5ff;
+        color: #004085;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='messenger_bots' %}">Messenger Bots</a>
+    &rsaquo; <a href="{% url 'admin:messenger_bots_telegramuserbot_changelist' %}">Telegram Userbots</a>
+    &rsaquo; <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}">{{ userbot.phone_number }}</a>
+    &rsaquo; {% block action_title %}Action{% endblock %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="userbot-action-container">
+    <div class="userbot-header">
+        <h2>{% block header_title %}Userbot Action{% endblock %}</h2>
+    </div>
+
+    <div class="userbot-info">
+        <p><span class="label">Phone:</span> {{ userbot.phone_number }}</p>
+        <p><span class="label">Status:</span>
+            {% if userbot.is_authenticated %}
+                <span class="status-badge status-authenticated">Authenticated</span>
+            {% elif userbot.auth_state == 'code_sent' %}
+                <span class="status-badge status-pending">Code Sent</span>
+            {% elif userbot.auth_state == 'awaiting_2fa' %}
+                <span class="status-badge status-pending">Awaiting 2FA</span>
+            {% else %}
+                <span class="status-badge status-not-authenticated">Not Authenticated</span>
+            {% endif %}
+        </p>
+        {% if userbot.auth_state_message %}
+        <p><span class="label">Message:</span> {{ userbot.auth_state_message }}</p>
+        {% endif %}
+    </div>
+
+    {% block action_content %}{% endblock %}
+
+    <div class="form-actions">
+        {% block form_actions %}
+        <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}" class="cancel">
+            &laquo; Back to Userbot
+        </a>
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}

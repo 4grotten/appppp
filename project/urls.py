@@ -31,6 +31,7 @@ v1 = (
         path("", include("stock.urls")),
         path("", include("instagram_parsers.urls")),
         path("notifications/", include("notifications.urls")),
+        path("messenger-bots/", include("messenger_bots.urls")),
     ],
     "v1",
 )

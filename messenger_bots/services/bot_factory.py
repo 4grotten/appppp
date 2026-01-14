@@ -1,13 +1,16 @@
 import logging
 import re
+import os
 from typing import Optional, Tuple, Dict, Any, List
 from datetime import date
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import asyncio
 
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db import connection
+from asgiref.sync import sync_to_async
 
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -33,8 +36,6 @@ def _run_in_thread(coro):
     This avoids Django's SynchronousOnlyOperation errors when running
     async code from synchronous Django views under gunicorn/gevent.
     """
-    import asyncio
-
     def thread_target():
         # Close any existing Django DB connections in this thread
         connection.close()
@@ -52,15 +53,25 @@ def _run_in_thread(coro):
     return future.result(timeout=120)  # 2 minute timeout
 
 
-def _sync_save(model, update_fields=None):
-    """
-    Synchronous save that can be called from within async code running in separate thread.
-    This works because the thread has no async context that Django can detect.
-    """
+def _do_save(model, update_fields=None):
+    """Actual save operation - runs in separate thread via sync_to_async."""
+    connection.close()  # Close stale connections
     if update_fields:
         model.save(update_fields=update_fields)
     else:
         model.save()
+
+
+# Async wrapper for save - runs in a separate thread (thread_sensitive=False)
+_async_save = sync_to_async(_do_save, thread_sensitive=False)
+
+
+async def _save_model(model, update_fields=None):
+    """
+    Async save that runs the actual DB operation in a separate thread.
+    Uses sync_to_async with thread_sensitive=False to avoid async context issues.
+    """
+    await _async_save(model, update_fields)
 
 from messenger_bots.models import (
     TelegramUserbot,
@@ -122,7 +133,7 @@ class UserbotAuthService:
                 self.userbot.session_string = self.client.session.save()
                 self.userbot.is_authenticated = True
                 self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
-                _sync_save(self.userbot, update_fields=["session_string", "is_authenticated", "auth_state"])
+                await _save_model(self.userbot, update_fields=["session_string", "is_authenticated", "auth_state"])
 
             return result
 
@@ -148,7 +159,7 @@ class UserbotAuthService:
                 self.userbot.is_authenticated = True
                 self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
                 self.userbot.auth_state_message = "Already authenticated!"
-                _sync_save(self.userbot, update_fields=["session_string", "is_authenticated", "auth_state", "auth_state_message"])
+                await _save_model(self.userbot, update_fields=["session_string", "is_authenticated", "auth_state", "auth_state_message"])
                 return {
                     "success": True,
                     "already_authenticated": True,
@@ -163,7 +174,7 @@ class UserbotAuthService:
             self.userbot.auth_state = UserbotAuthState.CODE_SENT
             self.userbot.auth_state_message = f"Code sent to {self.userbot.phone_number}. Enter the code to continue."
             self.userbot.last_error = None
-            _sync_save(self.userbot, update_fields=["phone_code_hash", "auth_state", "auth_state_message", "last_error"])
+            await _save_model(self.userbot, update_fields=["phone_code_hash", "auth_state", "auth_state_message", "last_error"])
 
             return {
                 "success": True,
@@ -176,7 +187,7 @@ class UserbotAuthService:
             self.userbot.auth_state = UserbotAuthState.ERROR
             self.userbot.auth_state_message = error_msg
             self.userbot.last_error = error_msg
-            _sync_save(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
             return {"success": False, "error": error_msg}
 
         except Exception as e:
@@ -184,7 +195,7 @@ class UserbotAuthService:
             self.userbot.auth_state = UserbotAuthState.ERROR
             self.userbot.auth_state_message = error_msg
             self.userbot.last_error = error_msg
-            _sync_save(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
             return {"success": False, "error": error_msg}
 
         finally:
@@ -218,7 +229,7 @@ class UserbotAuthService:
                 self.userbot.auth_state_message = "Successfully authenticated!"
                 self.userbot.phone_code_hash = None
                 self.userbot.last_error = None
-                _sync_save(self.userbot, update_fields=[
+                await _save_model(self.userbot, update_fields=[
                         "session_string", "is_authenticated", "auth_state",
                         "auth_state_message", "phone_code_hash", "last_error"
                     ])
@@ -238,7 +249,7 @@ class UserbotAuthService:
                 # 2FA is enabled
                 self.userbot.auth_state = UserbotAuthState.AWAITING_2FA
                 self.userbot.auth_state_message = "2FA is enabled. Enter your password to continue."
-                _sync_save(self.userbot, update_fields=["auth_state", "auth_state_message"])
+                await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message"])
                 return {
                     "success": False,
                     "needs_2fa": True,
@@ -253,13 +264,13 @@ class UserbotAuthService:
             self.userbot.auth_state = UserbotAuthState.NOT_STARTED
             self.userbot.phone_code_hash = None
             self.userbot.auth_state_message = "Code expired. Please request a new one."
-            _sync_save(self.userbot, update_fields=["auth_state", "phone_code_hash", "auth_state_message"])
+            await _save_model(self.userbot, update_fields=["auth_state", "phone_code_hash", "auth_state_message"])
             return {"success": False, "error": "Code expired. Please request a new one."}
 
         except Exception as e:
             error_msg = str(e)
             self.userbot.last_error = error_msg
-            _sync_save(self.userbot, update_fields=["last_error"])
+            await _save_model(self.userbot, update_fields=["last_error"])
             return {"success": False, "error": error_msg}
 
         finally:
@@ -288,7 +299,7 @@ class UserbotAuthService:
             self.userbot.auth_state_message = "Successfully authenticated with 2FA!"
             self.userbot.phone_code_hash = None
             self.userbot.last_error = None
-            _sync_save(self.userbot, update_fields=[
+            await _save_model(self.userbot, update_fields=[
                     "session_string", "is_authenticated", "auth_state",
                     "auth_state_message", "phone_code_hash", "last_error"
                 ])
@@ -310,7 +321,7 @@ class UserbotAuthService:
         except Exception as e:
             error_msg = str(e)
             self.userbot.last_error = error_msg
-            _sync_save(self.userbot, update_fields=["last_error"])
+            await _save_model(self.userbot, update_fields=["last_error"])
             return {"success": False, "error": error_msg}
 
         finally:
@@ -326,14 +337,14 @@ class UserbotAuthService:
                 await self.client.log_out()
 
             self.userbot.reset_auth_state()
-            _sync_save(self.userbot)
+            await _save_model(self.userbot)
 
             return {"success": True, "message": "Successfully logged out."}
 
         except Exception as e:
             # Even if logout fails, clear local session
             self.userbot.reset_auth_state()
-            _sync_save(self.userbot)
+            await _save_model(self.userbot)
             return {"success": True, "message": f"Session cleared. Telegram logout: {e}"}
 
         finally:
@@ -452,7 +463,7 @@ class BotFactoryService:
                 # Already authenticated, save session
                 self.userbot.session_string = self.client.session.save()
                 self.userbot.is_authenticated = True
-                _sync_save(self.userbot, update_fields=["session_string", "is_authenticated"])
+                await _save_model(self.userbot, update_fields=["session_string", "is_authenticated"])
                 return True, "Already authenticated"
 
             if phone_code is None:
@@ -475,14 +486,14 @@ class BotFactoryService:
             # Save session string
             self.userbot.session_string = self.client.session.save()
             self.userbot.is_authenticated = True
-            _sync_save(self.userbot, update_fields=["session_string", "is_authenticated"])
+            await _save_model(self.userbot, update_fields=["session_string", "is_authenticated"])
 
             return True, "Successfully authenticated"
 
         except Exception as e:
             logger.error(f"Authentication error: {e}")
             self.userbot.last_error = str(e)
-            _sync_save(self.userbot, update_fields=["last_error"])
+            await _save_model(self.userbot, update_fields=["last_error"])
             return False, str(e)
 
     async def create_bot(self, request: BotCreationRequest) -> Tuple[bool, str]:
@@ -508,7 +519,7 @@ class BotFactoryService:
             # Update request status
             request.status = BotCreationStatus.IN_PROGRESS
             request.userbot_used = self.userbot
-            _sync_save(request, update_fields=["status", "userbot_used"])
+            await _save_model(request, update_fields=["status", "userbot_used"])
             logger.info(f"[BOT_FACTORY] Request status updated to IN_PROGRESS")
 
             # Generate bot username
@@ -593,14 +604,14 @@ class BotFactoryService:
             request.bot_username = final_username
             request.bot_token = bot_token
             request.completed_at = timezone.now()
-            _sync_save(request, update_fields=["status", "bot_username", "bot_token", "completed_at"])
+            await _save_model(request, update_fields=["status", "bot_username", "bot_token", "completed_at"])
             logger.info(f"[BOT_FACTORY] Request updated: status=COMPLETED, username=@{final_username}")
 
             # Update userbot stats
             self.userbot.bots_created_today += 1
             self.userbot.total_bots_created += 1
             self.userbot.last_used_at = timezone.now()
-            _sync_save(self.userbot, update_fields=["bots_created_today", "total_bots_created", "last_used_at"])
+            await _save_model(self.userbot, update_fields=["bots_created_today", "total_bots_created", "last_used_at"])
             logger.info(f"[BOT_FACTORY] Userbot stats updated: today={self.userbot.bots_created_today}/20, total={self.userbot.total_bots_created}")
 
             logger.info(f"[BOT_FACTORY] ====== CREATE BOT SUCCESS ======")
@@ -612,10 +623,10 @@ class BotFactoryService:
             logger.error(f"[BOT_FACTORY] ERROR: {e}", exc_info=True)
             request.status = BotCreationStatus.FAILED
             request.error_message = str(e)
-            _sync_save(request, update_fields=["status", "error_message"])
+            await _save_model(request, update_fields=["status", "error_message"])
 
             self.userbot.last_error = str(e)
-            _sync_save(self.userbot, update_fields=["last_error"])
+            await _save_model(self.userbot, update_fields=["last_error"])
 
             return False, str(e)
 
@@ -645,7 +656,7 @@ class BotFactoryService:
             if userbot.last_used_at and userbot.last_used_at.date() < today:
                 logger.info(f"[BOT_FACTORY] Resetting daily counter for {userbot.phone_number} (last used: {userbot.last_used_at.date()})")
                 userbot.bots_created_today = 0
-                _sync_save(userbot, update_fields=["bots_created_today"])
+                await _save_model(userbot, update_fields=["bots_created_today"])
 
             if userbot.bots_created_today < 20:
                 logger.info(f"[BOT_FACTORY] Selected userbot: {userbot.phone_number} ({userbot.bots_created_today}/20 today)")
@@ -674,7 +685,7 @@ class BotFactoryService:
             logger.error(f"[BOT_FACTORY] ERROR: No available userbots for request {request.id}")
             request.status = BotCreationStatus.FAILED
             request.error_message = "No available userbots. Please try again later."
-            _sync_save(request, update_fields=["status", "error_message"])
+            await _save_model(request, update_fields=["status", "error_message"])
             return False, "No available userbots"
 
         logger.info(f"[BOT_FACTORY] Starting bot creation with userbot {userbot.phone_number}")

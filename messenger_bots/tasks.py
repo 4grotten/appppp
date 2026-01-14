@@ -48,8 +48,9 @@ def userbot_send_code_task(userbot_id: int):
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
-def userbot_resend_code_sms_task(userbot_id: int):
-    logger.info(f"[USERBOT_TASK] resend_code_sms started for userbot_id={userbot_id}")
+def userbot_qr_login_start_task(userbot_id: int):
+    """Start QR code login - returns QR URL to display."""
+    logger.info(f"[USERBOT_TASK] qr_login_start started for userbot_id={userbot_id}")
 
     try:
         userbot = TelegramUserbot.objects.get(id=userbot_id)
@@ -60,9 +61,29 @@ def userbot_resend_code_sms_task(userbot_id: int):
     from messenger_bots.services.bot_factory import UserbotAuthService
 
     service = UserbotAuthService(userbot)
-    result = _run_async(service.resend_code_sms())
+    result = _run_async(service.qr_login_start())
 
-    logger.info(f"[USERBOT_TASK] resend_code_sms result: {result}")
+    logger.info(f"[USERBOT_TASK] qr_login_start result: {result}")
+    return result
+
+
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
+def userbot_qr_login_check_task(userbot_id: int):
+    """Check if user has scanned QR code."""
+    logger.info(f"[USERBOT_TASK] qr_login_check started for userbot_id={userbot_id}")
+
+    try:
+        userbot = TelegramUserbot.objects.get(id=userbot_id)
+    except TelegramUserbot.DoesNotExist:
+        logger.error(f"[USERBOT_TASK] Userbot {userbot_id} not found")
+        return {"success": False, "error": "Userbot not found"}
+
+    from messenger_bots.services.bot_factory import UserbotAuthService
+
+    service = UserbotAuthService(userbot)
+    result = _run_async(service.qr_login_check())
+
+    logger.info(f"[USERBOT_TASK] qr_login_check result: {result}")
     return result
 
 

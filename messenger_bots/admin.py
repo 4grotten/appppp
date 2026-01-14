@@ -18,7 +18,7 @@ from messenger_bots.models import (
 from messenger_bots.admin_views import (
     UserbotSendCodeView,
     UserbotVerifyCodeView,
-    UserbotResendCodeSMSView,
+    UserbotQRLoginView,
     UserbotVerify2FAView,
     UserbotCheckConnectionView,
     UserbotLogoutView,
@@ -330,9 +330,9 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
                 name="messenger_bots_userbot_verify_code",
             ),
             path(
-                "<int:pk>/resend-code-sms/",
-                self.admin_site.admin_view(UserbotResendCodeSMSView.as_view()),
-                name="messenger_bots_userbot_resend_code_sms",
+                "<int:pk>/qr-login/",
+                self.admin_site.admin_view(UserbotQRLoginView.as_view()),
+                name="messenger_bots_userbot_qr_login",
             ),
             path(
                 "<int:pk>/verify-2fa/",
@@ -440,10 +440,17 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
         if not obj.is_authenticated:
             # Authentication flow buttons based on state
             if obj.auth_state == UserbotAuthState.NOT_STARTED:
-                url = reverse("admin:messenger_bots_userbot_send_code", args=[obj.pk])
+                # QR Login (recommended)
+                url = reverse("admin:messenger_bots_userbot_qr_login", args=[obj.pk])
                 buttons.append(
                     f'<a href="{url}" style="{base_style} background: #28a745;">'
-                    f'1. Send Verification Code</a>'
+                    f'Login via QR Code (Recommended)</a>'
+                )
+                # Phone code (alternative)
+                url = reverse("admin:messenger_bots_userbot_send_code", args=[obj.pk])
+                buttons.append(
+                    f'<a href="{url}" style="{base_style} background: #6c757d;">'
+                    f'Login via Phone Code</a>'
                 )
             elif obj.auth_state == UserbotAuthState.CODE_SENT:
                 url = reverse("admin:messenger_bots_userbot_verify_code", args=[obj.pk])
@@ -451,11 +458,11 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
                     f'<a href="{url}" style="{base_style} background: #007bff;">'
                     f'2. Enter Code</a>'
                 )
-                # Also show resend option
-                url = reverse("admin:messenger_bots_userbot_send_code", args=[obj.pk])
+                # Also show QR option
+                url = reverse("admin:messenger_bots_userbot_qr_login", args=[obj.pk])
                 buttons.append(
-                    f'<a href="{url}" style="{base_style} background: #6c757d;">'
-                    f'Resend Code</a>'
+                    f'<a href="{url}" style="{base_style} background: #28a745;">'
+                    f'Try QR Login Instead</a>'
                 )
             elif obj.auth_state == UserbotAuthState.AWAITING_2FA:
                 url = reverse("admin:messenger_bots_userbot_verify_2fa", args=[obj.pk])
@@ -464,10 +471,15 @@ class TelegramUserbotAdmin(admin.ModelAdmin):
                     f'3. Enter 2FA Password</a>'
                 )
             elif obj.auth_state == UserbotAuthState.ERROR:
+                url = reverse("admin:messenger_bots_userbot_qr_login", args=[obj.pk])
+                buttons.append(
+                    f'<a href="{url}" style="{base_style} background: #28a745;">'
+                    f'Retry via QR Code</a>'
+                )
                 url = reverse("admin:messenger_bots_userbot_send_code", args=[obj.pk])
                 buttons.append(
                     f'<a href="{url}" style="{base_style} background: #dc3545;">'
-                    f'Retry Authentication</a>'
+                    f'Retry via Phone Code</a>'
                 )
         else:
             # Already authenticated - show logout option

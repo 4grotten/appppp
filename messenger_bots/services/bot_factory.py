@@ -153,6 +153,17 @@ class UserbotAuthService:
             # Send code request
             sent_code = await self.client.send_code_request(self.userbot.phone_number)
 
+            # Extract delivery type info from Telegram response
+            code_type = type(sent_code.type).__name__
+            next_type = type(sent_code.next_type).__name__ if sent_code.next_type else None
+            timeout = getattr(sent_code, 'timeout', None)
+
+            logger.info(
+                f"[USERBOT_AUTH] Telegram response for {self.userbot.phone_number}: "
+                f"type={code_type}, next_type={next_type}, timeout={timeout}, "
+                f"hash_exists={bool(sent_code.phone_code_hash)}"
+            )
+
             # Save phone_code_hash for later verification
             self.userbot.phone_code_hash = sent_code.phone_code_hash
             self.userbot.auth_state = UserbotAuthState.CODE_SENT
@@ -164,6 +175,12 @@ class UserbotAuthService:
                 "success": True,
                 "message": f"Code sent to {self.userbot.phone_number}",
                 "next_step": "verify_code",
+                "telegram_response": {
+                    "code_type": code_type,
+                    "next_type": next_type,
+                    "timeout": timeout,
+                    "phone_code_hash_received": bool(sent_code.phone_code_hash),
+                },
             }
 
         except FloodWaitError as e:
@@ -204,6 +221,17 @@ class UserbotAuthService:
                 force_sms=True
             )
 
+            # Extract delivery type info from Telegram response
+            code_type = type(sent_code.type).__name__
+            next_type = type(sent_code.next_type).__name__ if sent_code.next_type else None
+            timeout = getattr(sent_code, 'timeout', None)
+
+            logger.info(
+                f"[USERBOT_AUTH] SMS resend response for {self.userbot.phone_number}: "
+                f"type={code_type}, next_type={next_type}, timeout={timeout}, "
+                f"hash_exists={bool(sent_code.phone_code_hash)}"
+            )
+
             # Update phone_code_hash (it may change)
             self.userbot.phone_code_hash = sent_code.phone_code_hash
             self.userbot.auth_state_message = f"SMS sent to {self.userbot.phone_number}. Enter the code."
@@ -212,6 +240,12 @@ class UserbotAuthService:
             return {
                 "success": True,
                 "message": f"SMS sent to {self.userbot.phone_number}",
+                "telegram_response": {
+                    "code_type": code_type,
+                    "next_type": next_type,
+                    "timeout": timeout,
+                    "phone_code_hash_received": bool(sent_code.phone_code_hash),
+                },
             }
 
         except FloodWaitError as e:

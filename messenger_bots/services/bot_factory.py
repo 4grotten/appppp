@@ -8,6 +8,7 @@ import asyncio
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db import connection
+from asgiref.sync import sync_to_async
 
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -49,12 +50,12 @@ def _run_async_unsafe(coro):
 
 async def _save_model(model, update_fields=None):
     """
-    Save model - works in async context with DJANGO_ALLOW_ASYNC_UNSAFE.
+    Save model - works in async context using sync_to_async.
     """
     if update_fields:
-        model.save(update_fields=update_fields)
+        await sync_to_async(model.save)(update_fields=update_fields)
     else:
-        model.save()
+        await sync_to_async(model.save)()
 
 from messenger_bots.models import (
     TelegramUserbot,

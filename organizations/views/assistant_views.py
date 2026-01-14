@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from shop.tasks import update_assistant_json_task
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Answer, AnswerFile, Assistant, Chat, Plan, Question
@@ -180,6 +181,8 @@ class PurchaseAssistantView(generics.CreateAPIView):
                                                                          assistant=assistant, plans=plans,
                                                                          duration_days=duration_days,
                                                                          utc_offset_minutes=utc_offset_minutes)
+
+        update_assistant_json_task.delay(assistant.organization.id)
 
         return Response(
             {

@@ -11,6 +11,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
+SITE_DOMAIN = config("SITE_URL","PROD")
+
+if SITE_DOMAIN == "DEV":
+    SITE_URL = "https://test.apofiz.com"
+else:
+    SITE_URL = "https://apofiz.com"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="notasecret")

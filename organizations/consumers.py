@@ -20,6 +20,7 @@ from shop.serializers.comment_serializers import CommentSerializer, WSCommentSer
 from shop.serializers.item_serializers import ItemInfoSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
+from shop.services.assistant_data_service import AssistantDataService
 
 logger = logging.getLogger(__name__)
 
@@ -499,6 +500,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         stock_info = ShopItemSizeCountSetSerializer(
             size_info, many=True, context={"request": None}
         ).data
+        catalog_url = AssistantDataService.get_file_url(assistant.organization)
         data = {
             "assistant_id": assistant.id,
             "parent_id": comment.id,
@@ -516,6 +518,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 "item_info": item_info,
                 "organization_info": organization_info,
                 "stock_info": stock_info,
+                "catalog_file": catalog_url
             },
             "headers": decoded_headers,
         }

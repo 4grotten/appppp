@@ -16,6 +16,7 @@ from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
 from notifications.tasks import sent_notification
+from shop.services.assistant_data_service import AssistantDataService
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,9 @@ class CommentService:
     @classmethod
     def get_training_data(cls, assistant: Assistant):
         answers = Answer.objects.filter(assistant=assistant)
+
+        catalog_url = AssistantDataService.get_file_url(assistant.organization)
+
         training_data = {
             "assistant_info": {
                 "organization": assistant.organization.title,
@@ -101,7 +105,8 @@ class CommentService:
                 "position": assistant.position,
                 "is_enabled": assistant.is_enabled
             },
-            "answers": []
+            "answers": [],
+            "catalog_file": catalog_url
         }
 
         for answer in answers:

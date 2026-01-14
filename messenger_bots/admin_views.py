@@ -1,29 +1,39 @@
-"""
-Custom admin views for Telegram Userbot management.
-Provides UI for authentication, testing, and debugging.
-"""
 import json
+import logging
+
+from celery.exceptions import TimeoutError as CeleryTimeoutError
 from django.contrib import admin, messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_protect
 
-from messenger_bots.models import TelegramUserbot, UserbotAuthState
-from messenger_bots.services.bot_factory import UserbotAuthService
 from messenger_bots.forms import (
     SendCodeForm,
-    VerifyCodeForm,
-    Verify2FAForm,
     TestMessageForm,
+    Verify2FAForm,
+    VerifyCodeForm,
 )
+from messenger_bots.models import TelegramUserbot, UserbotAuthState
+from messenger_bots.tasks import (
+    userbot_check_connection_task,
+    userbot_get_dialogs_task,
+    userbot_logout_task,
+    userbot_send_code_task,
+    userbot_send_test_message_task,
+    userbot_verify_2fa_task,
+    userbot_verify_code_task,
+)
+
+logger = logging.getLogger(__name__)
+
+CELERY_TASK_TIMEOUT = 90
 
 
 class UserbotAuthBaseView(View):
-    """Base view for userbot authentication."""
 
     @method_decorator(staff_member_required)
     @method_decorator(csrf_protect)
@@ -32,14 +42,11 @@ class UserbotAuthBaseView(View):
         return super().dispatch(request, *args, **kwargs)
 
     def get_admin_url(self):
-        """Get URL to admin change page."""
         return reverse(
-            "admin:messenger_bots_telegramuserbot_change",
-            args=[self.userbot.pk]
+            "admin:messenger_bots_telegramuserbot_change", args=[self.userbot.pk]
         )
 
     def get_context(self, **extra):
-        """Get base context for templates."""
         context = {
             "userbot": self.userbot,
             "title": f"Userbot: {self.userbot.phone_number}",
@@ -53,7 +60,6 @@ class UserbotAuthBaseView(View):
 
 
 class UserbotSendCodeView(UserbotAuthBaseView):
-    """View to send verification code."""
     template_name = "admin/messenger_bots/telegramuserbot/send_code.html"
 
     def get(self, request, pk):
@@ -63,26 +69,34 @@ class UserbotSendCodeView(UserbotAuthBaseView):
     def post(self, request, pk):
         form = SendCodeForm(request.POST)
         if form.is_valid():
-            service = UserbotAuthService(self.userbot)
-            result = UserbotAuthService.run_async(service.send_code())
+            try:
+                task = userbot_send_code_task.delay(self.userbot.pk)
+                result = task.get(timeout=CELERY_TASK_TIMEOUT)
 
-            if result.get("success"):
-                if result.get("already_authenticated"):
-                    messages.success(request, "Already authenticated!")
-                else:
-                    messages.success(
-                        request,
-                        f"Code sent to {self.userbot.phone_number}. "
-                        "Please enter the verification code."
-                    )
-                    return HttpResponseRedirect(
-                        reverse(
-                            "admin:messenger_bots_userbot_verify_code",
-                            args=[self.userbot.pk]
+                if result.get("success"):
+                    if result.get("already_authenticated"):
+                        messages.success(request, "Already authenticated!")
+                    else:
+                        messages.success(
+                            request,
+                            f"Code sent to {self.userbot.phone_number}. "
+                            "Please enter the verification code.",
                         )
-                    )
-            else:
-                messages.error(request, f"Error: {result.get('error')}")
+                        return HttpResponseRedirect(
+                            reverse(
+                                "admin:messenger_bots_userbot_verify_code",
+                                args=[self.userbot.pk],
+                            )
+                        )
+                else:
+                    messages.error(request, f"Error: {result.get('error')}")
+
+            except CeleryTimeoutError:
+                logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+                messages.error(request, "Operation timed out. Please try again.")
+            except Exception as e:
+                logger.error(f"Celery task error: {e}", exc_info=True)
+                messages.error(request, f"Error: {str(e)}")
 
             return HttpResponseRedirect(self.get_admin_url())
 
@@ -90,7 +104,6 @@ class UserbotSendCodeView(UserbotAuthBaseView):
 
 
 class UserbotVerifyCodeView(UserbotAuthBaseView):
-    """View to verify phone code."""
     template_name = "admin/messenger_bots/telegramuserbot/verify_code.html"
 
     def get(self, request, pk):
@@ -98,14 +111,10 @@ class UserbotVerifyCodeView(UserbotAuthBaseView):
             UserbotAuthState.CODE_SENT,
             UserbotAuthState.ERROR,
         ]:
-            messages.warning(
-                request,
-                "Please send verification code first."
-            )
+            messages.warning(request, "Please send verification code first.")
             return HttpResponseRedirect(
                 reverse(
-                    "admin:messenger_bots_userbot_send_code",
-                    args=[self.userbot.pk]
+                    "admin:messenger_bots_userbot_send_code", args=[self.userbot.pk]
                 )
             )
 
@@ -116,43 +125,47 @@ class UserbotVerifyCodeView(UserbotAuthBaseView):
         form = VerifyCodeForm(request.POST)
         if form.is_valid():
             code = form.cleaned_data["code"]
-            service = UserbotAuthService(self.userbot)
-            result = UserbotAuthService.run_async(service.verify_code(code))
 
-            if result.get("success"):
-                user_info = result.get("user_info", {})
-                messages.success(
-                    request,
-                    f"Successfully authenticated as {user_info.get('first_name', 'User')}!"
-                )
-                return HttpResponseRedirect(self.get_admin_url())
-            elif result.get("needs_2fa"):
-                messages.info(
-                    request,
-                    "2FA is enabled. Please enter your password."
-                )
-                return HttpResponseRedirect(
-                    reverse(
-                        "admin:messenger_bots_userbot_verify_2fa",
-                        args=[self.userbot.pk]
+            try:
+                task = userbot_verify_code_task.delay(self.userbot.pk, code)
+                result = task.get(timeout=CELERY_TASK_TIMEOUT)
+
+                if result.get("success"):
+                    user_info = result.get("user_info", {})
+                    messages.success(
+                        request,
+                        f"Successfully authenticated as {user_info.get('first_name', 'User')}!",
                     )
-                )
-            else:
-                messages.error(request, f"Error: {result.get('error')}")
+                    return HttpResponseRedirect(self.get_admin_url())
+                elif result.get("needs_2fa"):
+                    messages.info(
+                        request, "2FA is enabled. Please enter your password."
+                    )
+                    return HttpResponseRedirect(
+                        reverse(
+                            "admin:messenger_bots_userbot_verify_2fa",
+                            args=[self.userbot.pk],
+                        )
+                    )
+                else:
+                    messages.error(request, f"Error: {result.get('error')}")
+
+            except CeleryTimeoutError:
+                logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+                messages.error(request, "Operation timed out. Please try again.")
+            except Exception as e:
+                logger.error(f"Celery task error: {e}", exc_info=True)
+                messages.error(request, f"Error: {str(e)}")
 
         return render(request, self.template_name, self.get_context(form=form))
 
 
 class UserbotVerify2FAView(UserbotAuthBaseView):
-    """View to verify 2FA password."""
     template_name = "admin/messenger_bots/telegramuserbot/verify_2fa.html"
 
     def get(self, request, pk):
         if self.userbot.auth_state != UserbotAuthState.AWAITING_2FA:
-            messages.warning(
-                request,
-                "2FA verification not required at this stage."
-            )
+            messages.warning(request, "2FA verification not required at this stage.")
             return HttpResponseRedirect(self.get_admin_url())
 
         form = Verify2FAForm()
@@ -162,17 +175,26 @@ class UserbotVerify2FAView(UserbotAuthBaseView):
         form = Verify2FAForm(request.POST)
         if form.is_valid():
             password = form.cleaned_data["password"]
-            service = UserbotAuthService(self.userbot)
-            result = UserbotAuthService.run_async(service.verify_2fa(password))
 
-            if result.get("success"):
-                user_info = result.get("user_info", {})
-                messages.success(
-                    request,
-                    f"Successfully authenticated with 2FA as {user_info.get('first_name', 'User')}!"
-                )
-            else:
-                messages.error(request, f"Error: {result.get('error')}")
+            try:
+                task = userbot_verify_2fa_task.delay(self.userbot.pk, password)
+                result = task.get(timeout=CELERY_TASK_TIMEOUT)
+
+                if result.get("success"):
+                    user_info = result.get("user_info", {})
+                    messages.success(
+                        request,
+                        f"Successfully authenticated with 2FA as {user_info.get('first_name', 'User')}!",
+                    )
+                else:
+                    messages.error(request, f"Error: {result.get('error')}")
+
+            except CeleryTimeoutError:
+                logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+                messages.error(request, "Operation timed out. Please try again.")
+            except Exception as e:
+                logger.error(f"Celery task error: {e}", exc_info=True)
+                messages.error(request, f"Error: {str(e)}")
 
             return HttpResponseRedirect(self.get_admin_url())
 
@@ -180,12 +202,16 @@ class UserbotVerify2FAView(UserbotAuthBaseView):
 
 
 class UserbotCheckConnectionView(UserbotAuthBaseView):
-    """View to check connection status."""
     template_name = "admin/messenger_bots/telegramuserbot/check_connection.html"
 
     def get(self, request, pk):
-        service = UserbotAuthService(self.userbot)
-        result = UserbotAuthService.run_async(service.check_connection())
+        try:
+            task = userbot_check_connection_task.delay(self.userbot.pk)
+            result = task.get(timeout=CELERY_TASK_TIMEOUT)
+        except CeleryTimeoutError:
+            result = {"success": False, "error": "Operation timed out"}
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
 
         context = self.get_context(
             result=result,
@@ -195,29 +221,35 @@ class UserbotCheckConnectionView(UserbotAuthBaseView):
 
 
 class UserbotLogoutView(UserbotAuthBaseView):
-    """View to logout userbot."""
 
     def get(self, request, pk):
         return render(
             request,
             "admin/messenger_bots/telegramuserbot/logout_confirm.html",
-            self.get_context()
+            self.get_context(),
         )
 
     def post(self, request, pk):
-        service = UserbotAuthService(self.userbot)
-        result = UserbotAuthService.run_async(service.logout())
+        try:
+            task = userbot_logout_task.delay(self.userbot.pk)
+            result = task.get(timeout=CELERY_TASK_TIMEOUT)
 
-        if result.get("success"):
-            messages.success(request, result.get("message"))
-        else:
-            messages.error(request, f"Error: {result.get('error')}")
+            if result.get("success"):
+                messages.success(request, result.get("message"))
+            else:
+                messages.error(request, f"Error: {result.get('error')}")
+
+        except CeleryTimeoutError:
+            logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+            messages.error(request, "Operation timed out. Please try again.")
+        except Exception as e:
+            logger.error(f"Celery task error: {e}", exc_info=True)
+            messages.error(request, f"Error: {str(e)}")
 
         return HttpResponseRedirect(self.get_admin_url())
 
 
 class UserbotDialogsView(UserbotAuthBaseView):
-    """View to see userbot dialogs."""
     template_name = "admin/messenger_bots/telegramuserbot/dialogs.html"
 
     def get(self, request, pk):
@@ -225,8 +257,13 @@ class UserbotDialogsView(UserbotAuthBaseView):
             messages.error(request, "Userbot is not authenticated.")
             return HttpResponseRedirect(self.get_admin_url())
 
-        service = UserbotAuthService(self.userbot)
-        result = UserbotAuthService.run_async(service.get_dialogs(limit=30))
+        try:
+            task = userbot_get_dialogs_task.delay(self.userbot.pk, limit=30)
+            result = task.get(timeout=CELERY_TASK_TIMEOUT)
+        except CeleryTimeoutError:
+            result = {"success": False, "error": "Operation timed out", "dialogs": []}
+        except Exception as e:
+            result = {"success": False, "error": str(e), "dialogs": []}
 
         context = self.get_context(
             result=result,
@@ -236,7 +273,6 @@ class UserbotDialogsView(UserbotAuthBaseView):
 
 
 class UserbotTestMessageView(UserbotAuthBaseView):
-    """View to send a test message."""
     template_name = "admin/messenger_bots/telegramuserbot/test_message.html"
 
     def get(self, request, pk):
@@ -257,15 +293,23 @@ class UserbotTestMessageView(UserbotAuthBaseView):
             chat = form.cleaned_data["chat"]
             message = form.cleaned_data["message"]
 
-            service = UserbotAuthService(self.userbot)
-            result = UserbotAuthService.run_async(
-                service.send_test_message(chat, message)
-            )
+            try:
+                task = userbot_send_test_message_task.delay(
+                    self.userbot.pk, chat, message
+                )
+                result = task.get(timeout=CELERY_TASK_TIMEOUT)
 
-            if result.get("success"):
-                messages.success(request, f"Message sent to {chat}!")
-            else:
-                messages.error(request, f"Error: {result.get('error')}")
+                if result.get("success"):
+                    messages.success(request, f"Message sent to {chat}!")
+                else:
+                    messages.error(request, f"Error: {result.get('error')}")
+
+            except CeleryTimeoutError:
+                logger.error(f"Celery task timeout for userbot {self.userbot.pk}")
+                messages.error(request, "Operation timed out. Please try again.")
+            except Exception as e:
+                logger.error(f"Celery task error: {e}", exc_info=True)
+                messages.error(request, f"Error: {str(e)}")
 
             return HttpResponseRedirect(self.get_admin_url())
 

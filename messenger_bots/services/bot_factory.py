@@ -3,14 +3,11 @@ import re
 import os
 from typing import Optional, Tuple, Dict, Any, List
 from datetime import date
-from concurrent.futures import ThreadPoolExecutor
-import threading
 import asyncio
 
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db import connection
-from asgiref.sync import sync_to_async
 
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -23,55 +20,41 @@ from telethon.errors import (
     FloodWaitError,
 )
 
-# Thread-local storage for event loops
-_thread_local = threading.local()
 
-# Executor for running async code in separate threads
-_executor = ThreadPoolExecutor(max_workers=4)
-
-
-def _run_in_thread(coro):
+def _run_async_unsafe(coro):
     """
-    Run async coroutine in a separate thread with its own event loop.
-    This avoids Django's SynchronousOnlyOperation errors when running
-    async code from synchronous Django views under gunicorn/gevent.
+    Run async coroutine allowing unsafe DB operations.
+    This is safe here because we control the execution context.
     """
-    def thread_target():
-        # Close any existing Django DB connections in this thread
-        connection.close()
+    # Temporarily allow async-unsafe operations
+    old_value = os.environ.get('DJANGO_ALLOW_ASYNC_UNSAFE')
+    os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
 
-        # Create a new event loop for this thread
+    try:
+        # Create a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
             return loop.run_until_complete(coro)
         finally:
             loop.close()
-
-    # Run in thread pool and wait for result
-    future = _executor.submit(thread_target)
-    return future.result(timeout=120)  # 2 minute timeout
-
-
-def _do_save(model, update_fields=None):
-    """Actual save operation - runs in separate thread via sync_to_async."""
-    connection.close()  # Close stale connections
-    if update_fields:
-        model.save(update_fields=update_fields)
-    else:
-        model.save()
-
-
-# Async wrapper for save - runs in a separate thread (thread_sensitive=False)
-_async_save = sync_to_async(_do_save, thread_sensitive=False)
+            asyncio.set_event_loop(None)
+    finally:
+        # Restore original value
+        if old_value is None:
+            os.environ.pop('DJANGO_ALLOW_ASYNC_UNSAFE', None)
+        else:
+            os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = old_value
 
 
 async def _save_model(model, update_fields=None):
     """
-    Async save that runs the actual DB operation in a separate thread.
-    Uses sync_to_async with thread_sensitive=False to avoid async context issues.
+    Save model - works in async context with DJANGO_ALLOW_ASYNC_UNSAFE.
     """
-    await _async_save(model, update_fields)
+    if update_fields:
+        model.save(update_fields=update_fields)
+    else:
+        model.save()
 
 from messenger_bots.models import (
     TelegramUserbot,
@@ -405,11 +388,6 @@ class UserbotAuthService:
         finally:
             if self.client:
                 await self.client.disconnect()
-
-    @classmethod
-    def run_async(cls, coro):
-        """Run async function synchronously in a separate thread."""
-        return _run_in_thread(coro)
 
 
 class BotFactoryService:

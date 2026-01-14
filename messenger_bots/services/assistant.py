@@ -108,10 +108,18 @@ class BotAssistantService:
         if user_language:
             assistant_info["response_language"] = cls._get_language_name(user_language)
 
+        # Get Q&A training pairs (like website does)
+        answers = cls._get_qa_pairs(assistant)
+
+        # Get catalog file URL
+        catalog_file = cls._get_catalog_file_url(organization)
+
         return {
             "assistant_info": assistant_info,
             "organization_info": organization_info,
             "item_info": items_info,
+            "answers": answers,
+            "catalog_file": catalog_file,
         }
 
     @classmethod
@@ -125,21 +133,26 @@ class BotAssistantService:
                 is_published=True,
                 removed_at__isnull=True,
             ).select_related("subcategory").only(
-                "name", "description", "price", "subcategory__name"
+                "id", "name", "description", "price", "subcategory__name"
             )[:50]
 
             if not items:
                 return "Нет доступных товаров/услуг."
+
+            # Get site URL for constructing item links
+            site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
 
             items_list = []
             for item in items:
                 item_str = f"- {item.name}"
                 if item.price:
                     item_str += f" ({item.price} {organization.currency_id})"
+                # Add product URL
+                item_str += f" | Ссылка: {site_url}/p/{item.id}"
                 if item.description:
                     # Truncate long descriptions
                     desc = item.description[:100] + "..." if len(item.description) > 100 else item.description
-                    item_str += f": {desc}"
+                    item_str += f" | {desc}"
                 items_list.append(item_str)
 
             return "\n".join(items_list)
@@ -147,6 +160,51 @@ class BotAssistantService:
         except Exception as e:
             logger.error(f"Error getting items info: {e}")
             return ""
+
+    @classmethod
+    def _get_qa_pairs(cls, assistant: Assistant) -> List[Dict]:
+        """Get Q&A training pairs for the assistant (like website does)."""
+        try:
+            from organizations.models import Answer
+
+            answers = Answer.objects.filter(
+                assistant=assistant
+            ).select_related("question").prefetch_related("files")
+
+            qa_list = []
+            for answer in answers:
+                # Get file URLs
+                file_urls = []
+                for answer_file in answer.files.all():
+                    if answer_file.file:
+                        file_urls.append(answer_file.file.url)
+
+                qa_list.append({
+                    "question": answer.question.text if answer.question else "",
+                    "answer": answer.text,
+                    "files": file_urls,
+                })
+
+            return qa_list
+
+        except Exception as e:
+            logger.error(f"Error getting Q&A pairs: {e}")
+            return []
+
+    @classmethod
+    def _get_catalog_file_url(cls, organization: Organization) -> Optional[str]:
+        """Get catalog JSON file URL for the organization."""
+        try:
+            from shop.services.assistant_data_service import AssistantDataService
+
+            catalog_url = AssistantDataService.get_file_url(organization)
+            if catalog_url:
+                logger.debug(f"Found catalog file: {catalog_url}")
+            return catalog_url
+
+        except Exception as e:
+            logger.error(f"Error getting catalog file URL: {e}")
+            return None
 
     @classmethod
     def _call_ai_service(
@@ -212,6 +270,7 @@ class BotAssistantService:
             assistant_info = training_data.get("assistant_info", {})
             organization_info = training_data.get("organization_info", {})
             item_info = training_data.get("item_info", "")
+            answers = training_data.get("answers", [])
 
             # Build language instruction
             language_instruction = ""
@@ -219,13 +278,20 @@ class BotAssistantService:
                 lang_name = cls._get_language_name(user_language)
                 language_instruction = f"\nВАЖНО: Отвечай на языке: {lang_name}."
 
+            # Build Q&A training section
+            qa_section = ""
+            if answers:
+                qa_section = "\n\nПримеры вопросов и ответов:\n"
+                for qa in answers:
+                    qa_section += f"В: {qa.get('question', '')}\nО: {qa.get('answer', '')}\n"
+
             system_prompt = f"""Ты полезный ассистент по имени {assistant_info.get('name', 'Ассистент')},
 работающий в организации {assistant_info.get('organization', 'неизвестная организация')}.
 Твоя должность: {assistant_info.get('position', 'консультант')}.
 
 Информация об организации:
 {organization_info}
-
+{qa_section}
 Доступные товары/услуги:
 {item_info}
 

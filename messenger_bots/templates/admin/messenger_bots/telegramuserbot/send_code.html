@@ -1,0 +1,32 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Send Code{% endblock %}
+{% block header_title %}Send Verification Code{% endblock %}
+
+{% block action_content %}
+<div class="info-message">
+    <strong>Step 1 of 2-3:</strong> We will send a verification code to
+    <strong>{{ userbot.phone_number }}</strong> via Telegram or SMS.
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <p>{{ form.confirm.label }}</p>
+    <p>{{ form.confirm }} {{ form.confirm.help_text }}</p>
+
+    {% if form.errors %}
+    <div class="error-message">
+        {{ form.errors }}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+        <input type="submit" value="Send Code" class="default">
+        <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}" class="cancel">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block form_actions %}{% endblock %}

@@ -42,6 +42,7 @@ from shop.models import ItemInstagramData, ShopItem
 from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
+from shop.services.assistant_data_service import AssistantDataService
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,7 @@ def process_comment_with_assistant(
 
     comment = Comment.objects.get(id=comment_id)
     assistant = Assistant.objects.get(id=assistant_id)
+    catalog_url = AssistantDataService.get_file_url(assistant.organization)
 
     try:
         response = requests.post(
@@ -294,6 +296,7 @@ def process_comment_with_assistant(
                     },
                     "item_info": item_info,
                     "organization_info": organization_info,
+                    "catalog_file": catalog_url
                 },
             },
             timeout=10,

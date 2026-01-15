@@ -2,6 +2,8 @@ version: '3'
 volumes:
   postgres_data_dev: { }
   postgres_backup_dev: { }
+  waha_sessions: { }
+  waha_files: { }
 
 services:
   django: &django
@@ -16,11 +18,13 @@ services:
       - rabbitmq:rabbitmq
       - memcached:memcached
       - redis:redis
+      - waha:waha
     depends_on:
       - rabbitmq
       - postgres
       - memcached
       - redis
+      - waha
     env_file: ./env/test.env
     volumes:
       - .:/app
@@ -69,7 +73,8 @@ services:
 
   memcached:
     image: memcached:1.6-alpine
-    env_file: ./env/development.env
+    env_file: ./env/test.env
+    restart: always
 
   celery_beat:
     <<: *django
@@ -81,3 +86,32 @@ services:
     image: redis:6.2.6
     env_file: ./env/test.env
     restart: always
+
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: appofiz_waha_test
+    restart: unless-stopped
+    env_file: ./env/test.env
+    environment:
+      - WHATSAPP_SWAGGER_USERNAME=${WAHA_SWAGGER_USERNAME:-admin}
+      - WHATSAPP_SWAGGER_PASSWORD=${WAHA_SWAGGER_PASSWORD:-password}
+      - WAHA_DASHBOARD_ENABLED=true
+      - WHATSAPP_DEFAULT_ENGINE=NOWEB
+      - WHATSAPP_HOOK_URL=https://test2.apofiz.com/api/v1/messenger-bots/whatsapp/webhook/
+      - WHATSAPP_HOOK_EVENTS=message,message.ack,session.status
+      - WAHA_WEBHOOK_HMAC_SECRET=${WAHA_WEBHOOK_SECRET:-secret}
+      - WAHA_WORKER_RESTART_SESSIONS=true
+      - WAHA_LOG_LEVEL=info
+    volumes:
+      - waha_sessions:/app/.sessions
+      - waha_files:/app/.media
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    mem_limit: 256m
+    mem_reservation: 128m
+    expose:
+      - "3000"

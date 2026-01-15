@@ -12,9 +12,9 @@ def update_assistant_json_task(organization_id):
 
 
 
-# @shared_task
-# def cleanup_expired_assistants_files():
-#     organizations = Organization.objects.filter(assistant__isnull=False)
-#     for org in organizations:
-#         if not AssistantDataService.is_assistant_active(org):
-#              AssistantDataService.delete_organization_json(org)
+@shared_task
+def cleanup_expired_assistants_files():
+    organizations = Organization.objects.filter(assistant__isnull=False)
+    for org in organizations:
+        if not AssistantDataService.is_assistant_active(org):
+             AssistantDataService.delete_organization_json(org)

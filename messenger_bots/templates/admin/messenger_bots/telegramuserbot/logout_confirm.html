@@ -1,0 +1,31 @@
+{% extends "admin/messenger_bots/telegramuserbot/base_action.html" %}
+{% load i18n %}
+
+{% block action_title %}Logout{% endblock %}
+{% block header_title %}Confirm Logout{% endblock %}
+
+{% block action_content %}
+<div class="error-message">
+    <strong>Warning!</strong> This will:
+    <ul>
+        <li>Log out from Telegram</li>
+        <li>Clear the session string</li>
+        <li>Require re-authentication to use this userbot</li>
+    </ul>
+</div>
+
+<p>Are you sure you want to logout userbot <strong>{{ userbot.phone_number }}</strong>?</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-actions">
+        <input type="submit" value="Yes, Logout" class="default" style="background: #dc3545;">
+        <a href="{% url 'admin:messenger_bots_telegramuserbot_change' userbot.pk %}" class="cancel">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block form_actions %}{% endblock %}

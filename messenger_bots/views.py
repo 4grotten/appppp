@@ -835,19 +835,20 @@ class AutoCreateTelegramBotAPIView(APIView):
             bot_name = f"{org.title[:57]} APZ"
         logger.info(f"[AUTO_CREATE] Bot name: '{bot_name}'")
 
-        # Create request
+        # Create request with base_url for webhook
+        base_url = request.build_absolute_uri("/").rstrip("/")
         creation_request = BotCreationRequest.objects.create(
             organization=org,
             requested_by=request.user,
             bot_name=bot_name,
             status=BotCreationStatus.PENDING,
+            base_url=base_url,
         )
-        logger.info(f"[AUTO_CREATE] Created BotCreationRequest id={creation_request.id}")
+        logger.info(f"[AUTO_CREATE] Created BotCreationRequest id={creation_request.id}, base_url={base_url}")
 
         # Start async task
         from messenger_bots.tasks import create_telegram_bot_task
 
-        base_url = request.build_absolute_uri("/").rstrip("/")
         logger.info(f"[AUTO_CREATE] Starting Celery task with base_url={base_url}")
         task = create_telegram_bot_task.delay(creation_request.id, base_url)
         logger.info(f"[AUTO_CREATE] Celery task started: task_id={task.id}")

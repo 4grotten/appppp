@@ -324,7 +324,9 @@ def check_pending_bot_requests():
 
     for request in pending_requests:
         logger.info(f"Processing stale pending request {request.id}")
-        base_url = "https://apofiz.com"  # Default, should be configured
+        # Use stored base_url or fallback to production
+        base_url = request.base_url or "https://apofiz.com"
+        logger.info(f"Using base_url: {base_url}")
         create_telegram_bot_task.delay(request.id, base_url)
 
     return {"processed": len(pending_requests)}

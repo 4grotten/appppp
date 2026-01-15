@@ -407,6 +407,12 @@ class BotCreationRequest(TimestampModel):
         null=True,
         blank=True,
     )
+    base_url = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("Base URL for webhook (auto-detected from request)"),
+    )
 
     class Meta:
         verbose_name = _("Bot Creation Request")

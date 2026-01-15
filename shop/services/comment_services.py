@@ -97,6 +97,23 @@ class CommentService:
         answers = Answer.objects.filter(assistant=assistant)
 
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
+        organization_info = {
+            "name": assistant.organization.title,
+            "description": assistant.organization.description or "",
+            "address": assistant.organization.address or "",
+            "opens_at": str(assistant.organization.opens_at) if assistant.organization.opens_at else "",
+            "closes_at": str(assistant.organization.closes_at) if assistant.organization.closes_at else "",
+        }
+
+        phone_numbers = list(assistant.organization.phone_numbers.values_list("phone_number", flat=True))
+        if phone_numbers:
+            organization_info["phones"] = ", ".join(phone_numbers)
+
+        social_contacts = list(assistant.organization.social_contacts.values_list("url", flat=True))
+
+        if social_contacts:
+            organization_info["social_links"] = ", ".join(social_contacts)
+
         org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
         training_data = {
             "assistant_info": {
@@ -108,7 +125,8 @@ class CommentService:
             },
             "answers": [],
             "organization_page_url": org_url,
-            "catalog_file": catalog_url
+            "catalog_file": catalog_url,
+            "contacts_info":organization_info
         }
 
         for answer in answers:

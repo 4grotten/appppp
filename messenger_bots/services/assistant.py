@@ -93,7 +93,6 @@ class BotAssistantService:
         if social_contacts:
             organization_info["social_links"] = ", ".join(social_contacts)
 
-        # Get items/products info (limited to first 50 for context)
         items_info = cls._get_items_info(organization)
 
         # Prepare assistant info
@@ -113,6 +112,7 @@ class BotAssistantService:
 
         # Get catalog file URL
         catalog_file = cls._get_catalog_file_url(organization)
+        org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
 
         return {
             "assistant_info": assistant_info,
@@ -120,6 +120,7 @@ class BotAssistantService:
             "item_info": items_info,
             "answers": answers,
             "catalog_file": catalog_file,
+            "organization_page_url": org_url,
         }
 
     @classmethod
@@ -355,7 +356,6 @@ class BotAssistantService:
                             except Exception as e:
                                 logger.warning(f"Failed to load file {file_url}: {e}")
 
-            # Load catalog file
             catalog_section = ""
             catalog_file = training_data.get("catalog_file")
             if catalog_file:

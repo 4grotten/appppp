@@ -1,6 +1,7 @@
 import time
 import logging
 import requests
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
@@ -96,7 +97,7 @@ class CommentService:
         answers = Answer.objects.filter(assistant=assistant)
 
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
-
+        org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
         training_data = {
             "assistant_info": {
                 "organization": assistant.organization.title,
@@ -106,6 +107,7 @@ class CommentService:
                 "is_enabled": assistant.is_enabled
             },
             "answers": [],
+            "organization_page_url": org_url,
             "catalog_file": catalog_url
         }
 

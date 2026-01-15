@@ -152,6 +152,62 @@ def format_catalog_json(json_content) -> str:
         return ""
 
 
+def should_load_catalog(question: str) -> bool:
+    """
+    Determine if the question is about products/catalog.
+    Returns True only if user is clearly asking about products.
+
+    This prevents loading 20KB catalog for simple questions like "Привет!" or "Что ты умеешь?"
+    """
+    question_lower = question.lower().strip()
+
+    # Product-related trigger words (user wants to see products)
+    product_triggers = {
+        # Russian - asking for products
+        'товар', 'товары', 'продукт', 'продукция', 'каталог', 'ассортимент',
+        'купить', 'покупка', 'заказать', 'заказ', 'приобрести',
+        'покажи', 'покажите', 'показать', 'посмотреть',
+        'есть ли', 'имеется', 'в наличии', 'наличие',
+        'цена', 'цены', 'стоимость', 'сколько стоит', 'прайс',
+        # Russian - product categories (common)
+        'кроссовки', 'кеды', 'обувь', 'ботинки', 'сапоги', 'туфли',
+        'сумка', 'сумки', 'рюкзак', 'рюкзаки', 'клатч',
+        'одежда', 'платье', 'юбка', 'блузка', 'футболка', 'джинсы',
+        'куртка', 'пальто', 'шуба', 'плащ',
+        'купальник', 'купальники', 'бикини',
+        'аксессуары', 'украшения', 'часы', 'очки',
+        # English
+        'product', 'products', 'catalog', 'catalogue', 'item', 'items',
+        'buy', 'purchase', 'order', 'show me', 'looking for',
+        'price', 'prices', 'cost', 'how much',
+        'shoes', 'sneakers', 'bags', 'clothes', 'dress',
+    }
+
+    # Check if any trigger is in the question
+    for trigger in product_triggers:
+        if trigger in question_lower:
+            print(f"[CATALOG_FILTER] Product trigger found: '{trigger}' in '{question}'")
+            return True
+
+    # Check for product-asking patterns
+    product_patterns = [
+        'что у вас есть',
+        'что есть',
+        'что продаёте',
+        'что продаете',
+        'чем торгуете',
+        'what do you have',
+        'what do you sell',
+    ]
+    for pattern in product_patterns:
+        if pattern in question_lower:
+            print(f"[CATALOG_FILTER] Product pattern found: '{pattern}'")
+            return True
+
+    print(f"[CATALOG_FILTER] No product triggers in '{question}' - skipping catalog")
+    return False
+
+
 def extract_search_keywords(question: str) -> List[str]:
     """
     Extract potential product keywords from user question.
@@ -367,6 +423,7 @@ def build_system_prompt(
 ) -> str:
     """
     Build a comprehensive system prompt for the AI assistant.
+    Structure copied from ai_assistant/bot/consumers.py for consistency.
 
     The product format is designed to be compatible with telegram.py's
     parse_products_from_response() function which expects:
@@ -374,87 +431,105 @@ def build_system_prompt(
     - "Ссылка:" or "Link:" with URL at the end
     """
     # Extract contact info
-    phones_str = ", ".join(organization_info.get('phones', []))
+    phones = organization_info.get('phones', [])
+    if isinstance(phones, list):
+        phones_str = ", ".join([str(p) for p in phones])
+    else:
+        phones_str = str(phones)
     address_str = organization_info.get('address', 'Unknown')
     opens_at = organization_info.get('opens_at', 'Unknown')
     closes_at = organization_info.get('closes_at', 'Unknown')
     social_links = organization_info.get('social_links', '')
 
-    # Language-specific labels
-    if user_language == "en":
-        product_label = "Product"
-        category_label = "Category"
-        price_label = "Price"
-        link_label = "Link"
-        more_products_text = f"More products on the organization page: {organization_page_url}"
-        phone_label = "Phone"
-        address_label = "Address"
-        hours_label = "Working hours"
-    else:
-        product_label = "Товар"
-        category_label = "Категория"
-        price_label = "Цена"
-        link_label = "Ссылка"
-        more_products_text = f"Больше товаров на странице организации: {organization_page_url}"
-        phone_label = "Телефон"
-        address_label = "Адрес"
-        hours_label = "Часы работы"
-
-    prompt = (
-        f"You are {assistant_info.get('name', 'Assistant')}, "
-        f"{assistant_info.get('position', 'consultant')} at {assistant_info.get('organization', 'organization')}. "
-        f"Gender: {assistant_info.get('gender', 'not specified')}.\n\n"
-
-        "FORMATTING RULES:\n"
-        "- NO markdown (*, **, _, ~, `, [text](url))\n"
-        "- Links as plain text only\n\n"
-
-        "PRODUCT FORMAT (use exactly):\n"
-        f"{product_label}: <Name>\n"
-        f"{category_label}: <Category>\n"
-        f"{price_label}: <Price>\n"
-        f"{link_label}: <URL>\n"
-        "###NEXT###\n\n"
-
-        "PRODUCT RULES:\n"
-        f"- Each product needs: {product_label}, {category_label}, {price_label}, {link_label}\n"
-        "- Use ###NEXT### between products\n"
-        "- No numbering (1., 2.)\n"
-        f"- End with: ###NEXT###\n  {more_products_text}\n\n"
-
-        f"CONTACTS (when asked):\n"
-        f"{phone_label}: {phones_str}\n"
-        f"{address_label}: {address_str}\n"
-        f"{hours_label}: {opens_at} - {closes_at}\n"
-    )
-
-    if social_links:
-        prompt += f"   Social links: {social_links}\n"
-
-    prompt += "\n"
-
-    # Add marketing/promotions
+    # Marketing info
+    marketing_str = ""
     if marketing_info:
         marketing_str = "\n".join([f"- {m}" for m in marketing_info])
-        prompt += (
-            f"PROMOTIONS & DISCOUNTS:\n"
-            f"{marketing_str}\n"
-            f"(Mention these if the user asks about price, discounts or bonuses)\n\n"
-        )
+
+    # Build prompt - SAME STRUCTURE AS consumers.py
+    prompt = (
+        f"SYSTEM PRIORITY: DETECT USER LANGUAGE (e.g., Russian, English). "
+        f"You MUST answer STRICTLY in the same language as the user's question.\n\n"
+
+        f"IDENTITY:\n"
+        f"You are {assistant_info.get('name', 'Assistant')}, an assistant at {assistant_info.get('organization', 'organization')}.\n"
+        f"Position: {assistant_info.get('position', 'consultant')}. Gender: {assistant_info.get('gender', 'not specified')}.\n\n"
+
+        "⛔ STRICT FORMATTING RULES:\n"
+        "1. NO MARKDOWN. No *, **, [text](url).\n"
+        "2. Send LINKS as plain text only.\n"
+        "3. SEPARATOR: Use '###NEXT###' to separate different products or the final link.\n\n"
+
+        "🧠 LOGIC SCENARIOS:\n\n"
+
+        "scenario_A: DISCOUNTS & COUPONS\n"
+        "   - IF user asks about discounts, coupons, or bonuses:\n"
+        "   - Answer ONLY about the promotions.\n"
+        "   - DO NOT list products/items unless the user explicitly asks for them.\n"
+        "   - DO NOT use the ###NEXT### tag in this scenario.\n\n"
+
+        "scenario_B: PRODUCTS (Catalogue)\n"
+        "   - IF user asks about products or recommendations:\n"
+        "   - TRANSLATE labels (Name, Price, Category) to user's language.\n"
+        "   - Format per item:\n"
+        "     <Translated 'Name/Товар'>: <Value>\n"
+        "     <Translated 'Price/Цена'>: <Value>\n"
+        "     <Translated 'Category/Категория'>: <Value> (Write this line ONLY if category exists)\n"
+        "     <Translated 'Link/Ссылка'>: <Raw URL>\n"
+        "     ###NEXT###\n\n"
+
+        "scenario_C: CONTACTS\n"
+        "   - IF user asks for contacts/address/phone:\n"
+        "   - 1. First check the 'KNOWLEDGE BASE' (files/answers) below.\n"
+        "   - 2. If not found, use 'ORGANIZATION DATA' below.\n"
+        "   - TRANSLATE labels (Phone, Address, Hours) to user's language.\n"
+        "   - Required Format:\n"
+        "     📞 <Translated 'Phone'>: <Value>\n"
+        "     🏢 <Translated 'Address'>: <Value>\n"
+        "     🕘 <Translated 'Hours'>: <Value> - <Value>\n"
+        f"     Socials: {social_links} (if available)\n\n"
+
+        "scenario_D: GENERAL QUESTIONS\n"
+        "   - IF user asks general questions (Привет, Что ты умеешь?, etc.):\n"
+        "   - Answer naturally and helpfully.\n"
+        "   - Briefly describe what you can help with (products, promotions, contacts).\n"
+        "   - DO NOT use ###NEXT### tag.\n"
+        "   - DO NOT list products unless asked.\n\n"
+
+        "🏁 ENDING RULE:\n"
+        "   - ONLY when listing products, finish with organization link.\n"
+        "   - Translate the phrase 'More items at organization page' to user's language.\n"
+        f"   - Format: ###NEXT###\n<Translated 'More items...'>: {organization_page_url}\n\n"
+
+        "=== DATA SECTIONS ===\n\n"
+    )
+
+    # Add marketing/promotions
+    if marketing_str:
+        prompt += f"💰 ACTIVE PROMOTIONS:\n{marketing_str}\n\n"
+
+    # Add organization data
+    prompt += (
+        f"🏢 ORGANIZATION DATA (Backup for contacts):\n"
+        f"Phone: {phones_str}\n"
+        f"Address: {address_str}\n"
+        f"Open: {opens_at}\n"
+        f"Close: {closes_at}\n\n"
+    )
 
     # Add current item info if user is viewing a specific product
     if item_info:
         prompt += (
-            f"USER IS CURRENTLY VIEWING THIS ITEM:\n"
+            f"📦 USER IS LOOKING AT THIS ITEM:\n"
             f"ID: {item_info.get('id')}\n"
             f"Name: {item_info.get('name')}\n"
             f"Price: {item_info.get('price')}\n"
             f"Description: {item_info.get('description')}\n\n"
         )
 
-    # Add Q&A training data
+    # Add Q&A training data (KNOWLEDGE BASE)
     if qa_pairs:
-        prompt += "KNOWLEDGE BASE (Q&A):\n"
+        prompt += "📚 KNOWLEDGE BASE (Primary source for specific questions):\n"
         for qa in qa_pairs:
             question = qa.get('question', '')
             answer = qa.get('answer', '')
@@ -475,27 +550,41 @@ def build_system_prompt(
         # Check if catalog is filtered (has FOUND X PRODUCTS header)
         is_filtered = "✅ FOUND" in catalog_content
 
-        prompt += f"=== CATALOG ===\n{catalog_content}\n"
+        prompt += f"🛒 PRODUCT CATALOG:\n{catalog_content}\n"
 
         if is_filtered:
             # Filtered catalog - products already match user's query
             prompt += (
                 "⚠️ CATALOG STATUS: PRE-FILTERED - items above MATCH user's query!\n\n"
-                "RESPONSE RULES (STRICT):\n"
+                "CATALOG RESPONSE RULES (STRICT):\n"
                 "1. NEVER say 'not found' / 'нет в каталоге' - products ARE found above\n"
                 "2. If user said 'покажи/список/дай/show/list' → LIST ALL products above\n"
                 "3. If user said 'есть ли/есть/have' → Confirm: 'Да, есть!' + show 1-2 examples\n"
-                "4. Format each product using PRODUCT FORMAT above\n\n"
+                "4. Format each product using scenario_B format above\n\n"
             )
         else:
             # Full catalog - user asked general question
             prompt += (
-                "CATALOG STATUS: FULL - showing all available products\n"
-                "Use this to answer general questions about available items.\n\n"
+                "CATALOG STATUS: FULL - all available products shown.\n"
+                "Use this to recommend items if asked.\n\n"
             )
 
+    # Add few-shot examples for better response quality
+    org_name = assistant_info.get('organization', 'магазине')
     prompt += (
-        "BEHAVIOR: Be concise, polite. If unsure, suggest contacting organization.\n"
+        "📝 RESPONSE EXAMPLES:\n\n"
+
+        "Example 1 (General greeting):\n"
+        "User: Привет!\n"
+        f"Assistant: Здравствуйте! Я помощник {org_name}. Могу помочь с информацией о товарах, акциях и контактах. Чем могу быть полезен?\n\n"
+
+        "Example 2 (What can you do):\n"
+        "User: Что ты умеешь?\n"
+        f"Assistant: Я могу помочь вам с информацией о товарах в {org_name}, рассказать об акциях и скидках, предоставить контактные данные и адрес. Задавайте вопросы!\n\n"
+
+        "Example 3 (Contacts):\n"
+        "User: Как с вами связаться?\n"
+        "Assistant: 📞 Телефон: +7 XXX XXX-XX-XX\n🏢 Адрес: ул. Примерная, 1\n🕘 Часы работы: 10:00 - 20:00\n\n"
     )
 
     return prompt
@@ -509,7 +598,7 @@ def call_openai(
     chat_history: Optional[List[Dict[str, str]]] = None,
     model: str = "gpt-3.5-turbo",
     max_tokens: int = 1500,
-    temperature: float = 0.7,
+    temperature: float = 0.5,  # Same as consumers.py for consistency
 ) -> str:
     """
     Call OpenAI API via ai_assistant proxy service.

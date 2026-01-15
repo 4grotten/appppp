@@ -12,7 +12,7 @@ from common.serializers import ImageSerializer
 from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership, Chat, Assistant, Answer, Organization, CouponBanners
+from organizations.models import Membership, Chat, Assistant, Answer, Organization, Coupon, DiscountCard
 from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
@@ -115,15 +115,22 @@ class CommentService:
             organization_info["social_links"] = ", ".join(social_contacts)
 
         marketing_info = []
+        discounts = DiscountCard.objects.filter(organization=org, is_published=True)
+        coupons = Coupon.objects.filter(organization=org, is_active=True)
+        coupons_info = []
+        for coupon in coupons:
+            coupons_info.append(f"{coupon.percent} - {coupon.description}")
 
-        if org.cashback_group:
-            marketing_info.append(f"Кэшбек система: {org.cashback_group.name}")
+        for card in discounts:
+            if card.type == DiscountCard.FIXED:
+                marketing_info.append(f"Постоянная скидка: {card.percent}%")
 
-        if org.cumulative_group:
-            marketing_info.append(f"Накопительная система: {org.cumulative_group.name}")
+            elif card.type == DiscountCard.CASHBACK:
+                marketing_info.append(f"Кэшбек: {card.percent}%")
 
-        if CouponBanners.objects.filter(organization=org).exists():
-            marketing_info.append("Доступны скидочные купоны (спрашивайте подробности)")
+            elif card.type == DiscountCard.CUMULATIVE:
+                limit_str = f"{card.limit} {card.currency.code}" if card.limit and card.currency else "определенной суммы"
+                marketing_info.append(f"Накопительная скидка {card.percent}% (при покупках от {limit_str})")
 
         org_url = f"{settings.SITE_URL}/organizations/{org.id}"
         training_data = {
@@ -138,7 +145,8 @@ class CommentService:
             "organization_page_url": org_url,
             "catalog_file": catalog_url,
             "organization_info":organization_info,
-            "marketing_info": marketing_info
+            "marketing_info": marketing_info,
+            "coupons_info": coupons_info,
         }
 
         for answer in answers:

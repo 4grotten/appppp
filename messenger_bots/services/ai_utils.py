@@ -152,6 +152,99 @@ def format_catalog_json(json_content: bytes) -> str:
         return ""
 
 
+def extract_search_keywords(question: str) -> List[str]:
+    """
+    Extract potential product keywords from user question.
+    Returns list of keywords to search in catalog.
+    """
+    # Common stop words to ignore
+    stop_words = {
+        'покажи', 'покажите', 'есть', 'ли', 'у', 'вас', 'меня', 'мне',
+        'хочу', 'нужен', 'нужна', 'нужно', 'нужны', 'можно', 'какие',
+        'что', 'где', 'как', 'сколько', 'стоит', 'цена', 'купить',
+        'посмотреть', 'показать', 'найти', 'ищу', 'интересует',
+        'подскажите', 'расскажите', 'а', 'и', 'в', 'на', 'с', 'по',
+        'для', 'от', 'до', 'или', 'но', 'же', 'бы', 'то', 'не',
+        'show', 'me', 'do', 'you', 'have', 'any', 'want', 'need',
+        'looking', 'for', 'find', 'search', 'the', 'a', 'an', 'is', 'are',
+    }
+
+    # Clean and split question
+    question_lower = question.lower()
+    # Remove punctuation
+    for char in '?!.,;:()[]{}"\'-':
+        question_lower = question_lower.replace(char, ' ')
+
+    words = question_lower.split()
+
+    # Filter keywords (length > 2, not in stop words)
+    keywords = [w for w in words if len(w) > 2 and w not in stop_words]
+
+    logger.info(f"[CATALOG_FILTER] Extracted keywords from '{question}': {keywords}")
+    return keywords
+
+
+def filter_catalog_by_keywords(json_content: bytes, keywords: List[str]) -> str:
+    """
+    Filter catalog items by keywords and format for AI.
+    Returns filtered catalog text or full catalog if no matches.
+    """
+    try:
+        if isinstance(json_content, bytes):
+            json_content = json_content.decode('utf-8')
+
+        items = json.loads(json_content)
+        if not items:
+            return "Catalog is empty."
+
+        if not keywords:
+            # No keywords - return full catalog
+            return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
+
+        # Filter items matching any keyword
+        matched_items = []
+        for item in items:
+            name = (item.get('name') or '').lower()
+            category = (item.get('category') or '').lower()
+            description = (item.get('description') or '').lower()
+
+            # Check if any keyword matches
+            for keyword in keywords:
+                if keyword in name or keyword in category or keyword in description:
+                    matched_items.append(item)
+                    break
+
+        logger.info(f"[CATALOG_FILTER] Found {len(matched_items)} items matching keywords {keywords}")
+
+        if not matched_items:
+            # No matches - return full catalog with note
+            logger.info("[CATALOG_FILTER] No matches, returning full catalog")
+            return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
+
+        # Format matched items
+        text = f"FILTERED CATALOG ({len(matched_items)} items matching '{', '.join(keywords)}'):\n"
+
+        for item in matched_items:
+            name = item.get('name', 'Unknown Item')
+            category = item.get('category', 'General')
+            price = f"{item.get('price')} {item.get('currency', '')}" if item.get('price') else "Price not set"
+            url = item.get('url', 'No link')
+
+            description = (item.get('description') or "").strip().replace("\n", " ")
+            if len(description) > 300:
+                description = description[:297] + "..."
+
+            text += f"- [{category}] {name} (Price: {price}). Link: {url}\n"
+            if description:
+                text += f"  Info: {description}\n"
+
+        return text
+
+    except Exception as e:
+        logger.error(f"[CATALOG_FILTER] Error filtering catalog: {e}")
+        return ""
+
+
 def read_file_from_url(file_url: str) -> str:
     """
     Read and extract text content from a file URL.

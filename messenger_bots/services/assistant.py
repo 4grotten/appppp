@@ -207,6 +207,67 @@ class BotAssistantService:
             return None
 
     @classmethod
+    def _load_file_content(cls, file_url: str) -> str:
+        """Load and extract text content from a file URL (PDF, DOCX, JSON, TXT)."""
+        try:
+            response = requests.get(file_url, timeout=15)
+            response.raise_for_status()
+            content = response.content
+            file_url_lower = file_url.lower()
+
+            if file_url_lower.endswith(".pdf"):
+                import io
+                try:
+                    import PyPDF2
+                    pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+                    text = ""
+                    for page in pdf_reader.pages:
+                        text += page.extract_text() or ""
+                    return text.strip()
+                except Exception as e:
+                    logger.warning(f"PyPDF2 failed: {e}, trying pdfplumber")
+                    try:
+                        import pdfplumber
+                        with pdfplumber.open(io.BytesIO(content)) as pdf:
+                            text = ""
+                            for page in pdf.pages:
+                                text += page.extract_text() or ""
+                            return text.strip()
+                    except Exception:
+                        return ""
+
+            elif file_url_lower.endswith(".docx"):
+                import io
+                try:
+                    import docx
+                    doc = docx.Document(io.BytesIO(content))
+                    return "\n".join([p.text for p in doc.paragraphs]).strip()
+                except Exception:
+                    return ""
+
+            elif file_url_lower.endswith(".json"):
+                import json
+                data = json.loads(content.decode("utf-8"))
+                if isinstance(data, list):
+                    lines = []
+                    for item in data[:50]:
+                        name = item.get("name", "")
+                        price = item.get("price", "")
+                        url = item.get("url", "")
+                        lines.append(f"- {name} ({price}) | {url}")
+                    return "\n".join(lines)
+                return str(data)[:2000]
+
+            elif file_url_lower.endswith((".txt", ".csv", ".md")):
+                return content.decode("utf-8").strip()[:5000]
+
+            return ""
+
+        except Exception as e:
+            logger.error(f"Error loading file {file_url}: {e}")
+            return ""
+
+    @classmethod
     def _call_ai_service(
         cls,
         question: str,
@@ -278,12 +339,32 @@ class BotAssistantService:
                 lang_name = cls._get_language_name(user_language)
                 language_instruction = f"\nВАЖНО: Отвечай на языке: {lang_name}."
 
-            # Build Q&A training section
+            # Build Q&A training section with files
             qa_section = ""
             if answers:
                 qa_section = "\n\nПримеры вопросов и ответов:\n"
                 for qa in answers:
                     qa_section += f"В: {qa.get('question', '')}\nО: {qa.get('answer', '')}\n"
+                    # Load file content (like AI service does)
+                    for file_url in qa.get("files", []):
+                        if file_url:
+                            try:
+                                file_content = cls._load_file_content(file_url)
+                                if file_content:
+                                    qa_section += f"Содержимое файла: {file_content}\n"
+                            except Exception as e:
+                                logger.warning(f"Failed to load file {file_url}: {e}")
+
+            # Load catalog file
+            catalog_section = ""
+            catalog_file = training_data.get("catalog_file")
+            if catalog_file:
+                try:
+                    catalog_content = cls._load_file_content(catalog_file)
+                    if catalog_content:
+                        catalog_section = f"\n\n=== КАТАЛОГ ТОВАРОВ ===\n{catalog_content}\n"
+                except Exception as e:
+                    logger.warning(f"Failed to load catalog {catalog_file}: {e}")
 
             system_prompt = f"""Ты полезный ассистент по имени {assistant_info.get('name', 'Ассистент')},
 работающий в организации {assistant_info.get('organization', 'неизвестная организация')}.
@@ -294,7 +375,7 @@ class BotAssistantService:
 {qa_section}
 Доступные товары/услуги:
 {item_info}
-
+{catalog_section}
 Отвечай кратко и по существу. Если не знаешь ответа, предложи связаться с организацией напрямую.{language_instruction}"""
 
             # Build messages array with chat history

@@ -12,7 +12,7 @@ import websockets
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from organizations.models import UserAssistant
+from organizations.models import UserAssistant, DiscountCard, Coupon
 from organizations.services.assistant_services import (
     ChatService,
     AssistantService,
@@ -496,15 +496,51 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         decoded_headers = {
             k.decode("utf-8"): v.decode("utf-8") for k, v in self.headers
         }
+        org = comment.item.organization
         item_info = ItemInfoSerializer(comment.item).data
         assistant = comment.item.organization.assistant
-        organization_info = CommentService.get_training_data(assistant=assistant)
+        # organization_info = CommentService.get_training_data(assistant=assistant)
+        organization_info = {
+            "name": org.title,
+            "description": org.description or "",
+            "address": org.address or "",
+            "opens_at": str(org.opens_at) if org.opens_at else "",
+            "closes_at": str(org.closes_at) if org.closes_at else "",
+        }
+
+        phone_numbers = list(org.phone_numbers.values_list("phone_number", flat=True))
+        if phone_numbers:
+            organization_info["phones"] = ", ".join(phone_numbers)
+
+        social_contacts = list(org.social_contacts.values_list("url", flat=True))
+
+        if social_contacts:
+            organization_info["social_links"] = ", ".join(social_contacts)
         size_info = comment.item.shop_item_size_counts.all()
         stock_info = ShopItemSizeCountSetSerializer(
             size_info, many=True, context={"request": None}
         ).data
-        catalog_url = AssistantDataService.get_file_url(assistant.organization)
-        org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
+        catalog_url = AssistantDataService.get_file_url(org)
+        org_url = f"{settings.SITE_URL}/organizations/{org.id}"
+
+        marketing_info = []
+        discounts = DiscountCard.objects.filter(organization=org, is_published=True)
+        coupons = Coupon.objects.filter(organization=org, is_active=True)
+        coupons_info = []
+        for coupon in coupons:
+            coupons_info.append(f"{coupon.percent} - {coupon.description}")
+
+        for card in discounts:
+            if card.type == DiscountCard.FIXED:
+                marketing_info.append(f"Постоянная скидка: {card.percent}%")
+
+            elif card.type == DiscountCard.CASHBACK:
+                marketing_info.append(f"Кэшбек: {card.percent}%")
+
+            elif card.type == DiscountCard.CUMULATIVE:
+                limit_str = f"{card.limit} {card.currency.code}" if card.limit and card.currency else "определенной суммы"
+                marketing_info.append(f"Накопительная скидка {card.percent}% (при покупках от {limit_str})")
+
         data = {
             "assistant_id": assistant.id,
             "parent_id": comment.id,
@@ -524,6 +560,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 "stock_info": stock_info,
                 "catalog_file": catalog_url,
                 "organization_page_url": org_url,
+                "marketing_info": marketing_info,
+                "coupons_info": coupons_info
             },
             "headers": decoded_headers,
         }

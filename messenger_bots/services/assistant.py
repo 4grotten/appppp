@@ -344,45 +344,16 @@ class BotAssistantService:
         chat_history: Optional[List[Dict[str, str]]] = None,
         user_language: Optional[str] = None,
     ) -> str:
-        ai_service_url = getattr(
-            settings, "AI_ASSISTANT_URL", "http://ai_assistant:8001"
+        """
+        Call AI service to get response.
+
+        Uses direct OpenAI API with our custom prompts for consistent formatting
+        (product links, ###NEXT### separators for pagination, etc.)
+        """
+        logger.info("[AI_ASSISTANT] _call_ai_service: Using direct OpenAI API")
+        return cls._fallback_openai_response(
+            question, training_data, chat_history, user_language
         )
-        endpoint = f"{ai_service_url}/bot/comments/"
-
-        logger.info(f"[AI_ASSISTANT] _call_ai_service: endpoint={endpoint}")
-        logger.debug(f"[AI_ASSISTANT] AI_ASSISTANT_URL from settings: {ai_service_url}")
-
-        try:
-            logger.debug("[AI_ASSISTANT] Sending POST request to AI service...")
-            response = requests.post(
-                endpoint,
-                json={
-                    "question": question,
-                    "training_data": training_data,
-                    "chat_history": chat_history or [],
-                },
-                timeout=30,
-            )
-            logger.info(
-                f"[AI_ASSISTANT] AI service response: status_code={response.status_code}"
-            )
-            response.raise_for_status()
-
-            data = response.json()
-            answer = data.get("answer", cls._get_message("no_response", user_language))
-            logger.info(f"[AI_ASSISTANT] AI service SUCCESS: answer='{answer[:80]}...'")
-            return answer
-
-        except requests.Timeout:
-            logger.error("[AI_ASSISTANT] ERROR: AI service TIMEOUT (30s)")
-            return cls._get_message("timeout", user_language)
-
-        except requests.RequestException as e:
-            logger.error(f"[AI_ASSISTANT] ERROR: AI service request failed: {e}")
-            logger.info("[AI_ASSISTANT] Trying fallback to OpenAI...")
-            return cls._fallback_openai_response(
-                question, training_data, chat_history, user_language
-            )
 
     @classmethod
     def _fallback_openai_response(

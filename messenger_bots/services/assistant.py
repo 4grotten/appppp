@@ -419,7 +419,7 @@ class BotAssistantService:
                 qa_pairs=qa_pairs,
                 catalog_content=catalog_content,
                 marketing_info=marketing_info,
-                item_info=item_info,
+                item_info=item_info or {},
                 user_language=user_language or "ru",
             )
 
@@ -429,7 +429,7 @@ class BotAssistantService:
                 system_prompt=system_prompt,
                 chat_history=chat_history,
                 model="gpt-3.5-turbo",
-                max_tokens=500,
+                max_tokens=1500,
             )
 
             if answer:

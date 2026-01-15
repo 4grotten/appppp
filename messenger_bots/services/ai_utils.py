@@ -161,7 +161,7 @@ def read_file_from_url(file_url: str) -> str:
     """
     try:
         session = get_http_session_with_retry()
-        response = session.get(file_url, timeout=30)
+        response = session.get(file_url, timeout=(5, 15))  # (connect, read)
         response.raise_for_status()
         file_content = response.content
 
@@ -236,40 +236,31 @@ def build_system_prompt(
         hours_label = "Часы работы"
 
     prompt = (
-        f"You are a helpful assistant named {assistant_info.get('name', 'Assistant')} "
-        f"working for {assistant_info.get('organization', 'the organization')}.\n"
-        f"Your position: {assistant_info.get('position', 'consultant')}. "
+        f"You are {assistant_info.get('name', 'Assistant')}, "
+        f"{assistant_info.get('position', 'consultant')} at {assistant_info.get('organization', 'organization')}. "
         f"Gender: {assistant_info.get('gender', 'not specified')}.\n\n"
 
-        "STRICT FORMATTING RULES (CRITICAL):\n"
-        "1. NO MARKDOWN ALLOWED. Do not use *, **, _, ~, `, [text](url).\n"
-        "2. Send LINKS as plain text only (e.g. https://site.com).\n\n"
+        "FORMATTING RULES:\n"
+        "- NO markdown (*, **, _, ~, `, [text](url))\n"
+        "- Links as plain text only\n\n"
 
-        "PRODUCT RECOMMENDATIONS FORMAT:\n"
-        "When recommending multiple products, use EXACTLY this format:\n"
-        f"   {product_label}: <Name>\n"
-        f"   {category_label}: <Category>\n"
-        f"   {price_label}: <Price>\n"
-        f"   {link_label}: <URL>\n"
-        "   ###NEXT###\n"
-        f"   {product_label}: <Next product name>\n"
-        "   ... (repeat for each product)\n\n"
+        "PRODUCT FORMAT (use exactly):\n"
+        f"{product_label}: <Name>\n"
+        f"{category_label}: <Category>\n"
+        f"{price_label}: <Price>\n"
+        f"{link_label}: <URL>\n"
+        "###NEXT###\n\n"
 
-        "IMPORTANT RULES:\n"
-        f"- Each product MUST have all 4 lines ({product_label}, {category_label}, {price_label}, {link_label})\n"
-        f"- The {link_label} line MUST contain a valid https:// URL\n"
-        "- Use ###NEXT### separator between products\n"
-        "- Do NOT number products (1., 2., etc.)\n\n"
+        "PRODUCT RULES:\n"
+        f"- Each product needs: {product_label}, {category_label}, {price_label}, {link_label}\n"
+        "- Use ###NEXT### between products\n"
+        "- No numbering (1., 2.)\n"
+        f"- End with: ###NEXT###\n  {more_products_text}\n\n"
 
-        f"ALWAYS finish product recommendations with:\n"
-        f"   ###NEXT###\n"
-        f"   {more_products_text}\n\n"
-
-        "ORGANIZATION CONTACTS FORMAT:\n"
-        "If the user asks for contacts/address/phone, use EXACTLY this format:\n"
-        f"   {phone_label}: {phones_str}\n"
-        f"   {address_label}: {address_str}\n"
-        f"   {hours_label}: {opens_at} - {closes_at}\n"
+        f"CONTACTS (when asked):\n"
+        f"{phone_label}: {phones_str}\n"
+        f"{address_label}: {address_str}\n"
+        f"{hours_label}: {opens_at} - {closes_at}\n"
     )
 
     if social_links:
@@ -314,24 +305,15 @@ def build_system_prompt(
                         prompt += f"File link (if needed): {file_url}\n"
         prompt += "\n"
 
-    # Add catalog with detailed instructions
+    # Add catalog
     if catalog_content:
         prompt += (
-            f"=== COMPANY PRODUCT CATALOG ===\n{catalog_content}\n"
-            "CATALOG USAGE INSTRUCTIONS:\n"
-            "- Use this catalog to answer ANY questions about products, prices, and availability.\n"
-            "- Help the client find products they might be interested in, not just specific items they ask about.\n"
-            "- Proactively suggest alternatives if the requested item is not available or if similar products exist.\n"
-            "- Always provide prices and links from this catalog when recommending products.\n"
-            "- If a product is not in the catalog, clearly state that and suggest similar items if available.\n\n"
+            f"=== CATALOG ===\n{catalog_content}\n"
+            "Use catalog for product questions. Suggest alternatives if item unavailable.\n\n"
         )
 
     prompt += (
-        "CONTEXT INSTRUCTIONS:\n"
-        "- Remember the user's last selected filters (category, price) from the current conversation.\n"
-        "- If the user asks about 'this' or 'it', refer to the last discussed item.\n"
-        "- Keep answers concise and polite.\n"
-        "- If you don't know the answer, suggest contacting the organization directly.\n"
+        "BEHAVIOR: Be concise, polite. If unsure, suggest contacting organization.\n"
     )
 
     return prompt
@@ -383,7 +365,7 @@ def call_openai(
         response = session.post(
             proxy_url,
             json=payload,
-            timeout=45  # Longer timeout for proxy
+            timeout=(5, 30)  # (connect_timeout, read_timeout) - fast connection, reasonable read
         )
 
         result = response.json()

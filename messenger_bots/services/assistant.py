@@ -397,11 +397,15 @@ class BotAssistantService:
             # Load catalog content
             catalog_content = ""
             catalog_file = training_data.get("catalog_file")
+            logger.info(f"[AI_ASSISTANT] catalog_file URL: {catalog_file}")
             if catalog_file:
                 try:
                     catalog_content = read_file_from_url(catalog_file)
+                    logger.info(f"[AI_ASSISTANT] catalog loaded: {len(catalog_content)} chars, preview: {catalog_content[:200] if catalog_content else 'EMPTY'}...")
                 except Exception as e:
                     logger.warning(f"Failed to load catalog {catalog_file}: {e}")
+            else:
+                logger.warning("[AI_ASSISTANT] catalog_file is None - no catalog will be loaded!")
 
             # Build comprehensive system prompt (compatible with telegram.py parsing)
             system_prompt = build_system_prompt(

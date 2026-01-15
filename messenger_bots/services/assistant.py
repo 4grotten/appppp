@@ -390,6 +390,12 @@ class BotAssistantService:
                 "organization_page_url", "https://apofiz.com"
             )
             qa_pairs = training_data.get("answers", [])
+
+            # Debug Q&A data
+            print(f"[AI_ASSISTANT] Q&A pairs count: {len(qa_pairs)}")
+            if qa_pairs:
+                for i, qa in enumerate(qa_pairs):
+                    print(f"[AI_ASSISTANT] Q&A {i+1}: Q='{qa.get('question', '')[:50]}' A='{qa.get('answer', '')[:50]}' files={len(qa.get('files', []))}")
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")
 

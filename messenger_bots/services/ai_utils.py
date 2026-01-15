@@ -129,7 +129,9 @@ def format_catalog_json(json_content) -> str:
         if not items:
             return "Catalog is empty."
 
+        # Use neutral DATA: format to prevent AI from copying the format
         text = "FULL ORGANIZATION CATALOG:\n"
+        text += "(Use scenario_B format with ###NEXT### separator when showing products!)\n\n"
 
         for item in items:
             name = item.get('name', 'Unknown Item')
@@ -137,13 +139,8 @@ def format_catalog_json(json_content) -> str:
             price = f"{item.get('price')} {item.get('currency', '')}" if item.get('price') else "Price not set"
             url = item.get('url', 'No link')
 
-            description = (item.get('description') or "").strip().replace("\n", " ")
-            if len(description) > 300:
-                description = description[:297] + "..."
-
-            text += f"- [{category}] {name} (Price: {price}). Link: {url}\n"
-            if description:
-                text += f"  Info: {description}\n"
+            # Use DATA: prefix - raw data, not response format
+            text += f"DATA: name={name} | category={category} | price={price} | url={url}\n"
 
         return text
 
@@ -169,6 +166,7 @@ def should_load_catalog(question: str) -> bool:
         'покажи', 'покажите', 'показать', 'посмотреть',
         'есть ли', 'имеется', 'в наличии', 'наличие',
         'цена', 'цены', 'стоимость', 'сколько стоит', 'прайс',
+        'ссылка', 'ссылку', 'скинь',  # Links to files/services
         # Russian - product categories (common)
         'кроссовки', 'кеды', 'обувь', 'ботинки', 'сапоги', 'туфли',
         'сумка', 'сумки', 'рюкзак', 'рюкзаки', 'клатч',
@@ -349,8 +347,10 @@ def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
             print("[CATALOG_FILTER] No matches found, returning full catalog")
             return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
 
-        # Format matched items with clear header for AI
-        text = f"✅ FOUND {len(matched_items)} PRODUCTS (these items match user's request):\n"
+        # Format matched items - use structured data format (NOT the response format!)
+        # AI should reformat these into scenario_B format with ###NEXT###
+        text = f"✅ FOUND {len(matched_items)} PRODUCTS:\n"
+        text += "(IMPORTANT: Reformat each item using scenario_B format with ###NEXT### separator!)\n\n"
 
         for item in matched_items:
             name = item.get('name', 'Unknown Item')
@@ -359,12 +359,11 @@ def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
             url = item.get('url', 'No link')
 
             description = (item.get('description') or "").strip().replace("\n", " ")
-            if len(description) > 300:
-                description = description[:297] + "..."
+            if len(description) > 150:
+                description = description[:147] + "..."
 
-            text += f"- [{category}] {name} (Price: {price}). Link: {url}\n"
-            if description:
-                text += f"  Info: {description}\n"
+            # Use DATA: prefix to make it clear this is raw data, not response format
+            text += f"DATA: name={name} | category={category} | price={price} | url={url}\n"
 
         return text
 
@@ -386,23 +385,42 @@ def read_file_from_url(file_url: str) -> str:
         response.raise_for_status()
         file_content = response.content
 
-        file_url_lower = file_url.lower()
+        # Extract file path without query parameters for extension check
+        from urllib.parse import urlparse
+        parsed_url = urlparse(file_url)
+        file_path = parsed_url.path.lower()
 
-        if file_url_lower.endswith(".pdf"):
+        print(f"[READ_FILE] URL: {file_url[:100]}...")
+        print(f"[READ_FILE] File path: {file_path}, size: {len(file_content)} bytes")
+
+        if file_path.endswith(".pdf") or ".pdf" in file_url.lower():
+            print("[READ_FILE] Detected PDF file")
             return extract_text_from_pdf(file_content)
-        elif file_url_lower.endswith(".docx"):
+        elif file_path.endswith(".docx") or ".docx" in file_url.lower():
+            print("[READ_FILE] Detected DOCX file")
             return extract_text_from_docx(file_content)
-        elif file_url_lower.endswith(".json"):
+        elif file_path.endswith(".json") or ".json" in file_url.lower():
             return format_catalog_json(file_content)
-        elif file_url_lower.endswith((".txt", ".csv", ".log", ".md")):
+        elif file_path.endswith((".txt", ".csv", ".log", ".md")):
             try:
                 return file_content.decode("utf-8")[:5000]
             except UnicodeDecodeError:
                 print(f"Failed to decode file as UTF-8: {file_url}")
                 return ""
         else:
-            print(f"Unsupported file type for text extraction: {file_url}")
-            return ""
+            # Try to detect by content type or magic bytes
+            print("[READ_FILE] Unknown extension, trying to detect type...")
+            # PDF magic bytes: %PDF
+            if file_content[:4] == b'%PDF':
+                print("[READ_FILE] Detected PDF by magic bytes")
+                return extract_text_from_pdf(file_content)
+            # DOCX is a ZIP file starting with PK
+            elif file_content[:2] == b'PK':
+                print("[READ_FILE] Detected DOCX/ZIP by magic bytes")
+                return extract_text_from_docx(file_content)
+            else:
+                print(f"[READ_FILE] Unsupported file type: {file_path}")
+                return ""
 
     except requests.exceptions.RequestException as e:
         print(f"Error reading file from URL: {e}")
@@ -469,14 +487,19 @@ def build_system_prompt(
         "   - DO NOT use the ###NEXT### tag in this scenario.\n\n"
 
         "scenario_B: PRODUCTS (Catalogue)\n"
-        "   - IF user asks about products or recommendations:\n"
-        "   - TRANSLATE labels (Name, Price, Category) to user's language.\n"
-        "   - Format per item:\n"
-        "     <Translated 'Name/Товар'>: <Value>\n"
-        "     <Translated 'Price/Цена'>: <Value>\n"
-        "     <Translated 'Category/Категория'>: <Value> (Write this line ONLY if category exists)\n"
-        "     <Translated 'Link/Ссылка'>: <Raw URL>\n"
-        "     ###NEXT###\n\n"
+        "   ⚠️ CRITICAL: You MUST use this EXACT format for EACH product:\n"
+        "   - DO NOT use dashes (-) or bullet points!\n"
+        "   - DO NOT copy the DATA: format from catalog!\n"
+        "   - TRANSLATE labels to user's language (Russian: Товар/Цена/Ссылка)\n"
+        "   - Put ###NEXT### BETWEEN each product (not at the end)\n\n"
+        "   CORRECT FORMAT (Russian example):\n"
+        "   Товар: Название товара\n"
+        "   Цена: 1000 RUB\n"
+        "   Ссылка: https://...\n"
+        "   ###NEXT###\n"
+        "   Товар: Другой товар\n"
+        "   Цена: 2000 RUB\n"
+        "   Ссылка: https://...\n\n"
 
         "scenario_C: CONTACTS\n"
         "   - IF user asks for contacts/address/phone:\n"
@@ -528,22 +551,34 @@ def build_system_prompt(
         )
 
     # Add Q&A training data (KNOWLEDGE BASE)
+    print(f"[BUILD_PROMPT] qa_pairs count: {len(qa_pairs) if qa_pairs else 0}")
     if qa_pairs:
         prompt += "📚 KNOWLEDGE BASE (Primary source for specific questions):\n"
+        prompt += "IMPORTANT: When user asks for a link/file mentioned in answers below, provide the File URL!\n\n"
         for qa in qa_pairs:
             question = qa.get('question', '')
             answer = qa.get('answer', '')
+            print(f"[BUILD_PROMPT] Adding Q&A: Q='{question[:50]}...' A='{answer[:50]}...'")
             if question and answer:
                 prompt += f"Q: {question}\nA: {answer}\n"
 
-            # Add file contents and URLs
-            for file_url in qa.get('files', []):
+            # Add file contents and URLs - ALWAYS add URL even if content fails
+            files = qa.get('files', [])
+            for file_url in files:
                 if file_url:
+                    print(f"[BUILD_PROMPT] Loading file: {file_url}")
+                    # Always add the file URL so AI can share it
+                    prompt += f"📎 File URL (share this when asked): {file_url}\n"
+
+                    # Try to extract content for context
                     file_content = read_file_from_url(file_url)
                     if file_content:
-                        prompt += f"File content: {file_content[:2000]}\n"
-                        prompt += f"File link (if needed): {file_url}\n"
-        prompt += "\n"
+                        prompt += f"File content preview: {file_content[:1500]}\n"
+                    else:
+                        print("[BUILD_PROMPT] WARNING: Could not read file content, but URL is added")
+            prompt += "\n"
+    else:
+        print("[BUILD_PROMPT] WARNING: No Q&A pairs provided!")
 
     # Add catalog with strict rules
     if catalog_content:
@@ -587,6 +622,7 @@ def build_system_prompt(
         "Assistant: 📞 Телефон: +7 XXX XXX-XX-XX\n🏢 Адрес: ул. Примерная, 1\n🕘 Часы работы: 10:00 - 20:00\n\n"
     )
 
+    print(f"[BUILD_PROMPT] Final prompt length: {len(prompt)} chars")
     return prompt
 
 

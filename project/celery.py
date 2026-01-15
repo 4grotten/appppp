@@ -40,4 +40,21 @@ app.conf.beat_schedule = {
         "task": "organizations.tasks.expire_coupons",
         "schedule": crontab(minute=0, hour=0),
     },
+    # Messenger Bots Tasks
+    "reset-userbot-daily-counters": {
+        "task": "messenger_bots.tasks.reset_userbot_daily_counters",
+        "schedule": crontab(minute=0, hour=0),  # Every day at midnight
+    },
+    "check-pending-bot-requests": {
+        "task": "messenger_bots.tasks.check_pending_bot_requests",
+        "schedule": crontab(minute="*/5"),  # Every 5 minutes
+    },
+    "check-waha-session-health": {
+        "task": "messenger_bots.tasks.check_waha_session_health",
+        "schedule": crontab(minute="*/10"),  # Every 10 minutes
+    },
+    "sync-waha-session-status": {
+        "task": "messenger_bots.tasks.sync_waha_session_status",
+        "schedule": crontab(minute="*/15"),  # Every 15 minutes
+    },
 }

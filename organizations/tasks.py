@@ -42,6 +42,7 @@ from shop.models import ItemInstagramData, ShopItem
 from transactions.models import Transaction
 from transactions.services.transaction_services import TransactionService
 from users.models import User
+from shop.services.assistant_data_service import AssistantDataService
 
 logger = logging.getLogger(__name__)
 
@@ -278,7 +279,8 @@ def process_comment_with_assistant(
 
     comment = Comment.objects.get(id=comment_id)
     assistant = Assistant.objects.get(id=assistant_id)
-
+    catalog_url = AssistantDataService.get_file_url(assistant.organization)
+    org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
     try:
         response = requests.post(
             "http://161.35.153.151:8080/bot/comments/",
@@ -294,6 +296,8 @@ def process_comment_with_assistant(
                     },
                     "item_info": item_info,
                     "organization_info": organization_info,
+                    "organization_page_url": org_url,
+                    "catalog_file": catalog_url
                 },
             },
             timeout=10,

@@ -9,8 +9,17 @@ from firebase_admin import credentials
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
+SITE_DOMAIN = config("SITE_URL","PROD")
+
+if SITE_DOMAIN == "DEV":
+    SITE_URL = "https://test.apofiz.com"
+else:
+    SITE_URL = "https://apofiz.com"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="notasecret")
@@ -67,7 +76,8 @@ INSTALLED_APPS = [
     "cors",
     "channels",
     "daphne",
-    "api_keys.apps.ApiKeysConfig"
+    "api_keys.apps.ApiKeysConfig",
+    "messenger_bots.apps.MessengerBotsConfig",
 ]
 
 if DEBUG:
@@ -369,8 +379,9 @@ FCM_DRY_RUN_ENABLE = config("FCM_DRY_RUN_ENABLE", default=True, cast=bool)
 
 HOST_URL = config("DJANGO_HOST_URL", default="https://apofiz.com/media/")
 CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
-CELERY_RESULT_BACKEND = None
-CELERY_IGNORE_RESULT = True
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+CELERY_IGNORE_RESULT = True  # Default: don't store results (userbot tasks override this)
+CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},
@@ -394,6 +405,22 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.update_posts": {"queue": "default"},
     "organizations.tasks.create_invoice_pdf": {"queue": "default"},
     "organizations.tasks.fetch_maalypay_status": {"queue": "default"},
+    # Messenger Bots tasks
+    "messenger_bots.tasks.create_telegram_bot_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.process_whatsapp_message_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.reset_userbot_daily_counters": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.check_pending_bot_requests": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.check_waha_session_health": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.sync_waha_session_status": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_send_code_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_qr_login_start_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_qr_login_check_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_verify_code_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_verify_2fa_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_check_connection_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_logout_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_get_dialogs_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_send_test_message_task": {"queue": "messenger_bots"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)
@@ -496,6 +523,9 @@ GOOGLE_MAP_API_KEY = "AIzaSyA0bvvniHRGe7tLKYupkWSf1_b31mdMlFA"
 
 OPENAI_API_KEY = config("OPENAI_API_KEY", default="notasecret")
 
+# AI Assistant service URL
+AI_ASSISTANT_URL = config("AI_ASSISTANT_URL", default="http://ai_assistant:8001")
+
 # FreedomPay settings
 # Project_id
 FREEDOMPAY_PROJECT_ID = config("FREEDOMPAY_PROJECT_ID", default="notasecret")
@@ -519,6 +549,12 @@ PROXY_PASS = config("PROXY_PASS", None)
 PROXY_HOST = config("PROXY_HOST", None)
 PROXY_PORT = "1080"
 PRODUCTION = config("PRODUCTION", False, cast=bool)
+
+# WAHA Configuration (WhatsApp HTTP API)
+WAHA_BASE_URL = config("WAHA_BASE_URL", default="http://waha:3000")
+WAHA_API_KEY = config("WAHA_API_KEY", default="notasecret")
+WAHA_WEBHOOK_SECRET = config("WAHA_WEBHOOK_SECRET", default="notasecret")
+BACKEND_URL = config("BACKEND_URL", default="https://api.appofiz.com")
 
 
 if DEBUG:

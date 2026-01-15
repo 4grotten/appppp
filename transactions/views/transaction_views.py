@@ -2010,6 +2010,11 @@ class InitPaymentView(GenericAPIView):
             transaction = TransactionService.get(
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
+
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
+
             converted_amount = CurrencyConverterService.convert(
                 from_currency=transaction.currency.code,
                 to_currency="EUR",
@@ -2023,17 +2028,22 @@ class InitPaymentView(GenericAPIView):
                     Decimal("0.00"), rounding=ROUND_DOWN
                 )
             success_url = TransactionService.get_success_url(request=request)
+            callback_url = f"{base_url}transactions/result/libersave/"
             currency = "EUR"
             url = "https://api.libersave.com/api/mc/payment"
-            # order_id = generate_new_order_id(str(transaction_id))
             amount_float = float(converted_amount)
             if amount_float < 1:
                 amount_float = 1
             data = {
                 "amount": amount_float,
-                "order_id": str(transaction_id),
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
                 "currency": currency,
                 "redirect_url": success_url + f"/?transaction_id={transaction_id}",
+                "callback_url": callback_url,
             }
             headers = {
                 "accept": "application/json",
@@ -2143,6 +2153,7 @@ class InitPaymentView(GenericAPIView):
             currency = "USD"
             url = "https://api.cryptocloud.plus/v2/invoice/create"
             amount_float = float(converted_amount)
+            postback_url = f"{base_url}transactions/result/cryptocloud/"
             data = {
                 "shop_id": CRYPTOCLOUD_SHOP_ID,
                 "amount": amount_float,
@@ -2153,6 +2164,7 @@ class InitPaymentView(GenericAPIView):
                 + "|"
                 + str(purchase_type),
                 "email": self.request.user.email,
+                "postback_url": postback_url,
             }
             print(data)
             headers = {"Authorization": f"Token {CRYPTOCLOUD_API_KEY}"}
@@ -2615,6 +2627,11 @@ class NewInitPaymentView(GenericAPIView):
             transaction = TransactionService.get(
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
             )
+
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
+            )
+
             converted_amount = CurrencyConverterService.convert(
                 from_currency=transaction.currency.code,
                 to_currency="EUR",
@@ -2628,17 +2645,22 @@ class NewInitPaymentView(GenericAPIView):
                     Decimal("0.00"), rounding=ROUND_DOWN
                 )
             success_url = TransactionService.get_success_url(request=request)
+            callback_url = f"{base_url}transactions/result/libersave/"
             currency = "EUR"
             url = "https://api.libersave.com/api/mc/payment"
-            # order_id = generate_new_order_id(str(transaction_id))
             amount_float = float(converted_amount)
             if amount_float < 1:
                 amount_float = 1
             data = {
                 "amount": amount_float,
-                "order_id": str(transaction_id),
+                "order_id": str(self.request.user.id)
+                + "|"
+                + str(transaction_id)
+                + "|"
+                + str(purchase_type),
                 "currency": currency,
                 "redirect_url": success_url + f"/?transaction_id={transaction_id}",
+                "callback_url": callback_url,
             }
             headers = {
                 "accept": "application/json",
@@ -2748,6 +2770,7 @@ class NewInitPaymentView(GenericAPIView):
             currency = "USD"
             url = "https://api.cryptocloud.plus/v2/invoice/create"
             amount_float = float(converted_amount)
+            postback_url = f"{base_url}transactions/result/cryptocloud/"
             data = {
                 "shop_id": CRYPTOCLOUD_SHOP_ID,
                 "amount": amount_float,
@@ -2758,6 +2781,7 @@ class NewInitPaymentView(GenericAPIView):
                 + "|"
                 + str(purchase_type),
                 "email": self.request.user.email,
+                "postback_url": postback_url,
             }
             headers = {"Authorization": f"Token {CRYPTOCLOUD_API_KEY}"}
             response = requests.post(url, headers=headers, json=data)
@@ -2777,6 +2801,10 @@ class NewInitPaymentView(GenericAPIView):
             transaction_id = serializer.validated_data["transaction_id"]
             transaction = TransactionService.get(
                 id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
+            )
+
+            __, purchase_type = TransactionService.get_pg_description_and_purchase_type(
+                transaction=transaction
             )
 
             client_name = (
@@ -3210,9 +3238,21 @@ class BetaPayWebhookView(APIView):
 class CryptoCloudPostbackView(APIView):
     def post(self, request, *args, **kwargs):
         payload = request.data
+        print(f"[CryptoCloud] Webhook received: {payload}")
+
         order_id = payload.get("order_id")
-        user_id, transaction_id, purchase_type = order_id.split("|")
+        if not order_id:
+            print(f"[CryptoCloud] ERROR: No order_id in payload")
+            return Response({"error": "Missing order_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id, transaction_id, purchase_type = order_id.split("|")
+        except ValueError as e:
+            print(f"[CryptoCloud] ERROR: Invalid order_id format: {order_id}, error: {e}")
+            return Response({"error": "Invalid order_id format"}, status=status.HTTP_400_BAD_REQUEST)
+
         status_value = payload.get("status")
+        print(f"[CryptoCloud] Processing: user_id={user_id}, transaction_id={transaction_id}, purchase_type={purchase_type}, status={status_value}")
 
         user_id = int(user_id)
         user = UserService.get(id=user_id)
@@ -3236,9 +3276,11 @@ class CryptoCloudPostbackView(APIView):
                     transaction_id=transaction.id
                 )
             elif purchase_type == "assistant":
+                print(f"[CryptoCloud] Activating assistant subscription for transaction_id={transaction.id}")
                 TransactionService.accept_assistant_transaction(
                     transaction_id=transaction.id
                 )
+                print(f"[CryptoCloud] Assistant subscription activated successfully")
 
             else:
                 TransactionService.accept_paysy_booking_transaction_by_user(
@@ -3251,6 +3293,81 @@ class CryptoCloudPostbackView(APIView):
             return Response(
                 {"message": "Received an unknown status"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class LibersaveWebhookView(APIView):
+    """
+    Webhook handler для Libersave.
+    Обрабатывает callback после успешной/неуспешной оплаты.
+    """
+
+    def post(self, request, *args, **kwargs):
+        payload = request.data
+        order_id = payload.get("order_id")
+        status_value = payload.get("status")
+
+        if not order_id:
+            return Response(
+                {"error": "Missing order_id"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            parts = order_id.split("|")
+            if len(parts) != 3:
+                return Response(
+                    {"error": "Invalid order_id format"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user_id, transaction_id, purchase_type = parts
+            user_id = int(user_id)
+            transaction_id = int(transaction_id)
+        except (ValueError, AttributeError) as e:
+            return Response(
+                {"error": f"Error parsing order_id: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = UserService.get(id=user_id)
+        transaction = TransactionService.get(id=transaction_id)
+
+        # Libersave может возвращать разные статусы: "success", "completed", "paid" и т.д.
+        # Проверяем на успешные статусы
+        if status_value in ("success", "completed", "paid"):
+            if purchase_type == "product":
+                TransactionService.accept_paysy_order_transaction_by_user(
+                    transaction_id=transaction.id, user=user
+                )
+            elif purchase_type == "org_subscription":
+                TransactionService.accept_org_subscription_transaction(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "user_app":
+                TransactionService.accept_user_app_transaction(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "deal":
+                TransactionService.complete_paysy_transaction_online(
+                    transaction_id=transaction.id
+                )
+            elif purchase_type == "assistant":
+                TransactionService.accept_assistant_transaction(
+                    transaction_id=transaction.id
+                )
+            else:
+                TransactionService.accept_paysy_booking_transaction_by_user(
+                    transaction_id=transaction.id, user=user, request=self.request
+                )
+
+            return Response(
+                {"message": "Payment processed successfully"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"message": f"Received status: {status_value}"},
+                status=status.HTTP_200_OK,
             )
 
 

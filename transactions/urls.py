@@ -13,6 +13,7 @@ from transactions.views.transaction_views import (
     CheckTicketInUsersView,
     CryptoCloudPostbackView,
     InitPaymentView,
+    LibersaveWebhookView,
     MaalyPayResultView,
     NewInitPaymentView,
     OnlineBookingTransactionCompleteView,
@@ -443,6 +444,12 @@ urlpatterns = [
         "transactions/result/cryptocloud/",
         CryptoCloudPostbackView.as_view(),
         name="cryptocloud_postback",
+    ),
+    # Libersave
+    path(
+        "transactions/result/libersave/",
+        LibersaveWebhookView.as_view(),
+        name="libersave_webhook",
     ),
     # MaalyPay
     path(

@@ -1,6 +1,7 @@
 import time
 import logging
 import requests
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +12,7 @@ from common.serializers import ImageSerializer
 from instagram_parsers.services.proxy_services import ProxyService
 from notifications.constants import NOTIFICATION_MODE_PERSONAL, NEW_COMMENT_TYPE
 from notifications.models import Notification
-from organizations.models import Membership, Chat, Assistant, Answer
+from organizations.models import Membership, Chat, Assistant, Answer, Organization, CouponBanners
 from organizations.services.assistant_services import AssistantService
 from shop.models import Comment, ShopItem, UserCommentTheme, CommentTheme
 from users.models import User
@@ -94,19 +95,50 @@ class CommentService:
     @classmethod
     def get_training_data(cls, assistant: Assistant):
         answers = Answer.objects.filter(assistant=assistant)
-
+        org = Organization.objects.get(assistant=assistant)
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
+        organization_info = {
+            "name": org.title,
+            "description": org.description or "",
+            "address": org.address or "",
+            "opens_at": str(org.opens_at) if org.opens_at else "",
+            "closes_at": str(org.closes_at) if org.closes_at else "",
+        }
 
+        phone_numbers = list(org.phone_numbers.values_list("phone_number", flat=True))
+        if phone_numbers:
+            organization_info["phones"] = ", ".join(phone_numbers)
+
+        social_contacts = list(org.social_contacts.values_list("url", flat=True))
+
+        if social_contacts:
+            organization_info["social_links"] = ", ".join(social_contacts)
+
+        marketing_info = []
+
+        if org.cashback_group:
+            marketing_info.append(f"Кэшбек система: {org.cashback_group.name}")
+
+        if org.cumulative_group:
+            marketing_info.append(f"Накопительная система: {org.cumulative_group.name}")
+
+        if CouponBanners.objects.filter(organization=org).exists():
+            marketing_info.append("Доступны скидочные купоны (спрашивайте подробности)")
+
+        org_url = f"{settings.SITE_URL}/organizations/{org.id}"
         training_data = {
             "assistant_info": {
-                "organization": assistant.organization.title,
+                "organization": org.title,
                 "name": assistant.name,
                 "gender": assistant.gender,
                 "position": assistant.position,
                 "is_enabled": assistant.is_enabled
             },
             "answers": [],
-            "catalog_file": catalog_url
+            "organization_page_url": org_url,
+            "catalog_file": catalog_url,
+            "organization_info":organization_info,
+            "marketing_info": marketing_info
         }
 
         for answer in answers:

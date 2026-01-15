@@ -2,6 +2,9 @@ import asyncio
 import json
 import logging
 import decimal
+
+from django.conf import settings
+
 import common.services.slack as slack
 
 from stock.serializers import ShopItemSizeCountSetSerializer
@@ -501,6 +504,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
             size_info, many=True, context={"request": None}
         ).data
         catalog_url = AssistantDataService.get_file_url(assistant.organization)
+        org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
         data = {
             "assistant_id": assistant.id,
             "parent_id": comment.id,
@@ -518,7 +522,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 "item_info": item_info,
                 "organization_info": organization_info,
                 "stock_info": stock_info,
-                "catalog_file": catalog_url
+                "catalog_file": catalog_url,
+                "organization_page_url": org_url,
             },
             "headers": decoded_headers,
         }

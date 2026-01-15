@@ -461,6 +461,12 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     unread_chat_count = serializers.SerializerMethodField(allow_null=True)
     maaly_pay_config = serializers.SerializerMethodField(allow_null=True)
     zina_pay_config = serializers.SerializerMethodField(allow_null=True)
+    telegram_bot_url = serializers.SerializerMethodField(allow_null=True)
+
+    def get_telegram_bot_url(self, organization: Organization):
+        """Get Telegram bot URL if configured."""
+        tg_contact = organization.social_contacts.filter(url__icontains="t.me/").first()
+        return tg_contact.url if tg_contact else None
 
     def get_maaly_pay_config(self, organization: Organization):
         """Get MaalyPay configuration if exists"""
@@ -675,6 +681,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             "unread_chat_count",
             "maaly_pay_config",
             "zina_pay_config",
+            "telegram_bot_url",
         )
         read_only_fields = ["verification_status", "need_add_item"]
 

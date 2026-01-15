@@ -445,6 +445,11 @@ class TelegramBotAPIView(APIView):
             )
 
         logger.info(f"[TG_API] SUCCESS: Bot @{bot.bot_username} configured, webhook_url={bot.webhook_url}")
+
+        # Add bot link to organization contacts
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(org, bot.bot_username)
+
         return Response(
             TelegramBotSerializer(bot).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
@@ -586,6 +591,8 @@ class BotChatsAPIView(APIView):
 
     def get(self, request, organization_id):
         """Get all bot chats for organization."""
+        from django.db.models import Count, Q, Subquery, OuterRef
+
         try:
             org = Organization.objects.get(id=organization_id)
             if org.owner != request.user:
@@ -602,7 +609,21 @@ class BotChatsAPIView(APIView):
             )
 
         platform = request.query_params.get("platform")
-        chats = BotChat.objects.filter(organization=org).order_by("-last_message_at")
+
+        # Subquery for last message text
+        last_message_subquery = BotMessage.objects.filter(
+            chat=OuterRef("pk")
+        ).order_by("-created_at").values("text")[:1]
+
+        # Optimized queryset with annotations to avoid N+1 queries
+        chats = BotChat.objects.filter(organization=org).annotate(
+            _messages_count=Count("messages"),
+            _unread_count=Count(
+                "messages",
+                filter=Q(messages__sender="user", messages__is_read=False)
+            ),
+            _last_message_text=Subquery(last_message_subquery),
+        ).order_by("-last_message_at")
 
         if platform:
             chats = chats.filter(platform=platform)
@@ -634,6 +655,9 @@ class BotChatMessagesAPIView(APIView):
                 {"error": "Chat not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        # Mark all user messages as read when admin opens the chat
+        chat.messages.filter(sender="user", is_read=False).update(is_read=True)
 
         messages = chat.messages.all().order_by("created_at")
         serializer = BotMessageSerializer(messages, many=True)

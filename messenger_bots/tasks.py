@@ -206,6 +206,113 @@ def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
 CHAT_HISTORY_LIMIT = 5
 
 
+@shared_task(bind=True, max_retries=3, default_retry_delay=5)
+def send_telegram_products_task(
+    self,
+    telegram_bot_id: int,
+    chat_id: int,
+    products: list,
+    footer: str,
+    page: int = 0,
+    language: str = "ru",
+):
+    """
+    Send products with pagination asynchronously.
+    This avoids blocking the webhook response with time.sleep().
+    """
+    import time
+    from messenger_bots.services.telegram import (
+        TelegramBotService,
+        PRODUCTS_PER_PAGE,
+        MESSAGE_DELAY,
+    )
+
+    logger.info(f"[TG_PRODUCTS_TASK] Starting: bot_id={telegram_bot_id}, chat_id={chat_id}, page={page}")
+
+    try:
+        telegram_bot = TelegramBot.objects.select_related("organization").get(id=telegram_bot_id)
+        chat = BotChat.objects.get(id=chat_id)
+    except (TelegramBot.DoesNotExist, BotChat.DoesNotExist) as e:
+        logger.error(f"[TG_PRODUCTS_TASK] ERROR: {e}")
+        return {"success": False, "error": str(e)}
+
+    service = TelegramBotService(telegram_bot)
+    platform_chat_id = chat.platform_chat_id
+
+    start = page * PRODUCTS_PER_PAGE
+    batch = products[start:start + PRODUCTS_PER_PAGE]
+    messages_sent = 0
+
+    # Send products with delay between messages
+    for i, product in enumerate(batch):
+        if i > 0:
+            time.sleep(MESSAGE_DELAY)
+
+        result = service.send_message(platform_chat_id, product)
+        if result:
+            BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=product,
+                platform_message_id=str(result.get("message_id", "")),
+            )
+            messages_sent += 1
+
+    has_more = (start + PRODUCTS_PER_PAGE) < len(products)
+
+    if has_more:
+        # Send "Show more" button
+        remaining = len(products) - (start + PRODUCTS_PER_PAGE)
+        show_count = min(remaining, PRODUCTS_PER_PAGE)
+
+        time.sleep(MESSAGE_DELAY)
+
+        button_text = {
+            "ru": f"Показать ещё {show_count}",
+            "en": f"Show {show_count} more",
+        }
+        status_text = {
+            "ru": f"Показано {start + len(batch)} из {len(products)} товаров",
+            "en": f"Shown {start + len(batch)} of {len(products)} products",
+        }
+
+        keyboard = {
+            "inline_keyboard": [[{
+                "text": button_text.get(language, button_text["ru"]),
+                "callback_data": f"{TelegramBotService.CALLBACK_MORE_PRODUCTS}{page + 1}",
+            }]]
+        }
+
+        result = service.send_message(
+            platform_chat_id,
+            status_text.get(language, status_text["ru"]),
+            reply_markup=keyboard,
+        )
+        if result:
+            BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=status_text.get(language, status_text["ru"]),
+                platform_message_id=str(result.get("message_id", "")),
+            )
+    else:
+        # Send footer
+        if footer:
+            time.sleep(MESSAGE_DELAY)
+            keyboard = service.build_main_menu_keyboard(language)
+            result = service.send_message(platform_chat_id, footer, reply_markup=keyboard)
+            if result:
+                BotMessage.objects.create(
+                    chat=chat,
+                    sender=BotMessage.ASSISTANT,
+                    text=footer,
+                    platform_message_id=str(result.get("message_id", "")),
+                )
+
+    logger.info(f"[TG_PRODUCTS_TASK] Completed: sent {messages_sent} products")
+    return {"success": True, "messages_sent": messages_sent}
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def create_telegram_bot_task(self, request_id: int, base_url: str):
     logger.info("[CELERY_TASK] ====== CREATE_TELEGRAM_BOT_TASK START ======")
@@ -278,6 +385,10 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
                 )
             else:
                 logger.info("[CELERY_TASK] Webhook set successfully!")
+
+                # Add bot link to organization contacts
+                from messenger_bots.utils import add_bot_link_to_contacts
+                add_bot_link_to_contacts(request.organization, request.bot_username)
         else:
             logger.warning(
                 "[CELERY_TASK] WARNING: Could not get bot info (getMe failed)"
@@ -416,7 +527,9 @@ def process_whatsapp_message_task(
 
 
 def _get_whatsapp_chat_history(chat: BotChat) -> list:
-    messages = chat.messages.order_by("-created_at")[:CHAT_HISTORY_LIMIT]
+    """Get chat history for WhatsApp context (same limit as Telegram)."""
+    # Get last N*2 messages (same as Telegram for consistency)
+    messages = chat.messages.order_by("-created_at")[:CHAT_HISTORY_LIMIT * 2]
 
     history = []
     for msg in reversed(messages):
@@ -427,7 +540,7 @@ def _get_whatsapp_chat_history(chat: BotChat) -> list:
             }
         )
 
-    return history
+    return history[-CHAT_HISTORY_LIMIT * 2:]  # Last 5 pairs (10 messages)
 
 
 @shared_task

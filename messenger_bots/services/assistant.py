@@ -1,9 +1,11 @@
 import logging
-import requests
-from typing import Optional, List, Dict
-from django.conf import settings
+from typing import Dict, List, Optional
 
-from organizations.models import Organization, Assistant
+import requests
+from django.conf import settings
+from django.db import models
+from organizations.models import Assistant, Organization
+from shop.services.comment_services import CommentService
 
 logger = logging.getLogger(__name__)
 
@@ -32,38 +34,56 @@ class BotAssistantService:
             chat_history: List of previous messages [{"role": "user/assistant", "content": "..."}]
             user_language: User's language code (e.g., "ru", "en", "kg")
         """
-        logger.info(f"[AI_ASSISTANT] ====== GET RESPONSE ======")
-        logger.info(f"[AI_ASSISTANT] org_id={organization.id}, org='{organization.title}'")
-        logger.info(f"[AI_ASSISTANT] question='{question[:100]}', language={user_language}")
-        logger.debug(f"[AI_ASSISTANT] chat_history={len(chat_history) if chat_history else 0} messages")
+        logger.info("[AI_ASSISTANT] ====== GET RESPONSE ======")
+        logger.info(
+            f"[AI_ASSISTANT] org_id={organization.id}, org='{organization.title}'"
+        )
+        logger.info(
+            f"[AI_ASSISTANT] question='{question[:100]}', language={user_language}"
+        )
+        logger.debug(
+            f"[AI_ASSISTANT] chat_history={len(chat_history) if chat_history else 0} messages"
+        )
 
         try:
             # Check if organization has an active assistant
             assistant = getattr(organization, "assistant", None)
             if not assistant:
-                logger.error(f"[AI_ASSISTANT] ERROR: No assistant configured for org {organization.id}")
+                logger.error(
+                    f"[AI_ASSISTANT] ERROR: No assistant configured for org {organization.id}"
+                )
                 return cls._get_message("assistant_not_active", user_language)
 
             if not assistant.is_enabled:
-                logger.error(f"[AI_ASSISTANT] ERROR: Assistant '{assistant.name}' is disabled")
+                logger.error(
+                    f"[AI_ASSISTANT] ERROR: Assistant '{assistant.name}' is disabled"
+                )
                 return cls._get_message("assistant_not_active", user_language)
 
-            logger.info(f"[AI_ASSISTANT] Assistant: '{assistant.name}', enabled={assistant.is_enabled}")
+            logger.info(
+                f"[AI_ASSISTANT] Assistant: '{assistant.name}', enabled={assistant.is_enabled}"
+            )
 
             # Prepare training data
-            logger.debug(f"[AI_ASSISTANT] Preparing training data...")
-            training_data = cls._prepare_training_data(organization, assistant, user_language)
-            logger.debug(f"[AI_ASSISTANT] Training data prepared")
+            logger.debug("[AI_ASSISTANT] Preparing training data...")
+            training_data = cls._prepare_training_data(
+                organization, assistant, user_language
+            )
+            logger.debug("[AI_ASSISTANT] Training data prepared")
 
             # Call AI Assistant service with chat history
-            logger.info(f"[AI_ASSISTANT] Calling AI service...")
-            response = cls._call_ai_service(question, training_data, chat_history, user_language)
+            logger.info("[AI_ASSISTANT] Calling AI service...")
+            response = cls._call_ai_service(
+                question, training_data, chat_history, user_language
+            )
             logger.info(f"[AI_ASSISTANT] Response received: '{response[:100]}...'")
-            logger.info(f"[AI_ASSISTANT] ====== GET RESPONSE END ======")
+            logger.info("[AI_ASSISTANT] ====== GET RESPONSE END ======")
             return response
 
         except Exception as e:
-            logger.error(f"[AI_ASSISTANT] EXCEPTION in get_response: {e}", exc_info=True)
+            logger.error(
+                f"[AI_ASSISTANT] EXCEPTION in get_response: {e}", exc_info=True
+            )
             return cls._get_message("error", user_language)
 
     @classmethod
@@ -73,74 +93,111 @@ class BotAssistantService:
         assistant: Assistant,
         user_language: Optional[str] = None,
     ) -> dict:
-        """Prepare training data for the AI assistant."""
-        # Get organization info
-        organization_info = {
-            "name": organization.title,
-            "description": organization.description or "",
+        """Prepare training data for the AI assistant - same as website chat."""
+        # Use the same training data as website chat
+        training_data = CommentService.get_training_data(assistant=assistant)
+
+        # Add organization page URL (same as website chat)
+        site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
+        training_data["organization_page_url"] = f"{site_url}/org/{organization.id}"
+
+        # Add organization_info with contacts (required by ai_assistant prompts)
+        phones = list(
+            organization.phone_numbers.values_list("phone_number", flat=True)
+        )
+        social_links = ", ".join(
+            organization.social_contacts.values_list("url", flat=True)
+        )
+        training_data["organization_info"] = {
+            "phones": phones,
             "address": organization.address or "",
             "opens_at": str(organization.opens_at) if organization.opens_at else "",
             "closes_at": str(organization.closes_at) if organization.closes_at else "",
+            "social_links": social_links,
         }
 
-        # Get phone numbers
-        phone_numbers = list(organization.phone_numbers.values_list("phone_number", flat=True))
-        if phone_numbers:
-            organization_info["phones"] = ", ".join(phone_numbers)
-
-        # Get social contacts
-        social_contacts = list(organization.social_contacts.values_list("url", flat=True))
-        if social_contacts:
-            organization_info["social_links"] = ", ".join(social_contacts)
-
-        items_info = cls._get_items_info(organization)
-
-        # Prepare assistant info
-        assistant_info = {
-            "name": assistant.name,
-            "gender": assistant.get_gender_display() if hasattr(assistant, "get_gender_display") else assistant.gender,
-            "position": assistant.position,
-            "organization": organization.title,
-        }
+        # Add marketing_info from active coupons/promotions
+        training_data["marketing_info"] = cls._get_marketing_info(organization)
 
         # Add language instruction if provided
         if user_language:
-            assistant_info["response_language"] = cls._get_language_name(user_language)
+            training_data["assistant_info"]["response_language"] = cls._get_language_name(user_language)
 
-        # Get Q&A training pairs (like website does)
-        answers = cls._get_qa_pairs(assistant)
+        return training_data
 
-        # Get catalog file URL
-        catalog_file = cls._get_catalog_file_url(organization)
-        org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
+    @classmethod
+    def _get_marketing_info(cls, organization: Organization) -> List[str]:
+        """
+        Get marketing info (promotions, discounts, coupons) for AI prompt.
+        Returns list of strings describing active promotions.
+        """
+        from django.utils import timezone
+        from organizations.models import Coupon, DiscountCard
 
-        return {
-            "assistant_info": assistant_info,
-            "organization_info": organization_info,
-            "item_info": items_info,
-            "answers": answers,
-            "catalog_file": catalog_file,
-            "organization_page_url": org_url,
-        }
+        marketing = []
+
+        try:
+            # Get active coupons with descriptions
+            now = timezone.now()
+            coupons = Coupon.objects.filter(
+                organization=organization,
+                is_active=True,
+            ).filter(
+                # Not expired or always active
+                models.Q(expire_date__isnull=True) |
+                models.Q(expire_date__gt=now) |
+                models.Q(always_active=True)
+            )
+
+            for coupon in coupons:
+                if coupon.description:
+                    if coupon.percent:
+                        marketing.append(f"{coupon.description} (-{coupon.percent}%)")
+                    else:
+                        marketing.append(coupon.description)
+                elif coupon.percent:
+                    if coupon.coupon_type == Coupon.DISCOUNT:
+                        marketing.append(f"Скидка {coupon.percent}%")
+                    elif coupon.product:
+                        marketing.append(f"Скидка {coupon.percent}% на {coupon.product.name}")
+
+            # Get discount cards info
+            discount_cards = DiscountCard.objects.filter(
+                organization=organization,
+                is_published=True,
+            ).order_by("percent")[:3]
+
+            for card in discount_cards:
+                if card.type == DiscountCard.FIXED:
+                    marketing.append(f"Скидочная карта: {card.percent}%")
+                elif card.type == DiscountCard.CASHBACK:
+                    marketing.append(f"Кешбэк: {card.percent}%")
+                elif card.type == DiscountCard.CUMULATIVE:
+                    marketing.append(f"Накопительная скидка до {card.percent}%")
+
+        except Exception as e:
+            logger.warning(f"Error getting marketing info: {e}")
+
+        return marketing
 
     @classmethod
     def _get_items_info(cls, organization: Organization) -> str:
-        """Get formatted items/products info for context."""
         try:
             from shop.models import ShopItem
 
-            items = ShopItem.objects.filter(
-                organization=organization,
-                is_published=True,
-                removed_at__isnull=True,
-            ).select_related("subcategory").only(
-                "id", "name", "description", "price", "subcategory__name"
-            )[:50]
+            items = (
+                ShopItem.objects.filter(
+                    organization=organization,
+                    is_published=True,
+                    removed_at__isnull=True,
+                )
+                .select_related("subcategory")
+                .only("id", "name", "description", "price", "subcategory__name")[:50]
+            )
 
             if not items:
                 return "Нет доступных товаров/услуг."
 
-            # Get site URL for constructing item links
             site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
 
             items_list = []
@@ -152,7 +209,11 @@ class BotAssistantService:
                 item_str += f" | Ссылка: {site_url}/p/{item.id}"
                 if item.description:
                     # Truncate long descriptions
-                    desc = item.description[:100] + "..." if len(item.description) > 100 else item.description
+                    desc = (
+                        item.description[:100] + "..."
+                        if len(item.description) > 100
+                        else item.description
+                    )
                     item_str += f" | {desc}"
                 items_list.append(item_str)
 
@@ -164,13 +225,14 @@ class BotAssistantService:
 
     @classmethod
     def _get_qa_pairs(cls, assistant: Assistant) -> List[Dict]:
-        """Get Q&A training pairs for the assistant (like website does)."""
         try:
             from organizations.models import Answer
 
-            answers = Answer.objects.filter(
-                assistant=assistant
-            ).select_related("question").prefetch_related("files")
+            answers = (
+                Answer.objects.filter(assistant=assistant)
+                .select_related("question")
+                .prefetch_related("files")
+            )
 
             qa_list = []
             for answer in answers:
@@ -180,11 +242,13 @@ class BotAssistantService:
                     if answer_file.file:
                         file_urls.append(answer_file.file.url)
 
-                qa_list.append({
-                    "question": answer.question.text if answer.question else "",
-                    "answer": answer.text,
-                    "files": file_urls,
-                })
+                qa_list.append(
+                    {
+                        "question": answer.question.text if answer.question else "",
+                        "answer": answer.text,
+                        "files": file_urls,
+                    }
+                )
 
             return qa_list
 
@@ -194,7 +258,6 @@ class BotAssistantService:
 
     @classmethod
     def _get_catalog_file_url(cls, organization: Organization) -> Optional[str]:
-        """Get catalog JSON file URL for the organization."""
         try:
             from shop.services.assistant_data_service import AssistantDataService
 
@@ -209,7 +272,6 @@ class BotAssistantService:
 
     @classmethod
     def _load_file_content(cls, file_url: str) -> str:
-        """Load and extract text content from a file URL (PDF, DOCX, JSON, TXT)."""
         try:
             response = requests.get(file_url, timeout=15)
             response.raise_for_status()
@@ -218,8 +280,10 @@ class BotAssistantService:
 
             if file_url_lower.endswith(".pdf"):
                 import io
+
                 try:
                     import PyPDF2
+
                     pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
                     text = ""
                     for page in pdf_reader.pages:
@@ -229,6 +293,7 @@ class BotAssistantService:
                     logger.warning(f"PyPDF2 failed: {e}, trying pdfplumber")
                     try:
                         import pdfplumber
+
                         with pdfplumber.open(io.BytesIO(content)) as pdf:
                             text = ""
                             for page in pdf.pages:
@@ -239,8 +304,10 @@ class BotAssistantService:
 
             elif file_url_lower.endswith(".docx"):
                 import io
+
                 try:
                     import docx
+
                     doc = docx.Document(io.BytesIO(content))
                     return "\n".join([p.text for p in doc.paragraphs]).strip()
                 except Exception:
@@ -248,6 +315,7 @@ class BotAssistantService:
 
             elif file_url_lower.endswith(".json"):
                 import json
+
                 data = json.loads(content.decode("utf-8"))
                 if isinstance(data, list):
                     lines = []
@@ -276,15 +344,16 @@ class BotAssistantService:
         chat_history: Optional[List[Dict[str, str]]] = None,
         user_language: Optional[str] = None,
     ) -> str:
-        """Call the AI Assistant service API."""
-        ai_service_url = getattr(settings, "AI_ASSISTANT_URL", "http://ai_assistant:8001")
+        ai_service_url = getattr(
+            settings, "AI_ASSISTANT_URL", "http://ai_assistant:8001"
+        )
         endpoint = f"{ai_service_url}/bot/comments/"
 
         logger.info(f"[AI_ASSISTANT] _call_ai_service: endpoint={endpoint}")
         logger.debug(f"[AI_ASSISTANT] AI_ASSISTANT_URL from settings: {ai_service_url}")
 
         try:
-            logger.debug(f"[AI_ASSISTANT] Sending POST request to AI service...")
+            logger.debug("[AI_ASSISTANT] Sending POST request to AI service...")
             response = requests.post(
                 endpoint,
                 json={
@@ -294,7 +363,9 @@ class BotAssistantService:
                 },
                 timeout=30,
             )
-            logger.info(f"[AI_ASSISTANT] AI service response: status_code={response.status_code}")
+            logger.info(
+                f"[AI_ASSISTANT] AI service response: status_code={response.status_code}"
+            )
             response.raise_for_status()
 
             data = response.json()
@@ -303,14 +374,15 @@ class BotAssistantService:
             return answer
 
         except requests.Timeout:
-            logger.error(f"[AI_ASSISTANT] ERROR: AI service TIMEOUT (30s)")
+            logger.error("[AI_ASSISTANT] ERROR: AI service TIMEOUT (30s)")
             return cls._get_message("timeout", user_language)
 
         except requests.RequestException as e:
             logger.error(f"[AI_ASSISTANT] ERROR: AI service request failed: {e}")
-            logger.info(f"[AI_ASSISTANT] Trying fallback to OpenAI...")
-            # Fallback: try to use local OpenAI directly
-            return cls._fallback_openai_response(question, training_data, chat_history, user_language)
+            logger.info("[AI_ASSISTANT] Trying fallback to OpenAI...")
+            return cls._fallback_openai_response(
+                question, training_data, chat_history, user_language
+            )
 
     @classmethod
     def _fallback_openai_response(
@@ -320,105 +392,79 @@ class BotAssistantService:
         chat_history: Optional[List[Dict[str, str]]] = None,
         user_language: Optional[str] = None,
     ) -> str:
-        """Fallback to direct OpenAI call if AI service is unavailable."""
-        logger.info(f"[AI_ASSISTANT] _fallback_openai_response: Using OpenAI API directly")
+        """
+        Fallback to direct OpenAI call if AI service is unavailable.
+
+        Uses ai_utils for consistent prompts and file handling,
+        ensuring compatibility with telegram.py's product parsing.
+        """
+        from messenger_bots.services.ai_utils import (
+            build_system_prompt,
+            call_openai,
+            read_file_from_url,
+        )
+
+        logger.info(
+            "[AI_ASSISTANT] _fallback_openai_response: Using OpenAI API directly"
+        )
         try:
             api_key = getattr(settings, "OPENAI_API_KEY", None)
             if not api_key:
-                logger.error(f"[AI_ASSISTANT] ERROR: OPENAI_API_KEY not configured!")
+                logger.error("[AI_ASSISTANT] ERROR: OPENAI_API_KEY not configured!")
                 return cls._get_message("service_unavailable", user_language)
             logger.debug(f"[AI_ASSISTANT] OpenAI API key found: {api_key[:10]}...")
 
             assistant_info = training_data.get("assistant_info", {})
             organization_info = training_data.get("organization_info", {})
-            item_info = training_data.get("item_info", "")
-            answers = training_data.get("answers", [])
+            organization_page_url = training_data.get(
+                "organization_page_url", "https://apofiz.com"
+            )
+            qa_pairs = training_data.get("answers", [])
+            marketing_info = training_data.get("marketing_info", [])
+            item_info = training_data.get("item_info")
 
-            # Build language instruction
-            language_instruction = ""
-            if user_language:
-                lang_name = cls._get_language_name(user_language)
-                language_instruction = f"\nВАЖНО: Отвечай на языке: {lang_name}."
-
-            # Build Q&A training section with files
-            qa_section = ""
-            if answers:
-                qa_section = "\n\nПримеры вопросов и ответов:\n"
-                for qa in answers:
-                    qa_section += f"В: {qa.get('question', '')}\nО: {qa.get('answer', '')}\n"
-                    # Load file content (like AI service does)
-                    for file_url in qa.get("files", []):
-                        if file_url:
-                            try:
-                                file_content = cls._load_file_content(file_url)
-                                if file_content:
-                                    qa_section += f"Содержимое файла: {file_content}\n"
-                            except Exception as e:
-                                logger.warning(f"Failed to load file {file_url}: {e}")
-
-            catalog_section = ""
+            # Load catalog content
+            catalog_content = ""
             catalog_file = training_data.get("catalog_file")
             if catalog_file:
                 try:
-                    catalog_content = cls._load_file_content(catalog_file)
-                    if catalog_content:
-                        catalog_section = f"\n\n=== КАТАЛОГ ТОВАРОВ ===\n{catalog_content}\n"
+                    catalog_content = read_file_from_url(catalog_file)
                 except Exception as e:
                     logger.warning(f"Failed to load catalog {catalog_file}: {e}")
 
-            system_prompt = f"""Ты полезный ассистент по имени {assistant_info.get('name', 'Ассистент')},
-работающий в организации {assistant_info.get('organization', 'неизвестная организация')}.
-Твоя должность: {assistant_info.get('position', 'консультант')}.
-
-Информация об организации:
-{organization_info}
-{qa_section}
-Доступные товары/услуги:
-{item_info}
-{catalog_section}
-Отвечай кратко и по существу. Если не знаешь ответа, предложи связаться с организацией напрямую.{language_instruction}"""
-
-            # Build messages array with chat history
-            messages = [{"role": "system", "content": system_prompt}]
-
-            # Add chat history (last N messages for context)
-            if chat_history:
-                for msg in chat_history[-CHAT_HISTORY_LIMIT:]:
-                    messages.append({
-                        "role": msg["role"],
-                        "content": msg["content"],
-                    })
-
-            # Add current question
-            messages.append({"role": "user", "content": question})
-
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            }
-            payload = {
-                "model": "gpt-4o-mini",
-                "messages": messages,
-                "max_tokens": 300,
-            }
-
-            logger.debug(f"[AI_ASSISTANT] Sending request to OpenAI API...")
-            response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30,
+            # Build comprehensive system prompt (compatible with telegram.py parsing)
+            system_prompt = build_system_prompt(
+                assistant_info=assistant_info,
+                organization_info=organization_info,
+                organization_page_url=organization_page_url,
+                qa_pairs=qa_pairs,
+                catalog_content=catalog_content,
+                marketing_info=marketing_info,
+                item_info=item_info,
+                user_language=user_language or "ru",
             )
-            logger.info(f"[AI_ASSISTANT] OpenAI API response: status_code={response.status_code}")
-            response.raise_for_status()
 
-            data = response.json()
-            answer = data["choices"][0]["message"]["content"].strip()
-            logger.info(f"[AI_ASSISTANT] OpenAI fallback SUCCESS: answer='{answer[:80]}...'")
-            return answer
+            # Call OpenAI API
+            answer = call_openai(
+                question=question,
+                system_prompt=system_prompt,
+                chat_history=chat_history,
+                model="gpt-3.5-turbo",
+                max_tokens=500,
+            )
+
+            if answer:
+                logger.info(
+                    f"[AI_ASSISTANT] OpenAI fallback SUCCESS: answer='{answer[:80]}...'"
+                )
+                return answer
+            else:
+                return cls._get_message("error", user_language)
 
         except Exception as e:
-            logger.error(f"[AI_ASSISTANT] ERROR: OpenAI fallback failed: {e}", exc_info=True)
+            logger.error(
+                f"[AI_ASSISTANT] ERROR: OpenAI fallback failed: {e}", exc_info=True
+            )
             return cls._get_message("error", user_language)
 
     # ============== Multilanguage Support ==============

@@ -348,7 +348,10 @@ def call_openai(
     temperature: float = 0.7,
 ) -> str:
     """
-    Call OpenAI API directly.
+    Call OpenAI API via ai_assistant proxy service.
+
+    The proxy is needed because the backend server may be in a region
+    where OpenAI is blocked, but ai_assistant server is in allowed region.
 
     Args:
         question: User's question
@@ -361,58 +364,43 @@ def call_openai(
     Returns:
         AI response text
     """
-    api_key = getattr(settings, "OPENAI_API_KEY", None)
-    if not api_key:
-        logger.error("OPENAI_API_KEY not configured!")
-        return ""
+    # Get AI Assistant service URL for proxy
+    ai_assistant_url = getattr(settings, "AI_ASSISTANT_URL", "http://161.35.153.151:8080")
+    proxy_url = f"{ai_assistant_url}/bot/openai-proxy/"
 
     try:
-        # Build messages array
-        messages = [{"role": "system", "content": system_prompt}]
-
-        # Add chat history for context
-        if chat_history:
-            for msg in chat_history[-10:]:  # Last 10 messages
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"],
-                })
-
-        # Add current question
-        messages.append({"role": "user", "content": question})
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        }
         payload = {
+            "system_prompt": system_prompt,
+            "question": question,
+            "chat_history": chat_history or [],
             "model": model,
-            "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
 
-        logger.debug(f"[AI_UTILS] Calling OpenAI API with model={model}")
+        logger.debug(f"[AI_UTILS] Calling OpenAI proxy at {proxy_url}")
         session = get_http_session_with_retry()
         response = session.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
+            proxy_url,
             json=payload,
-            timeout=30
+            timeout=45  # Longer timeout for proxy
         )
 
         result = response.json()
 
-        if "choices" in result and len(result["choices"]) > 0:
-            answer = result["choices"][0]["message"]["content"].strip()
-            logger.info(f"[AI_UTILS] OpenAI response received: {len(answer)} chars")
+        if "answer" in result:
+            answer = result["answer"]
+            logger.info(f"[AI_UTILS] OpenAI proxy response received: {len(answer)} chars")
             return answer
+        elif "error" in result:
+            logger.error(f"[AI_UTILS] OpenAI proxy error: {result['error']}")
+            return ""
         else:
-            logger.error(f"[AI_UTILS] Unexpected API response format: {result}")
+            logger.error(f"[AI_UTILS] Unexpected proxy response format: {result}")
             return ""
 
     except Exception as e:
-        logger.error(f"[AI_UTILS] Error calling OpenAI: {e}")
+        logger.error(f"[AI_UTILS] Error calling OpenAI proxy: {e}")
         return ""
 
 

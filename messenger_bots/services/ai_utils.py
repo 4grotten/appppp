@@ -309,7 +309,11 @@ def build_system_prompt(
     if catalog_content:
         prompt += (
             f"=== CATALOG ===\n{catalog_content}\n"
-            "Use catalog for product questions. Suggest alternatives if item unavailable.\n\n"
+            "SEARCH RULES:\n"
+            "- Extract keywords from user question (e.g. 'купальник', 'кроссовки', 'сумка')\n"
+            "- Search ENTIRE catalog for items matching these keywords in name/category/description\n"
+            "- If found - show ALL matching products, not just first ones\n"
+            "- If not found - say so and suggest similar categories\n\n"
         )
 
     prompt += (
@@ -326,7 +330,7 @@ def call_openai(
     system_prompt: str,
     chat_history: Optional[List[Dict[str, str]]] = None,
     model: str = "gpt-3.5-turbo",
-    max_tokens: int = 500,
+    max_tokens: int = 1500,
     temperature: float = 0.7,
 ) -> str:
     """

@@ -112,10 +112,16 @@ class WhatsAppSessionStatusSerializer(serializers.Serializer):
 
 
 class BotChatSerializer(serializers.ModelSerializer):
-    """Serializer for bot chat."""
+    """Serializer for bot chat.
+
+    Optimized to use annotated values from queryset to avoid N+1 queries.
+    Falls back to direct queries if annotations are not present.
+    """
 
     platform_display = serializers.CharField(source="get_platform_display", read_only=True)
     messages_count = serializers.SerializerMethodField()
+    last_message_preview = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
 
     class Meta:
         model = BotChat
@@ -126,14 +132,38 @@ class BotChatSerializer(serializers.ModelSerializer):
             "platform_chat_id",
             "user_name",
             "user_phone",
+            "user_photo",
             "is_active",
             "last_message_at",
             "messages_count",
+            "last_message_preview",
+            "unread_count",
             "created_at",
         ]
 
     def get_messages_count(self, obj):
+        # Use annotated value if available (avoids N+1 query)
+        if hasattr(obj, "_messages_count"):
+            return obj._messages_count
         return obj.messages.count()
+
+    def get_last_message_preview(self, obj):
+        # Use annotated value if available (avoids N+1 query)
+        if hasattr(obj, "_last_message_text") and obj._last_message_text:
+            text = obj._last_message_text
+            return text[:40] + "..." if len(text) > 40 else text
+        # Fallback to direct query
+        last_msg = obj.messages.order_by("-created_at").first()
+        if last_msg:
+            text = last_msg.text
+            return text[:40] + "..." if len(text) > 40 else text
+        return None
+
+    def get_unread_count(self, obj):
+        # Use annotated value if available (avoids N+1 query)
+        if hasattr(obj, "_unread_count"):
+            return obj._unread_count
+        return obj.messages.filter(sender="user", is_read=False).count()
 
 
 class BotMessageSerializer(serializers.ModelSerializer):
@@ -150,6 +180,7 @@ class BotMessageSerializer(serializers.ModelSerializer):
             "sender_display",
             "text",
             "platform_message_id",
+            "is_read",
             "created_at",
         ]
 

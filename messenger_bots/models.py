@@ -213,6 +213,12 @@ class BotChat(TimestampModel):
         blank=True,
         help_text=_("User's phone number (for WhatsApp)"),
     )
+    user_photo = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text=_("User's profile photo URL from the platform"),
+    )
     is_active = models.BooleanField(default=True)
     last_message_at = models.DateTimeField(null=True, blank=True)
 
@@ -254,6 +260,10 @@ class BotMessage(TimestampModel):
         null=True,
         blank=True,
         help_text=_("Message ID from the platform"),
+    )
+    is_read = models.BooleanField(
+        default=False,
+        help_text=_("Whether the message has been read by admin"),
     )
 
     class Meta:

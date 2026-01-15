@@ -1,13 +1,20 @@
 import logging
 import json
+import re
 import requests
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 
 from messenger_bots.models import TelegramBot, BotChat, BotMessage, BotPlatform
 
 logger = logging.getLogger(__name__)
+
+# Product pagination settings
+PRODUCTS_PER_PAGE = 3
+PRODUCTS_CACHE_TIMEOUT = 600  # 10 minutes
+MESSAGE_DELAY = 0.5  # seconds between messages (rate limit protection)
 
 # Chat history limit for context
 CHAT_HISTORY_LIMIT = 5
@@ -24,6 +31,7 @@ class TelegramBotService:
     CALLBACK_CATEGORY = "cat_"
     CALLBACK_PRODUCT = "prod_"
     CALLBACK_BACK = "back"
+    CALLBACK_MORE_PRODUCTS = "more_products:"
 
     def __init__(self, telegram_bot: TelegramBot):
         self.bot = telegram_bot
@@ -180,6 +188,201 @@ class TelegramBotService:
         result = self._make_request("sendChatAction", data)
         return result.get("ok", False)
 
+    def get_user_profile_photo_url(self, user_id: str, org_id: int) -> Optional[str]:
+        """
+        Get user's profile photo URL.
+        Downloads the photo and saves it to Django storage to avoid token exposure.
+        """
+        try:
+            # Get user profile photos
+            result = self._make_request("getUserProfilePhotos", {"user_id": user_id, "limit": 1})
+            if not result.get("ok"):
+                return None
+
+            photos = result.get("result", {}).get("photos", [])
+            if not photos:
+                return None
+
+            # Get the largest photo (last in the array for better quality)
+            photo_sizes = photos[0]
+            if not photo_sizes:
+                return None
+
+            # Get file_id from the largest photo size
+            file_id = photo_sizes[-1].get("file_id")
+            if not file_id:
+                return None
+
+            # Get file path from Telegram
+            file_result = self._make_request("getFile", {"file_id": file_id})
+            if not file_result.get("ok"):
+                return None
+
+            file_path = file_result.get("result", {}).get("file_path")
+            if not file_path:
+                return None
+
+            # Download and save to storage
+            return self._download_and_save_photo(user_id, org_id, file_path)
+
+        except Exception as e:
+            logger.warning(f"[TG_SERVICE] Failed to get user profile photo: {e}")
+            return None
+
+    def _download_and_save_photo(self, user_id: str, org_id: int, telegram_file_path: str) -> Optional[str]:
+        """Download photo from Telegram and save to Django storage."""
+        try:
+            from django.core.files.base import ContentFile
+            from django.core.files.storage import default_storage
+
+            # Download photo from Telegram
+            download_url = f"https://api.telegram.org/file/bot{self.token}/{telegram_file_path}"
+            response = requests.get(download_url, timeout=30)
+
+            if response.status_code != 200:
+                logger.warning(f"[TG_SERVICE] Failed to download photo: HTTP {response.status_code}")
+                return None
+
+            # Determine file extension
+            ext = telegram_file_path.split(".")[-1] if "." in telegram_file_path else "jpg"
+
+            # Save to storage with organized path
+            storage_path = f"bot_user_photos/org_{org_id}/user_{user_id}.{ext}"
+
+            # Delete old photo if exists
+            if default_storage.exists(storage_path):
+                default_storage.delete(storage_path)
+
+            # Save new photo
+            content_file = ContentFile(response.content)
+            default_storage.save(storage_path, content_file)
+
+            # Return permanent URL
+            return default_storage.url(storage_path)
+
+        except Exception as e:
+            logger.warning(f"[TG_SERVICE] Failed to download/save user photo: {e}")
+            return None
+
+    # ============== Product Parsing & Pagination ==============
+
+    # Product validation pattern
+    PRODUCT_PATTERN = re.compile(
+        r'((?:Товар|Product):.*?(?:Ссылка|Link):\s*https?://[^\s]+)',
+        re.DOTALL | re.IGNORECASE
+    )
+    # Footer pattern
+    FOOTER_PATTERN = re.compile(
+        r'((?:Больше товаров|More products).+)$',
+        re.DOTALL | re.IGNORECASE
+    )
+    # AI separator
+    AI_SEPARATOR = "###NEXT###"
+
+    @classmethod
+    def parse_products_from_response(cls, ai_response: str) -> Tuple[List[str], str]:
+        """
+        Parse AI response and split into separate product blocks.
+
+        Uses hybrid approach for maximum reliability:
+        1. If ###NEXT### separators present - split by them first (faster)
+        2. Validate each block with regex (ensures correct format)
+        3. Fallback to pure regex if no separators (handles edge cases)
+
+        Supports both Russian and English formats:
+        - Russian: Товар: ... Ссылка: URL
+        - English: Product: ... Link: URL
+
+        Returns:
+            products: list of validated product blocks
+            footer: closing text ("Больше товаров..."/"More products...")
+        """
+        products = []
+
+        # Step 1: Extract footer first (before processing)
+        footer = ""
+        footer_match = cls.FOOTER_PATTERN.search(ai_response)
+        if footer_match:
+            footer = footer_match.group(1).strip()
+            # Remove ###NEXT### from footer if present
+            footer = footer.replace(cls.AI_SEPARATOR, "").strip()
+
+        # Step 2: Clean response - remove footer from parsing
+        clean_response = ai_response
+        if footer:
+            clean_response = ai_response[:ai_response.rfind(footer)].strip()
+
+        # Step 3: Hybrid parsing approach
+        if cls.AI_SEPARATOR in clean_response:
+            # Fast path: split by ###NEXT### and validate each block
+            logger.debug("[TG_SERVICE] Using ###NEXT### separator parsing")
+            blocks = clean_response.split(cls.AI_SEPARATOR)
+
+            for block in blocks:
+                block = block.strip()
+                if not block:
+                    continue
+
+                # Validate block has correct product format
+                match = cls.PRODUCT_PATTERN.search(block)
+                if match:
+                    products.append(match.group(1).strip())
+        else:
+            # Fallback: pure regex parsing (handles any format)
+            logger.debug("[TG_SERVICE] Using regex-only parsing")
+            matches = cls.PRODUCT_PATTERN.findall(clean_response)
+            products = [m.strip() for m in matches if m.strip()]
+
+        # Step 4: Deduplicate while preserving order
+        seen = set()
+        unique_products = []
+        for p in products:
+            if p not in seen:
+                seen.add(p)
+                unique_products.append(p)
+
+        logger.debug(f"[TG_SERVICE] Parsed {len(unique_products)} products, footer: {bool(footer)}")
+        return unique_products, footer
+
+    @staticmethod
+    def send_products_async(
+        telegram_bot_id: int,
+        chat_id: int,
+        products: List[str],
+        footer: str,
+        page: int = 0,
+        language: str = "ru",
+    ):
+        """
+        Send products with pagination asynchronously via Celery task.
+        This avoids blocking the webhook response.
+        """
+        from messenger_bots.tasks import send_telegram_products_task
+
+        send_telegram_products_task.delay(
+            telegram_bot_id=telegram_bot_id,
+            chat_id=chat_id,
+            products=products,
+            footer=footer,
+            page=page,
+            language=language,
+        )
+
+    @staticmethod
+    def cache_products(chat_id: str, products: List[str], footer: str):
+        """Cache products for pagination."""
+        cache_key = f"tg_products:{chat_id}"
+        cache.set(cache_key, {"products": products, "footer": footer}, timeout=PRODUCTS_CACHE_TIMEOUT)
+
+    @staticmethod
+    def get_cached_products(chat_id: str) -> Tuple[List[str], str]:
+        """Get cached products for pagination."""
+        cache_key = f"tg_products:{chat_id}"
+        data = cache.get(cache_key)
+        if data:
+            return data.get("products", []), data.get("footer", "")
+        return [], ""
+
     # ============== Inline Keyboard Builders ==============
 
     def build_main_menu_keyboard(self, language: str = "ru") -> dict:
@@ -298,9 +501,23 @@ class TelegramBotService:
         )
         logger.info(f"[TG_SERVICE] Chat: id={chat.id}, {'CREATED' if created else 'EXISTS'}, user='{user_name}'")
 
+        # Update user_name and fetch user_photo if needed
+        update_fields = []
         if not created and chat.user_name != user_name:
             chat.user_name = user_name
-            chat.save(update_fields=["user_name"])
+            update_fields.append("user_name")
+
+        # Fetch user photo if not already set or on new chat
+        if created or not chat.user_photo:
+            service = cls(telegram_bot)
+            user_photo_url = service.get_user_profile_photo_url(user_id, telegram_bot.organization_id)
+            if user_photo_url:
+                chat.user_photo = user_photo_url
+                update_fields.append("user_photo")
+                logger.debug(f"[TG_SERVICE] User photo saved: {user_photo_url[:60]}...")
+
+        if update_fields:
+            chat.save(update_fields=update_fields)
 
         # Save incoming message
         incoming_msg = BotMessage.objects.create(
@@ -354,20 +571,38 @@ class TelegramBotService:
 
         # Send response with main menu
         service.send_typing_action(chat_id)
-        keyboard = service.build_main_menu_keyboard(user_language)
-        result = service.send_message(chat_id, response_text, message_id, reply_markup=keyboard)
 
-        # Save assistant response
-        if result:
-            outgoing_msg = BotMessage.objects.create(
-                chat=chat,
-                sender=BotMessage.ASSISTANT,
-                text=response_text,
-                platform_message_id=str(result.get("message_id", "")),
+        # Check if response contains multiple products for pagination
+        products, footer = cls.parse_products_from_response(response_text)
+
+        if len(products) > PRODUCTS_PER_PAGE:
+            # Cache products for pagination and send first batch asynchronously
+            logger.info(f"[TG_SERVICE] Found {len(products)} products, using pagination")
+            cls.cache_products(chat_id, products, footer)
+            cls.send_products_async(
+                telegram_bot_id=telegram_bot.id,
+                chat_id=chat.id,
+                products=products,
+                footer=footer,
+                page=0,
+                language=user_language,
             )
-            logger.info(f"[TG_SERVICE] Response sent and saved: msg_id={outgoing_msg.id}")
         else:
-            logger.error(f"[TG_SERVICE] Failed to send response to chat_id={chat_id}")
+            # Send regular response
+            keyboard = service.build_main_menu_keyboard(user_language)
+            result = service.send_message(chat_id, response_text, message_id, reply_markup=keyboard)
+
+            # Save assistant response
+            if result:
+                outgoing_msg = BotMessage.objects.create(
+                    chat=chat,
+                    sender=BotMessage.ASSISTANT,
+                    text=response_text,
+                    platform_message_id=str(result.get("message_id", "")),
+                )
+                logger.info(f"[TG_SERVICE] Response sent and saved: msg_id={outgoing_msg.id}")
+            else:
+                logger.error(f"[TG_SERVICE] Failed to send response to chat_id={chat_id}")
 
         logger.info(f"[TG_SERVICE] ====== MESSAGE PROCESSED ======")
         return response_text
@@ -405,6 +640,11 @@ class TelegramBotService:
         elif data.startswith(cls.CALLBACK_PRODUCT):
             product_id = int(data.replace(cls.CALLBACK_PRODUCT, ""))
             return cls._show_product(service, telegram_bot, chat_id, product_id, user_language)
+
+        elif data.startswith(cls.CALLBACK_MORE_PRODUCTS):
+            # Handle "Show more" products pagination
+            page = int(data.replace(cls.CALLBACK_MORE_PRODUCTS, ""))
+            return cls._show_more_products(service, telegram_bot, chat_id, message_id, page, user_language)
 
         elif data == cls.CALLBACK_BACK:
             # Back to main menu
@@ -664,6 +904,53 @@ class TelegramBotService:
 
         service.edit_message_text(chat_id, message_id, text, reply_markup=keyboard)
         return text
+
+    @classmethod
+    def _show_more_products(
+        cls,
+        service: "TelegramBotService",
+        telegram_bot: TelegramBot,
+        chat_id: str,
+        message_id: str,
+        page: int,
+        language: str,
+    ) -> str:
+        """Handle 'Show more' products pagination callback."""
+        try:
+            # Get cached products
+            products, footer = cls.get_cached_products(chat_id)
+            if not products:
+                logger.warning(f"[TG_SERVICE] No cached products for chat_id={chat_id}")
+                return ""
+
+            # Delete the "Show more" button message
+            service._make_request("deleteMessage", {"chat_id": chat_id, "message_id": message_id})
+
+            # Get chat for saving messages
+            chat = BotChat.objects.filter(
+                organization=telegram_bot.organization,
+                platform=BotPlatform.TELEGRAM,
+                platform_chat_id=chat_id,
+            ).first()
+
+            if not chat:
+                logger.error(f"[TG_SERVICE] Chat not found for chat_id={chat_id}")
+                return ""
+
+            # Send next batch asynchronously
+            cls.send_products_async(
+                telegram_bot_id=telegram_bot.id,
+                chat_id=chat.id,
+                products=products,
+                footer=footer,
+                page=page,
+                language=language,
+            )
+            return f"Showing page {page + 1}"
+
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Error showing more products: {e}", exc_info=True)
+            return ""
 
     @classmethod
     def _get_chat_history(cls, chat: BotChat) -> List[Dict[str, str]]:

@@ -165,8 +165,11 @@ def extract_search_keywords(question: str) -> List[str]:
         'посмотреть', 'показать', 'найти', 'ищу', 'интересует',
         'подскажите', 'расскажите', 'а', 'и', 'в', 'на', 'с', 'по',
         'для', 'от', 'до', 'или', 'но', 'же', 'бы', 'то', 'не',
+        'дай', 'дайте', 'список', 'товаров', 'товары', 'все', 'всё',
+        'продукты', 'продукция', 'ассортимент', 'каталог', 'весь',
         'show', 'me', 'do', 'you', 'have', 'any', 'want', 'need',
         'looking', 'for', 'find', 'search', 'the', 'a', 'an', 'is', 'are',
+        'list', 'all', 'products', 'items', 'catalog', 'give', 'get',
     }
 
     # Clean and split question
@@ -277,8 +280,8 @@ def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
             print("[CATALOG_FILTER] No matches found, returning full catalog")
             return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
 
-        # Format matched items
-        text = f"FILTERED CATALOG ({len(matched_items)} items matching '{', '.join(keywords)}'):\n"
+        # Format matched items with explicit instruction
+        text = f"✅ FOUND {len(matched_items)} PRODUCTS matching user query. YOU MUST LIST THESE ITEMS:\n"
 
         for item in matched_items:
             name = item.get('name', 'Unknown Item')
@@ -458,11 +461,10 @@ def build_system_prompt(
     if catalog_content:
         prompt += (
             f"=== CATALOG ===\n{catalog_content}\n"
-            "SEARCH RULES:\n"
-            "- Extract keywords from user question (e.g. 'купальник', 'кроссовки', 'сумка')\n"
-            "- Search ENTIRE catalog for items matching these keywords in name/category/description\n"
-            "- If found - show ALL matching products, not just first ones\n"
-            "- If not found - say so and suggest similar categories\n\n"
+            "CATALOG RULES:\n"
+            "- If catalog header says 'FOUND X PRODUCTS' - these items MATCH user's query, LIST THEM ALL\n"
+            "- DO NOT say 'products not found' if catalog contains items\n"
+            "- Format each product using PRODUCT FORMAT above\n\n"
         )
 
     prompt += (

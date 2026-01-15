@@ -395,7 +395,10 @@ class BotAssistantService:
             print(f"[AI_ASSISTANT] Q&A pairs count: {len(qa_pairs)}")
             if qa_pairs:
                 for i, qa in enumerate(qa_pairs):
-                    print(f"[AI_ASSISTANT] Q&A {i+1}: Q='{qa.get('question', '')[:50]}' A='{qa.get('answer', '')[:50]}' files={len(qa.get('files', []))}")
+                    q_text = (qa.get('question') or '')[:50]
+                    a_text = (qa.get('answer') or '')[:50]
+                    files_count = len(qa.get('files') or [])
+                    print(f"[AI_ASSISTANT] Q&A {i+1}: Q='{q_text}' A='{a_text}' files={files_count}")
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")
 

@@ -556,14 +556,14 @@ def build_system_prompt(
         prompt += "📚 KNOWLEDGE BASE (Primary source for specific questions):\n"
         prompt += "IMPORTANT: When user asks for a link/file mentioned in answers below, provide the File URL!\n\n"
         for qa in qa_pairs:
-            question = qa.get('question', '')
-            answer = qa.get('answer', '')
+            question = qa.get('question') or ''
+            answer = qa.get('answer') or ''
             print(f"[BUILD_PROMPT] Adding Q&A: Q='{question[:50]}...' A='{answer[:50]}...'")
             if question and answer:
                 prompt += f"Q: {question}\nA: {answer}\n"
 
             # Add file contents and URLs - ALWAYS add URL even if content fails
-            files = qa.get('files', [])
+            files = qa.get('files') or []
             for file_url in files:
                 if file_url:
                     print(f"[BUILD_PROMPT] Loading file: {file_url}")

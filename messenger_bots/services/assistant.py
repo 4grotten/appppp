@@ -372,7 +372,6 @@ class BotAssistantService:
         from messenger_bots.services.ai_utils import (
             build_system_prompt,
             call_openai,
-            read_file_from_url,
         )
 
         logger.info(
@@ -394,13 +393,27 @@ class BotAssistantService:
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")
 
-            # Load catalog content
+            # Load and filter catalog content
             catalog_content = ""
             catalog_file = training_data.get("catalog_file")
             print(f"[AI_ASSISTANT] catalog_file URL: {catalog_file}")
             if catalog_file:
                 try:
-                    catalog_content = read_file_from_url(catalog_file)
+                    from messenger_bots.services.ai_utils import (
+                        extract_search_keywords,
+                        filter_catalog_by_keywords,
+                        get_http_session_with_retry,
+                    )
+                    # Load raw JSON
+                    session = get_http_session_with_retry()
+                    response = session.get(catalog_file, timeout=(5, 15))
+                    response.raise_for_status()
+                    raw_json = response.content
+
+                    # Extract keywords from question and filter catalog
+                    keywords = extract_search_keywords(question)
+                    catalog_content = filter_catalog_by_keywords(raw_json, keywords)
+
                     print(f"[AI_ASSISTANT] catalog loaded: {len(catalog_content)} chars")
                     if catalog_content:
                         print(f"[AI_ASSISTANT] catalog preview: {catalog_content[:300]}...")
@@ -433,6 +446,8 @@ class BotAssistantService:
             )
 
             if answer:
+                print(f"[AI_ASSISTANT] OpenAI response length: {len(answer)} chars")
+                print(f"[AI_ASSISTANT] Full answer:\n{answer}")
                 logger.info(
                     f"[AI_ASSISTANT] OpenAI fallback SUCCESS: answer='{answer[:80]}...'"
                 )

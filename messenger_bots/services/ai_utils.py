@@ -165,8 +165,11 @@ def extract_search_keywords(question: str) -> List[str]:
         'посмотреть', 'показать', 'найти', 'ищу', 'интересует',
         'подскажите', 'расскажите', 'а', 'и', 'в', 'на', 'с', 'по',
         'для', 'от', 'до', 'или', 'но', 'же', 'бы', 'то', 'не',
+        'дай', 'дайте', 'список', 'товаров', 'товары', 'все', 'всё',
+        'продукты', 'продукция', 'ассортимент', 'каталог', 'весь',
         'show', 'me', 'do', 'you', 'have', 'any', 'want', 'need',
         'looking', 'for', 'find', 'search', 'the', 'a', 'an', 'is', 'are',
+        'list', 'all', 'products', 'items', 'catalog', 'give', 'get',
     }
 
     # Clean and split question
@@ -216,13 +219,23 @@ def keyword_matches_text(keyword: str, text: str) -> bool:
     if not keyword or not text:
         return False
 
-    # Direct match
+    # Minimum keyword length to avoid false positives
+    if len(keyword) < 3:
+        return False
+
+    # Direct match - most reliable
     if keyword in text:
         return True
 
-    # Try stems of keyword in text
+    # For short keywords (3-4 chars), require exact word match only
+    if len(keyword) <= 4:
+        text_words = text.split()
+        return keyword in text_words
+
+    # Try stems of keyword in text (only for longer words)
+    min_stem_len = 4  # Increased from 3 to reduce false positives
     for stem in get_word_stems(keyword):
-        if len(stem) >= 3 and stem in text:
+        if len(stem) >= min_stem_len and stem in text:
             return True
 
     # Try if any word in text starts with keyword stem
@@ -230,8 +243,10 @@ def keyword_matches_text(keyword: str, text: str) -> bool:
     keyword_stems = get_word_stems(keyword)
     for text_word in text_words:
         for stem in keyword_stems:
-            if len(stem) >= 3 and text_word.startswith(stem):
-                return True
+            # Only match if stem is substantial part of the keyword
+            if len(stem) >= min_stem_len and len(stem) >= len(keyword) - 2:
+                if text_word.startswith(stem):
+                    return True
 
     return False
 
@@ -257,16 +272,17 @@ def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
         print(f"[CATALOG_FILTER] Searching for keywords: {keywords}")
 
         # Filter items matching any keyword
+        # Priority: name > category > description (description has more noise)
         matched_items = []
         for item in items:
             name = (item.get('name') or '').lower()
             category = (item.get('category') or '').lower()
-            description = (item.get('description') or '').lower()
-            searchable_text = f"{name} {category} {description}"
 
-            # Check if any keyword matches using flexible matching
+            # Primary search: name and category only (most reliable)
+            primary_text = f"{name} {category}"
+
             for keyword in keywords:
-                if keyword_matches_text(keyword, searchable_text):
+                if keyword_matches_text(keyword, primary_text):
                     matched_items.append(item)
                     break
 
@@ -277,8 +293,8 @@ def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
             print("[CATALOG_FILTER] No matches found, returning full catalog")
             return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
 
-        # Format matched items
-        text = f"FILTERED CATALOG ({len(matched_items)} items matching '{', '.join(keywords)}'):\n"
+        # Format matched items with clear header for AI
+        text = f"✅ FOUND {len(matched_items)} PRODUCTS (these items match user's request):\n"
 
         for item in matched_items:
             name = item.get('name', 'Unknown Item')
@@ -454,16 +470,29 @@ def build_system_prompt(
                         prompt += f"File link (if needed): {file_url}\n"
         prompt += "\n"
 
-    # Add catalog
+    # Add catalog with strict rules
     if catalog_content:
-        prompt += (
-            f"=== CATALOG ===\n{catalog_content}\n"
-            "SEARCH RULES:\n"
-            "- Extract keywords from user question (e.g. 'купальник', 'кроссовки', 'сумка')\n"
-            "- Search ENTIRE catalog for items matching these keywords in name/category/description\n"
-            "- If found - show ALL matching products, not just first ones\n"
-            "- If not found - say so and suggest similar categories\n\n"
-        )
+        # Check if catalog is filtered (has FOUND X PRODUCTS header)
+        is_filtered = "✅ FOUND" in catalog_content
+
+        prompt += f"=== CATALOG ===\n{catalog_content}\n"
+
+        if is_filtered:
+            # Filtered catalog - products already match user's query
+            prompt += (
+                "⚠️ CATALOG STATUS: PRE-FILTERED - items above MATCH user's query!\n\n"
+                "RESPONSE RULES (STRICT):\n"
+                "1. NEVER say 'not found' / 'нет в каталоге' - products ARE found above\n"
+                "2. If user said 'покажи/список/дай/show/list' → LIST ALL products above\n"
+                "3. If user said 'есть ли/есть/have' → Confirm: 'Да, есть!' + show 1-2 examples\n"
+                "4. Format each product using PRODUCT FORMAT above\n\n"
+            )
+        else:
+            # Full catalog - user asked general question
+            prompt += (
+                "CATALOG STATUS: FULL - showing all available products\n"
+                "Use this to answer general questions about available items.\n\n"
+            )
 
     prompt += (
         "BEHAVIOR: Be concise, polite. If unsure, suggest contacting organization.\n"

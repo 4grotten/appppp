@@ -1,6 +1,8 @@
 import logging
 import re
 import os
+import tempfile
+import requests
 from typing import Optional, Tuple, Dict, Any, List
 from datetime import date
 import asyncio
@@ -752,6 +754,9 @@ class BotFactoryService:
             await _save_model(self.userbot, update_fields=["bots_created_today", "total_bots_created", "last_used_at"])
             logger.info(f"[BOT_FACTORY] Userbot stats updated: today={self.userbot.bots_created_today}/20, total={self.userbot.total_bots_created}")
 
+            # Try to set bot avatar from organization image
+            await self._set_bot_avatar(client, botfather, final_username, request.organization)
+
             logger.info(f"[BOT_FACTORY] ====== CREATE BOT SUCCESS ======")
             logger.info(f"[BOT_FACTORY] Created bot @{final_username} for org {request.organization.id}")
             return True, bot_token
@@ -770,6 +775,79 @@ class BotFactoryService:
 
         finally:
             await self.disconnect()
+
+    async def _set_bot_avatar(self, client: TelegramClient, botfather, bot_username: str, organization) -> bool:
+        """
+        Set bot avatar using organization image via BotFather.
+
+        Flow:
+        1. Download organization image
+        2. Send /setuserpic to BotFather
+        3. Send bot username
+        4. Send the image file
+        """
+        try:
+            # Get organization image URL
+            @sync_to_async
+            def get_org_image_url():
+                if organization.image and organization.image.file:
+                    return organization.image.file.url
+                return None
+
+            image_url = await get_org_image_url()
+
+            if not image_url:
+                logger.info(f"[BOT_FACTORY] No organization image, skipping avatar setup")
+                return False
+
+            logger.info(f"[BOT_FACTORY] Setting bot avatar from: {image_url[:50]}...")
+
+            # Download image to temp file
+            response = requests.get(image_url, timeout=30)
+            if response.status_code != 200:
+                logger.warning(f"[BOT_FACTORY] Failed to download image: {response.status_code}")
+                return False
+
+            # Save to temp file
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+                tmp_file.write(response.content)
+                tmp_path = tmp_file.name
+
+            try:
+                # Step 1: Send /setuserpic
+                logger.info(f"[BOT_FACTORY] Sending /setuserpic to BotFather...")
+                await client.send_message(botfather, "/setuserpic")
+                await asyncio.sleep(2)
+
+                # Step 2: Send bot username
+                logger.info(f"[BOT_FACTORY] Sending bot username @{bot_username}...")
+                await client.send_message(botfather, f"@{bot_username}")
+                await asyncio.sleep(2)
+
+                # Step 3: Send the image
+                logger.info(f"[BOT_FACTORY] Sending avatar image...")
+                await client.send_file(botfather, tmp_path)
+                await asyncio.sleep(2)
+
+                # Check response
+                messages = await client.get_messages(botfather, limit=1)
+                response_text = messages[0].text if messages and messages[0].text else ""
+
+                if "success" in response_text.lower() or "done" in response_text.lower():
+                    logger.info(f"[BOT_FACTORY] Bot avatar set successfully!")
+                    return True
+                else:
+                    logger.info(f"[BOT_FACTORY] Avatar response: {response_text[:100]}")
+                    return True  # Assume success if no error
+
+            finally:
+                # Clean up temp file
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        except Exception as e:
+            logger.warning(f"[BOT_FACTORY] Failed to set bot avatar: {e}")
+            return False
 
     @classmethod
     async def get_available_userbot(cls) -> Optional[TelegramUserbot]:

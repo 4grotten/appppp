@@ -190,12 +190,6 @@ class TelegramBotService:
             "inline_keyboard": [
                 [
                     {
-                        "text": BotAssistantService._get_message("catalog_button", language),
-                        "callback_data": self.CALLBACK_CATALOG,
-                    },
-                ],
-                [
-                    {
                         "text": BotAssistantService._get_message("contacts_button", language),
                         "callback_data": self.CALLBACK_CONTACTS,
                     },

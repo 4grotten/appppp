@@ -587,17 +587,46 @@ class TelegramBotService:
                 page=0,
                 language=user_language,
             )
-        else:
-            # Send regular response
+        elif products:
+            # Few products (1-3): send each as separate message without pagination
+            logger.info(f"[TG_SERVICE] Found {len(products)} products, sending individually")
             keyboard = service.build_main_menu_keyboard(user_language)
-            result = service.send_message(chat_id, response_text, message_id, reply_markup=keyboard)
+
+            # Send each product as separate message
+            for i, product in enumerate(products):
+                is_last = (i == len(products) - 1) and not footer
+                result = service.send_message(
+                    chat_id,
+                    product,
+                    message_id if i == 0 else None,
+                    reply_markup=keyboard if is_last else None
+                )
+
+            # Send footer with keyboard
+            if footer:
+                result = service.send_message(chat_id, footer, reply_markup=keyboard)
+
+            # Save combined response
+            combined_text = "\n\n".join(products) + (f"\n\n{footer}" if footer else "")
+            BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=combined_text,
+                platform_message_id=str(result.get("message_id", "") if result else ""),
+            )
+            logger.info(f"[TG_SERVICE] {len(products)} products sent individually")
+        else:
+            # No products - send regular response (clean ###NEXT### just in case)
+            clean_response = response_text.replace(cls.AI_SEPARATOR, "").strip()
+            keyboard = service.build_main_menu_keyboard(user_language)
+            result = service.send_message(chat_id, clean_response, message_id, reply_markup=keyboard)
 
             # Save assistant response
             if result:
                 outgoing_msg = BotMessage.objects.create(
                     chat=chat,
                     sender=BotMessage.ASSISTANT,
-                    text=response_text,
+                    text=clean_response,
                     platform_message_id=str(result.get("message_id", "")),
                 )
                 logger.info(f"[TG_SERVICE] Response sent and saved: msg_id={outgoing_msg.id}")

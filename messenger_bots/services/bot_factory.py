@@ -778,13 +778,17 @@ class BotFactoryService:
         # Reset daily counter if new day
         today = date.today()
 
-        userbots = list(
-            TelegramUserbot.objects.filter(
-                is_active=True,
-                is_authenticated=True,
-                bots_created_today__lt=20,  # BotFather daily limit
-            ).order_by("bots_created_today", "last_used_at")
-        )
+        @sync_to_async
+        def get_userbots():
+            return list(
+                TelegramUserbot.objects.filter(
+                    is_active=True,
+                    is_authenticated=True,
+                    bots_created_today__lt=20,  # BotFather daily limit
+                ).order_by("bots_created_today", "last_used_at")
+            )
+
+        userbots = await get_userbots()
 
         logger.info(f"[BOT_FACTORY] Found {len(userbots)} candidate userbots")
 

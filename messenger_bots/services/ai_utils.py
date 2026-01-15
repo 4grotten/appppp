@@ -86,11 +86,11 @@ def extract_text_from_pdf(file_content: bytes) -> str:
         except ImportError:
             pass
 
-        logger.error("No PDF library available (pypdf, PyPDF2, or pdfplumber)")
+        print("No PDF library available (pypdf, PyPDF2, or pdfplumber)")
         return ""
 
     except Exception as e:
-        logger.error(f"Error extracting text from PDF: {e}")
+        print(f"Error extracting text from PDF: {e}")
         return ""
 
 
@@ -111,15 +111,15 @@ def extract_text_from_docx(file_content: bytes) -> str:
         except ImportError:
             pass
 
-        logger.error("No DOCX library available (python-docx)")
+        print("No DOCX library available (python-docx)")
         return ""
 
     except Exception as e:
-        logger.error(f"Error extracting text from DOCX: {e}")
+        print(f"Error extracting text from DOCX: {e}")
         return ""
 
 
-def format_catalog_json(json_content: bytes) -> str:
+def format_catalog_json(json_content) -> str:
     """Format catalog JSON into readable text for AI prompt."""
     try:
         if isinstance(json_content, bytes):
@@ -148,7 +148,7 @@ def format_catalog_json(json_content: bytes) -> str:
         return text
 
     except Exception as e:
-        logger.error(f"Error parsing catalog JSON: {e}")
+        print(f"Error parsing catalog JSON: {e}")
         return ""
 
 
@@ -180,11 +180,63 @@ def extract_search_keywords(question: str) -> List[str]:
     # Filter keywords (length > 2, not in stop words)
     keywords = [w for w in words if len(w) > 2 and w not in stop_words]
 
-    logger.info(f"[CATALOG_FILTER] Extracted keywords from '{question}': {keywords}")
+    print(f"[CATALOG_FILTER] Extracted keywords from '{question}': {keywords}")
     return keywords
 
 
-def filter_catalog_by_keywords(json_content: bytes, keywords: List[str]) -> str:
+def get_word_stems(word: str) -> List[str]:
+    """
+    Get possible stems of a Russian/English word by removing common suffixes.
+    Returns list of possible stems including the original word.
+    """
+    stems = [word]
+    if len(word) < 4:
+        return stems
+
+    # Russian plural/case endings (most common)
+    russian_suffixes = ['ики', 'ами', 'ами', 'ями', 'ов', 'ев', 'ей', 'ах', 'ях', 'ие', 'ые', 'ий', 'ый', 'ая', 'яя', 'ое', 'ее', 'и', 'ы', 'а', 'я', 'у', 'ю', 'е', 'о']
+
+    for suffix in russian_suffixes:
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            stems.append(word[:-len(suffix)])
+
+    # Also add truncated versions (last 1-2 chars removed)
+    if len(word) > 4:
+        stems.append(word[:-1])
+        stems.append(word[:-2])
+
+    return list(set(stems))  # Remove duplicates
+
+
+def keyword_matches_text(keyword: str, text: str) -> bool:
+    """
+    Check if keyword matches text using flexible matching.
+    Handles Russian morphology (plural/singular, cases).
+    """
+    if not keyword or not text:
+        return False
+
+    # Direct match
+    if keyword in text:
+        return True
+
+    # Try stems of keyword in text
+    for stem in get_word_stems(keyword):
+        if len(stem) >= 3 and stem in text:
+            return True
+
+    # Try if any word in text starts with keyword stem
+    text_words = text.split()
+    keyword_stems = get_word_stems(keyword)
+    for text_word in text_words:
+        for stem in keyword_stems:
+            if len(stem) >= 3 and text_word.startswith(stem):
+                return True
+
+    return False
+
+
+def filter_catalog_by_keywords(json_content, keywords: List[str]) -> str:
     """
     Filter catalog items by keywords and format for AI.
     Returns filtered catalog text or full catalog if no matches.
@@ -199,7 +251,10 @@ def filter_catalog_by_keywords(json_content: bytes, keywords: List[str]) -> str:
 
         if not keywords:
             # No keywords - return full catalog
+            print("[CATALOG_FILTER] No keywords extracted, returning full catalog")
             return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
+
+        print(f"[CATALOG_FILTER] Searching for keywords: {keywords}")
 
         # Filter items matching any keyword
         matched_items = []
@@ -207,18 +262,19 @@ def filter_catalog_by_keywords(json_content: bytes, keywords: List[str]) -> str:
             name = (item.get('name') or '').lower()
             category = (item.get('category') or '').lower()
             description = (item.get('description') or '').lower()
+            searchable_text = f"{name} {category} {description}"
 
-            # Check if any keyword matches
+            # Check if any keyword matches using flexible matching
             for keyword in keywords:
-                if keyword in name or keyword in category or keyword in description:
+                if keyword_matches_text(keyword, searchable_text):
                     matched_items.append(item)
                     break
 
-        logger.info(f"[CATALOG_FILTER] Found {len(matched_items)} items matching keywords {keywords}")
+        print(f"[CATALOG_FILTER] Found {len(matched_items)} items matching keywords {keywords}")
 
         if not matched_items:
             # No matches - return full catalog with note
-            logger.info("[CATALOG_FILTER] No matches, returning full catalog")
+            print("[CATALOG_FILTER] No matches found, returning full catalog")
             return format_catalog_json(json_content.encode('utf-8') if isinstance(json_content, str) else json_content)
 
         # Format matched items
@@ -241,7 +297,7 @@ def filter_catalog_by_keywords(json_content: bytes, keywords: List[str]) -> str:
         return text
 
     except Exception as e:
-        logger.error(f"[CATALOG_FILTER] Error filtering catalog: {e}")
+        print(f"[CATALOG_FILTER] Error filtering catalog: {e}")
         return ""
 
 
@@ -270,14 +326,14 @@ def read_file_from_url(file_url: str) -> str:
             try:
                 return file_content.decode("utf-8")[:5000]
             except UnicodeDecodeError:
-                logger.error(f"Failed to decode file as UTF-8: {file_url}")
+                print(f"Failed to decode file as UTF-8: {file_url}")
                 return ""
         else:
-            logger.warning(f"Unsupported file type for text extraction: {file_url}")
+            print(f"Unsupported file type for text extraction: {file_url}")
             return ""
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error reading file from URL: {e}")
+        print(f"Error reading file from URL: {e}")
         return ""
 
 
@@ -457,7 +513,7 @@ def call_openai(
             "temperature": temperature,
         }
 
-        logger.debug(f"[AI_UTILS] Calling OpenAI proxy at {proxy_url}")
+        print(f"[AI_UTILS] Calling OpenAI proxy at {proxy_url}")
         session = get_http_session_with_retry()
         response = session.post(
             proxy_url,
@@ -469,17 +525,17 @@ def call_openai(
 
         if "answer" in result:
             answer = result["answer"]
-            logger.info(f"[AI_UTILS] OpenAI proxy response received: {len(answer)} chars")
+            print(f"[AI_UTILS] OpenAI proxy response received: {len(answer)} chars")
             return answer
         elif "error" in result:
-            logger.error(f"[AI_UTILS] OpenAI proxy error: {result['error']}")
+            print(f"[AI_UTILS] OpenAI proxy error: {result['error']}")
             return ""
         else:
-            logger.error(f"[AI_UTILS] Unexpected proxy response format: {result}")
+            print(f"[AI_UTILS] Unexpected proxy response format: {result}")
             return ""
 
     except Exception as e:
-        logger.error(f"[AI_UTILS] Error calling OpenAI proxy: {e}")
+        print(f"[AI_UTILS] Error calling OpenAI proxy: {e}")
         return ""
 
 

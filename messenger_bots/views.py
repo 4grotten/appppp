@@ -728,6 +728,69 @@ class BotStatusAPIView(APIView):
         return Response(result)
 
 
+class BotUnreadCountAPIView(APIView):
+    """
+    API for getting total unread message count across all bot chats.
+    Used for displaying badge/notification in the menu.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, organization_id):
+        """Get total unread count for all bot chats."""
+        from django.db.models import Count, Q
+
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership:
+                    return Response(
+                        {"error": "Access denied"},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+        except Organization.DoesNotExist:
+            return Response(
+                {"error": "Organization not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get unread counts per platform
+        telegram_unread = BotMessage.objects.filter(
+            chat__organization=org,
+            chat__platform=BotPlatform.TELEGRAM,
+            sender=BotMessage.USER,
+            is_read=False,
+        ).count()
+
+        whatsapp_unread = BotMessage.objects.filter(
+            chat__organization=org,
+            chat__platform=BotPlatform.WHATSAPP,
+            sender=BotMessage.USER,
+            is_read=False,
+        ).count()
+
+        # Get unread from website chats (ChatMessage model)
+        from organizations.models import ChatMessage, Chat
+
+        website_unread = 0
+        if hasattr(org, 'assistant'):
+            website_unread = ChatMessage.objects.filter(
+                chat__assistant=org.assistant,
+                sender=ChatMessage.USER,
+                is_read=False,
+            ).count()
+
+        total = telegram_unread + whatsapp_unread + website_unread
+
+        return Response({
+            "total": total,
+            "telegram": telegram_unread,
+            "whatsapp": whatsapp_unread,
+            "website": website_unread,
+        })
+
+
 class AutoCreateTelegramBotAPIView(APIView):
     """
     API for one-click Telegram bot creation.

@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.db.models import Exists, OuterRef, Prefetch
-from django.db.models import Case, When, F, BooleanField, OuterRef, Exists
+from django.db.models import Case, When, F, BooleanField, OuterRef, Exists, Q
 from django.utils import timezone
 
 from common.exceptions import CouponException
@@ -39,10 +39,15 @@ class CouponServiceClass:
     def get_available(cls, org_id, transaction_id):
         transaction = Transaction.objects.get(id=transaction_id)
         user = transaction.client
-        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Текущее время и начало дня
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         qs = (
-            cls.__model.objects.filter(organization_id=org_id)
+            cls.__model.objects
+            .filter(organization_id=org_id, is_active=True)
+            .filter(Q(expire_date__isnull=True) | Q(expire_date__gt=now))
             .annotate(
                 used_ever=Exists(
                     CouponUsage.objects.filter(
@@ -54,13 +59,16 @@ class CouponServiceClass:
                     CouponUsage.objects.filter(
                         coupon=OuterRef("pk"), 
                         user=user,
-                        created_at__gte=today_start 
+                        created_at__gte=today_start
                     )
                 )
             )
             .annotate(
                 used=Case(
                     When(always_active=True, then=F('used_today')),
+
+                    When(expire_date__isnull=False, then=F('used_today')),
+                    
                     default=F('used_ever'),
                     output_field=BooleanField()
                 )
@@ -76,8 +84,7 @@ class CouponServiceClass:
         )
 
         return qs
-
-
+    
     @classmethod
     def calculate(cls, data: dict):
         coupons_list = data["coupons"]
@@ -105,17 +112,16 @@ class CouponServiceClass:
 
     @classmethod
     def get_list(cls, org_id: int, user):
-
-        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         qs = (
-            cls.__model.objects.filter(organization_id=org_id)
+            cls.__model.objects
+            .filter(organization_id=org_id, is_active=True)
+            .filter(Q(expire_date__isnull=True) | Q(expire_date__gt=now))
             .annotate(
                 used_ever=Exists(
-                    CouponUsage.objects.filter(
-                        coupon=OuterRef("pk"), 
-                        user=user
-                    )
+                    CouponUsage.objects.filter(coupon=OuterRef("pk"), user=user)
                 ),
                 used_today=Exists(
                     CouponUsage.objects.filter(
@@ -128,6 +134,7 @@ class CouponServiceClass:
             .annotate(
                 used=Case(
                     When(always_active=True, then=F('used_today')),
+                    When(expire_date__isnull=False, then=F('used_today')),
                     default=F('used_ever'),
                     output_field=BooleanField()
                 )
@@ -141,6 +148,6 @@ class CouponServiceClass:
             )
             .order_by("used", "-updated_at", "-created_at")
         )
-        # print(qs.query)
-
+        
         return qs
+    

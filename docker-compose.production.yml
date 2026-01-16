@@ -52,7 +52,7 @@ services:
   celery_worker_backend:
     <<: *django
     ports: [ ]
-    command: celery worker -A project --loglevel=INFO -Q celery,default
+    command: celery worker -A project --loglevel=INFO -Q celery,default,messenger_bots
     env_file: ./env/production.env
 
   celery_worker_high:

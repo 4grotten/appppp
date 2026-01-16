@@ -228,13 +228,12 @@ class GeminiAIService:
                         ),
                     )
 
-                    # Возвращаем чистый текст
+                   
                     return response.text.strip() if response.text else None
                 except errors.APIError as e:
                     if e.code == 503:
                         print(f"The model is overloaded trying again {retry}")
 
         except Exception as e:
-            # Тут лучше добавить логгер
             print(f"Gemini Error: {e}")
             return None

@@ -9,7 +9,10 @@ class MessengerBotsConfig(AppConfig):
     verbose_name = "Messenger Bots"
 
     def ready(self):
-        """Run cache warmup task on server startup."""
+        """Run cache warmup task on server startup and register signals."""
+        # Import signals to register them
+        import messenger_bots.signals  # noqa: F401
+
         # Only run in main process (not in migrations, shell, etc.)
         # Check for RUN_MAIN to avoid double execution in dev server
         is_main_process = os.environ.get("RUN_MAIN") == "true"

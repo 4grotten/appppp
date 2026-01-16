@@ -84,12 +84,26 @@ class UserbotAuthService:
         self.client: Optional[TelegramClient] = None
 
     def _create_client(self) -> TelegramClient:
-        """Create a new Telethon client."""
+        """Create a new Telethon client with connection timeout."""
+        # Validate api_id and api_hash before creating client
+        if not self.userbot.api_id or not self.userbot.api_hash:
+            raise ValueError("api_id and api_hash are required. Get them from https://my.telegram.org")
+
+        try:
+            api_id = int(self.userbot.api_id)
+        except (ValueError, TypeError):
+            raise ValueError(f"Invalid api_id: '{self.userbot.api_id}'. Must be a number from https://my.telegram.org")
+
+        if api_id <= 0:
+            raise ValueError(f"Invalid api_id: {api_id}. Get valid credentials from https://my.telegram.org")
+
         session = StringSession(self.userbot.session_string or "")
         return TelegramClient(
             session,
-            int(self.userbot.api_id),
+            api_id,
             self.userbot.api_hash,
+            timeout=30,  # Connection timeout in seconds
+            connection_retries=2,
         )
 
     async def check_connection(self) -> Dict[str, Any]:
@@ -136,8 +150,11 @@ class UserbotAuthService:
     async def send_code(self) -> Dict[str, Any]:
         """Step 1: Send verification code to the phone."""
         try:
+            logger.info(f"[USERBOT_AUTH] Creating client for {self.userbot.phone_number}...")
             self.client = self._create_client()
-            await self.client.connect()
+
+            logger.info(f"[USERBOT_AUTH] Connecting to Telegram (timeout=30s)...")
+            await asyncio.wait_for(self.client.connect(), timeout=60)
 
             # Check if already authorized
             if await self.client.is_user_authorized():
@@ -185,6 +202,25 @@ class UserbotAuthService:
                 },
             }
 
+        except asyncio.TimeoutError:
+            error_msg = "Connection to Telegram timed out. Please check network connectivity to Telegram MTProto servers."
+            logger.error(f"[USERBOT_AUTH] Timeout connecting for {self.userbot.phone_number}")
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
+            return {"success": False, "error": error_msg}
+
+        except ValueError as e:
+            # Invalid api_id or api_hash
+            error_msg = str(e)
+            logger.error(f"[USERBOT_AUTH] Invalid credentials for {self.userbot.phone_number}: {error_msg}")
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
+            return {"success": False, "error": error_msg}
+
         except FloodWaitError as e:
             error_msg = f"Too many requests. Wait {e.seconds} seconds before trying again."
             self.userbot.auth_state = UserbotAuthState.ERROR
@@ -195,6 +231,7 @@ class UserbotAuthService:
 
         except Exception as e:
             error_msg = str(e)
+            logger.error(f"[USERBOT_AUTH] Error for {self.userbot.phone_number}: {error_msg}")
             self.userbot.auth_state = UserbotAuthState.ERROR
             self.userbot.auth_state_message = error_msg
             self.userbot.last_error = error_msg

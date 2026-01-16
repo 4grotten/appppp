@@ -11,6 +11,7 @@ from messenger_bots.views import (
     BotChatsAPIView,
     BotChatMessagesAPIView,
     BotStatusAPIView,
+    BotUnreadCountAPIView,
     AutoCreateTelegramBotAPIView,
     BotCreationStatusAPIView,
 )
@@ -80,6 +81,12 @@ urlpatterns = [
         "status/<int:organization_id>/",
         BotStatusAPIView.as_view(),
         name="bot-status",
+    ),
+    # Unread count (for menu badge)
+    path(
+        "unread/<int:organization_id>/",
+        BotUnreadCountAPIView.as_view(),
+        name="bot-unread-count",
     ),
 
     # Chats

@@ -117,10 +117,13 @@ class OrganizationSerializer(serializers.ModelSerializer):
         try:
             from messenger_bots.models import TelegramBot
             bot = TelegramBot.objects.filter(organization=organization).first()
-            if bot and bot.bot_username:
+            if bot:
                 return {
                     "username": bot.bot_username,
-                    "link": f"https://t.me/{bot.bot_username}",
+                    "link": f"https://t.me/{bot.bot_username}" if bot.bot_username else None,
+                    "is_active": bot.is_active,
+                    "has_webhook": bool(bot.webhook_url),
+                    "has_error": bool(bot.last_error),
                 }
         except Exception:
             pass
@@ -462,6 +465,24 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
     maaly_pay_config = serializers.SerializerMethodField(allow_null=True)
     zina_pay_config = serializers.SerializerMethodField(allow_null=True)
     telegram_bot_url = serializers.SerializerMethodField(allow_null=True)
+    telegram_bot = serializers.SerializerMethodField(allow_null=True)
+
+    def get_telegram_bot(self, organization: Organization):
+        """Get Telegram bot info from TelegramBot model."""
+        try:
+            from messenger_bots.models import TelegramBot
+            bot = TelegramBot.objects.filter(organization=organization).first()
+            if bot:
+                return {
+                    "username": bot.bot_username,
+                    "link": f"https://t.me/{bot.bot_username}" if bot.bot_username else None,
+                    "is_active": bot.is_active,
+                    "has_webhook": bool(bot.webhook_url),
+                    "has_error": bool(bot.last_error),
+                }
+        except Exception:
+            pass
+        return None
 
     def get_telegram_bot_url(self, organization: Organization):
         """Get Telegram bot URL if configured."""
@@ -682,6 +703,7 @@ class OrganizationDetailedSerializer(serializers.ModelSerializer):
             "maaly_pay_config",
             "zina_pay_config",
             "telegram_bot_url",
+            "telegram_bot",
         )
         read_only_fields = ["verification_status", "need_add_item"]
 

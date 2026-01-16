@@ -33,6 +33,7 @@ class TelegramBotAdmin(admin.ModelAdmin):
         "organization",
         "bot_username",
         "is_active",
+        "context_messages_limit",
         "status_indicator",
         "created_at",
     ]
@@ -43,6 +44,11 @@ class TelegramBotAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             "fields": ("organization", "bot_token", "is_active")
+        }),
+        ("AI Context Settings", {
+            "fields": ("context_messages_limit",),
+            "description": "Количество пар сообщений (user+assistant) для контекста AI. "
+                          "Например: 5 = последние 10 сообщений (5 от пользователя + 5 от бота).",
         }),
         ("Bot Info", {
             "fields": ("bot_username", "webhook_url"),

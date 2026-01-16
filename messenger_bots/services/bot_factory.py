@@ -19,7 +19,7 @@ from telethon.errors import (
     SessionPasswordNeededError,
 )
 from telethon.sessions import StringSession
-from telethon.tl.types.auth import LoginTokenMigrateTo, LoginTokenSuccess
+from telethon.tl.types.auth import LoginTokenMigrateTo
 
 # Telegram Datacenter IPs for reference
 # DC1: 149.154.175.53 (Test)
@@ -30,7 +30,6 @@ from telethon.tl.types.auth import LoginTokenMigrateTo, LoginTokenSuccess
 
 
 def _run_async_unsafe(coro):
-    # Temporarily allow async-unsafe operations
     old_value = os.environ.get("DJANGO_ALLOW_ASYNC_UNSAFE")
     os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
@@ -305,32 +304,44 @@ class UserbotAuthService:
                       Useful when user is in a region that requires specific DC.
         """
         try:
-            logger.info(f"[QR_LOGIN] ====== QR LOGIN START ======")
-            logger.info(f"[QR_LOGIN] Phone: {self.userbot.phone_number}, force_dc={force_dc}")
+            logger.info("[QR_LOGIN] ====== QR LOGIN START ======")
+            logger.info(
+                f"[QR_LOGIN] Phone: {self.userbot.phone_number}, force_dc={force_dc}"
+            )
 
             self.client = self._create_client()
             await self.client.connect()
 
             # Log initial session state
-            initial_dc = getattr(self.client.session, 'dc_id', 'unknown')
-            initial_server = getattr(self.client.session, 'server_address', 'unknown')
-            logger.info(f"[QR_LOGIN] Connected. Initial session: DC{initial_dc}, server={initial_server}")
+            initial_dc = getattr(self.client.session, "dc_id", "unknown")
+            initial_server = getattr(self.client.session, "server_address", "unknown")
+            logger.info(
+                f"[QR_LOGIN] Connected. Initial session: DC{initial_dc}, server={initial_server}"
+            )
 
             # Force specific datacenter if requested
             if force_dc and 1 <= force_dc <= 5:
-                logger.info(f"[QR_LOGIN] User requested force_dc={force_dc}, switching...")
+                logger.info(
+                    f"[QR_LOGIN] User requested force_dc={force_dc}, switching..."
+                )
                 try:
                     await self.client._switch_dc(force_dc)
-                    new_dc = getattr(self.client.session, 'dc_id', 'unknown')
-                    new_server = getattr(self.client.session, 'server_address', 'unknown')
-                    logger.info(f"[QR_LOGIN] Force DC switch complete: DC{new_dc}, server={new_server}")
+                    new_dc = getattr(self.client.session, "dc_id", "unknown")
+                    new_server = getattr(
+                        self.client.session, "server_address", "unknown"
+                    )
+                    logger.info(
+                        f"[QR_LOGIN] Force DC switch complete: DC{new_dc}, server={new_server}"
+                    )
                 except Exception as force_dc_err:
-                    logger.error(f"[QR_LOGIN] Force DC switch to DC{force_dc} FAILED: {force_dc_err}")
+                    logger.error(
+                        f"[QR_LOGIN] Force DC switch to DC{force_dc} FAILED: {force_dc_err}"
+                    )
                     raise Exception(f"Failed to switch to DC{force_dc}: {force_dc_err}")
 
             # Check if already authorized
             if await self.client.is_user_authorized():
-                logger.info(f"[QR_LOGIN] Already authorized, skipping QR generation")
+                logger.info("[QR_LOGIN] Already authorized, skipping QR generation")
                 self.userbot.session_string = self.client.session.save()
                 self.userbot.is_authenticated = True
                 self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
@@ -351,9 +362,9 @@ class UserbotAuthService:
                 }
 
             # Start QR login with automatic datacenter migration handling
-            logger.info(f"[QR_LOGIN] Calling client.qr_login()...")
+            logger.info("[QR_LOGIN] Calling client.qr_login()...")
             qr_login = await self.client.qr_login()
-            current_dc = getattr(self.client.session, 'dc_id', 'unknown')
+            current_dc = getattr(self.client.session, "dc_id", "unknown")
 
             # Detailed logging of Telegram response
             logger.info(f"[QR_LOGIN] Telegram response type: {type(qr_login).__name__}")
@@ -361,18 +372,24 @@ class UserbotAuthService:
             logger.info(f"[QR_LOGIN] Current session DC: {current_dc}")
 
             # Log all attributes of the response
-            qr_attrs = {attr: getattr(qr_login, attr, 'N/A') for attr in dir(qr_login) if not attr.startswith('_')}
+            qr_attrs = {
+                attr: getattr(qr_login, attr, "N/A")
+                for attr in dir(qr_login)
+                if not attr.startswith("_")
+            }
             logger.info(f"[QR_LOGIN] Response attributes: {qr_attrs}")
 
             # Handle datacenter migration if Telegram requests it
             retry_count = 0
             while isinstance(qr_login, LoginTokenMigrateTo) and retry_count < 3:
                 target_dc = qr_login.dc_id
-                migrate_token = getattr(qr_login, 'token', None)
-                logger.info(f"[QR_LOGIN] *** MIGRATION REQUIRED ***")
-                logger.info(f"[QR_LOGIN] LoginTokenMigrateTo received:")
+                migrate_token = getattr(qr_login, "token", None)
+                logger.info("[QR_LOGIN] *** MIGRATION REQUIRED ***")
+                logger.info("[QR_LOGIN] LoginTokenMigrateTo received:")
                 logger.info(f"[QR_LOGIN]   - target_dc: {target_dc}")
-                logger.info(f"[QR_LOGIN]   - token: {migrate_token[:20] if migrate_token else 'None'}...")
+                logger.info(
+                    f"[QR_LOGIN]   - token: {migrate_token[:20] if migrate_token else 'None'}..."
+                )
                 logger.info(f"[QR_LOGIN]   - attempt: {retry_count + 1}/3")
 
                 # Switch to the requested datacenter
@@ -380,15 +397,23 @@ class UserbotAuthService:
                     logger.info(f"[QR_LOGIN] Executing _switch_dc({target_dc})...")
                     await self.client._switch_dc(target_dc)
 
-                    post_switch_dc = getattr(self.client.session, 'dc_id', 'unknown')
-                    post_switch_server = getattr(self.client.session, 'server_address', 'unknown')
-                    logger.info(f"[QR_LOGIN] DC switch SUCCESS: DC{post_switch_dc}, server={post_switch_server}")
+                    post_switch_dc = getattr(self.client.session, "dc_id", "unknown")
+                    post_switch_server = getattr(
+                        self.client.session, "server_address", "unknown"
+                    )
+                    logger.info(
+                        f"[QR_LOGIN] DC switch SUCCESS: DC{post_switch_dc}, server={post_switch_server}"
+                    )
 
                     # Retry QR login on new datacenter
-                    logger.info(f"[QR_LOGIN] Retrying qr_login() on DC{post_switch_dc}...")
+                    logger.info(
+                        f"[QR_LOGIN] Retrying qr_login() on DC{post_switch_dc}..."
+                    )
                     qr_login = await self.client.qr_login()
 
-                    logger.info(f"[QR_LOGIN] Post-migration response type: {type(qr_login).__name__}")
+                    logger.info(
+                        f"[QR_LOGIN] Post-migration response type: {type(qr_login).__name__}"
+                    )
                     logger.info(f"[QR_LOGIN] Post-migration response: {qr_login}")
 
                 except Exception as switch_err:
@@ -396,14 +421,19 @@ class UserbotAuthService:
                     logger.error(f"[QR_LOGIN] Error type: {type(switch_err).__name__}")
                     logger.error(f"[QR_LOGIN] Error message: {switch_err}")
                     import traceback
+
                     logger.error(f"[QR_LOGIN] Traceback:\n{traceback.format_exc()}")
-                    raise Exception(f"Datacenter migration to DC{target_dc} failed: {switch_err}")
+                    raise Exception(
+                        f"Datacenter migration to DC{target_dc} failed: {switch_err}"
+                    )
 
                 retry_count += 1
 
             # Final check - do we have a valid QR login object?
             if isinstance(qr_login, LoginTokenMigrateTo):
-                logger.error(f"[QR_LOGIN] FAILED: Still getting LoginTokenMigrateTo after {retry_count} attempts")
+                logger.error(
+                    f"[QR_LOGIN] FAILED: Still getting LoginTokenMigrateTo after {retry_count} attempts"
+                )
                 logger.error(f"[QR_LOGIN] Final migration target: DC{qr_login.dc_id}")
                 raise Exception(
                     f"Failed to complete datacenter migration after {retry_count} attempts. "
@@ -411,7 +441,7 @@ class UserbotAuthService:
                 )
 
             if not hasattr(qr_login, "url"):
-                logger.error(f"[QR_LOGIN] FAILED: Response has no 'url' attribute")
+                logger.error("[QR_LOGIN] FAILED: Response has no 'url' attribute")
                 logger.error(f"[QR_LOGIN] Response type: {type(qr_login).__name__}")
                 logger.error(f"[QR_LOGIN] Response: {qr_login}")
                 raise Exception(
@@ -423,10 +453,10 @@ class UserbotAuthService:
             if hasattr(qr_login, "expires") and qr_login.expires:
                 expires_str = qr_login.expires.isoformat()
 
-            final_dc = getattr(self.client.session, 'dc_id', 'unknown')
-            final_server = getattr(self.client.session, 'server_address', 'unknown')
+            final_dc = getattr(self.client.session, "dc_id", "unknown")
+            final_server = getattr(self.client.session, "server_address", "unknown")
 
-            logger.info(f"[QR_LOGIN] ====== QR LOGIN SUCCESS ======")
+            logger.info("[QR_LOGIN] ====== QR LOGIN SUCCESS ======")
             logger.info(f"[QR_LOGIN] Final DC: {final_dc}, server: {final_server}")
             logger.info(f"[QR_LOGIN] QR URL: {qr_login.url[:50]}...")
             logger.info(f"[QR_LOGIN] Expires: {expires_str}")
@@ -435,7 +465,9 @@ class UserbotAuthService:
             # with the same session that generated the QR code
             self.userbot.session_string = self.client.session.save()
             self.userbot.auth_state = UserbotAuthState.CODE_SENT
-            self.userbot.auth_state_message = f"Scan QR code with Telegram app (DC{final_dc})."
+            self.userbot.auth_state_message = (
+                f"Scan QR code with Telegram app (DC{final_dc})."
+            )
             self.userbot.last_error = None
             await _save_model(
                 self.userbot,
@@ -490,18 +522,20 @@ class UserbotAuthService:
         This only checks authorization status, doesn't generate new QR.
         """
         try:
-            logger.info(f"[QR_CHECK] ====== QR CHECK START ======")
+            logger.info("[QR_CHECK] ====== QR CHECK START ======")
             logger.info(f"[QR_CHECK] Phone: {self.userbot.phone_number}")
 
             self.client = self._create_client()
             await self.client.connect()
 
-            session_dc = getattr(self.client.session, 'dc_id', 'unknown')
-            session_server = getattr(self.client.session, 'server_address', 'unknown')
-            logger.info(f"[QR_CHECK] Connected to DC{session_dc}, server={session_server}")
+            session_dc = getattr(self.client.session, "dc_id", "unknown")
+            session_server = getattr(self.client.session, "server_address", "unknown")
+            logger.info(
+                f"[QR_CHECK] Connected to DC{session_dc}, server={session_server}"
+            )
 
             # Check if authorized (user scanned QR)
-            logger.info(f"[QR_CHECK] Checking is_user_authorized()...")
+            logger.info("[QR_CHECK] Checking is_user_authorized()...")
             is_authorized = await self.client.is_user_authorized()
             logger.info(f"[QR_CHECK] is_user_authorized() = {is_authorized}")
 
@@ -523,7 +557,7 @@ class UserbotAuthService:
                 )
 
                 me = await self.client.get_me()
-                logger.info(f"[QR_CHECK] ====== QR CHECK SUCCESS ======")
+                logger.info("[QR_CHECK] ====== QR CHECK SUCCESS ======")
                 logger.info(
                     f"[QR_CHECK] Authenticated as: {me.first_name} (@{me.username}), id={me.id}"
                 )
@@ -538,7 +572,7 @@ class UserbotAuthService:
                 }
 
             # Not yet authorized - user hasn't scanned
-            logger.info(f"[QR_CHECK] Not yet authorized - QR not scanned")
+            logger.info("[QR_CHECK] Not yet authorized - QR not scanned")
             return {
                 "success": False,
                 "not_scanned": True,
@@ -547,7 +581,7 @@ class UserbotAuthService:
 
         except SessionPasswordNeededError:
             # 2FA is enabled - need password
-            logger.info(f"[QR_CHECK] 2FA required - SessionPasswordNeededError")
+            logger.info("[QR_CHECK] 2FA required - SessionPasswordNeededError")
             self.userbot.auth_state = UserbotAuthState.AWAITING_2FA
             self.userbot.auth_state_message = (
                 "2FA is enabled. Enter your password to continue."
@@ -564,10 +598,11 @@ class UserbotAuthService:
 
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"[QR_CHECK] ====== QR CHECK FAILED ======")
+            logger.error("[QR_CHECK] ====== QR CHECK FAILED ======")
             logger.error(f"[QR_CHECK] Error type: {type(e).__name__}")
             logger.error(f"[QR_CHECK] Error message: {error_msg}")
             import traceback
+
             logger.error(f"[QR_CHECK] Traceback:\n{traceback.format_exc()}")
             self.userbot.last_error = error_msg
             await _save_model(self.userbot, update_fields=["last_error"])

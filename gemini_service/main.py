@@ -8,7 +8,8 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from schemas import GeminiAICreateImage
 from service import GeminiAIService
-from settings import GEMINI_API_KEY_FILE
+from settings import set_gemini_api_key
+from internal_router import internal_router 
 
 app = FastAPI(
     docs_url="/api/v2/docs",
@@ -99,22 +100,23 @@ async def generate_prompt(
     else:
         return JSONResponse(content=None, status_code=400)
 
+app.include_router(internal_router)
 
-class UpdateApiKeyPayload(BaseModel):
-    api_key: str
+# class UpdateApiKeyPayload(BaseModel):
+#     api_key: str
 
 
-@app.post("/internal/update_api_key")
-async def update_api_key(payload: UpdateApiKeyPayload):
-    logger = logging.getLogger(__name__)
-    try:
-        path = GEMINI_API_KEY_FILE
-        logger.info("Received request to update Gemini API key, writing to %s", path)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            f.write(payload.api_key or "")
-        logger.info("Gemini API key written to %s", path)
-        return JSONResponse(status_code=200, content={"status": "ok"})
-    except Exception as e:
-        logger.exception("Failed to write Gemini API key to %s: %s", GEMINI_API_KEY_FILE, e)
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/internal/update_api_key")
+# async def update_api_key(payload: UpdateApiKeyPayload):
+#     logger = logging.getLogger(__name__)
+#     try:
+#         path = GEMINI_API_KEY_FILE
+#         logger.info("Received request to update Gemini API key, writing to %s", path)
+#         os.makedirs(os.path.dirname(path), exist_ok=True)
+#         with open(path, "w") as f:
+#             f.write(payload.api_key or "")
+#         logger.info("Gemini API key written to %s", path)
+#         return JSONResponse(status_code=200, content={"status": "ok"})
+#     except Exception as e:
+#         logger.exception("Failed to write Gemini API key to %s: %s", GEMINI_API_KEY_FILE, e)
+#         raise HTTPException(status_code=500, detail=str(e))

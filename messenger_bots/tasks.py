@@ -637,3 +637,107 @@ def sync_waha_session_status():
 
         except Exception as e:
             logger.error(f"WAHA status sync failed for org {bot.organization.id}: {e}")
+
+
+# ============== AI Assistant Cache Tasks ==============
+
+CACHE_TIMEOUT = 25 * 60  # 25 minutes (task runs every 20 min, so cache outlives task interval)
+
+
+@shared_task
+def cache_assistant_training_data():
+    """
+    Pre-cache training data (Q&A, catalog, PDF content) for all active assistants.
+    Runs every 20 minutes to keep cache warm.
+    Uses parallel file downloads for performance.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from django.core.cache import cache
+    from organizations.models import Assistant
+    from shop.services.comment_services import CommentService
+    from messenger_bots.services.ai_utils import (
+        format_catalog_json,
+        read_file_from_url,
+        get_http_session_with_retry,
+    )
+
+    # Get all enabled assistants with active bots
+    assistants = Assistant.objects.filter(
+        is_enabled=True,
+    ).select_related('organization').prefetch_related(
+        'organization__telegram_bot',
+        'organization__whatsapp_bot',
+    )
+
+    cached_count = 0
+    errors = []
+
+    for assistant in assistants:
+        org = assistant.organization
+
+        # Check if org has active bots (TG or WA)
+        has_tg = hasattr(org, 'telegram_bot') and org.telegram_bot.is_active
+        has_wa = hasattr(org, 'whatsapp_bot') and org.whatsapp_bot.is_active
+
+        if not (has_tg or has_wa):
+            continue
+
+        try:
+            cache_key = f"assistant_training_data:{org.id}"
+            logger.info(f"[CACHE_TASK] Caching training data for org {org.id} ({org.title})")
+
+            # Get base training data
+            training_data = CommentService.get_training_data(assistant=assistant)
+
+            # Parallel download of files
+            qa_pairs = training_data.get("answers", [])
+            file_urls = []
+            for qa in qa_pairs:
+                for file_url in (qa.get('files') or []):
+                    if file_url:
+                        file_urls.append(file_url)
+
+            # Download files in parallel
+            file_contents = {}
+            if file_urls:
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    future_to_url = {
+                        executor.submit(read_file_from_url, url): url
+                        for url in file_urls
+                    }
+                    for future in as_completed(future_to_url):
+                        url = future_to_url[future]
+                        try:
+                            content = future.result()
+                            if content:
+                                file_contents[url] = content
+                        except Exception as e:
+                            logger.warning(f"[CACHE_TASK] Failed to download {url}: {e}")
+
+            # Store file contents in training data
+            training_data['_cached_file_contents'] = file_contents
+
+            # Download and cache catalog
+            catalog_url = training_data.get("catalog_file")
+            if catalog_url:
+                try:
+                    session = get_http_session_with_retry()
+                    response = session.get(catalog_url, timeout=(5, 15))
+                    response.raise_for_status()
+                    catalog_content = format_catalog_json(response.content)
+                    training_data['_cached_catalog'] = catalog_content
+                    logger.info(f"[CACHE_TASK] Cached catalog: {len(catalog_content)} chars")
+                except Exception as e:
+                    logger.warning(f"[CACHE_TASK] Failed to download catalog: {e}")
+
+            # Store in cache
+            cache.set(cache_key, training_data, timeout=CACHE_TIMEOUT)
+            cached_count += 1
+            logger.info(f"[CACHE_TASK] Cached org {org.id}: {len(qa_pairs)} Q&A, {len(file_contents)} files")
+
+        except Exception as e:
+            logger.error(f"[CACHE_TASK] Error caching org {org.id}: {e}")
+            errors.append({"org_id": org.id, "error": str(e)})
+
+    logger.info(f"[CACHE_TASK] Completed: {cached_count} assistants cached, {len(errors)} errors")
+    return {"cached": cached_count, "errors": errors}

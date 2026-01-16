@@ -555,6 +555,10 @@ class TelegramBotService:
         chat_history = cls._get_chat_history(chat)
         logger.debug(f"[TG_SERVICE] Chat history: {len(chat_history)} messages")
 
+        # Send typing indicator BEFORE AI call so user sees bot is "thinking"
+        service = cls(telegram_bot)
+        service.send_typing_action(chat_id)
+
         # Get AI response with context and language
         logger.info(f"[TG_SERVICE] Requesting AI response...")
         try:
@@ -568,9 +572,6 @@ class TelegramBotService:
         except Exception as e:
             logger.error(f"[TG_SERVICE] ERROR getting AI response: {e}", exc_info=True)
             response_text = BotAssistantService._get_message("error", user_language)
-
-        # Send response with main menu
-        service.send_typing_action(chat_id)
 
         # Check if response contains multiple products for pagination
         products, footer = cls.parse_products_from_response(response_text)

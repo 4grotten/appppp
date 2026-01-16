@@ -18,10 +18,7 @@ from settings import (
 
 class GeminiAIService:
     _client = None
-    if not PRODUCTION:
-        proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
-    else:
-        proxy_url = None
+
     PROMPT_TEMPLATES = {
         "item_description": (
             "Ты — копирайтер для маркетплейса. "
@@ -45,8 +42,19 @@ class GeminiAIService:
     @classmethod
     def get_client(cls):
         api_key = get_gemini_api_key()
-        transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
-        http_client = httpx.AsyncClient(transport=transport)
+
+        if not api_key:
+            print("WARNING: Gemini API key is empty!")
+
+        if PRODUCTION:
+            print(f"PRODUCTION mode: direct connection (api_key={'set' if api_key else 'EMPTY'})")
+            http_client = httpx.AsyncClient()
+        else:
+            proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+            print(f"DEV mode: using proxy {proxy_url}")
+            transport = httpx.AsyncHTTPTransport(proxy=proxy_url)
+            http_client = httpx.AsyncClient(transport=transport)
+
         return Client(
             api_key=api_key,
             http_options=types.HttpOptions(httpx_async_client=http_client),
@@ -54,11 +62,16 @@ class GeminiAIService:
 
     @classmethod
     async def check_proxy_ip(cls):
-        print(cls.proxy_url)
-        transport = httpx.AsyncHTTPTransport(proxy=cls.proxy_url)
-        async with httpx.AsyncClient(transport=transport) as client:
-            resp = await client.get("https://ipinfo.io/json")
-            print(f"IP from proxy: {resp.json()}")
+        if PRODUCTION:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get("https://ipinfo.io/json")
+                print(f"Direct IP: {resp.json()}")
+        else:
+            proxy_url = f"socks5://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+            transport = httpx.AsyncHTTPTransport(proxy=proxy_url)
+            async with httpx.AsyncClient(transport=transport) as client:
+                resp = await client.get("https://ipinfo.io/json")
+                print(f"IP from proxy: {resp.json()}")
 
     @classmethod
     async def generate_from_prompt(

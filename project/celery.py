@@ -57,4 +57,9 @@ app.conf.beat_schedule = {
         "task": "messenger_bots.tasks.sync_waha_session_status",
         "schedule": crontab(minute="*/15"),  # Every 15 minutes
     },
+    # AI Assistant cache task - pre-warm cache for fast responses
+    "cache-assistant-training-data": {
+        "task": "messenger_bots.tasks.cache_assistant_training_data",
+        "schedule": crontab(minute="*/20"),  # Every 20 minutes
+    },
 }

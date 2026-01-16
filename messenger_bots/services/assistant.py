@@ -93,9 +93,22 @@ class BotAssistantService:
         assistant: Assistant,
         user_language: Optional[str] = None,
     ) -> dict:
-        """Prepare training data for the AI assistant - same as website chat."""
-        # Use the same training data as website chat
-        training_data = CommentService.get_training_data(assistant=assistant)
+        """
+        Prepare training data for the AI assistant.
+        Uses cached data if available (pre-cached by background task).
+        """
+        from django.core.cache import cache
+
+        # Check cache first (populated by cache_assistant_training_data task)
+        cache_key = f"assistant_training_data:{organization.id}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            logger.info(f"[AI_ASSISTANT] Using cached training data for org {organization.id}")
+            training_data = cached_data
+        else:
+            logger.info(f"[AI_ASSISTANT] Cache miss, loading fresh data for org {organization.id}")
+            training_data = CommentService.get_training_data(assistant=assistant)
 
         # Add organization page URL (same as website chat)
         site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
@@ -402,26 +415,31 @@ class BotAssistantService:
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")
 
-            # Load full catalog (same as website chat - no filtering)
-            catalog_content = ""
-            catalog_file = training_data.get("catalog_file")
+            # Use cached catalog if available, otherwise load fresh
+            catalog_content = training_data.get("_cached_catalog", "")
 
-            from messenger_bots.services.ai_utils import (
-                format_catalog_json,
-                get_http_session_with_retry,
-            )
+            if catalog_content:
+                print(f"[AI_ASSISTANT] Using cached catalog: {len(catalog_content)} chars")
+            else:
+                # Fallback: load catalog fresh if not cached
+                catalog_file = training_data.get("catalog_file")
+                if catalog_file:
+                    from messenger_bots.services.ai_utils import (
+                        format_catalog_json,
+                        get_http_session_with_retry,
+                    )
+                    print(f"[AI_ASSISTANT] Cache miss, loading catalog from: {catalog_file}")
+                    try:
+                        session = get_http_session_with_retry()
+                        response = session.get(catalog_file, timeout=(5, 15))
+                        response.raise_for_status()
+                        catalog_content = format_catalog_json(response.content)
+                        print(f"[AI_ASSISTANT] catalog loaded: {len(catalog_content)} chars")
+                    except Exception as e:
+                        print(f"[AI_ASSISTANT] ERROR loading catalog {catalog_file}: {e}")
 
-            if catalog_file:
-                print(f"[AI_ASSISTANT] Loading catalog from: {catalog_file}")
-                try:
-                    session = get_http_session_with_retry()
-                    response = session.get(catalog_file, timeout=(5, 15))
-                    response.raise_for_status()
-                    catalog_content = format_catalog_json(response.content)
-
-                    print(f"[AI_ASSISTANT] catalog loaded: {len(catalog_content)} chars")
-                except Exception as e:
-                    print(f"[AI_ASSISTANT] ERROR loading catalog {catalog_file}: {e}")
+            # Get cached file contents if available
+            cached_file_contents = training_data.get("_cached_file_contents", {})
 
             # Build comprehensive system prompt (compatible with telegram.py parsing)
             system_prompt = build_system_prompt(
@@ -433,6 +451,7 @@ class BotAssistantService:
                 marketing_info=marketing_info,
                 item_info=item_info or {},
                 user_language=user_language or "ru",
+                cached_file_contents=cached_file_contents,
             )
 
             # Call OpenAI API

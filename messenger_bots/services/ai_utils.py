@@ -215,6 +215,7 @@ def build_system_prompt(
     marketing_info: List[str] = None,
     item_info: Dict[str, Any] = None,
     user_language: str = "ru",
+    cached_file_contents: Dict[str, str] = None,
 ) -> str:
     """
     Build a comprehensive system prompt for the AI assistant.
@@ -339,16 +340,21 @@ def build_system_prompt(
             if question and answer:
                 prompt += f"Q: {question}\nA: {answer}\n"
 
-            # Add file contents and URLs - ALWAYS add URL even if content fails
+            # Add file contents and URLs - use cached content if available
             files = qa.get('files') or []
             for file_url in files:
                 if file_url:
-                    print(f"[BUILD_PROMPT] Loading file: {file_url}")
                     # Always add the file URL so AI can share it
                     prompt += f"📎 File URL (share this when asked): {file_url}\n"
 
-                    # Try to extract content for context
-                    file_content = read_file_from_url(file_url)
+                    # Use cached content if available, otherwise download fresh
+                    if cached_file_contents and file_url in cached_file_contents:
+                        file_content = cached_file_contents[file_url]
+                        print(f"[BUILD_PROMPT] Using cached file content: {file_url[:50]}...")
+                    else:
+                        print(f"[BUILD_PROMPT] Loading file (no cache): {file_url}")
+                        file_content = read_file_from_url(file_url)
+
                     if file_content:
                         prompt += f"File content preview: {file_content[:1500]}\n"
                     else:

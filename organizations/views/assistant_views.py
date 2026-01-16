@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
+from rest_framework.filters import SearchFilter
 
 logger = logging.getLogger(__name__)
 
@@ -299,6 +300,15 @@ class ToggleAssistantEnableView(APIView):
 class AssistantChatsListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
     permission_classes = (IsAuthenticated, )
+    
+    filter_backends = [SearchFilter]
+    
+    search_fields = [
+        'user__email', 
+        'user__first_name', 
+        'user__last_name', 
+        'user__username'
+    ]
 
     def get_object(self):
         return AssistantService.get(id=self.kwargs['pk'])

@@ -48,9 +48,22 @@ def userbot_send_code_task(userbot_id: int):
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
-def userbot_qr_login_start_task(userbot_id: int):
-    """Start QR code login - returns QR URL to display."""
-    logger.info(f"[USERBOT_TASK] qr_login_start started for userbot_id={userbot_id}")
+def userbot_qr_login_start_task(userbot_id: int, force_dc: int = None):
+    """
+    Start QR code login - returns QR URL to display.
+
+    Args:
+        userbot_id: ID of the TelegramUserbot to authenticate
+        force_dc: Force specific datacenter (1-5):
+            - DC1: Test (Miami)
+            - DC2: Europe (Netherlands) - recommended for EU/CIS
+            - DC3: USA (Miami)
+            - DC4: Europe (Netherlands, files)
+            - DC5: Asia (Singapore) - recommended for UAE/Asia
+    """
+    logger.info(
+        f"[USERBOT_TASK] qr_login_start started for userbot_id={userbot_id}, force_dc={force_dc}"
+    )
 
     try:
         userbot = TelegramUserbot.objects.get(id=userbot_id)
@@ -61,7 +74,7 @@ def userbot_qr_login_start_task(userbot_id: int):
     from messenger_bots.services.bot_factory import UserbotAuthService
 
     service = UserbotAuthService(userbot)
-    result = _run_async(service.qr_login_start())
+    result = _run_async(service.qr_login_start(force_dc=force_dc))
 
     logger.info(f"[USERBOT_TASK] qr_login_start result: {result}")
     return result

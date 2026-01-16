@@ -97,6 +97,40 @@
 
 {% block action_content %}
 <div class="qr-container">
+    {% if show_region_select %}
+    <!-- Region Selection Step -->
+    <div class="qr-instructions" style="background: #e3f2fd;">
+        <strong>Step 1: Select Your Region</strong>
+        <p style="margin: 10px 0;">
+            Choose the region where you are physically located.<br>
+            This helps Telegram route your connection correctly.
+        </p>
+    </div>
+
+    <div style="margin: 20px 0;">
+        {% for dc_value, dc_label in dc_choices %}
+        <a href="?generate=1{% if dc_value %}&dc={{ dc_value }}{% endif %}"
+           style="display: block; margin: 10px auto; padding: 15px 30px;
+                  background: {% if dc_value == 2 %}#28a745{% elif dc_value == 5 %}#17a2b8{% elif dc_value == 3 %}#6c757d{% else %}#007bff{% endif %};
+                  color: white; text-decoration: none; border-radius: 8px;
+                  max-width: 350px; text-align: center; font-size: 16px;">
+            {{ dc_label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+        <strong>💡 Tip:</strong><br>
+        <small>
+            • <strong>Europe/CIS</strong> - For Russia, Ukraine, Kazakhstan, EU countries<br>
+            • <strong>Asia/UAE</strong> - For UAE, Saudi Arabia, India, Southeast Asia<br>
+            • <strong>USA</strong> - For North/South America<br>
+            • <strong>Auto</strong> - Let Telegram decide (may fail if migration is needed)
+        </small>
+    </div>
+
+    {% else %}
+    <!-- QR Code Display Step -->
     <div class="qr-instructions">
         <strong>Instructions:</strong>
         <ol>
@@ -120,6 +154,12 @@
     </div>
     {% endif %}
 
+    {% if datacenter %}
+    <div class="info-message" style="background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0;">
+        <small>🌐 Connected to Datacenter: <strong>DC{{ datacenter }}</strong></small>
+    </div>
+    {% endif %}
+
     {% if expires %}
     <div class="info-message">
         <small>QR code expires at: {{ expires }}</small>
@@ -138,9 +178,10 @@
 
     <div style="margin-top: 20px;">
         <a href="{% url 'admin:messenger_bots_userbot_qr_login' userbot.pk %}" class="btn-refresh">
-            Refresh QR Code
+            🔄 Change Region / Refresh QR
         </a>
     </div>
+    {% endif %}
 
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
         <small>Having trouble?</small><br>

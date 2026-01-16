@@ -3954,57 +3954,123 @@ class TransactionService:
     @classmethod
     @transaction.atomic
     def accept_assistant_transaction(cls, transaction_id: Transaction):
-        transaction = cls.get(
+        transaction_obj = cls.get(
             id=transaction_id, is_processed=False, status=Transaction.ACCEPTED
         )
 
+        # Preserve original payment_info (contains plan_ids, base_url)
+        original_payment_info = transaction_obj.payment_info or {}
+
         balance, created = Balance.objects.get_or_create(
-            organization=transaction.organization, currency=Balance.KGS
+            organization=transaction_obj.organization, currency=Balance.KGS
         )
         try:
-            transaction.payment_info = (
-                BalanceInTransactionSerializer(balance).data if balance else None
-            )
-            transaction.payment_status = Transaction.ACCEPTED
-            transaction.is_processed = True
-            transaction.save()
+            # Merge balance info with original payment_info
+            balance_data = BalanceInTransactionSerializer(balance).data if balance else {}
+            transaction_obj.payment_info = {**original_payment_info, "balance": balance_data}
+            transaction_obj.payment_status = Transaction.ACCEPTED
+            transaction_obj.is_processed = True
+            transaction_obj.save()
         except:
             raise IntegrityException()
 
-        user_assistant = transaction.user_assistants
+        user_assistant = transaction_obj.user_assistants
         user_assistant.is_active = True
         user_assistant.save()
 
         assistant = user_assistant.assistant
 
+        # Create Telegram bot if "Все включено" plan (id=5) was selected
+        TELEGRAM_BOT_PLAN_ID = 5
+        plan_ids = original_payment_info.get("plan_ids", [])
+        base_url = original_payment_info.get("base_url")
+
+        if TELEGRAM_BOT_PLAN_ID in plan_ids:
+            cls._create_telegram_bot_after_payment(
+                organization=transaction_obj.organization,
+                requested_by=transaction_obj.client,
+                base_url=base_url,
+            )
+
         sent_notification.delay(
-            recipient_id=transaction.processed_by_id,
-            sender_id=transaction.client_id,
+            recipient_id=transaction_obj.processed_by_id,
+            sender_id=transaction_obj.client_id,
             mode=NOTIFICATION_MODE_ASSISTANT,
             notification_type=ACCEPT_ASSISTANT_PAYMENT_TYPE,
-            organization_id=transaction.organization_id,
+            organization_id=transaction_obj.organization_id,
             extra_data=dict(
-                transaction_id=transaction.id,
-                total_price=transaction.final_amount,
-                currency=transaction.currency.code,
+                transaction_id=transaction_obj.id,
+                total_price=transaction_obj.final_amount,
+                currency=transaction_obj.currency.code,
                 assistant_position=assistant.position,
                 assistant_name=assistant.name,
             ),
         )
         sent_notification.delay(
-            recipient_id=transaction.client_id,
-            sender_id=transaction.processed_by_id,
+            recipient_id=transaction_obj.client_id,
+            sender_id=transaction_obj.processed_by_id,
             mode=NOTIFICATION_MODE_ASSISTANT,
             notification_type=ACCEPT_ASSISTANT_PAYMENT_CLIENT_TYPE,
-            organization_id=transaction.organization_id,
+            organization_id=transaction_obj.organization_id,
             extra_data=dict(
-                transaction_id=transaction.id,
-                total_price=transaction.final_amount,
-                currency=transaction.currency.code,
+                transaction_id=transaction_obj.id,
+                total_price=transaction_obj.final_amount,
+                currency=transaction_obj.currency.code,
                 assistant_position=assistant.position,
                 assistant_name=assistant.name,
             ),
         )
+
+    @classmethod
+    def _create_telegram_bot_after_payment(cls, organization, requested_by, base_url: str = None):
+        """Create Telegram bot after successful payment."""
+        try:
+            from messenger_bots.models import TelegramBot, BotCreationRequest, BotCreationStatus
+            from messenger_bots.tasks import create_telegram_bot_task
+
+            # Check if bot already exists
+            existing_bot = TelegramBot.objects.filter(organization=organization).first()
+            if existing_bot:
+                logging.info(f"[PAYMENT] Telegram bot already exists for org {organization.id}")
+                return
+
+            # Check for available userbots
+            from messenger_bots.models import TelegramUserbot
+            available_userbot = TelegramUserbot.objects.filter(
+                is_active=True,
+                is_authenticated=True,
+                bots_created_today__lt=20,
+            ).first()
+
+            if not available_userbot:
+                logging.warning(f"[PAYMENT] No available userbots for org {organization.id}")
+                return
+
+            # Generate bot name
+            bot_name = f"{organization.title} APZ"
+            if len(bot_name) > 64:
+                bot_name = f"{organization.title[:57]} APZ"
+
+            # Use default base_url if not provided
+            if not base_url:
+                base_url = getattr(settings, "SITE_URL", "https://apofiz.com")
+
+            # Create request
+            creation_request = BotCreationRequest.objects.create(
+                organization=organization,
+                requested_by=requested_by,
+                bot_name=bot_name,
+                status=BotCreationStatus.PENDING,
+                base_url=base_url,
+            )
+
+            logging.info(f"[PAYMENT] Creating Telegram bot for org {organization.id}, request_id={creation_request.id}")
+
+            # Start async task
+            create_telegram_bot_task.delay(creation_request.id, base_url)
+
+        except Exception as e:
+            logging.error(f"[PAYMENT] Error creating Telegram bot: {e}", exc_info=True)
 
     @classmethod
     @transaction.atomic

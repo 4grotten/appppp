@@ -402,40 +402,26 @@ class BotAssistantService:
             marketing_info = training_data.get("marketing_info", [])
             item_info = training_data.get("item_info")
 
-            # Load and filter catalog content ONLY if question is about products
+            # Load full catalog (same as website chat - no filtering)
             catalog_content = ""
             catalog_file = training_data.get("catalog_file")
 
             from messenger_bots.services.ai_utils import (
-                should_load_catalog,
-                extract_search_keywords,
-                filter_catalog_by_keywords,
+                format_catalog_json,
                 get_http_session_with_retry,
             )
 
-            # Check if question is about products BEFORE loading catalog
-            if catalog_file and should_load_catalog(question):
+            if catalog_file:
                 print(f"[AI_ASSISTANT] Loading catalog from: {catalog_file}")
                 try:
-                    # Load raw JSON
                     session = get_http_session_with_retry()
                     response = session.get(catalog_file, timeout=(5, 15))
                     response.raise_for_status()
-                    raw_json = response.content
-
-                    # Extract keywords from question and filter catalog
-                    keywords = extract_search_keywords(question)
-                    catalog_content = filter_catalog_by_keywords(raw_json, keywords)
+                    catalog_content = format_catalog_json(response.content)
 
                     print(f"[AI_ASSISTANT] catalog loaded: {len(catalog_content)} chars")
-                    if catalog_content:
-                        print(f"[AI_ASSISTANT] catalog preview: {catalog_content[:300]}...")
-                    else:
-                        print("[AI_ASSISTANT] WARNING: catalog_content is EMPTY!")
                 except Exception as e:
                     print(f"[AI_ASSISTANT] ERROR loading catalog {catalog_file}: {e}")
-            else:
-                print("[AI_ASSISTANT] Skipping catalog - question not about products")
 
             # Build comprehensive system prompt (compatible with telegram.py parsing)
             system_prompt = build_system_prompt(

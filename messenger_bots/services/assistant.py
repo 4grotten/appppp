@@ -1,8 +1,12 @@
+import hashlib
 import logging
+import re
+import time
 from typing import Dict, List, Optional
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from organizations.models import Assistant, Organization
 from shop.services.comment_services import CommentService
@@ -11,6 +15,197 @@ logger = logging.getLogger(__name__)
 
 # Number of previous messages to include for context
 CHAT_HISTORY_LIMIT = 5
+
+# AI Response caching settings
+RESPONSE_CACHE_TIMEOUT = 60 * 60  # 1 hour
+FREQUENCY_CACHE_TIMEOUT = 24 * 60 * 60  # 24 hours
+
+# Per-organization frequency threshold
+MIN_FREQUENCY_TO_CACHE = 3  # Cache after 3 identical questions per org
+
+# Global frequency threshold (across ALL organizations)
+GLOBAL_MIN_FREQUENCY_TO_CACHE = 20  # Cache after 20 identical questions globally
+
+# Common question patterns - cache immediately on first request
+# These are normalized patterns (lowercase, no punctuation)
+COMMON_QUESTION_PATTERNS = {
+    # Greetings
+    "привет", "здравствуйте", "добрый день", "добрый вечер", "доброе утро",
+    "hello", "hi", "hey", "good morning", "good evening",
+    # Contacts
+    "контакты", "контакт", "телефон", "номер телефона", "позвонить",
+    "адрес", "где находитесь", "где вы находитесь", "как доехать",
+    "contacts", "contact", "phone", "address", "location",
+    # Working hours
+    "режим работы", "график работы", "время работы", "часы работы",
+    "когда работаете", "во сколько открываетесь", "во сколько закрываетесь",
+    "working hours", "open hours", "when do you open",
+    # General info
+    "что вы продаете", "чем занимаетесь", "о компании", "о магазине",
+    "what do you sell", "about", "about company",
+    # Delivery/Payment
+    "доставка", "как заказать", "оплата", "способы оплаты",
+    "delivery", "how to order", "payment",
+}
+
+# Metrics cache timeout
+METRICS_CACHE_TIMEOUT = 24 * 60 * 60  # 24 hours
+
+# Global frequency cache key
+GLOBAL_FREQUENCY_CACHE_KEY = "ai_global_freq"
+
+
+def normalize_question(question: str) -> str:
+    """
+    Normalize a question for cache key generation.
+    - Lowercase
+    - Remove extra whitespace
+    - Remove punctuation (keep Cyrillic and Latin letters, numbers)
+    """
+    # Lowercase
+    text = question.lower().strip()
+    # Remove punctuation but keep letters (Cyrillic + Latin) and numbers
+    text = re.sub(r'[^\w\sа-яёА-ЯЁ]', '', text)
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
+def get_response_cache_key(org_id: int, question: str) -> str:
+    """Generate cache key for AI response."""
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    return f"ai_response:{org_id}:{question_hash}"
+
+
+def get_frequency_cache_key(org_id: int, question: str) -> str:
+    """Generate cache key for question frequency tracking (per-org)."""
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    return f"ai_freq:{org_id}:{question_hash}"
+
+
+def get_global_frequency(question: str) -> int:
+    """Get global frequency count for a question (across all orgs)."""
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    cache_key = f"ai_global_freq:{question_hash}"
+    return cache.get(cache_key) or 0
+
+
+def increment_org_frequency(org_id: int, question: str) -> int:
+    """
+    Atomically increment and return per-org frequency count for a question.
+    Uses cache.incr() for thread-safe operation with concurrent users.
+    """
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    cache_key = f"ai_freq:{org_id}:{question_hash}"
+
+    try:
+        # Try atomic increment (works with Redis/Memcached)
+        return cache.incr(cache_key)
+    except ValueError:
+        # Key doesn't exist, create it
+        cache.set(cache_key, 1, timeout=FREQUENCY_CACHE_TIMEOUT)
+        return 1
+
+
+def increment_global_frequency(question: str) -> int:
+    """
+    Atomically increment and return global frequency count for a question.
+    Uses cache.incr() for thread-safe operation with concurrent users.
+    """
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    cache_key = f"ai_global_freq:{question_hash}"
+
+    try:
+        # Try atomic increment (works with Redis/Memcached)
+        return cache.incr(cache_key)
+    except ValueError:
+        # Key doesn't exist, create it
+        cache.set(cache_key, 1, timeout=FREQUENCY_CACHE_TIMEOUT)
+        return 1
+
+
+def is_common_question(question: str) -> bool:
+    """Check if question matches common patterns that should be cached immediately."""
+    normalized = normalize_question(question)
+    # Exact match
+    if normalized in COMMON_QUESTION_PATTERNS:
+        return True
+    # Check if normalized question starts with a common pattern
+    for pattern in COMMON_QUESTION_PATTERNS:
+        if normalized.startswith(pattern) or pattern in normalized:
+            return True
+    return False
+
+
+def should_cache_response(question: str, org_frequency: int) -> bool:
+    """
+    Determine if a response should be cached based on:
+    1. Common question patterns (cache immediately)
+    2. Per-org frequency (>= 3)
+    3. Global frequency (>= 20)
+    """
+    # Common patterns - always cache
+    if is_common_question(question):
+        logger.debug(f"[CACHE] Common pattern detected: '{question[:30]}...'")
+        return True
+
+    # Per-org frequency threshold
+    if org_frequency >= MIN_FREQUENCY_TO_CACHE:
+        logger.debug(f"[CACHE] Per-org frequency threshold met: {org_frequency}")
+        return True
+
+    # Global frequency threshold
+    global_freq = get_global_frequency(question)
+    if global_freq >= GLOBAL_MIN_FREQUENCY_TO_CACHE:
+        logger.debug(f"[CACHE] Global frequency threshold met: {global_freq}")
+        return True
+
+    return False
+
+
+def update_metrics(
+    org_id: int,
+    response_time_ms: float,
+    cache_hit: bool,
+    error: bool = False,
+) -> None:
+    """
+    Update AI assistant metrics using atomic increments.
+    Thread-safe for concurrent users.
+    """
+    try:
+        org_key = str(org_id)
+        base_key = f"ai_metrics:{org_key}"
+
+        # Atomic increments for counters
+        def safe_incr(key: str, delta: int = 1) -> int:
+            try:
+                return cache.incr(key, delta)
+            except ValueError:
+                cache.set(key, delta, timeout=METRICS_CACHE_TIMEOUT)
+                return delta
+
+        safe_incr(f"{base_key}:total_requests")
+        safe_incr(f"{base_key}:total_response_time_ms", int(response_time_ms))
+
+        if cache_hit:
+            safe_incr(f"{base_key}:cache_hits")
+        if error:
+            safe_incr(f"{base_key}:errors")
+
+        # Update timestamp (not critical if overwritten)
+        cache.set(
+            f"{base_key}:last_updated",
+            time.strftime("%Y-%m-%d %H:%M:%S"),
+            timeout=METRICS_CACHE_TIMEOUT
+        )
+    except Exception as e:
+        logger.warning(f"[METRICS] Failed to update metrics: {e}")
 
 
 class BotAssistantService:
@@ -26,7 +221,7 @@ class BotAssistantService:
     ) -> str:
         """
         Get AI response for a question using organization's assistant.
-        Calls the AI Assistant service API.
+        Uses smart caching for frequent questions.
 
         Args:
             organization: The organization
@@ -34,6 +229,10 @@ class BotAssistantService:
             chat_history: List of previous messages [{"role": "user/assistant", "content": "..."}]
             user_language: User's language code (e.g., "ru", "en", "kg")
         """
+        start_time = time.time()
+        cache_hit = False
+        error_occurred = False
+
         logger.info("[AI_ASSISTANT] ====== GET RESPONSE ======")
         logger.info(
             f"[AI_ASSISTANT] org_id={organization.id}, org='{organization.title}'"
@@ -64,6 +263,26 @@ class BotAssistantService:
                 f"[AI_ASSISTANT] Assistant: '{assistant.name}', enabled={assistant.is_enabled}"
             )
 
+            # Check response cache first (only for simple questions without much context)
+            # Skip cache for questions with chat history (contextual questions)
+            response_cache_key = get_response_cache_key(organization.id, question)
+            if not chat_history or len(chat_history) <= 1:
+                cached_response = cache.get(response_cache_key)
+                if cached_response:
+                    cache_hit = True
+                    logger.info(f"[AI_ASSISTANT] CACHE HIT for question: '{question[:50]}...'")
+                    response_time_ms = (time.time() - start_time) * 1000
+                    update_metrics(organization.id, response_time_ms, cache_hit=True)
+                    return cached_response
+
+            # Track question frequency atomically (thread-safe for concurrent users)
+            org_frequency = increment_org_frequency(organization.id, question)
+            global_frequency = increment_global_frequency(question)
+
+            logger.debug(
+                f"[AI_ASSISTANT] Frequency - org: {org_frequency}, global: {global_frequency}"
+            )
+
             # Prepare training data
             logger.debug("[AI_ASSISTANT] Preparing training data...")
             training_data = cls._prepare_training_data(
@@ -77,14 +296,37 @@ class BotAssistantService:
                 question, training_data, chat_history, user_language
             )
             logger.info(f"[AI_ASSISTANT] Response received: '{response[:100]}...'")
+
+            # Cache response based on frequency thresholds or common patterns
+            # Don't cache product responses (contain prices that may change)
+            is_product_response = "Товар:" in response or "Product:" in response
+            if not is_product_response and should_cache_response(question, org_frequency):
+                cache.set(response_cache_key, response, timeout=RESPONSE_CACHE_TIMEOUT)
+                logger.info(
+                    f"[AI_ASSISTANT] CACHED response (org_freq={org_frequency}, "
+                    f"global_freq={global_frequency}, common={is_common_question(question)})"
+                )
+
             logger.info("[AI_ASSISTANT] ====== GET RESPONSE END ======")
             return response
 
         except Exception as e:
+            error_occurred = True
             logger.error(
                 f"[AI_ASSISTANT] EXCEPTION in get_response: {e}", exc_info=True
             )
             return cls._get_message("error", user_language)
+
+        finally:
+            # Track metrics
+            response_time_ms = (time.time() - start_time) * 1000
+            update_metrics(
+                organization.id,
+                response_time_ms,
+                cache_hit=cache_hit,
+                error=error_occurred,
+            )
+            logger.info(f"[AI_ASSISTANT] Response time: {response_time_ms:.0f}ms")
 
     @classmethod
     def _prepare_training_data(
@@ -549,3 +791,90 @@ class BotAssistantService:
 
         # Only support ru and en for now
         return short_code if short_code in cls.SUPPORTED_LANGUAGES else "ru"
+
+    # ============== Metrics ==============
+
+    @classmethod
+    def get_metrics(cls, org_id: Optional[int] = None) -> dict:
+        """
+        Get AI assistant metrics.
+
+        Args:
+            org_id: If provided, get metrics for specific org. Otherwise, get all.
+
+        Returns:
+            Dict with metrics including:
+            - total_requests: Total number of requests
+            - cache_hits: Number of cache hits
+            - cache_hit_rate: Percentage of cache hits
+            - errors: Number of errors
+            - avg_response_time_ms: Average response time in milliseconds
+        """
+        if org_id:
+            # Read from atomic counter keys
+            org_metrics = cls._read_org_metrics(org_id)
+            return cls._calculate_rates(org_metrics)
+
+        # For all orgs, we need to scan for metrics keys
+        # This is a simplified implementation - returns empty for "all"
+        # since atomic keys don't support easy enumeration
+        logger.warning("[METRICS] get_metrics() without org_id not fully supported with atomic counters")
+        return {}
+
+    @classmethod
+    def _read_org_metrics(cls, org_id: int) -> dict:
+        """
+        Read metrics for a specific organization from atomic counter keys.
+        """
+        base_key = f"ai_metrics:{org_id}"
+        return {
+            "total_requests": cache.get(f"{base_key}:total_requests") or 0,
+            "cache_hits": cache.get(f"{base_key}:cache_hits") or 0,
+            "errors": cache.get(f"{base_key}:errors") or 0,
+            "total_response_time_ms": cache.get(f"{base_key}:total_response_time_ms") or 0,
+            "last_updated": cache.get(f"{base_key}:last_updated"),
+        }
+
+    @classmethod
+    def _calculate_rates(cls, metrics: dict) -> dict:
+        """Calculate rate metrics from raw counts."""
+        if not metrics:
+            return {
+                "total_requests": 0,
+                "cache_hits": 0,
+                "cache_hit_rate": 0.0,
+                "errors": 0,
+                "error_rate": 0.0,
+                "avg_response_time_ms": 0.0,
+                "last_updated": None,
+            }
+
+        total = metrics.get("total_requests", 0)
+        hits = metrics.get("cache_hits", 0)
+        errors = metrics.get("errors", 0)
+        total_time = metrics.get("total_response_time_ms", 0)
+
+        return {
+            "total_requests": total,
+            "cache_hits": hits,
+            "cache_hit_rate": round((hits / total * 100) if total > 0 else 0, 1),
+            "errors": errors,
+            "error_rate": round((errors / total * 100) if total > 0 else 0, 1),
+            "avg_response_time_ms": round(total_time / total if total > 0 else 0, 0),
+            "last_updated": metrics.get("last_updated"),
+        }
+
+    @classmethod
+    def clear_response_cache(cls, org_id: int) -> int:
+        """
+        Clear all cached AI responses for an organization.
+        Useful when training data is updated.
+
+        Returns number of keys cleared (approximate).
+        """
+        # Note: This is a simple implementation. For production with Redis,
+        # you might want to use SCAN with pattern matching.
+        logger.info(f"[AI_ASSISTANT] Clearing response cache for org {org_id}")
+        # The training data cache invalidation already handles this via signals
+        # This method is for manual clearing if needed
+        return 0

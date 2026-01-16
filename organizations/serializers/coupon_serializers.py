@@ -53,15 +53,6 @@ class CouponListSerializer(serializers.ModelSerializer):
             # "currency",
         ]
 
-        # def get_currency(self, obj):
-        #     if obj.product and obj.product.currency:
-        #         return {
-        #             "id": obj.product.currency.id,
-        #             "name": getattr(obj.product.currency, 'name', str(obj.product.currency)),
-        #             "code": getattr(obj.product.currency, 'code', None)
-        #         }
-        #     return None
-
 
 class ValidateCreateCouponSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(required=False, default=True)

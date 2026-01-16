@@ -1,6 +1,8 @@
 import logging
 import re
 import os
+import tempfile
+import requests
 from typing import Optional, Tuple, Dict, Any, List
 from datetime import date
 import asyncio
@@ -8,6 +10,7 @@ import asyncio
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db import connection
+from asgiref.sync import sync_to_async
 
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -49,12 +52,12 @@ def _run_async_unsafe(coro):
 
 async def _save_model(model, update_fields=None):
     """
-    Save model - works in async context with DJANGO_ALLOW_ASYNC_UNSAFE.
+    Save model - works in async context using sync_to_async.
     """
     if update_fields:
-        model.save(update_fields=update_fields)
+        await sync_to_async(model.save)(update_fields=update_fields)
     else:
-        model.save()
+        await sync_to_async(model.save)()
 
 from messenger_bots.models import (
     TelegramUserbot,
@@ -152,6 +155,17 @@ class UserbotAuthService:
             # Send code request
             sent_code = await self.client.send_code_request(self.userbot.phone_number)
 
+            # Extract delivery type info from Telegram response
+            code_type = type(sent_code.type).__name__
+            next_type = type(sent_code.next_type).__name__ if sent_code.next_type else None
+            timeout = getattr(sent_code, 'timeout', None)
+
+            logger.info(
+                f"[USERBOT_AUTH] Telegram response for {self.userbot.phone_number}: "
+                f"type={code_type}, next_type={next_type}, timeout={timeout}, "
+                f"hash_exists={bool(sent_code.phone_code_hash)}"
+            )
+
             # Save phone_code_hash for later verification
             self.userbot.phone_code_hash = sent_code.phone_code_hash
             self.userbot.auth_state = UserbotAuthState.CODE_SENT
@@ -163,6 +177,12 @@ class UserbotAuthService:
                 "success": True,
                 "message": f"Code sent to {self.userbot.phone_number}",
                 "next_step": "verify_code",
+                "telegram_response": {
+                    "code_type": code_type,
+                    "next_type": next_type,
+                    "timeout": timeout,
+                    "phone_code_hash_received": bool(sent_code.phone_code_hash),
+                },
             }
 
         except FloodWaitError as e:
@@ -179,6 +199,148 @@ class UserbotAuthService:
             self.userbot.auth_state_message = error_msg
             self.userbot.last_error = error_msg
             await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message", "last_error"])
+            return {"success": False, "error": error_msg}
+
+        finally:
+            if self.client:
+                await self.client.disconnect()
+
+    async def qr_login_start(self) -> Dict[str, Any]:
+        """
+        Start QR code login process.
+        Returns a URL that should be encoded as QR code for user to scan.
+        """
+        try:
+            self.client = self._create_client()
+            await self.client.connect()
+
+            # Check if already authorized
+            if await self.client.is_user_authorized():
+                self.userbot.session_string = self.client.session.save()
+                self.userbot.is_authenticated = True
+                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
+                self.userbot.auth_state_message = "Already authenticated!"
+                await _save_model(self.userbot, update_fields=[
+                    "session_string", "is_authenticated", "auth_state", "auth_state_message"
+                ])
+                return {
+                    "success": True,
+                    "already_authenticated": True,
+                    "message": "Already authenticated!",
+                }
+
+            # Start QR login
+            qr_login = await self.client.qr_login()
+
+            logger.info(
+                f"[USERBOT_AUTH] QR login started for {self.userbot.phone_number}: "
+                f"url={qr_login.url[:50]}..., expires={qr_login.expires}"
+            )
+
+            # CRITICAL: Save session_string so qr_login_check() can reconnect
+            # with the same session that generated the QR code
+            self.userbot.session_string = self.client.session.save()
+            self.userbot.auth_state = UserbotAuthState.CODE_SENT
+            self.userbot.auth_state_message = "Scan QR code with Telegram app to login."
+            self.userbot.last_error = None
+            await _save_model(self.userbot, update_fields=[
+                "session_string", "auth_state", "auth_state_message", "last_error"
+            ])
+
+            return {
+                "success": True,
+                "qr_url": qr_login.url,
+                "expires": qr_login.expires.isoformat() if qr_login.expires else None,
+                "message": "QR code generated. Scan with Telegram app.",
+                "next_step": "qr_wait",
+            }
+
+        except FloodWaitError as e:
+            error_msg = f"Too many requests. Wait {e.seconds} seconds before trying again."
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=[
+                "auth_state", "auth_state_message", "last_error"
+            ])
+            return {"success": False, "error": error_msg}
+
+        except Exception as e:
+            error_msg = str(e)
+            self.userbot.auth_state = UserbotAuthState.ERROR
+            self.userbot.auth_state_message = error_msg
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=[
+                "auth_state", "auth_state_message", "last_error"
+            ])
+            return {"success": False, "error": error_msg}
+
+        finally:
+            if self.client:
+                await self.client.disconnect()
+
+    async def qr_login_check(self) -> Dict[str, Any]:
+        """
+        Check if user has scanned QR code and is now authorized.
+        This only checks authorization status, doesn't generate new QR.
+        """
+        try:
+            self.client = self._create_client()
+            await self.client.connect()
+
+            # Check if authorized (user scanned QR)
+            if await self.client.is_user_authorized():
+                self.userbot.session_string = self.client.session.save()
+                self.userbot.is_authenticated = True
+                self.userbot.auth_state = UserbotAuthState.AUTHENTICATED
+                self.userbot.auth_state_message = "Successfully authenticated via QR!"
+                self.userbot.last_error = None
+                await _save_model(self.userbot, update_fields=[
+                    "session_string", "is_authenticated", "auth_state",
+                    "auth_state_message", "last_error"
+                ])
+
+                me = await self.client.get_me()
+                logger.info(
+                    f"[USERBOT_AUTH] QR auth successful for {self.userbot.phone_number}: "
+                    f"user={me.first_name} (@{me.username})"
+                )
+                return {
+                    "success": True,
+                    "message": f"Successfully authenticated as {me.first_name}!",
+                    "user_info": {
+                        "id": me.id,
+                        "first_name": me.first_name,
+                        "username": me.username,
+                    },
+                }
+
+            # Not yet authorized - user hasn't scanned
+            logger.info(
+                f"[USERBOT_AUTH] QR check for {self.userbot.phone_number}: not yet authorized"
+            )
+            return {
+                "success": False,
+                "not_scanned": True,
+                "error": "QR code not scanned yet. Please scan and try again.",
+            }
+
+        except SessionPasswordNeededError:
+            # 2FA is enabled - need password
+            self.userbot.auth_state = UserbotAuthState.AWAITING_2FA
+            self.userbot.auth_state_message = "2FA is enabled. Enter your password to continue."
+            await _save_model(self.userbot, update_fields=["auth_state", "auth_state_message"])
+            return {
+                "success": False,
+                "needs_2fa": True,
+                "message": "2FA is enabled. Please enter your password.",
+                "next_step": "verify_2fa",
+            }
+
+        except Exception as e:
+            error_msg = str(e)
+            self.userbot.last_error = error_msg
+            await _save_model(self.userbot, update_fields=["last_error"])
             return {"success": False, "error": error_msg}
 
         finally:
@@ -592,6 +754,9 @@ class BotFactoryService:
             await _save_model(self.userbot, update_fields=["bots_created_today", "total_bots_created", "last_used_at"])
             logger.info(f"[BOT_FACTORY] Userbot stats updated: today={self.userbot.bots_created_today}/20, total={self.userbot.total_bots_created}")
 
+            # Try to set bot avatar from organization image
+            await self._set_bot_avatar(client, botfather, final_username, request.organization)
+
             logger.info(f"[BOT_FACTORY] ====== CREATE BOT SUCCESS ======")
             logger.info(f"[BOT_FACTORY] Created bot @{final_username} for org {request.organization.id}")
             return True, bot_token
@@ -611,6 +776,79 @@ class BotFactoryService:
         finally:
             await self.disconnect()
 
+    async def _set_bot_avatar(self, client: TelegramClient, botfather, bot_username: str, organization) -> bool:
+        """
+        Set bot avatar using organization image via BotFather.
+
+        Flow:
+        1. Download organization image
+        2. Send /setuserpic to BotFather
+        3. Send bot username
+        4. Send the image file
+        """
+        try:
+            # Get organization image URL
+            @sync_to_async
+            def get_org_image_url():
+                if organization.image and organization.image.file:
+                    return organization.image.file.url
+                return None
+
+            image_url = await get_org_image_url()
+
+            if not image_url:
+                logger.info(f"[BOT_FACTORY] No organization image, skipping avatar setup")
+                return False
+
+            logger.info(f"[BOT_FACTORY] Setting bot avatar from: {image_url[:50]}...")
+
+            # Download image to temp file
+            response = requests.get(image_url, timeout=30)
+            if response.status_code != 200:
+                logger.warning(f"[BOT_FACTORY] Failed to download image: {response.status_code}")
+                return False
+
+            # Save to temp file
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+                tmp_file.write(response.content)
+                tmp_path = tmp_file.name
+
+            try:
+                # Step 1: Send /setuserpic
+                logger.info(f"[BOT_FACTORY] Sending /setuserpic to BotFather...")
+                await client.send_message(botfather, "/setuserpic")
+                await asyncio.sleep(2)
+
+                # Step 2: Send bot username
+                logger.info(f"[BOT_FACTORY] Sending bot username @{bot_username}...")
+                await client.send_message(botfather, f"@{bot_username}")
+                await asyncio.sleep(2)
+
+                # Step 3: Send the image
+                logger.info(f"[BOT_FACTORY] Sending avatar image...")
+                await client.send_file(botfather, tmp_path)
+                await asyncio.sleep(2)
+
+                # Check response
+                messages = await client.get_messages(botfather, limit=1)
+                response_text = messages[0].text if messages and messages[0].text else ""
+
+                if "success" in response_text.lower() or "done" in response_text.lower():
+                    logger.info(f"[BOT_FACTORY] Bot avatar set successfully!")
+                    return True
+                else:
+                    logger.info(f"[BOT_FACTORY] Avatar response: {response_text[:100]}")
+                    return True  # Assume success if no error
+
+            finally:
+                # Clean up temp file
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        except Exception as e:
+            logger.warning(f"[BOT_FACTORY] Failed to set bot avatar: {e}")
+            return False
+
     @classmethod
     async def get_available_userbot(cls) -> Optional[TelegramUserbot]:
         """Get an available userbot for bot creation."""
@@ -618,13 +856,17 @@ class BotFactoryService:
         # Reset daily counter if new day
         today = date.today()
 
-        userbots = list(
-            TelegramUserbot.objects.filter(
-                is_active=True,
-                is_authenticated=True,
-                bots_created_today__lt=20,  # BotFather daily limit
-            ).order_by("bots_created_today", "last_used_at")
-        )
+        @sync_to_async
+        def get_userbots():
+            return list(
+                TelegramUserbot.objects.filter(
+                    is_active=True,
+                    is_authenticated=True,
+                    bots_created_today__lt=20,  # BotFather daily limit
+                ).order_by("bots_created_today", "last_used_at")
+            )
+
+        userbots = await get_userbots()
 
         logger.info(f"[BOT_FACTORY] Found {len(userbots)} candidate userbots")
 

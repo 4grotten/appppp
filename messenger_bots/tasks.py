@@ -48,6 +48,46 @@ def userbot_send_code_task(userbot_id: int):
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
+def userbot_qr_login_start_task(userbot_id: int):
+    """Start QR code login - returns QR URL to display."""
+    logger.info(f"[USERBOT_TASK] qr_login_start started for userbot_id={userbot_id}")
+
+    try:
+        userbot = TelegramUserbot.objects.get(id=userbot_id)
+    except TelegramUserbot.DoesNotExist:
+        logger.error(f"[USERBOT_TASK] Userbot {userbot_id} not found")
+        return {"success": False, "error": "Userbot not found"}
+
+    from messenger_bots.services.bot_factory import UserbotAuthService
+
+    service = UserbotAuthService(userbot)
+    result = _run_async(service.qr_login_start())
+
+    logger.info(f"[USERBOT_TASK] qr_login_start result: {result}")
+    return result
+
+
+@shared_task(time_limit=60, soft_time_limit=50, ignore_result=False)
+def userbot_qr_login_check_task(userbot_id: int):
+    """Check if user has scanned QR code."""
+    logger.info(f"[USERBOT_TASK] qr_login_check started for userbot_id={userbot_id}")
+
+    try:
+        userbot = TelegramUserbot.objects.get(id=userbot_id)
+    except TelegramUserbot.DoesNotExist:
+        logger.error(f"[USERBOT_TASK] Userbot {userbot_id} not found")
+        return {"success": False, "error": "Userbot not found"}
+
+    from messenger_bots.services.bot_factory import UserbotAuthService
+
+    service = UserbotAuthService(userbot)
+    result = _run_async(service.qr_login_check())
+
+    logger.info(f"[USERBOT_TASK] qr_login_check result: {result}")
+    return result
+
+
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
 def userbot_verify_code_task(userbot_id: int, code: str):
     logger.info(f"[USERBOT_TASK] verify_code started for userbot_id={userbot_id}")
 
@@ -166,6 +206,113 @@ def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
 CHAT_HISTORY_LIMIT = 5
 
 
+@shared_task(bind=True, max_retries=3, default_retry_delay=5)
+def send_telegram_products_task(
+    self,
+    telegram_bot_id: int,
+    chat_id: int,
+    products: list,
+    footer: str,
+    page: int = 0,
+    language: str = "ru",
+):
+    """
+    Send products with pagination asynchronously.
+    This avoids blocking the webhook response with time.sleep().
+    """
+    import time
+    from messenger_bots.services.telegram import (
+        TelegramBotService,
+        PRODUCTS_PER_PAGE,
+        MESSAGE_DELAY,
+    )
+
+    logger.info(f"[TG_PRODUCTS_TASK] Starting: bot_id={telegram_bot_id}, chat_id={chat_id}, page={page}")
+
+    try:
+        telegram_bot = TelegramBot.objects.select_related("organization").get(id=telegram_bot_id)
+        chat = BotChat.objects.get(id=chat_id)
+    except (TelegramBot.DoesNotExist, BotChat.DoesNotExist) as e:
+        logger.error(f"[TG_PRODUCTS_TASK] ERROR: {e}")
+        return {"success": False, "error": str(e)}
+
+    service = TelegramBotService(telegram_bot)
+    platform_chat_id = chat.platform_chat_id
+
+    start = page * PRODUCTS_PER_PAGE
+    batch = products[start:start + PRODUCTS_PER_PAGE]
+    messages_sent = 0
+
+    # Send products with delay between messages
+    for i, product in enumerate(batch):
+        if i > 0:
+            time.sleep(MESSAGE_DELAY)
+
+        result = service.send_message(platform_chat_id, product)
+        if result:
+            BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=product,
+                platform_message_id=str(result.get("message_id", "")),
+            )
+            messages_sent += 1
+
+    has_more = (start + PRODUCTS_PER_PAGE) < len(products)
+
+    if has_more:
+        # Send "Show more" button
+        remaining = len(products) - (start + PRODUCTS_PER_PAGE)
+        show_count = min(remaining, PRODUCTS_PER_PAGE)
+
+        time.sleep(MESSAGE_DELAY)
+
+        button_text = {
+            "ru": f"Показать ещё {show_count}",
+            "en": f"Show {show_count} more",
+        }
+        status_text = {
+            "ru": f"Показано {start + len(batch)} из {len(products)} товаров",
+            "en": f"Shown {start + len(batch)} of {len(products)} products",
+        }
+
+        keyboard = {
+            "inline_keyboard": [[{
+                "text": button_text.get(language, button_text["ru"]),
+                "callback_data": f"{TelegramBotService.CALLBACK_MORE_PRODUCTS}{page + 1}",
+            }]]
+        }
+
+        result = service.send_message(
+            platform_chat_id,
+            status_text.get(language, status_text["ru"]),
+            reply_markup=keyboard,
+        )
+        if result:
+            BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=status_text.get(language, status_text["ru"]),
+                platform_message_id=str(result.get("message_id", "")),
+            )
+    else:
+        # Send footer
+        if footer:
+            time.sleep(MESSAGE_DELAY)
+            keyboard = service.build_main_menu_keyboard(language)
+            result = service.send_message(platform_chat_id, footer, reply_markup=keyboard)
+            if result:
+                BotMessage.objects.create(
+                    chat=chat,
+                    sender=BotMessage.ASSISTANT,
+                    text=footer,
+                    platform_message_id=str(result.get("message_id", "")),
+                )
+
+    logger.info(f"[TG_PRODUCTS_TASK] Completed: sent {messages_sent} products")
+    return {"success": True, "messages_sent": messages_sent}
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def create_telegram_bot_task(self, request_id: int, base_url: str):
     logger.info("[CELERY_TASK] ====== CREATE_TELEGRAM_BOT_TASK START ======")
@@ -238,6 +385,10 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
                 )
             else:
                 logger.info("[CELERY_TASK] Webhook set successfully!")
+
+                # Add bot link to organization contacts
+                from messenger_bots.utils import add_bot_link_to_contacts
+                add_bot_link_to_contacts(request.organization, request.bot_username)
         else:
             logger.warning(
                 "[CELERY_TASK] WARNING: Could not get bot info (getMe failed)"
@@ -284,7 +435,9 @@ def check_pending_bot_requests():
 
     for request in pending_requests:
         logger.info(f"Processing stale pending request {request.id}")
-        base_url = "https://apofiz.com"  # Default, should be configured
+        # Use stored base_url or fallback to production
+        base_url = request.base_url or "https://apofiz.com"
+        logger.info(f"Using base_url: {base_url}")
         create_telegram_bot_task.delay(request.id, base_url)
 
     return {"processed": len(pending_requests)}
@@ -374,7 +527,9 @@ def process_whatsapp_message_task(
 
 
 def _get_whatsapp_chat_history(chat: BotChat) -> list:
-    messages = chat.messages.order_by("-created_at")[:CHAT_HISTORY_LIMIT]
+    """Get chat history for WhatsApp context (same limit as Telegram)."""
+    # Get last N*2 messages (same as Telegram for consistency)
+    messages = chat.messages.order_by("-created_at")[:CHAT_HISTORY_LIMIT * 2]
 
     history = []
     for msg in reversed(messages):
@@ -385,7 +540,7 @@ def _get_whatsapp_chat_history(chat: BotChat) -> list:
             }
         )
 
-    return history
+    return history[-CHAT_HISTORY_LIMIT * 2:]  # Last 5 pairs (10 messages)
 
 
 @shared_task
@@ -482,3 +637,107 @@ def sync_waha_session_status():
 
         except Exception as e:
             logger.error(f"WAHA status sync failed for org {bot.organization.id}: {e}")
+
+
+# ============== AI Assistant Cache Tasks ==============
+
+CACHE_TIMEOUT = 25 * 60  # 25 minutes (task runs every 20 min, so cache outlives task interval)
+
+
+@shared_task
+def cache_assistant_training_data():
+    """
+    Pre-cache training data (Q&A, catalog, PDF content) for all active assistants.
+    Runs every 20 minutes to keep cache warm.
+    Uses parallel file downloads for performance.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from django.core.cache import cache
+    from organizations.models import Assistant
+    from shop.services.comment_services import CommentService
+    from messenger_bots.services.ai_utils import (
+        format_catalog_json,
+        read_file_from_url,
+        get_http_session_with_retry,
+    )
+
+    # Get all enabled assistants with active bots
+    assistants = Assistant.objects.filter(
+        is_enabled=True,
+    ).select_related('organization').prefetch_related(
+        'organization__telegram_bot',
+        'organization__whatsapp_bot',
+    )
+
+    cached_count = 0
+    errors = []
+
+    for assistant in assistants:
+        org = assistant.organization
+
+        # Check if org has active bots (TG or WA)
+        has_tg = hasattr(org, 'telegram_bot') and org.telegram_bot.is_active
+        has_wa = hasattr(org, 'whatsapp_bot') and org.whatsapp_bot.is_active
+
+        if not (has_tg or has_wa):
+            continue
+
+        try:
+            cache_key = f"assistant_training_data:{org.id}"
+            logger.info(f"[CACHE_TASK] Caching training data for org {org.id} ({org.title})")
+
+            # Get base training data
+            training_data = CommentService.get_training_data(assistant=assistant)
+
+            # Parallel download of files
+            qa_pairs = training_data.get("answers", [])
+            file_urls = []
+            for qa in qa_pairs:
+                for file_url in (qa.get('files') or []):
+                    if file_url:
+                        file_urls.append(file_url)
+
+            # Download files in parallel
+            file_contents = {}
+            if file_urls:
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    future_to_url = {
+                        executor.submit(read_file_from_url, url): url
+                        for url in file_urls
+                    }
+                    for future in as_completed(future_to_url):
+                        url = future_to_url[future]
+                        try:
+                            content = future.result()
+                            if content:
+                                file_contents[url] = content
+                        except Exception as e:
+                            logger.warning(f"[CACHE_TASK] Failed to download {url}: {e}")
+
+            # Store file contents in training data
+            training_data['_cached_file_contents'] = file_contents
+
+            # Download and cache catalog
+            catalog_url = training_data.get("catalog_file")
+            if catalog_url:
+                try:
+                    session = get_http_session_with_retry()
+                    response = session.get(catalog_url, timeout=(5, 15))
+                    response.raise_for_status()
+                    catalog_content = format_catalog_json(response.content)
+                    training_data['_cached_catalog'] = catalog_content
+                    logger.info(f"[CACHE_TASK] Cached catalog: {len(catalog_content)} chars")
+                except Exception as e:
+                    logger.warning(f"[CACHE_TASK] Failed to download catalog: {e}")
+
+            # Store in cache
+            cache.set(cache_key, training_data, timeout=CACHE_TIMEOUT)
+            cached_count += 1
+            logger.info(f"[CACHE_TASK] Cached org {org.id}: {len(qa_pairs)} Q&A, {len(file_contents)} files")
+
+        except Exception as e:
+            logger.error(f"[CACHE_TASK] Error caching org {org.id}: {e}")
+            errors.append({"org_id": org.id, "error": str(e)})
+
+    logger.info(f"[CACHE_TASK] Completed: {cached_count} assistants cached, {len(errors)} errors")
+    return {"cached": cached_count, "errors": errors}

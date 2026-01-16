@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import BooleanField, Case, Max, Value, When
 from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, status
@@ -7,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
+
+logger = logging.getLogger(__name__)
 
 from common.exceptions import NotAcceptableException
 from organizations.models import Answer, AnswerFile, Assistant, Chat, Plan, Question
@@ -176,21 +180,36 @@ class PurchaseAssistantView(generics.CreateAPIView):
         duration_days = serializer.validated_data['duration_days']
         utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
 
-        user_assistant = AssistantService.create_or_renew_user_assistant(user=request.user,
-                                                                         processed_by=assistant.organization.owner,
-                                                                         assistant=assistant, plans=plans,
-                                                                         duration_days=duration_days,
-                                                                         utc_offset_minutes=utc_offset_minutes)
+        # Get base_url for bot creation after payment
+        base_url = request.build_absolute_uri("/").rstrip("/")
+
+        user_assistant = AssistantService.create_or_renew_user_assistant(
+            user=request.user,
+            processed_by=assistant.organization.owner,
+            assistant=assistant,
+            plans=plans,
+            duration_days=duration_days,
+            utc_offset_minutes=utc_offset_minutes,
+            base_url=base_url,
+        )
 
         update_assistant_json_task.delay(assistant.organization.id)
+
+        # Bot creation is now triggered AFTER payment in accept_assistant_transaction()
+        # Check if "Все включено" plan (id=5) is selected
+        plan_ids = [p.id for p in plans]
+        TELEGRAM_BOT_PLAN_ID = 5  # "Все включено" plan with Telegram Bot
+        will_create_bot = TELEGRAM_BOT_PLAN_ID in plan_ids
 
         return Response(
             {
                 "message": _("Success"),
                 "transaction_id": user_assistant.transaction_id,
-                "organization_id": assistant.organization.id
+                "organization_id": assistant.organization.id,
+                "telegram_bot_will_be_created": will_create_bot,
             }
         )
+
 
 class GetOrCreateChatView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated, )

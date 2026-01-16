@@ -36,7 +36,7 @@ class AssistantService:
 
     @classmethod
     def create_assistant_transaction(cls, user: User, processed_by: User, assistant: Assistant, utc_offset_minutes: int,
-                                     plans):
+                                     plans, base_url: str = None):
         currency = Currency.objects.get(code='USD')
         best_choice_plan = next((plan for plan in plans if plan.is_best_choice), None)
         if best_choice_plan:
@@ -45,6 +45,15 @@ class AssistantService:
             total_price = sum(plan.price for plan in plans)
 
         role = OrganizationService.get_user_role_in_organization(organization=assistant.organization, user=processed_by)
+
+        # Save plan_ids and base_url for bot creation after payment
+        plan_ids = [p.id for p in plans]
+        payment_info = {
+            "purchase_type": "assistant",
+            "plan_ids": plan_ids,
+        }
+        if base_url:
+            payment_info["base_url"] = base_url
 
         transaction = Transaction.objects.create(
             client=user,
@@ -59,7 +68,8 @@ class AssistantService:
             currency=currency,
             status=Transaction.ACCEPTED,
             payment_status=Transaction.IN_PROGRESS,
-            display_time=now() + timedelta(minutes=utc_offset_minutes)
+            display_time=now() + timedelta(minutes=utc_offset_minutes),
+            payment_info=payment_info,
         )
         transaction.save()
 
@@ -67,15 +77,17 @@ class AssistantService:
 
     @classmethod
     def create_or_renew_user_assistant(cls, user: User, processed_by: User, assistant: Assistant, plans: Plan,
-                                       duration_days: int, utc_offset_minutes: int):
+                                       duration_days: int, utc_offset_minutes: int, base_url: str = None):
         user_assistants = UserAssistant.objects.filter(assistant=assistant, user=user, is_active=True)
 
         if user_assistants.exists():
             longest_active_user_assistant = user_assistants.order_by('-active_until').first()
             old_active_until = longest_active_user_assistant.active_until
 
-            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
-                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+            transaction = cls.create_assistant_transaction(
+                user=user, processed_by=processed_by, assistant=assistant,
+                plans=plans, utc_offset_minutes=utc_offset_minutes, base_url=base_url
+            )
 
             user_assistant = UserAssistant.objects.create(
                 user=user,
@@ -86,8 +98,10 @@ class AssistantService:
             user_assistant.plans.set(plans)
             user_assistant.save()
         else:
-            transaction = cls.create_assistant_transaction(user=user, processed_by=processed_by, assistant=assistant,
-                                                           plans=plans, utc_offset_minutes=utc_offset_minutes)
+            transaction = cls.create_assistant_transaction(
+                user=user, processed_by=processed_by, assistant=assistant,
+                plans=plans, utc_offset_minutes=utc_offset_minutes, base_url=base_url
+            )
 
             user_assistant = UserAssistant.objects.create(
                 user=user,

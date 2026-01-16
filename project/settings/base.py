@@ -405,6 +405,22 @@ CELERY_TASK_ROUTES = {
     "organizations.tasks.update_posts": {"queue": "default"},
     "organizations.tasks.create_invoice_pdf": {"queue": "default"},
     "organizations.tasks.fetch_maalypay_status": {"queue": "default"},
+    # Messenger Bots tasks
+    "messenger_bots.tasks.create_telegram_bot_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.process_whatsapp_message_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.reset_userbot_daily_counters": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.check_pending_bot_requests": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.check_waha_session_health": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.sync_waha_session_status": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_send_code_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_qr_login_start_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_qr_login_check_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_verify_code_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_verify_2fa_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_check_connection_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_logout_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_get_dialogs_task": {"queue": "messenger_bots"},
+    "messenger_bots.tasks.userbot_send_test_message_task": {"queue": "messenger_bots"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)

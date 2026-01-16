@@ -395,9 +395,9 @@ def call_openai(
     question: str,
     system_prompt: str,
     chat_history: Optional[List[Dict[str, str]]] = None,
-    model: str = "gpt-3.5-turbo",
+    model: str = "gpt-4o-mini",  # 128k context, cheaper than gpt-3.5-turbo
     max_tokens: int = 1500,
-    temperature: float = 0.5,  # Same as consumers.py for consistency
+    temperature: float = 0.5,
 ) -> str:
     """
     Call OpenAI API via ai_assistant proxy service.

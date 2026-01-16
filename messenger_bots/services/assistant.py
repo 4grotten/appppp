@@ -440,7 +440,7 @@ class BotAssistantService:
                 question=question,
                 system_prompt=system_prompt,
                 chat_history=chat_history,
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",  # 128k context, cheaper than gpt-3.5-turbo
                 max_tokens=1500,
             )
 

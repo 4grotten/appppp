@@ -77,7 +77,6 @@ class AssistantDataService:
             organization__is_active=True,
             organization__is_deleted=False
         ).select_related('currency', 'subcategory')
-
         
         data_list = []
         for item in items:

@@ -48,8 +48,7 @@ COMMON_QUESTION_PATTERNS = {
     "delivery", "how to order", "payment",
 }
 
-# Metrics cache keys
-METRICS_CACHE_KEY = "ai_assistant_metrics"
+# Metrics cache timeout
 METRICS_CACHE_TIMEOUT = 24 * 60 * 60  # 24 hours
 
 # Global frequency cache key
@@ -90,21 +89,44 @@ def get_global_frequency(question: str) -> int:
     """Get global frequency count for a question (across all orgs)."""
     normalized = normalize_question(question)
     question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
-    global_freq = cache.get(GLOBAL_FREQUENCY_CACHE_KEY) or {}
-    return global_freq.get(question_hash, 0)
+    cache_key = f"ai_global_freq:{question_hash}"
+    return cache.get(cache_key) or 0
+
+
+def increment_org_frequency(org_id: int, question: str) -> int:
+    """
+    Atomically increment and return per-org frequency count for a question.
+    Uses cache.incr() for thread-safe operation with concurrent users.
+    """
+    normalized = normalize_question(question)
+    question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    cache_key = f"ai_freq:{org_id}:{question_hash}"
+
+    try:
+        # Try atomic increment (works with Redis/Memcached)
+        return cache.incr(cache_key)
+    except ValueError:
+        # Key doesn't exist, create it
+        cache.set(cache_key, 1, timeout=FREQUENCY_CACHE_TIMEOUT)
+        return 1
 
 
 def increment_global_frequency(question: str) -> int:
-    """Increment and return global frequency count for a question."""
+    """
+    Atomically increment and return global frequency count for a question.
+    Uses cache.incr() for thread-safe operation with concurrent users.
+    """
     normalized = normalize_question(question)
     question_hash = hashlib.md5(normalized.encode()).hexdigest()[:12]
+    cache_key = f"ai_global_freq:{question_hash}"
 
-    global_freq = cache.get(GLOBAL_FREQUENCY_CACHE_KEY) or {}
-    current = global_freq.get(question_hash, 0)
-    global_freq[question_hash] = current + 1
-
-    cache.set(GLOBAL_FREQUENCY_CACHE_KEY, global_freq, timeout=FREQUENCY_CACHE_TIMEOUT)
-    return global_freq[question_hash]
+    try:
+        # Try atomic increment (works with Redis/Memcached)
+        return cache.incr(cache_key)
+    except ValueError:
+        # Key doesn't exist, create it
+        cache.set(cache_key, 1, timeout=FREQUENCY_CACHE_TIMEOUT)
+        return 1
 
 
 def is_common_question(question: str) -> bool:
@@ -152,30 +174,36 @@ def update_metrics(
     cache_hit: bool,
     error: bool = False,
 ) -> None:
-    """Update AI assistant metrics."""
+    """
+    Update AI assistant metrics using atomic increments.
+    Thread-safe for concurrent users.
+    """
     try:
-        metrics = cache.get(METRICS_CACHE_KEY) or {}
         org_key = str(org_id)
+        base_key = f"ai_metrics:{org_key}"
 
-        if org_key not in metrics:
-            metrics[org_key] = {
-                "total_requests": 0,
-                "cache_hits": 0,
-                "errors": 0,
-                "total_response_time_ms": 0,
-                "last_updated": None,
-            }
+        # Atomic increments for counters
+        def safe_incr(key: str, delta: int = 1) -> int:
+            try:
+                return cache.incr(key, delta)
+            except ValueError:
+                cache.set(key, delta, timeout=METRICS_CACHE_TIMEOUT)
+                return delta
 
-        m = metrics[org_key]
-        m["total_requests"] += 1
-        m["total_response_time_ms"] += response_time_ms
+        safe_incr(f"{base_key}:total_requests")
+        safe_incr(f"{base_key}:total_response_time_ms", int(response_time_ms))
+
         if cache_hit:
-            m["cache_hits"] += 1
+            safe_incr(f"{base_key}:cache_hits")
         if error:
-            m["errors"] += 1
-        m["last_updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            safe_incr(f"{base_key}:errors")
 
-        cache.set(METRICS_CACHE_KEY, metrics, timeout=METRICS_CACHE_TIMEOUT)
+        # Update timestamp (not critical if overwritten)
+        cache.set(
+            f"{base_key}:last_updated",
+            time.strftime("%Y-%m-%d %H:%M:%S"),
+            timeout=METRICS_CACHE_TIMEOUT
+        )
     except Exception as e:
         logger.warning(f"[METRICS] Failed to update metrics: {e}")
 
@@ -247,13 +275,8 @@ class BotAssistantService:
                     update_metrics(organization.id, response_time_ms, cache_hit=True)
                     return cached_response
 
-            # Track question frequency (per-org and global)
-            freq_cache_key = get_frequency_cache_key(organization.id, question)
-            org_frequency = cache.get(freq_cache_key) or 0
-            org_frequency += 1
-            cache.set(freq_cache_key, org_frequency, timeout=FREQUENCY_CACHE_TIMEOUT)
-
-            # Track global frequency (across all organizations)
+            # Track question frequency atomically (thread-safe for concurrent users)
+            org_frequency = increment_org_frequency(organization.id, question)
             global_frequency = increment_global_frequency(question)
 
             logger.debug(
@@ -787,18 +810,30 @@ class BotAssistantService:
             - errors: Number of errors
             - avg_response_time_ms: Average response time in milliseconds
         """
-        metrics = cache.get(METRICS_CACHE_KEY) or {}
-
         if org_id:
-            org_metrics = metrics.get(str(org_id), {})
+            # Read from atomic counter keys
+            org_metrics = cls._read_org_metrics(org_id)
             return cls._calculate_rates(org_metrics)
 
-        # Calculate rates for all orgs
-        result = {}
-        for org_key, org_metrics in metrics.items():
-            result[org_key] = cls._calculate_rates(org_metrics)
+        # For all orgs, we need to scan for metrics keys
+        # This is a simplified implementation - returns empty for "all"
+        # since atomic keys don't support easy enumeration
+        logger.warning("[METRICS] get_metrics() without org_id not fully supported with atomic counters")
+        return {}
 
-        return result
+    @classmethod
+    def _read_org_metrics(cls, org_id: int) -> dict:
+        """
+        Read metrics for a specific organization from atomic counter keys.
+        """
+        base_key = f"ai_metrics:{org_id}"
+        return {
+            "total_requests": cache.get(f"{base_key}:total_requests") or 0,
+            "cache_hits": cache.get(f"{base_key}:cache_hits") or 0,
+            "errors": cache.get(f"{base_key}:errors") or 0,
+            "total_response_time_ms": cache.get(f"{base_key}:total_response_time_ms") or 0,
+            "last_updated": cache.get(f"{base_key}:last_updated"),
+        }
 
     @classmethod
     def _calculate_rates(cls, metrics: dict) -> dict:

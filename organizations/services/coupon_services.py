@@ -1,6 +1,8 @@
 from decimal import Decimal
 
 from django.db.models import Exists, OuterRef, Prefetch
+from django.db.models import Case, When, F, BooleanField, OuterRef, Exists
+from django.utils import timezone
 
 from common.exceptions import CouponException
 from organizations.models import Coupon, CouponUsage
@@ -36,19 +38,37 @@ class CouponServiceClass:
     @classmethod
     def get_available(cls, org_id, transaction_id):
         transaction = Transaction.objects.get(id=transaction_id)
+        user = transaction.client
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
         qs = (
             cls.__model.objects.filter(organization_id=org_id)
             .annotate(
-                used=Exists(
+                used_ever=Exists(
                     CouponUsage.objects.filter(
-                        coupon=OuterRef("pk"), user=transaction.client
+                        coupon=OuterRef("pk"), 
+                        user=user
                     )
+                ),
+                used_today=Exists(
+                    CouponUsage.objects.filter(
+                        coupon=OuterRef("pk"), 
+                        user=user,
+                        created_at__gte=today_start 
+                    )
+                )
+            )
+            .annotate(
+                used=Case(
+                    When(always_active=True, then=F('used_today')),
+                    default=F('used_ever'),
+                    output_field=BooleanField()
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "coupon_usage",
-                    queryset=CouponUsage.objects.filter(user=transaction.client),
+                    queryset=CouponUsage.objects.filter(user=user),
                     to_attr="user_coupon_usage",
                 )
             )
@@ -56,6 +76,7 @@ class CouponServiceClass:
         )
 
         return qs
+
 
     @classmethod
     def calculate(cls, data: dict):
@@ -84,11 +105,31 @@ class CouponServiceClass:
 
     @classmethod
     def get_list(cls, org_id: int, user):
+
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
         qs = (
             cls.__model.objects.filter(organization_id=org_id)
             .annotate(
-                used=Exists(
-                    CouponUsage.objects.filter(coupon=OuterRef("pk"), user=user)
+                used_ever=Exists(
+                    CouponUsage.objects.filter(
+                        coupon=OuterRef("pk"), 
+                        user=user
+                    )
+                ),
+                used_today=Exists(
+                    CouponUsage.objects.filter(
+                        coupon=OuterRef("pk"), 
+                        user=user,
+                        created_at__gte=today_start
+                    )
+                )
+            )
+            .annotate(
+                used=Case(
+                    When(always_active=True, then=F('used_today')),
+                    default=F('used_ever'),
+                    output_field=BooleanField()
                 )
             )
             .prefetch_related(
@@ -100,6 +141,6 @@ class CouponServiceClass:
             )
             .order_by("used", "-updated_at", "-created_at")
         )
-        print(qs.query)
+        # print(qs.query)
 
         return qs

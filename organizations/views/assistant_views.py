@@ -180,96 +180,35 @@ class PurchaseAssistantView(generics.CreateAPIView):
         duration_days = serializer.validated_data['duration_days']
         utc_offset_minutes = serializer.validated_data['utc_offset_minutes']
 
-        user_assistant = AssistantService.create_or_renew_user_assistant(user=request.user,
-                                                                         processed_by=assistant.organization.owner,
-                                                                         assistant=assistant, plans=plans,
-                                                                         duration_days=duration_days,
-                                                                         utc_offset_minutes=utc_offset_minutes)
+        # Get base_url for bot creation after payment
+        base_url = request.build_absolute_uri("/").rstrip("/")
+
+        user_assistant = AssistantService.create_or_renew_user_assistant(
+            user=request.user,
+            processed_by=assistant.organization.owner,
+            assistant=assistant,
+            plans=plans,
+            duration_days=duration_days,
+            utc_offset_minutes=utc_offset_minutes,
+            base_url=base_url,
+        )
 
         update_assistant_json_task.delay(assistant.organization.id)
 
-        # Check if "Все включено" plan (id=5) is selected - auto-create Telegram bot
-        telegram_bot_info = None
+        # Bot creation is now triggered AFTER payment in accept_assistant_transaction()
+        # Check if "Все включено" plan (id=5) is selected
         plan_ids = [p.id for p in plans]
         TELEGRAM_BOT_PLAN_ID = 5  # "Все включено" plan with Telegram Bot
-
-        if TELEGRAM_BOT_PLAN_ID in plan_ids:
-            telegram_bot_info = self._get_or_create_telegram_bot(
-                request, assistant.organization
-            )
+        will_create_bot = TELEGRAM_BOT_PLAN_ID in plan_ids
 
         return Response(
             {
                 "message": _("Success"),
                 "transaction_id": user_assistant.transaction_id,
                 "organization_id": assistant.organization.id,
-                "telegram_bot": telegram_bot_info,
+                "telegram_bot_will_be_created": will_create_bot,
             }
         )
-
-    def _get_or_create_telegram_bot(self, request, organization):
-        """Get existing or auto-create Telegram bot for organization."""
-        try:
-            from messenger_bots.models import TelegramBot, BotCreationRequest, BotCreationStatus
-            from messenger_bots.tasks import create_telegram_bot_task
-
-            # Check if bot already exists
-            existing_bot = TelegramBot.objects.filter(organization=organization).first()
-            if existing_bot:
-                logger.info(f"[PURCHASE] Telegram bot already exists for org {organization.id}")
-                return {
-                    "status": "exists",
-                    "username": existing_bot.bot_username,
-                    "link": f"https://t.me/{existing_bot.bot_username}" if existing_bot.bot_username else None,
-                }
-
-            # Check for available userbots
-            from messenger_bots.models import TelegramUserbot
-            available_userbot = TelegramUserbot.objects.filter(
-                is_active=True,
-                is_authenticated=True,
-                bots_created_today__lt=20,
-            ).first()
-
-            if not available_userbot:
-                logger.warning(f"[PURCHASE] No available userbots for auto-creating bot for org {organization.id}")
-                return {
-                    "status": "unavailable",
-                    "message": "No available userbots. Bot will be created later.",
-                }
-
-            # Generate bot name
-            bot_name = f"{organization.title} APZ"
-            if len(bot_name) > 64:
-                bot_name = f"{organization.title[:57]} APZ"
-
-            # Create request with base_url
-            base_url = request.build_absolute_uri("/").rstrip("/")
-            creation_request = BotCreationRequest.objects.create(
-                organization=organization,
-                requested_by=request.user,
-                bot_name=bot_name,
-                status=BotCreationStatus.PENDING,
-                base_url=base_url,
-            )
-
-            logger.info(f"[PURCHASE] Auto-creating Telegram bot for org {organization.id}, request_id={creation_request.id}")
-
-            # Start async task
-            create_telegram_bot_task.delay(creation_request.id, base_url)
-
-            return {
-                "status": "creating",
-                "request_id": creation_request.id,
-                "message": "Bot is being created. Check status in a few seconds.",
-            }
-
-        except Exception as e:
-            logger.error(f"[PURCHASE] Error auto-creating Telegram bot: {e}", exc_info=True)
-            return {
-                "status": "error",
-                "message": str(e),
-            }
 
 
 class GetOrCreateChatView(generics.RetrieveAPIView):

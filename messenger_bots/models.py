@@ -58,6 +58,13 @@ class TelegramBot(TimestampModel):
         blank=True,
         help_text=_("Last error message from Telegram API"),
     )
+    context_messages_limit = models.PositiveSmallIntegerField(
+        default=5,
+        help_text=_(
+            "Number of message pairs (user+assistant) to include in AI context. "
+            "Default: 5 pairs = 10 messages. Range: 1-20."
+        ),
+    )
 
     class Meta:
         verbose_name = _("Telegram Bot")

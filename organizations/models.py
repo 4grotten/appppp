@@ -1325,12 +1325,36 @@ class UserOrgSubscription(TimestampModel):
         return f"Subscription of {self.user} to {self.organization}"
 
 
+class ChatSource(models.TextChoices):
+    WEB = "web", "Web"
+    TELEGRAM = "telegram", "Telegram"
+    WHATSAPP = "whatsapp", "WhatsApp"
+
+
 class Chat(TimestampModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chats")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="chats", null=True, blank=True
+    )
     assistant = models.ForeignKey(
         Assistant, on_delete=models.CASCADE, related_name="chats"
     )
     chat_by_org_user = models.BooleanField(default=False)
+
+    # New fields for multi-source chats
+    source = models.CharField(
+        max_length=20,
+        choices=ChatSource.choices,
+        default=ChatSource.WEB,
+    )
+    bot_chat = models.OneToOneField(
+        "messenger_bots.BotChat",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="linked_chat",
+    )
+    unread_count = models.PositiveIntegerField(default=0)
+    is_read = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Chat with ID {self.id}"
@@ -1338,8 +1362,15 @@ class Chat(TimestampModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=("user", "assistant"), name="one_chat_between_user_and_assistant"
-            )
+                fields=("user", "assistant"),
+                condition=models.Q(source="web"),
+                name="one_chat_between_user_and_assistant"
+            ),
+            models.UniqueConstraint(
+                fields=("bot_chat",),
+                condition=models.Q(bot_chat__isnull=False),
+                name="one_chat_per_bot_chat"
+            ),
         ]
 
 

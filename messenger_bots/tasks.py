@@ -410,6 +410,10 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
             f"[CELERY_TASK] TelegramBot {'created' if created else 'updated'}: id={telegram_bot.id}"
         )
 
+        # Add bot link to organization contacts (regardless of webhook setup)
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(request.organization, request.bot_username)
+
         logger.info("[CELERY_TASK] Setting up webhook...")
         service = TelegramBotService(telegram_bot)
         bot_info = service.get_me()
@@ -426,10 +430,6 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
                 )
             else:
                 logger.info("[CELERY_TASK] Webhook set successfully!")
-
-                # Add bot link to organization contacts
-                from messenger_bots.utils import add_bot_link_to_contacts
-                add_bot_link_to_contacts(request.organization, request.bot_username)
         else:
             logger.warning(
                 "[CELERY_TASK] WARNING: Could not get bot info (getMe failed)"

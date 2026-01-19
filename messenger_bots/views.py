@@ -492,6 +492,10 @@ class TelegramBotAPIView(APIView):
         )
         logger.info(f"[TG_API] Bot {'created' if created else 'updated'}: id={bot.id}")
 
+        # Add bot link to organization contacts (before webhook setup, so link is added even if webhook fails)
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(org, bot.bot_username)
+
         # Setup webhook
         base_url = request.build_absolute_uri("/").rstrip("/")
         logger.info(f"[TG_API] Setting up webhook with base_url={base_url}")
@@ -505,10 +509,6 @@ class TelegramBotAPIView(APIView):
             )
 
         logger.info(f"[TG_API] SUCCESS: Bot @{bot.bot_username} configured, webhook_url={bot.webhook_url}")
-
-        # Add bot link to organization contacts
-        from messenger_bots.utils import add_bot_link_to_contacts
-        add_bot_link_to_contacts(org, bot.bot_username)
 
         return Response(
             TelegramBotSerializer(bot).data,

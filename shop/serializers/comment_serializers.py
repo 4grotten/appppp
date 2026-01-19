@@ -77,13 +77,18 @@ class WSCommentSerializer(serializers.ModelSerializer):
     parent = WSParentCommentSerializer()
     is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
     is_updated = serializers.SerializerMethodField()
+    source = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant'
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source'
         )
+
+    def get_source(self, obj):
+        """Web comments always have source='web'."""
+        return 'web'
 
     def get_is_updated(self, comment: Comment) -> bool:
         return (comment.updated_at - comment.created_at) > timedelta(seconds=1)
@@ -146,13 +151,18 @@ class CommentSerializer(serializers.ModelSerializer):
     parent = ParentCommentSerializer()
     is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
     is_updated = serializers.SerializerMethodField()
+    source = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant'
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source'
         )
+
+    def get_source(self, obj):
+        """Web comments always have source='web'."""
+        return 'web'
 
     def get_is_updated(self, comment: Comment) -> bool:
         return (comment.updated_at - comment.created_at) > timedelta(seconds=1)
@@ -282,13 +292,14 @@ class BotMessageSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField()
     is_updated = serializers.SerializerMethodField()
     item = serializers.SerializerMethodField()
+    source = serializers.SerializerMethodField()
 
     class Meta:
         model = BotMessage
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role',
             'is_comment_liked', 'is_blocked', 'comment_like_count', 'can_delete',
-            'is_updated', 'created_at', 'updated_at', 'assistant'
+            'is_updated', 'created_at', 'updated_at', 'assistant', 'source'
         )
 
     def get_user(self, msg: BotMessage):
@@ -340,3 +351,7 @@ class BotMessageSerializer(serializers.ModelSerializer):
 
     def get_item(self, msg: BotMessage):
         return None
+
+    def get_source(self, msg: BotMessage):
+        """Return source platform: telegram or whatsapp."""
+        return msg.chat.platform if msg.chat else None

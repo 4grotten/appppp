@@ -114,7 +114,7 @@ class File(TimestampModel):
                     )
                     self.file = img_file
                 except Exception as e:
-                    logging.error(f"Error occurred during image retrieval: {str(e)}")
+                    print(f"Error occurred during image retrieval: {str(e)}")
             else:
                 counter = 0
                 while counter <= 10:
@@ -503,3 +503,207 @@ class ChatGPTSettings(TimestampModel, SingletonModel):
     class Meta:
         verbose_name = _("ChatGPT Settings")
         verbose_name_plural = _("ChatGPT Settings")
+
+
+class AIPromptSettings(TimestampModel, SingletonModel):
+    """
+    Singleton model for managing AI assistant prompts.
+    Used by both Telegram Bot and Web Chat.
+    Changes are synced to ai_assistant server via webhook.
+    """
+
+    # ============== Language Settings ==============
+    language_instruction_ru = models.TextField(
+        default="Отвечай на Русском языке.",
+        verbose_name=_("Language Instruction (Russian)"),
+        help_text=_("Инструкция для ответа на русском языке")
+    )
+    language_instruction_en = models.TextField(
+        default="Answer strictly in ENGLISH. Translate all data from Russian to English.",
+        verbose_name=_("Language Instruction (English)"),
+        help_text=_("Инструкция для ответа на английском языке")
+    )
+
+    # ============== Identity Template ==============
+    identity_template = models.TextField(
+        default=(
+            "You are {assistant_name}, an assistant at {organization}.\n"
+            "Position: {position}. Gender: {gender}."
+        ),
+        verbose_name=_("Identity Template"),
+        help_text=_("Шаблон идентичности ассистента. Переменные: {assistant_name}, {organization}, {position}, {gender}")
+    )
+
+    # ============== Formatting Rules ==============
+    formatting_rules = models.TextField(
+        default=(
+            "⛔ STRICT FORMATTING RULES:\n"
+            "1. NO MARKDOWN. No *, **, ~ , [text](url).\n"
+            "2. Send LINKS as plain text only.\n"
+            "3. SEPARATOR: Use '###NEXT###' to separate different products or the final link."
+        ),
+        verbose_name=_("Formatting Rules"),
+        help_text=_("Правила форматирования ответов")
+    )
+
+    # ============== Scenario A: Discounts ==============
+    scenario_a_discounts = models.TextField(
+        default=(
+            "scenario_A: DISCOUNTS & COUPONS\n"
+            "   - IF user asks about discounts, coupons, or bonuses:\n"
+            "   - Answer ONLY about the promotions.\n"
+            "   - DO NOT list products/items unless the user explicitly asks for them.\n"
+            "   - DO NOT use the ###NEXT### tag in this scenario."
+        ),
+        verbose_name=_("Scenario A: Discounts"),
+        help_text=_("Инструкции для обработки вопросов о скидках")
+    )
+
+    # ============== Scenario B: Products ==============
+    scenario_b_products = models.TextField(
+        default=(
+            "scenario_B: PRODUCTS (Catalogue)\n"
+            "   ⚠️ CRITICAL: You MUST use this EXACT format for EACH product:\n"
+            "   - DO NOT use dashes (-) or bullet points!\n"
+            "   - Put ###NEXT### BETWEEN each product (not at the end)\n\n"
+            "   CORRECT FORMAT:\n"
+            "   Item: <item name from catalog>\n"
+            "   Price: <price from catalog>\n"
+            "   URL: <item url from catalog>\n"
+            "   ###NEXT###\n"
+            "   Item: <item name from catalog>\n"
+            "   Price: <price from catalog>\n"
+            "   URL: <item url from catalog>"
+        ),
+        verbose_name=_("Scenario B: Products"),
+        help_text=_("Инструкции для обработки запросов о товарах")
+    )
+
+    # ============== Scenario C: Contacts ==============
+    scenario_c_contacts = models.TextField(
+        default=(
+            "scenario_C: CONTACTS\n"
+            "   - IF user asks for contacts/address/phone:\n"
+            "   - 1. First check the 'KNOWLEDGE BASE' (files/answers) below.\n"
+            "   - 2. If not found, use 'ORGANIZATION DATA' below.\n"
+            "   - Required Format:\n"
+            "     📞 Phone: <Value>\n"
+            "     🏢 Address: <Value>\n"
+            "     🕘 Hours: <Value> - <Value>"
+        ),
+        verbose_name=_("Scenario C: Contacts"),
+        help_text=_("Инструкции для обработки запросов о контактах")
+    )
+
+    # ============== Scenario D: General Questions ==============
+    scenario_d_general = models.TextField(
+        default=(
+            "scenario_D: GENERAL QUESTIONS\n"
+            "   - IF user asks general questions (Привет, Что ты умеешь?, Hello, etc.):\n"
+            "   - Answer naturally and helpfully.\n"
+            "   - Briefly describe what you can help with (products, promotions, contacts).\n"
+            "   - DO NOT use ###NEXT### tag.\n"
+            "   - DO NOT list products unless asked."
+        ),
+        verbose_name=_("Scenario D: General Questions"),
+        help_text=_("Инструкции для обработки общих вопросов (приветствия и т.д.)")
+    )
+
+    # ============== Ending Rule ==============
+    ending_rule = models.TextField(
+        default=(
+            "🏁 ENDING RULE:\n"
+            "   - ONLY when listing products, finish with organization link.\n"
+            "   - Format: ###NEXT###\nMore items at: {org_page_url}"
+        ),
+        verbose_name=_("Ending Rule"),
+        help_text=_("Правило завершения ответа. Переменная: {org_page_url}")
+    )
+
+    # ============== Few-shot Examples ==============
+    few_shot_example_greeting_ru = models.TextField(
+        default="Здравствуйте! Я помощник {organization}. Могу помочь с информацией о товарах, акциях и контактах. Чем могу быть полезен?",
+        verbose_name=_("Greeting Example (RU)"),
+        help_text=_("Пример ответа на приветствие (рус). Переменная: {organization}")
+    )
+    few_shot_example_greeting_en = models.TextField(
+        default="Hello! I'm an assistant at {organization}. I can help with product info, promotions, and contacts. How can I help you?",
+        verbose_name=_("Greeting Example (EN)"),
+        help_text=_("Пример ответа на приветствие (англ). Переменная: {organization}")
+    )
+
+    few_shot_example_capabilities_ru = models.TextField(
+        default="Я могу помочь вам с информацией о товарах в {organization}, рассказать об акциях и скидках, предоставить контактные данные и адрес. Задавайте вопросы!",
+        verbose_name=_("Capabilities Example (RU)"),
+        help_text=_("Пример ответа на 'что ты умеешь' (рус)")
+    )
+    few_shot_example_capabilities_en = models.TextField(
+        default="I can help you with product information at {organization}, tell you about promotions and discounts, provide contact details and address. Feel free to ask!",
+        verbose_name=_("Capabilities Example (EN)"),
+        help_text=_("Пример ответа на 'what can you do' (англ)")
+    )
+
+    few_shot_example_contacts = models.TextField(
+        default="📞 Телефон: +7 XXX XXX-XX-XX\n🏢 Адрес: ул. Примерная, 1\n🕘 Часы работы: 10:00 - 20:00",
+        verbose_name=_("Contacts Example"),
+        help_text=_("Пример ответа на запрос контактов")
+    )
+
+    # ============== Search Rules ==============
+    search_rules = models.TextField(
+        default=(
+            "SEARCH RULES:\n"
+            "- Extract keywords from user question (e.g. 'купальник', 'кроссовки')\n"
+            "- Search ENTIRE catalog for items matching keywords in name/category/description\n"
+            "- If found - show ALL matching products, not just first ones\n"
+            "- If not found - say so and suggest similar categories"
+        ),
+        verbose_name=_("Search Rules"),
+        help_text=_("Правила поиска по каталогу")
+    )
+
+    # ============== Active flag ==============
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Active"),
+        help_text=_("Если выключено, используются дефолтные промпты из кода")
+    )
+
+    def __str__(self):
+        return f"AI Prompt Settings (Active: {self.is_active})"
+
+    @classmethod
+    def get_settings(cls):
+        """Get or create singleton settings instance."""
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings
+
+    @classmethod
+    def get_prompt_data(cls) -> dict:
+        """Get all prompt data as dictionary for webhook/cache."""
+        settings = cls.get_settings()
+        if not settings.is_active:
+            return {}
+
+        return {
+            "language_instruction_ru": settings.language_instruction_ru,
+            "language_instruction_en": settings.language_instruction_en,
+            "identity_template": settings.identity_template,
+            "formatting_rules": settings.formatting_rules,
+            "scenario_a_discounts": settings.scenario_a_discounts,
+            "scenario_b_products": settings.scenario_b_products,
+            "scenario_c_contacts": settings.scenario_c_contacts,
+            "scenario_d_general": settings.scenario_d_general,
+            "ending_rule": settings.ending_rule,
+            "few_shot_example_greeting_ru": settings.few_shot_example_greeting_ru,
+            "few_shot_example_greeting_en": settings.few_shot_example_greeting_en,
+            "few_shot_example_capabilities_ru": settings.few_shot_example_capabilities_ru,
+            "few_shot_example_capabilities_en": settings.few_shot_example_capabilities_en,
+            "few_shot_example_contacts": settings.few_shot_example_contacts,
+            "search_rules": settings.search_rules,
+            "is_active": settings.is_active,
+        }
+
+    class Meta:
+        verbose_name = _("AI Prompt Settings")
+        verbose_name_plural = _("AI Prompt Settings")

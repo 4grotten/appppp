@@ -413,19 +413,45 @@ class ChatListSerializer(serializers.ModelSerializer):
         return None
 
     def get_last_message(self, chat: Chat):
+        """
+        Get last message text. Uses annotated data if available (N+1 optimized),
+        otherwise falls back to query (for backwards compatibility).
+        """
+        # Try annotated values first (set by ViewSet Subquery)
         if chat.source == ChatSource.WEB:
+            annotated = getattr(chat, '_web_last_message_text', None)
+            if annotated is not None:
+                return annotated
+            # Fallback to query
             last_message = chat.chat_messages.order_by("-created_at").first()
             return last_message.text if last_message else None
         elif chat.bot_chat:
+            annotated = getattr(chat, '_tg_last_message_text', None)
+            if annotated is not None:
+                return annotated
+            # Fallback to query
             last_message = chat.bot_chat.messages.order_by("-created_at").first()
             return last_message.text if last_message else None
         return None
 
     def get_last_message_created_at(self, chat: Chat):
+        """
+        Get last message created_at. Uses annotated data if available (N+1 optimized),
+        otherwise falls back to query (for backwards compatibility).
+        """
+        # Try annotated values first (set by ViewSet Subquery)
         if chat.source == ChatSource.WEB:
+            annotated = getattr(chat, '_web_last_message_time', None)
+            if annotated is not None:
+                return annotated
+            # Fallback to query
             last_message = chat.chat_messages.order_by("-created_at").first()
             return last_message.created_at if last_message else None
         elif chat.bot_chat:
+            annotated = getattr(chat, '_tg_last_message_time', None)
+            if annotated is not None:
+                return annotated
+            # Fallback to query
             last_message = chat.bot_chat.messages.order_by("-created_at").first()
             return last_message.created_at if last_message else None
         return None

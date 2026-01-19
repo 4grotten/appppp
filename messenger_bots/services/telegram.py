@@ -532,6 +532,9 @@ class TelegramBotService:
         chat.last_message_at = timezone.now()
         chat.save(update_fields=["last_message_at"])
 
+        # Sync with organizations.Chat for unified chat list
+        cls._sync_linked_chat(chat, telegram_bot.organization)
+
         # Handle /start command
         service = cls(telegram_bot)
         if text.strip().lower() == "/start":
@@ -551,9 +554,10 @@ class TelegramBotService:
                 logger.error(f"[TG_SERVICE] Failed to send /start response")
             return welcome_text
 
-        # Get chat history for context
-        chat_history = cls._get_chat_history(chat)
-        logger.debug(f"[TG_SERVICE] Chat history: {len(chat_history)} messages")
+        # Get chat history for context (use bot's configured limit or default)
+        context_limit = getattr(telegram_bot, 'context_messages_limit', CHAT_HISTORY_LIMIT)
+        chat_history = cls._get_chat_history(chat, limit=context_limit)
+        logger.debug(f"[TG_SERVICE] Chat history: {len(chat_history)} messages (limit={context_limit})")
 
         # Send typing indicator BEFORE AI call so user sees bot is "thinking"
         service = cls(telegram_bot)
@@ -983,9 +987,64 @@ class TelegramBotService:
             return ""
 
     @classmethod
-    def _get_chat_history(cls, chat: BotChat) -> List[Dict[str, str]]:
-        """Get last N messages from chat for context."""
-        messages = BotMessage.objects.filter(chat=chat).order_by("-created_at")[:CHAT_HISTORY_LIMIT * 2]
+    def _sync_linked_chat(cls, bot_chat: BotChat, organization) -> None:
+        """
+        Sync BotChat with organizations.Chat for unified chat list.
+        Creates or updates the linked Chat and increments unread_count.
+        Uses F() for atomic increment to avoid race conditions.
+        """
+        from django.db.models import F
+        from organizations.models import Assistant, Chat, ChatSource
+
+        try:
+            # Get assistant for this organization
+            assistant = Assistant.objects.filter(organization=organization).first()
+            if not assistant:
+                logger.warning(f"[TG_SERVICE] No assistant found for org_id={organization.id}")
+                return
+
+            # Get or create linked Chat
+            linked_chat, created = Chat.objects.get_or_create(
+                bot_chat=bot_chat,
+                defaults={
+                    'assistant': assistant,
+                    'source': ChatSource.TELEGRAM,
+                    'user': None,
+                    'is_read': False,
+                    'unread_count': 1,
+                }
+            )
+
+            if created:
+                logger.info(f"[TG_SERVICE] Created linked Chat id={linked_chat.id} for BotChat id={bot_chat.id}")
+            else:
+                # Increment unread_count atomically and mark as unread
+                Chat.objects.filter(id=linked_chat.id).update(
+                    unread_count=F('unread_count') + 1,
+                    is_read=False
+                )
+                logger.debug(f"[TG_SERVICE] Updated linked Chat id={linked_chat.id}, incremented unread_count")
+
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Error syncing linked chat: {e}", exc_info=True)
+
+    @classmethod
+    def _get_chat_history(cls, chat: BotChat, limit: int = None) -> List[Dict[str, str]]:
+        """
+        Get last N messages from chat for context.
+
+        Args:
+            chat: BotChat instance
+            limit: Number of message pairs (user+assistant) to include.
+                   Default is CHAT_HISTORY_LIMIT (5).
+        """
+        if limit is None:
+            limit = CHAT_HISTORY_LIMIT
+
+        # Ensure limit is within reasonable bounds (1-20 pairs)
+        limit = max(1, min(limit, 20))
+
+        messages = BotMessage.objects.filter(chat=chat).order_by("-created_at")[:limit * 2]
 
         # Convert to list and reverse (oldest first)
         messages_list = list(messages)[::-1]
@@ -998,7 +1057,7 @@ class TelegramBotService:
                 "content": msg.text,
             })
 
-        return history[-CHAT_HISTORY_LIMIT * 2:]  # Last 5 pairs (10 messages)
+        return history[-limit * 2:]
 
     @classmethod
     def setup_bot(cls, telegram_bot: TelegramBot, base_url: str) -> bool:

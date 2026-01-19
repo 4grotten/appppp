@@ -95,6 +95,7 @@ def parse_instagram_to_shop_items(
                 if v_url:
                     thumb_obj = File.objects.create(image_url=t_url)
                     video_obj = FileVideo.objects.create(video_url=v_url, thumbnail=thumb_obj)
+                    shop_item.videos.add(video_obj) 
 
                     ItemInstagramData.objects.create(
                         item=shop_item,

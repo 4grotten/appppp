@@ -5,6 +5,8 @@ import hashlib
 import re
 from typing import Optional
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -45,6 +47,58 @@ from messenger_bots.serializers import (
 from organizations.models import Organization
 
 logger = logging.getLogger(__name__)
+
+
+def _sync_linked_chat_waha(bot_chat: BotChat, organization) -> None:
+    """Sync BotChat with organizations.Chat for unified chat list (WAHA WhatsApp)."""
+    from django.db.models import F
+    from organizations.models import Assistant, Chat, ChatSource
+
+    try:
+        assistant = Assistant.objects.filter(organization=organization).first()
+        if not assistant:
+            return
+
+        linked_chat, created = Chat.objects.get_or_create(
+            bot_chat=bot_chat,
+            defaults={
+                'assistant': assistant,
+                'source': ChatSource.WHATSAPP,
+                'user': None,
+                'is_read': False,
+                'unread_count': 1,
+            }
+        )
+
+        if not created:
+            Chat.objects.filter(id=linked_chat.id).update(
+                unread_count=F('unread_count') + 1,
+                is_read=False
+            )
+    except Exception as e:
+        logger.error(f"[WAHA] Error syncing linked chat: {e}", exc_info=True)
+
+
+def _send_ws_notification_waha(bot_message: BotMessage, bot_chat: BotChat) -> None:
+    """Send WebSocket notification for WAHA WhatsApp message."""
+    from shop.serializers.comment_serializers import BotMessageSerializer
+
+    try:
+        linked_chat = getattr(bot_chat, 'linked_chat', None)
+        if not linked_chat:
+            return
+
+        chat_group_name = f"chat_{linked_chat.id}"
+        serialized_data = BotMessageSerializer(bot_message).data
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                chat_group_name,
+                {"type": "chat_message", "message": serialized_data}
+            )
+    except Exception as e:
+        logger.error(f"[WAHA] Error sending WS notification: {e}", exc_info=True)
 
 
 # ============== Webhook Views (No Auth Required) ==============
@@ -321,12 +375,18 @@ class WAHAWebhookView(View):
         chat.save(update_fields=["last_message_at"])
 
         # Save incoming message
-        BotMessage.objects.create(
+        incoming_msg = BotMessage.objects.create(
             chat=chat,
             sender=BotMessage.USER,
             text=message_body,
             platform_message_id=message_id,
         )
+
+        # Sync with organizations.Chat for unified chat list
+        _sync_linked_chat_waha(chat, whatsapp_bot.organization)
+
+        # Send WebSocket notification for incoming message
+        _send_ws_notification_waha(incoming_msg, chat)
 
         logger.info(f"WAHA message from {phone_number} to org {whatsapp_bot.organization_id}: {message_body[:50]}...")
 

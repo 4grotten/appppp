@@ -1,6 +1,7 @@
 import logging
 
-from django.db.models import BooleanField, Case, Max, Value, When
+from django.db import models
+from django.db.models import BooleanField, Case, F, Max, Value, When
 from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -300,14 +301,15 @@ class ToggleAssistantEnableView(APIView):
 class AssistantChatsListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
     permission_classes = (IsAuthenticated, )
-    
+
     filter_backends = [SearchFilter]
-    
+
     search_fields = [
-        'user__email', 
-        'user__first_name', 
-        'user__last_name', 
-        'user__username'
+        'user__email',
+        'user__first_name',
+        'user__last_name',
+        'user__username',
+        'bot_chat__user_name',  # Search in Telegram user names
     ]
 
     def get_object(self):
@@ -318,28 +320,60 @@ class AssistantChatsListView(generics.ListAPIView):
         if not OrganizationService.user_can_edit_organization(organization=assistant.organization,
                                                               user=self.request.user):
             raise PermissionDenied({'message': _('No rights to edit organization')})
-        chat, created = Chat.objects.get_or_create(user=self.request.user, assistant=assistant)
+
+        # Create or get web chat for current user
+        chat, created = Chat.objects.get_or_create(
+            user=self.request.user,
+            assistant=assistant,
+            defaults={'source': 'web'}
+        )
         if created:
             CommentService.create_chat_assistant_default_comment(chat=chat, assistant=chat.assistant)
-        queryset = Chat.objects.filter(assistant=assistant).annotate(
+
+        # Get all chats (web + telegram) for this assistant
+        queryset = Chat.objects.filter(assistant=assistant).select_related(
+            'user', 'bot_chat', 'assistant'
+        ).annotate(
             is_target_chat=Case(
                 When(id=chat.id, then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            last_message_created_at=Max('chat_messages__created_at')
-        ).order_by('-is_target_chat', '-last_message_created_at')
+            # For web chats use chat_messages, for telegram chats use bot_chat.messages
+            web_last_message_at=Max('chat_messages__created_at'),
+            telegram_last_message_at=Max('bot_chat__messages__created_at'),
+        ).annotate(
+            last_message_created_at=Case(
+                When(source='web', then='web_last_message_at'),
+                default='telegram_last_message_at',
+                output_field=models.DateTimeField()
+            )
+        ).order_by('-is_target_chat', '-is_read', '-last_message_created_at')
 
         return queryset
 
 
 
 class AssistantChatReadMessages(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         chat = ChatService.get(id=self.kwargs['pk'])
 
-        CommentService.do_read_messages(chat=chat)
+        # Mark messages as read based on chat source
+        if chat.source == 'web':
+            CommentService.do_read_messages(chat=chat)
+        elif chat.bot_chat:
+            # Mark Telegram messages as read
+            chat.bot_chat.messages.filter(
+                sender='user', is_read=False
+            ).update(is_read=True)
+
+        # Reset unread counter and mark chat as read
+        Chat.objects.filter(id=chat.id).update(
+            unread_count=0,
+            is_read=True
+        )
 
         return Response(data={
             'message': _('Success')

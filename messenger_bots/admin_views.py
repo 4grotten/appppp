@@ -166,10 +166,38 @@ class UserbotQRLoginView(UserbotAuthBaseView):
     """QR code login - generates QR and waits for scan."""
     template_name = "admin/messenger_bots/telegramuserbot/qr_login.html"
 
+    # Datacenter options for region selection
+    DC_CHOICES = [
+        (None, "Auto (let Telegram decide)"),
+        (2, "🇪🇺 Europe / CIS (DC2 - Netherlands)"),
+        (5, "🌏 Asia / UAE / Middle East (DC5 - Singapore)"),
+        (3, "🇺🇸 USA (DC3 - Miami)"),
+        (1, "🧪 Test (DC1)"),
+    ]
+
     def get(self, request, pk):
-        # Start QR login process
+        # Check if we're generating QR or showing region selection
+        force_dc = request.GET.get("dc")
+
+        if force_dc is None and "generate" not in request.GET:
+            # Show region selection form first
+            return render(
+                request,
+                self.template_name,
+                self.get_context(
+                    show_region_select=True,
+                    dc_choices=self.DC_CHOICES,
+                ),
+            )
+
+        # Parse force_dc parameter
+        force_dc_int = None
+        if force_dc and force_dc.isdigit():
+            force_dc_int = int(force_dc)
+
+        # Start QR login process with optional forced datacenter
         try:
-            task = userbot_qr_login_start_task.delay(self.userbot.pk)
+            task = userbot_qr_login_start_task.delay(self.userbot.pk, force_dc=force_dc_int)
             result = task.get(timeout=CELERY_TASK_TIMEOUT)
 
             if result.get("success"):
@@ -180,6 +208,7 @@ class UserbotQRLoginView(UserbotAuthBaseView):
                 # Generate QR code image
                 qr_url = result.get("qr_url")
                 qr_image_base64 = self._generate_qr_image(qr_url)
+                datacenter = result.get("datacenter", "unknown")
 
                 return render(
                     request,
@@ -188,10 +217,21 @@ class UserbotQRLoginView(UserbotAuthBaseView):
                         qr_url=qr_url,
                         qr_image=qr_image_base64,
                         expires=result.get("expires"),
+                        datacenter=datacenter,
+                        dc_choices=self.DC_CHOICES,
                     ),
                 )
             else:
-                messages.error(request, f"Error: {result.get('error')}")
+                error_msg = result.get("error", "Unknown error")
+                messages.error(request, f"Error: {error_msg}")
+
+                # If it's a datacenter error, suggest trying different region
+                if "migration" in error_msg.lower() or "datacenter" in error_msg.lower():
+                    messages.info(
+                        request,
+                        "Try selecting a different region (e.g., Asia/UAE for Middle East users)."
+                    )
+
                 return HttpResponseRedirect(self.get_admin_url())
 
         except CeleryTimeoutError:

@@ -11,6 +11,7 @@ from organizations.models import (
     BlockedUser,
     Chat,
     ChatMessage,
+    ChatSource,
     Organization,
     Plan,
     Question,
@@ -277,12 +278,22 @@ class ChatUserInfoSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    user = UserShortInfoSerializer()
+    user = serializers.SerializerMethodField()
     organization = serializers.SerializerMethodField()
     assistant = OrganizationAssistantSerializer()
     user_role = serializers.SerializerMethodField()
     can_comment = serializers.SerializerMethodField(default=True, read_only=True)
     is_my_chat = serializers.SerializerMethodField()
+    source = serializers.CharField(read_only=True)
+    is_read = serializers.BooleanField(read_only=True)
+    unread_count = serializers.IntegerField(read_only=True)
+
+    def get_user(self, chat: Chat):
+        if chat.source == ChatSource.WEB and chat.user:
+            return UserShortInfoSerializer(chat.user).data
+        elif chat.bot_chat:
+            return TelegramUserInfoSerializer(chat).data
+        return None
 
     def get_can_comment(self, chat: Chat) -> bool:
         if self.context["request"].user:
@@ -301,7 +312,7 @@ class ChatSerializer(serializers.ModelSerializer):
         if not OrganizationService.user_can_edit_organization(
             organization=chat.assistant.organization, user=user
         ):
-            if OrganizationService.user_can_edit_organization(
+            if chat.user and OrganizationService.user_can_edit_organization(
                 organization=chat.assistant.organization, user=chat.user
             ):
                 from organizations.serializers.organization_serializers import (
@@ -314,11 +325,13 @@ class ChatSerializer(serializers.ModelSerializer):
         return None
 
     def get_user_role(self, chat: Chat):
-        return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
+        if chat.user:
+            return AssistantService.get_my_role(assistant=chat.assistant, user=chat.user)
+        return None
 
     def get_is_my_chat(self, chat: Chat):
         user = self.context["request"].user
-        return chat.user == user
+        return chat.user == user if chat.user else False
 
     class Meta:
         model = Chat
@@ -331,6 +344,9 @@ class ChatSerializer(serializers.ModelSerializer):
             "chat_by_org_user",
             "can_comment",
             "is_my_chat",
+            "source",
+            "is_read",
+            "unread_count",
         )
 
 
@@ -350,12 +366,30 @@ class MessageCreateSerializer(serializers.ModelSerializer):
         fields = ("chat", "text")
 
 
+class TelegramUserInfoSerializer(serializers.Serializer):
+    """Serializer for Telegram user info from BotChat."""
+    id = serializers.IntegerField(source="bot_chat.id")
+    full_name = serializers.CharField(source="bot_chat.user_name")
+    avatar = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+
+    def get_avatar(self, chat: Chat):
+        if chat.bot_chat and chat.bot_chat.user_photo:
+            return {"image": chat.bot_chat.user_photo}
+        return None
+
+    def get_username(self, chat: Chat):
+        return None
+
+
 class ChatListSerializer(serializers.ModelSerializer):
-    user = UserShortInfoSerializer()
+    user = serializers.SerializerMethodField()
     assistant = OrganizationAssistantSerializer()
     last_message = serializers.SerializerMethodField()
     last_message_created_at = serializers.SerializerMethodField()
     unread_messages_count = serializers.SerializerMethodField()
+    source = serializers.CharField(read_only=True)
+    is_read = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Chat
@@ -367,18 +401,38 @@ class ChatListSerializer(serializers.ModelSerializer):
             "last_message",
             "last_message_created_at",
             "unread_messages_count",
+            "source",
+            "is_read",
         )
 
+    def get_user(self, chat: Chat):
+        if chat.source == ChatSource.WEB and chat.user:
+            return UserShortInfoSerializer(chat.user).data
+        elif chat.bot_chat:
+            return TelegramUserInfoSerializer(chat).data
+        return None
+
     def get_last_message(self, chat: Chat):
-        last_message = chat.chat_messages.order_by("-created_at").first()
-        return last_message.text if last_message else None
+        if chat.source == ChatSource.WEB:
+            last_message = chat.chat_messages.order_by("-created_at").first()
+            return last_message.text if last_message else None
+        elif chat.bot_chat:
+            last_message = chat.bot_chat.messages.order_by("-created_at").first()
+            return last_message.text if last_message else None
+        return None
 
     def get_last_message_created_at(self, chat: Chat):
-        last_message = chat.chat_messages.order_by("-created_at").first()
-        return last_message.created_at if last_message else None
+        if chat.source == ChatSource.WEB:
+            last_message = chat.chat_messages.order_by("-created_at").first()
+            return last_message.created_at if last_message else None
+        elif chat.bot_chat:
+            last_message = chat.bot_chat.messages.order_by("-created_at").first()
+            return last_message.created_at if last_message else None
+        return None
 
     def get_unread_messages_count(self, chat: Chat):
-        return chat.chat_messages.filter(is_read=False).count()
+        # Use denormalized field if available
+        return chat.unread_count
 
 
 class ChatSettingsSerializer(serializers.ModelSerializer):

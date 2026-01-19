@@ -348,7 +348,7 @@ class AssistantChatsListView(generics.ListAPIView):
                 default='telegram_last_message_at',
                 output_field=models.DateTimeField()
             )
-        ).order_by('-is_target_chat', '-is_read', '-last_message_created_at')
+        ).order_by('-is_target_chat', 'is_read', '-last_message_created_at')
 
         return queryset
 

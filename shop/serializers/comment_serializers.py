@@ -8,6 +8,7 @@ from organizations.models import Membership, BlockedUser
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
+from messenger_bots.models import BotMessage
 from shop.models import Comment, CommentLike, CommentComplaint, ShopItem, UserCommentTheme
 from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
@@ -263,3 +264,79 @@ class UserCommentThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserCommentTheme
         fields = ('theme_type', 'image_id', 'theme_id', )
+
+
+class BotMessageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BotMessage (Telegram/WhatsApp messages).
+    Returns data in unified format compatible with CommentSerializer.
+    """
+    user = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
+    assistant = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
+    is_comment_liked = serializers.SerializerMethodField()
+    comment_like_count = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+    parent = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
+    is_updated = serializers.SerializerMethodField()
+    item = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BotMessage
+        fields = (
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role',
+            'is_comment_liked', 'is_blocked', 'comment_like_count', 'can_delete',
+            'is_updated', 'created_at', 'updated_at', 'assistant'
+        )
+
+    def get_user(self, msg: BotMessage):
+        """Return user info for user messages, None for assistant messages."""
+        if msg.sender == BotMessage.USER:
+            bot_chat = msg.chat
+            return {
+                'id': bot_chat.id,
+                'full_name': bot_chat.user_name or 'Telegram User',
+                'avatar': {'image': bot_chat.user_photo} if bot_chat.user_photo else None,
+                'username': None,
+            }
+        return None
+
+    def get_organization(self, msg: BotMessage):
+        """Return organization for assistant messages."""
+        if msg.sender == BotMessage.ASSISTANT:
+            return OrganizationWithTypeImageSerializer(msg.chat.organization).data
+        return None
+
+    def get_assistant(self, msg: BotMessage):
+        """Return assistant info for assistant messages."""
+        if msg.sender == BotMessage.ASSISTANT:
+            assistant = getattr(msg.chat.organization, 'assistant', None)
+            if assistant:
+                return OrganizationAssistantSerializer(assistant).data
+        return None
+
+    def get_user_role(self, msg: BotMessage):
+        return 'client' if msg.sender == BotMessage.USER else 'assistant'
+
+    def get_is_comment_liked(self, msg: BotMessage):
+        return False
+
+    def get_comment_like_count(self, msg: BotMessage):
+        return 0
+
+    def get_can_delete(self, msg: BotMessage):
+        return False
+
+    def get_parent(self, msg: BotMessage):
+        return None
+
+    def get_is_blocked(self, msg: BotMessage):
+        return False
+
+    def get_is_updated(self, msg: BotMessage):
+        return False
+
+    def get_item(self, msg: BotMessage):
+        return None

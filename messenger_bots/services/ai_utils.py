@@ -226,6 +226,22 @@ def build_system_prompt(
     - "Товар:" or "Product:" at the start
     - "Ссылка:" or "Link:" with URL at the end
     """
+    # ============== Language Detection (same as Web Chat) ==============
+    # Map language code to full language name (only ru/en supported)
+    LANGUAGE_MAP = {
+        "ru": "Russian",
+        "en": "English",
+    }
+    detected_lang = LANGUAGE_MAP.get(user_language, "Russian")
+
+    # Language-specific instruction
+    if user_language == "ru":
+        lang_instruction = "Отвечай на Русском языке."
+    elif user_language == "en":
+        lang_instruction = "Answer strictly in ENGLISH. Translate all data from Russian to English."
+    else:
+        lang_instruction = f"Answer strictly in {detected_lang}. Translate all data to {detected_lang}."
+
     # Extract contact info
     phones = organization_info.get('phones', [])
     if isinstance(phones, list):
@@ -242,10 +258,11 @@ def build_system_prompt(
     if marketing_info:
         marketing_str = "\n".join([f"- {m}" for m in marketing_info])
 
-    # Build prompt - SAME STRUCTURE AS consumers.py
+    # Build prompt - SAME STRUCTURE AS consumers.py (Web Chat)
     prompt = (
-        f"SYSTEM PRIORITY: DETECT USER LANGUAGE (e.g., Russian, English). "
-        f"You MUST answer STRICTLY in the same language as the user's question.\n\n"
+        f"CRITICAL INSTRUCTION: USER LANGUAGE IS *** {detected_lang} ***.\n"
+        f"{lang_instruction}\n"
+        f"Even if the data below is in Russian, you MUST translate your final answer to {detected_lang}.\n\n"
 
         f"IDENTITY:\n"
         f"You are {assistant_info.get('name', 'Assistant')}, an assistant at {assistant_info.get('organization', 'organization')}.\n"
@@ -262,36 +279,37 @@ def build_system_prompt(
         "   - IF user asks about discounts, coupons, or bonuses:\n"
         "   - Answer ONLY about the promotions.\n"
         "   - DO NOT list products/items unless the user explicitly asks for them.\n"
-        "   - DO NOT use the ###NEXT### tag in this scenario.\n\n"
+        "   - DO NOT use the ###NEXT### tag in this scenario.\n"
+        f"   - TRANSLATE the discounts info to {detected_lang} if needed.\n\n"
 
         "scenario_B: PRODUCTS (Catalogue)\n"
         "   ⚠️ CRITICAL: You MUST use this EXACT format for EACH product:\n"
         "   - DO NOT use dashes (-) or bullet points!\n"
         "   - DO NOT copy the DATA: format from catalog!\n"
-        "   - TRANSLATE labels to user's language (Russian: Товар/Цена/Ссылка)\n"
+        f"   - TRANSLATE labels (Name, Price, Link) to {detected_lang}.\n"
         "   - Put ###NEXT### BETWEEN each product (not at the end)\n\n"
-        "   CORRECT FORMAT (Russian example):\n"
-        "   Товар: Название товара\n"
-        "   Цена: 1000 RUB\n"
-        "   Ссылка: https://...\n"
+        f"   CORRECT FORMAT for {detected_lang}:\n"
+        f"   {'Товар' if user_language == 'ru' else 'Item'}: <item name>\n"
+        f"   {'Цена' if user_language == 'ru' else 'Price'}: <price>\n"
+        f"   {'Ссылка' if user_language == 'ru' else 'Link'}: <url>\n"
         "   ###NEXT###\n"
-        "   Товар: Другой товар\n"
-        "   Цена: 2000 RUB\n"
-        "   Ссылка: https://...\n\n"
+        f"   {'Товар' if user_language == 'ru' else 'Item'}: <another item>\n"
+        f"   {'Цена' if user_language == 'ru' else 'Price'}: <price>\n"
+        f"   {'Ссылка' if user_language == 'ru' else 'Link'}: <url>\n\n"
 
         "scenario_C: CONTACTS\n"
         "   - IF user asks for contacts/address/phone:\n"
         "   - 1. First check the 'KNOWLEDGE BASE' (files/answers) below.\n"
         "   - 2. If not found, use 'ORGANIZATION DATA' below.\n"
-        "   - TRANSLATE labels (Phone, Address, Hours) to user's language.\n"
+        f"   - TRANSLATE labels (Phone, Address, Hours) and Values to {detected_lang}.\n"
         "   - Required Format:\n"
-        "     📞 <Translated 'Phone'>: <Value>\n"
-        "     🏢 <Translated 'Address'>: <Value>\n"
-        "     🕘 <Translated 'Hours'>: <Value> - <Value>\n"
+        f"     📞 {'Телефон' if user_language == 'ru' else 'Phone'}: <Value>\n"
+        f"     🏢 {'Адрес' if user_language == 'ru' else 'Address'}: <Value>\n"
+        f"     🕘 {'Часы работы' if user_language == 'ru' else 'Hours'}: <Value> - <Value>\n"
         f"     Socials: {social_links} (if available)\n\n"
 
         "scenario_D: GENERAL QUESTIONS\n"
-        "   - IF user asks general questions (Привет, Что ты умеешь?, etc.):\n"
+        "   - IF user asks general questions (Привет, Hello, etc.):\n"
         "   - Answer naturally and helpfully.\n"
         "   - Briefly describe what you can help with (products, promotions, contacts).\n"
         "   - DO NOT use ###NEXT### tag.\n"
@@ -299,7 +317,7 @@ def build_system_prompt(
 
         "🏁 ENDING RULE:\n"
         "   - ONLY when listing products, finish with organization link.\n"
-        "   - Translate the phrase 'More items at organization page' to user's language.\n"
+        f"   - TRANSLATE the phrase 'More items at organization page' to {detected_lang}.\n"
         f"   - Format: ###NEXT###\n<Translated 'More items...'>: {organization_page_url}\n\n"
 
         "=== DATA SECTIONS ===\n\n"
@@ -373,22 +391,40 @@ def build_system_prompt(
             "- If nothing matches, say so and suggest alternatives\n\n"
         )
 
-    # Add few-shot examples for better response quality
+    # Add few-shot examples for better response quality (language-aware)
     org_name = assistant_info.get('organization', 'магазине')
+
+    if user_language == "ru":
+        prompt += (
+            "📝 ПРИМЕРЫ ОТВЕТОВ:\n\n"
+            "Пример 1 (Приветствие):\n"
+            "User: Привет!\n"
+            f"Assistant: Здравствуйте! Я помощник {org_name}. Могу помочь с информацией о товарах, акциях и контактах. Чем могу быть полезен?\n\n"
+            "Пример 2 (Что умеешь):\n"
+            "User: Что ты умеешь?\n"
+            f"Assistant: Я могу помочь вам с информацией о товарах в {org_name}, рассказать об акциях и скидках, предоставить контактные данные и адрес. Задавайте вопросы!\n\n"
+            "Пример 3 (Контакты):\n"
+            "User: Как с вами связаться?\n"
+            "Assistant: 📞 Телефон: +7 XXX XXX-XX-XX\n🏢 Адрес: ул. Примерная, 1\n🕘 Часы работы: 10:00 - 20:00\n\n"
+        )
+    else:
+        prompt += (
+            "📝 RESPONSE EXAMPLES:\n\n"
+            "Example 1 (Greeting):\n"
+            "User: Hello!\n"
+            f"Assistant: Hello! I'm an assistant at {org_name}. I can help with product info, promotions, and contacts. How can I help you?\n\n"
+            "Example 2 (Capabilities):\n"
+            "User: What can you do?\n"
+            f"Assistant: I can help you with product information at {org_name}, tell you about promotions and discounts, provide contact details and address. Feel free to ask!\n\n"
+            "Example 3 (Contacts):\n"
+            "User: How can I contact you?\n"
+            "Assistant: 📞 Phone: +7 XXX XXX-XX-XX\n🏢 Address: Example St. 1\n🕘 Working hours: 10:00 - 20:00\n\n"
+        )
+
+    # Add language reminder at the end (same as Web Chat)
     prompt += (
-        "📝 RESPONSE EXAMPLES:\n\n"
-
-        "Example 1 (General greeting):\n"
-        "User: Привет!\n"
-        f"Assistant: Здравствуйте! Я помощник {org_name}. Могу помочь с информацией о товарах, акциях и контактах. Чем могу быть полезен?\n\n"
-
-        "Example 2 (What can you do):\n"
-        "User: Что ты умеешь?\n"
-        f"Assistant: Я могу помочь вам с информацией о товарах в {org_name}, рассказать об акциях и скидках, предоставить контактные данные и адрес. Задавайте вопросы!\n\n"
-
-        "Example 3 (Contacts):\n"
-        "User: Как с вами связаться?\n"
-        "Assistant: 📞 Телефон: +7 XXX XXX-XX-XX\n🏢 Адрес: ул. Примерная, 1\n🕘 Часы работы: 10:00 - 20:00\n\n"
+        f"\n⚠️ REMINDER: The user speaks {detected_lang}. "
+        f"Output ONLY in {detected_lang}. Translate all data if necessary.\n"
     )
 
     print(f"[BUILD_PROMPT] Final prompt length: {len(prompt)} chars")

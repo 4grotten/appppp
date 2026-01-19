@@ -250,9 +250,14 @@ class AIPromptSettingsAdmin(admin.ModelAdmin):
             "fields": ("is_active",),
             "description": "Если выключено, используются дефолтные промпты из кода"
         }),
-        ("Language Instructions", {
+        ("Language Detection", {
+            "fields": ("language_detection_rule",),
+            "description": "Правило определения языка из контекста сообщений пользователя (TG бот определяет язык автоматически)"
+        }),
+        ("Language Instructions (Legacy)", {
             "fields": ("language_instruction_ru", "language_instruction_en"),
-            "description": "Инструкции для ответа на разных языках"
+            "description": "Устаревшие инструкции для фиксированного языка (для обратной совместимости с Web Chat)",
+            "classes": ("collapse",),
         }),
         ("Identity", {
             "fields": ("identity_template",),
@@ -268,6 +273,7 @@ class AIPromptSettingsAdmin(admin.ModelAdmin):
         }),
         ("Scenario B: Products", {
             "fields": ("scenario_b_products",),
+            "description": "⚠️ ВАЖНО: Используйте 'Товар/Product' и 'Ссылка/Link' для корректного парсинга в TG боте",
             "classes": ("collapse",),
         }),
         ("Scenario C: Contacts", {

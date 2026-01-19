@@ -54,9 +54,14 @@ def sync_openai_to_ai_server(sender, instance, **kwargs):
 @receiver(post_save, sender=AIPromptSettings)
 def sync_prompts_to_ai_server(sender, instance, **kwargs):
     """
-    Sync AI prompt settings to ai_assistant server.
+    Sync AI prompt settings to ai_assistant server and invalidate TG bot cache.
     Called when AIPromptSettings is saved from Django admin.
     """
+    # Invalidate TG bot prompt cache
+    from django.core.cache import cache
+    cache.delete("ai_prompt_settings")
+    logger.info("Invalidated ai_prompt_settings cache for TG bot")
+
     if not instance.is_active:
         # Send empty dict to signal using defaults
         payload = {"is_active": False}

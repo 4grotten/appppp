@@ -513,15 +513,27 @@ class AIPromptSettings(TimestampModel, SingletonModel):
     """
 
     # ============== Language Settings ==============
+    language_detection_rule = models.TextField(
+        default=(
+            "🌐 CRITICAL LANGUAGE RULE:\n"
+            "Detect the language from USER'S MESSAGES (not from any settings).\n"
+            "- If user writes in English (Hello, What can you do, etc.) → respond in ENGLISH\n"
+            "- If user writes in Russian (Привет, Что умеешь, etc.) → respond in RUSSIAN\n"
+            "- If user explicitly asks 'Speak English' or 'Говори по-русски' → switch to that language\n"
+            "- Translate all data (products, contacts) to the user's language."
+        ),
+        verbose_name=_("Language Detection Rule"),
+        help_text=_("Правило определения языка из контекста сообщений")
+    )
     language_instruction_ru = models.TextField(
         default="Отвечай на Русском языке.",
         verbose_name=_("Language Instruction (Russian)"),
-        help_text=_("Инструкция для ответа на русском языке")
+        help_text=_("Инструкция для ответа на русском языке (для обратной совместимости)")
     )
     language_instruction_en = models.TextField(
         default="Answer strictly in ENGLISH. Translate all data from Russian to English.",
         verbose_name=_("Language Instruction (English)"),
-        help_text=_("Инструкция для ответа на английском языке")
+        help_text=_("Инструкция для ответа на английском языке (для обратной совместимости)")
     )
 
     # ============== Identity Template ==============
@@ -565,18 +577,20 @@ class AIPromptSettings(TimestampModel, SingletonModel):
             "scenario_B: PRODUCTS (Catalogue)\n"
             "   ⚠️ CRITICAL: You MUST use this EXACT format for EACH product:\n"
             "   - DO NOT use dashes (-) or bullet points!\n"
+            "   - DO NOT copy the DATA: format from catalog!\n"
             "   - Put ###NEXT### BETWEEN each product (not at the end)\n\n"
-            "   CORRECT FORMAT:\n"
-            "   Item: <item name from catalog>\n"
-            "   Price: <price from catalog>\n"
-            "   URL: <item url from catalog>\n"
+            "   FORMAT for Russian:\n"
+            "   Товар: <item name>\n"
+            "   Цена: <price>\n"
+            "   Ссылка: <url>\n"
             "   ###NEXT###\n"
-            "   Item: <item name from catalog>\n"
-            "   Price: <price from catalog>\n"
-            "   URL: <item url from catalog>"
+            "   FORMAT for English:\n"
+            "   Product: <item name>\n"
+            "   Price: <price>\n"
+            "   Link: <url>"
         ),
         verbose_name=_("Scenario B: Products"),
-        help_text=_("Инструкции для обработки запросов о товарах")
+        help_text=_("Инструкции для обработки запросов о товарах. ВАЖНО: Используйте 'Товар/Product' и 'Ссылка/Link' для корректного парсинга в TG боте")
     )
 
     # ============== Scenario C: Contacts ==============
@@ -586,10 +600,8 @@ class AIPromptSettings(TimestampModel, SingletonModel):
             "   - IF user asks for contacts/address/phone:\n"
             "   - 1. First check the 'KNOWLEDGE BASE' (files/answers) below.\n"
             "   - 2. If not found, use 'ORGANIZATION DATA' below.\n"
-            "   - Required Format:\n"
-            "     📞 Phone: <Value>\n"
-            "     🏢 Address: <Value>\n"
-            "     🕘 Hours: <Value> - <Value>"
+            "   - Format for Russian: 📞 Телефон: / 🏢 Адрес: / 🕘 Часы работы:\n"
+            "   - Format for English: 📞 Phone: / 🏢 Address: / 🕘 Hours:"
         ),
         verbose_name=_("Scenario C: Contacts"),
         help_text=_("Инструкции для обработки запросов о контактах")
@@ -614,7 +626,8 @@ class AIPromptSettings(TimestampModel, SingletonModel):
         default=(
             "🏁 ENDING RULE:\n"
             "   - ONLY when listing products, finish with organization link.\n"
-            "   - Format: ###NEXT###\nMore items at: {org_page_url}"
+            "   - Russian: ###NEXT###\nБольше товаров на странице: {org_page_url}\n"
+            "   - English: ###NEXT###\nMore items at: {org_page_url}"
         ),
         verbose_name=_("Ending Rule"),
         help_text=_("Правило завершения ответа. Переменная: {org_page_url}")
@@ -686,6 +699,7 @@ class AIPromptSettings(TimestampModel, SingletonModel):
             return {}
 
         return {
+            "language_detection_rule": settings.language_detection_rule,
             "language_instruction_ru": settings.language_instruction_ru,
             "language_instruction_en": settings.language_instruction_en,
             "identity_template": settings.identity_template,

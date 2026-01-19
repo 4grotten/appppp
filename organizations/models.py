@@ -543,6 +543,11 @@ class InstagramIntegration(TimestampModel):
         blank=True,
         related_name="instagram_integrations",
     )
+    # parse_posts_limit = models.PositiveIntegerField(
+    #     default=20, 
+    #     verbose_name="Количество постов для парсинга",
+    #     help_text="Сколько постов загружать за один раз для этой организации"
+    # )
 
     def __str__(self):
         return f"{self.url}"

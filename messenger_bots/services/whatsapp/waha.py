@@ -118,7 +118,7 @@ class WAHAService(WhatsAppServiceInterface):
                     "name": self.session_name,
                     "config": {
                         "webhook": {
-                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/webhook/",
+                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/waha/webhook/",
                             "events": ["message", "session.status"],
                             "hmac": {"key": self.webhook_secret},
                         }

@@ -2,6 +2,7 @@ import asyncio
 import decimal
 import json
 import logging
+import re
 
 import common.services.slack as slack
 import websockets
@@ -21,6 +22,7 @@ from organizations.services.assistant_services import (
     ChatService,
 )
 from organizations.services.organization_services import OrganizationService
+from shop.models import ShopItem 
 
 logger = logging.getLogger(__name__)
 
@@ -292,12 +294,28 @@ class CommentConsumer(AsyncWebsocketConsumer):
             assistant = await self.get_assistant(assistant_id)
             parent = await self.get_comment(parent_id)
             chat = await self.get_chat_with_parent(parent)
+
+
             comment = await self.create_comment_with_ai_response(
                 text, chat, assistant, parent
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
             )
+
+
+            match = re.search(r'/p/(\d+)', text)
+            if match:
+                item_id = match.group(1)
+                logger.info(f"Found Item ID in AI response: {item_id}")
+
+                image_url = await self.get_item_image_url(item_id)
+                
+                if image_url:
+
+                    serialized_data['product_image'] = image_url
+                    logger.info(f"Attached image to response: {image_url}")
+
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
@@ -305,6 +323,29 @@ class CommentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
             slack.slack_ai(f"[ WEBSOCKET error ] error handling AI response: {e}")
+    
+    @database_sync_to_async
+    def get_item_image_url(self, item_id):
+
+        try:
+            item = ShopItem.objects.filter(id=item_id).first()
+            
+            if not item:
+                return None
+
+            first_image = item.images.all().order_by('order').first()
+            if first_image:
+                return first_image.medium_property
+
+            first_video = item.videos.all().order_by('order').first()
+            if first_video and first_video.thumbnail:
+                return first_video.thumbnail.medium_property
+
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error fetching image for item {item_id}: {e}")
+            return None
 
     async def handle_ai_default_response(self, parent, user):
         try:

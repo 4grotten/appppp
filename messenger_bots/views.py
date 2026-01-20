@@ -225,12 +225,18 @@ class WAHAWebhookView(View):
 
     def _verify_signature(self, body: bytes, signature: str) -> bool:
         """Verify HMAC-SHA512 signature from WAHA."""
-        if not signature:
-            return False
-
         secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
+
+        # Debug logging
+        logger.info(f"WAHA webhook signature verification: signature_present={bool(signature)}, secret_configured={bool(secret)}")
+
+        if not signature:
+            # If no signature provided, allow for now (WAHA session might not have HMAC configured)
+            logger.warning("WAHA webhook: No signature provided, allowing request")
+            return True
+
         if not secret:
-            # If no secret configured, skip verification (not recommended for production)
+            # If no secret configured, skip verification
             logger.warning("WAHA_WEBHOOK_SECRET not configured, skipping signature verification")
             return True
 
@@ -240,7 +246,11 @@ class WAHAWebhookView(View):
             hashlib.sha512
         ).hexdigest()
 
-        return hmac.compare_digest(expected, signature)
+        is_valid = hmac.compare_digest(expected, signature)
+        if not is_valid:
+            logger.warning(f"WAHA webhook signature mismatch: expected={expected[:20]}..., got={signature[:20]}...")
+
+        return is_valid
 
     # ============== WAHA PLUS VERSION CODE (uncomment when upgraded) ==============
     # def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:

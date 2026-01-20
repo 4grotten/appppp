@@ -91,6 +91,9 @@ services:
     image: devlikeapro/waha:latest
     container_name: appofiz_waha_test
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     env_file: ./env/test.env
     environment:
       - WAHA_DASHBOARD_ENABLED=true

@@ -242,14 +242,61 @@ class WAHAWebhookView(View):
 
         return hmac.compare_digest(expected, signature)
 
-    def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:
-        """Extract organization ID from session name (e.g., 'org_123' -> 123)."""
+    # ============== WAHA PLUS VERSION CODE (uncomment when upgraded) ==============
+    # def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:
+    #     """Extract organization ID from session name (e.g., 'org_123' -> 123)."""
+    #     if not session_name:
+    #         return None
+    #     match = re.match(r"^org_(\d+)$", session_name)
+    #     if match:
+    #         return int(match.group(1))
+    #     return None
+    # ============== END WAHA PLUS VERSION CODE ==============
+
+    def _find_bot_by_session(self, session_name: str) -> Optional[WhatsAppBot]:
+        """Find WhatsApp bot by session name.
+
+        WAHA Core (free): only supports 'default' session (1 WhatsApp per instance)
+        WAHA Plus: supports multiple sessions like 'org_123'
+
+        When upgrading to WAHA Plus:
+        1. Change waha.py: session_name = f"org_{whatsapp_bot.organization_id}"
+        2. Uncomment _extract_org_id_from_session above
+        3. Update this method to use org_id extraction first
+        """
         if not session_name:
             return None
 
+        # WAHA Plus: Try to extract org_id from session name (e.g., 'org_123' -> 123)
         match = re.match(r"^org_(\d+)$", session_name)
         if match:
-            return int(match.group(1))
+            org_id = int(match.group(1))
+            try:
+                return WhatsAppBot.objects.select_related("organization").get(
+                    organization_id=org_id,
+                    provider=WhatsAppProvider.WAHA,
+                    is_active=True,
+                )
+            except WhatsAppBot.DoesNotExist:
+                return None
+
+        # WAHA Core: For 'default' session - find by waha_session_name or first active bot
+        try:
+            return WhatsAppBot.objects.select_related("organization").get(
+                waha_session_name=session_name,
+                provider=WhatsAppProvider.WAHA,
+                is_active=True,
+            )
+        except WhatsAppBot.DoesNotExist:
+            pass
+
+        # Fallback for 'default' session - find first active WAHA bot
+        if session_name == "default":
+            return WhatsAppBot.objects.select_related("organization").filter(
+                provider=WhatsAppProvider.WAHA,
+                is_active=True,
+            ).first()
+
         return None
 
     def post(self, request):
@@ -273,21 +320,10 @@ class WAHAWebhookView(View):
 
         logger.info(f"WAHA webhook: event={event_type}, session={session_name}")
 
-        # Extract organization ID from session name
-        org_id = self._extract_org_id_from_session(session_name)
-        if not org_id:
-            logger.warning(f"Could not extract org_id from session: {session_name}")
-            return HttpResponse(status=200)  # Return 200 to avoid retries
-
-        # Get WhatsApp bot for this organization
-        try:
-            whatsapp_bot = WhatsAppBot.objects.select_related("organization").get(
-                organization_id=org_id,
-                provider=WhatsAppProvider.WAHA,
-                is_active=True,
-            )
-        except WhatsAppBot.DoesNotExist:
-            logger.warning(f"WAHA webhook for unknown/inactive org: {org_id}")
+        # Find WhatsApp bot by session name
+        whatsapp_bot = self._find_bot_by_session(session_name)
+        if not whatsapp_bot:
+            logger.warning(f"WAHA webhook: no bot found for session '{session_name}'")
             return HttpResponse(status=200)  # Return 200 to avoid retries
 
         # Update last activity

@@ -39,9 +39,11 @@ class WAHAService(WhatsAppServiceInterface):
         self.base_url = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key = getattr(settings, "WAHA_API_KEY", "")
         self.webhook_secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
-        self.session_name = (
-            whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
-        )
+        # WAHA Core (free) only supports "default" session
+        # For multiple sessions, need WAHA Plus ($19/month)
+        # WAHA PLUS: uncomment next line and comment the one below
+        # self.session_name = whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
+        self.session_name = whatsapp_bot.waha_session_name or "default"
 
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for WAHA API requests."""

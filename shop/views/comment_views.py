@@ -18,9 +18,11 @@ from organizations.services.assistant_services import ChatService, UserAssistant
 from organizations.services.organization_services import OrganizationService
 from organizations.tasks import process_comment_with_assistant
 from shop.models import Comment, CommentComplaint, UserCommentTheme
-from shop.serializers.comment_serializers import CommentSerializer, CommentLikeSerializer, CommentCreateSerializer, \
-    CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer, \
-    UserCommentThemeSerializer, AssistantCommentCreateSerializer
+from shop.serializers.comment_serializers import (
+    CommentSerializer, CommentLikeSerializer, CommentCreateSerializer,
+    CommentComplaintSerializer, CommentUpdateSerializer, ItemChangeCommentsDisabledSerializer,
+    UserCommentThemeSerializer, AssistantCommentCreateSerializer, BotMessageSerializer
+)
 from shop.serializers.item_serializers import SubscriptionItemSerializer, ItemRetrieveSerializer, ItemInfoSerializer
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
@@ -85,45 +87,100 @@ class CommentItemListCreateView(ListCreateAPIView):
 
 
 class CommentChatListCreateView(ListCreateAPIView):
+    """
+    Universal endpoint for chat messages.
+    Works with web chats (Comment model) and Telegram/WhatsApp chats (BotMessage model).
+    """
     permission_classes = (IsAuthenticated,)
     pagination_class = GeneralPagination
     serializer_class = CommentSerializer
 
+    def get_chat(self):
+        """Get chat and cache it on request."""
+        if not hasattr(self, '_chat'):
+            self._chat = ChatService.get(id=self.kwargs['pk'])
+        return self._chat
+
     def get_queryset(self):
-        chat = ChatService.get(id=self.kwargs['pk'])
-        comment_complaints_ids = CommentComplaint.objects.filter(user=self.request.user).values_list('comment_id', flat=True).distinct()
-        return Comment.objects.filter(chat=chat).exclude(id__in=comment_complaints_ids).order_by('-created_at')
+        chat = self.get_chat()
+
+        # For Telegram/WhatsApp chats, return BotMessage queryset
+        if chat.source in ('telegram', 'whatsapp') and chat.bot_chat:
+            return chat.bot_chat.messages.all().order_by('-created_at')
+
+        # For web chats, return Comment queryset
+        comment_complaints_ids = CommentComplaint.objects.filter(
+            user=self.request.user
+        ).values_list('comment_id', flat=True).distinct()
+        return Comment.objects.filter(chat=chat).exclude(
+            id__in=comment_complaints_ids
+        ).order_by('-created_at')
+
+    def get_serializer_class(self):
+        chat = self.get_chat()
+        if chat.source in ('telegram', 'whatsapp') and chat.bot_chat:
+            return BotMessageSerializer
+        return CommentSerializer
 
     def list(self, request, *args, **kwargs):
-        chat = ChatService.get(id=self.kwargs['pk'])
-        response = super().list(request, args, kwargs)
+        chat = self.get_chat()
+
+        # Use appropriate serializer based on chat source
+        if chat.source in ('telegram', 'whatsapp') and chat.bot_chat:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = BotMessageSerializer(page, many=True, context={'request': request})
+                response = self.get_paginated_response(serializer.data)
+            else:
+                serializer = BotMessageSerializer(queryset, many=True, context={'request': request})
+                response = Response(serializer.data)
+        else:
+            response = super().list(request, args, kwargs)
+
+        # Add common metadata
         response.data['my_role'] = CommentService.get_my_role_for_chat(user=self.request.user, chat=chat)
         response.data['wallpapers'] = CommentService.get_user_theme_or_default(user=self.request.user)
         response.data['chat'] = ChatSettingsSerializer(chat, context={'request': request}).data
-        response.data['organization'] = ItemFeedOrganizationSerializer(chat.assistant.organization,
-                                                                       context={'request': request}).data
+        response.data['organization'] = ItemFeedOrganizationSerializer(
+            chat.assistant.organization,
+            context={'request': request}
+        ).data
+        response.data['source'] = chat.source
         return response
 
     def create(self, request, *args, **kwargs):
+        chat = self.get_chat()
+
+        # Telegram/WhatsApp chats don't support creating messages via API
+        # Messages are created via webhook from the platform
+        if chat.source in ('telegram', 'whatsapp'):
+            return Response(
+                data={'message': _('Cannot create messages in bot chats via API')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = CommentCreateSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
             return Response(data={
                 'message': _('Invalid input'),
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
-        chat = ChatService.get(id=self.kwargs['pk'])
+
         if chat.assistant.is_enabled:
             if chat.chat_by_org_user:
                 comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
             else:
                 if UserAssistantService.user_has_active_assistant(assistant=chat.assistant):
-                    comment = CommentService.create_chat_comment_with_assistant_response(**serializer.validated_data,
-                                                                                     chat=chat, request=request)
+                    comment = CommentService.create_chat_comment_with_assistant_response(
+                        **serializer.validated_data, chat=chat, request=request
+                    )
                 else:
                     comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
         else:
-            comment = CommentService.create_chat_comment_with_assistant_default_response(**serializer.validated_data,
-                                                                                         chat=chat)
+            comment = CommentService.create_chat_comment_with_assistant_default_response(
+                **serializer.validated_data, chat=chat
+            )
         data = self.serializer_class(comment, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
 

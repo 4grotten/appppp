@@ -39,9 +39,11 @@ class WAHAService(WhatsAppServiceInterface):
         self.base_url = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key = getattr(settings, "WAHA_API_KEY", "")
         self.webhook_secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
-        self.session_name = (
-            whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
-        )
+        # WAHA Core (free) only supports "default" session
+        # For multiple sessions, need WAHA Plus ($19/month)
+        # WAHA PLUS: uncomment next line and comment the one below
+        # self.session_name = whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
+        self.session_name = whatsapp_bot.waha_session_name or "default"
 
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for WAHA API requests."""
@@ -104,21 +106,23 @@ class WAHAService(WhatsAppServiceInterface):
     def start_session(self) -> bool:
         """Create and start WAHA session.
 
-        Creates a new session if it doesn't exist, then starts it.
-        Configures webhook for this session.
+        Uses POST /api/sessions/start which does "upsert and start":
+        - Creates session if it doesn't exist
+        - Starts session if it exists but stopped
+        - Does nothing if already running
         """
         try:
             backend_url = getattr(settings, "BACKEND_URL", "https://api.appofiz.com")
 
-            # Create session with webhook config
+            # Upsert and Start session (creates if not exists, starts if exists)
             self._make_request(
                 "POST",
-                "/api/sessions",
+                "/api/sessions/start",
                 {
                     "name": self.session_name,
                     "config": {
                         "webhook": {
-                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/webhook/",
+                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/waha/webhook/",
                             "events": ["message", "session.status"],
                             "hmac": {"key": self.webhook_secret},
                         }
@@ -126,26 +130,18 @@ class WAHAService(WhatsAppServiceInterface):
                 },
             )
 
-            # Start the session
-            self._make_request("POST", f"/api/sessions/{self.session_name}/start")
-
             logger.info(f"WAHA session started: {self.session_name}")
             return True
 
         except requests.exceptions.HTTPError as e:
-            # Session might already exist
-            if e.response.status_code == 409:
-                logger.info(f"WAHA session already exists: {self.session_name}")
-                # Try to start it anyway
-                try:
-                    self._make_request(
-                        "POST", f"/api/sessions/{self.session_name}/start"
-                    )
-                    return True
-                except Exception:
-                    pass
-            logger.error(f"Failed to start WAHA session: {e}")
-            self._update_bot_error(str(e))
+            error_msg = str(e)
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("message", str(e))
+            except Exception:
+                pass
+            logger.error(f"Failed to start WAHA session: {error_msg}")
+            self._update_bot_error(error_msg)
             return False
 
         except Exception as e:

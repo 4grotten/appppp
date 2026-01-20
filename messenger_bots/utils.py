@@ -15,6 +15,7 @@ def add_bot_link_to_contacts(organization, bot_username: str) -> bool:
         True if link was added/updated, False otherwise
     """
     if not bot_username:
+        logger.warning(f"Cannot add bot link for org {organization.id}: bot_username is empty")
         return False
 
     from organizations.models import SocialNetworkContact
@@ -35,4 +36,5 @@ def add_bot_link_to_contacts(organization, bot_username: str) -> bool:
         logger.info(f"Updated bot link in org {organization.id} contacts: {bot_link}")
         return True
 
+    logger.info(f"Bot link already exists for org {organization.id}: {bot_link}")
     return False

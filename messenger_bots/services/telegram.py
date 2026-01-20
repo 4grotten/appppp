@@ -6,6 +6,8 @@ from typing import Optional, List, Dict, Any, Tuple
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from messenger_bots.models import TelegramBot, BotChat, BotMessage, BotPlatform
 
@@ -412,7 +414,7 @@ class TelegramBotService:
         # Add back button
         back_text = {"ru": "« Назад", "en": "« Back"}
         buttons.append([{
-            "text": back_text.get(language, "« Назад"),
+            "text": back_text.get(language, back_text["ru"]),
             "callback_data": self.CALLBACK_BACK,
         }])
 
@@ -431,7 +433,7 @@ class TelegramBotService:
         # Add back button
         back_text = {"ru": "« К категориям", "en": "« Categories"}
         buttons.append([{
-            "text": back_text.get(language, "« К категориям"),
+            "text": back_text.get(language, back_text["ru"]),
             "callback_data": self.CALLBACK_CATALOG,
         }])
 
@@ -535,6 +537,9 @@ class TelegramBotService:
         # Sync with organizations.Chat for unified chat list
         cls._sync_linked_chat(chat, telegram_bot.organization)
 
+        # Send WebSocket notification for incoming message
+        cls._send_ws_notification(incoming_msg, chat)
+
         # Handle /start command
         service = cls(telegram_bot)
         if text.strip().lower() == "/start":
@@ -543,12 +548,13 @@ class TelegramBotService:
             keyboard = service.build_main_menu_keyboard(user_language)
             result = service.send_message(chat_id, welcome_text, reply_markup=keyboard)
             if result:
-                BotMessage.objects.create(
+                start_response_msg = BotMessage.objects.create(
                     chat=chat,
                     sender=BotMessage.ASSISTANT,
                     text=welcome_text,
                     platform_message_id=str(result.get("message_id", "")),
                 )
+                cls._send_ws_notification(start_response_msg, chat)
                 logger.info(f"[TG_SERVICE] /start response sent successfully")
             else:
                 logger.error(f"[TG_SERVICE] Failed to send /start response")
@@ -613,12 +619,13 @@ class TelegramBotService:
 
             # Save combined response
             combined_text = "\n\n".join(products) + (f"\n\n{footer}" if footer else "")
-            BotMessage.objects.create(
+            products_response_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=combined_text,
                 platform_message_id=str(result.get("message_id", "") if result else ""),
             )
+            cls._send_ws_notification(products_response_msg, chat)
             logger.info(f"[TG_SERVICE] {len(products)} products sent individually")
         else:
             # No products - send regular response (clean ###NEXT### just in case)
@@ -634,6 +641,7 @@ class TelegramBotService:
                     text=clean_response,
                     platform_message_id=str(result.get("message_id", "")),
                 )
+                cls._send_ws_notification(outgoing_msg, chat)
                 logger.info(f"[TG_SERVICE] Response sent and saved: msg_id={outgoing_msg.id}")
             else:
                 logger.error(f"[TG_SERVICE] Failed to send response to chat_id={chat_id}")
@@ -714,10 +722,7 @@ class TelegramBotService:
                 return cls._show_all_products(service, telegram_bot, chat_id, message_id, language)
 
             # Build categories text
-            text_templates = {
-                "ru": "Выберите категорию:",
-                "en": "Select a category:",
-            }
+            text_templates = {"ru": "Выберите категорию:", "en": "Select a category:"}
             text = text_templates.get(language, text_templates["ru"])
 
             keyboard = service.build_categories_keyboard(categories_list, language)
@@ -757,10 +762,7 @@ class TelegramBotService:
                 service.edit_message_text(chat_id, message_id, text, reply_markup=keyboard)
                 return text
 
-            text_templates = {
-                "ru": "Наши товары:",
-                "en": "Our products:",
-            }
+            text_templates = {"ru": "Наши товары:", "en": "Our products:"}
             text = text_templates.get(language, text_templates["ru"])
 
             keyboard = service.build_products_keyboard(products_list, 0, language)
@@ -846,10 +848,7 @@ class TelegramBotService:
                 text += f"Цена: {price_str}"
 
             # Back button
-            back_text = {
-                "ru": "« Назад к товарам",
-                "en": "« Back to products",
-            }
+            back_text = {"ru": "« Назад к товарам", "en": "« Back to products"}
             keyboard = {
                 "inline_keyboard": [[{
                     "text": back_text.get(language, back_text["ru"]),
@@ -902,28 +901,28 @@ class TelegramBotService:
         # Address
         if org.address:
             address_label = {"ru": "Адрес", "en": "Address"}
-            text_parts.append(f"📍 <b>{address_label.get(language, 'Адрес')}:</b> {org.address}")
+            text_parts.append(f"📍 <b>{address_label.get(language, address_label['ru'])}:</b> {org.address}")
 
         # Working hours
         if org.opens_at or org.closes_at:
             hours_label = {"ru": "Часы работы", "en": "Working hours"}
             opens = str(org.opens_at)[:5] if org.opens_at else "—"
             closes = str(org.closes_at)[:5] if org.closes_at else "—"
-            text_parts.append(f"🕐 <b>{hours_label.get(language, 'Часы работы')}:</b> {opens} - {closes}")
+            text_parts.append(f"🕐 <b>{hours_label.get(language, hours_label['ru'])}:</b> {opens} - {closes}")
 
         # Phone numbers
         phone_numbers = list(org.phone_numbers.values_list("phone_number", flat=True))
         if phone_numbers:
             phone_label = {"ru": "Телефоны", "en": "Phones"}
             phones_str = "\n".join([f"📞 {phone}" for phone in phone_numbers])
-            text_parts.append(f"\n<b>{phone_label.get(language, 'Телефоны')}:</b>\n{phones_str}")
+            text_parts.append(f"\n<b>{phone_label.get(language, phone_label['ru'])}:</b>\n{phones_str}")
 
         # Social contacts
         social_contacts = list(org.social_contacts.values_list("url", flat=True))
         if social_contacts:
             social_label = {"ru": "Соц. сети", "en": "Social media"}
             socials_str = "\n".join([f"🔗 {url}" for url in social_contacts[:5]])
-            text_parts.append(f"\n<b>{social_label.get(language, 'Соц. сети')}:</b>\n{socials_str}")
+            text_parts.append(f"\n<b>{social_label.get(language, social_label['ru'])}:</b>\n{socials_str}")
 
         text = "\n".join(text_parts)
 
@@ -1027,6 +1026,43 @@ class TelegramBotService:
 
         except Exception as e:
             logger.error(f"[TG_SERVICE] Error syncing linked chat: {e}", exc_info=True)
+
+    @classmethod
+    def _send_ws_notification(cls, bot_message: BotMessage, bot_chat: BotChat) -> None:
+        """
+        Send WebSocket notification for new Telegram message.
+        Uses the same format as web chat messages for frontend compatibility.
+        """
+        from shop.serializers.comment_serializers import BotMessageSerializer
+
+        try:
+            # Get linked Chat id
+            linked_chat = getattr(bot_chat, 'linked_chat', None)
+            if not linked_chat:
+                logger.debug(f"[TG_SERVICE] No linked chat for BotChat id={bot_chat.id}, skipping WS")
+                return
+
+            chat_group_name = f"chat_{linked_chat.id}"
+
+            # Serialize message using BotMessageSerializer (unified format)
+            serialized_data = BotMessageSerializer(bot_message).data
+
+            # Send via channel layer
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    chat_group_name,
+                    {
+                        "type": "chat_message",
+                        "message": serialized_data,
+                    }
+                )
+                logger.debug(f"[TG_SERVICE] WS notification sent to {chat_group_name}")
+            else:
+                logger.warning(f"[TG_SERVICE] No channel layer available for WS notification")
+
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Error sending WS notification: {e}", exc_info=True)
 
     @classmethod
     def _get_chat_history(cls, chat: BotChat, limit: int = None) -> List[Dict[str, str]]:

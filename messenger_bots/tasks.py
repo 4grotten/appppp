@@ -1,7 +1,10 @@
 import asyncio
 import logging
+import time
 
+from asgiref.sync import async_to_sync
 from celery import shared_task
+from channels.layers import get_channel_layer
 from django.utils import timezone
 
 from messenger_bots.models import (
@@ -17,6 +20,28 @@ from messenger_bots.services import BotFactoryService, TelegramBotService
 from messenger_bots.services.assistant import BotAssistantService
 
 logger = logging.getLogger(__name__)
+
+
+def _send_ws_notification(bot_message: BotMessage, bot_chat: BotChat) -> None:
+    """Send WebSocket notification for new bot message."""
+    from shop.serializers.comment_serializers import BotMessageSerializer
+
+    try:
+        linked_chat = getattr(bot_chat, 'linked_chat', None)
+        if not linked_chat:
+            return
+
+        chat_group_name = f"chat_{linked_chat.id}"
+        serialized_data = BotMessageSerializer(bot_message).data
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                chat_group_name,
+                {"type": "chat_message", "message": serialized_data}
+            )
+    except Exception as e:
+        logger.error(f"[WS_NOTIFICATION] Error: {e}", exc_info=True)
 
 
 def _run_async(coro):
@@ -263,12 +288,13 @@ def send_telegram_products_task(
 
         result = service.send_message(platform_chat_id, product)
         if result:
-            BotMessage.objects.create(
+            product_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=product,
                 platform_message_id=str(result.get("message_id", "")),
             )
+            _send_ws_notification(product_msg, chat)
             messages_sent += 1
 
     has_more = (start + PRODUCTS_PER_PAGE) < len(products)
@@ -302,12 +328,13 @@ def send_telegram_products_task(
             reply_markup=keyboard,
         )
         if result:
-            BotMessage.objects.create(
+            status_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=status_text.get(language, status_text["ru"]),
                 platform_message_id=str(result.get("message_id", "")),
             )
+            _send_ws_notification(status_msg, chat)
     else:
         # Send footer
         if footer:
@@ -315,12 +342,13 @@ def send_telegram_products_task(
             keyboard = service.build_main_menu_keyboard(language)
             result = service.send_message(platform_chat_id, footer, reply_markup=keyboard)
             if result:
-                BotMessage.objects.create(
+                footer_msg = BotMessage.objects.create(
                     chat=chat,
                     sender=BotMessage.ASSISTANT,
                     text=footer,
                     platform_message_id=str(result.get("message_id", "")),
                 )
+                _send_ws_notification(footer_msg, chat)
 
     logger.info(f"[TG_PRODUCTS_TASK] Completed: sent {messages_sent} products")
     return {"success": True, "messages_sent": messages_sent}
@@ -382,6 +410,10 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
             f"[CELERY_TASK] TelegramBot {'created' if created else 'updated'}: id={telegram_bot.id}"
         )
 
+        # Add bot link to organization contacts (regardless of webhook setup)
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(request.organization, request.bot_username)
+
         logger.info("[CELERY_TASK] Setting up webhook...")
         service = TelegramBotService(telegram_bot)
         bot_info = service.get_me()
@@ -398,10 +430,6 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
                 )
             else:
                 logger.info("[CELERY_TASK] Webhook set successfully!")
-
-                # Add bot link to organization contacts
-                from messenger_bots.utils import add_bot_link_to_contacts
-                add_bot_link_to_contacts(request.organization, request.bot_username)
         else:
             logger.warning(
                 "[CELERY_TASK] WARNING: Could not get bot info (getMe failed)"
@@ -511,12 +539,13 @@ def process_whatsapp_message_task(
         result = service.send_message(message)
 
         if result.success:
-            BotMessage.objects.create(
+            wa_response_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=response_text,
                 platform_message_id=result.message_id,
             )
+            _send_ws_notification(wa_response_msg, chat)
             logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
             logger.info(
                 f"[WA_TASK] Response sent to {chat.platform_chat_id}, msg_id={result.message_id}"

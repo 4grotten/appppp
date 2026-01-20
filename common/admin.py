@@ -6,6 +6,7 @@ from mapwidgets import GooglePointFieldWidget
 from common.forms import CountryAdminForm
 
 from .models import (
+    AIPromptSettings,
     BlockedIps,
     ChatGPTSettings,
     City,
@@ -233,47 +234,89 @@ class CountryInvoiceInfoAdmin(admin.ModelAdmin):
     ]
 
 
-# @admin.register(ChatGPTSettings)
-# class ChatGPTSettingsAdmin(admin.ModelAdmin):
-#     list_display = [
-#         "id",
-#         "is_active",
-#         "model",
-#         "temperature",
-#         "max_tokens",
-#         "api_key_masked",
-#         "updated_at",
-#     ]
-#     readonly_fields = ["created_at", "updated_at"]
-#     fieldsets = (
-#         (None, {
-#             "fields": ("is_active",)
-#         }),
-#         ("API Configuration", {
-#             "fields": ("api_key", "model", "temperature"),
-#             "description": "Настройки подключения к OpenAI ChatGPT API"
-#         }),
-#         ("Generation Parameters", {
-#             "fields": ("max_tokens", ("min_sentences", "max_sentences"), ("min_words", "max_words")),
-#             "description": "Параметры генерации текста: длина ответа и количество предложений/слов"
-#         }),
-#         ("Timestamps", {
-#             "fields": ("created_at", "updated_at"),
-#             "classes": ("collapse",)
-#         }),
-#     )
-#
-#     def api_key_masked(self, obj):
-#         """Показывает замаскированный API ключ для безопасности."""
-#         if obj.api_key:
-#             return f"{obj.api_key[:10]}...{obj.api_key[-4:]}"
-#         return "Not set"
-#     api_key_masked.short_description = "API Key"
-#
-#     def has_add_permission(self, request):
-#         # Разрешаем добавление только если нет записей
-#         return not ChatGPTSettings.objects.exists()
-#
-#     def has_delete_permission(self, request, obj=None):
-#         # Запрещаем удаление singleton
-#         return False
+@admin.register(AIPromptSettings)
+class AIPromptSettingsAdmin(admin.ModelAdmin):
+    """Admin for managing AI assistant prompts (used by TG bot and Web Chat)."""
+
+    list_display = [
+        "id",
+        "is_active",
+        "updated_at",
+    ]
+    readonly_fields = ["created_at", "updated_at"]
+
+    fieldsets = (
+        ("Status", {
+            "fields": ("is_active",),
+            "description": "Если выключено, используются дефолтные промпты из кода"
+        }),
+        ("Language Detection", {
+            "fields": ("language_detection_rule",),
+            "description": "Правило определения языка из контекста сообщений пользователя (TG бот определяет язык автоматически)"
+        }),
+        ("Language Instructions (Legacy)", {
+            "fields": ("language_instruction_ru", "language_instruction_en"),
+            "description": "Устаревшие инструкции для фиксированного языка (для обратной совместимости с Web Chat)",
+            "classes": ("collapse",),
+        }),
+        ("Identity", {
+            "fields": ("identity_template",),
+            "description": "Шаблон идентичности ассистента. Переменные: {assistant_name}, {organization}, {position}, {gender}"
+        }),
+        ("Formatting", {
+            "fields": ("formatting_rules",),
+            "description": "Правила форматирования ответов"
+        }),
+        ("Scenario A: Discounts", {
+            "fields": ("scenario_a_discounts",),
+            "classes": ("collapse",),
+        }),
+        ("Scenario B: Products", {
+            "fields": ("scenario_b_products",),
+            "description": "⚠️ ВАЖНО: Используйте 'Товар/Product' и 'Ссылка/Link' для корректного парсинга в TG боте",
+            "classes": ("collapse",),
+        }),
+        ("Scenario C: Contacts", {
+            "fields": ("scenario_c_contacts",),
+            "classes": ("collapse",),
+        }),
+        ("Scenario D: General Questions", {
+            "fields": ("scenario_d_general",),
+            "description": "ВАЖНО: Это сценарий для приветствий и общих вопросов"
+        }),
+        ("Ending Rule", {
+            "fields": ("ending_rule",),
+            "classes": ("collapse",),
+        }),
+        ("Few-shot Examples (RU)", {
+            "fields": ("few_shot_example_greeting_ru", "few_shot_example_capabilities_ru"),
+            "description": "Примеры ответов на русском"
+        }),
+        ("Few-shot Examples (EN)", {
+            "fields": ("few_shot_example_greeting_en", "few_shot_example_capabilities_en"),
+            "description": "Примеры ответов на английском"
+        }),
+        ("Contacts Example", {
+            "fields": ("few_shot_example_contacts",),
+        }),
+        ("Search Rules", {
+            "fields": ("search_rules",),
+            "classes": ("collapse",),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Allow adding only if no records exist (singleton)
+        return not AIPromptSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion of singleton
+        return False
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Signal will handle webhook sync

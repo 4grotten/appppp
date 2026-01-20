@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.db.models import BooleanField, Case, F, Max, Value, When
+from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
 from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -331,8 +331,35 @@ class AssistantChatsListView(generics.ListAPIView):
             CommentService.create_chat_assistant_default_comment(chat=chat, assistant=chat.assistant)
 
         # Get all chats (web + telegram) for this assistant
+        # Import models for subquery annotations
+        from organizations.models import ChatMessage
+        from messenger_bots.models import BotMessage
+
+        # Subqueries for last message (eliminates N+1)
+        web_last_msg_subquery = ChatMessage.objects.filter(
+            chat=OuterRef('pk')
+        ).order_by('-created_at').values('text')[:1]
+
+        web_last_msg_time_subquery = ChatMessage.objects.filter(
+            chat=OuterRef('pk')
+        ).order_by('-created_at').values('created_at')[:1]
+
+        tg_last_msg_subquery = BotMessage.objects.filter(
+            chat=OuterRef('bot_chat')
+        ).order_by('-created_at').values('text')[:1]
+
+        tg_last_msg_time_subquery = BotMessage.objects.filter(
+            chat=OuterRef('bot_chat')
+        ).order_by('-created_at').values('created_at')[:1]
+
         queryset = Chat.objects.filter(assistant=assistant).select_related(
-            'user', 'bot_chat', 'assistant'
+            'user', 'bot_chat', 'assistant', 'assistant__organization'
+        ).annotate(
+            # Annotate last message text and time (solves N+1 query)
+            _web_last_message_text=Subquery(web_last_msg_subquery),
+            _web_last_message_time=Subquery(web_last_msg_time_subquery),
+            _tg_last_message_text=Subquery(tg_last_msg_subquery),
+            _tg_last_message_time=Subquery(tg_last_msg_time_subquery),
         ).annotate(
             is_target_chat=Case(
                 When(id=chat.id, then=Value(True)),
@@ -348,7 +375,7 @@ class AssistantChatsListView(generics.ListAPIView):
                 default='telegram_last_message_at',
                 output_field=models.DateTimeField()
             )
-        ).order_by('-is_target_chat', '-is_read', '-last_message_created_at')
+        ).order_by('-is_target_chat', 'is_read', '-last_message_created_at')
 
         return queryset
 

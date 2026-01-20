@@ -436,7 +436,7 @@ INSTAGRAM_DAYS_TO_KEEP = config("INSTAGRAM_DAYS_TO_KEEP", default=14, cast=int)
 if not DEBUG and JSON_LOGGING:
     LOGGING = {
         "version": 1,
-        "disable_existing_loggers": True,
+        "disable_existing_loggers": False,
         "formatters": {"json": {"()": "common.logs.LogFormatter", "timestamp": True}},
         "handlers": {
             "console": {
@@ -448,12 +448,33 @@ if not DEBUG and JSON_LOGGING:
         "loggers": {
             "": {
                 "handlers": ["console"],
-                "level": "DEBUG",
+                "level": "INFO",
                 "propagate": True,
             },
             "django.request": {
                 "handlers": ["console"],
                 "level": "ERROR",
+            },
+            # Custom app loggers - INFO level in production
+            "organizations": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "common": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "shop": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "messenger_bots": {
+                "handlers": ["console"],
+                "level": "INFO",
+                "propagate": False,
             },
         },
     }
@@ -461,9 +482,16 @@ else:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[{asctime}] {levelname} {name}: {message}",
+                "style": "{",
+            },
+        },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
+                "formatter": "verbose",
             },
         },
         "loggers": {
@@ -471,6 +499,27 @@ else:
             "django.request": {
                 "handlers": ["console"],
                 "level": "ERROR",
+                "propagate": False,
+            },
+            # Custom app loggers
+            "organizations": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "common": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "shop": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "messenger_bots": {
+                "handlers": ["console"],
+                "level": "DEBUG",
                 "propagate": False,
             },
         },

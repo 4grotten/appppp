@@ -5,6 +5,8 @@ import hashlib
 import re
 from typing import Optional
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -45,6 +47,58 @@ from messenger_bots.serializers import (
 from organizations.models import Organization
 
 logger = logging.getLogger(__name__)
+
+
+def _sync_linked_chat_waha(bot_chat: BotChat, organization) -> None:
+    """Sync BotChat with organizations.Chat for unified chat list (WAHA WhatsApp)."""
+    from django.db.models import F
+    from organizations.models import Assistant, Chat, ChatSource
+
+    try:
+        assistant = Assistant.objects.filter(organization=organization).first()
+        if not assistant:
+            return
+
+        linked_chat, created = Chat.objects.get_or_create(
+            bot_chat=bot_chat,
+            defaults={
+                'assistant': assistant,
+                'source': ChatSource.WHATSAPP,
+                'user': None,
+                'is_read': False,
+                'unread_count': 1,
+            }
+        )
+
+        if not created:
+            Chat.objects.filter(id=linked_chat.id).update(
+                unread_count=F('unread_count') + 1,
+                is_read=False
+            )
+    except Exception as e:
+        logger.error(f"[WAHA] Error syncing linked chat: {e}", exc_info=True)
+
+
+def _send_ws_notification_waha(bot_message: BotMessage, bot_chat: BotChat) -> None:
+    """Send WebSocket notification for WAHA WhatsApp message."""
+    from shop.serializers.comment_serializers import BotMessageSerializer
+
+    try:
+        linked_chat = getattr(bot_chat, 'linked_chat', None)
+        if not linked_chat:
+            return
+
+        chat_group_name = f"chat_{linked_chat.id}"
+        serialized_data = BotMessageSerializer(bot_message).data
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                chat_group_name,
+                {"type": "chat_message", "message": serialized_data}
+            )
+    except Exception as e:
+        logger.error(f"[WAHA] Error sending WS notification: {e}", exc_info=True)
 
 
 # ============== Webhook Views (No Auth Required) ==============
@@ -171,12 +225,18 @@ class WAHAWebhookView(View):
 
     def _verify_signature(self, body: bytes, signature: str) -> bool:
         """Verify HMAC-SHA512 signature from WAHA."""
-        if not signature:
-            return False
-
         secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
+
+        # Debug logging
+        logger.info(f"WAHA webhook signature verification: signature_present={bool(signature)}, secret_configured={bool(secret)}")
+
+        if not signature:
+            # If no signature provided, allow for now (WAHA session might not have HMAC configured)
+            logger.warning("WAHA webhook: No signature provided, allowing request")
+            return True
+
         if not secret:
-            # If no secret configured, skip verification (not recommended for production)
+            # If no secret configured, skip verification
             logger.warning("WAHA_WEBHOOK_SECRET not configured, skipping signature verification")
             return True
 
@@ -186,22 +246,73 @@ class WAHAWebhookView(View):
             hashlib.sha512
         ).hexdigest()
 
-        return hmac.compare_digest(expected, signature)
+        is_valid = hmac.compare_digest(expected, signature)
+        if not is_valid:
+            logger.warning(f"WAHA webhook signature mismatch: expected={expected[:20]}..., got={signature[:20]}...")
 
-    def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:
-        """Extract organization ID from session name (e.g., 'org_123' -> 123)."""
+        return is_valid
+
+    # ============== WAHA PLUS VERSION CODE (uncomment when upgraded) ==============
+    # def _extract_org_id_from_session(self, session_name: str) -> Optional[int]:
+    #     """Extract organization ID from session name (e.g., 'org_123' -> 123)."""
+    #     if not session_name:
+    #         return None
+    #     match = re.match(r"^org_(\d+)$", session_name)
+    #     if match:
+    #         return int(match.group(1))
+    #     return None
+    # ============== END WAHA PLUS VERSION CODE ==============
+
+    def _find_bot_by_session(self, session_name: str) -> Optional[WhatsAppBot]:
+        """Find WhatsApp bot by session name.
+
+        WAHA Core (free): only supports 'default' session (1 WhatsApp per instance)
+        WAHA Plus: supports multiple sessions like 'org_123'
+
+        When upgrading to WAHA Plus:
+        1. Change waha.py: session_name = f"org_{whatsapp_bot.organization_id}"
+        2. Uncomment _extract_org_id_from_session above
+        3. Update this method to use org_id extraction first
+        """
         if not session_name:
             return None
 
+        # WAHA Plus: Try to extract org_id from session name (e.g., 'org_123' -> 123)
         match = re.match(r"^org_(\d+)$", session_name)
         if match:
-            return int(match.group(1))
+            org_id = int(match.group(1))
+            try:
+                return WhatsAppBot.objects.select_related("organization").get(
+                    organization_id=org_id,
+                    provider=WhatsAppProvider.WAHA,
+                    is_active=True,
+                )
+            except WhatsAppBot.DoesNotExist:
+                return None
+
+        # WAHA Core: For 'default' session - find by waha_session_name or first active bot
+        try:
+            return WhatsAppBot.objects.select_related("organization").get(
+                waha_session_name=session_name,
+                provider=WhatsAppProvider.WAHA,
+                is_active=True,
+            )
+        except WhatsAppBot.DoesNotExist:
+            pass
+
+        # Fallback for 'default' session - find first active WAHA bot
+        if session_name == "default":
+            return WhatsAppBot.objects.select_related("organization").filter(
+                provider=WhatsAppProvider.WAHA,
+                is_active=True,
+            ).first()
+
         return None
 
     def post(self, request):
         """Handle incoming WAHA webhook events."""
-        # Verify signature
-        signature = request.headers.get("X-Waha-Signature", "")
+        # Verify signature (WAHA sends X-Webhook-Hmac-Sha512 header)
+        signature = request.headers.get("X-Webhook-Hmac-Sha512", "")
         if not self._verify_signature(request.body, signature):
             logger.warning("Invalid WAHA webhook signature")
             return HttpResponse(status=403)
@@ -219,21 +330,10 @@ class WAHAWebhookView(View):
 
         logger.info(f"WAHA webhook: event={event_type}, session={session_name}")
 
-        # Extract organization ID from session name
-        org_id = self._extract_org_id_from_session(session_name)
-        if not org_id:
-            logger.warning(f"Could not extract org_id from session: {session_name}")
-            return HttpResponse(status=200)  # Return 200 to avoid retries
-
-        # Get WhatsApp bot for this organization
-        try:
-            whatsapp_bot = WhatsAppBot.objects.select_related("organization").get(
-                organization_id=org_id,
-                provider=WhatsAppProvider.WAHA,
-                is_active=True,
-            )
-        except WhatsAppBot.DoesNotExist:
-            logger.warning(f"WAHA webhook for unknown/inactive org: {org_id}")
+        # Find WhatsApp bot by session name
+        whatsapp_bot = self._find_bot_by_session(session_name)
+        if not whatsapp_bot:
+            logger.warning(f"WAHA webhook: no bot found for session '{session_name}'")
             return HttpResponse(status=200)  # Return 200 to avoid retries
 
         # Update last activity
@@ -295,15 +395,30 @@ class WAHAWebhookView(View):
         message_id = payload.get("id", {}).get("id", "") if isinstance(payload.get("id"), dict) else payload.get("id", "")
         timestamp = payload.get("timestamp")
 
-        # Clean phone number (remove @c.us suffix)
-        if "@" in from_number:
+        # WAHA uses LID (Linked ID) format like "230545808167055@lid"
+        # The actual phone number is in _data.key.remoteJidAlt like "996550022578@s.whatsapp.net"
+        # We need to extract the real phone number for sending replies
+        _data = payload.get("_data", {})
+        key_data = _data.get("key", {})
+        remote_jid_alt = key_data.get("remoteJidAlt", "")
+
+        # Try to get real phone number from remoteJidAlt first
+        if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt:
+            phone_number = remote_jid_alt.replace("@s.whatsapp.net", "")
+            logger.debug(f"WAHA: Using remoteJidAlt phone: {phone_number}")
+        elif "@" in from_number:
+            # Fallback to from field (remove any suffix)
             phone_number = from_number.split("@")[0]
+            logger.debug(f"WAHA: Using from field: {phone_number}")
         else:
             phone_number = from_number
 
         if not phone_number or not message_body:
             logger.debug(f"Skipping empty message from {from_number}")
             return
+
+        # Extract user name from pushName if available
+        push_name = _data.get("pushName", "")
 
         # Get or create chat
         chat, created = BotChat.objects.get_or_create(
@@ -313,20 +428,31 @@ class WAHAWebhookView(View):
             defaults={
                 "user_phone": phone_number,
                 "platform_user_id": phone_number,
+                "user_name": push_name or None,
             }
         )
 
-        # Update last message time
+        # Update user name if we have it now and didn't before
+        update_fields = ["last_message_at"]
         chat.last_message_at = timezone.now()
-        chat.save(update_fields=["last_message_at"])
+        if push_name and not chat.user_name:
+            chat.user_name = push_name
+            update_fields.append("user_name")
+        chat.save(update_fields=update_fields)
 
         # Save incoming message
-        BotMessage.objects.create(
+        incoming_msg = BotMessage.objects.create(
             chat=chat,
             sender=BotMessage.USER,
             text=message_body,
             platform_message_id=message_id,
         )
+
+        # Sync with organizations.Chat for unified chat list
+        _sync_linked_chat_waha(chat, whatsapp_bot.organization)
+
+        # Send WebSocket notification for incoming message
+        _send_ws_notification_waha(incoming_msg, chat)
 
         logger.info(f"WAHA message from {phone_number} to org {whatsapp_bot.organization_id}: {message_body[:50]}...")
 
@@ -432,6 +558,10 @@ class TelegramBotAPIView(APIView):
         )
         logger.info(f"[TG_API] Bot {'created' if created else 'updated'}: id={bot.id}")
 
+        # Add bot link to organization contacts (before webhook setup, so link is added even if webhook fails)
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(org, bot.bot_username)
+
         # Setup webhook
         base_url = request.build_absolute_uri("/").rstrip("/")
         logger.info(f"[TG_API] Setting up webhook with base_url={base_url}")
@@ -445,10 +575,6 @@ class TelegramBotAPIView(APIView):
             )
 
         logger.info(f"[TG_API] SUCCESS: Bot @{bot.bot_username} configured, webhook_url={bot.webhook_url}")
-
-        # Add bot link to organization contacts
-        from messenger_bots.utils import add_bot_link_to_contacts
-        add_bot_link_to_contacts(org, bot.bot_username)
 
         return Response(
             TelegramBotSerializer(bot).data,

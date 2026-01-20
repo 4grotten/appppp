@@ -301,8 +301,8 @@ class WAHAWebhookView(View):
 
     def post(self, request):
         """Handle incoming WAHA webhook events."""
-        # Verify signature
-        signature = request.headers.get("X-Waha-Signature", "")
+        # Verify signature (WAHA sends X-Webhook-Hmac-Sha512 header)
+        signature = request.headers.get("X-Webhook-Hmac-Sha512", "")
         if not self._verify_signature(request.body, signature):
             logger.warning("Invalid WAHA webhook signature")
             return HttpResponse(status=403)

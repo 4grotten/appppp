@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.gis.db.models import PointField
 
+
 from common.models import TimestampModel, File, FileVideo, Currency, Country
 from common.utils import upload_file_with_unique_name
 from organizations.models import Organization, Chat, Assistant

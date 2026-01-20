@@ -395,15 +395,30 @@ class WAHAWebhookView(View):
         message_id = payload.get("id", {}).get("id", "") if isinstance(payload.get("id"), dict) else payload.get("id", "")
         timestamp = payload.get("timestamp")
 
-        # Clean phone number (remove @c.us suffix)
-        if "@" in from_number:
+        # WAHA uses LID (Linked ID) format like "230545808167055@lid"
+        # The actual phone number is in _data.key.remoteJidAlt like "996550022578@s.whatsapp.net"
+        # We need to extract the real phone number for sending replies
+        _data = payload.get("_data", {})
+        key_data = _data.get("key", {})
+        remote_jid_alt = key_data.get("remoteJidAlt", "")
+
+        # Try to get real phone number from remoteJidAlt first
+        if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt:
+            phone_number = remote_jid_alt.replace("@s.whatsapp.net", "")
+            logger.debug(f"WAHA: Using remoteJidAlt phone: {phone_number}")
+        elif "@" in from_number:
+            # Fallback to from field (remove any suffix)
             phone_number = from_number.split("@")[0]
+            logger.debug(f"WAHA: Using from field: {phone_number}")
         else:
             phone_number = from_number
 
         if not phone_number or not message_body:
             logger.debug(f"Skipping empty message from {from_number}")
             return
+
+        # Extract user name from pushName if available
+        push_name = _data.get("pushName", "")
 
         # Get or create chat
         chat, created = BotChat.objects.get_or_create(
@@ -413,12 +428,17 @@ class WAHAWebhookView(View):
             defaults={
                 "user_phone": phone_number,
                 "platform_user_id": phone_number,
+                "user_name": push_name or None,
             }
         )
 
-        # Update last message time
+        # Update user name if we have it now and didn't before
+        update_fields = ["last_message_at"]
         chat.last_message_at = timezone.now()
-        chat.save(update_fields=["last_message_at"])
+        if push_name and not chat.user_name:
+            chat.user_name = push_name
+            update_fields.append("user_name")
+        chat.save(update_fields=update_fields)
 
         # Save incoming message
         incoming_msg = BotMessage.objects.create(

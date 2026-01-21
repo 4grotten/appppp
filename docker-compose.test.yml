@@ -119,7 +119,7 @@ services:
 
   app:
     build:
-      context: ./App
+      context: ../frontend/EasyCard
       dockerfile: Dockerfile
     image: apofiz/app
     ports:

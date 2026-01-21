@@ -9,6 +9,8 @@ from shop.services.assistant_data_service import AssistantDataService
 @receiver(post_delete, sender=ShopItem)
 def trigger_assistant_json_update(sender, instance, **kwargs):
     if instance.organization:
+        if not instance.organization.is_catalog:
+            return
         try:
             
             print(f"🔄 [SYNC] Обновляем JSON для {instance.organization.title}...")

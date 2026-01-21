@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from django.views.static import serve
 
 from notifications.views import (
@@ -43,6 +44,7 @@ urlpatterns = [
     path("api/v1/", include(v1)),
     path("api-auth/", include("rest_framework.urls")),
     path("rest-auth/", include("rest_auth.urls")),
+    path('UaeEasyCard/', RedirectView.as_view(url='https://apofiz.com/', permanent=True)),
     path(
         "api/v1/devices/",
         CustomFCMDeviceAuthorizedViewSet.as_view({"post": "create"}),

@@ -1,29 +1,28 @@
 import asyncio
+import decimal
 import json
 import logging
-import decimal
-
-from django.conf import settings
+import re
 
 import common.services.slack as slack
-
-from stock.serializers import ShopItemSizeCountSetSerializer
 import websockets
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-
-from organizations.models import UserAssistant, DiscountCard, Coupon
-from organizations.services.assistant_services import (
-    ChatService,
-    AssistantService,
-    UserAssistantService,
-)
-from organizations.services.organization_services import OrganizationService
+from django.conf import settings
 from shop.serializers.comment_serializers import CommentSerializer, WSCommentSerializer
 from shop.serializers.item_serializers import ItemInfoSerializer
+from shop.services.assistant_data_service import AssistantDataService
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
-from shop.services.assistant_data_service import AssistantDataService
+from stock.serializers import ShopItemSizeCountSetSerializer
+
+from organizations.models import Coupon, DiscountCard, UserAssistant
+from organizations.services.assistant_services import (
+    AssistantService,
+    ChatService,
+)
+from organizations.services.organization_services import OrganizationService
+from shop.models import ShopItem 
 
 logger = logging.getLogger(__name__)
 
@@ -203,19 +202,70 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return serializer.data
 
     @database_sync_to_async
+    def get_chat_history(self, chat, limit: int = 5):
+        """
+        Get last N message pairs from chat for context.
+        Returns list of dicts with role and content.
+        """
+        from shop.models import Comment
+
+        # Get last N*2 messages (pairs of user + assistant)
+        messages = Comment.objects.filter(chat=chat).order_by("-created_at")[
+            : limit * 2
+        ]
+        messages = list(reversed(messages))  # Chronological order
+
+        history = []
+        for msg in messages:
+            role = "assistant" if msg.assistant else "user"
+            history.append(
+                {
+                    "role": role,
+                    "content": msg.text,
+                }
+            )
+        return history
+
+    @database_sync_to_async
     def prepare_data(self, comment):
         decoded_headers = {
             k.decode("utf-8"): v.decode("utf-8") for k, v in self.headers
         }
+
+        # Get training data
+        training_data = CommentService.get_training_data(
+            assistant=comment.chat.assistant
+        )
+
+        # Add chat history for context (last 5 pairs = 10 messages)
+        from shop.models import Comment as CommentModel
+
+        messages = (
+            CommentModel.objects.filter(chat=comment.chat)
+            .exclude(id=comment.id)
+            .order_by("-created_at")[:10]
+        )
+        messages = list(reversed(messages))
+
+        chat_history = []
+        for msg in messages:
+            role = "assistant" if msg.assistant else "user"
+            chat_history.append(
+                {
+                    "role": role,
+                    "content": msg.text,
+                }
+            )
+
+        training_data["chat_history"] = chat_history
+
         data = {
             "assistant_id": comment.chat.assistant.id,
             "parent_id": comment.id,
             "chat_id": comment.chat.id,
             "message": comment.text,
             "host": self.host,
-            "training_data": CommentService.get_training_data(
-                assistant=comment.chat.assistant
-            ),
+            "training_data": training_data,
             "headers": decoded_headers,
         }
         return data
@@ -244,12 +294,28 @@ class CommentConsumer(AsyncWebsocketConsumer):
             assistant = await self.get_assistant(assistant_id)
             parent = await self.get_comment(parent_id)
             chat = await self.get_chat_with_parent(parent)
+
+
             comment = await self.create_comment_with_ai_response(
                 text, chat, assistant, parent
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
             )
+
+
+            # match = re.search(r'/p/(\d+)', text)
+            # if match:
+            #     item_id = match.group(1)
+            #     logger.info(f"Found Item ID in AI response: {item_id}")
+            #
+            #     image_url = await self.get_item_image_url(item_id)
+            #
+            #     if image_url:
+            #
+            #         serialized_data['product_image'] = image_url
+            #         logger.info(f"Attached image to response: {image_url}")
+
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
@@ -257,6 +323,29 @@ class CommentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error handling AI response: {e}")
             slack.slack_ai(f"[ WEBSOCKET error ] error handling AI response: {e}")
+    
+    # @database_sync_to_async
+    # def get_item_image_url(self, item_id):
+    #
+    #     try:
+    #         item = ShopItem.objects.filter(id=item_id).first()
+    #
+    #         if not item:
+    #             return None
+    #
+    #         first_image = item.images.all().order_by('order').first()
+    #         if first_image:
+    #             return first_image.medium_property
+    #
+    #         first_video = item.videos.all().order_by('order').first()
+    #         if first_video and first_video.thumbnail:
+    #             return first_video.thumbnail.medium_property
+    #
+    #         return None
+    #
+    #     except Exception as e:
+    #         logger.error(f"Error fetching image for item {item_id}: {e}")
+    #         return None
 
     async def handle_ai_default_response(self, parent, user):
         try:
@@ -278,7 +367,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             ai_socket = await websockets.connect(
                 "ws://161.35.153.151:8081/ws/bot/", timeout=5
             )
-            slack.slack_ai(f"[ WEBSOCKET logs ] connecting to AI socket")
+            slack.slack_ai("[ WEBSOCKET logs ] connecting to AI socket")
             return ai_socket
         except (websockets.exceptions.ConnectionClosedError, asyncio.TimeoutError) as e:
             logger.error(f"Failed to connect to AI socket: {e}")
@@ -299,16 +388,16 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 if not self.ai_socket or not self.ai_socket.open:
                     logger.error("Failed to reconnect to AI socket")
                     slack.slack_ai(
-                        f"[ WEBSOCKET error ] reconnection failed to AI socket"
+                        "[ WEBSOCKET error ] reconnection failed to AI socket"
                     )
                     return
 
             data = await self.prepare_data(comment)
-            logger.debug(f"Sending message to AI: {data}")
+            logger.info(f"Sending message to AI: {data}")
             await self.ai_socket.send(json.dumps(data))
             logger.info("Message sent to AI successfully")
         except websockets.exceptions.ConnectionClosedError as e:
-            logger.error(f"Connection to AI closed unexpectedly: {e}")
+            logger.warning(f"Connection to AI closed unexpectedly: {e}")
             slack.slack_ai(f"[ WEBSOCKET error ] connection to AI closed: {e}")
             await self.reconnect_ai_socket()
         except Exception as e:
@@ -368,7 +457,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         try:
-            logger.debug("Received text data: %s", text_data)
+            logger.info("Received text data: %s", text_data)
             self.chat = await self.get_chat_item(self.chat_id)
             if not self.chat:
                 logger.warning(f"Chat not found for ID {self.chat_id}")
@@ -520,7 +609,9 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         stock_info = ShopItemSizeCountSetSerializer(
             size_info, many=True, context={"request": None}
         ).data
-        catalog_url = AssistantDataService.get_file_url(org)
+        catalog_url = None
+        if org.is_catalog:
+            catalog_url = AssistantDataService.get_file_url(org)
         org_url = f"{settings.SITE_URL}/organizations/{org.id}"
 
         marketing_info = []
@@ -538,8 +629,34 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 marketing_info.append(f"Кэшбек: {card.percent}%")
 
             elif card.type == DiscountCard.CUMULATIVE:
-                limit_str = f"{card.limit} {card.currency.code}" if card.limit and card.currency else "определенной суммы"
-                marketing_info.append(f"Накопительная скидка {card.percent}% (при покупках от {limit_str})")
+                limit_str = (
+                    f"{card.limit} {card.currency.code}"
+                    if card.limit and card.currency
+                    else "определенной суммы"
+                )
+                marketing_info.append(
+                    f"Накопительная скидка {card.percent}% (при покупках от {limit_str})"
+                )
+
+        # Add chat history for item comments (last 10 messages)
+        from shop.models import Comment as CommentModel
+
+        item_messages = (
+            CommentModel.objects.filter(item=comment.item)
+            .exclude(id=comment.id)
+            .order_by("-created_at")[:10]
+        )
+        item_messages = list(reversed(item_messages))
+
+        chat_history = []
+        for msg in item_messages:
+            role = "assistant" if msg.assistant else "user"
+            chat_history.append(
+                {
+                    "role": role,
+                    "content": msg.text,
+                }
+            )
 
         data = {
             "assistant_id": assistant.id,
@@ -561,7 +678,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                 "catalog_file": catalog_url,
                 "organization_page_url": org_url,
                 "marketing_info": marketing_info,
-                "coupons_info": coupons_info
+                "coupons_info": coupons_info,
+                "chat_history": chat_history,
             },
             "headers": decoded_headers,
         }
@@ -644,11 +762,11 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                     return
 
             data = await self.prepare_item_data(comment)
-            logger.debug(f"Sending message to AI: {data}")
+            logger.info(f"Sending message to AI: {data}")
             await self.ai_socket.send(json.dumps(data))
             logger.info("Message sent to AI successfully")
         except websockets.exceptions.ConnectionClosedError as e:
-            logger.error(f"Connection to AI closed unexpectedly: {e}")
+            logger.warning(f"Connection to AI closed unexpectedly: {e}")
             await self.reconnect_item_ai_socket()
         except Exception as e:
             logger.error(f"Error sending message to AI: {e}")

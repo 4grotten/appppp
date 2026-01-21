@@ -91,15 +91,15 @@ services:
     image: devlikeapro/waha:latest
     container_name: appofiz_waha_test
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     env_file: ./env/test.env
     environment:
-      - WHATSAPP_SWAGGER_USERNAME=${WAHA_SWAGGER_USERNAME:-admin}
-      - WHATSAPP_SWAGGER_PASSWORD=${WAHA_SWAGGER_PASSWORD:-password}
       - WAHA_DASHBOARD_ENABLED=true
       - WHATSAPP_DEFAULT_ENGINE=NOWEB
-      - WHATSAPP_HOOK_URL=https://test2.apofiz.com/api/v1/messenger-bots/whatsapp/webhook/
+      - WHATSAPP_HOOK_URL=https://test2.apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
       - WHATSAPP_HOOK_EVENTS=message,message.ack,session.status
-      - WAHA_WEBHOOK_HMAC_SECRET=${WAHA_WEBHOOK_SECRET:-secret}
       - WAHA_WORKER_RESTART_SESSIONS=true
       - WAHA_LOG_LEVEL=info
     volumes:
@@ -115,3 +115,13 @@ services:
     mem_reservation: 128m
     ports:
       - "3000:3000"
+
+
+  app:
+    build:
+      context: ../frontend/EasyCard
+      dockerfile: Dockerfile
+    image: apofiz/app
+    ports:
+      - "3001:80"
+    restart: on-failure

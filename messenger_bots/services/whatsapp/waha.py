@@ -39,9 +39,11 @@ class WAHAService(WhatsAppServiceInterface):
         self.base_url = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key = getattr(settings, "WAHA_API_KEY", "")
         self.webhook_secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
-        self.session_name = (
-            whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
-        )
+        # WAHA Core (free) only supports "default" session
+        # For multiple sessions, need WAHA Plus ($19/month)
+        # WAHA PLUS: uncomment next line and comment the one below
+        # self.session_name = whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
+        self.session_name = whatsapp_bot.waha_session_name or "default"
 
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for WAHA API requests."""
@@ -104,21 +106,23 @@ class WAHAService(WhatsAppServiceInterface):
     def start_session(self) -> bool:
         """Create and start WAHA session.
 
-        Creates a new session if it doesn't exist, then starts it.
-        Configures webhook for this session.
+        Uses POST /api/sessions/start which does "upsert and start":
+        - Creates session if it doesn't exist
+        - Starts session if it exists but stopped
+        - Does nothing if already running
         """
         try:
             backend_url = getattr(settings, "BACKEND_URL", "https://api.appofiz.com")
 
-            # Create session with webhook config
+            # Upsert and Start session (creates if not exists, starts if exists)
             self._make_request(
                 "POST",
-                "/api/sessions",
+                "/api/sessions/start",
                 {
                     "name": self.session_name,
                     "config": {
                         "webhook": {
-                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/webhook/",
+                            "url": f"{backend_url}/api/v1/messenger-bots/whatsapp/waha/webhook/",
                             "events": ["message", "session.status"],
                             "hmac": {"key": self.webhook_secret},
                         }
@@ -126,26 +130,18 @@ class WAHAService(WhatsAppServiceInterface):
                 },
             )
 
-            # Start the session
-            self._make_request("POST", f"/api/sessions/{self.session_name}/start")
-
             logger.info(f"WAHA session started: {self.session_name}")
             return True
 
         except requests.exceptions.HTTPError as e:
-            # Session might already exist
-            if e.response.status_code == 409:
-                logger.info(f"WAHA session already exists: {self.session_name}")
-                # Try to start it anyway
-                try:
-                    self._make_request(
-                        "POST", f"/api/sessions/{self.session_name}/start"
-                    )
-                    return True
-                except Exception:
-                    pass
-            logger.error(f"Failed to start WAHA session: {e}")
-            self._update_bot_error(str(e))
+            error_msg = str(e)
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("message", str(e))
+            except Exception:
+                pass
+            logger.error(f"Failed to start WAHA session: {error_msg}")
+            self._update_bot_error(error_msg)
             return False
 
         except Exception as e:
@@ -247,6 +243,98 @@ class WAHAService(WhatsAppServiceInterface):
         except Exception as e:
             logger.error(f"Failed to send photo: {e}")
             return WhatsAppResponse(success=False, error=str(e))
+
+    def send_typing(self, to: str, duration: int = 3000) -> bool:
+        """Send typing indicator via WAHA.
+
+        Shows "typing..." status to the user for specified duration.
+
+        Args:
+            to: Phone number to show typing to
+            duration: Duration in milliseconds (default 3000ms = 3 seconds)
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/startTyping",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                    "duration": duration,
+                },
+                timeout=5,
+            )
+            logger.debug(f"WAHA: Typing indicator sent to {chat_id}")
+            return True
+
+        except Exception as e:
+            # Non-critical error, just log and continue
+            logger.debug(f"WAHA: Failed to send typing indicator: {e}")
+            return False
+
+    def stop_typing(self, to: str) -> bool:
+        """Stop typing indicator via WAHA.
+
+        Args:
+            to: Phone number to stop typing for
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/stopTyping",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                },
+                timeout=5,
+            )
+            return True
+
+        except Exception as e:
+            logger.debug(f"WAHA: Failed to stop typing indicator: {e}")
+            return False
+
+    def mark_as_read(self, to: str, message_id: Optional[str] = None) -> bool:
+        """Mark messages as read (send seen status) via WAHA.
+
+        Shows blue checkmarks to the sender.
+
+        Args:
+            to: Phone number/chat ID
+            message_id: Optional specific message ID to mark as read
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/sendSeen",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                },
+                timeout=5,
+            )
+            logger.debug(f"WAHA: Marked messages as read for {chat_id}")
+            return True
+
+        except Exception as e:
+            # Non-critical error, just log and continue
+            logger.debug(f"WAHA: Failed to mark as read: {e}")
+            return False
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
         """Verify HMAC-SHA512 signature from WAHA webhook.

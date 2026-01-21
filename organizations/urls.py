@@ -137,7 +137,7 @@ from .views.organization_views import (
     SetOrganizationLocationAPIView,
     SubscriptionsMessageListAPIView,
     UnblockUserDestroyView,
-    ZinaPayConfigView,
+    ZinaPayConfigView, OrganizationCatalogApiView,
 )
 from .views.partnerships_views import (
     HomepageBannersView,
@@ -167,6 +167,8 @@ router = DefaultRouter()
 router.register("services", ServiceReadOnlySet)
 
 organization_urls = [
+    path('organizations/<int:pk>/catalog-toggle/',
+         OrganizationCatalogApiView.as_view()),
     path(
         "services/<int:pk>/item_categories/",
         NonEmptyServiceCategoryItemListView.as_view(),

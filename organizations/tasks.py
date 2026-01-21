@@ -95,6 +95,7 @@ def parse_instagram_to_shop_items(
                 if v_url:
                     thumb_obj = File.objects.create(image_url=t_url)
                     video_obj = FileVideo.objects.create(video_url=v_url, thumbnail=thumb_obj)
+                    
                     shop_item.videos.add(video_obj) 
 
                     ItemInstagramData.objects.create(
@@ -280,7 +281,10 @@ def process_comment_with_assistant(
 
     comment = Comment.objects.get(id=comment_id)
     assistant = Assistant.objects.get(id=assistant_id)
-    catalog_url = AssistantDataService.get_file_url(assistant.organization)
+    org = assistant.organization
+    catalog_url = None
+    if org.is_catalog:
+        catalog_url = AssistantDataService.get_file_url(assistant.organization)
     org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
     try:
         response = requests.post(

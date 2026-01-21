@@ -215,10 +215,10 @@ class BotChat(TimestampModel):
         help_text=_("User's name or username from the platform"),
     )
     user_phone = models.CharField(
-        max_length=20,
+        max_length=50,
         null=True,
         blank=True,
-        help_text=_("User's phone number (for WhatsApp)"),
+        help_text=_("User's phone number or chat ID (for WhatsApp)"),
     )
     user_photo = models.URLField(
         max_length=500,

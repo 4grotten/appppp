@@ -1,7 +1,10 @@
 import asyncio
 import logging
+import time
 
+from asgiref.sync import async_to_sync
 from celery import shared_task
+from channels.layers import get_channel_layer
 from django.utils import timezone
 
 from messenger_bots.models import (
@@ -17,6 +20,28 @@ from messenger_bots.services import BotFactoryService, TelegramBotService
 from messenger_bots.services.assistant import BotAssistantService
 
 logger = logging.getLogger(__name__)
+
+
+def _send_ws_notification(bot_message: BotMessage, bot_chat: BotChat) -> None:
+    """Send WebSocket notification for new bot message."""
+    from shop.serializers.comment_serializers import BotMessageSerializer
+
+    try:
+        linked_chat = getattr(bot_chat, 'linked_chat', None)
+        if not linked_chat:
+            return
+
+        chat_group_name = f"chat_{linked_chat.id}"
+        serialized_data = BotMessageSerializer(bot_message).data
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                chat_group_name,
+                {"type": "chat_message", "message": serialized_data}
+            )
+    except Exception as e:
+        logger.error(f"[WS_NOTIFICATION] Error: {e}", exc_info=True)
 
 
 def _run_async(coro):
@@ -263,12 +288,13 @@ def send_telegram_products_task(
 
         result = service.send_message(platform_chat_id, product)
         if result:
-            BotMessage.objects.create(
+            product_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=product,
                 platform_message_id=str(result.get("message_id", "")),
             )
+            _send_ws_notification(product_msg, chat)
             messages_sent += 1
 
     has_more = (start + PRODUCTS_PER_PAGE) < len(products)
@@ -302,12 +328,13 @@ def send_telegram_products_task(
             reply_markup=keyboard,
         )
         if result:
-            BotMessage.objects.create(
+            status_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=status_text.get(language, status_text["ru"]),
                 platform_message_id=str(result.get("message_id", "")),
             )
+            _send_ws_notification(status_msg, chat)
     else:
         # Send footer
         if footer:
@@ -315,12 +342,13 @@ def send_telegram_products_task(
             keyboard = service.build_main_menu_keyboard(language)
             result = service.send_message(platform_chat_id, footer, reply_markup=keyboard)
             if result:
-                BotMessage.objects.create(
+                footer_msg = BotMessage.objects.create(
                     chat=chat,
                     sender=BotMessage.ASSISTANT,
                     text=footer,
                     platform_message_id=str(result.get("message_id", "")),
                 )
+                _send_ws_notification(footer_msg, chat)
 
     logger.info(f"[TG_PRODUCTS_TASK] Completed: sent {messages_sent} products")
     return {"success": True, "messages_sent": messages_sent}
@@ -382,6 +410,10 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
             f"[CELERY_TASK] TelegramBot {'created' if created else 'updated'}: id={telegram_bot.id}"
         )
 
+        # Add bot link to organization contacts (regardless of webhook setup)
+        from messenger_bots.utils import add_bot_link_to_contacts
+        add_bot_link_to_contacts(request.organization, request.bot_username)
+
         logger.info("[CELERY_TASK] Setting up webhook...")
         service = TelegramBotService(telegram_bot)
         bot_info = service.get_me()
@@ -398,10 +430,6 @@ def create_telegram_bot_task(self, request_id: int, base_url: str):
                 )
             else:
                 logger.info("[CELERY_TASK] Webhook set successfully!")
-
-                # Add bot link to organization contacts
-                from messenger_bots.utils import add_bot_link_to_contacts
-                add_bot_link_to_contacts(request.organization, request.bot_username)
         else:
             logger.warning(
                 "[CELERY_TASK] WARNING: Could not get bot info (getMe failed)"
@@ -462,10 +490,11 @@ def process_whatsapp_message_task(
     whatsapp_bot_id: int,
     chat_id: int,
     message_text: str,
+    is_first_message: bool = False,
 ):
     logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE START ======")
     logger.info(f"[WA_TASK] whatsapp_bot_id={whatsapp_bot_id}, chat_id={chat_id}")
-    logger.info(f"[WA_TASK] message='{message_text[:100]}...'")
+    logger.info(f"[WA_TASK] message='{message_text[:100]}...', is_first_message={is_first_message}")
 
     try:
         whatsapp_bot = WhatsAppBot.objects.select_related("organization").get(
@@ -479,10 +508,27 @@ def process_whatsapp_message_task(
         logger.error(f"[WA_TASK] ERROR: Bot or chat not found: {e}")
         return {"success": False, "error": str(e)}
 
+    # Initialize WhatsApp service early for activity indicators
+    from messenger_bots.services.whatsapp import WhatsAppServiceFactory
+    service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+
+    # Mark incoming message as read (show blue checkmarks)
+    service.mark_as_read(chat.platform_chat_id)
+    logger.debug(f"[WA_TASK] Marked messages as read for {chat.platform_chat_id}")
+
+    # Send welcome message for first contact
+    user_language = "ru"
+    if is_first_message:
+        logger.info("[WA_TASK] First message detected, sending welcome...")
+        welcome_text = BotAssistantService._get_message("welcome", user_language)
+        _send_whatsapp_welcome(service, chat, welcome_text)
+
     chat_history = _get_whatsapp_chat_history(chat)
     logger.debug(f"[WA_TASK] Chat history: {len(chat_history)} messages")
 
-    user_language = "ru"
+    # Show typing indicator while AI processes
+    service.send_typing(chat.platform_chat_id, duration=15000)
+    logger.debug(f"[WA_TASK] Typing indicator started")
 
     logger.info("[WA_TASK] Requesting AI response...")
     try:
@@ -499,39 +545,86 @@ def process_whatsapp_message_task(
 
     logger.info("[WA_TASK] Sending response via WAHA...")
     try:
-        from messenger_bots.services.whatsapp import WhatsAppServiceFactory
         from messenger_bots.services.whatsapp.base import WhatsAppMessage
-
-        service = WhatsAppServiceFactory.get_service(whatsapp_bot)
-
-        message = WhatsAppMessage(
-            to=chat.platform_chat_id,
-            text=response_text,
+        from messenger_bots.services.message_parser import (
+            parse_products_from_response,
+            split_by_separator,
+            clean_response as clean_ai_response,
+            AI_SEPARATOR,
         )
-        result = service.send_message(message)
 
-        if result.success:
-            BotMessage.objects.create(
+        # Use shared parser (same as Telegram) for product detection
+        products, footer = parse_products_from_response(response_text)
+        logger.info(f"[WA_TASK] Parsed {len(products)} products, footer: {bool(footer)}")
+
+        message_parts = []
+
+        if products:
+            # Has products - send each product as separate message
+            message_parts = products
+            # TODO: Enable footer when WAHA Plus is available (for link previews)
+            # if footer:
+            #     message_parts.append(footer)
+            logger.info(f"[WA_TASK] Using product parsing: {len(message_parts)} messages")
+        elif AI_SEPARATOR in response_text:
+            # No products but has separator - split by it
+            message_parts = split_by_separator(response_text)
+            logger.info(f"[WA_TASK] Split by separator: {len(message_parts)} messages")
+        else:
+            # Single message, just clean any stray separators
+            message_parts = [clean_ai_response(response_text)]
+
+        # Send each part as a separate message
+        sent_message_ids = []
+        last_result = None
+
+        for i, part_text in enumerate(message_parts):
+            message = WhatsAppMessage(
+                to=chat.platform_chat_id,
+                text=part_text,
+            )
+            result = service.send_message(message)
+            last_result = result
+
+            if result.success:
+                sent_message_ids.append(result.message_id)
+                logger.debug(f"[WA_TASK] Sent part {i+1}/{len(message_parts)}, msg_id={result.message_id}")
+            else:
+                logger.error(f"[WA_TASK] Failed to send part {i+1}: {result.error}")
+
+            # Small delay between messages to maintain order
+            if i < len(message_parts) - 1:
+                import time
+                time.sleep(0.3)
+
+        if sent_message_ids:
+            # Save full response as single DB record (for chat history)
+            # Clean the separators for storage
+            clean_response = clean_ai_response(response_text)
+            wa_response_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
-                text=response_text,
-                platform_message_id=result.message_id,
+                text=clean_response,
+                platform_message_id=sent_message_ids[-1],  # Use last message ID
             )
+            _send_ws_notification(wa_response_msg, chat)
             logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
             logger.info(
-                f"[WA_TASK] Response sent to {chat.platform_chat_id}, msg_id={result.message_id}"
+                f"[WA_TASK] Sent {len(sent_message_ids)} messages to {chat.platform_chat_id}"
             )
             return {
                 "success": True,
-                "message_id": result.message_id,
+                "message_ids": sent_message_ids,
+                "messages_sent": len(sent_message_ids),
             }
         else:
-            logger.error(f"[WA_TASK] ERROR: Failed to send response: {result.error}")
-            whatsapp_bot.last_error = result.error
+            error = last_result.error if last_result else "No messages sent"
+            logger.error(f"[WA_TASK] ERROR: Failed to send response: {error}")
+            whatsapp_bot.last_error = error
             whatsapp_bot.save(update_fields=["last_error"])
             return {
                 "success": False,
-                "error": result.error,
+                "error": error,
             }
 
     except Exception as e:
@@ -554,6 +647,43 @@ def _get_whatsapp_chat_history(chat: BotChat) -> list:
         )
 
     return history[-CHAT_HISTORY_LIMIT * 2:]  # Last 5 pairs (10 messages)
+
+
+def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
+    """Send welcome message for first-time WhatsApp contact.
+
+    Args:
+        service: WhatsApp service instance (WAHA/Twilio/etc.)
+        chat: BotChat instance
+        welcome_text: Welcome message text
+    """
+    from messenger_bots.services.whatsapp.base import WhatsAppMessage
+
+    try:
+        message = WhatsAppMessage(
+            to=chat.platform_chat_id,
+            text=welcome_text,
+        )
+        result = service.send_message(message)
+
+        if result.success:
+            # Save welcome message to chat history
+            welcome_msg = BotMessage.objects.create(
+                chat=chat,
+                sender=BotMessage.ASSISTANT,
+                text=welcome_text,
+                platform_message_id=result.message_id,
+            )
+            _send_ws_notification(welcome_msg, chat)
+            logger.info(f"[WA_TASK] Welcome message sent: {result.message_id}")
+        else:
+            logger.warning(f"[WA_TASK] Failed to send welcome: {result.error}")
+
+        # Small delay before AI processing
+        time.sleep(0.5)
+
+    except Exception as e:
+        logger.warning(f"[WA_TASK] Welcome message error: {e}")
 
 
 @shared_task

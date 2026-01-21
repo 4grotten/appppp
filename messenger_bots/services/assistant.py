@@ -354,7 +354,7 @@ class BotAssistantService:
 
         # Add organization page URL (same as website chat)
         site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
-        training_data["organization_page_url"] = f"{site_url}/org/{organization.id}"
+        training_data["organization_page_url"] = f"{site_url}/organizations/{organization.id}"
 
         # Add organization_info with contacts (required by ai_assistant prompts)
         phones = list(
@@ -723,13 +723,13 @@ class BotAssistantService:
 
     # ============== Multilanguage Support ==============
 
-    # Supported languages (Russian and English only for now)
+    # Supported languages (Russian and English only)
     SUPPORTED_LANGUAGES = {
         "ru": "Русский",
         "en": "English",
     }
 
-    # Messages in different languages
+    # Messages in different languages (Russian and English only)
     MESSAGES = {
         "assistant_not_active": {
             "ru": "К сожалению, AI-ассистент для этой организации не активен.",
@@ -767,14 +767,29 @@ class BotAssistantService:
             "ru": "К сожалению, товары не найдены.",
             "en": "Unfortunately, no products were found.",
         },
+        "more_products": {
+            "ru": "Показать ещё",
+            "en": "Show more",
+        },
     }
 
     @classmethod
     def _get_message(cls, key: str, language: Optional[str] = None) -> str:
-        """Get a message in the specified language."""
-        lang = language if language in cls.SUPPORTED_LANGUAGES else "ru"
+        """Get a message in the specified language with fallback to ru/en."""
         messages = cls.MESSAGES.get(key, {})
-        return messages.get(lang, messages.get("ru", ""))
+
+        # Try exact language match
+        if language and language in messages:
+            return messages[language]
+
+        # Fallback chain: ru -> en -> first available
+        if "ru" in messages:
+            return messages["ru"]
+        if "en" in messages:
+            return messages["en"]
+
+        # Return first available or empty
+        return next(iter(messages.values()), "")
 
     @classmethod
     def _get_language_name(cls, code: str) -> str:
@@ -783,14 +798,26 @@ class BotAssistantService:
 
     @classmethod
     def detect_language_from_telegram(cls, user: dict) -> str:
-        """Detect user language from Telegram user data."""
+        """
+        Detect user language from Telegram user data.
+        Returns the language code (e.g., 'ru', 'en', 'kg').
+        """
         lang_code = user.get("language_code", "ru")
 
-        # Get first 2 chars of language code
-        short_code = lang_code[:2] if lang_code else "ru"
+        # Get first 2 chars of language code (e.g., "en-US" -> "en")
+        short_code = lang_code[:2].lower() if lang_code else "ru"
 
-        # Only support ru and en for now
-        return short_code if short_code in cls.SUPPORTED_LANGUAGES else "ru"
+        # Return the code if supported, otherwise default to 'ru'
+        # But pass through unsupported codes too - AI can handle them
+        if short_code in cls.SUPPORTED_LANGUAGES:
+            return short_code
+
+        # For unsupported but valid language codes, still pass them
+        # The AI model can translate to most languages
+        if len(short_code) == 2 and short_code.isalpha():
+            return short_code
+
+        return "ru"
 
     # ============== Metrics ==============
 

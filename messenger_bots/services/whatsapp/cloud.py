@@ -4,10 +4,67 @@ import logging
 import requests
 from typing import Optional
 from django.utils import timezone
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from messenger_bots.models import WhatsAppBot, BotChat, BotMessage, BotPlatform
 
 logger = logging.getLogger(__name__)
+
+
+def _sync_linked_chat_whatsapp(bot_chat: BotChat, organization) -> None:
+    """
+    Sync BotChat with organizations.Chat for unified chat list (WhatsApp).
+    """
+    from django.db.models import F
+    from organizations.models import Assistant, Chat, ChatSource
+
+    try:
+        assistant = Assistant.objects.filter(organization=organization).first()
+        if not assistant:
+            return
+
+        linked_chat, created = Chat.objects.get_or_create(
+            bot_chat=bot_chat,
+            defaults={
+                'assistant': assistant,
+                'source': ChatSource.WHATSAPP,
+                'user': None,
+                'is_read': False,
+                'unread_count': 1,
+            }
+        )
+
+        if not created:
+            Chat.objects.filter(id=linked_chat.id).update(
+                unread_count=F('unread_count') + 1,
+                is_read=False
+            )
+
+    except Exception as e:
+        logger.error(f"[WA_SERVICE] Error syncing linked chat: {e}", exc_info=True)
+
+
+def _send_ws_notification_whatsapp(bot_message: BotMessage, bot_chat: BotChat) -> None:
+    """Send WebSocket notification for WhatsApp message."""
+    from shop.serializers.comment_serializers import BotMessageSerializer
+
+    try:
+        linked_chat = getattr(bot_chat, 'linked_chat', None)
+        if not linked_chat:
+            return
+
+        chat_group_name = f"chat_{linked_chat.id}"
+        serialized_data = BotMessageSerializer(bot_message).data
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                chat_group_name,
+                {"type": "chat_message", "message": serialized_data}
+            )
+    except Exception as e:
+        logger.error(f"[WA_SERVICE] Error sending WS notification: {e}", exc_info=True)
 
 
 class WhatsAppBotService:
@@ -155,7 +212,7 @@ class WhatsAppBotService:
             chat.save(update_fields=["user_name"])
 
         # Save incoming message
-        BotMessage.objects.create(
+        incoming_msg = BotMessage.objects.create(
             chat=chat,
             sender=BotMessage.USER,
             text=text,
@@ -165,6 +222,12 @@ class WhatsAppBotService:
         # Update last message time
         chat.last_message_at = timezone.now()
         chat.save(update_fields=["last_message_at"])
+
+        # Sync with organizations.Chat for unified chat list
+        _sync_linked_chat_whatsapp(chat, whatsapp_bot.organization)
+
+        # Send WebSocket notification for incoming message
+        _send_ws_notification_whatsapp(incoming_msg, chat)
 
         # Mark as read
         service = cls(whatsapp_bot)
@@ -184,12 +247,13 @@ class WhatsAppBotService:
         if result:
             wa_messages = result.get("messages", [])
             response_message_id = wa_messages[0].get("id") if wa_messages else None
-            BotMessage.objects.create(
+            outgoing_msg = BotMessage.objects.create(
                 chat=chat,
                 sender=BotMessage.ASSISTANT,
                 text=response_text,
                 platform_message_id=response_message_id,
             )
+            _send_ws_notification_whatsapp(outgoing_msg, chat)
 
         return response_text
 

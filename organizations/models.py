@@ -264,6 +264,7 @@ class Organization(TimestampModel):
     add_item_date = models.DateTimeField(auto_now_add=True)
 
     switcher = models.CharField(max_length=20, choices=SWITCHER_TYPE, default=WEB)
+    is_catalog = models.BooleanField(default=False,null=True, blank=True)
 
     # Managers
     objects = OrganizationManager()
@@ -1264,7 +1265,7 @@ class Answer(TimestampModel):
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers"
     )
-    text = models.CharField(max_length=5000)
+    text = models.CharField(max_length=5000, null=True, blank=True)
     files = models.ManyToManyField(AnswerFile, blank=True, related_name="answers")
 
     def __str__(self):

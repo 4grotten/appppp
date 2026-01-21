@@ -115,3 +115,13 @@ services:
     mem_reservation: 128m
     ports:
       - "3000:3000"
+
+
+  app:
+    build:
+      context: ./App
+      dockerfile: Dockerfile
+    image: apofiz/app
+    ports:
+      - "3001:80"
+    restart: on-failure

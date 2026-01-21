@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Karta Fintech Design System - Lime Green Accent on Black/White */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    /* Primary is now the blue accent #007AFF */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 7%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 7%;
+
+    /* Success/Error states */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 7%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 211 100% 50%;
+
+    --radius: 1rem;
+
+    /* Custom Karta colors */
+    --karta-blue: 211 100% 50%;
+    --karta-black: 0 0% 7%;
+    --karta-dark: 0 0% 12%;
+    --karta-gray: 0 0% 45%;
+    --karta-light: 0 0% 96%;
+    --karta-white: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 211 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  #root {
+    @apply max-w-[800px] mx-auto;
+  }
+}
+
+@layer components {
+  .karta-card {
+    @apply bg-card rounded-2xl border border-border p-4 shadow-sm;
+  }
+
+  .karta-card-accent {
+    @apply bg-primary text-primary-foreground rounded-2xl p-4;
+  }
+
+  .karta-input {
+    @apply w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all;
+  }
+
+  .karta-btn-primary {
+    @apply w-full bg-primary backdrop-blur-2xl text-primary-foreground font-semibold py-4 rounded-2xl hover:opacity-90 transition-all active:scale-[0.98] border-2 border-white;
+    box-shadow: 0 4px 20px -4px rgba(0, 122, 255, 0.4);
+  }
+
+  .karta-btn-secondary {
+    @apply w-full bg-secondary text-secondary-foreground font-semibold py-4 rounded-xl hover:bg-secondary/80 transition-all active:scale-[0.98];
+  }
+
+  .karta-btn-outline {
+    @apply w-full border-2 border-primary text-primary font-semibold py-4 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all active:scale-[0.98];
+  }
+
+  .karta-radio {
+    @apply flex items-center justify-between p-4 rounded-xl border border-border cursor-pointer transition-all hover:border-primary;
+  }
+
+  .karta-radio-selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .karta-step-indicator {
+    @apply h-1 rounded-full bg-border;
+  }
+
+  .karta-step-indicator-active {
+    @apply bg-foreground;
+  }
+  .karta-footer-actions {
+    @apply fixed left-4 right-4 bottom-4 z-50 p-0 max-w-[800px] mx-auto;
+    left: max(1rem, calc(50% - 400px + 1rem));
+    right: max(1rem, calc(50% - 400px + 1rem));
+  }
+}
+
+@layer utilities {
+  .karta-shadow {
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  .karta-shadow-lg {
+    box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.15);
+  }
+}

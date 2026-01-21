@@ -99,7 +99,7 @@ from organizations.serializers.organization_serializers import (
     PaymentSystemSerializer,
     PurchaseOrgSubscriptionSerializer,
     RegionalTariffSerializer,
-    SubscriptionsMessageSerializer,
+    SubscriptionsMessageSerializer, OrganizationCatalogSerializer,
 )
 from organizations.serializers.query_param_serializers import (
     CountryQueryParamSerializer,
@@ -1954,3 +1954,30 @@ class PinnOrganizationView(APIView):
         return Response(
             {"message": f"Successfully unpinned '{organization.title}'"}, status=200
         )
+
+
+class OrganizationCatalogApiView(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return get_object_or_404(
+            Organization,
+            id=self.kwargs.get("pk"),
+            owner=self.request.user
+        )
+
+    def update(self, request, *args, **kwargs):
+        organization = self.get_object()
+
+        organization.is_catalog = not organization.is_catalog
+        organization.save(update_fields=["is_catalog"])
+
+        return Response(
+            {
+                "message": "Статус переключен",
+                "is_catalog": organization.is_catalog
+            },
+            status=status.HTTP_200_OK,
+        )
+
+

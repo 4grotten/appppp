@@ -1472,3 +1472,12 @@ class OrganizationWithUsersSerializer(serializers.ModelSerializer):
         referred_user_ids = subscriptions.values_list("user_id", flat=True)
         users = User.objects.filter(id__in=referred_user_ids).distinct()
         return UserInfoSerializer(users, many=True).data
+
+
+class OrganizationCatalogSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Organization
+        fields = ("id", "title", "is_catalog")
+
+

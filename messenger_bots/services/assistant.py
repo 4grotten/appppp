@@ -354,7 +354,7 @@ class BotAssistantService:
 
         # Add organization page URL (same as website chat)
         site_url = getattr(settings, "SITE_URL", "https://apofiz.com")
-        training_data["organization_page_url"] = f"{site_url}/org/{organization.id}"
+        training_data["organization_page_url"] = f"{site_url}/organizations/{organization.id}"
 
         # Add organization_info with contacts (required by ai_assistant prompts)
         phones = list(

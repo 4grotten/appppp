@@ -462,6 +462,7 @@ class WAHAWebhookView(View):
             whatsapp_bot_id=whatsapp_bot.id,
             chat_id=chat.id,
             message_text=message_body,
+            is_first_message=created,  # Send welcome if new chat
         )
 
     def _handle_message_ack(self, whatsapp_bot: WhatsAppBot, data: dict):

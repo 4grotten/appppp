@@ -244,6 +244,98 @@ class WAHAService(WhatsAppServiceInterface):
             logger.error(f"Failed to send photo: {e}")
             return WhatsAppResponse(success=False, error=str(e))
 
+    def send_typing(self, to: str, duration: int = 3000) -> bool:
+        """Send typing indicator via WAHA.
+
+        Shows "typing..." status to the user for specified duration.
+
+        Args:
+            to: Phone number to show typing to
+            duration: Duration in milliseconds (default 3000ms = 3 seconds)
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/startTyping",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                    "duration": duration,
+                },
+                timeout=5,
+            )
+            logger.debug(f"WAHA: Typing indicator sent to {chat_id}")
+            return True
+
+        except Exception as e:
+            # Non-critical error, just log and continue
+            logger.debug(f"WAHA: Failed to send typing indicator: {e}")
+            return False
+
+    def stop_typing(self, to: str) -> bool:
+        """Stop typing indicator via WAHA.
+
+        Args:
+            to: Phone number to stop typing for
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/stopTyping",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                },
+                timeout=5,
+            )
+            return True
+
+        except Exception as e:
+            logger.debug(f"WAHA: Failed to stop typing indicator: {e}")
+            return False
+
+    def mark_as_read(self, to: str, message_id: Optional[str] = None) -> bool:
+        """Mark messages as read (send seen status) via WAHA.
+
+        Shows blue checkmarks to the sender.
+
+        Args:
+            to: Phone number/chat ID
+            message_id: Optional specific message ID to mark as read
+
+        Returns:
+            True if successful
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            self._make_request(
+                "POST",
+                "/api/sendSeen",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                },
+                timeout=5,
+            )
+            logger.debug(f"WAHA: Marked messages as read for {chat_id}")
+            return True
+
+        except Exception as e:
+            # Non-critical error, just log and continue
+            logger.debug(f"WAHA: Failed to mark as read: {e}")
+            return False
+
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
         """Verify HMAC-SHA512 signature from WAHA webhook.
 

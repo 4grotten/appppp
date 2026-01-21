@@ -304,17 +304,17 @@ class CommentConsumer(AsyncWebsocketConsumer):
             )
 
 
-            match = re.search(r'/p/(\d+)', text)
-            if match:
-                item_id = match.group(1)
-                logger.info(f"Found Item ID in AI response: {item_id}")
-
-                image_url = await self.get_item_image_url(item_id)
-                
-                if image_url:
-
-                    serialized_data['product_image'] = image_url
-                    logger.info(f"Attached image to response: {image_url}")
+            # match = re.search(r'/p/(\d+)', text)
+            # if match:
+            #     item_id = match.group(1)
+            #     logger.info(f"Found Item ID in AI response: {item_id}")
+            #
+            #     image_url = await self.get_item_image_url(item_id)
+            #
+            #     if image_url:
+            #
+            #         serialized_data['product_image'] = image_url
+            #         logger.info(f"Attached image to response: {image_url}")
 
             await self.channel_layer.group_send(
                 self.chat_group_name,
@@ -324,28 +324,28 @@ class CommentConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error handling AI response: {e}")
             slack.slack_ai(f"[ WEBSOCKET error ] error handling AI response: {e}")
     
-    @database_sync_to_async
-    def get_item_image_url(self, item_id):
-
-        try:
-            item = ShopItem.objects.filter(id=item_id).first()
-            
-            if not item:
-                return None
-
-            first_image = item.images.all().order_by('order').first()
-            if first_image:
-                return first_image.medium_property
-
-            first_video = item.videos.all().order_by('order').first()
-            if first_video and first_video.thumbnail:
-                return first_video.thumbnail.medium_property
-
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error fetching image for item {item_id}: {e}")
-            return None
+    # @database_sync_to_async
+    # def get_item_image_url(self, item_id):
+    #
+    #     try:
+    #         item = ShopItem.objects.filter(id=item_id).first()
+    #
+    #         if not item:
+    #             return None
+    #
+    #         first_image = item.images.all().order_by('order').first()
+    #         if first_image:
+    #             return first_image.medium_property
+    #
+    #         first_video = item.videos.all().order_by('order').first()
+    #         if first_video and first_video.thumbnail:
+    #             return first_video.thumbnail.medium_property
+    #
+    #         return None
+    #
+    #     except Exception as e:
+    #         logger.error(f"Error fetching image for item {item_id}: {e}")
+    #         return None
 
     async def handle_ai_default_response(self, parent, user):
         try:

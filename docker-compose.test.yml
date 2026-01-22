@@ -98,7 +98,7 @@ services:
     environment:
       - WAHA_DASHBOARD_ENABLED=true
       - WHATSAPP_DEFAULT_ENGINE=NOWEB
-      - WHATSAPP_HOOK_URL=https://test2.apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
+      - WHATSAPP_HOOK_URL=https://test.apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
       - WHATSAPP_HOOK_EVENTS=message,message.ack,session.status
       - WAHA_WORKER_RESTART_SESSIONS=true
       - WAHA_LOG_LEVEL=info

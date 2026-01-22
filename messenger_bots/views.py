@@ -438,6 +438,19 @@ class WAHAWebhookView(View):
         if push_name and not chat.user_name:
             chat.user_name = push_name
             update_fields.append("user_name")
+
+        # Fetch profile picture if not yet available
+        if created or not chat.user_photo:
+            try:
+                service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+                profile_picture_url = service.get_profile_picture(phone_number)
+                if profile_picture_url:
+                    chat.user_photo = profile_picture_url
+                    update_fields.append("user_photo")
+                    logger.debug(f"WAHA: Profile picture saved for {phone_number}")
+            except Exception as e:
+                logger.debug(f"WAHA: Failed to get profile picture: {e}")
+
         chat.save(update_fields=update_fields)
 
         # Save incoming message

@@ -574,7 +574,7 @@ def process_whatsapp_message_task(
             # Single message, just clean any stray separators
             message_parts = [clean_ai_response(response_text)]
 
-        # Send each part as a separate message
+        # Send each part as a separate message and save each to DB
         sent_message_ids = []
         last_result = None
 
@@ -589,6 +589,15 @@ def process_whatsapp_message_task(
             if result.success:
                 sent_message_ids.append(result.message_id)
                 logger.debug(f"[WA_TASK] Sent part {i+1}/{len(message_parts)}, msg_id={result.message_id}")
+
+                # Save each message part as separate DB record (like Telegram)
+                wa_response_msg = BotMessage.objects.create(
+                    chat=chat,
+                    sender=BotMessage.ASSISTANT,
+                    text=part_text,
+                    platform_message_id=result.message_id or "",
+                )
+                _send_ws_notification(wa_response_msg, chat)
             else:
                 logger.error(f"[WA_TASK] Failed to send part {i+1}: {result.error}")
 
@@ -598,16 +607,6 @@ def process_whatsapp_message_task(
                 time.sleep(0.3)
 
         if sent_message_ids:
-            # Save full response as single DB record (for chat history)
-            # Clean the separators for storage
-            clean_response = clean_ai_response(response_text)
-            wa_response_msg = BotMessage.objects.create(
-                chat=chat,
-                sender=BotMessage.ASSISTANT,
-                text=clean_response,
-                platform_message_id=sent_message_ids[-1],  # Use last message ID
-            )
-            _send_ws_notification(wa_response_msg, chat)
             logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
             logger.info(
                 f"[WA_TASK] Sent {len(sent_message_ids)} messages to {chat.platform_chat_id}"

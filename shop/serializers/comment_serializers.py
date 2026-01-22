@@ -9,7 +9,7 @@ from organizations.models import Membership, BlockedUser
 from organizations.serializers.assistant_serializers import OrganizationAssistantSerializer
 from organizations.serializers.organization_serializers import OrganizationWithTypeImageSerializer
 from organizations.services.organization_services import OrganizationService
-from messenger_bots.models import BotMessage
+from messenger_bots.models import BotMessage, BotPlatform
 from shop.models import Comment, CommentLike, CommentComplaint, ShopItem, UserCommentTheme
 from shop.services.comment_services import CommentService
 from shop.services.like_bookmark_services import LikeService
@@ -190,69 +190,52 @@ class CommentSerializer(serializers.ModelSerializer):
     is_updated = serializers.SerializerMethodField()
     source = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
+    products = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source', 'product_data'
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',
+            'product_data', 'products'
         )
 
     def get_product_data(self, obj):
-
+        """Returns first product found in text (for backwards compatibility)."""
         if not obj.text:
             return None
         match = re.search(r'/p/(\d+)', obj.text)
         if not match:
             return None
+        return _get_product_data_by_id(match.group(1))
 
-        item_id = match.group(1)
-        item = ShopItem.objects.filter(id=item_id).select_related(
-            'currency',
-            'subcategory',
-            'subcategory__category'
-        ).prefetch_related(
-            'images',
-            'videos',
-            'videos__thumbnail'
-        ).first()
+    def get_products(self, obj):
+        """
+        Returns array of all products found in text.
+        Parses all /p/{id} links and returns structured product data.
+        """
+        if not obj.text:
+            return []
 
-        if not item:
-            return None
+        matches = re.findall(r'/p/(\d+)', obj.text)
+        if not matches:
+            return []
 
-        try:
-            media_urls = []
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_ids = []
+        for item_id in matches:
+            if item_id not in seen:
+                seen.add(item_id)
+                unique_ids.append(item_id)
 
-            for img in item.images.all().order_by('order'):
-                if hasattr(img, 'medium') and img.medium:
-                    media_urls.append(img.medium.url)
-                else:
-                    media_urls.append(img.file.url)
+        products = []
+        for item_id in unique_ids:
+            product_data = _get_product_data_by_id(item_id)
+            if product_data:
+                products.append(product_data)
 
-            for vid in item.videos.all().order_by('order'):
-                if vid.thumbnail:
-                    if hasattr(vid.thumbnail, 'medium') and vid.thumbnail.medium:
-                        media_urls.append(vid.thumbnail.medium.url)
-                    else:
-                        media_urls.append(vid.thumbnail.file.url)
-
-
-            return {
-                "id": item.id,
-                "name": item.name,
-                "price": float(item.price) if item.price else None,
-                "discount_price": float(item.discounted_price) if item.discounted_price else "",
-                "currency": item.currency.code if item.currency else "KGS",
-                "description": item.description,
-                "category": item.subcategory.category.name if item.subcategory and item.subcategory.category else None,
-                "subcategory": item.subcategory.name if item.subcategory else None,
-                "images": media_urls,
-                "url": f"{settings.SITE_URL}/p/{item.id}"
-            }
-
-        except Exception as e:
-            # print(f"Error serializing product data: {e}")
-            return None
+        return products
 
     def get_source(self, obj):
         """Web comments always have source='web'."""
@@ -370,6 +353,54 @@ class UserCommentThemeSerializer(serializers.ModelSerializer):
         fields = ('theme_type', 'image_id', 'theme_id', )
 
 
+def _get_product_data_by_id(item_id):
+    """Helper function to get product data by ID."""
+    item = ShopItem.objects.filter(id=item_id).select_related(
+        'currency',
+        'subcategory',
+        'subcategory__category'
+    ).prefetch_related(
+        'images',
+        'videos',
+        'videos__thumbnail'
+    ).first()
+
+    if not item:
+        return None
+
+    try:
+        media_urls = []
+
+        for img in item.images.all().order_by('order'):
+            if hasattr(img, 'medium') and img.medium:
+                media_urls.append(img.medium.url)
+            else:
+                media_urls.append(img.file.url)
+
+        for vid in item.videos.all().order_by('order'):
+            if vid.thumbnail:
+                if hasattr(vid.thumbnail, 'medium') and vid.thumbnail.medium:
+                    media_urls.append(vid.thumbnail.medium.url)
+                else:
+                    media_urls.append(vid.thumbnail.file.url)
+
+        return {
+            "id": item.id,
+            "name": item.name,
+            "price": float(item.price) if item.price else None,
+            "discount_price": float(item.discounted_price) if item.discounted_price else "",
+            "currency": item.currency.code if item.currency else "KGS",
+            "description": item.description,
+            "category": item.subcategory.category.name if item.subcategory and item.subcategory.category else None,
+            "subcategory": item.subcategory.name if item.subcategory else None,
+            "images": media_urls,
+            "url": f"{settings.SITE_URL}/p/{item.id}"
+        }
+
+    except Exception:
+        return None
+
+
 class BotMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for BotMessage (Telegram/WhatsApp messages).
@@ -387,24 +418,64 @@ class BotMessageSerializer(serializers.ModelSerializer):
     is_updated = serializers.SerializerMethodField()
     item = serializers.SerializerMethodField()
     source = serializers.SerializerMethodField()
+    product_data = serializers.SerializerMethodField()
+    products = serializers.SerializerMethodField()
 
     class Meta:
         model = BotMessage
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role',
             'is_comment_liked', 'is_blocked', 'comment_like_count', 'can_delete',
-            'is_updated', 'created_at', 'updated_at', 'assistant', 'source'
+            'is_updated', 'created_at', 'updated_at', 'assistant', 'source', 'product_data', 'products'
         )
+
+    def get_product_data(self, obj):
+        """Returns first product found in text (for backwards compatibility)."""
+        if not obj.text:
+            return None
+        match = re.search(r'/p/(\d+)', obj.text)
+        if not match:
+            return None
+        return _get_product_data_by_id(match.group(1))
+
+    def get_products(self, obj):
+        """
+        Returns array of all products found in text.
+        Parses all /p/{id} links and returns structured product data.
+        """
+        if not obj.text:
+            return []
+
+        matches = re.findall(r'/p/(\d+)', obj.text)
+        if not matches:
+            return []
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_ids = []
+        for item_id in matches:
+            if item_id not in seen:
+                seen.add(item_id)
+                unique_ids.append(item_id)
+
+        products = []
+        for item_id in unique_ids:
+            product_data = _get_product_data_by_id(item_id)
+            if product_data:
+                products.append(product_data)
+
+        return products
 
     def get_user(self, msg: BotMessage):
         """Return user info for user messages, None for assistant messages."""
         if msg.sender == BotMessage.USER:
             bot_chat = msg.chat
+            is_whatsapp = bot_chat.platform == BotPlatform.WHATSAPP
             return {
                 'id': bot_chat.id,
-                'full_name': bot_chat.user_name or 'Telegram User',
+                'full_name': bot_chat.user_name or ('WhatsApp User' if is_whatsapp else 'Telegram User'),
                 'avatar': {'image': bot_chat.user_photo} if bot_chat.user_photo else None,
-                'username': None,
+                'username': bot_chat.user_phone if is_whatsapp else None,
             }
         return None
 

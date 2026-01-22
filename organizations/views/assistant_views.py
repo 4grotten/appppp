@@ -15,7 +15,8 @@ from rest_framework.filters import SearchFilter
 logger = logging.getLogger(__name__)
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Assistant, Chat, Plan, Question
+from organizations.models import Answer, AnswerFile, Assistant, Chat, ChatSource, Plan, Question
+from messenger_bots.models import BotChat, BotPlatform
 from organizations.serializers.assistant_serializers import (
     AnswerFileSerializer,
     AssistantCreateSerializer,
@@ -226,10 +227,38 @@ class GetOrCreateChatView(generics.RetrieveAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        user = serializer.validated_data['user']
+        user = serializer.validated_data.get('user')
+        phone = serializer.validated_data.get('phone')
         assistant = serializer.validated_data['assistant']
 
-        chat, created = Chat.objects.get_or_create(user=user, assistant=assistant)
+        if phone:
+            # WhatsApp chat - find by phone number
+            bot_chat = BotChat.objects.filter(
+                organization=assistant.organization,
+                platform=BotPlatform.WHATSAPP,
+                user_phone=phone,
+            ).first()
+
+            if not bot_chat:
+                return Response(data={
+                    'message': _('Chat not found'),
+                    'errors': {'phone': [_('No WhatsApp chat found for this phone number')]}
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            # Get or create linked Chat for this BotChat
+            chat = Chat.objects.filter(bot_chat=bot_chat).first()
+            if not chat:
+                chat = Chat.objects.create(
+                    assistant=assistant,
+                    bot_chat=bot_chat,
+                    source=ChatSource.WHATSAPP,
+                    user=None,
+                )
+            created = False
+        else:
+            # Web chat - find by user
+            chat, created = Chat.objects.get_or_create(user=user, assistant=assistant)
+
         if created:
             CommentService.create_chat_assistant_default_comment(chat=chat, assistant=chat.assistant)
 

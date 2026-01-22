@@ -3980,14 +3980,29 @@ class TransactionService:
 
         assistant = user_assistant.assistant
 
-        # Create Telegram bot if "Все включено" plan (id=5) was selected
+        # Create Telegram bot and enable catalog if "Все включено" plan (id=5) was selected
         TELEGRAM_BOT_PLAN_ID = 5
         plan_ids = original_payment_info.get("plan_ids", [])
         base_url = original_payment_info.get("base_url")
 
         if TELEGRAM_BOT_PLAN_ID in plan_ids:
+            # Enable catalog mode for AI assistant
+            organization = transaction_obj.organization
+            if not organization.is_catalog:
+                organization.is_catalog = True
+                organization.save(update_fields=["is_catalog"])
+                logging.info(f"[PAYMENT] Enabled is_catalog for org {organization.id}")
+
+                # Generate initial JSON catalog
+                try:
+                    from shop.services.assistant_data_service import AssistantDataService
+                    AssistantDataService.update_organization_json(organization)
+                    logging.info(f"[PAYMENT] Generated initial catalog JSON for org {organization.id}")
+                except Exception as e:
+                    logging.error(f"[PAYMENT] Failed to generate catalog JSON: {e}")
+
             cls._create_telegram_bot_after_payment(
-                organization=transaction_obj.organization,
+                organization=organization,
                 requested_by=transaction_obj.client,
                 base_url=base_url,
             )

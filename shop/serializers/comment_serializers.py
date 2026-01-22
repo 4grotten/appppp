@@ -472,11 +472,10 @@ class BotMessageSerializer(serializers.ModelSerializer):
             bot_chat = msg.chat
             is_whatsapp = bot_chat.platform == BotPlatform.WHATSAPP
             return {
-                'id': None if is_whatsapp else bot_chat.id,
-                'full_name': bot_chat.user_name if is_whatsapp else (bot_chat.user_name or 'Telegram User'),
+                'id': bot_chat.id,
+                'full_name': bot_chat.user_name or ('WhatsApp User' if is_whatsapp else 'Telegram User'),
                 'avatar': {'image': bot_chat.user_photo} if bot_chat.user_photo else None,
-                'username': None,
-                'phone': bot_chat.user_phone if is_whatsapp else None,
+                'username': bot_chat.user_phone if is_whatsapp else None,
             }
         return None
 

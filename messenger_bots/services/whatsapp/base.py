@@ -150,3 +150,14 @@ class WhatsAppServiceInterface(ABC):
             True if signature is valid
         """
         return True  # Default: no verification
+
+    def get_profile_picture(self, phone: str) -> Optional[str]:
+        """Get contact's profile picture URL (optional, not all providers support this).
+
+        Args:
+            phone: Phone number
+
+        Returns:
+            Profile picture URL or None if not available
+        """
+        return None  # Default: no profile picture support

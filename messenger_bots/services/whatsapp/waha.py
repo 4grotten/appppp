@@ -415,6 +415,28 @@ class WAHAService(WhatsAppServiceInterface):
         clean = phone.replace("+", "").replace(" ", "").replace("-", "")
         return f"{clean}@c.us"
 
+    def get_profile_picture(self, phone: str) -> Optional[str]:
+        """Get contact's profile picture URL.
+
+        Args:
+            phone: Phone number (e.g., 79001234567)
+
+        Returns:
+            Profile picture URL or None if not available
+        """
+        try:
+            chat_id = self._format_chat_id(phone)
+            response = self._make_request(
+                "GET",
+                f"/api/contacts/profile-picture?contactId={chat_id}&session={self.session_name}",
+                timeout=10,
+            )
+            # WAHA returns {"profilePictureURL": "https://..."}
+            return response.get("profilePictureURL")
+        except Exception as e:
+            logger.debug(f"Failed to get profile picture for {phone}: {e}")
+            return None
+
     def _update_bot_error(self, error: str):
         """Update bot's last_error field."""
         self.bot.last_error = error

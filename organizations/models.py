@@ -1175,6 +1175,7 @@ class Plan(TimestampModel):
         Currency, on_delete=models.CASCADE, related_name="plans", null=True, blank=True
     )
     is_best_choice = models.BooleanField(default=False)
+    is_active_all = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

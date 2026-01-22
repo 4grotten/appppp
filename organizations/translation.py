@@ -1,7 +1,7 @@
 from modeltranslation.decorators import register
 from modeltranslation.translator import TranslationOptions
 
-from .models import OrganizationCategory, OrganizationType, Service
+from .models import OrganizationCategory, OrganizationType, Service,Plan
 
 
 @register(OrganizationCategory)
@@ -24,3 +24,8 @@ class ServiceOptions(TranslationOptions):
         'name',
         'description'
     )
+
+
+@register(Plan)
+class PlanTranslationOptions(TranslationOptions):
+    fields = ('name', 'description', 'additional_name')

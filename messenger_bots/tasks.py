@@ -516,12 +516,14 @@ def process_whatsapp_message_task(
     service.mark_as_read(chat.platform_chat_id)
     logger.debug(f"[WA_TASK] Marked messages as read for {chat.platform_chat_id}")
 
-    # Send welcome message for first contact
+    # Send welcome message for first contact and return (like Telegram /start)
     user_language = "ru"
     if is_first_message:
         logger.info("[WA_TASK] First message detected, sending welcome...")
         welcome_text = BotAssistantService._get_message("welcome", user_language)
         _send_whatsapp_welcome(service, chat, welcome_text)
+        logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS (welcome) ======")
+        return {"success": True, "welcome_sent": True}
 
     chat_history = _get_whatsapp_chat_history(chat)
     logger.debug(f"[WA_TASK] Chat history: {len(chat_history)} messages")

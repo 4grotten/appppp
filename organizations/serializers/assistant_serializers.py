@@ -242,8 +242,16 @@ class PurchaseAssistantSerializer(serializers.Serializer):
 
 
 class ChatSerializerQueryParam(serializers.Serializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False)
     assistant = serializers.PrimaryKeyRelatedField(queryset=Assistant.objects.all())
+    phone = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        user = attrs.get('user')
+        phone = attrs.get('phone')
+        if not user and not phone:
+            raise serializers.ValidationError("Either 'user' or 'phone' is required")
+        return attrs
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -366,12 +374,19 @@ class MessageCreateSerializer(serializers.ModelSerializer):
         fields = ("chat", "text")
 
 
-class TelegramUserInfoSerializer(serializers.Serializer):
-    """Serializer for Telegram user info from BotChat."""
-    id = serializers.IntegerField(source="bot_chat.id")
+class BotUserInfoSerializer(serializers.Serializer):
+    """Serializer for Telegram/WhatsApp user info from BotChat."""
+    id = serializers.SerializerMethodField()
     full_name = serializers.CharField(source="bot_chat.user_name")
     avatar = serializers.SerializerMethodField()
     username = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+
+    def get_id(self, chat: Chat):
+        """Return bot_chat.id for Telegram, None for WhatsApp (use phone instead)."""
+        if chat.bot_chat and chat.source == ChatSource.WHATSAPP:
+            return None
+        return chat.bot_chat.id if chat.bot_chat else None
 
     def get_avatar(self, chat: Chat):
         if chat.bot_chat and chat.bot_chat.user_photo:
@@ -380,6 +395,16 @@ class TelegramUserInfoSerializer(serializers.Serializer):
 
     def get_username(self, chat: Chat):
         return None
+
+    def get_phone(self, chat: Chat):
+        """Return phone number for WhatsApp chats."""
+        if chat.bot_chat and chat.source == ChatSource.WHATSAPP:
+            return chat.bot_chat.user_phone
+        return None
+
+
+# Alias for backwards compatibility
+TelegramUserInfoSerializer = BotUserInfoSerializer
 
 
 class ChatListSerializer(serializers.ModelSerializer):

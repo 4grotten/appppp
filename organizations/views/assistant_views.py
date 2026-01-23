@@ -157,7 +157,7 @@ class AssistantPlansListView(generics.ListAPIView):
         assistant = AssistantService.get(id=self.kwargs['pk'])
         assistant_data = OrganizationAssistantSerializer(assistant, context={'request': request}).data
         plans = self.get_queryset()
-        plan_data = PlanSerializer(plans, many=True).data
+        plan_data = PlanSerializer(plans, many=True, context={'request': request}).data
 
         response_data = {
             'assistant': assistant_data,

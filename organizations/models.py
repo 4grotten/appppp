@@ -1174,6 +1174,9 @@ class Plan(TimestampModel):
     currency = models.ForeignKey(
         Currency, on_delete=models.CASCADE, related_name="plans", null=True, blank=True
     )
+    position_number = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)], help_text="Номер позиции в тарифах", null=True, blank=True,default=1
+    )
     is_best_choice = models.BooleanField(default=False)
     is_active_all = models.BooleanField(default=False)
 
@@ -1185,6 +1188,11 @@ class Plan(TimestampModel):
         if self.description:
             self.description_lang = GoogleTranslator().get_lang(self.description)
         super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ("position_number",)
+        verbose_name = "Ai Plans Info"
+        verbose_name_plural = "Ai Plans Info"
 
 
 class Assistant(TimestampModel):

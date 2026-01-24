@@ -65,6 +65,10 @@ class TelegramBot(TimestampModel):
             "Default: 5 pairs = 10 messages. Range: 1-20."
         ),
     )
+    is_ai_enabled = models.BooleanField(
+        default=True,
+        help_text=_("Whether AI assistant responds to messages. If False, bot receives messages but stays silent."),
+    )
 
     class Meta:
         verbose_name = _("Telegram Bot")
@@ -165,6 +169,21 @@ class WhatsAppBot(TimestampModel):
         null=True,
         blank=True,
         help_text=_("Last activity timestamp"),
+    )
+    is_ai_enabled = models.BooleanField(
+        default=True,
+        help_text=_("Whether AI assistant responds to messages. If False, bot receives messages but stays silent."),
+    )
+    previous_phone_number = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        help_text=_("Previous phone number before rebind"),
+    )
+    phone_changed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("Timestamp when phone number was changed (rebind)"),
     )
 
     class Meta:

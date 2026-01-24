@@ -250,11 +250,12 @@ class OrganizationInvoiceService:
 
         qs = (
             Invoice.objects.filter(
-                subscription__organization_id=organization_id,
+                Q(subscription__organization_id=organization_id)
+                | Q(transaction__organization_id=organization_id),
                 receipt_pdf__isnull=False,
             )
             .exclude(receipt_pdf="")
-            .select_related("tariff", "subscription")
+            .select_related("tariff", "subscription", "transaction")
             .order_by("-created_at")
         )
 

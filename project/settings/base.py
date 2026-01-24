@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "daphne",
     "api_keys.apps.ApiKeysConfig",
     "messenger_bots.apps.MessengerBotsConfig",
+    "otp_bot.apps.OtpBotConfig",
 ]
 
 if DEBUG:
@@ -604,6 +605,18 @@ WAHA_BASE_URL = config("WAHA_BASE_URL", default="http://waha:3000")
 WAHA_API_KEY = config("WAHA_API_KEY", default="notasecret")
 WAHA_WEBHOOK_SECRET = config("WAHA_WEBHOOK_SECRET", default="notasecret")
 BACKEND_URL = config("BACKEND_URL", default="https://api.appofiz.com")
+
+# OTP Bot Configuration
+WAHA_OTP_SESSION_NAME = config("WAHA_OTP_SESSION_NAME", default="otp_service_bot")
+OTP_CODE_TTL_SECONDS = config("OTP_CODE_TTL_SECONDS", default=300, cast=int)
+OTP_MAX_ATTEMPTS = config("OTP_MAX_ATTEMPTS", default=3, cast=int)
+OTP_RESEND_COOLDOWN_SECONDS = config("OTP_RESEND_COOLDOWN_SECONDS", default=60, cast=int)
+OTP_MAX_PER_PHONE_10MIN = config("OTP_MAX_PER_PHONE_10MIN", default=3, cast=int)
+OTP_ADMIN_API_KEY = config("OTP_ADMIN_API_KEY", default="change-me-in-production")
+OTP_MESSAGE_TEMPLATE = config(
+    "OTP_MESSAGE_TEMPLATE",
+    default="Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин. Не сообщайте его никому.",
+)
 
 
 if DEBUG:

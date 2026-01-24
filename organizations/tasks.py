@@ -391,18 +391,33 @@ def create_invoice_pdf(invoice_number: str = None, context: dict = {}):
         amount = clean_original_amount(str(country_data["amount"]))
         tax = clean_original_amount(str(country_data.get("tax_amount", 0)))
         payment_method = context.get("payment_method")
-        subscription = UserOrgSubscription.objects.get(id=context["subscription_id"])
-        org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
-        tariff = RegionalTariff.objects.get(id=country_data["tariff_id"])
-        invoice_qs = Invoice.objects.create(
-            code=code,
-            invoice_amount=Decimal(amount),
-            invoice_tax=Decimal(tax),
-            payment_method=payment_method,
-            organization_info=org_info,
-            tariff=tariff,
-            subscription=subscription,
-        )
+
+        invoice_kwargs = {
+            "code": code,
+            "invoice_amount": Decimal(amount),
+            "invoice_tax": Decimal(tax),
+            "payment_method": payment_method,
+        }
+
+        if context.get("transaction_id"):
+            # Assistant transaction receipt
+            tx = Transaction.objects.get(id=context["transaction_id"])
+            invoice_kwargs["transaction"] = tx
+            org_info = OrganizationInvoiceInfo.objects.filter(
+                organization_id=tx.organization_id
+            ).first()
+            if org_info:
+                invoice_kwargs["organization_info"] = org_info
+        else:
+            # Org subscription receipt
+            subscription = UserOrgSubscription.objects.get(id=context["subscription_id"])
+            org_info = OrganizationInvoiceInfo.objects.get(**context["data"])
+            tariff = RegionalTariff.objects.get(id=country_data["tariff_id"])
+            invoice_kwargs["subscription"] = subscription
+            invoice_kwargs["organization_info"] = org_info
+            invoice_kwargs["tariff"] = tariff
+
+        invoice_qs = Invoice.objects.create(**invoice_kwargs)
 
         invoice_number = invoice_qs.invoice_number
     context["invoice_number"] = invoice_number

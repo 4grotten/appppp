@@ -4,10 +4,12 @@ from messenger_bots.views import (
     WhatsAppWebhookView,
     WAHAWebhookView,
     TelegramBotAPIView,
+    TelegramBotSettingsAPIView,
     WhatsAppBotAPIView,
     WhatsAppWAHABotAPIView,
     WhatsAppWAHASessionAPIView,
     WhatsAppWAHAQRCodeAPIView,
+    WhatsAppRebindAPIView,
     BotChatsAPIView,
     BotChatMessagesAPIView,
     BotStatusAPIView,
@@ -41,6 +43,11 @@ urlpatterns = [
         TelegramBotAPIView.as_view(),
         name="telegram-bot",
     ),
+    path(
+        "telegram/<int:organization_id>/settings/",
+        TelegramBotSettingsAPIView.as_view(),
+        name="telegram-bot-settings",
+    ),
     # Meta Cloud API WhatsApp
     path(
         "whatsapp/<int:organization_id>/",
@@ -57,6 +64,11 @@ urlpatterns = [
         "whatsapp/waha/<int:organization_id>/session/",
         WhatsAppWAHASessionAPIView.as_view(),
         name="whatsapp-waha-session",
+    ),
+    path(
+        "whatsapp/waha/<int:organization_id>/session/rebind/",
+        WhatsAppRebindAPIView.as_view(),
+        name="whatsapp-waha-rebind",
     ),
     path(
         "whatsapp/waha/<int:organization_id>/qr/",

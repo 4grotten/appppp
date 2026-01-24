@@ -7,6 +7,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from users.models import User
+from users.services import MyOwnTokenService
+
 from .serializers import (
     SendOTPSerializer,
     VerifyOTPSerializer,
@@ -152,7 +155,7 @@ class SendOTPAPIView(APIView):
 
 
 class VerifyOTPAPIView(APIView):
-    """Verify an OTP code."""
+    """Verify an OTP code. On success, creates/finds user and returns auth token."""
 
     permission_classes = [AllowAny]
 
@@ -167,9 +170,30 @@ class VerifyOTPAPIView(APIView):
 
         service = OTPService()
         result = service.verify_otp(phone, code)
+
+        if not result.is_valid:
+            return Response({
+                "is_valid": False,
+                "error": result.error,
+                "token": None,
+                "is_new_user": None,
+            })
+
+        # OTP verified — get or create user and issue token
+        user, created = User.objects.get_or_create(
+            phone_number=phone,
+            defaults={"is_new_user": True},
+        )
+        is_new_user = user.is_new_user
+
+        token = MyOwnTokenService.get_or_create_token(user=user, request=request)
+        logger.info(f"[OTP_API] Token issued for {phone[:7]}*** (new_user={is_new_user})")
+
         return Response({
-            "is_valid": result.is_valid,
-            "error": result.error,
+            "is_valid": True,
+            "error": None,
+            "token": token.key,
+            "is_new_user": is_new_user,
         })
 
 

@@ -616,6 +616,158 @@ class TelegramBotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    def patch(self, request, organization_id):
+        """Toggle AI assistant on/off."""
+        logger.info(f"[TG_API] PATCH is_ai_enabled for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = TelegramBot.objects.get(organization=org)
+        except TelegramBot.DoesNotExist:
+            return Response(
+                {"error": "Telegram bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        is_ai_enabled = request.data.get("is_ai_enabled")
+        if is_ai_enabled is None:
+            return Response(
+                {"error": "is_ai_enabled field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        bot.is_ai_enabled = bool(is_ai_enabled)
+        bot.save(update_fields=["is_ai_enabled"])
+        logger.info(f"[TG_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        return Response({"is_ai_enabled": bot.is_ai_enabled})
+
+
+class TelegramBotSettingsAPIView(APIView):
+    """API for updating Telegram bot settings (name, description, photo) via Telegram API."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def _get_bot(self, request, organization_id):
+        """Get organization and bot, or return error response."""
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return None, None, Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            bot = TelegramBot.objects.get(organization=org)
+            return org, bot, None
+        except TelegramBot.DoesNotExist:
+            return org, None, Response(
+                {"error": "Telegram bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    def post(self, request, organization_id):
+        """Update bot settings: name, description, and/or photo (multipart/form-data)."""
+        logger.info(f"[TG_SETTINGS] POST settings for org_id={organization_id}")
+
+        org, bot, error_response = self._get_bot(request, organization_id)
+        if error_response:
+            return error_response
+
+        service = TelegramBotService(bot)
+        results = {}
+        has_any_field = False
+
+        # Handle name and description from request data
+        name = request.data.get("name")
+        description = request.data.get("description")
+
+        if name is not None:
+            has_any_field = True
+            if len(name) > 64:
+                results["name"] = {"success": False, "error": "Name must be 64 characters or less"}
+            else:
+                result = service.set_my_name(name)
+                results["name"] = {
+                    "success": result.get("ok", False),
+                    **({"error": result.get("description")} if not result.get("ok") else {}),
+                }
+
+        if description is not None:
+            has_any_field = True
+            if len(description) > 512:
+                results["description"] = {"success": False, "error": "Description must be 512 characters or less"}
+            else:
+                result = service.set_my_description(description)
+                results["description"] = {
+                    "success": result.get("ok", False),
+                    **({"error": result.get("description")} if not result.get("ok") else {}),
+                }
+
+        # Handle photo file upload
+        photo = request.FILES.get("photo")
+        if photo:
+            has_any_field = True
+            # Validate file type
+            content_type = photo.content_type
+            if content_type not in ("image/jpeg", "image/png"):
+                results["photo"] = {"success": False, "error": "Photo must be JPEG or PNG"}
+            elif photo.size > 5 * 1024 * 1024:  # 5MB
+                results["photo"] = {"success": False, "error": "Photo must be 5MB or less"}
+            else:
+                result = service.set_my_photo(photo)
+                results["photo"] = {
+                    "success": result.get("ok", False),
+                    **({"error": result.get("description")} if not result.get("ok") else {}),
+                }
+
+        if not has_any_field:
+            return Response(
+                {"error": "No settings provided. Send name, description, and/or photo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        logger.info(f"[TG_SETTINGS] Results: {results}")
+
+        # Determine overall status
+        all_success = all(r.get("success") for r in results.values())
+        return Response(results, status=status.HTTP_200_OK if all_success else status.HTTP_207_MULTI_STATUS)
+
+    def delete(self, request, organization_id):
+        """Delete bot profile photo."""
+        logger.info(f"[TG_SETTINGS] DELETE photo for org_id={organization_id}")
+
+        org, bot, error_response = self._get_bot(request, organization_id)
+        if error_response:
+            return error_response
+
+        service = TelegramBotService(bot)
+        result = service.delete_my_photo()
+
+        if result.get("ok"):
+            return Response({"success": True})
+        return Response(
+            {"success": False, "error": result.get("description", "Unknown error")},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
 
 class WhatsAppBotAPIView(APIView):
     """API for managing WhatsApp bot configuration."""
@@ -1237,6 +1389,38 @@ class WhatsAppWAHABotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    def patch(self, request, organization_id):
+        """Toggle AI assistant on/off for WhatsApp bot."""
+        logger.info(f"[WAHA_API] PATCH is_ai_enabled for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(organization=org)
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        is_ai_enabled = request.data.get("is_ai_enabled")
+        if is_ai_enabled is None:
+            return Response(
+                {"error": "is_ai_enabled field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        bot.is_ai_enabled = bool(is_ai_enabled)
+        bot.save(update_fields=["is_ai_enabled"])
+        logger.info(f"[WAHA_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        return Response({"is_ai_enabled": bot.is_ai_enabled})
+
 
 class WhatsAppWAHASessionAPIView(APIView):
     """API for managing WAHA session (start, stop, get QR code)."""
@@ -1436,3 +1620,104 @@ class WhatsAppWAHAQRCodeAPIView(APIView):
                 "message": "QR code not available. Try starting the session first.",
                 "session_status": bot.session_status,
             })
+
+
+class WhatsAppRebindAPIView(APIView):
+    """API for rebinding WhatsApp phone number (stop old session, start new, get QR)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def post(self, request, organization_id):
+        """Rebind WhatsApp phone number: stop old session, save previous phone, start new session."""
+        logger.info(f"[WA_REBIND] POST rebind for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(
+                organization=org,
+                provider=WhatsAppProvider.WAHA,
+            )
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp WAHA bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Check if there's a phone to rebind
+        if not bot.connected_phone_number:
+            return Response(
+                {"error": "No phone number connected to rebind"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        service = WhatsAppServiceFactory.get_service(bot)
+
+        # 1. Save previous phone info
+        bot.previous_phone_number = bot.connected_phone_number
+        bot.phone_changed_at = timezone.now()
+
+        # 2. Stop current session
+        try:
+            service.stop_session()
+            logger.info(f"[WA_REBIND] Session stopped for org {organization_id}")
+        except Exception as e:
+            logger.error(f"[WA_REBIND] Failed to stop session: {e}")
+            return Response(
+                {"error": f"Failed to stop current session: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # 3. Clear current phone and update status
+        bot.connected_phone_number = None
+        bot.session_status = WhatsAppSessionStatus.SCAN_QR
+        bot.save(update_fields=[
+            "previous_phone_number",
+            "phone_changed_at",
+            "connected_phone_number",
+            "session_status",
+        ])
+
+        # 4. Start new session
+        try:
+            service.start_session()
+            logger.info(f"[WA_REBIND] New session started for org {organization_id}")
+        except Exception as e:
+            logger.error(f"[WA_REBIND] Failed to start new session: {e}")
+            bot.last_error = str(e)
+            bot.session_status = WhatsAppSessionStatus.FAILED
+            bot.save(update_fields=["last_error", "session_status"])
+            return Response(
+                {"error": f"Failed to start new session: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # 5. Get QR code for new phone
+        qr_code = service.get_qr_code()
+
+        logger.info(f"[WA_REBIND] Rebind successful: prev_phone={bot.previous_phone_number}, qr={'yes' if qr_code else 'no'}")
+
+        return Response({
+            "success": True,
+            "previous_phone_number": bot.previous_phone_number,
+            "phone_changed_at": bot.phone_changed_at.isoformat(),
+            "session_status": bot.session_status,
+            "qr_code": qr_code,
+        })

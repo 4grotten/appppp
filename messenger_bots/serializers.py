@@ -24,6 +24,7 @@ class TelegramBotSerializer(serializers.ModelSerializer):
             "organization_title",
             "bot_username",
             "is_active",
+            "is_ai_enabled",
             "webhook_url",
             "last_error",
             "created_at",
@@ -44,6 +45,24 @@ class TelegramBotCreateSerializer(serializers.Serializer):
                 "Invalid bot token format. Token should be in format: 123456789:ABCdefGHI..."
             )
         return value
+
+
+class TelegramBotSettingsSerializer(serializers.Serializer):
+    """Serializer for updating Telegram bot settings (name, description)."""
+
+    name = serializers.CharField(max_length=64, required=False)
+    description = serializers.CharField(max_length=512, required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("No settings provided")
+        return attrs
+
+
+class TelegramBotAIToggleSerializer(serializers.Serializer):
+    """Serializer for toggling AI on/off."""
+
+    is_ai_enabled = serializers.BooleanField()
 
 
 class WhatsAppBotSerializer(serializers.ModelSerializer):
@@ -77,9 +96,13 @@ class WhatsAppBotSerializer(serializers.ModelSerializer):
             "twilio_phone_number",
             # Common fields
             "is_active",
+            "is_ai_enabled",
             "is_connected",
             "last_error",
             "last_activity_at",
+            # Rebind fields
+            "previous_phone_number",
+            "phone_changed_at",
             "created_at",
             "updated_at",
         ]

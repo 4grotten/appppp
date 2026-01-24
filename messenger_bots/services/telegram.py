@@ -96,6 +96,54 @@ class TelegramBotService:
             return True
         return False
 
+    # --- Bot Settings (Telegram API) ---
+
+    def _make_file_request(self, method: str, files: dict, data: dict = None) -> dict:
+        """Make a multipart/form-data request to Telegram Bot API (for file uploads)."""
+        url = self.BASE_URL.format(token=self.token, method=method)
+        logger.debug(f"[TG_SERVICE] File API call: {method}")
+        try:
+            response = requests.post(url, data=data, files=files, timeout=60)
+            result = response.json()
+            if not result.get("ok"):
+                error_msg = result.get("description", "Unknown error")
+                logger.error(f"[TG_SERVICE] File API ERROR: method={method}, msg={error_msg}")
+            else:
+                logger.info(f"[TG_SERVICE] File API SUCCESS: {method}")
+            return result
+        except requests.RequestException as e:
+            logger.error(f"[TG_SERVICE] File REQUEST EXCEPTION: method={method}, error={e}", exc_info=True)
+            return {"ok": False, "description": str(e)}
+
+    def set_my_name(self, name: str) -> dict:
+        """Set bot's name via Telegram API (setMyName). Max 64 chars."""
+        result = self._make_request("setMyName", {"name": name})
+        if result.get("ok"):
+            logger.info(f"[TG_SERVICE] Bot name updated to: '{name}'")
+        return result
+
+    def set_my_description(self, description: str) -> dict:
+        """Set bot's description via Telegram API (setMyDescription). Max 512 chars."""
+        result = self._make_request("setMyDescription", {"description": description})
+        if result.get("ok"):
+            logger.info(f"[TG_SERVICE] Bot description updated")
+        return result
+
+    def set_my_photo(self, photo_file) -> dict:
+        """Set bot's profile photo via Telegram API (setMyPhoto). Accepts file object."""
+        files = {"photo": ("photo.png", photo_file, "image/png")}
+        result = self._make_file_request("setMyPhoto", files=files)
+        if result.get("ok"):
+            logger.info(f"[TG_SERVICE] Bot photo updated")
+        return result
+
+    def delete_my_photo(self) -> dict:
+        """Delete bot's profile photo via Telegram API (deleteMyPhoto)."""
+        result = self._make_request("deleteMyPhoto")
+        if result.get("ok"):
+            logger.info(f"[TG_SERVICE] Bot photo deleted")
+        return result
+
     def send_message(
         self,
         chat_id: str,
@@ -559,6 +607,17 @@ class TelegramBotService:
             else:
                 logger.error(f"[TG_SERVICE] Failed to send /start response")
             return welcome_text
+
+        # Check if AI is enabled for this bot
+        if not telegram_bot.is_ai_enabled:
+            logger.info(f"[TG_SERVICE] AI disabled for org {telegram_bot.organization_id}, skipping response")
+            return None
+
+        # Check if organization subscription is active
+        from messenger_bots.services.subscription_check import check_subscription_active
+        if not check_subscription_active(telegram_bot.organization):
+            logger.info(f"[TG_SERVICE] Subscription expired for org {telegram_bot.organization_id}, skipping AI response")
+            return None
 
         # Get chat history for context (use bot's configured limit or default)
         context_limit = getattr(telegram_bot, 'context_messages_limit', CHAT_HISTORY_LIMIT)

@@ -4,6 +4,7 @@ Not tied to WhatsAppBot model — uses session_name directly from settings.
 Only implements methods needed for OTP: send_text, session management, QR.
 """
 
+import base64
 import logging
 from typing import Dict, Optional
 
@@ -93,11 +94,31 @@ class WAHAOTPClient:
             return "STOPPED"
 
     def get_qr_code(self) -> Optional[str]:
-        """Get QR code for authentication (base64 or data URI)."""
+        """Get QR code for authentication as base64 PNG string."""
+        url = f"{self.base_url}/api/{self.session_name}/auth/qr"
         try:
-            result = self._request("GET", f"/api/{self.session_name}/auth/qr")
-            return result.get("data") or result.get("value")
-        except WAHAOTPError:
+            response = requests.get(url, headers=self._headers(), timeout=15)
+            if response.status_code >= 400:
+                logger.error(f"[WAHA_OTP] QR request failed: {response.status_code}")
+                return None
+
+            content_type = response.headers.get("Content-Type", "")
+
+            # WAHA returns QR as PNG image
+            if "image" in content_type:
+                return base64.b64encode(response.content).decode("utf-8")
+
+            # Fallback: try JSON response
+            try:
+                data = response.json()
+                return data.get("data") or data.get("value")
+            except ValueError:
+                # If not JSON and not image, try to encode raw bytes
+                if response.content:
+                    return base64.b64encode(response.content).decode("utf-8")
+                return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"[WAHA_OTP] QR connection error: {e}")
             return None
 
     def get_me(self) -> Optional[Dict]:

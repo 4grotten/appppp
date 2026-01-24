@@ -111,14 +111,17 @@ class ReceiptListSerializer(serializers.Serializer):
     invoice_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     invoice_tax = serializers.DecimalField(max_digits=10, decimal_places=2)
     payment_method = serializers.CharField()
-    tariff = InvoiceTariffSerializer()
-    subscription = ReceiptSubscriptionSerializer()
+    tariff = InvoiceTariffSerializer(allow_null=True, required=False)
+    subscription = ReceiptSubscriptionSerializer(allow_null=True, required=False)
 
     def to_representation(self, instance):
         url = create_download_url(instance.receipt_pdf)
         data = super().to_representation(instance)
         data["receipt_pdf"] = instance.receipt_pdf.url
-        data["tax_amount"] = CountryInvoiceInfo.objects.get(country=data["code"]).tax
+        try:
+            data["tax_amount"] = CountryInvoiceInfo.objects.get(country=data["code"]).tax
+        except CountryInvoiceInfo.DoesNotExist:
+            data["tax_amount"] = instance.invoice_tax
         data["receipt_download"] = url
 
         return data

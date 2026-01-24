@@ -3978,6 +3978,15 @@ class TransactionService:
         user_assistant.is_active = True
         user_assistant.save()
 
+        # Generate receipt for assistant payment
+        try:
+            from organizations.services.receipts_services import ReceiptService
+            payment_info = transaction_obj.payment_info or {}
+            payment_method = payment_info.get("payment_method", "Online")
+            ReceiptService.create_receipt_for_assistant(transaction_obj, payment_method)
+        except Exception as e:
+            logging.error(f"[PAYMENT] Error creating receipt for assistant transaction {transaction_obj.id}: {e}")
+
         assistant = user_assistant.assistant
 
         # Create Telegram bot and enable catalog if "Все включено" plan (id=5) was selected

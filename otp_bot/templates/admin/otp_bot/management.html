@@ -1,0 +1,310 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .otp-management-container {
+        max-width: 650px;
+        margin: 20px auto;
+        padding: 25px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .otp-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .otp-header h2 {
+        margin: 0;
+        font-size: 22px;
+    }
+    .otp-info {
+        background: #f8f9fa;
+        padding: 18px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    .otp-info p {
+        margin: 8px 0;
+    }
+    .otp-info .label {
+        font-weight: bold;
+        color: #555;
+        display: inline-block;
+        min-width: 120px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .status-connected {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-disconnected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .status-qr_pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .status-failed {
+        background: #f5c6cb;
+        color: #721c24;
+    }
+    .qr-section {
+        text-align: center;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #25D366;
+    }
+    .qr-section img {
+        max-width: 280px;
+        margin: 15px auto;
+        display: block;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .qr-instructions {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        text-align: left;
+    }
+    .qr-instructions ol {
+        margin: 10px 0 0;
+        padding-left: 20px;
+    }
+    .qr-instructions li {
+        margin: 6px 0;
+    }
+    .waiting-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 15px 0;
+        padding: 10px;
+        background: #fff3cd;
+        border-radius: 4px;
+    }
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #25D366;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .otp-actions {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-action {
+        display: inline-block;
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: bold;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        color: white;
+    }
+    .btn-initialize {
+        background: #25D366;
+    }
+    .btn-initialize:hover {
+        background: #1da851;
+    }
+    .btn-disconnect {
+        background: #dc3545;
+    }
+    .btn-disconnect:hover {
+        background: #c82333;
+    }
+    .btn-refresh {
+        background: #007bff;
+    }
+    .btn-refresh:hover {
+        background: #0069d9;
+    }
+    .btn-back {
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+    }
+    .btn-back:hover {
+        background: #5a6268;
+    }
+    .phone-display {
+        font-size: 18px;
+        font-weight: bold;
+        color: #25D366;
+    }
+    .messages-list {
+        margin-bottom: 15px;
+    }
+    .messages-list .msg {
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+    }
+    .msg-success { background: #d4edda; color: #155724; }
+    .msg-error { background: #f8d7da; color: #721c24; }
+    .msg-warning { background: #fff3cd; color: #856404; }
+    .msg-info { background: #cce5ff; color: #004085; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='otp_bot' %}">OTP Bot</a>
+    &rsaquo; <a href="{% url 'admin:otp_bot_otpbot_changelist' %}">OTP Bots</a>
+    &rsaquo; OTP Bot Management
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="otp-management-container">
+
+    <div class="otp-header">
+        <h2>OTP Bot Management</h2>
+        <span class="status-badge status-{{ bot.status }}">{{ bot.get_status_display }}</span>
+    </div>
+
+    {% if messages %}
+    <div class="messages-list">
+        {% for message in messages %}
+        <div class="msg msg-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="otp-info">
+        <p><span class="label">Session:</span> {{ bot.waha_session_name }}</p>
+        <p><span class="label">Phone:</span>
+            {% if bot.phone_number %}
+                <span class="phone-display">{{ bot.phone_number }}</span>
+            {% else %}
+                <span style="color: #999;">Not connected</span>
+            {% endif %}
+        </p>
+        <p><span class="label">Status:</span> {{ bot.get_status_display }}</p>
+        <p><span class="label">Updated:</span> {{ bot.updated_at }}</p>
+    </div>
+
+    {% if bot.status == "qr_pending" %}
+    <!-- QR Code Section -->
+    <div class="qr-section">
+        <div class="qr-instructions">
+            <strong>Scan QR code with WhatsApp:</strong>
+            <ol>
+                <li>Open <strong>WhatsApp</strong> on your phone</li>
+                <li>Go to <strong>Settings</strong> &rarr; <strong>Linked Devices</strong></li>
+                <li>Tap <strong>Link a Device</strong></li>
+                <li>Point your camera at the QR code below</li>
+            </ol>
+        </div>
+
+        {% if qr_code %}
+        <img src="data:image/png;base64,{{ qr_code }}" alt="WhatsApp QR Code">
+        {% else %}
+        <div style="padding: 20px; color: #856404;">
+            QR code is loading... Click "Refresh Status" to update.
+        </div>
+        {% endif %}
+
+        <div class="waiting-indicator">
+            <div class="spinner"></div>
+            <span>Waiting for QR scan...</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if bot.status == "connected" %}
+    <div style="text-align: center; padding: 20px; background: #d4edda; border-radius: 8px; margin: 15px 0;">
+        <div style="font-size: 40px; margin-bottom: 10px;">&#10003;</div>
+        <strong>Bot is connected and ready to send OTP codes</strong>
+        {% if bot.phone_number %}
+        <p style="margin-top: 10px; font-size: 16px;">Phone: <strong>{{ bot.phone_number }}</strong></p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if bot.status == "failed" %}
+    <div style="text-align: center; padding: 20px; background: #f8d7da; border-radius: 8px; margin: 15px 0;">
+        <div style="font-size: 40px; margin-bottom: 10px;">&#10007;</div>
+        <strong>Session failed. Try re-initializing.</strong>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="otp-actions">
+        {% if bot.status == "disconnected" or bot.status == "failed" %}
+        <form method="post" action="{% url 'admin:otp_bot_otpbot_initialize' bot.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-action btn-initialize">Initialize Bot</button>
+        </form>
+        {% endif %}
+
+        {% if bot.status == "qr_pending" %}
+        <form method="post" action="{% url 'admin:otp_bot_otpbot_initialize' bot.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-action btn-initialize">Restart Session</button>
+        </form>
+        {% endif %}
+
+        {% if bot.status == "connected" or bot.status == "qr_pending" %}
+        <form method="post" action="{% url 'admin:otp_bot_otpbot_disconnect' bot.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-action btn-disconnect"
+                    onclick="return confirm('Are you sure you want to disconnect the OTP bot?')">
+                Disconnect
+            </button>
+        </form>
+        {% endif %}
+
+        <form method="post" action="{% url 'admin:otp_bot_otpbot_refresh' bot.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-action btn-refresh">Refresh Status</button>
+        </form>
+
+        <a href="{% url 'admin:otp_bot_otpbot_changelist' %}" class="btn-action btn-back">Back to List</a>
+    </div>
+</div>
+
+{% if bot.status == "qr_pending" %}
+<script>
+    // Auto-refresh page every 5 seconds while waiting for QR scan
+    setTimeout(function() {
+        window.location.reload();
+    }, 5000);
+</script>
+{% endif %}
+{% endblock %}

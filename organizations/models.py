@@ -1499,6 +1499,14 @@ class Invoice(TimestampModel):
         blank=True,
         default=None,
     )
+    transaction = models.ForeignKey(
+        "transactions.Transaction",
+        on_delete=models.SET_NULL,
+        related_name="invoices",
+        null=True,
+        blank=True,
+        default=None,
+    )
     tariff = models.ForeignKey(
         RegionalTariff,
         on_delete=models.CASCADE,

@@ -525,6 +525,17 @@ def process_whatsapp_message_task(
         logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS (welcome) ======")
         return {"success": True, "welcome_sent": True}
 
+    # Check if AI is enabled for this bot
+    if not whatsapp_bot.is_ai_enabled:
+        logger.info(f"[WA_TASK] AI disabled for org {whatsapp_bot.organization_id}, skipping response")
+        return {"success": True, "ai_disabled": True}
+
+    # Check if organization subscription is active
+    from messenger_bots.services.subscription_check import check_subscription_active
+    if not check_subscription_active(whatsapp_bot.organization):
+        logger.info(f"[WA_TASK] Subscription expired for org {whatsapp_bot.organization_id}, skipping AI response")
+        return {"success": True, "subscription_expired": True}
+
     chat_history = _get_whatsapp_chat_history(chat)
     logger.debug(f"[WA_TASK] Chat history: {len(chat_history)} messages")
 

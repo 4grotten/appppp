@@ -1,0 +1,157 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .qr-container {
+        max-width: 550px;
+        margin: 20px auto;
+        padding: 25px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .qr-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .qr-header h2 {
+        margin: 0 0 5px;
+        font-size: 20px;
+    }
+    .qr-header .session-name {
+        color: #666;
+        font-size: 14px;
+    }
+    .qr-instructions {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    .qr-instructions ol {
+        margin: 10px 0 0;
+        padding-left: 20px;
+    }
+    .qr-instructions li {
+        margin: 6px 0;
+    }
+    .qr-image-box {
+        text-align: center;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #25D366;
+    }
+    .qr-image-box img {
+        max-width: 280px;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .waiting-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 15px 0;
+        padding: 10px;
+        background: #fff3cd;
+        border-radius: 4px;
+    }
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #25D366;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .qr-actions {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14px;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-check { background: #007bff; }
+    .btn-back { background: #6c757d; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='otp_bot' %}">OTP Bot</a>
+    &rsaquo; <a href="{% url 'admin:otp_bot_otpbot_changelist' %}">OTP Bots</a>
+    &rsaquo; <a href="{% url 'admin:otp_bot_otpbot_change' bot.pk %}">{{ bot.waha_session_name }}</a>
+    &rsaquo; QR Code
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="qr-container">
+    <div class="qr-header">
+        <h2>Scan QR Code</h2>
+        <span class="session-name">Session: {{ bot.waha_session_name }}</span>
+    </div>
+
+    <div class="qr-instructions">
+        <strong>Connect WhatsApp:</strong>
+        <ol>
+            <li>Open <strong>WhatsApp</strong> on your phone</li>
+            <li>Go to <strong>Settings</strong> &rarr; <strong>Linked Devices</strong></li>
+            <li>Tap <strong>Link a Device</strong></li>
+            <li>Point your camera at the QR code below</li>
+        </ol>
+    </div>
+
+    <div class="qr-image-box">
+        {% if qr_code %}
+        <img src="data:image/png;base64,{{ qr_code }}" alt="WhatsApp QR Code">
+        {% else %}
+        <p style="color: #856404; padding: 20px;">
+            QR code is loading... Page will refresh automatically.
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="waiting-indicator">
+        <div class="spinner"></div>
+        <span>Waiting for QR scan... Page refreshes automatically.</span>
+    </div>
+
+    <div class="qr-actions">
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-check">I've Scanned — Check Status</button>
+        </form>
+        <a href="{% url 'admin:otp_bot_otpbot_change' bot.pk %}" class="btn btn-back">Back to Bot</a>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh every 5 seconds while waiting for scan
+    setTimeout(function() { window.location.reload(); }, 5000);
+</script>
+{% endblock %}

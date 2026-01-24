@@ -5,6 +5,7 @@ from otp_bot.views import (
     OTPBotStatusAPIView,
     OTPBotQRCodeAPIView,
     OTPBotDisconnectAPIView,
+    CheckPhoneAPIView,
     SendOTPAPIView,
     VerifyOTPAPIView,
     ResendOTPAPIView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path("otp-bot/disconnect/", OTPBotDisconnectAPIView.as_view(), name="otp-bot-disconnect"),
 
     # OTP operations (public, rate-limited)
+    path("otp/check-phone/", CheckPhoneAPIView.as_view(), name="otp-check-phone"),
     path("otp/send/", SendOTPAPIView.as_view(), name="otp-send"),
     path("otp/verify/", VerifyOTPAPIView.as_view(), name="otp-verify"),
     path("otp/resend/", ResendOTPAPIView.as_view(), name="otp-resend"),

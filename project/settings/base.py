@@ -607,7 +607,7 @@ WAHA_WEBHOOK_SECRET = config("WAHA_WEBHOOK_SECRET", default="notasecret")
 BACKEND_URL = config("BACKEND_URL", default="https://api.appofiz.com")
 
 # OTP Bot Configuration
-WAHA_OTP_SESSION_NAME = config("WAHA_OTP_SESSION_NAME", default="otp_service_bot")
+WAHA_OTP_SESSION_NAME = config("WAHA_OTP_SESSION_NAME", default="default")
 OTP_CODE_TTL_SECONDS = config("OTP_CODE_TTL_SECONDS", default=300, cast=int)
 OTP_MAX_ATTEMPTS = config("OTP_MAX_ATTEMPTS", default=3, cast=int)
 OTP_RESEND_COOLDOWN_SECONDS = config("OTP_RESEND_COOLDOWN_SECONDS", default=60, cast=int)

@@ -115,6 +115,23 @@ class OTPBotDisconnectAPIView(APIView):
 # --- OTP Operations (Public, protected by rate limiting) ---
 
 
+class CheckPhoneAPIView(APIView):
+    """Check if phone number exists in the system (for routing new vs existing users)."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = SendOTPSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        phone = serializer.validated_data["phone_number"]
+        exists = User.objects.filter(phone_number=phone).exists()
+        logger.info(f"[OTP_API] POST /otp/check-phone/ phone={phone[:7]}*** exists={exists}")
+
+        return Response({"exists": exists})
+
+
 class SendOTPAPIView(APIView):
     """Send OTP code to a phone number."""
 
@@ -180,12 +197,41 @@ class VerifyOTPAPIView(APIView):
             })
 
         # OTP verified — get or create user and issue token
+        username = serializer.validated_data.get("username")
+        password = serializer.validated_data.get("password")
+
         user, created = User.objects.get_or_create(
             phone_number=phone,
             defaults={"is_new_user": True},
         )
-        is_new_user = user.is_new_user
 
+        if created:
+            # New user registration — require username and password
+            if not username or not password:
+                user.delete()
+                return Response({
+                    "is_valid": True,
+                    "error": "Username and password are required for registration",
+                    "token": None,
+                    "is_new_user": True,
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check username uniqueness
+            if User.objects.filter(username=username).exists():
+                user.delete()
+                return Response({
+                    "is_valid": True,
+                    "error": "Username is already taken",
+                    "token": None,
+                    "is_new_user": True,
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            user.username = username
+            user.set_password(password)
+            user.save(update_fields=["username", "password"])
+            logger.info(f"[OTP_API] New user registered: {phone[:7]}*** username={username}")
+
+        is_new_user = user.is_new_user
         token = MyOwnTokenService.get_or_create_token(user=user, request=request)
         logger.info(f"[OTP_API] Token issued for {phone[:7]}*** (new_user={is_new_user})")
 

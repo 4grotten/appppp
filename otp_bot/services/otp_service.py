@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
 
-import bcrypt
+import hashlib
+import hmac
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -311,19 +313,16 @@ class OTPService:
 
     @staticmethod
     def _hash_code(code: str) -> str:
-        """Hash OTP code with bcrypt (low rounds for speed)."""
-        return bcrypt.hashpw(
-            code.encode("utf-8"),
-            bcrypt.gensalt(rounds=4),
-        ).decode("utf-8")
+        """Hash OTP code with HMAC-SHA256 using SECRET_KEY."""
+        key = settings.SECRET_KEY.encode("utf-8")
+        return hmac.new(key, code.encode("utf-8"), hashlib.sha256).hexdigest()
 
     @staticmethod
     def _verify_code(code: str, code_hash: str) -> bool:
-        """Verify OTP code against bcrypt hash."""
-        return bcrypt.checkpw(
-            code.encode("utf-8"),
-            code_hash.encode("utf-8"),
-        )
+        """Verify OTP code against HMAC-SHA256 hash."""
+        key = settings.SECRET_KEY.encode("utf-8")
+        computed = hmac.new(key, code.encode("utf-8"), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(computed, code_hash)
 
     @staticmethod
     def _map_waha_status(waha_status: str) -> str:

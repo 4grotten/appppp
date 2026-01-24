@@ -30,7 +30,7 @@ class WAHAOTPClient:
         self.base_url: str = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key: str = getattr(settings, "WAHA_API_KEY", "")
         self.session_name: str = session_name or getattr(
-            settings, "WAHA_OTP_SESSION_NAME", "otp_service_bot"
+            settings, "WAHA_OTP_SESSION_NAME", "default"
         )
 
     def _headers(self) -> Dict[str, str]:

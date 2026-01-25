@@ -67,6 +67,8 @@ class WAHAOTPClient:
         backend_url = getattr(settings, "BACKEND_URL", "https://api.appofiz.com")
 
         try:
+            # Note: Don't add otp-bot webhook here - we route from messenger_bots webhook
+            # to avoid duplicate message processing
             self._request("POST", "/api/sessions/start", {
                 "name": self.session_name,
                 "config": {
@@ -76,12 +78,6 @@ class WAHAOTPClient:
                             "full_sync": True,
                         }
                     },
-                    "webhooks": [
-                        {
-                            "url": f"{backend_url}/api/v1/otp-bot/webhook/",
-                            "events": ["message"],
-                        }
-                    ],
                 },
             })
             logger.info(f"[WAHA_OTP] Session started with webhook: {backend_url}/api/v1/otp-bot/webhook/")

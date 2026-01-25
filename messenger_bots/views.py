@@ -332,6 +332,43 @@ class WAHAWebhookView(View):
 
         # Find WhatsApp bot by session name
         whatsapp_bot = self._find_bot_by_session(session_name)
+
+        # Check if this message should be routed to OTP/Voice bot
+        # For 'default' session: route to OTP bot if sender is not in org's BotChat
+        if session_name == "default" and event_type == "message" and whatsapp_bot:
+            payload = data.get("payload", {})
+            # Skip outgoing messages
+            if not payload.get("fromMe", False):
+                # Extract phone number from message
+                from_number = payload.get("from", "")
+                _data = payload.get("_data", {})
+                key_data = _data.get("key", {})
+                remote_jid_alt = key_data.get("remoteJidAlt", "")
+
+                if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt:
+                    phone_number = remote_jid_alt.replace("@s.whatsapp.net", "")
+                elif "@" in from_number:
+                    phone_number = from_number.split("@")[0]
+                else:
+                    phone_number = from_number
+
+                # Check if this phone has existing chat with organization
+                existing_chat = BotChat.objects.filter(
+                    organization=whatsapp_bot.organization,
+                    platform=BotPlatform.WHATSAPP,
+                    platform_chat_id=phone_number,
+                ).exists()
+
+                if not existing_chat:
+                    # New user - route to OTP/Voice bot handler
+                    logger.info(f"WAHA webhook: routing NEW user {phone_number[:7]}*** to OTP bot handler")
+                    try:
+                        from otp_bot.webhook_handler import OTPBotWebhookHandler
+                        handler = OTPBotWebhookHandler()
+                        handler.handle_webhook(data)
+                    except Exception as e:
+                        logger.error(f"WAHA webhook: OTP bot handler error: {e}", exc_info=True)
+                    return HttpResponse(status=200)
         if not whatsapp_bot:
             logger.warning(f"WAHA webhook: no bot found for session '{session_name}'")
             return HttpResponse(status=200)  # Return 200 to avoid retries

@@ -4,8 +4,11 @@ Handles text and voice messages for the Finance AI Voice Assistant.
 Voice flow: Download -> STT (ElevenLabs) -> AI -> TTS (ElevenLabs) -> Send Voice
 """
 
+import base64
 import logging
 from typing import Optional
+
+import requests
 
 from .models import ChatSession, UserVoicePreference
 from .services.waha_otp import WAHAOTPClient
@@ -75,10 +78,15 @@ class OTPBotWebhookHandler:
         # Construct full message ID for WAHA API: false_{chatId}_{messageId}
         from_me = "true" if payload.get("fromMe", False) else "false"
         chat_id = from_field  # e.g., "996552154092@s.whatsapp.net"
-        # Convert to @c.us format for WAHA API
-        if "@s.whatsapp.net" in chat_id:
-            chat_id = chat_id.replace("@s.whatsapp.net", "@c.us")
         message_id = f"{from_me}_{chat_id}_{msg_id}"
+
+        # Also try to get media URL directly from payload (WAHA provides this when ready)
+        media_url = None
+        _data = payload.get("_data", {})
+        message_content = _data.get("message", {})
+        audio_msg = message_content.get("audioMessage", {})
+        if audio_msg:
+            media_url = audio_msg.get("url")
 
         masked_phone = self._mask_phone(phone)
         logger.info(f"[WEBHOOK_HANDLER] Message from {masked_phone}: {text[:50] if text else '(media)'}")
@@ -95,7 +103,8 @@ class OTPBotWebhookHandler:
 
             # Check if voice message
             if has_media and self._is_voice_message(payload):
-                self._handle_voice_message(phone, message_id)
+                logger.info(f"[WEBHOOK_HANDLER] Voice message detected, message_id={message_id[:50]}...")
+                self._handle_voice_message(phone, message_id, payload)
                 return
 
             # Handle text message
@@ -143,11 +152,11 @@ class OTPBotWebhookHandler:
         else:
             self._send_text(phone, response)
 
-    def _handle_voice_message(self, phone: str, message_id: str) -> None:
+    def _handle_voice_message(self, phone: str, message_id: str, payload: dict) -> None:
         """Process voice message: Download -> STT -> AI -> TTS -> Voice response.
 
         Full voice pipeline:
-        1. Download voice message from WAHA
+        1. Download voice message from WAHA (try media.data first, then download API)
         2. Transcribe using ElevenLabs STT
         3. Get AI response (voice_mode=True for shorter text)
         4. Convert to speech using ElevenLabs TTS
@@ -158,6 +167,7 @@ class OTPBotWebhookHandler:
         Args:
             phone: User's phone number
             message_id: WhatsApp message ID for downloading media
+            payload: Full message payload from webhook
         """
         masked_phone = self._mask_phone(phone)
         logger.info(f"[WEBHOOK_HANDLER] Voice message from {masked_phone}")
@@ -172,18 +182,120 @@ class OTPBotWebhookHandler:
             )
             return
 
-        # Step 1: Download voice message
-        logger.info(f"[WEBHOOK_HANDLER] Downloading voice from {masked_phone}")
-        audio_bytes = self.waha.download_media(message_id)
+        # Step 1: Try ALL possible methods to get audio
+        audio_bytes = None
+        download_method = None
+
+        # Log full payload structure for debugging
+        logger.info(f"[WEBHOOK_HANDLER] Payload keys: {list(payload.keys())}")
+        if "media" in payload:
+            logger.info(f"[WEBHOOK_HANDLER] payload.media keys: {list(payload.get('media', {}).keys())}")
+        if "_data" in payload:
+            _data = payload.get("_data", {})
+            logger.info(f"[WEBHOOK_HANDLER] payload._data keys: {list(_data.keys())}")
+            if "message" in _data:
+                logger.info(f"[WEBHOOK_HANDLER] payload._data.message keys: {list(_data.get('message', {}).keys())}")
+
+        # Method 1: Try media.data from payload (base64 encoded)
+        media_data = payload.get("media", {}).get("data")
+        if media_data and not audio_bytes:
+            logger.info(f"[WEBHOOK_HANDLER] METHOD 1: Trying media.data from payload (base64)")
+            try:
+                audio_bytes = base64.b64decode(media_data)
+                download_method = "media.data (base64)"
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 1 SUCCESS: Got {len(audio_bytes)} bytes")
+            except Exception as e:
+                logger.warning(f"[WEBHOOK_HANDLER] METHOD 1 FAILED: {e}")
+
+        # Method 2: Try media.url from payload (WAHA pre-signed URL)
+        if not audio_bytes:
+            media_url = payload.get("media", {}).get("url")
+            if media_url:
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 2: Trying media.url: {media_url[:80]}...")
+                try:
+                    resp = requests.get(media_url, timeout=30)
+                    if resp.ok:
+                        audio_bytes = resp.content
+                        download_method = "media.url"
+                        logger.info(f"[WEBHOOK_HANDLER] METHOD 2 SUCCESS: Got {len(audio_bytes)} bytes")
+                    else:
+                        logger.warning(f"[WEBHOOK_HANDLER] METHOD 2 FAILED: HTTP {resp.status_code}")
+                except Exception as e:
+                    logger.warning(f"[WEBHOOK_HANDLER] METHOD 2 FAILED: {e}")
+
+        # Method 3: Try mediaUrl from payload root
+        if not audio_bytes:
+            media_url_root = payload.get("mediaUrl")
+            if media_url_root:
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 3: Trying mediaUrl from root: {media_url_root[:80]}...")
+                try:
+                    resp = requests.get(media_url_root, timeout=30)
+                    if resp.ok:
+                        audio_bytes = resp.content
+                        download_method = "mediaUrl (root)"
+                        logger.info(f"[WEBHOOK_HANDLER] METHOD 3 SUCCESS: Got {len(audio_bytes)} bytes")
+                    else:
+                        logger.warning(f"[WEBHOOK_HANDLER] METHOD 3 FAILED: HTTP {resp.status_code}")
+                except Exception as e:
+                    logger.warning(f"[WEBHOOK_HANDLER] METHOD 3 FAILED: {e}")
+
+        # Method 4: Try WAHA download API with original message_id
+        if not audio_bytes:
+            logger.info(f"[WEBHOOK_HANDLER] METHOD 4: Trying WAHA download API with message_id: {message_id}")
+            audio_bytes = self.waha.download_media(message_id)
+            if audio_bytes:
+                download_method = "WAHA download API"
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 4 SUCCESS: Got {len(audio_bytes)} bytes")
+            else:
+                logger.warning(f"[WEBHOOK_HANDLER] METHOD 4 FAILED")
+
+        # Method 5: Try WAHA download API with @c.us format
+        if not audio_bytes:
+            message_id_cus = message_id.replace("@s.whatsapp.net", "@c.us")
+            if message_id_cus != message_id:
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 5: Trying WAHA API with @c.us: {message_id_cus}")
+                audio_bytes = self.waha.download_media(message_id_cus)
+                if audio_bytes:
+                    download_method = "WAHA download API (@c.us)"
+                    logger.info(f"[WEBHOOK_HANDLER] METHOD 5 SUCCESS: Got {len(audio_bytes)} bytes")
+                else:
+                    logger.warning(f"[WEBHOOK_HANDLER] METHOD 5 FAILED")
+
+        # Method 6: Try with just the message ID (no prefix)
+        if not audio_bytes:
+            # Extract raw ID from message_id (format: false_xxx@xxx_ACTUALID)
+            parts = message_id.split("_")
+            if len(parts) >= 3:
+                raw_id = parts[-1]  # Last part is the actual message ID
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 6: Trying WAHA API with raw ID: {raw_id}")
+                audio_bytes = self.waha.download_media(raw_id)
+                if audio_bytes:
+                    download_method = "WAHA download API (raw ID)"
+                    logger.info(f"[WEBHOOK_HANDLER] METHOD 6 SUCCESS: Got {len(audio_bytes)} bytes")
+                else:
+                    logger.warning(f"[WEBHOOK_HANDLER] METHOD 6 FAILED")
+
+        # Method 7: Try _data.message.audioMessage.url (WhatsApp encrypted URL - won't work directly but log it)
+        if not audio_bytes:
+            _data = payload.get("_data", {})
+            message_content = _data.get("message", {})
+            audio_msg = message_content.get("audioMessage", {})
+            wa_url = audio_msg.get("url")
+            if wa_url:
+                logger.info(f"[WEBHOOK_HANDLER] METHOD 7: Found audioMessage.url (encrypted): {wa_url[:80]}...")
+                # This is encrypted, can't download directly, but log for reference
+                logger.warning(f"[WEBHOOK_HANDLER] METHOD 7: WhatsApp URL is encrypted, need WAHA to decrypt")
 
         if not audio_bytes:
-            logger.error(f"[WEBHOOK_HANDLER] Failed to download voice from {masked_phone}")
+            logger.error(f"[WEBHOOK_HANDLER] ALL METHODS FAILED for {masked_phone}")
             self._send_text(
                 phone,
                 "Не удалось загрузить голосовое сообщение. "
                 "Попробуйте ещё раз или напишите текстом."
             )
             return
+
+        logger.info(f"[WEBHOOK_HANDLER] SUCCESS via {download_method}: Got {len(audio_bytes)} bytes")
 
         # Step 2: Speech-to-Text
         logger.info(f"[WEBHOOK_HANDLER] Transcribing voice from {masked_phone}")

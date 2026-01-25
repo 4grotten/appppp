@@ -70,6 +70,12 @@ class WAHAOTPClient:
             self._request("POST", "/api/sessions/start", {
                 "name": self.session_name,
                 "config": {
+                    "noweb": {
+                        "store": {
+                            "enabled": True,
+                            "full_sync": True,
+                        }
+                    },
                     "webhooks": [
                         {
                             "url": f"{backend_url}/api/v1/otp-bot/webhook/",

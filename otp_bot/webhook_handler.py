@@ -64,12 +64,21 @@ class OTPBotWebhookHandler:
         text = body.strip() if body else ""
         has_media = payload.get("hasMedia", False)
 
-        # Get message ID - can be dict or string
-        msg_id = payload.get("id", "")
-        if isinstance(msg_id, dict):
-            message_id = msg_id.get("id", "")
+        # Get message ID - WAHA uses format: {fromMe}_{chatId}_{id}
+        # We need to construct this from payload data
+        msg_id_raw = payload.get("id", "")
+        if isinstance(msg_id_raw, dict):
+            msg_id = msg_id_raw.get("id", "")
         else:
-            message_id = str(msg_id)
+            msg_id = str(msg_id_raw)
+
+        # Construct full message ID for WAHA API: false_{chatId}_{messageId}
+        from_me = "true" if payload.get("fromMe", False) else "false"
+        chat_id = from_field  # e.g., "996552154092@s.whatsapp.net"
+        # Convert to @c.us format for WAHA API
+        if "@s.whatsapp.net" in chat_id:
+            chat_id = chat_id.replace("@s.whatsapp.net", "@c.us")
+        message_id = f"{from_me}_{chat_id}_{msg_id}"
 
         masked_phone = self._mask_phone(phone)
         logger.info(f"[WEBHOOK_HANDLER] Message from {masked_phone}: {text[:50] if text else '(media)'}")

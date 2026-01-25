@@ -618,6 +618,17 @@ OTP_MESSAGE_TEMPLATE = config(
     default="Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин. Не сообщайте его никому.",
 )
 
+# ElevenLabs Configuration (Voice AI for OTP Bot)
+ELEVENLABS_API_KEY = config("ELEVENLABS_API_KEY", default="")
+ELEVENLABS_VOICE_ID = config("ELEVENLABS_VOICE_ID", default="FGY2WhTYpPnrIDTdsKH5")  # Laura
+ELEVENLABS_MODEL_TTS = config("ELEVENLABS_MODEL_TTS", default="eleven_turbo_v2_5")
+ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
+
+# OTP Bot AI Configuration
+OTP_BOT_AI_MODEL = config("OTP_BOT_AI_MODEL", default="gpt-4o-mini")
+OTP_BOT_AI_MAX_TOKENS = config("OTP_BOT_AI_MAX_TOKENS", default=500, cast=int)
+OTP_BOT_AI_TEMPERATURE = config("OTP_BOT_AI_TEMPERATURE", default=0.7, cast=float)
+
 
 if DEBUG:
     PORTAINER_URL = config(

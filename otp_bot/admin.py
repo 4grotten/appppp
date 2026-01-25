@@ -8,7 +8,7 @@ from .admin_views import (
     OTPBotQRCodeView,
     OTPBotStartSessionView,
 )
-from .models import OTPBot, OTPCode
+from .models import OTPBot, OTPCode, ChatSession, UserVoicePreference
 
 
 @admin.register(OTPBot)
@@ -109,3 +109,24 @@ class OTPCodeAdmin(admin.ModelAdmin):
     list_filter = ("is_used",)
     search_fields = ("phone_number",)
     readonly_fields = ("id", "code_hash", "created_at")
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    list_display = ("phone_number", "message_count", "updated_at", "created_at")
+    search_fields = ("phone_number",)
+    readonly_fields = ("id", "messages", "created_at", "updated_at")
+    ordering = ("-updated_at",)
+
+    def message_count(self, obj) -> int:
+        """Number of messages in the session."""
+        return len(obj.messages) if obj.messages else 0
+    message_count.short_description = "Messages"
+
+
+@admin.register(UserVoicePreference)
+class UserVoicePreferenceAdmin(admin.ModelAdmin):
+    list_display = ("phone_number", "voice_enabled", "updated_at")
+    list_filter = ("voice_enabled",)
+    search_fields = ("phone_number",)
+    readonly_fields = ("id", "created_at", "updated_at")

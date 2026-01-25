@@ -53,10 +53,23 @@ class OTPBotWebhookHandler:
             logger.debug("[WEBHOOK_HANDLER] Ignoring group message")
             return
 
-        phone = from_field.replace("@c.us", "")
-        text = payload.get("body", "").strip()
+        # Extract phone - handle both @c.us and @s.whatsapp.net formats
+        if "@" in from_field:
+            phone = from_field.split("@")[0]
+        else:
+            phone = from_field
+
+        # Body can be None for voice messages
+        body = payload.get("body")
+        text = body.strip() if body else ""
         has_media = payload.get("hasMedia", False)
-        message_id = payload.get("id", "")
+
+        # Get message ID - can be dict or string
+        msg_id = payload.get("id", "")
+        if isinstance(msg_id, dict):
+            message_id = msg_id.get("id", "")
+        else:
+            message_id = str(msg_id)
 
         masked_phone = self._mask_phone(phone)
         logger.info(f"[WEBHOOK_HANDLER] Message from {masked_phone}: {text[:50] if text else '(media)'}")
@@ -245,8 +258,18 @@ class OTPBotWebhookHandler:
         Returns:
             True if voice/audio message (ptt = push-to-talk)
         """
+        # Check mediaType field
         media_type = payload.get("mediaType", "")
-        return media_type in ("audio", "ptt")
+        if media_type in ("audio", "ptt"):
+            return True
+
+        # Check for audioMessage in message structure (WAHA noweb format)
+        _data = payload.get("_data", {})
+        message = _data.get("message", {})
+        if message.get("audioMessage"):
+            return True
+
+        return False
 
     def _send_text(self, phone: str, text: str) -> bool:
         """Send text message via WAHA.

@@ -365,7 +365,7 @@ class WAHAWebhookView(View):
                     try:
                         from otp_bot.webhook_handler import OTPBotWebhookHandler
                         handler = OTPBotWebhookHandler()
-                        handler.handle_webhook(data)
+                        handler.handle(data)  # Method is 'handle', not 'handle_webhook'
                     except Exception as e:
                         logger.error(f"WAHA webhook: OTP bot handler error: {e}", exc_info=True)
                     return HttpResponse(status=200)

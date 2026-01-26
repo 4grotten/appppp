@@ -283,6 +283,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                     "is_deleted",
                     "is_banned",
                     "is_private",
+                    "is_catalog",
                     "update_posts",
                     "is_under_review",
                     "is_delivery_service",

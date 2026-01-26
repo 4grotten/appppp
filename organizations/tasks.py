@@ -282,9 +282,7 @@ def process_comment_with_assistant(
     comment = Comment.objects.get(id=comment_id)
     assistant = Assistant.objects.get(id=assistant_id)
     org = assistant.organization
-    catalog_url = None
-    if org.is_catalog:
-        catalog_url = AssistantDataService.get_file_url(assistant.organization)
+    catalog_url = AssistantDataService.get_file_url(assistant.organization)
     org_url = f"{settings.SITE_URL}/organizations/{assistant.organization.id}"
     try:
         response = requests.post(

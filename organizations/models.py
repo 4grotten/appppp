@@ -1256,7 +1256,7 @@ class AnswerFile(TimestampModel):
         null=True,
         blank=True,
     )
-
+    
     @property
     def name(self):
         return self.file.name.split("/")[-1]

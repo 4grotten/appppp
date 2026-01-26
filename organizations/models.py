@@ -1245,6 +1245,11 @@ class Question(TimestampModel):
 
 class AnswerFile(TimestampModel):
     order = models.PositiveSmallIntegerField(default=0, editable=False)
+    is_readable_by_ai = models.BooleanField(
+        default=True, 
+        verbose_name="ИИ должен читать этот файл?",
+        help_text="Если галочка стоит, ИИ прочитает текст файла. Если нет — просто отправит ссылку клиенту."
+    )
     file = models.FileField(
         upload_to=upload_file_with_unique_name,
         help_text=_("File that you want to store"),

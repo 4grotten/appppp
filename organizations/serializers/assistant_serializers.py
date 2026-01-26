@@ -28,7 +28,7 @@ class AnswerFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnswerFile
-        fields = ("id", "file", "name")
+        fields = ("id", "file", "name","is_readable_by_ai")
         read_only_fields = ("name",)
 
     def get_name(self, obj):

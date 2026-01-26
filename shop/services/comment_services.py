@@ -152,10 +152,20 @@ class CommentService:
         }
 
         for answer in answers:
+            files_to_read = []
+            files_to_send = []
+            
+            for file_obj in answer.files.all():
+                if file_obj.is_readable_by_ai:
+                    files_to_read.append(file_obj.file.url)
+                else:
+                    files_to_send.append(file_obj.file.url)
+
             training_data["answers"].append({
                 "question": answer.question.text,
                 "answer": answer.text,
-                "files": [file.file.url for file in answer.files.all()]
+                "files_to_read": files_to_read,
+                "files_to_send": files_to_send  
             })
 
         return training_data

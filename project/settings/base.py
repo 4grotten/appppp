@@ -14,9 +14,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
-SITE_DOMAIN = config("SITE_URL","PROD")
+SITE_DOMAIN = config("PROJECT_ENVIRONMENT","prod")
 
-if SITE_DOMAIN == "DEV":
+if SITE_DOMAIN == "dev" or SITE_DOMAIN == "test":
     SITE_URL = "https://test.apofiz.com"
 else:
     SITE_URL = "https://apofiz.com"

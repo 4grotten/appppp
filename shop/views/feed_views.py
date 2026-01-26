@@ -131,6 +131,12 @@ class OrganizationItemListView(FeedView):
     serializer_class = ItemFeedSerializer
     filter_class = FeedItemFilterWithoutOrganization
     # ordering = ['-updated_at', ]
+    filter_backends = (
+        DjangoFilterBackend,
+        FeedItemOrderingFilter, # Этот фильтр отвечает за сортировку и исключение товаров без цены
+        SearchFilter,
+    )
+    ordering_fields = ["updated_at", "price"]
 
     def get_queryset(self):
         serializer = OrganizationQueryParamSerializer(data=self.request.GET)
@@ -154,8 +160,10 @@ class OrganizationItemListView(FeedView):
                 queryset=qs, search_word=search
             )
 
-        qs = qs.order_by(F('pinned_at').desc(nulls_last=True), '-updated_at')
-
+        if self.request.query_params.get('ordering'):
+            pass
+        else:
+            qs = qs.order_by(F('pinned_at').desc(nulls_last=True), '-updated_at')
         return ShopItemService.annotate_likes_and_bookmarks(
             queryset=qs, user=self.request.user
         )

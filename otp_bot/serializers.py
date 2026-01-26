@@ -22,10 +22,14 @@ class SendOTPSerializer(serializers.Serializer):
 
 
 class VerifyOTPSerializer(serializers.Serializer):
-    """Request for verifying OTP."""
+    """Request for verifying OTP. Includes optional registration fields."""
 
     phone_number = serializers.CharField(max_length=20)
     code = serializers.CharField(min_length=6, max_length=6)
+
+    # Optional registration fields (required for new users)
+    username = serializers.CharField(max_length=255, required=False)
+    password = serializers.CharField(min_length=6, max_length=128, required=False)
 
     def validate_phone_number(self, value: str) -> str:
         value = value.strip()

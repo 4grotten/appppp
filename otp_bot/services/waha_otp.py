@@ -4,6 +4,7 @@ Not tied to WhatsAppBot model — uses session_name directly from settings.
 Only implements methods needed for OTP: send_text, session management, QR.
 """
 
+import base64
 import logging
 from typing import Dict, Optional
 
@@ -29,7 +30,7 @@ class WAHAOTPClient:
         self.base_url: str = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key: str = getattr(settings, "WAHA_API_KEY", "")
         self.session_name: str = session_name or getattr(
-            settings, "WAHA_OTP_SESSION_NAME", "otp_service_bot"
+            settings, "WAHA_OTP_SESSION_NAME", "default"
         )
 
     def _headers(self) -> Dict[str, str]:
@@ -59,15 +60,27 @@ class WAHAOTPClient:
             raise WAHAOTPError(f"WAHA connection error: {str(e)}")
 
     def start_session(self) -> bool:
-        """Start/create the OTP WAHA session."""
+        """Start/create the OTP WAHA session with webhook for incoming messages."""
         logger.info(f"[WAHA_OTP] Starting session: {self.session_name}")
+
+        # Get backend URL for webhook callback
+        backend_url = getattr(settings, "BACKEND_URL", "https://api.appofiz.com")
+
         try:
+            # Note: Don't add otp-bot webhook here - we route from messenger_bots webhook
+            # to avoid duplicate message processing
             self._request("POST", "/api/sessions/start", {
                 "name": self.session_name,
                 "config": {
-                    "webhooks": [],  # OTP bot doesn't receive messages
+                    "noweb": {
+                        "store": {
+                            "enabled": True,
+                            "full_sync": True,
+                        }
+                    },
                 },
             })
+            logger.info(f"[WAHA_OTP] Session started with webhook: {backend_url}/api/v1/otp-bot/webhook/")
             return True
         except WAHAOTPError as e:
             logger.error(f"[WAHA_OTP] Failed to start session: {e.message}")
@@ -93,11 +106,31 @@ class WAHAOTPClient:
             return "STOPPED"
 
     def get_qr_code(self) -> Optional[str]:
-        """Get QR code for authentication (base64 or data URI)."""
+        """Get QR code for authentication as base64 PNG string."""
+        url = f"{self.base_url}/api/{self.session_name}/auth/qr"
         try:
-            result = self._request("GET", f"/api/{self.session_name}/auth/qr")
-            return result.get("data") or result.get("value")
-        except WAHAOTPError:
+            response = requests.get(url, headers=self._headers(), timeout=15)
+            if response.status_code >= 400:
+                logger.error(f"[WAHA_OTP] QR request failed: {response.status_code}")
+                return None
+
+            content_type = response.headers.get("Content-Type", "")
+
+            # WAHA returns QR as PNG image
+            if "image" in content_type:
+                return base64.b64encode(response.content).decode("utf-8")
+
+            # Fallback: try JSON response
+            try:
+                data = response.json()
+                return data.get("data") or data.get("value")
+            except ValueError:
+                # If not JSON and not image, try to encode raw bytes
+                if response.content:
+                    return base64.b64encode(response.content).decode("utf-8")
+                return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"[WAHA_OTP] QR connection error: {e}")
             return None
 
     def get_me(self) -> Optional[Dict]:
@@ -137,3 +170,96 @@ class WAHAOTPClient:
         """Check if session is healthy and ready to send."""
         status = self.get_session_status()
         return status in ("WORKING", "AUTHENTICATED")
+
+    def send_voice(self, phone_number: str, audio_url: str) -> bool:
+        """Send voice message via WhatsApp using audio URL.
+
+        Args:
+            phone_number: E.164 format (e.g., +79991234567)
+            audio_url: URL to audio file (MP3/OGG)
+
+        Returns:
+            True if sent successfully
+        """
+        chat_id = phone_number.lstrip("+") + "@c.us"
+        masked_phone = phone_number[:7] + "***"
+        logger.info(f"[WAHA_OTP] Sending voice to {masked_phone}")
+
+        try:
+            self._request("POST", "/api/sendVoice", {
+                "session": self.session_name,
+                "chatId": chat_id,
+                "file": {"url": audio_url},
+                "convert": True,  # Auto-convert MP3 to OPUS/OGG
+            })
+            logger.info(f"[WAHA_OTP] Voice sent to {masked_phone}")
+            return True
+        except WAHAOTPError as e:
+            logger.error(f"[WAHA_OTP] Failed to send voice to {masked_phone}: {e.message}")
+            return False
+
+    def send_voice_base64(
+        self, phone_number: str, audio_bytes: bytes, mimetype: str = "audio/mpeg"
+    ) -> bool:
+        """Send voice message via WhatsApp using base64 encoded audio.
+
+        Args:
+            phone_number: E.164 format
+            audio_bytes: Raw audio bytes
+            mimetype: Audio MIME type (audio/mpeg for MP3)
+
+        Returns:
+            True if sent successfully
+        """
+        chat_id = phone_number.lstrip("+") + "@c.us"
+        masked_phone = phone_number[:7] + "***"
+        logger.info(f"[WAHA_OTP] Sending voice (base64) to {masked_phone}, size={len(audio_bytes)} bytes")
+
+        # Encode to base64
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+        try:
+            self._request("POST", "/api/sendVoice", {
+                "session": self.session_name,
+                "chatId": chat_id,
+                "file": {
+                    "data": audio_b64,
+                    "mimetype": mimetype,
+                },
+                "convert": True,
+            })
+            logger.info(f"[WAHA_OTP] Voice (base64) sent to {masked_phone}")
+            return True
+        except WAHAOTPError as e:
+            logger.error(f"[WAHA_OTP] Failed to send voice: {e.message}")
+            return False
+
+    def download_media(self, message_id: str) -> Optional[bytes]:
+        """Download media file from a WhatsApp message.
+
+        Args:
+            message_id: Message ID containing media
+
+        Returns:
+            Raw media bytes or None on error
+        """
+        logger.info(f"[WAHA_OTP] Downloading media: {message_id[:30]}...")
+
+        try:
+            url = f"{self.base_url}/api/{self.session_name}/messages/{message_id}/download"
+            response = requests.get(
+                url,
+                headers=self._headers(),
+                timeout=30,
+            )
+
+            if response.status_code >= 400:
+                logger.error(f"[WAHA_OTP] Download error: {response.status_code}")
+                return None
+
+            logger.info(f"[WAHA_OTP] Downloaded {len(response.content)} bytes")
+            return response.content
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"[WAHA_OTP] Download error: {e}")
+            return None

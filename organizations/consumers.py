@@ -16,7 +16,7 @@ from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from stock.serializers import ShopItemSizeCountSetSerializer
 
-from organizations.models import Coupon, DiscountCard, UserAssistant
+from organizations.models import Coupon, DiscountCard, UserAssistant,Answer
 from organizations.services.assistant_services import (
     AssistantService,
     ChatService,
@@ -585,6 +585,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         decoded_headers = {
             k.decode("utf-8"): v.decode("utf-8") for k, v in self.headers
         }
+        answers = Answer.objects.filter(assistant=assistant)
         org = comment.item.organization
         item_info = ItemInfoSerializer(comment.item).data
         assistant = comment.item.organization.assistant
@@ -672,6 +673,7 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                     "position": assistant.position,
                     "is_enabled": assistant.is_enabled,
                 },
+                "answers": [],
                 "item_info": item_info,
                 "organization_info": organization_info,
                 "stock_info": stock_info,

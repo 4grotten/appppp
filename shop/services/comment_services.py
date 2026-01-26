@@ -96,9 +96,7 @@ class CommentService:
     def get_training_data(cls, assistant: Assistant):
         answers = Answer.objects.filter(assistant=assistant)
         org = Organization.objects.get(assistant=assistant)
-        catalog_url = None
-        if org.is_catalog:
-            catalog_url = AssistantDataService.get_file_url(assistant.organization)
+        catalog_url = AssistantDataService.get_file_url(assistant.organization)
         organization_info = {
             "name": org.title,
             "description": org.description or "",

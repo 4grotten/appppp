@@ -610,9 +610,8 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         stock_info = ShopItemSizeCountSetSerializer(
             size_info, many=True, context={"request": None}
         ).data
-        catalog_url = None
-        if org.is_catalog:
-            catalog_url = AssistantDataService.get_file_url(org)
+
+        catalog_url = AssistantDataService.get_file_url(org)
         org_url = f"{settings.SITE_URL}/organizations/{org.id}"
 
         marketing_info = []

@@ -107,12 +107,11 @@ class AssistantDataService:
 
     @classmethod
     def delete_organization_json(cls, organization):
-        file_path = cls._get_file_path(organization)
-        if file_path.exists():
-            try:
-                os.remove(file_path)
-            except OSError:
-                pass
+
+        path = cls._get_storage_path(organization)
+
+        if default_storage.exists(path):
+            default_storage.delete(path)
 
 # @classmethod
 #     def delete_json(cls, organization):

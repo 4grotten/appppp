@@ -324,44 +324,17 @@ class ResendOTPAPIView(APIView):
 class OTPBotWebhookView(APIView):
     """Receive incoming WhatsApp messages from WAHA.
 
-    Handles text and voice messages for the Finance AI Voice Assistant.
+    NOTE: This endpoint is now a NO-OP. All message routing goes through
+    messenger_bots webhook to avoid duplicate processing.
+    The messenger_bots webhook routes new users to OTPBotWebhookHandler.
+
+    This endpoint exists only for backwards compatibility with WAHA
+    webhook configuration. It will be removed once WAHA config is updated.
     """
 
-    permission_classes = [AllowAny]  # WAHA doesn't send auth headers
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        try:
-            data = request.data
-            event = data.get("event")
-
-            logger.info(f"[OTP_WEBHOOK] Received event: {event}")
-
-            if event == "message":
-                payload = data.get("payload", {})
-                from_number = payload.get("from", "").replace("@c.us", "")
-                body = payload.get("body", "")
-                from_me = payload.get("fromMe", False)
-                has_media = payload.get("hasMedia", False)
-
-                # Skip our own messages
-                if from_me:
-                    logger.debug("[OTP_WEBHOOK] Skipping own message")
-                    return Response({"status": "ok"})
-
-                masked_phone = f"+{from_number[:7]}***" if len(from_number) > 7 else from_number
-                logger.info(
-                    f"[OTP_WEBHOOK] Message from {masked_phone}: "
-                    f"text={body[:50] if body else '(empty)'}... hasMedia={has_media}"
-                )
-
-                # Import and use handler
-                from .webhook_handler import OTPBotWebhookHandler
-
-                handler = OTPBotWebhookHandler()
-                handler.handle(data)
-
-            return Response({"status": "ok"})
-
-        except Exception as e:
-            logger.error(f"[OTP_WEBHOOK] Error: {e}", exc_info=True)
-            return Response({"status": "error"}, status=500)
+        # NO-OP: All processing done via messenger_bots webhook
+        # Just acknowledge receipt to prevent WAHA retries
+        return Response({"status": "ok"})

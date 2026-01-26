@@ -130,6 +130,14 @@ class AnswerFileCreateView(generics.CreateAPIView):
     serializer_class = AnswerFileSerializer
     queryset = AnswerFile.objects.all()
 
+    def perform_create(self, serializer):
+        question_id = self.request.data.get('question_id')
+        is_readable = True
+        if question_id and int(question_id) == 9:
+            is_readable = False
+
+        serializer.save(is_readable_by_ai=is_readable)
+
 
 class QuestionListView(generics.ListAPIView):
     serializer_class = QuestionListSerializer

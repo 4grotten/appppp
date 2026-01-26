@@ -8,6 +8,7 @@ import uuid
 import os
 from pathlib import Path
 from django.conf import settings
+from django.utils.text import slugify
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -41,13 +42,23 @@ def upload_file_with_original_file_name(instance, filename):
 
 
 def upload_file_with_unique_name(instance, filename):
+
+    path = Path(filename)
+    ext = path.suffix
+    name = path.stem 
+    safe_name = slugify(name) 
+    if not safe_name:
+        safe_name = "file" 
+
+    unique_id = str(uuid.uuid4())[:8]
+
+    final_filename = f"{safe_name}_{unique_id}{ext}"
+
     return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(
         hashlib.sha256(
             datetime.date.today().strftime('%Y%m').encode()
         ).hexdigest()[32:-16]
-    ) / Path(str(uuid.uuid4())).with_suffix(
-        Path(filename).suffix
-    )
+    ) / Path(final_filename)
 
 def upload_transaction_file_with_unique_name(instance, filename):
     return Path(settings.MEDIA_UPLOAD_PREFIX).relative_to('/') / Path(

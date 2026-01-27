@@ -79,16 +79,24 @@ class WSCommentSerializer(serializers.ModelSerializer):
     is_blocked = serializers.SerializerMethodField(default=False, read_only=True)
     is_updated = serializers.SerializerMethodField()
     source = serializers.SerializerMethodField()
+    product_data = serializers.SerializerMethodField()
     # product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source'
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data"
         ) #'product_image',
 
-    
+    def get_product_data(self, obj):
+        """Returns first product found in text (for backwards compatibility)."""
+        if not obj.text:
+            return None
+        match = re.search(r'/p/(\d+)', obj.text)
+        if not match:
+            return None
+        return _get_product_data_by_id(match.group(1))
     # def get_product_image(self, obj):
     #
     #     if not obj.text:

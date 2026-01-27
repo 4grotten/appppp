@@ -662,7 +662,7 @@ class TelegramBotService:
             logger.info(f"[TG_SERVICE] Found {len(products)} products, sending individually")
             keyboard = service.build_main_menu_keyboard(user_language)
 
-            # Send each product as separate message
+            # Send each product as separate message and save each to DB
             for i, product in enumerate(products):
                 is_last = (i == len(products) - 1) and not footer
                 result = service.send_message(
@@ -671,20 +671,27 @@ class TelegramBotService:
                     message_id if i == 0 else None,
                     reply_markup=keyboard if is_last else None
                 )
+                # Save each product as separate message
+                if result:
+                    product_msg = BotMessage.objects.create(
+                        chat=chat,
+                        sender=BotMessage.ASSISTANT,
+                        text=product,
+                        platform_message_id=str(result.get("message_id", "")),
+                    )
+                    cls._send_ws_notification(product_msg, chat)
 
             # Send footer with keyboard
             if footer:
                 result = service.send_message(chat_id, footer, reply_markup=keyboard)
-
-            # Save combined response
-            combined_text = "\n\n".join(products) + (f"\n\n{footer}" if footer else "")
-            products_response_msg = BotMessage.objects.create(
-                chat=chat,
-                sender=BotMessage.ASSISTANT,
-                text=combined_text,
-                platform_message_id=str(result.get("message_id", "") if result else ""),
-            )
-            cls._send_ws_notification(products_response_msg, chat)
+                if result:
+                    footer_msg = BotMessage.objects.create(
+                        chat=chat,
+                        sender=BotMessage.ASSISTANT,
+                        text=footer,
+                        platform_message_id=str(result.get("message_id", "")),
+                    )
+                    cls._send_ws_notification(footer_msg, chat)
             logger.info(f"[TG_SERVICE] {len(products)} products sent individually")
         else:
             # No products - send regular response (clean ###NEXT### just in case)

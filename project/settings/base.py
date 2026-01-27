@@ -606,6 +606,10 @@ WAHA_API_KEY = config("WAHA_API_KEY", default="notasecret")
 WAHA_WEBHOOK_SECRET = config("WAHA_WEBHOOK_SECRET", default="notasecret")
 BACKEND_URL = config("BACKEND_URL", default="https://api.appofiz.com")
 
+# Telegram Bot Configuration
+# Plan ID for "All inclusive" / "Все включено" plan that includes Telegram Bot
+TELEGRAM_BOT_PLAN_ID = config("TELEGRAM_BOT_PLAN_ID", default=5, cast=int)
+
 # OTP Bot Configuration
 WAHA_OTP_SESSION_NAME = config("WAHA_OTP_SESSION_NAME", default="default")
 OTP_CODE_TTL_SECONDS = config("OTP_CODE_TTL_SECONDS", default=300, cast=int)

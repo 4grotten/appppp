@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.db import models
 from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
 from django.utils.translation import gettext_lazy as _
@@ -199,10 +200,9 @@ class PurchaseAssistantView(generics.CreateAPIView):
         update_assistant_json_task.delay(assistant.organization.id)
 
         # Bot creation is now triggered AFTER payment in accept_assistant_transaction()
-        # Check if "Все включено" plan (id=5) is selected
+        # Check if "Все включено" plan is selected
         plan_ids = [p.id for p in plans]
-        TELEGRAM_BOT_PLAN_ID = 5  # "Все включено" plan with Telegram Bot
-        will_create_bot = TELEGRAM_BOT_PLAN_ID in plan_ids
+        will_create_bot = settings.TELEGRAM_BOT_PLAN_ID in plan_ids
 
         return Response(
             {

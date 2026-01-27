@@ -4,9 +4,11 @@ import os
 import re
 import tempfile
 from datetime import date
+from io import BytesIO
 from typing import Any, Dict, Optional, Tuple
 
 import requests
+from PIL import Image
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.text import slugify
@@ -1240,10 +1242,31 @@ class BotFactoryService:
                 )
                 return False
 
-            # Save to temp file
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-                tmp_file.write(response.content)
-                tmp_path = tmp_file.name
+            # Convert image to RGB (remove transparency) and save as JPEG
+            try:
+                img = Image.open(BytesIO(response.content))
+
+                # Convert RGBA/P to RGB (remove transparency)
+                if img.mode in ('RGBA', 'P', 'LA'):
+                    # Create white background
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # Save to temp file as JPEG
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                    img.save(tmp_file, format='JPEG', quality=95)
+                    tmp_path = tmp_file.name
+
+                logger.info(f"[BOT_FACTORY] Image converted to RGB JPEG: {tmp_path}")
+
+            except Exception as img_error:
+                logger.warning(f"[BOT_FACTORY] Failed to process image: {img_error}")
+                return False
 
             try:
                 # Step 1: Send /setuserpic

@@ -438,48 +438,40 @@ class ChatListSerializer(serializers.ModelSerializer):
         return None
 
     def get_last_message(self, chat: Chat):
-        """
-        Get last message text. Uses annotated data if available (N+1 optimized),
-        otherwise falls back to query (for backwards compatibility).
-        """
-        # Try annotated values first (set by ViewSet Subquery)
+        web_text = getattr(chat, '_web_last_message_text', None)
+        if web_text:
+            return web_text
+
+        tg_text = getattr(chat, '_tg_last_message_text', None)
+        if tg_text:
+            return tg_text
+        last_message = None
         if chat.source == ChatSource.WEB:
-            annotated = getattr(chat, '_web_last_message_text', None)
-            if annotated is not None:
-                return annotated
-            # Fallback to query
             last_message = chat.chat_messages.order_by("-created_at").first()
-            return last_message.text if last_message else None
-        elif chat.bot_chat:
-            annotated = getattr(chat, '_tg_last_message_text', None)
-            if annotated is not None:
-                return annotated
-            # Fallback to query
-            last_message = chat.bot_chat.messages.order_by("-created_at").first()
-            return last_message.text if last_message else None
-        return None
+        if not last_message and chat.bot_chat_id:
+            if chat.bot_chat:
+                last_message = chat.bot_chat.messages.order_by("-created_at").first()
+
+        return last_message.text if last_message else None
 
     def get_last_message_created_at(self, chat: Chat):
-        """
-        Get last message created_at. Uses annotated data if available (N+1 optimized),
-        otherwise falls back to query (for backwards compatibility).
-        """
-        # Try annotated values first (set by ViewSet Subquery)
+        web_time = getattr(chat, '_web_last_message_time', None)
+        if web_time:
+            return web_time
+
+        tg_time = getattr(chat, '_tg_last_message_time', None)
+        if tg_time:
+            return tg_time
+
+        last_message = None
         if chat.source == ChatSource.WEB:
-            annotated = getattr(chat, '_web_last_message_time', None)
-            if annotated is not None:
-                return annotated
-            # Fallback to query
             last_message = chat.chat_messages.order_by("-created_at").first()
-            return last_message.created_at if last_message else None
-        elif chat.bot_chat:
-            annotated = getattr(chat, '_tg_last_message_time', None)
-            if annotated is not None:
-                return annotated
-            # Fallback to query
-            last_message = chat.bot_chat.messages.order_by("-created_at").first()
-            return last_message.created_at if last_message else None
-        return None
+
+        if not last_message and chat.bot_chat_id:
+            if chat.bot_chat:
+                last_message = chat.bot_chat.messages.order_by("-created_at").first()
+
+        return last_message.created_at if last_message else None
 
     def get_unread_messages_count(self, chat: Chat):
         # Use denormalized field if available

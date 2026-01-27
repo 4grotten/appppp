@@ -4062,7 +4062,11 @@ class TransactionService:
 
     @classmethod
     def _create_telegram_bot_after_payment(cls, organization, requested_by, base_url: str = None):
-        """Create Telegram bot after successful payment."""
+        """Create Telegram bot after successful payment.
+
+        Uses transaction.on_commit() to ensure Celery task starts only after
+        the database transaction is committed, avoiding race conditions.
+        """
         try:
             from messenger_bots.models import TelegramBot, BotCreationRequest, BotCreationStatus
             from messenger_bots.tasks import create_telegram_bot_task
@@ -4105,8 +4109,16 @@ class TransactionService:
 
             logging.info(f"[PAYMENT] Creating Telegram bot for org {organization.id}, request_id={creation_request.id}")
 
-            # Start async task
-            create_telegram_bot_task.delay(creation_request.id, base_url)
+            # Use on_commit to ensure Celery task starts only after transaction commits
+            # This prevents race condition where task runs before BotCreationRequest is visible
+            request_id = creation_request.id
+            task_base_url = base_url
+
+            def start_bot_creation_task():
+                logging.info(f"[PAYMENT] Transaction committed, starting bot creation task for request_id={request_id}")
+                create_telegram_bot_task.delay(request_id, task_base_url)
+
+            transaction.on_commit(start_bot_creation_task)
 
         except Exception as e:
             logging.error(f"[PAYMENT] Error creating Telegram bot: {e}", exc_info=True)

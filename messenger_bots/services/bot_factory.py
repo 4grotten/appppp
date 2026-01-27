@@ -4,9 +4,11 @@ import os
 import re
 import tempfile
 from datetime import date
+from io import BytesIO
 from typing import Any, Dict, Optional, Tuple
 
 import requests
+from PIL import Image
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.text import slugify
@@ -20,6 +22,96 @@ from telethon.errors import (
 )
 from telethon.sessions import StringSession
 from telethon.tl.types.auth import LoginTokenMigrateTo
+
+# Cyrillic to Latin transliteration map
+CYRILLIC_TO_LATIN = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+    'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+    'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+    'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
+    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+}
+
+
+def transliterate(text: str) -> str:
+    """Transliterate Cyrillic text to Latin characters."""
+    result = []
+    for char in text:
+        if char in CYRILLIC_TO_LATIN:
+            result.append(CYRILLIC_TO_LATIN[char])
+        else:
+            result.append(char)
+    return ''.join(result)
+
+
+def generate_bot_username(org_title: str, org_id: int) -> list:
+    """
+    Generate valid Telegram bot username attempts.
+
+    Telegram username rules:
+    - Must be 5-32 characters
+    - Can only contain a-z, A-Z, 0-9, and underscores
+    - Cannot start with a number or underscore
+    - Cannot have consecutive underscores
+    - Must end with 'bot' (case insensitive)
+    """
+    # Transliterate Cyrillic to Latin
+    transliterated = transliterate(org_title)
+
+    # Convert to lowercase and replace spaces/special chars with underscore
+    slug = re.sub(r'[^a-zA-Z0-9]', '_', transliterated).lower()
+
+    # Remove consecutive underscores
+    slug = re.sub(r'_+', '_', slug)
+
+    # Remove leading/trailing underscores
+    slug = slug.strip('_')
+
+    # Limit length (username must be <= 32, minus "_apz_bot" = 8 chars)
+    if len(slug) > 20:
+        slug = slug[:20].rstrip('_')
+
+    # If slug is empty after processing, use org_id
+    if not slug:
+        slug = f"org{org_id}"
+
+    # Generate username attempts
+    attempts = []
+
+    # Primary: {slug}_apz_bot
+    primary = f"{slug}_apz_bot"
+    if len(primary) >= 5:
+        attempts.append(primary)
+
+    # With org_id: {slug}{org_id}_apz_bot
+    with_id = f"{slug}{org_id}_apz_bot"
+    if len(with_id) <= 32:
+        attempts.append(with_id)
+
+    # Alternative: apz_{slug}_bot
+    alt1 = f"apz_{slug}_bot"
+    if len(alt1) >= 5 and len(alt1) <= 32:
+        attempts.append(alt1)
+
+    # Fallback: apz{org_id}_bot
+    fallback = f"apz{org_id}_bot"
+    attempts.append(fallback)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_attempts = []
+    for username in attempts:
+        if username not in seen:
+            seen.add(username)
+            unique_attempts.append(username)
+
+    return unique_attempts
+
 
 # Telegram Datacenter IPs for reference
 # DC1: 149.154.175.53 (Test)
@@ -967,20 +1059,12 @@ class BotFactoryService:
             await _save_model(request, update_fields=["status", "userbot_used"])
             logger.info("[BOT_FACTORY] Request status updated to IN_PROGRESS")
 
-            # Generate bot username
-            org_slug = slugify(request.organization.title).replace("-", "_")
-            if len(org_slug) > 20:
-                org_slug = org_slug[:20]
-            logger.debug(f"[BOT_FACTORY] Org slug: '{org_slug}'")
-
-            # Try different username variations
-            base_username = f"{org_slug}_apz_bot"
-            username_attempts = [
-                base_username,
-                f"{org_slug}_apofiz_bot",
-                f"apz_{org_slug}_bot",
-                f"{org_slug}{request.organization.id}_apz_bot",
-            ]
+            # Generate bot username using transliteration
+            username_attempts = generate_bot_username(
+                request.organization.title,
+                request.organization.id
+            )
+            logger.info(f"[BOT_FACTORY] Org title: '{request.organization.title}'")
             logger.info(f"[BOT_FACTORY] Username attempts: {username_attempts}")
 
             # Get BotFather entity
@@ -1158,10 +1242,31 @@ class BotFactoryService:
                 )
                 return False
 
-            # Save to temp file
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-                tmp_file.write(response.content)
-                tmp_path = tmp_file.name
+            # Convert image to RGB (remove transparency) and save as JPEG
+            try:
+                img = Image.open(BytesIO(response.content))
+
+                # Convert RGBA/P to RGB (remove transparency)
+                if img.mode in ('RGBA', 'P', 'LA'):
+                    # Create white background
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # Save to temp file as JPEG
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                    img.save(tmp_file, format='JPEG', quality=95)
+                    tmp_path = tmp_file.name
+
+                logger.info(f"[BOT_FACTORY] Image converted to RGB JPEG: {tmp_path}")
+
+            except Exception as img_error:
+                logger.warning(f"[BOT_FACTORY] Failed to process image: {img_error}")
+                return False
 
             try:
                 # Step 1: Send /setuserpic

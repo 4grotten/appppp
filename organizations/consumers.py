@@ -289,6 +289,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
     async def handle_ai_response(self, data, user):
         try:
             text = data.get("message", "")
+            audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
             assistant = await self.get_assistant(assistant_id)
@@ -316,6 +317,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #         serialized_data['product_image'] = image_url
             #         logger.info(f"Attached image to response: {image_url}")
 
+            if audio_base64:
+                serialized_data['audio'] = audio_base64
+                logger.info("Audio attached to response")
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
@@ -585,10 +589,11 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
         decoded_headers = {
             k.decode("utf-8"): v.decode("utf-8") for k, v in self.headers
         }
-        answers = Answer.objects.filter(assistant=assistant)
+
         org = comment.item.organization
         item_info = ItemInfoSerializer(comment.item).data
         assistant = comment.item.organization.assistant
+        answers = Answer.objects.filter(assistant=assistant)
         # organization_info = CommentService.get_training_data(assistant=assistant)
         organization_info = {
             "name": org.title,

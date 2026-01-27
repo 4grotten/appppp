@@ -261,6 +261,12 @@ class ForgotPasswordSerializer(serializers.Serializer):
     #    type = serializers.ChoiceField(choices=FORGOT_PASSWORD_CHOICES)
     #    email = serializers.CharField(allow_null=True)
     phone_number = serializers.CharField()
+    method = serializers.ChoiceField(
+        choices=['sms', 'whatsapp', 'email'],
+        required=False,
+        allow_null=True,
+        default=None
+    )
 
 
 class PhoneNumberSerializer(serializers.ModelSerializer):

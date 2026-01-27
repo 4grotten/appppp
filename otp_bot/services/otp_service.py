@@ -281,6 +281,20 @@ class OTPService:
             )
         return phone
 
+    def is_available(self) -> bool:
+        """Check if OTP bot is connected and ready to send messages."""
+        bot = OTPBot.objects.first()
+        if not bot:
+            return False
+        if bot.status == OTPBotStatus.CONNECTED:
+            return True
+        # Try quick health check
+        if self.waha.is_healthy():
+            bot.status = OTPBotStatus.CONNECTED
+            bot.save(update_fields=["status", "updated_at"])
+            return True
+        return False
+
     def _ensure_bot_connected(self) -> None:
         """Ensure OTP bot is connected and ready."""
         bot = OTPBot.objects.first()

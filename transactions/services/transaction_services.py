@@ -3988,15 +3988,23 @@ class TransactionService:
             logging.error(f"[PAYMENT] Error creating receipt for assistant transaction {transaction_obj.id}: {e}")
 
         assistant = user_assistant.assistant
+        organization = transaction_obj.organization
 
         # Create Telegram bot and enable catalog if "Все включено" plan (id=5) was selected
-        TELEGRAM_BOT_PLAN_ID = 5
+        TELEGRAM_BOT_PLAN_ID = getattr(settings, 'TELEGRAM_BOT_PLAN_ID', 5)
         plan_ids = original_payment_info.get("plan_ids", [])
         base_url = original_payment_info.get("base_url")
 
+        logging.info(
+            f"[PAYMENT] Processing assistant transaction for org {organization.id}: "
+            f"plan_ids={plan_ids}, TELEGRAM_BOT_PLAN_ID={TELEGRAM_BOT_PLAN_ID}, "
+            f"current is_catalog={organization.is_catalog}"
+        )
+
         if TELEGRAM_BOT_PLAN_ID in plan_ids:
-            # Enable catalog mode for AI assistant
-            organization = transaction_obj.organization
+            logging.info(f"[PAYMENT] Telegram Bot plan found in plan_ids for org {organization.id}")
+
+            # Enable catalog mode for AI assistant (handle None, False, or missing value)
             if not organization.is_catalog:
                 organization.is_catalog = True
                 organization.save(update_fields=["is_catalog"])
@@ -4009,11 +4017,18 @@ class TransactionService:
                     logging.info(f"[PAYMENT] Generated initial catalog JSON for org {organization.id}")
                 except Exception as e:
                     logging.error(f"[PAYMENT] Failed to generate catalog JSON: {e}")
+            else:
+                logging.info(f"[PAYMENT] is_catalog already True for org {organization.id}, skipping")
 
             cls._create_telegram_bot_after_payment(
                 organization=organization,
                 requested_by=transaction_obj.client,
                 base_url=base_url,
+            )
+        else:
+            logging.info(
+                f"[PAYMENT] Telegram Bot plan ({TELEGRAM_BOT_PLAN_ID}) NOT in plan_ids {plan_ids} "
+                f"for org {organization.id}, skipping bot creation"
             )
 
         sent_notification.delay(

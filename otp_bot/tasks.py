@@ -2,6 +2,7 @@
 
 import base64
 import logging
+from typing import Optional
 
 from celery import shared_task
 from django.utils import timezone
@@ -207,7 +208,7 @@ def _download_voice_audio(
     message_id: str,
     payload: dict,
     waha,
-) -> bytes | None:
+) -> Optional[bytes]:
     """Download voice audio using multiple fallback methods.
 
     Tries in order:

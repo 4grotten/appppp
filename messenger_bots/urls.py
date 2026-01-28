@@ -10,6 +10,8 @@ from messenger_bots.views import (
     WhatsAppWAHASessionAPIView,
     WhatsAppWAHAQRCodeAPIView,
     WhatsAppRebindAPIView,
+    WhatsAppSessionLogoutAPIView,
+    WhatsAppSessionDeleteAPIView,
     BotChatsAPIView,
     BotChatMessagesAPIView,
     BotStatusAPIView,
@@ -69,6 +71,16 @@ urlpatterns = [
         "whatsapp/waha/<int:organization_id>/session/rebind/",
         WhatsAppRebindAPIView.as_view(),
         name="whatsapp-waha-rebind",
+    ),
+    path(
+        "whatsapp/waha/<int:organization_id>/session/logout/",
+        WhatsAppSessionLogoutAPIView.as_view(),
+        name="whatsapp-waha-logout",
+    ),
+    path(
+        "whatsapp/waha/<int:organization_id>/session/delete/",
+        WhatsAppSessionDeleteAPIView.as_view(),
+        name="whatsapp-waha-delete",
     ),
     path(
         "whatsapp/waha/<int:organization_id>/qr/",

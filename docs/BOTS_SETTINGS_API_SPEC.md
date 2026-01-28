@@ -26,7 +26,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ### 2.1. Telegram Bot Settings
 
-**URL:** `POST /api/bots/telegram/<org_id>/settings/`
+**URL:** `POST /api/v1/messenger-bots/telegram/<org_id>/settings/`
 
 Обновление имени, описания и/или аватарки бота через Telegram Bot API.
 
@@ -59,7 +59,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ---
 
-**URL:** `DELETE /api/bots/telegram/<org_id>/settings/photo/`
+**URL:** `DELETE /api/v1/messenger-bots/telegram/<org_id>/settings/photo/`
 
 Удаление аватарки бота.
 
@@ -72,7 +72,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ### 2.2. Telegram AI Toggle
 
-**URL:** `PATCH /api/bots/telegram/<org_id>/`
+**URL:** `PATCH /api/v1/messenger-bots/telegram/<org_id>/`
 
 **Request:**
 ```json
@@ -88,7 +88,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ### 2.3. WhatsApp AI Toggle
 
-**URL:** `PATCH /api/bots/whatsapp/waha/<org_id>/`
+**URL:** `PATCH /api/v1/messenger-bots/whatsapp/waha/<org_id>/`
 
 **Request:**
 ```json
@@ -104,7 +104,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ### 2.4. WhatsApp Phone Rebind (перепривязка номера)
 
-**URL:** `POST /api/bots/whatsapp/waha/<org_id>/session/rebind/`
+**URL:** `POST /api/v1/messenger-bots/whatsapp/waha/<org_id>/session/rebind/`
 
 Перепривязка WhatsApp номера: останавливает текущую сессию, сохраняет старый номер, запускает новую сессию.
 
@@ -132,7 +132,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 
 ### 2.5. Получение текущих настроек
 
-**URL:** `GET /api/bots/telegram/<org_id>/` (существующий эндпоинт, дополняем)
+**URL:** `GET /api/v1/messenger-bots/telegram/<org_id>/` (существующий эндпоинт, дополняем)
 
 **Response — добавляем поле:**
 ```json
@@ -142,7 +142,7 @@ phone_changed_at = DateTimeField(null=True, blank=True)  # Дата смены �
 }
 ```
 
-**URL:** `GET /api/bots/whatsapp/waha/<org_id>/` (существующий эндпоинт, дополняем)
+**URL:** `GET /api/v1/messenger-bots/whatsapp/waha/<org_id>/` (существующий эндпоинт, дополняем)
 
 **Response — добавляем поля:**
 ```json
@@ -242,15 +242,15 @@ def _disable_ai_for_organization(organization):
 
 ## 5. Чек-лист реализации
 
-- [ ] Добавить `is_ai_enabled` в TelegramBot
-- [ ] Добавить `is_ai_enabled`, `previous_phone_number`, `phone_changed_at` в WhatsAppBot
-- [ ] Создать миграцию
-- [ ] Создать `TelegramBotSettingsAPIView` (PATCH для name/description, POST для photo, DELETE для photo)
-- [ ] Добавить PATCH с `is_ai_enabled` в существующие TelegramBotAPIView и WhatsAppWAHABotAPIView
-- [ ] Создать `WhatsAppRebindAPIView` (POST для перепривязки)
-- [ ] Создать сервис `TelegramBotSettingsService` (вызовы к Telegram API)
-- [ ] Добавить проверку `is_ai_enabled` в telegram.py и tasks.py
+- [x] Добавить `is_ai_enabled` в TelegramBot
+- [x] Добавить `is_ai_enabled`, `previous_phone_number`, `phone_changed_at` в WhatsAppBot
+- [x] Создать миграцию
+- [x] Создать `TelegramBotSettingsAPIView` (POST для name/description/photo, DELETE для photo)
+- [x] Добавить PATCH с `is_ai_enabled` в существующие TelegramBotAPIView и WhatsAppWAHABotAPIView
+- [x] Создать `WhatsAppRebindAPIView` (POST для перепривязки)
+- [x] Создать сервис `TelegramBotService` (вызовы к Telegram API)
+- [x] Добавить проверку `is_ai_enabled` в telegram.py и tasks.py
 - [ ] Добавить проверку подписки (`check_subscription_active`) в telegram.py и tasks.py
-- [ ] Обновить сериализаторы для новых полей
-- [ ] Добавить URL-маршруты
-- [ ] Логирование всех операций
+- [x] Обновить сериализаторы для новых полей
+- [x] Добавить URL-маршруты
+- [x] Логирование всех операций

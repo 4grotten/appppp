@@ -2,14 +2,20 @@
 
 Not tied to WhatsAppBot model — uses session_name directly from settings.
 Only implements methods needed for OTP: send_text, session management, QR.
+
+Uses shared HTTP client with:
+- Connection pooling
+- Automatic retries on 429/502/503/504
+- Default timeout
 """
 
 import base64
 import logging
 from typing import Dict, Optional
 
-import requests
 from django.conf import settings
+
+from messenger_bots.services.whatsapp.http_client import waha_request
 
 logger = logging.getLogger(__name__)
 
@@ -24,38 +30,61 @@ class WAHAOTPError(Exception):
 
 
 class WAHAOTPClient:
-    """Simplified WAHA client for OTP bot operations."""
+    """Simplified WAHA client for OTP bot operations.
+
+    Uses shared HTTP session from messenger_bots for connection pooling
+    and automatic retries.
+    """
 
     def __init__(self, session_name: Optional[str] = None) -> None:
         self.base_url: str = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
-        self.api_key: str = getattr(settings, "WAHA_API_KEY", "")
         self.session_name: str = session_name or getattr(
             settings, "WAHA_OTP_SESSION_NAME", "default"
         )
 
-    def _headers(self) -> Dict[str, str]:
-        return {
-            "X-Api-Key": self.api_key,
-            "Content-Type": "application/json",
-        }
+    def _request(
+        self,
+        method: str,
+        endpoint: str,
+        data: Optional[Dict] = None,
+        timeout: tuple = None,
+    ) -> Dict:
+        """Make HTTP request to WAHA API using shared connection pool.
 
-    def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict:
-        """Make HTTP request to WAHA API."""
+        Uses waha_request() which provides:
+        - Connection pooling
+        - Automatic retries on 429/502/503/504
+        - Pre-configured headers
+        - Default timeout
+
+        Args:
+            method: HTTP method
+            endpoint: API endpoint
+            data: Request body
+            timeout: Optional (connect, read) timeout tuple
+
+        Returns:
+            Response JSON as dict
+
+        Raises:
+            WAHAOTPError: On HTTP errors or connection failures
+        """
         url = f"{self.base_url}{endpoint}"
         try:
-            response = requests.request(
+            response = waha_request(
                 method=method,
                 url=url,
-                headers=self._headers(),
                 json=data,
-                timeout=30,
+                timeout=timeout,
             )
             if response.status_code >= 400:
                 error_text = response.text[:200]
                 logger.error(f"[WAHA_OTP] {method} {endpoint}: {response.status_code} {error_text}")
                 raise WAHAOTPError(error_text, status_code=response.status_code)
             return response.json() if response.text else {}
-        except requests.exceptions.RequestException as e:
+        except WAHAOTPError:
+            raise
+        except Exception as e:
             logger.error(f"[WAHA_OTP] Connection error: {e}")
             raise WAHAOTPError(f"WAHA connection error: {str(e)}")
 
@@ -97,6 +126,26 @@ class WAHAOTPClient:
         except WAHAOTPError:
             return False
 
+    def logout_session(self) -> bool:
+        """Logout from WhatsApp (requires QR re-scan to reconnect)."""
+        logger.info(f"[WAHA_OTP] Logging out session: {self.session_name}")
+        try:
+            self._request("POST", "/api/sessions/logout", {
+                "name": self.session_name,
+            })
+            return True
+        except WAHAOTPError:
+            return False
+
+    def delete_session(self) -> bool:
+        """Delete session completely (removes all session data)."""
+        logger.info(f"[WAHA_OTP] Deleting session: {self.session_name}")
+        try:
+            self._request("DELETE", f"/api/sessions/{self.session_name}")
+            return True
+        except WAHAOTPError:
+            return False
+
     def get_session_status(self) -> str:
         """Get session status string (WORKING, SCAN_QR, STOPPED, etc.)."""
         try:
@@ -109,7 +158,7 @@ class WAHAOTPClient:
         """Get QR code for authentication as base64 PNG string."""
         url = f"{self.base_url}/api/{self.session_name}/auth/qr"
         try:
-            response = requests.get(url, headers=self._headers(), timeout=15)
+            response = waha_request("GET", url, timeout=(5, 15))
             if response.status_code >= 400:
                 logger.error(f"[WAHA_OTP] QR request failed: {response.status_code}")
                 return None
@@ -129,7 +178,7 @@ class WAHAOTPClient:
                 if response.content:
                     return base64.b64encode(response.content).decode("utf-8")
                 return None
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"[WAHA_OTP] QR connection error: {e}")
             return None
 
@@ -247,11 +296,7 @@ class WAHAOTPClient:
 
         try:
             url = f"{self.base_url}/api/{self.session_name}/messages/{message_id}/download"
-            response = requests.get(
-                url,
-                headers=self._headers(),
-                timeout=30,
-            )
+            response = waha_request("GET", url, timeout=(5, 30))
 
             if response.status_code >= 400:
                 logger.error(f"[WAHA_OTP] Download error: {response.status_code}")
@@ -260,6 +305,6 @@ class WAHAOTPClient:
             logger.info(f"[WAHA_OTP] Downloaded {len(response.content)} bytes")
             return response.content
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"[WAHA_OTP] Download error: {e}")
             return None

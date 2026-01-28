@@ -795,12 +795,14 @@ class TelegramBotSettingsAPIView(APIView):
                     **({"error": result.get("description")} if not result.get("ok") else {}),
                 }
 
-        # Handle photo file upload
+        # Handle photo: either file upload OR photo_url
         photo = request.FILES.get("photo")
+        photo_url = request.data.get("photo_url")
+
         if photo:
+            # Direct file upload
             has_any_field = True
-            logger.info(f"[TG_SETTINGS] Setting photo: name={photo.name}, size={photo.size}, content_type={photo.content_type}")
-            # Validate file type
+            logger.info(f"[TG_SETTINGS] Setting photo from file: name={photo.name}, size={photo.size}, content_type={photo.content_type}")
             content_type = photo.content_type
             if content_type not in ("image/jpeg", "image/png"):
                 results["photo"] = {"success": False, "error": "Photo must be JPEG or PNG"}
@@ -813,6 +815,16 @@ class TelegramBotSettingsAPIView(APIView):
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
                 }
+        elif photo_url:
+            # Download from URL (e.g., from /api/v1/images/ response)
+            has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting photo from URL: {photo_url}")
+            result = service.set_my_photo_from_url(photo_url)
+            logger.info(f"[TG_SETTINGS] setMyPhoto from URL response: {result}")
+            results["photo"] = {
+                "success": result.get("ok", False),
+                **({"error": result.get("description")} if not result.get("ok") else {}),
+            }
 
         if not has_any_field:
             return Response(

@@ -369,15 +369,16 @@ class AssistantChatsListView(generics.ListAPIView):
 
         # Get all chats (web + telegram) for this assistant
         # Import models for subquery annotations
-        from organizations.models import ChatMessage
+        from shop.models import Comment  # Web chats store messages in Comment model
         from messenger_bots.models import BotMessage
 
         # Subqueries for last message (eliminates N+1)
-        web_last_msg_subquery = ChatMessage.objects.filter(
+        # Web chats use Comment model (related_name='comments')
+        web_last_msg_subquery = Comment.objects.filter(
             chat=OuterRef('pk')
         ).order_by('-created_at').values('text')[:1]
 
-        web_last_msg_time_subquery = ChatMessage.objects.filter(
+        web_last_msg_time_subquery = Comment.objects.filter(
             chat=OuterRef('pk')
         ).order_by('-created_at').values('created_at')[:1]
 
@@ -403,8 +404,8 @@ class AssistantChatsListView(generics.ListAPIView):
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            # For web chats use chat_messages, for telegram chats use bot_chat.messages
-            web_last_message_at=Max('chat_messages__created_at'),
+            # For web chats use comments, for telegram chats use bot_chat.messages
+            web_last_message_at=Max('comments__created_at'),
             telegram_last_message_at=Max('bot_chat__messages__created_at'),
         ).annotate(
             last_message_created_at=Case(

@@ -753,6 +753,9 @@ class TelegramBotSettingsAPIView(APIView):
     def post(self, request, organization_id):
         """Update bot settings: name, description, and/or photo (multipart/form-data)."""
         logger.info(f"[TG_SETTINGS] POST settings for org_id={organization_id}")
+        logger.info(f"[TG_SETTINGS] Content-Type: {request.content_type}")
+        logger.info(f"[TG_SETTINGS] request.data keys: {list(request.data.keys())}")
+        logger.info(f"[TG_SETTINGS] request.FILES keys: {list(request.FILES.keys())}")
 
         org, bot, error_response = self._get_bot(request, organization_id)
         if error_response:

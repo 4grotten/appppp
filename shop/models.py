@@ -427,6 +427,12 @@ class Comment(TimestampModel):
     )
     is_read = models.BooleanField(default=False)
     text = models.TextField(max_length=2000)
+    audio = models.FileField(
+        upload_to='comments/audio/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        verbose_name="Голосовое сообщение"
+    )
 
     def __str__(self):
         return f"Comment with ID {self.id}"

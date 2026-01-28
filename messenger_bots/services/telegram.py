@@ -144,6 +144,95 @@ class TelegramBotService:
             logger.info(f"[TG_SERVICE] Bot photo deleted")
         return result
 
+    def get_my_name(self) -> dict:
+        """Get bot's name via Telegram API (getMyName)."""
+        result = self._make_request("getMyName")
+        if result.get("ok"):
+            name = result.get("result", {}).get("name", "")
+            logger.info(f"[TG_SERVICE] Got bot name: '{name}'")
+        return result
+
+    def get_my_description(self) -> dict:
+        """Get bot's description via Telegram API (getMyDescription)."""
+        result = self._make_request("getMyDescription")
+        if result.get("ok"):
+            description = result.get("result", {}).get("description", "")
+            logger.info(f"[TG_SERVICE] Got bot description: '{description[:50]}...'")
+        return result
+
+    def get_my_photo_url(self) -> Optional[str]:
+        """Get bot's profile photo URL via Telegram API."""
+        try:
+            # First get bot's user_id from getMe
+            me_result = self._make_request("getMe")
+            if not me_result.get("ok"):
+                return None
+
+            bot_id = me_result.get("result", {}).get("id")
+            if not bot_id:
+                return None
+
+            # Get bot's profile photos
+            photos_result = self._make_request("getUserProfilePhotos", {"user_id": bot_id, "limit": 1})
+            if not photos_result.get("ok"):
+                return None
+
+            photos = photos_result.get("result", {}).get("photos", [])
+            if not photos:
+                logger.info(f"[TG_SERVICE] Bot has no profile photo")
+                return None
+
+            # Get the largest photo (last in array)
+            photo_sizes = photos[0]
+            if not photo_sizes:
+                return None
+
+            file_id = photo_sizes[-1].get("file_id")
+            if not file_id:
+                return None
+
+            # Get file path
+            file_result = self._make_request("getFile", {"file_id": file_id})
+            if not file_result.get("ok"):
+                return None
+
+            file_path = file_result.get("result", {}).get("file_path")
+            if not file_path:
+                return None
+
+            # Construct download URL
+            photo_url = f"https://api.telegram.org/file/bot{self.token}/{file_path}"
+            logger.info(f"[TG_SERVICE] Got bot photo URL")
+            return photo_url
+
+        except Exception as e:
+            logger.warning(f"[TG_SERVICE] Failed to get bot photo: {e}")
+            return None
+
+    def get_bot_settings(self) -> dict:
+        """Get all bot settings from Telegram API (name, description, username, photo)."""
+        settings = {
+            "username": self.bot.bot_username,
+            "name": None,
+            "description": None,
+            "photo_url": None,
+        }
+
+        # Get name
+        name_result = self.get_my_name()
+        if name_result.get("ok"):
+            settings["name"] = name_result.get("result", {}).get("name", "")
+
+        # Get description
+        desc_result = self.get_my_description()
+        if desc_result.get("ok"):
+            settings["description"] = desc_result.get("result", {}).get("description", "")
+
+        # Get photo
+        settings["photo_url"] = self.get_my_photo_url()
+
+        return settings
+
     def send_message(
         self,
         chat_id: str,

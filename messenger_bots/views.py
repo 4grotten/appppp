@@ -731,6 +731,21 @@ class TelegramBotSettingsAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    def get(self, request, organization_id):
+        """Get current bot settings from Telegram API (name, description, username)."""
+        logger.info(f"[TG_SETTINGS] GET settings for org_id={organization_id}")
+
+        org, bot, error_response = self._get_bot(request, organization_id)
+        if error_response:
+            return error_response
+
+        service = TelegramBotService(bot)
+        settings = service.get_bot_settings()
+
+        logger.info(f"[TG_SETTINGS] Got settings: name='{settings.get('name')}', description='{settings.get('description', '')[:30]}...'")
+
+        return Response(settings)
+
     def post(self, request, organization_id):
         """Update bot settings: name, description, and/or photo (multipart/form-data)."""
         logger.info(f"[TG_SETTINGS] POST settings for org_id={organization_id}")
@@ -749,10 +764,12 @@ class TelegramBotSettingsAPIView(APIView):
 
         if name is not None:
             has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting name: '{name}' (len={len(name)})")
             if len(name) > 64:
                 results["name"] = {"success": False, "error": "Name must be 64 characters or less"}
             else:
                 result = service.set_my_name(name)
+                logger.info(f"[TG_SETTINGS] setMyName response: {result}")
                 results["name"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
@@ -760,10 +777,12 @@ class TelegramBotSettingsAPIView(APIView):
 
         if description is not None:
             has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting description: '{description[:50]}...' (len={len(description)})")
             if len(description) > 512:
                 results["description"] = {"success": False, "error": "Description must be 512 characters or less"}
             else:
                 result = service.set_my_description(description)
+                logger.info(f"[TG_SETTINGS] setMyDescription response: {result}")
                 results["description"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
@@ -773,6 +792,7 @@ class TelegramBotSettingsAPIView(APIView):
         photo = request.FILES.get("photo")
         if photo:
             has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting photo: name={photo.name}, size={photo.size}, content_type={photo.content_type}")
             # Validate file type
             content_type = photo.content_type
             if content_type not in ("image/jpeg", "image/png"):
@@ -781,6 +801,7 @@ class TelegramBotSettingsAPIView(APIView):
                 results["photo"] = {"success": False, "error": "Photo must be 5MB or less"}
             else:
                 result = service.set_my_photo(photo)
+                logger.info(f"[TG_SETTINGS] setMyPhoto response: {result}")
                 results["photo"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),

@@ -116,9 +116,10 @@ class OTPBotAdmin(admin.ModelAdmin):
             )
             # Rebind - change phone number
             url = reverse("admin:otp_bot_otpbot_rebind", args=[obj.pk])
+            confirm_msg = "Change phone number? Current session will be disconnected and you will need to scan QR with the new phone."
             buttons.append(
                 f'<a href="{url}" style="{base_style} background: #17a2b8;" '
-                f'onclick="return confirm(\'Change phone number? Current session will be disconnected and you\\'ll need to scan QR with the new phone.\');">'
+                f"onclick=\"return confirm('{confirm_msg}');\">"
                 f'Rebind Number</a>'
             )
 

@@ -139,30 +139,63 @@ class TelegramBotService:
         return result
 
     def set_my_photo(self, photo_file) -> dict:
-        """Set bot's profile photo via Telegram API (setMyPhoto). Accepts file object."""
+        """
+        Set bot's profile photo via BotFather userbot.
+
+        NOTE: Telegram Bot API does NOT have setMyPhoto method.
+        Bot photos can only be changed via BotFather.
+        This method uses a userbot to send /setuserpic command to BotFather.
+
+        Accepts file object.
+        """
         # Get filename and content type from uploaded file
         filename = getattr(photo_file, 'name', 'photo.jpg')
         content_type = getattr(photo_file, 'content_type', 'image/jpeg')
 
-        # Read file content and log first bytes for debugging
-        photo_file.seek(0)  # Ensure we're at the beginning
+        # Read file content
+        photo_file.seek(0)
         content = photo_file.read()
-        logger.info(f"[TG_SERVICE] Photo upload: filename={filename}, size={len(content)}, content_type={content_type}")
+        logger.info(f"[TG_SERVICE] Photo upload via userbot: filename={filename}, size={len(content)}, content_type={content_type}")
         logger.debug(f"[TG_SERVICE] Photo first 20 bytes: {content[:20]}")
 
-        # Check if it's a valid image (JPEG starts with FFD8, PNG with 89504E47)
+        # Validate
         if len(content) < 100:
-            logger.error(f"[TG_SERVICE] Photo too small ({len(content)} bytes), likely not a real image")
+            logger.error(f"[TG_SERVICE] Photo too small ({len(content)} bytes)")
             return {"ok": False, "description": f"Photo too small ({len(content)} bytes). Send a real image file."}
 
-        files = {"photo": (filename, content, content_type)}
-        result = self._make_file_request("setMyPhoto", files=files)
-        if result.get("ok"):
-            logger.info(f"[TG_SERVICE] Bot photo updated")
-        return result
+        # Get bot username
+        if not self.bot.bot_username:
+            # Try to fetch it
+            me = self.get_me()
+            if not me or not self.bot.bot_username:
+                return {"ok": False, "description": "Cannot determine bot username. Please configure the bot first."}
+
+        # Use userbot task to set photo via BotFather
+        from messenger_bots.tasks import userbot_set_bot_photo_task
+
+        try:
+            task = userbot_set_bot_photo_task.delay(
+                self.bot.bot_username,
+                content,
+                content_type
+            )
+            # Wait for result with timeout
+            result = task.get(timeout=90)
+
+            if result.get("success"):
+                logger.info(f"[TG_SERVICE] Bot photo updated via BotFather")
+                return {"ok": True, "description": "Photo updated via BotFather"}
+            else:
+                error = result.get("error", "Unknown error")
+                logger.error(f"[TG_SERVICE] Failed to set photo via BotFather: {error}")
+                return {"ok": False, "description": error}
+
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Userbot task failed: {e}")
+            return {"ok": False, "description": f"Failed to set photo via BotFather: {str(e)}"}
 
     def set_my_photo_from_url(self, photo_url: str) -> dict:
-        """Download image from URL and set as bot's profile photo."""
+        """Download image from URL and set as bot's profile photo via BotFather."""
         import requests as req
         from urllib.parse import urlparse
 
@@ -191,23 +224,47 @@ class TelegramBotService:
                 logger.error(f"[TG_SERVICE] Invalid content type: {content_type}")
                 return {"ok": False, "description": f"Invalid content type: {content_type}. Expected image."}
 
-            # Upload to Telegram
-            files = {"photo": (filename, content, content_type)}
-            result = self._make_file_request("setMyPhoto", files=files)
-            if result.get("ok"):
-                logger.info(f"[TG_SERVICE] Bot photo updated from URL")
-            return result
+            # Get bot username
+            if not self.bot.bot_username:
+                me = self.get_me()
+                if not me or not self.bot.bot_username:
+                    return {"ok": False, "description": "Cannot determine bot username"}
+
+            # Use userbot task to set photo via BotFather
+            from messenger_bots.tasks import userbot_set_bot_photo_task
+
+            task = userbot_set_bot_photo_task.delay(
+                self.bot.bot_username,
+                content,
+                content_type
+            )
+            result = task.get(timeout=90)
+
+            if result.get("success"):
+                logger.info(f"[TG_SERVICE] Bot photo updated from URL via BotFather")
+                return {"ok": True, "description": "Photo updated via BotFather"}
+            else:
+                error = result.get("error", "Unknown error")
+                logger.error(f"[TG_SERVICE] Failed to set photo from URL: {error}")
+                return {"ok": False, "description": error}
 
         except req.RequestException as e:
             logger.error(f"[TG_SERVICE] Failed to download photo from URL: {e}")
             return {"ok": False, "description": f"Failed to download photo: {str(e)}"}
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Userbot task failed: {e}")
+            return {"ok": False, "description": f"Failed to set photo via BotFather: {str(e)}"}
 
     def delete_my_photo(self) -> dict:
-        """Delete bot's profile photo via Telegram API (deleteMyPhoto)."""
-        result = self._make_request("deleteMyPhoto")
-        if result.get("ok"):
-            logger.info(f"[TG_SERVICE] Bot photo deleted")
-        return result
+        """
+        Delete bot's profile photo.
+
+        NOTE: Telegram Bot API does NOT have deleteMyPhoto method.
+        Bot photos can only be deleted via BotFather (/deleteuserpic).
+        This is not currently implemented via userbot.
+        """
+        logger.warning("[TG_SERVICE] delete_my_photo is not available via Bot API. Use BotFather /deleteuserpic command.")
+        return {"ok": False, "description": "Bot photo deletion is not available via API. Use BotFather /deleteuserpic command."}
 
     def get_my_name(self) -> dict:
         """Get bot's name via Telegram API (getMyName)."""

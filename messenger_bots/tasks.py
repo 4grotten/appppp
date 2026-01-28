@@ -250,6 +250,33 @@ def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
     return result
 
 
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
+def userbot_set_bot_photo_task(bot_username: str, photo_content: bytes, content_type: str = "image/jpeg"):
+    """
+    Set bot profile photo via BotFather using userbot.
+
+    This is the only way to change bot's profile photo programmatically
+    since Telegram Bot API doesn't have setMyPhoto method.
+
+    Args:
+        bot_username: Bot username without @ (e.g., "my_bot")
+        photo_content: Image bytes (JPEG or PNG)
+        content_type: MIME type of the image
+
+    Returns:
+        {"success": True/False, "error": str}
+    """
+    logger.info(f"[USERBOT_TASK] set_bot_photo started for @{bot_username}")
+
+    from messenger_bots.services.bot_factory import BotFactoryService
+
+    # Use any available authenticated userbot
+    result = _run_async(BotFactoryService._set_bot_photo_async(None, bot_username, photo_content, content_type))
+
+    logger.info(f"[USERBOT_TASK] set_bot_photo result: {result}")
+    return result
+
+
 CHAT_HISTORY_LIMIT = 5
 
 # Telegram message delay (seconds) - used for countdown scheduling

@@ -654,8 +654,8 @@ class TelegramBotAPIView(APIView):
             )
 
     def patch(self, request, organization_id):
-        """Toggle AI assistant on/off."""
-        logger.info(f"[TG_API] PATCH is_ai_enabled for org_id={organization_id}")
+        """Partial update of Telegram bot settings (is_active, is_ai_enabled)."""
+        logger.info(f"[TG_API] PATCH for org_id={organization_id}, data={request.data}")
 
         org = self.get_organization(request, organization_id)
         if not org:
@@ -672,18 +672,29 @@ class TelegramBotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_ai_enabled = request.data.get("is_ai_enabled")
-        if is_ai_enabled is None:
+        update_fields = []
+
+        # Handle is_ai_enabled
+        if "is_ai_enabled" in request.data:
+            bot.is_ai_enabled = bool(request.data["is_ai_enabled"])
+            update_fields.append("is_ai_enabled")
+            logger.info(f"[TG_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        # Handle is_active
+        if "is_active" in request.data:
+            bot.is_active = bool(request.data["is_active"])
+            update_fields.append("is_active")
+            logger.info(f"[TG_API] Bot {'activated' if bot.is_active else 'deactivated'} for org {organization_id}")
+
+        if not update_fields:
             return Response(
-                {"error": "is_ai_enabled field is required"},
+                {"error": "No valid fields provided. Supported: is_ai_enabled, is_active"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        bot.is_ai_enabled = bool(is_ai_enabled)
-        bot.save(update_fields=["is_ai_enabled"])
-        logger.info(f"[TG_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+        bot.save(update_fields=update_fields)
 
-        return Response({"is_ai_enabled": bot.is_ai_enabled})
+        return Response(TelegramBotSerializer(bot).data)
 
 
 class TelegramBotSettingsAPIView(APIView):
@@ -1427,8 +1438,8 @@ class WhatsAppWAHABotAPIView(APIView):
             )
 
     def patch(self, request, organization_id):
-        """Toggle AI assistant on/off for WhatsApp bot."""
-        logger.info(f"[WAHA_API] PATCH is_ai_enabled for org_id={organization_id}")
+        """Partial update of WhatsApp bot settings (is_active, is_ai_enabled)."""
+        logger.info(f"[WAHA_API] PATCH for org_id={organization_id}, data={request.data}")
 
         org = self.get_organization(request, organization_id)
         if not org:
@@ -1445,18 +1456,29 @@ class WhatsAppWAHABotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_ai_enabled = request.data.get("is_ai_enabled")
-        if is_ai_enabled is None:
+        update_fields = []
+
+        # Handle is_ai_enabled
+        if "is_ai_enabled" in request.data:
+            bot.is_ai_enabled = bool(request.data["is_ai_enabled"])
+            update_fields.append("is_ai_enabled")
+            logger.info(f"[WAHA_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        # Handle is_active
+        if "is_active" in request.data:
+            bot.is_active = bool(request.data["is_active"])
+            update_fields.append("is_active")
+            logger.info(f"[WAHA_API] Bot {'activated' if bot.is_active else 'deactivated'} for org {organization_id}")
+
+        if not update_fields:
             return Response(
-                {"error": "is_ai_enabled field is required"},
+                {"error": "No valid fields provided. Supported: is_ai_enabled, is_active"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        bot.is_ai_enabled = bool(is_ai_enabled)
-        bot.save(update_fields=["is_ai_enabled"])
-        logger.info(f"[WAHA_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+        bot.save(update_fields=update_fields)
 
-        return Response({"is_ai_enabled": bot.is_ai_enabled})
+        return Response(WhatsAppBotSerializer(bot).data)
 
 
 class WhatsAppWAHASessionAPIView(APIView):
@@ -1711,16 +1733,20 @@ class WhatsAppRebindAPIView(APIView):
         bot.previous_phone_number = bot.connected_phone_number
         bot.phone_changed_at = timezone.now()
 
-        # 2. Stop current session
+        # 2. Logout and delete current session completely
         try:
-            service.stop_session()
-            logger.info(f"[WA_REBIND] Session stopped for org {organization_id}")
+            # First logout (disconnects WhatsApp account)
+            service.logout_session()
+            logger.info(f"[WA_REBIND] Session logged out for org {organization_id}")
         except Exception as e:
-            logger.error(f"[WA_REBIND] Failed to stop session: {e}")
-            return Response(
-                {"error": f"Failed to stop current session: {str(e)}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            logger.warning(f"[WA_REBIND] Logout failed (continuing): {e}")
+
+        try:
+            # Then delete session data from WAHA
+            service.delete_session()
+            logger.info(f"[WA_REBIND] Session deleted for org {organization_id}")
+        except Exception as e:
+            logger.warning(f"[WA_REBIND] Delete failed (continuing): {e}")
 
         # 3. Clear current phone and update status
         bot.connected_phone_number = None
@@ -1758,3 +1784,133 @@ class WhatsAppRebindAPIView(APIView):
             "session_status": bot.session_status,
             "qr_code": qr_code,
         })
+
+
+class WhatsAppSessionLogoutAPIView(APIView):
+    """API for logging out WhatsApp session (requires QR re-scan)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def post(self, request, organization_id):
+        """Logout from WhatsApp (requires QR re-scan to reconnect)."""
+        logger.info(f"[WA_LOGOUT] POST logout for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(
+                organization=org,
+                provider=WhatsAppProvider.WAHA,
+            )
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp WAHA bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        service = WhatsAppServiceFactory.get_service(bot)
+
+        try:
+            success = service.logout_session()
+            if success:
+                bot.session_status = WhatsAppSessionStatus.DISCONNECTED
+                bot.connected_phone_number = None
+                bot.save(update_fields=["session_status", "connected_phone_number"])
+                logger.info(f"[WA_LOGOUT] Session logged out for org {organization_id}")
+                return Response({
+                    "success": True,
+                    "message": "Logged out from WhatsApp. QR scan required to reconnect.",
+                })
+            else:
+                return Response(
+                    {"error": "Failed to logout"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"[WA_LOGOUT] Logout failed: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class WhatsAppSessionDeleteAPIView(APIView):
+    """API for deleting WhatsApp session completely."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def post(self, request, organization_id):
+        """Delete session completely (removes all session data from WAHA)."""
+        logger.info(f"[WA_DELETE] POST delete session for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(
+                organization=org,
+                provider=WhatsAppProvider.WAHA,
+            )
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp WAHA bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        service = WhatsAppServiceFactory.get_service(bot)
+
+        try:
+            success = service.delete_session()
+            if success:
+                bot.session_status = WhatsAppSessionStatus.DISCONNECTED
+                bot.connected_phone_number = None
+                bot.save(update_fields=["session_status", "connected_phone_number"])
+                logger.info(f"[WA_DELETE] Session deleted for org {organization_id}")
+                return Response({
+                    "success": True,
+                    "message": "Session deleted completely.",
+                })
+            else:
+                return Response(
+                    {"error": "Failed to delete session"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"[WA_DELETE] Delete failed: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

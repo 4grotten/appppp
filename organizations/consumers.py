@@ -1,8 +1,12 @@
 import asyncio
+import base64
 import decimal
 import json
 import logging
 import re
+import uuid
+
+from django.core.files.base import ContentFile
 
 import common.services.slack as slack
 import websockets
@@ -185,9 +189,17 @@ class CommentConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def create_comment_with_ai_response(self, text, chat, assistant, parent=None):
+    def create_comment_with_ai_response(self, text, chat, assistant, parent=None, audio_base64=None):
+        audio_file = None
+        if audio_base64:
+            try:
+                decoded_file = base64.b64decode(audio_base64)
+                file_name = f"voice_{uuid.uuid4()}.mp3"
+                audio_file = ContentFile(decoded_file, name=file_name)
+            except Exception as e:
+                logger.error(f"Error decoding audio base64: {e}")
         return CommentService.create_chat_assistant_comment(
-            text=text, chat=chat, assistant=assistant, parent=parent
+            text=text, chat=chat, assistant=assistant, parent=parent, audio_file=audio_file
         )
 
     @database_sync_to_async
@@ -298,7 +310,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
 
             comment = await self.create_comment_with_ai_response(
-                text, chat, assistant, parent
+                text, chat, assistant, parent, audio_base64
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
@@ -317,9 +329,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #         serialized_data['product_image'] = image_url
             #         logger.info(f"Attached image to response: {image_url}")
 
-            if audio_base64:
-                serialized_data['audio'] = audio_base64
-                logger.info("Audio attached to response")
+
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},

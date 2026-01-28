@@ -124,3 +124,99 @@ class OTPBotDisconnectView(OTPBotBaseView):
             messages.error(request, f"Error: {e}")
 
         return HttpResponseRedirect(self.get_change_url())
+
+
+class OTPBotStopSessionView(OTPBotBaseView):
+    """Stop WAHA session (keeps session data, can restart)."""
+
+    def get(self, request, pk):
+        waha = WAHAOTPClient(session_name=self.bot.waha_session_name)
+        try:
+            if waha.stop_session():
+                self.bot.status = "disconnected"
+                self.bot.save(update_fields=["status", "updated_at"])
+                messages.success(request, "Session stopped.")
+            else:
+                messages.error(request, "Failed to stop session.")
+        except Exception as e:
+            logger.exception("[OTP Admin] Stop session failed")
+            messages.error(request, f"Error: {e}")
+
+        return HttpResponseRedirect(self.get_change_url())
+
+
+class OTPBotLogoutView(OTPBotBaseView):
+    """Logout from WhatsApp (requires QR re-scan to reconnect)."""
+
+    def get(self, request, pk):
+        waha = WAHAOTPClient(session_name=self.bot.waha_session_name)
+        try:
+            if waha.logout_session():
+                self.bot.status = "disconnected"
+                self.bot.phone_number = None
+                self.bot.save(update_fields=["status", "phone_number", "updated_at"])
+                messages.success(request, "Logged out from WhatsApp. QR scan required to reconnect.")
+            else:
+                messages.error(request, "Failed to logout.")
+        except Exception as e:
+            logger.exception("[OTP Admin] Logout failed")
+            messages.error(request, f"Error: {e}")
+
+        return HttpResponseRedirect(self.get_change_url())
+
+
+class OTPBotDeleteSessionView(OTPBotBaseView):
+    """Delete session completely (removes all WAHA session data)."""
+
+    def get(self, request, pk):
+        waha = WAHAOTPClient(session_name=self.bot.waha_session_name)
+        try:
+            if waha.delete_session():
+                self.bot.status = "disconnected"
+                self.bot.phone_number = None
+                self.bot.save(update_fields=["status", "phone_number", "updated_at"])
+                messages.success(request, "Session deleted completely.")
+            else:
+                messages.error(request, "Failed to delete session.")
+        except Exception as e:
+            logger.exception("[OTP Admin] Delete session failed")
+            messages.error(request, f"Error: {e}")
+
+        return HttpResponseRedirect(self.get_change_url())
+
+
+class OTPBotRebindView(OTPBotBaseView):
+    """Rebind session: logout + delete + start new session for QR scan."""
+
+    def get(self, request, pk):
+        waha = WAHAOTPClient(session_name=self.bot.waha_session_name)
+        try:
+            # Step 1: Logout (if connected)
+            if self.bot.status == "connected":
+                waha.logout_session()
+                logger.info(f"[OTP Admin] Rebind: logged out session {self.bot.waha_session_name}")
+
+            # Step 2: Delete session data
+            waha.delete_session()
+            logger.info(f"[OTP Admin] Rebind: deleted session {self.bot.waha_session_name}")
+
+            # Step 3: Start fresh session
+            if waha.start_session():
+                self.bot.status = "qr_pending"
+                self.bot.phone_number = None
+                self.bot.save(update_fields=["status", "phone_number", "updated_at"])
+                messages.success(request, "Session reset. Scan the QR code to connect new number.")
+                return HttpResponseRedirect(
+                    reverse("admin:otp_bot_otpbot_qr", args=[self.bot.pk])
+                )
+            else:
+                self.bot.status = "failed"
+                self.bot.phone_number = None
+                self.bot.save(update_fields=["status", "phone_number", "updated_at"])
+                messages.error(request, "Failed to start new session after rebind.")
+
+        except Exception as e:
+            logger.exception("[OTP Admin] Rebind failed")
+            messages.error(request, f"Rebind error: {e}")
+
+        return HttpResponseRedirect(self.get_change_url())

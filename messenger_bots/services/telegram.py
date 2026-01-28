@@ -1,7 +1,6 @@
 import logging
 import json
 import re
-import requests
 from typing import Optional, List, Dict, Any, Tuple
 from django.conf import settings
 from django.core.cache import cache
@@ -10,6 +9,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from messenger_bots.models import TelegramBot, BotChat, BotMessage, BotPlatform
+from messenger_bots.services.telegram_http_client import telegram_post, get_telegram_session
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,17 @@ class TelegramBotService:
         self.token = telegram_bot.bot_token
 
     def _make_request(self, method: str, data: dict = None) -> dict:
-        """Make a request to Telegram Bot API."""
+        """Make a request to Telegram Bot API using shared connection pool.
+
+        Uses telegram_post() which provides:
+        - Connection pooling
+        - Automatic retries on 429/502/503/504
+        - Default timeout
+        """
         url = self.BASE_URL.format(token=self.token, method=method)
         logger.debug(f"[TG_SERVICE] API call: {method}, data={json.dumps(data, ensure_ascii=False)[:200] if data else 'None'}")
         try:
-            response = requests.post(url, json=data, timeout=30)
+            response = telegram_post(url, json=data)
             result = response.json()
             if not result.get("ok"):
                 error_msg = result.get("description", "Unknown error")
@@ -55,7 +61,7 @@ class TelegramBotService:
             else:
                 logger.debug(f"[TG_SERVICE] API SUCCESS: {method}")
             return result
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(f"[TG_SERVICE] REQUEST EXCEPTION: method={method}, error={e}", exc_info=True)
             self.bot.last_error = str(e)
             self.bot.save(update_fields=["last_error"])
@@ -99,11 +105,14 @@ class TelegramBotService:
     # --- Bot Settings (Telegram API) ---
 
     def _make_file_request(self, method: str, files: dict, data: dict = None) -> dict:
-        """Make a multipart/form-data request to Telegram Bot API (for file uploads)."""
+        """Make a multipart/form-data request to Telegram Bot API (for file uploads).
+
+        Uses shared connection pool with longer timeout for file uploads.
+        """
         url = self.BASE_URL.format(token=self.token, method=method)
         logger.debug(f"[TG_SERVICE] File API call: {method}")
         try:
-            response = requests.post(url, data=data, files=files, timeout=60)
+            response = telegram_post(url, data=data, files=files, timeout=(5, 60))
             result = response.json()
             if not result.get("ok"):
                 error_msg = result.get("description", "Unknown error")
@@ -111,7 +120,7 @@ class TelegramBotService:
             else:
                 logger.info(f"[TG_SERVICE] File API SUCCESS: {method}")
             return result
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(f"[TG_SERVICE] File REQUEST EXCEPTION: method={method}, error={e}", exc_info=True)
             return {"ok": False, "description": str(e)}
 
@@ -131,11 +140,67 @@ class TelegramBotService:
 
     def set_my_photo(self, photo_file) -> dict:
         """Set bot's profile photo via Telegram API (setMyPhoto). Accepts file object."""
-        files = {"photo": ("photo.png", photo_file, "image/png")}
+        # Get filename and content type from uploaded file
+        filename = getattr(photo_file, 'name', 'photo.jpg')
+        content_type = getattr(photo_file, 'content_type', 'image/jpeg')
+
+        # Read file content and log first bytes for debugging
+        photo_file.seek(0)  # Ensure we're at the beginning
+        content = photo_file.read()
+        logger.info(f"[TG_SERVICE] Photo upload: filename={filename}, size={len(content)}, content_type={content_type}")
+        logger.debug(f"[TG_SERVICE] Photo first 20 bytes: {content[:20]}")
+
+        # Check if it's a valid image (JPEG starts with FFD8, PNG with 89504E47)
+        if len(content) < 100:
+            logger.error(f"[TG_SERVICE] Photo too small ({len(content)} bytes), likely not a real image")
+            return {"ok": False, "description": f"Photo too small ({len(content)} bytes). Send a real image file."}
+
+        files = {"photo": (filename, content, content_type)}
         result = self._make_file_request("setMyPhoto", files=files)
         if result.get("ok"):
             logger.info(f"[TG_SERVICE] Bot photo updated")
         return result
+
+    def set_my_photo_from_url(self, photo_url: str) -> dict:
+        """Download image from URL and set as bot's profile photo."""
+        import requests as req
+        from urllib.parse import urlparse
+
+        logger.info(f"[TG_SERVICE] Downloading photo from URL: {photo_url}")
+
+        try:
+            # Download the image
+            response = req.get(photo_url, timeout=30)
+            response.raise_for_status()
+
+            content = response.content
+            content_type = response.headers.get('Content-Type', 'image/jpeg')
+
+            # Extract filename from URL
+            parsed_url = urlparse(photo_url)
+            filename = parsed_url.path.split('/')[-1] or 'photo.jpg'
+
+            logger.info(f"[TG_SERVICE] Downloaded photo: filename={filename}, size={len(content)}, content_type={content_type}")
+
+            # Validate
+            if len(content) < 100:
+                logger.error(f"[TG_SERVICE] Downloaded photo too small ({len(content)} bytes)")
+                return {"ok": False, "description": f"Downloaded photo too small ({len(content)} bytes)"}
+
+            if 'image/' not in content_type:
+                logger.error(f"[TG_SERVICE] Invalid content type: {content_type}")
+                return {"ok": False, "description": f"Invalid content type: {content_type}. Expected image."}
+
+            # Upload to Telegram
+            files = {"photo": (filename, content, content_type)}
+            result = self._make_file_request("setMyPhoto", files=files)
+            if result.get("ok"):
+                logger.info(f"[TG_SERVICE] Bot photo updated from URL")
+            return result
+
+        except req.RequestException as e:
+            logger.error(f"[TG_SERVICE] Failed to download photo from URL: {e}")
+            return {"ok": False, "description": f"Failed to download photo: {str(e)}"}
 
     def delete_my_photo(self) -> dict:
         """Delete bot's profile photo via Telegram API (deleteMyPhoto)."""
@@ -369,14 +434,18 @@ class TelegramBotService:
             return None
 
     def _download_and_save_photo(self, user_id: str, org_id: int, telegram_file_path: str) -> Optional[str]:
-        """Download photo from Telegram and save to Django storage."""
+        """Download photo from Telegram and save to Django storage.
+
+        Uses shared connection pool for file download.
+        """
         try:
             from django.core.files.base import ContentFile
             from django.core.files.storage import default_storage
 
-            # Download photo from Telegram
+            # Download photo from Telegram using shared session
             download_url = f"https://api.telegram.org/file/bot{self.token}/{telegram_file_path}"
-            response = requests.get(download_url, timeout=30)
+            session = get_telegram_session()
+            response = session.get(download_url, timeout=(5, 30))
 
             if response.status_code != 200:
                 logger.warning(f"[TG_SERVICE] Failed to download photo: HTTP {response.status_code}")

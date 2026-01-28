@@ -19,6 +19,7 @@ from .base import (
     WhatsAppResponse,
     WhatsAppServiceInterface,
 )
+from .http_client import waha_request
 
 logger = logging.getLogger(__name__)
 
@@ -45,27 +46,26 @@ class WAHAService(WhatsAppServiceInterface):
         # self.session_name = whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
         self.session_name = whatsapp_bot.waha_session_name or "default"
 
-    def _get_headers(self) -> Dict[str, str]:
-        """Get headers for WAHA API requests."""
-        return {
-            "X-Api-Key": self.api_key,
-            "Content-Type": "application/json",
-        }
-
     def _make_request(
         self,
         method: str,
         endpoint: str,
         data: Optional[Dict] = None,
-        timeout: int = 30,
+        timeout: tuple = None,
     ) -> Dict:
-        """Make HTTP request to WAHA API.
+        """Make HTTP request to WAHA API using shared connection pool.
+
+        Uses waha_request() which provides:
+        - Connection pooling
+        - Automatic retries on 429/502/503/504
+        - Pre-configured headers (API key, Content-Type)
+        - Default timeout
 
         Args:
             method: HTTP method (GET, POST, etc.)
             endpoint: API endpoint (e.g., /api/sessions)
             data: Request body for POST/PUT
-            timeout: Request timeout in seconds
+            timeout: Optional (connect, read) timeout tuple
 
         Returns:
             Response JSON as dict
@@ -75,31 +75,29 @@ class WAHAService(WhatsAppServiceInterface):
         """
         url = f"{self.base_url}{endpoint}"
         try:
-            response = requests.request(
+            response = waha_request(
                 method=method,
                 url=url,
-                headers=self._get_headers(),
                 json=data,
                 timeout=timeout,
             )
             response.raise_for_status()
             return response.json() if response.text else {}
         except requests.exceptions.Timeout:
-            logger.error(f"WAHA request timeout: {endpoint}")
+            logger.error(f"[WAHA] Request timeout: {method} {endpoint}")
             raise
         except requests.exceptions.RequestException as e:
-            logger.error(f"WAHA request error: {e}")
+            logger.error(f"[WAHA] Request error: {method} {endpoint} - {e}")
             raise
 
     def is_healthy(self) -> bool:
-        """Check if WAHA service is available."""
+        """Check if WAHA service is available.
+
+        Uses the standard _make_request for consistency.
+        """
         try:
-            response = requests.get(
-                f"{self.base_url}/api/health",
-                headers=self._get_headers(),
-                timeout=5,
-            )
-            return response.status_code == 200
+            self._make_request("GET", "/api/health", timeout=(3, 5))
+            return True
         except Exception:
             return False
 
@@ -150,13 +148,37 @@ class WAHAService(WhatsAppServiceInterface):
             return False
 
     def stop_session(self) -> bool:
-        """Stop WAHA session."""
+        """Stop WAHA session (keeps session data, can restart)."""
         try:
             self._make_request("POST", f"/api/sessions/{self.session_name}/stop")
             logger.info(f"WAHA session stopped: {self.session_name}")
             return True
         except Exception as e:
             logger.error(f"Failed to stop WAHA session: {e}")
+            return False
+
+    def logout_session(self) -> bool:
+        """Logout from WhatsApp (requires QR re-scan to reconnect)."""
+        try:
+            self._make_request(
+                "POST",
+                "/api/sessions/logout",
+                {"name": self.session_name},
+            )
+            logger.info(f"WAHA session logged out: {self.session_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to logout WAHA session: {e}")
+            return False
+
+    def delete_session(self) -> bool:
+        """Delete session completely (removes all session data from WAHA)."""
+        try:
+            self._make_request("DELETE", f"/api/sessions/{self.session_name}")
+            logger.info(f"WAHA session deleted: {self.session_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete WAHA session: {e}")
             return False
 
     def get_qr_code(self) -> Optional[str]:
@@ -167,7 +189,7 @@ class WAHAService(WhatsAppServiceInterface):
         """
         try:
             response = self._make_request(
-                "GET", f"/api/{self.session_name}/auth/qr", timeout=10
+                "GET", f"/api/{self.session_name}/auth/qr", timeout=(5, 10)
             )
             # WAHA returns {"value": "base64_qr_data"}
             return response.get("value")
@@ -267,7 +289,7 @@ class WAHAService(WhatsAppServiceInterface):
                     "chatId": chat_id,
                     "duration": duration,
                 },
-                timeout=5,
+                timeout=(3, 5),
             )
             logger.debug(f"WAHA: Typing indicator sent to {chat_id}")
             return True
@@ -296,7 +318,7 @@ class WAHAService(WhatsAppServiceInterface):
                     "session": self.session_name,
                     "chatId": chat_id,
                 },
-                timeout=5,
+                timeout=(3, 5),
             )
             return True
 
@@ -326,7 +348,7 @@ class WAHAService(WhatsAppServiceInterface):
                     "session": self.session_name,
                     "chatId": chat_id,
                 },
-                timeout=5,
+                timeout=(3, 5),
             )
             logger.debug(f"WAHA: Marked messages as read for {chat_id}")
             return True
@@ -429,7 +451,7 @@ class WAHAService(WhatsAppServiceInterface):
             response = self._make_request(
                 "GET",
                 f"/api/contacts/profile-picture?contactId={chat_id}&session={self.session_name}",
-                timeout=10,
+                timeout=(5, 10),
             )
             # WAHA returns {"profilePictureURL": "https://..."}
             return response.get("profilePictureURL")

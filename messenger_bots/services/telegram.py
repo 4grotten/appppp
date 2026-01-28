@@ -144,6 +144,42 @@ class TelegramBotService:
             logger.info(f"[TG_SERVICE] Bot photo deleted")
         return result
 
+    def get_my_name(self) -> dict:
+        """Get bot's name via Telegram API (getMyName)."""
+        result = self._make_request("getMyName")
+        if result.get("ok"):
+            name = result.get("result", {}).get("name", "")
+            logger.info(f"[TG_SERVICE] Got bot name: '{name}'")
+        return result
+
+    def get_my_description(self) -> dict:
+        """Get bot's description via Telegram API (getMyDescription)."""
+        result = self._make_request("getMyDescription")
+        if result.get("ok"):
+            description = result.get("result", {}).get("description", "")
+            logger.info(f"[TG_SERVICE] Got bot description: '{description[:50]}...'")
+        return result
+
+    def get_bot_settings(self) -> dict:
+        """Get all bot settings from Telegram API (name, description, username)."""
+        settings = {
+            "username": self.bot.bot_username,
+            "name": None,
+            "description": None,
+        }
+
+        # Get name
+        name_result = self.get_my_name()
+        if name_result.get("ok"):
+            settings["name"] = name_result.get("result", {}).get("name", "")
+
+        # Get description
+        desc_result = self.get_my_description()
+        if desc_result.get("ok"):
+            settings["description"] = desc_result.get("result", {}).get("description", "")
+
+        return settings
+
     def send_message(
         self,
         chat_id: str,

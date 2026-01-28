@@ -804,7 +804,8 @@ class TelegramBotSettingsAPIView(APIView):
             has_any_field = True
             logger.info(f"[TG_SETTINGS] Setting photo from file: name={photo.name}, size={photo.size}, content_type={photo.content_type}")
             content_type = photo.content_type
-            if content_type not in ("image/jpeg", "image/png"):
+            # Accept both image/jpeg and image/jpg (some browsers send image/jpg)
+            if content_type not in ("image/jpeg", "image/jpg", "image/png"):
                 results["photo"] = {"success": False, "error": "Photo must be JPEG or PNG"}
             elif photo.size > 5 * 1024 * 1024:  # 5MB
                 results["photo"] = {"success": False, "error": "Photo must be 5MB or less"}

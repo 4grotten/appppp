@@ -106,7 +106,7 @@ services:
       - waha_sessions:/app/.sessions
       - waha_files:/app/.media
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/sessions"]
       interval: 30s
       timeout: 10s
       retries: 3

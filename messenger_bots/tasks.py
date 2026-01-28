@@ -251,7 +251,7 @@ def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
-def userbot_set_bot_photo_task(bot_username: str, photo_content: bytes, content_type: str = "image/jpeg"):
+def userbot_set_bot_photo_task(bot_username: str, photo_content_b64: str, content_type: str = "image/jpeg"):
     """
     Set bot profile photo via BotFather using userbot.
 
@@ -260,13 +260,23 @@ def userbot_set_bot_photo_task(bot_username: str, photo_content: bytes, content_
 
     Args:
         bot_username: Bot username without @ (e.g., "my_bot")
-        photo_content: Image bytes (JPEG or PNG)
+        photo_content_b64: Base64-encoded image bytes (Celery requires JSON-serializable args)
         content_type: MIME type of the image
 
     Returns:
         {"success": True/False, "error": str}
     """
+    import base64
+
     logger.info(f"[USERBOT_TASK] set_bot_photo started for @{bot_username}")
+
+    # Decode base64 back to bytes
+    try:
+        photo_content = base64.b64decode(photo_content_b64)
+        logger.info(f"[USERBOT_TASK] Decoded photo: {len(photo_content)} bytes")
+    except Exception as e:
+        logger.error(f"[USERBOT_TASK] Failed to decode base64: {e}")
+        return {"success": False, "error": f"Failed to decode photo data: {e}"}
 
     from messenger_bots.services.bot_factory import BotFactoryService
 
@@ -953,7 +963,8 @@ def cache_assistant_training_data():
             continue
 
         try:
-            cache_key = f"assistant_training_data:{org.id}"
+            from messenger_bots.signals import get_assistant_cache_key
+            cache_key = get_assistant_cache_key(org.id)
             logger.info(f"[CACHE_TASK] Caching training data for org {org.id} ({org.title})")
 
             # Get base training data

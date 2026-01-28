@@ -172,11 +172,15 @@ class TelegramBotService:
 
         # Use userbot task to set photo via BotFather
         from messenger_bots.tasks import userbot_set_bot_photo_task
+        import base64
 
         try:
+            # Encode bytes to base64 for Celery JSON serialization
+            content_b64 = base64.b64encode(content).decode('utf-8')
+
             task = userbot_set_bot_photo_task.delay(
                 self.bot.bot_username,
-                content,
+                content_b64,
                 content_type
             )
             # Wait for result with timeout
@@ -232,10 +236,14 @@ class TelegramBotService:
 
             # Use userbot task to set photo via BotFather
             from messenger_bots.tasks import userbot_set_bot_photo_task
+            import base64
+
+            # Encode bytes to base64 for Celery JSON serialization
+            content_b64 = base64.b64encode(content).decode('utf-8')
 
             task = userbot_set_bot_photo_task.delay(
                 self.bot.bot_username,
-                content,
+                content_b64,
                 content_type
             )
             result = task.get(timeout=90)

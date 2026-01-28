@@ -9,13 +9,26 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
+# Cache version - increment when changing cached data format
+# This ensures old cached data is ignored after deployment
+ASSISTANT_CACHE_VERSION = "v1"
+
+
+def get_assistant_cache_key(organization_id: int) -> str:
+    """
+    Get cache key for assistant training data.
+    Centralized to ensure consistency across read/write/invalidate operations.
+    Increment ASSISTANT_CACHE_VERSION when changing data format.
+    """
+    return f"{ASSISTANT_CACHE_VERSION}:assistant_training_data:{organization_id}"
+
 
 def invalidate_assistant_cache(organization_id: int, reason: str = ""):
     """
     Invalidate the cached training data for an organization.
     Next request will load fresh data, and the periodic task will re-cache it.
     """
-    cache_key = f"assistant_training_data:{organization_id}"
+    cache_key = get_assistant_cache_key(organization_id)
     deleted = cache.delete(cache_key)
     if deleted:
         logger.info(f"[CACHE_INVALIDATE] Cleared cache for org {organization_id}: {reason}")

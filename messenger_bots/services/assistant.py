@@ -340,9 +340,10 @@ class BotAssistantService:
         Uses cached data if available (pre-cached by background task).
         """
         from django.core.cache import cache
+        from messenger_bots.signals import get_assistant_cache_key
 
         # Check cache first (populated by cache_assistant_training_data task)
-        cache_key = f"assistant_training_data:{organization.id}"
+        cache_key = get_assistant_cache_key(organization.id)
         cached_data = cache.get(cache_key)
 
         if cached_data:

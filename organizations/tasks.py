@@ -238,16 +238,13 @@ def update_login_device_settings():
 
 @shared_task
 def subscribe_user_to_organization(organization_id, user_id):
+    """Subscribe a user to organization. Delay is handled via countdown at call site."""
     from organizations.services.organization_services import OrganizationService
     from organizations.services.subscription_services import SubscriptionService
     from users.models import User
 
     organization = OrganizationService.get(pk=organization_id)
     user = User.objects.get(pk=user_id)
-
-    # 1 minute and 15 minutes
-    time.sleep(random.randint(60, 900))
-
     SubscriptionService.toggle_subscription_status(organization=organization, user=user)
 
 
@@ -268,8 +265,14 @@ def add_subscribers_to_organization(organization_id, num_members):
         num_members = users.count()
     selected_users = random.sample(list(users), num_members)
 
+    # Schedule subscriptions with random delays (1-15 min) for organic appearance
+    # Using countdown instead of time.sleep to free workers immediately
     for user in selected_users:
-        subscribe_user_to_organization.delay(organization_id, user.id)
+        delay_seconds = random.randint(60, 900)
+        subscribe_user_to_organization.apply_async(
+            args=[organization_id, user.id],
+            countdown=delay_seconds
+        )
 
 
 @shared_task

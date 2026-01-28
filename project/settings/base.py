@@ -383,6 +383,19 @@ CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_IGNORE_RESULT = True  # Default: don't store results (userbot tasks override this)
 CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+
+# Task timeout protection (Phase 1 optimization)
+# 10 minutes default - tasks needing more already have explicit limits
+CELERY_TASK_SOFT_TIME_LIMIT = 600   # SoftTimeLimitExceeded raised
+CELERY_TASK_TIME_LIMIT = 660        # Hard kill after 11 min
+
+# Prefetch optimization for IO-bound tasks (network, API calls)
+CELERY_WORKER_PREFETCH_MULTIPLIER = 2  # Default is 4
+
+# Broker connection resilience
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
+
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},

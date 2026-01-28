@@ -104,7 +104,7 @@ class BaseWAHAClient:
     def is_healthy(self) -> bool:
         """Check if WAHA service is available."""
         try:
-            self._request("GET", "/api/health", timeout=(3, 5))
+            self._request("GET", "/api/sessions", timeout=(3, 5))
             return True
         except WAHAError:
             return False

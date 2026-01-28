@@ -93,10 +93,10 @@ class WAHAService(WhatsAppServiceInterface):
     def is_healthy(self) -> bool:
         """Check if WAHA service is available.
 
-        Uses the standard _make_request for consistency.
+        Uses /api/sessions endpoint which always exists in WAHA.
         """
         try:
-            self._make_request("GET", "/api/health", timeout=(3, 5))
+            self._make_request("GET", "/api/sessions", timeout=(3, 5))
             return True
         except Exception:
             return False

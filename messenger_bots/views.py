@@ -732,7 +732,7 @@ class TelegramBotSettingsAPIView(APIView):
             )
 
     def get(self, request, organization_id):
-        """Get current bot settings from Telegram API (name, description, username)."""
+        """Get current bot settings from Telegram API (name, description, username) + DB fields."""
         logger.info(f"[TG_SETTINGS] GET settings for org_id={organization_id}")
 
         org, bot, error_response = self._get_bot(request, organization_id)
@@ -742,7 +742,11 @@ class TelegramBotSettingsAPIView(APIView):
         service = TelegramBotService(bot)
         settings = service.get_bot_settings()
 
-        logger.info(f"[TG_SETTINGS] Got settings: name='{settings.get('name')}', description='{settings.get('description', '')[:30]}...'")
+        # Add DB fields that frontend needs
+        settings["is_ai_enabled"] = bot.is_ai_enabled
+        settings["is_active"] = bot.is_active
+
+        logger.info(f"[TG_SETTINGS] Got settings: name='{settings.get('name')}', is_ai_enabled={bot.is_ai_enabled}, is_active={bot.is_active}")
 
         return Response(settings)
 

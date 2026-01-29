@@ -470,7 +470,11 @@ class GetElevenLabsSignedUrlView(APIView):
             return Response({"error": "Chat or Assistant not found"}, status=404)
 
         url = f"https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id={agent_id}"
-        headers = {"xi-api-key": api_key}
+        headers = {
+            "xi-api-key": api_key,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json"
+        }
 
         try:
             logger.info("Sending request to ElevenLabs API...")

@@ -448,62 +448,35 @@ class AssistantChatReadMessages(APIView):
 
 
 class GetElevenLabsSignedUrlView(APIView):
+    permission_classes = [AllowAny]
 
     def get(self, request, chat_id):
-        logger.info(f"Received call request for chat_id: {chat_id} from user: {request.user}")
 
-        api_key = getattr(settings, "ELEVENLABS_API_KEY",
-                          "3afb9ffa289940893cc1482a991cc66fb4bd749c8c25935366377e636d5345cd")
-        if not api_key:
-            logger.error("ElevenLabs API Key is missing in settings!")
-            return Response({"error": "Server configuration error (API Key)"}, status=500)
+        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+
+        AI_SERVER_URL = "http://161.35.153.151:8080/api/proxy/elevenlabs/signed-url/"
 
         try:
-            chat = get_object_or_404(Chat, id=chat_id)
+            logger.info(f"Proxying signed URL request to AI Server for chat {chat_id}")
 
-            agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+            response = requests.get(
+                AI_SERVER_URL,
+                params={"agent_id": agent_id},
+                timeout=10
+            )
 
-            logger.info(f"Using Agent ID: {agent_id}")
-
-        except Exception as e:
-            logger.error(f"Error finding chat or assistant: {e}")
-            return Response({"error": "Chat or Assistant not found"}, status=404)
-
-        url = f"https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id={agent_id}"
-        headers = {
-            "xi-api-key": api_key,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "application/json"
-        }
-
-        try:
-            logger.info("Sending request to ElevenLabs API...")
-            resp = requests.get(url, headers=headers, timeout=10)
-
-            logger.info(f"ElevenLabs Response Status: {resp.status_code}")
-
-            if resp.status_code == 200:
-                data = resp.json()
-                signed_url = data.get("signed_url")
-                if not signed_url:
-                    logger.error(f"No signed_url in response: {data}")
-                    return Response({"error": "No signed_url returned"}, status=502)
-
+            if response.status_code == 200:
+                data = response.json()
                 return Response({
-                    "signed_url": signed_url,
+                    "signed_url": data["signed_url"],
                     "agent_id": agent_id
                 })
             else:
+                logger.error(f"AI Server returned error: {response.text}")
+                return Response({"error": "AI Server could not get token"}, status=502)
 
-                error_text = resp.text
-                logger.error(f"ElevenLabs API Error: {resp.status_code} - {error_text}")
-                return Response({"error": f"ElevenLabs Provider Error: {error_text}"}, status=resp.status_code)
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Network error connecting to ElevenLabs: {e}")
-            return Response({"error": "Failed to connect to AI provider"}, status=503)
         except Exception as e:
-            logger.error(f"Unexpected error in view: {e}", exc_info=True)
-            return Response({"error": str(e)}, status=500)
+            logger.error(f"Failed to connect to AI Server: {e}")
+            return Response({"error": "AI Server unavailable"}, status=503)
 
 

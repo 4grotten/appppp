@@ -18,7 +18,7 @@ from .views.assistant_views import (
     OrganizationAssistantRetrieveUpdateView,
     PurchaseAssistantView,
     QuestionListView,
-    ToggleAssistantEnableView,
+    ToggleAssistantEnableView, GetElevenLabsSignedUrlView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -820,6 +820,7 @@ coupon_urls = [
         CouponsListForUsersAPIView.as_view(),
         name="coupons-list-for-user",
     ),
+    path('api/chat/<int:chat_id>/call-ai/', GetElevenLabsSignedUrlView.as_view())
 ]
 
 

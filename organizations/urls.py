@@ -820,7 +820,7 @@ coupon_urls = [
         CouponsListForUsersAPIView.as_view(),
         name="coupons-list-for-user",
     ),
-    path('api/chat/<int:chat_id>/call-ai/', GetElevenLabsSignedUrlView.as_view())
+    path('chat/<int:chat_id>/call-ai/', GetElevenLabsSignedUrlView.as_view())
 ]
 
 

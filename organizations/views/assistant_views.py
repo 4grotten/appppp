@@ -453,7 +453,7 @@ class GetElevenLabsSignedUrlView(APIView):
     def get(self, request, chat_id):
 
         agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
-        api_key = "3afb9ffa289940893cc1482a991cc66fb4bd749c8c25935366377e636d5345cd"
+        api_key = "62a1bfd3e3fc41866f9b84b3a3b2c85314e6f08e59994a5d30702af36579ddc6"
 
         url = f"https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id={agent_id}"
         headers = {"xi-api-key": api_key}

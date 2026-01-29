@@ -1,5 +1,6 @@
 import logging
 
+import requests
 from django.conf import settings
 from django.db import models
 from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
@@ -443,3 +444,32 @@ class AssistantChatReadMessages(APIView):
         return Response(data={
             'message': _('Success')
         })
+
+
+
+
+class GetElevenLabsSignedUrlView(APIView):
+
+    def get(self, request, chat_id):
+
+        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+        api_key = "3afb9ffa289940893cc1482a991cc66fb4bd749c8c25935366377e636d5345cd"
+
+        url = f"https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id={agent_id}"
+        headers = {"xi-api-key": api_key}
+
+        try:
+            resp = requests.get(url, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                return Response({
+                    "signed_url": data["signed_url"],
+                    "agent_id": agent_id
+                })
+            else:
+                return Response({"error": "ElevenLabs API Error"}, status=500)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+

@@ -454,7 +454,7 @@ class GetElevenLabsSignedUrlView(APIView):
 
         agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
 
-        AI_SERVER_URL = "http://161.35.153.151:8080/api/proxy/elevenlabs/signed-url/"
+        AI_SERVER_URL = "http://161.35.153.151:8080/bot/api/proxy/elevenlabs/signed-url/"
 
         try:
             logger.info(f"Proxying signed URL request to AI Server for chat {chat_id}")

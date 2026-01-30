@@ -141,7 +141,10 @@ class CommentService:
                 "name": assistant.name,
                 "gender": assistant.gender,
                 "position": assistant.position,
-                "is_enabled": assistant.is_enabled
+                "is_enabled": assistant.is_enabled,
+                "ai_prompt": assistant.ai_prompt,
+                "first_message": assistant.first_message,
+                "ai_voice": assistant.ai_voice,
             },
             "answers": [],
             "organization_page_url": org_url,

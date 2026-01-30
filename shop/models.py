@@ -433,6 +433,12 @@ class Comment(TimestampModel):
         blank=True,
         verbose_name="Голосовое сообщение"
     )
+    user_audio = models.FileField(
+        upload_to='comments/user_audio/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        verbose_name="Голосовое сообщение от пользователя"
+    )
 
     def __str__(self):
         return f"Comment with ID {self.id}"

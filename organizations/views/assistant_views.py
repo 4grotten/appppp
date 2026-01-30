@@ -5,7 +5,9 @@ from django.conf import settings
 from django.db import models
 from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_page
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser
@@ -34,7 +36,7 @@ from organizations.serializers.assistant_serializers import (
     PurchaseAssistantSerializer,
     QuestionListQueryParamSerializer,
     QuestionListSerializer,
-    ToggleAssistantSerializer,
+    ToggleAssistantSerializer, AssistantSettingsUpdateSerializer,
 )
 from organizations.services.assistant_services import (
     AnswerService,
@@ -479,4 +481,38 @@ class GetElevenLabsSignedUrlView(APIView):
             logger.error(f"Failed to connect to AI Server: {e}")
             return Response({"error": "AI Server unavailable"}, status=503)
 
+
+class ElevenLabsVoicesListView(APIView):
+
+    @method_decorator(cache_page(60 * 60 * 24))
+    def get(self, request):
+        api_key = getattr(settings, "ELEVENLABS_API_KEY", "ТВОЙ_КЛЮЧ")
+        url = "https://api.elevenlabs.io/v1/voices"
+        headers = {"xi-api-key": api_key}
+
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                voices_data = response.json().get('voices', [])
+
+                result = [
+                    {
+                        "voice_id": v['voice_id'],
+                        "name": v['name'],
+                        "preview_url": v['preview_url'],
+                        "labels": v.get('labels', {}),
+                        "category": v.get('category')
+                    }
+                    for v in voices_data
+                ]
+                return Response(result)
+            return Response({"error": "Failed to fetch voices"}, status=response.status_code)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class AssistantSettingsUpdateView(generics.UpdateAPIView):
+    queryset = Assistant.objects.all()
+    serializer_class = AssistantSettingsUpdateSerializer
 

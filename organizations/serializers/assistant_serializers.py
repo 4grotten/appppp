@@ -42,7 +42,7 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assistant
-        fields = ("id", "organization", "name", "gender", "position", "image")
+        fields = ("id", "organization", "name", "gender", "position", "image","ai_prompt", "first_message", "ai_voice")
 
     def validate_organization(self, organization):
         if AssistantService.exists_for_organization(organization=organization):
@@ -50,6 +50,16 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
                 _("Assistant already exists in this organization.")
             )
         return organization
+
+class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assistant
+        fields = ("ai_prompt", "first_message", "ai_voice")
+
+    def validate_ai_voice(self, value):
+        if not value:
+            raise serializers.ValidationError("Voice ID is required.")
+        return value
 
 
 class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):

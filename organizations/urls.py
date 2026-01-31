@@ -18,7 +18,7 @@ from .views.assistant_views import (
     OrganizationAssistantRetrieveUpdateView,
     PurchaseAssistantView,
     QuestionListView,
-    ToggleAssistantEnableView, GetElevenLabsSignedUrlView, ElevenLabsVoicesListView, AssistantSettingsUpdateView,
+    ToggleAssistantEnableView, GetElevenLabsSignedUrlView, AssistantSettingsUpdateView, ProxyVoicesView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -824,7 +824,7 @@ coupon_urls = [
          GetElevenLabsSignedUrlView.as_view()),
 
     path('elevenlabs/voices/',
-         ElevenLabsVoicesListView.as_view(),
+         ProxyVoicesView.as_view(),
          name='elevenlabs-voices-list'),
 
     path('assistant/<int:pk>/ai-prompt/',

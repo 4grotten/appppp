@@ -483,53 +483,25 @@ class GetElevenLabsSignedUrlView(APIView):
 from project.settings.base import ELEVENLABS_API_KEY2
 
 
-class ElevenLabsVoicesListView(APIView):
-    """
-    Получение списка голосов через API v2
-    """
+class ProxyVoicesView(APIView):
 
     def get(self, request):
-
-        api_key = getattr(settings, "ELEVENLABS_API_KEY2",
-                          "3afb9ffa289940893cc1482a991cc66fb4bd749c8c25935366377e636d5345cd")
-
-
-        url = "https://api.elevenlabs.io/v2/voices"
-        headers = {
-            "xi-api-key": api_key,
-            "Content-Type": "application/json"
-        }
-
-        params = {
-            "page_size": 30,
-        }
+        ai_server_url = "http://161.35.153.151:8080/bot/elevenlabs-voices/"
 
         try:
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = requests.get(ai_server_url, timeout=20)
 
             if response.status_code == 200:
-                data = response.json()
-                voices_raw = data.get('voices', [])
-
-                result = []
-                for v in voices_raw:
-                    result.append({
-                        "voice_id": v.get("voice_id"),
-                        "name": v.get("name"),
-                        "preview_url": v.get("preview_url"),
-                        "labels": v.get("labels", {}),
-                        "description": v.get("description"),
-                        "language": v.get("labels", {}).get("language", "unknown")
-                    })
-                return Response(result)
+                return Response(response.json())
             else:
                 return Response({
-                    "error": "ElevenLabs API error",
-                    "details": response.text
+                    "error": "AI Server returned an error",
+                    "details": response.text[:500]
                 }, status=response.status_code)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Failed to connect to AI server: {str(e)}"}, status=500)
+
 
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()

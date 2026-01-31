@@ -480,13 +480,13 @@ class GetElevenLabsSignedUrlView(APIView):
         except Exception as e:
             logger.error(f"Failed to connect to AI Server: {e}")
             return Response({"error": "AI Server unavailable"}, status=503)
-
+from project.settings.base import ELEVENLABS_API_KEY
 
 class ElevenLabsVoicesListView(APIView):
 
     @method_decorator(cache_page(60 * 60 * 24))
     def get(self, request):
-        api_key = getattr(settings, "ELEVENLABS_API_KEY", "ТВОЙ_КЛЮЧ")
+        api_key = ELEVENLABS_API_KEY
         url = "https://api.elevenlabs.io/v1/voices"
         headers = {"xi-api-key": api_key}
 

@@ -195,6 +195,7 @@ class CommentService:
             "parent_id": comment.id,
             "chat_id": chat.id,
             "message": comment.text,
+            # "user_audio":comment.audio.url if comment.audio else "",
             "host": host,
             "training_data": cls.get_training_data(assistant=chat.assistant)
         }

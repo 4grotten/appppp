@@ -488,7 +488,7 @@ class ElevenLabsVoicesListView(APIView):
     def get(self, request):
         api_key = ELEVENLABS_API_KEY
         url = "https://api.elevenlabs.io/v1/voices"
-        headers = {"xi-api-key": api_key}
+        headers = {"xi-api-key": api_key,"next_page_token":None,"page_size":30}
 
         try:
             response = requests.get(url, headers=headers, timeout=10)

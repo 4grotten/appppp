@@ -480,37 +480,56 @@ class GetElevenLabsSignedUrlView(APIView):
         except Exception as e:
             logger.error(f"Failed to connect to AI Server: {e}")
             return Response({"error": "AI Server unavailable"}, status=503)
-from project.settings.base import ELEVENLABS_API_KEY
+from project.settings.base import ELEVENLABS_API_KEY2
+
 
 class ElevenLabsVoicesListView(APIView):
+    """
+    Получение списка голосов через API v2
+    """
 
-    @method_decorator(cache_page(60 * 60 * 24))
     def get(self, request):
-        api_key = ELEVENLABS_API_KEY
-        url = "https://api.elevenlabs.io/v1/voices"
-        headers = {"xi-api-key": api_key,"next_page_token":None,"page_size":"30"}
+
+        api_key = getattr(settings, "ELEVENLABS_API_KEY2",
+                          "3afb9ffa289940893cc1482a991cc66fb4bd749c8c25935366377e636d5345cd")
+
+
+        url = "https://api.elevenlabs.io/v2/voices"
+        headers = {
+            "xi-api-key": api_key,
+            "Content-Type": "application/json"
+        }
+
+        params = {
+            "page_size": 30,
+        }
 
         try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                voices_data = response.json().get('voices', [])
+            response = requests.get(url, headers=headers, params=params, timeout=10)
 
-                result = [
-                    {
-                        "voice_id": v['voice_id'],
-                        "name": v['name'],
-                        "preview_url": v['preview_url'],
-                        "labels": v.get('labels', {}),
-                        "category": v.get('category')
-                    }
-                    for v in voices_data
-                ]
+            if response.status_code == 200:
+                data = response.json()
+                voices_raw = data.get('voices', [])
+
+                result = []
+                for v in voices_raw:
+                    result.append({
+                        "voice_id": v.get("voice_id"),
+                        "name": v.get("name"),
+                        "preview_url": v.get("preview_url"),
+                        "labels": v.get("labels", {}),
+                        "description": v.get("description"),
+                        "language": v.get("labels", {}).get("language", "unknown")
+                    })
                 return Response(result)
-            return Response({"error": "Failed to fetch voices"}, status=response.status_code)
+            else:
+                return Response({
+                    "error": "ElevenLabs API error",
+                    "details": response.text
+                }, status=response.status_code)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 class AssistantSettingsUpdateView(generics.UpdateAPIView):
     queryset = Assistant.objects.all()

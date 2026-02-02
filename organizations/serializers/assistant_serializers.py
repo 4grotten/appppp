@@ -54,7 +54,7 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
 class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assistant
-        fields = ("ai_prompt", "first_message", "ai_voice")
+        fields = ("ai_prompt", "first_message", "ai_voice","voice_name")
 
     def validate_ai_voice(self, value):
         if not value:
@@ -104,7 +104,8 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "plans",
             "ai_prompt",
             "first_message",
-            "ai_voice"
+            "ai_voice",
+            "voice_name"
         )
         read_only_fields = ("organization",)
 

@@ -1211,6 +1211,7 @@ class Assistant(TimestampModel):
     ai_prompt = models.TextField(null=True, blank=True)
     first_message = models.CharField(max_length=500, null=True, blank=True)
     ai_voice = models.CharField(max_length=255, null=True, blank=True)
+    voice_name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Assistant {self.name} of {self.organization} organization"

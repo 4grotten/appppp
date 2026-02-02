@@ -81,6 +81,7 @@ class WSCommentSerializer(serializers.ModelSerializer):
     source = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
+    user_audio = serializers.FileField(required=False, allow_null=True)
     # product_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -229,6 +230,7 @@ class CommentSerializer(serializers.ModelSerializer):
     source = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
+    user_audio = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Comment

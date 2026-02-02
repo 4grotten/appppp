@@ -86,7 +86,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 return
             
             data = json.loads(text_data)
-            user_audio_base64 = data.get("audio", None) 
+            user_audio_base64 = data.get("user_audio", None) 
             assistant_id = data.get("assistant_id", None)
             user = self.scope["user"]
             chat = self.chat
@@ -280,6 +280,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
         user_audio_file = None
         if audio_base64:
             try:
+                if ";base64," in audio_base64:
+                    header, audio_base64 = audio_base64.split(";base64,")
+
                 decoded_file = base64.b64decode(audio_base64)
                 file_name = f"user_voice_{uuid.uuid4()}.mp3"
                 user_audio_file = ContentFile(decoded_file, name=file_name)

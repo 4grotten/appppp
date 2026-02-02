@@ -86,7 +86,7 @@ class WSCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',"user_audio",
             'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data","products",'audio'
         ) #'product_image',
 
@@ -235,7 +235,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
             'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',
-            'product_data', 'products','audio'
+            'product_data', 'products','audio',"user_audio"
         )
 
     def get_product_data(self, obj):

@@ -102,17 +102,19 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 else:
                     if user_has_active_assistant:
                         if assistant_id is None:
-                            comment, _ = await self.handle_user_response(data, user)
-                            
+                            comment = await self.handle_user_response(data, user)
+
                             await self.send_message_to_ai_with_audio(comment, user_audio_base64)
                         else:
+
                             await self.handle_ai_response(data, user)
                     else:
                         await self.handle_user_response(data, user)
             else:
-                comment, _ = await self.handle_user_response(data, user)
+                comment = await self.handle_user_response(data, user)
                 await self.handle_ai_default_response(parent=comment, user=user)
         except Exception as e:
+            logger.error(f"Error in receive: {e}")
             logger.error(f"Error in receive: {e}")
 
     async def chat_message(self, event):
@@ -272,14 +274,38 @@ class CommentConsumer(AsyncWebsocketConsumer):
             await self.ai_socket.send(json.dumps(data))
         except Exception as e:
             logger.error(f"Error sending to AI: {e}")
+    
+    @database_sync_to_async
+    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
+        user_audio_file = None
+        if audio_base64:
+            try:
+                decoded_file = base64.b64decode(audio_base64)
+                file_name = f"user_voice_{uuid.uuid4()}.mp3"
+                user_audio_file = ContentFile(decoded_file, name=file_name)
+            except Exception as e:
+                logger.error(f"Error decoding user audio: {e}")
+
+        return CommentService.create_chat_comment(
+            text=text or "[Голосовое сообщение]", 
+            chat=chat, 
+            user=user, 
+            parent=parent,
+            user_audio_file=user_audio_file
+        )
+
 
     async def handle_user_response(self, data, user):
+
         try:
             text = data.get("message", "")
             parent_id = data.get("parent", None)
+            audio_base64 = data.get("audio") 
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
-            comment = await self.create_user_comment(text, chat, user, parent)
+            
+            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent)
+            
             serialized_data = await self.serialize_data(comment=comment, user=user)
             await self.channel_layer.group_send(
                 self.chat_group_name,

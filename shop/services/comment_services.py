@@ -68,9 +68,11 @@ class CommentService:
         return comment
 
     @classmethod
-    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None):
+    def create_chat_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None, user_audio_file=None):
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
 
+        if user_audio_file:
+            comment.user_audio.save(user_audio_file.name, user_audio_file, save=True)
         return comment
 
     @classmethod

@@ -102,6 +102,9 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "active_until",
             "is_enabled",
             "plans",
+            "ai_prompt",
+            "first_message",
+            "ai_voice"
         )
         read_only_fields = ("organization",)
 

@@ -19,6 +19,8 @@ from shop.services.assistant_data_service import AssistantDataService
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from stock.serializers import ShopItemSizeCountSetSerializer
+from shop.models import Chat,Comment
+from users.models import User
 
 from organizations.models import Coupon, DiscountCard, UserAssistant,Answer
 from organizations.services.assistant_services import (
@@ -82,59 +84,34 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 logger.warning(f"Chat not found for ID {self.chat_id}")
                 await self.close()
                 return
-            logger.info("Received text data: %s", text_data)
+            
             data = json.loads(text_data)
-            logger.info("Parsed JSON data: %s", data)
-
+            user_audio_base64 = data.get("audio", None) 
             assistant_id = data.get("assistant_id", None)
-            logger.info("Extracted assistant_id: %s", assistant_id)
-
             user = self.scope["user"]
-            logger.info("Retrieved user from scope: %s", user)
-
             chat = self.chat
-            logger.info("Current chat: %s", chat)
+            
             assistant = await self.get_assistant_by_chat(chat=chat)
-            user_has_active_assistant = await self.user_has_active_assistant(
-                assistant=assistant
-            )
-            logger.info("User has active assistant: %s", user_has_active_assistant)
-
+            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
-            logger.info("Chat assistant is enabled: %s", is_enabled)
-
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
-            logger.info("Chat is by org user: %s", chat_by_org_user)
 
             if is_enabled:
-                logger.info("Chat assistant is enabled.")
                 if chat_by_org_user:
-                    logger.info("Chat is by organization user.")
                     await self.handle_user_response(data, user)
                 else:
-                    logger.info("Chat is not by organization user.")
                     if user_has_active_assistant:
-                        logger.info("User has an active assistant.")
                         if assistant_id is None:
-                            logger.info("Assistant ID is None.")
-                            comment = await self.handle_user_response(data, user)
-                            logger.info("Handled user response, comment: %s", comment)
-                            await self.send_message_to_ai(comment)
-                            logger.info("Sent message to AI.")
+                            comment, _ = await self.handle_user_response(data, user)
+                            
+                            await self.send_message_to_ai_with_audio(comment, user_audio_base64)
                         else:
-                            logger.info("Assistant ID is provided.")
                             await self.handle_ai_response(data, user)
-                            logger.info("Handled AI response.")
                     else:
-                        logger.info("User does not have an active assistant.")
                         await self.handle_user_response(data, user)
-                        logger.info("Handled user response.")
             else:
-                logger.info("Chat assistant is not enabled.")
-                comment = await self.handle_user_response(data, user)
-                logger.info("Handled user response, comment: %s", comment)
+                comment, _ = await self.handle_user_response(data, user)
                 await self.handle_ai_default_response(parent=comment, user=user)
-                logger.info("Handled AI default response.")
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -177,10 +154,15 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return CommentService.get(pk=comment_id)
 
     @database_sync_to_async
-    def create_user_comment(self, text, chat, user, parent=None):
-        return CommentService.create_chat_comment(
-            text=text, chat=chat, user=user, parent=parent
-        )
+    def create_user_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None, user_audio_file=None):
+        if not text and user_audio_file:
+            text = "[Голосовое сообщение]"
+            
+        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+
+        if user_audio_file:
+            comment.user_audio.save(user_audio_file.name, user_audio_file, save=True)
+        return comment
 
     @database_sync_to_async
     def create_ai_defualt_comment(self, chat, parent=None):
@@ -281,6 +263,20 @@ class CommentConsumer(AsyncWebsocketConsumer):
             "headers": decoded_headers,
         }
         return data
+
+    async def send_message_to_ai_with_audio(self, comment, audio_base64):
+        try:
+            if not hasattr(self, "ai_socket") or not self.ai_socket.open:
+                self.ai_socket = await self.connect_to_ai()
+
+
+            data = await self.prepare_data(comment)
+
+            data["user_audio"] = audio_base64 
+            
+            await self.ai_socket.send(json.dumps(data))
+        except Exception as e:
+            logger.error(f"Error sending to AI: {e}")
 
     async def handle_user_response(self, data, user):
         try:

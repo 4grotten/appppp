@@ -154,15 +154,10 @@ class CommentConsumer(AsyncWebsocketConsumer):
         return CommentService.get(pk=comment_id)
 
     @database_sync_to_async
-    def create_user_comment(cls, text: str, chat: Chat, user: User, parent: Comment = None, user_audio_file=None):
-        if not text and user_audio_file:
-            text = "[Голосовое сообщение]"
-            
-        comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
-
-        if user_audio_file:
-            comment.user_audio.save(user_audio_file.name, user_audio_file, save=True)
-        return comment
+    def create_user_comment(self, text, chat, user, parent=None):
+        return CommentService.create_chat_comment(
+            text=text, chat=chat, user=user, parent=parent
+        )
 
     @database_sync_to_async
     def create_ai_defualt_comment(self, chat, parent=None):

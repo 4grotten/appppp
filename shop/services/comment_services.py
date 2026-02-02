@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils.translation import gettext_lazy as _
-
+import base64
 from common.exceptions import ObjectNotFoundException
 from common.models import CommentsWallpaper, File
 from common.serializers import ImageSerializer
@@ -180,17 +180,29 @@ class CommentService:
 
     @classmethod
     def create_chat_comment_with_assistant_response(cls, text: str, chat: Chat, user: User, request,
-                                                    parent: Comment = None):
+                                                parent: Comment = None, user_audio_file=None):
+
+        if not text and user_audio_file:
+            text = "[Голосовое сообщение]"
+
         comment = cls.model.objects.create(chat=chat, user=user, parent=parent, text=text)
+        user_audio_base64 = ""
+        if user_audio_file:
 
-        host = request.META['HTTP_HOST']
+            comment.user_audio.save(user_audio_file.name, user_audio_file, save=True)
 
+            try:
+                user_audio_file.seek(0) 
+                user_audio_base64 = base64.b64encode(user_audio_file.read()).decode('utf-8')
+            except Exception as e:
+                logger.error(f"Error encoding user audio for AI server: {e}")
+
+        host = request.META.get('HTTP_HOST', 'default_host')
+        
         request_headers = {
             "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br",
             "Content-Type": "application/json",
-            "User-Agent": "My User Agent 1.0",
-            "Connection": "keep-alive"
+            "User-Agent": "Apofiz-Main-Server-1.0",
         }
 
         ask_bot_url = 'http://161.35.153.151:8080/bot/'
@@ -200,14 +212,14 @@ class CommentService:
             "parent_id": comment.id,
             "chat_id": chat.id,
             "message": comment.text,
-            # "user_audio":comment.audio.url if comment.audio else "",
+            "user_audio": user_audio_base64, 
             "host": host,
             "training_data": cls.get_training_data(assistant=chat.assistant)
         }
 
         sess = requests.Session()
         try:
-            response = sess.post(ask_bot_url, json=data, headers=request_headers)
+            response = sess.post(ask_bot_url, json=data, headers=request_headers, timeout=30)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to communicate with AI assistant: {e}")

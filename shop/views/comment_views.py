@@ -167,16 +167,19 @@ class CommentChatListCreateView(ListCreateAPIView):
                 'errors': serializer.errors
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        validated_data = serializer.validated_data
+        user_audio = validated_data.pop('user_audio', None) 
+
         if chat.assistant.is_enabled:
             if chat.chat_by_org_user:
                 comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
             else:
                 if UserAssistantService.user_has_active_assistant(assistant=chat.assistant):
                     comment = CommentService.create_chat_comment_with_assistant_response(
-                        **serializer.validated_data, chat=chat, request=request
+                        **serializer.validated_data, chat=chat, request=request,user_audio_file=user_audio
                     )
                 else:
-                    comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat)
+                    comment = CommentService.create_chat_comment(**serializer.validated_data, chat=chat,user_audio_file=user_audio)
         else:
             comment = CommentService.create_chat_comment_with_assistant_default_response(
                 **serializer.validated_data, chat=chat

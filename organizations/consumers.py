@@ -186,13 +186,18 @@ class CommentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def serialize_data(self, comment, user):
         host = self.host
-        def build_absolute_uri(url=None):
-            return f"https://{host}{url}" if url else f"https://{host}"
+        def build_absolute_uri(_self, location=None):
+            if not location:
+                return f"https://{host}"
+            if location.startswith('http'):
+                return location
+            return f"https://{host}{location}"
 
-        fake_request = type("FakeRequest", (object,), {
+        FakeRequest = type("FakeRequest", (object,), {
             "user": user,
             "build_absolute_uri": build_absolute_uri
-        })()
+        })
+        fake_request = FakeRequest()
         
         serializer = CommentSerializer(comment, context={"request": fake_request})
         return serializer.data
@@ -200,13 +205,19 @@ class CommentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def serialize_assistant_data(self, comment, user):
         host = self.host
-        def build_absolute_uri(url=None):
-            return f"https://{host}{url}" if url else f"https://{host}"
+        def build_absolute_uri(_self, location=None):
+            if not location:
+                return f"https://{host}"
+            if location.startswith('http'):
+                return location
+            return f"https://{host}{location}"
 
-        fake_request = type("FakeRequest", (object,), {
+        FakeRequest = type("FakeRequest", (object,), {
             "user": user,
             "build_absolute_uri": build_absolute_uri
-        })()
+        })
+
+        fake_request = FakeRequest()
         serializer = WSCommentSerializer(comment, context={"user": user, "request": fake_request})
         return serializer.data
 

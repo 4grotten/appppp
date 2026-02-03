@@ -303,7 +303,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
         try:
             text = data.get("message", "")
             parent_id = data.get("parent", None)
-            audio_base64 = data.get("audio") 
+            audio_base64 = data.get("user_audio") 
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
             

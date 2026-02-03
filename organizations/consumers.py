@@ -104,18 +104,20 @@ class CommentConsumer(AsyncWebsocketConsumer):
                         if assistant_id is None:
                             comment = await self.handle_user_response(data, user)
 
-                            await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                            if comment:
+                                await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                            else:
+                                logger.error("Comment creation failed, skipping AI response.")
                         else:
-
                             await self.handle_ai_response(data, user)
                     else:
                         await self.handle_user_response(data, user)
             else:
                 comment = await self.handle_user_response(data, user)
-                await self.handle_ai_default_response(parent=comment, user=user)
+                if comment:
+                    await self.handle_ai_default_response(parent=comment, user=user)
         except Exception as e:
-            logger.error(f"Error in receive: {e}")
-            logger.error(f"Error in receive: {e}")
+            logger.error(f"Critical error in receive: {e}", exc_info=True)
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event["message"], ensure_ascii=False))
@@ -183,13 +185,29 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def serialize_data(self, comment, user):
-        fake_request = type("FakeRequest", (object,), {"user": user})()
+        host = self.host
+        def build_absolute_uri(url=None):
+            return f"https://{host}{url}" if url else f"https://{host}"
+
+        fake_request = type("FakeRequest", (object,), {
+            "user": user,
+            "build_absolute_uri": build_absolute_uri
+        })()
+        
         serializer = CommentSerializer(comment, context={"request": fake_request})
         return serializer.data
 
     @database_sync_to_async
     def serialize_assistant_data(self, comment, user):
-        serializer = WSCommentSerializer(comment, context={"user": user})
+        host = self.host
+        def build_absolute_uri(url=None):
+            return f"https://{host}{url}" if url else f"https://{host}"
+
+        fake_request = type("FakeRequest", (object,), {
+            "user": user,
+            "build_absolute_uri": build_absolute_uri
+        })()
+        serializer = WSCommentSerializer(comment, context={"user": user, "request": fake_request})
         return serializer.data
 
     @database_sync_to_async

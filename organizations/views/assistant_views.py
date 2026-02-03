@@ -480,6 +480,9 @@ class GetElevenLabsSignedUrlView(APIView):
         except Exception as e:
             logger.error(f"Failed to connect to AI Server: {e}")
             return Response({"error": "AI Server unavailable"}, status=503)
+        
+
+        
 from project.settings.base import ELEVENLABS_API_KEY2
 
 

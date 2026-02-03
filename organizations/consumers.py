@@ -74,8 +74,15 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chat_group_name, self.channel_name)
-        if hasattr(self, "ai_socket") and self.ai_socket.open:
-            await self.ai_socket.close()
+
+        if hasattr(self, "ai_socket") and self.ai_socket:
+            try:
+                await asyncio.wait_for(self.ai_socket.close(), timeout=1.0)
+                logger.info("AI socket closed gracefully")
+            except asyncio.TimeoutError:
+                logger.warning("AI socket close timed out, killing connection")
+            except Exception as e:
+                logger.error(f"Error during AI socket disconnect: {e}")
 
     async def receive(self, text_data):
         try:
@@ -95,7 +102,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
-
+                
             if is_enabled:
                 if chat_by_org_user:
                     await self.handle_user_response(data, user)

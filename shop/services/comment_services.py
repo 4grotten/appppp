@@ -169,8 +169,10 @@ class CommentService:
                 else:
                     files_to_send.append(file_obj.file.url)
 
+            question_text = answer.question.text if answer.question else "Вопрос не указан"
+
             training_data["answers"].append({
-                "question": answer.question.text,
+                "question": question_text,
                 "answer": answer.text,
                 "files_to_read": files_to_read,
                 "files_to_send": files_to_send  

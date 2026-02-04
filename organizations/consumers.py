@@ -365,9 +365,9 @@ class CommentConsumer(AsyncWebsocketConsumer):
             audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
-            assistant = await self.get_assistant(assistant_id)
+            # assistant = await self.get_assistant(assistant_id)
             # parent = await self.get_comment(parent_id)
-            chat = await self.get_chat_with_parent(parent)
+            # chat = await self.get_chat_with_parent(parent)
 
 
             assistant_id = data.get("assistant_id")

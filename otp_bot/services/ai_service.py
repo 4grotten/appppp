@@ -6,9 +6,33 @@ from typing import Dict, List, Optional
 import requests
 from django.conf import settings
 
-from ..prompts import get_system_prompt
+from .prompt_service import build_system_prompt, get_error_message
 
 logger = logging.getLogger(__name__)
+
+
+def get_easycard_user_context(phone_number: str) -> str:
+    """Get EasyCard user financial context for AI.
+
+    Args:
+        phone_number: User's phone number
+
+    Returns:
+        Formatted string with user's financial data, or empty string if unavailable.
+    """
+    try:
+        from easycard_integration.services import EasyCardDataService
+
+        data = EasyCardDataService.get_user_financial_data(phone_number)
+        if data.is_registered:
+            return data.to_ai_context()
+        return ""
+    except ImportError:
+        logger.debug("[AI_SERVICE] easycard_integration not available")
+        return ""
+    except Exception as e:
+        logger.warning(f"[AI_SERVICE] Error getting EasyCard context: {e}")
+        return ""
 
 
 class FinanceAIServiceError(Exception):
@@ -43,7 +67,7 @@ class FinanceAIService:
         """Get AI response for a finance question.
 
         Args:
-            phone_number: User's phone number (for logging)
+            phone_number: User's phone number (for logging and EasyCard lookup)
             question: User's question
             chat_history: Previous messages for context
             voice_mode: If True, use shorter response for TTS
@@ -54,8 +78,14 @@ class FinanceAIService:
         masked_phone = self._mask_phone(phone_number)
         logger.info(f"[AI_SERVICE] Request from {masked_phone}: {question[:50]}...")
 
-        # Get appropriate prompt
-        system_prompt = get_system_prompt(voice_mode=voice_mode)
+        # Get system prompt from settings or fallback defaults
+        system_prompt = build_system_prompt(voice_mode=voice_mode)
+
+        # Get EasyCard user context (balance, cards, transactions)
+        easycard_context = get_easycard_user_context(phone_number)
+        if easycard_context:
+            system_prompt = f"{system_prompt}\n\n{easycard_context}"
+            logger.debug(f"[AI_SERVICE] Added EasyCard context for {masked_phone}")
 
         # Adjust max_tokens for voice mode (shorter responses)
         max_tokens = 200 if voice_mode else self.max_tokens
@@ -104,10 +134,5 @@ class FinanceAIService:
         return phone_number
 
     def _get_error_message(self, error_type: str) -> str:
-        """Get user-friendly error message in Russian."""
-        messages = {
-            "ai_error": "Извините, произошла ошибка. Попробуйте позже.",
-            "timeout": "Сервис не отвечает. Попробуйте позже.",
-            "connection": "Не удалось подключиться к сервису. Попробуйте позже.",
-        }
-        return messages.get(error_type, messages["ai_error"])
+        """Get user-friendly error message from settings or defaults."""
+        return get_error_message(error_type)

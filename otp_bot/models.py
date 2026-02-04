@@ -6,6 +6,8 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from common.models import SingletonModel, TimestampModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -230,3 +232,263 @@ class UserVoicePreference(models.Model):
         self.voice_enabled = not self.voice_enabled
         self.save(update_fields=["voice_enabled", "updated_at"])
         return self.voice_enabled
+
+
+class OTPBotPromptSettings(TimestampModel, SingletonModel):
+    """Singleton settings for OTP Bot AI prompts.
+
+    Manages prompts for EasyCard Finance AI Assistant.
+    Editable via Django Admin. Falls back to prompts.py defaults if not active.
+    """
+
+    # === Status ===
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Active"),
+        help_text=_("If disabled, uses default prompts from prompts.py"),
+    )
+
+    # === Core Identity ===
+    system_prompt_core = models.TextField(
+        default=(
+            "Ты - дружелюбный AI-ассистент для финансового приложения Easy Card.\n"
+            "Отвечай кратко и по делу на языке пользователя. Используй эмодзи для дружелюбности."
+        ),
+        verbose_name=_("Core System Prompt"),
+        help_text=_("Main AI identity and behavior instructions"),
+    )
+
+    # === EasyCard Knowledge Base ===
+    about_easycard = models.TextField(
+        default=(
+            "Easy Card - это финансовое приложение для управления "
+            "виртуальными и металлическими картами в ОАЭ (валюта AED - дирхамы)."
+        ),
+        verbose_name=_("About Easy Card"),
+        help_text=_("General description of EasyCard service"),
+    )
+
+    card_types = models.TextField(
+        default=(
+            "1. **Виртуальная карта** - мгновенный выпуск, идеально для онлайн-покупок\n"
+            "2. **Металлическая карта** - премиум карта с доставкой, статусная и долговечная"
+        ),
+        verbose_name=_("Card Types"),
+        help_text=_("Virtual and Metal card descriptions"),
+    )
+
+    fees_one_time = models.TextField(
+        default=(
+            "- Годовое обслуживание виртуальной карты: 183 AED\n"
+            "- Перевыпуск виртуальной карты: 183 AED\n"
+            "- Годовое обслуживание металлической карты: 183 AED\n"
+            "- Перевыпуск металлической карты: 183 AED\n"
+            "- Открытие виртуального счета: 183 AED"
+        ),
+        verbose_name=_("One-Time Fees"),
+        help_text=_("Annual service, replacement fees in AED"),
+    )
+
+    fees_topup = models.TextField(
+        default=(
+            "- Криптовалютой (USDT): фиксированная комиссия 5.90 USDT\n"
+            "- Банковским переводом: 1.5%\n"
+            "- Минимальная сумма пополнения криптой: 15 USDT\n"
+            "- Минимальная сумма пополнения банком: 50 AED"
+        ),
+        verbose_name=_("Top-Up Fees"),
+        help_text=_("Crypto and bank transfer fees"),
+    )
+
+    fees_transfer = models.TextField(
+        default=(
+            "- С карты на карту: 1%\n"
+            "- Банковский перевод: 2%\n"
+            "- Сетевая комиссия: 1%"
+        ),
+        verbose_name=_("Transfer Fees"),
+        help_text=_("Card-to-card, bank transfer, network fees"),
+    )
+
+    fees_transactions = models.TextField(
+        default="- Конвертация валюты: 1.5%",
+        verbose_name=_("Transaction Fees"),
+        help_text=_("Currency conversion fees"),
+    )
+
+    exchange_rates = models.TextField(
+        default=(
+            "- Пополнение: 1 USDT = 3.65 AED\n"
+            "- Вывод: 1 USDT = 3.69 AED"
+        ),
+        verbose_name=_("Exchange Rates"),
+        help_text=_("USDT/AED rates for top-up and withdrawal"),
+    )
+
+    app_features = models.TextField(
+        default=(
+            "- Управление картами (виртуальные и металлические)\n"
+            "- Пополнение баланса (криптой USDT или банковским переводом)\n"
+            "- Переводы (на карту, на банк, криптой)\n"
+            "- История транзакций\n"
+            "- Настройка лимитов\n"
+            "- Верификация личности (KYC)\n"
+            "- Мультиязычность (EN, RU, AR, DE, ES, TR, ZH)"
+        ),
+        verbose_name=_("App Features"),
+        help_text=_("List of EasyCard app capabilities"),
+    )
+
+    important_notes = models.TextField(
+        default=(
+            "- Все карты работают в валюте AED (дирхамы ОАЭ)\n"
+            "- Для использования карт нужно пройти верификацию\n"
+            "- Поддерживаются сети TRC20 и ERC20 для крипто-пополнений"
+        ),
+        verbose_name=_("Important Notes"),
+        help_text=_("KYC requirements, supported networks, etc."),
+    )
+
+    # === Scenario Prompts ===
+    scenario_new_user = models.TextField(
+        default=(
+            "Для новых пользователей (не зарегистрированных в EasyCard):\n"
+            "- Приветствие с OTP кодом\n"
+            "- Предложение перейти в чат EasyCard\n"
+            "- После регистрации - предложение получить карту"
+        ),
+        verbose_name=_("Scenario: New User"),
+        help_text=_("Instructions for users not in EasyCard DB"),
+    )
+
+    scenario_existing_user = models.TextField(
+        default=(
+            "Для существующих пользователей:\n"
+            "- Отправка OTP кода\n"
+            "- Консультация по приложению\n"
+            "- Помощь с переводами и функциями"
+        ),
+        verbose_name=_("Scenario: Existing User"),
+        help_text=_("Instructions for registered users"),
+    )
+
+    scenario_consultation = models.TextField(
+        default=(
+            "При консультации по EasyCard:\n"
+            "- Отвечай на вопросы о картах, комиссиях, функциях\n"
+            "- Помогай с навигацией по приложению\n"
+            "- Если вопрос не про EasyCard - вежливо объясни свою специализацию"
+        ),
+        verbose_name=_("Scenario: Consultation"),
+        help_text=_("AI consultation behavior instructions"),
+    )
+
+    scenario_escalation = models.TextField(
+        default=(
+            "Когда переводить на оператора:\n"
+            "- Пользователь явно просит связаться с человеком\n"
+            "- Сложные технические проблемы\n"
+            "- Жалобы на работу сервиса\n"
+            "- Вопросы, выходящие за рамки компетенции бота"
+        ),
+        verbose_name=_("Scenario: Escalation"),
+        help_text=_("When to redirect to human operator"),
+    )
+
+    escalation_keywords = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Escalation Keywords"),
+        help_text=_('Keywords triggering escalation, e.g. ["оператор", "человек", "помощь"]'),
+    )
+
+    # === Voice Mode ===
+    voice_mode_prompt = models.TextField(
+        default=(
+            "РЕЖИМ ГОЛОСОВОГО ОТВЕТА:\n"
+            "ВАЖНО: Этот ответ будет озвучен голосом, поэтому:\n"
+            "- Отвечай ОЧЕНЬ кратко\n"
+            "- Не используй списки, маркеры, форматирование\n"
+            "- Не используй эмодзи\n"
+            "- Говори естественно, как по телефону\n"
+            "- Если нужна детальная информация - предложи написать текстом"
+        ),
+        verbose_name=_("Voice Mode Instructions"),
+        help_text=_("Additional instructions for voice responses"),
+    )
+
+    voice_max_words = models.PositiveIntegerField(
+        default=50,
+        verbose_name=_("Voice Max Words"),
+        help_text=_("Maximum words for voice responses"),
+    )
+
+    # === Language & Formatting ===
+    language_detection_rule = models.TextField(
+        default=(
+            "Правила определения языка:\n"
+            "1. Определяй язык из сообщения пользователя\n"
+            "2. Отвечай на том же языке\n"
+            "3. Если пользователь явно просит другой язык - переключись"
+        ),
+        verbose_name=_("Language Detection Rule"),
+        help_text=_("How to detect and respond in user's language"),
+    )
+
+    formatting_rules = models.TextField(
+        default=(
+            "Правила форматирования:\n"
+            "- Будь дружелюбным и полезным\n"
+            "- Используй эмодзи умеренно для дружелюбности\n"
+            "- Структурируй ответы для читаемости"
+        ),
+        verbose_name=_("Formatting Rules"),
+        help_text=_("Emoji usage, message structure"),
+    )
+
+    # === WAHA Plus: Interactive Buttons ===
+    buttons_config = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("Buttons Configuration"),
+        help_text=_("JSON config for WAHA Plus interactive buttons/lists"),
+    )
+
+    welcome_buttons = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Welcome Buttons"),
+        help_text=_("Buttons for new user welcome message"),
+    )
+
+    # === Error Messages ===
+    error_ai = models.TextField(
+        default="Извините, произошла ошибка. Попробуйте позже.",
+        verbose_name=_("AI Error Message"),
+        help_text=_("Message shown when AI fails"),
+    )
+
+    error_timeout = models.TextField(
+        default="Сервис не отвечает. Попробуйте позже.",
+        verbose_name=_("Timeout Error Message"),
+        help_text=_("Message shown on timeout"),
+    )
+
+    error_voice_unavailable = models.TextField(
+        default="Голосовые сообщения временно недоступны. Напишите текстом.",
+        verbose_name=_("Voice Unavailable Message"),
+        help_text=_("Message when voice processing fails"),
+    )
+
+    class Meta:
+        verbose_name = _("OTP Bot Prompt Settings")
+        verbose_name_plural = _("OTP Bot Prompt Settings")
+
+    def __str__(self) -> str:
+        return f"OTP Bot Prompt Settings (Active: {self.is_active})"
+
+    @classmethod
+    def get_settings(cls) -> "OTPBotPromptSettings":
+        """Get or create singleton settings instance."""
+        settings, _ = cls.objects.get_or_create(pk=1)
+        return settings

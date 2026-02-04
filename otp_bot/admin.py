@@ -12,7 +12,7 @@ from .admin_views import (
     OTPBotStartSessionView,
     OTPBotStopSessionView,
 )
-from .models import OTPBot, OTPCode, ChatSession, UserVoicePreference
+from .models import OTPBot, OTPCode, ChatSession, UserVoicePreference, OTPBotPromptSettings
 
 
 @admin.register(OTPBot)
@@ -180,3 +180,80 @@ class UserVoicePreferenceAdmin(admin.ModelAdmin):
     list_filter = ("voice_enabled",)
     search_fields = ("phone_number",)
     readonly_fields = ("id", "created_at", "updated_at")
+
+
+@admin.register(OTPBotPromptSettings)
+class OTPBotPromptSettingsAdmin(admin.ModelAdmin):
+    """Admin for OTP Bot AI prompts configuration (singleton)."""
+
+    list_display = ["id", "is_active", "updated_at"]
+    readonly_fields = ["created_at", "updated_at"]
+
+    fieldsets = (
+        ("Status", {
+            "fields": ("is_active",),
+            "description": "If disabled, uses default prompts from prompts.py",
+        }),
+        ("Core Identity", {
+            "fields": ("system_prompt_core",),
+            "description": "Main AI personality and behavior instructions",
+        }),
+        ("EasyCard: About", {
+            "fields": ("about_easycard", "card_types", "app_features"),
+            "description": "General EasyCard information",
+        }),
+        ("EasyCard: Fees", {
+            "fields": (
+                "fees_one_time",
+                "fees_topup",
+                "fees_transfer",
+                "fees_transactions",
+            ),
+            "classes": ("collapse",),
+            "description": "Fee structure in AED",
+        }),
+        ("EasyCard: Rates & Notes", {
+            "fields": ("exchange_rates", "important_notes"),
+            "classes": ("collapse",),
+        }),
+        ("Business Scenarios", {
+            "fields": (
+                "scenario_new_user",
+                "scenario_existing_user",
+                "scenario_consultation",
+                "scenario_escalation",
+                "escalation_keywords",
+            ),
+            "description": "Scenario-based prompt templates",
+        }),
+        ("Voice Mode", {
+            "fields": ("voice_mode_prompt", "voice_max_words"),
+            "classes": ("collapse",),
+            "description": "Settings for voice responses (TTS)",
+        }),
+        ("Language & Formatting", {
+            "fields": ("language_detection_rule", "formatting_rules"),
+            "classes": ("collapse",),
+        }),
+        ("WAHA Plus: Interactive Buttons", {
+            "fields": ("buttons_config", "welcome_buttons"),
+            "classes": ("collapse",),
+            "description": "JSON configuration for interactive buttons/lists (requires WAHA Plus)",
+        }),
+        ("Error Messages", {
+            "fields": ("error_ai", "error_timeout", "error_voice_unavailable"),
+            "classes": ("collapse",),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
+
+    def has_add_permission(self, request):
+        """Allow adding only if no records exist (singleton)."""
+        return not OTPBotPromptSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of singleton."""
+        return False

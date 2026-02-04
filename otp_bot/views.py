@@ -262,6 +262,12 @@ class VerifyOTPAPIView(APIView):
             f"[OTP_API] Token issued for {phone[:7]}*** (new_user={is_new_user})"
         )
 
+        # Send welcome message to new users via OTP Bot
+        if is_new_user:
+            from .tasks import send_welcome_message_task
+            send_welcome_message_task.delay(phone_number=phone)
+            logger.info(f"[OTP_API] Welcome message task queued for {phone[:7]}***")
+
         return Response(
             {
                 "is_valid": True,

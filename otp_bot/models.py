@@ -480,6 +480,44 @@ class OTPBotPromptSettings(TimestampModel, SingletonModel):
         help_text=_("Message when voice processing fails"),
     )
 
+    # === OTP Messages ===
+    otp_message_new_user = models.TextField(
+        default=(
+            "Здравствуйте! 👋\n\n"
+            "Я ваш личный ассистент Easy Card 💳\n"
+            "Помогу вам пройти регистрацию и отвечу на любые вопросы о картах, "
+            "комиссиях и переводах.\n\n"
+            "Ваш код подтверждения: {code}\n\n"
+            "⏱ Код действителен {ttl_minutes} мин.\n"
+            "🔒 Не сообщайте его никому."
+        ),
+        verbose_name=_("OTP Message (New User)"),
+        help_text=_("Message sent with OTP code for first-time users. Use {code} and {ttl_minutes} placeholders."),
+    )
+
+    otp_message_existing_user = models.TextField(
+        default=(
+            "Ваш код подтверждения: {code}\n\n"
+            "Код действителен {ttl_minutes} мин. Не сообщайте его никому."
+        ),
+        verbose_name=_("OTP Message (Existing User)"),
+        help_text=_("Message sent with OTP code for returning users. Use {code} and {ttl_minutes} placeholders."),
+    )
+
+    welcome_message_after_registration = models.TextField(
+        default=(
+            "Отлично! Регистрация успешно завершена 🎉\n\n"
+            "Добро пожаловать в Easy Card!\n\n"
+            "Я всегда на связи и готов помочь:\n"
+            "• Узнать баланс и историю операций\n"
+            "• Рассказать о комиссиях и лимитах\n"
+            "• Ответить на вопросы о картах\n\n"
+            "Просто напишите мне! 💬"
+        ),
+        verbose_name=_("Welcome Message After Registration"),
+        help_text=_("Message sent after successful OTP verification for new users."),
+    )
+
     class Meta:
         verbose_name = _("OTP Bot Prompt Settings")
         verbose_name_plural = _("OTP Bot Prompt Settings")

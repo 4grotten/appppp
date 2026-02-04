@@ -93,10 +93,15 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 return
             
             data = json.loads(text_data)
-            user_audio_base64 = data.get("user_audio", None) 
+            # msg_type = data.get("type")
+            user_audio_base64 = data.get("user_audio", None)
             assistant_id = data.get("assistant_id", None)
             user = self.scope["user"]
             chat = self.chat
+            
+            # if msg_type == "save_ai_message" or data.get("assistant_id"):
+            #     await self.handle_ai_response(data, user)
+            #     return
             
             assistant = await self.get_assistant_by_chat(chat=chat)
             user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
@@ -179,6 +184,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_comment_with_ai_response(self, text, chat, assistant, parent=None, audio_base64=None):
         audio_file = None
+
         if audio_base64:
             try:
                 decoded_file = base64.b64decode(audio_base64)
@@ -302,7 +308,6 @@ class CommentConsumer(AsyncWebsocketConsumer):
             if not hasattr(self, "ai_socket") or not self.ai_socket.open:
                 self.ai_socket = await self.connect_to_ai()
 
-
             data = await self.prepare_data(comment)
 
             data["user_audio"] = audio_base64 
@@ -364,6 +369,22 @@ class CommentConsumer(AsyncWebsocketConsumer):
             parent = await self.get_comment(parent_id)
             chat = await self.get_chat_with_parent(parent)
 
+
+            assistant_id = data.get("assistant_id")
+            if assistant_id:
+                assistant = await self.get_assistant(assistant_id)
+            else:
+                assistant = await self.get_assistant_by_chat(chat=self.chat)
+
+            parent = None
+            if parent_id:
+                try:
+                    parent = await self.get_comment(parent_id)
+                except Exception as e:
+                    logger.warning(f"Parent comment {parent_id} not found: {e}. Saving without parent.")
+                    parent = None
+
+            chat = self.chat
 
             comment = await self.create_comment_with_ai_response(
                 text, chat, assistant, parent, audio_base64

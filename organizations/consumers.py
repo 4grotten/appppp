@@ -366,7 +366,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
             assistant = await self.get_assistant(assistant_id)
-            parent = await self.get_comment(parent_id)
+            # parent = await self.get_comment(parent_id)
             chat = await self.get_chat_with_parent(parent)
 
 

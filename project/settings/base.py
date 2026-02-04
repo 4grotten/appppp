@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "api_keys.apps.ApiKeysConfig",
     "messenger_bots.apps.MessengerBotsConfig",
     "otp_bot.apps.OtpBotConfig",
+    "easycard_integration.apps.EasycardIntegrationConfig",
 ]
 
 if DEBUG:
@@ -146,8 +147,24 @@ DATABASES = {
         "HOST": config("POSTGRES_HOST"),
         "PORT": config("POSTGRES_PORT"),
         "OPTIONS": json.loads(config("POSTGRES_OPTIONS", default="{}")),
-    }
+    },
+    # EasyCard database (read-only, managed by EasyCard server)
+    "easycard": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("EASYCARD_DB_NAME", default="easycard"),
+        "USER": config("EASYCARD_DB_USER", default="easycard"),
+        "PASSWORD": config("EASYCARD_DB_PASSWORD", default=""),
+        "HOST": config("EASYCARD_DB_HOST", default="localhost"),
+        "PORT": config("EASYCARD_DB_PORT", default="5432"),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {
+            "connect_timeout": 10,
+        },
+    },
 }
+
+# Database routers for multi-database support
+DATABASE_ROUTERS = ["easycard_integration.db_router.EasyCardRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

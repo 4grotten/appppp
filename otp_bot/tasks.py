@@ -292,3 +292,40 @@ def _download_voice_audio(
 
     logger.error(f"[OTP_VOICE_TASK] All download methods failed for {masked_phone}")
     return None
+
+
+@shared_task(
+    bind=True,
+    max_retries=2,
+    default_retry_delay=3,
+    time_limit=30,
+    soft_time_limit=25,
+)
+def send_welcome_message_task(self, phone_number: str):
+    """Send welcome message to new user after successful OTP verification.
+
+    Called asynchronously after OTP code is verified for a new user.
+    This allows the user to receive a friendly welcome message from the bot.
+
+    Args:
+        phone_number: User's phone number in E.164 format (e.g., +79991234567)
+    """
+    from .services.otp_service import OTPService
+
+    masked_phone = f"{phone_number[:7]}***" if len(phone_number) > 7 else phone_number
+    logger.info(f"[OTP_WELCOME] Sending welcome message to {masked_phone}")
+
+    try:
+        service = OTPService()
+        sent = service.send_welcome_message(phone_number)
+
+        if sent:
+            logger.info(f"[OTP_WELCOME] Welcome message sent successfully to {masked_phone}")
+            return {"status": "sent", "phone": masked_phone}
+        else:
+            logger.warning(f"[OTP_WELCOME] Failed to send welcome message to {masked_phone}")
+            return {"status": "failed", "phone": masked_phone}
+
+    except Exception as e:
+        logger.error(f"[OTP_WELCOME] Error sending welcome message to {masked_phone}: {e}")
+        raise self.retry(exc=e)

@@ -14,7 +14,7 @@ import hmac
 from django.conf import settings
 from django.utils import timezone
 
-from otp_bot.models import OTPBot, OTPBotStatus, OTPCode
+from otp_bot.models import OTPBot, OTPBotStatus, OTPCode, OTPBotPromptSettings
 from .waha_otp import WAHAOTPClient, WAHAOTPError
 
 logger = logging.getLogger(__name__)
@@ -24,11 +24,34 @@ OTP_CODE_TTL_SECONDS = getattr(settings, "OTP_CODE_TTL_SECONDS", 300)
 OTP_MAX_ATTEMPTS = getattr(settings, "OTP_MAX_ATTEMPTS", 3)
 OTP_RESEND_COOLDOWN_SECONDS = getattr(settings, "OTP_RESEND_COOLDOWN_SECONDS", 60)
 OTP_MAX_PER_PHONE_10MIN = getattr(settings, "OTP_MAX_PER_PHONE_10MIN", 3)
-OTP_MESSAGE_TEMPLATE = getattr(
-    settings,
-    "OTP_MESSAGE_TEMPLATE",
-    "Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин. Не сообщайте его никому.",
+
+# Fallback message templates (used if DB settings unavailable)
+_FALLBACK_OTP_MESSAGE = "Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин."
+_FALLBACK_OTP_MESSAGE_NEW_USER = (
+    "Здравствуйте! 👋\n\n"
+    "Я ваш личный ассистент Easy Card 💳\n\n"
+    "Ваш код подтверждения: {code}\n\n"
+    "⏱ Код действителен {ttl_minutes} мин."
 )
+_FALLBACK_WELCOME_MESSAGE = "Добро пожаловать в Easy Card! 🎉"
+
+
+def get_otp_message_templates() -> dict:
+    """Get OTP message templates from DB settings with fallbacks."""
+    try:
+        prompt_settings = OTPBotPromptSettings.get_settings()
+        return {
+            "new_user": prompt_settings.otp_message_new_user or _FALLBACK_OTP_MESSAGE_NEW_USER,
+            "existing_user": prompt_settings.otp_message_existing_user or _FALLBACK_OTP_MESSAGE,
+            "welcome": prompt_settings.welcome_message_after_registration or _FALLBACK_WELCOME_MESSAGE,
+        }
+    except Exception as e:
+        logger.warning(f"[OTP] Failed to load prompt settings: {e}, using fallbacks")
+        return {
+            "new_user": _FALLBACK_OTP_MESSAGE_NEW_USER,
+            "existing_user": _FALLBACK_OTP_MESSAGE,
+            "welcome": _FALLBACK_WELCOME_MESSAGE,
+        }
 
 
 class OTPServiceError(Exception):
@@ -150,6 +173,8 @@ class OTPService:
         Validates phone format, checks rate limits, generates code,
         sends via WAHA, stores hash in DB.
 
+        Uses personalized welcome message for first-time users.
+
         Raises:
             BotNotConnectedError: If OTP bot is not connected
             RateLimitError: If rate limit exceeded
@@ -158,6 +183,9 @@ class OTPService:
         phone = self._validate_phone(phone_number)
         self._ensure_bot_connected()
         self._check_rate_limit(phone)
+
+        # Check if this is a new user (never received OTP before)
+        is_first_otp = not OTPCode.objects.filter(phone_number=phone).exists()
 
         # Generate 6-digit code
         code = self._generate_code()
@@ -173,11 +201,14 @@ class OTPService:
             expires_at=expires_at,
         )
 
-        # Send via WhatsApp
-        message = OTP_MESSAGE_TEMPLATE.format(
+        # Get message templates from DB
+        templates = get_otp_message_templates()
+        template = templates["new_user"] if is_first_otp else templates["existing_user"]
+        message = template.format(
             code=code,
             ttl_minutes=OTP_CODE_TTL_SECONDS // 60,
         )
+
         sent = self.waha.send_text(phone, message)
 
         if not sent:
@@ -185,7 +216,7 @@ class OTPService:
             # Don't delete the OTP — user can retry via resend
             raise OTPServiceError("Failed to send WhatsApp message")
 
-        logger.info(f"[OTP] OTP sent to {phone[:7]}***: id={otp.id}")
+        logger.info(f"[OTP] OTP sent to {phone[:7]}*** (first_otp={is_first_otp}): id={otp.id}")
 
         return SendOTPResult(
             otp_id=str(otp.id),
@@ -268,6 +299,36 @@ class OTPService:
 
         # Send new OTP
         return self.send_otp(phone_number)
+
+    def send_welcome_message(self, phone_number: str) -> bool:
+        """Send welcome message after successful OTP verification for new users.
+
+        Args:
+            phone_number: Phone number in E.164 format
+
+        Returns:
+            True if message was sent successfully, False otherwise
+        """
+        phone = self._validate_phone(phone_number)
+
+        try:
+            self._ensure_bot_connected()
+        except BotNotConnectedError:
+            logger.warning(f"[OTP] Cannot send welcome message - bot not connected")
+            return False
+
+        # Get welcome message from DB settings
+        templates = get_otp_message_templates()
+        welcome_message = templates["welcome"]
+
+        sent = self.waha.send_text(phone, welcome_message)
+
+        if sent:
+            logger.info(f"[OTP] Welcome message sent to {phone[:7]}***")
+        else:
+            logger.error(f"[OTP] Failed to send welcome message to {phone[:7]}***")
+
+        return sent
 
     # --- Private Helpers ---
 

@@ -234,6 +234,87 @@ class UserVoicePreference(models.Model):
         return self.voice_enabled
 
 
+class UserEasyCardMapping(models.Model):
+    """Mapping between Apofiz User and EasyCard Profile.
+
+    Links local Apofiz users to their EasyCard profiles via UUID.
+    Used for reliable user identification in webhook processing
+    and transaction notifications.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    apofiz_user = models.OneToOneField(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="easycard_mapping",
+        help_text=_("Apofiz user account"),
+    )
+    easycard_user_id = models.UUIDField(
+        unique=True,
+        db_index=True,
+        help_text=_("EasyCard Profile user_id (UUID from Supabase)"),
+    )
+    phone_number = models.CharField(
+        max_length=20,
+        db_index=True,
+        help_text=_("Shared phone number for linking (E.164)"),
+    )
+    synced_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_("Last sync timestamp"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("User EasyCard Mapping")
+        verbose_name_plural = _("User EasyCard Mappings")
+        indexes = [
+            models.Index(fields=["phone_number"], name="idx_mapping_phone"),
+        ]
+
+    def __str__(self) -> str:
+        return f"Apofiz #{self.apofiz_user_id} <-> EasyCard {self.easycard_user_id}"
+
+    @classmethod
+    def get_by_easycard_id(cls, easycard_user_id: str) -> "UserEasyCardMapping":
+        """Get mapping by EasyCard user_id.
+
+        Args:
+            easycard_user_id: EasyCard Profile UUID
+
+        Returns:
+            UserEasyCardMapping instance or None
+        """
+        try:
+            return cls.objects.select_related("apofiz_user").get(
+                easycard_user_id=easycard_user_id
+            )
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def get_by_phone(cls, phone_number: str) -> "UserEasyCardMapping":
+        """Get mapping by phone number.
+
+        Args:
+            phone_number: Phone number in any format
+
+        Returns:
+            UserEasyCardMapping instance or None
+        """
+        # Normalize phone
+        normalized = phone_number.strip()
+        if not normalized.startswith("+"):
+            normalized = f"+{normalized}"
+
+        try:
+            return cls.objects.select_related("apofiz_user").get(
+                phone_number=normalized
+            )
+        except cls.DoesNotExist:
+            return None
+
+
 class OTPBotPromptSettings(TimestampModel, SingletonModel):
     """Singleton settings for OTP Bot AI prompts.
 

@@ -291,6 +291,161 @@ class EasyCardDataService:
         logger.info("[EASYCARD] Settings cache invalidated")
 
     @classmethod
+    def get_profile_by_user_id(cls, user_id: str):
+        """Get EasyCard profile by user_id UUID.
+
+        Used by webhook handlers to look up user information
+        when receiving transaction events.
+
+        Args:
+            user_id: EasyCard user_id (UUID string)
+
+        Returns:
+            EasyCardProfile instance or None if not found
+        """
+        try:
+            from ..models import EasyCardProfile
+            return EasyCardProfile.objects.filter(user_id=user_id).first()
+        except Exception as e:
+            logger.error(f"[EASYCARD] Error fetching profile by user_id: {e}")
+            return None
+
+    @classmethod
+    def get_profile_by_apofiz_id(cls, apofiz_user_id: int):
+        """Get EasyCard profile by Apofiz user ID.
+
+        Primary method for looking up EasyCard profiles when
+        you have the Apofiz user ID (e.g., from auth token).
+
+        Args:
+            apofiz_user_id: User ID from Apofiz backend (integer)
+
+        Returns:
+            EasyCardProfile instance or None if not found
+        """
+        try:
+            from ..models import EasyCardProfile
+            return EasyCardProfile.objects.filter(apofiz_user_id=apofiz_user_id).first()
+        except Exception as e:
+            logger.error(f"[EASYCARD] Error fetching profile by apofiz_user_id: {e}")
+            return None
+
+    @classmethod
+    def get_phone_by_user_id(cls, user_id: str) -> Optional[str]:
+        """Get user's phone number by EasyCard user_id.
+
+        Convenience method for webhook handlers that only need
+        the phone number.
+
+        Args:
+            user_id: EasyCard user_id (UUID string)
+
+        Returns:
+            Phone number string or None if not found
+        """
+        profile = cls.get_profile_by_user_id(user_id)
+        return profile.phone if profile else None
+
+    @classmethod
+    def get_phone_by_apofiz_id(cls, apofiz_user_id: int) -> Optional[str]:
+        """Get user's phone number by Apofiz user ID.
+
+        Args:
+            apofiz_user_id: User ID from Apofiz backend
+
+        Returns:
+            Phone number string or None if not found
+        """
+        profile = cls.get_profile_by_apofiz_id(apofiz_user_id)
+        return profile.phone if profile else None
+
+    @classmethod
+    def get_user_financial_data_by_apofiz_id(
+        cls,
+        apofiz_user_id: int,
+        include_transactions: bool = True,
+        transaction_limit: int = 10,
+    ) -> UserFinancialData:
+        """Get user's financial data by Apofiz user ID.
+
+        Primary method for getting financial context when
+        you have the Apofiz user ID.
+
+        Args:
+            apofiz_user_id: User ID from Apofiz backend
+            include_transactions: Whether to include recent transactions
+            transaction_limit: Max number of transactions to fetch
+
+        Returns:
+            UserFinancialData object with all available information
+        """
+        profile = cls.get_profile_by_apofiz_id(apofiz_user_id)
+        if not profile:
+            return cls._empty_user_data(f"apofiz:{apofiz_user_id}")
+
+        # Now fetch cards and transactions using the EasyCard user_id
+        return cls._fetch_user_data_by_profile(
+            profile, include_transactions, transaction_limit
+        )
+
+    @classmethod
+    def _fetch_user_data_by_profile(
+        cls, profile, include_transactions: bool, transaction_limit: int
+    ) -> UserFinancialData:
+        """Fetch user data using an existing profile."""
+        from ..models import EasyCardCard, EasyCardTransaction
+
+        # Get user's cards
+        cards = list(
+            EasyCardCard.objects.filter(user_id=profile.user_id).values(
+                "id",
+                "name",
+                "type",
+                "status",
+                "balance",
+                "last_four_digits",
+                "expiry_date",
+            )
+        )
+
+        # Calculate total balance
+        total_balance = sum(
+            card["balance"] for card in cards if card["status"] == "active"
+        )
+
+        has_active_card = any(card["status"] == "active" for card in cards)
+
+        # Get recent transactions
+        transactions = []
+        if include_transactions:
+            transactions = list(
+                EasyCardTransaction.objects.filter(user_id=profile.user_id)
+                .order_by("-created_at")[:transaction_limit]
+                .values(
+                    "id",
+                    "type",
+                    "status",
+                    "amount",
+                    "currency",
+                    "fee",
+                    "merchant_name",
+                    "description",
+                    "created_at",
+                )
+            )
+
+        return UserFinancialData(
+            phone=profile.phone or "",
+            user_id=str(profile.user_id),
+            full_name=profile.display_name,
+            total_balance=Decimal(str(total_balance)),
+            cards=cards,
+            recent_transactions=transactions,
+            has_active_card=has_active_card,
+            is_registered=True,
+        )
+
+    @classmethod
     def _normalize_phone(cls, phone: str) -> str:
         """Normalize phone number format."""
         # Remove all non-digit characters except +

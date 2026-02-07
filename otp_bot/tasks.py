@@ -2,12 +2,14 @@
 
 import base64
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 from celery import shared_task
 from django.utils import timezone
 
 from .models import OTPCode, ChatSession
+from .webhook_handler import get_waha_client, get_ai_service, get_elevenlabs_service
 
 logger = logging.getLogger(__name__)
 
@@ -58,16 +60,13 @@ def process_otp_voice_message_task(
         message_id: WhatsApp message ID
         payload: Full message payload from webhook
     """
-    from .services.waha_otp import WAHAOTPClient
-    from .services.ai_service import FinanceAIService
-    from .services.elevenlabs import ElevenLabsService
-
     masked_phone = f"+{phone[:7]}***" if len(phone) > 7 else f"+{phone}"
     logger.info(f"[OTP_VOICE_TASK] Processing voice from {masked_phone}")
 
-    waha = WAHAOTPClient()
-    ai = FinanceAIService()
-    elevenlabs = ElevenLabsService()
+    # Use singleton services (optimization #1)
+    waha = get_waha_client()
+    ai = get_ai_service()
+    elevenlabs = get_elevenlabs_service()
 
     # Check if ElevenLabs is configured
     if not elevenlabs.is_configured():
@@ -148,7 +147,6 @@ def process_otp_text_message_task(
     self,
     phone: str,
     text: str,
-    voice_mode: bool = False,
 ):
     """Process text message asynchronously (AI response + optional TTS).
 
@@ -158,18 +156,20 @@ def process_otp_text_message_task(
     Args:
         phone: User's phone number (without + prefix)
         text: User's message text
-        voice_mode: Whether to respond with voice (TTS)
     """
-    from .services.waha_otp import WAHAOTPClient
-    from .services.ai_service import FinanceAIService
-    from .services.elevenlabs import ElevenLabsService
+    from .models import UserVoicePreference
 
     masked_phone = f"+{phone[:7]}***" if len(phone) > 7 else f"+{phone}"
     logger.info(f"[OTP_TEXT_TASK] Processing text from {masked_phone}: {text[:30]}...")
 
-    waha = WAHAOTPClient()
-    ai = FinanceAIService()
-    elevenlabs = ElevenLabsService()
+    # Use singleton services (optimization #1)
+    waha = get_waha_client()
+    ai = get_ai_service()
+    elevenlabs = get_elevenlabs_service()
+
+    # Get voice preference inside task (optimization #6)
+    pref = UserVoicePreference.get_preference(phone)
+    voice_mode = pref.voice_enabled
 
     # Get or create chat session
     session = ChatSession.get_or_create_session(phone)
@@ -209,15 +209,11 @@ def _download_voice_audio(
     payload: dict,
     waha,
 ) -> Optional[bytes]:
-    """Download voice audio using multiple fallback methods.
+    """Download voice audio using parallel fallback methods (optimization #4).
 
-    Tries in order:
-    1. media.data (base64 in payload)
-    2. media.url (pre-signed URL)
-    3. mediaUrl (root level)
-    4. WAHA download API with message_id
-    5. WAHA download API with @c.us format
-    6. WAHA download API with raw ID
+    Uses ThreadPoolExecutor for parallel attempts:
+    - First successful method wins
+    - Fallback sequential methods for edge cases
 
     Args:
         phone: User's phone number
@@ -230,67 +226,78 @@ def _download_voice_audio(
     """
     from messenger_bots.services.whatsapp.http_client import waha_request
 
-    audio_bytes = None
     masked_phone = f"+{phone[:7]}***" if len(phone) > 7 else f"+{phone}"
 
-    # Method 1: media.data (base64)
-    media_data = payload.get("media", {}).get("data")
-    if media_data:
+    def try_base64():
+        media_data = payload.get("media", {}).get("data")
+        if media_data:
+            try:
+                return base64.b64decode(media_data)
+            except Exception:
+                return None
+        return None
+
+    def try_media_url():
+        url = payload.get("media", {}).get("url")
+        if url:
+            try:
+                resp = waha_request("GET", url, timeout=(3, 15))
+                return resp.content if resp.ok else None
+            except Exception:
+                return None
+        return None
+
+    def try_media_url_root():
+        url = payload.get("mediaUrl")
+        if url:
+            try:
+                resp = waha_request("GET", url, timeout=(3, 15))
+                return resp.content if resp.ok else None
+            except Exception:
+                return None
+        return None
+
+    def try_waha_api():
+        return waha.download_media(message_id)
+
+    def try_waha_cus():
+        msg_id_cus = message_id.replace("@s.whatsapp.net", "@c.us")
+        if msg_id_cus != message_id:
+            return waha.download_media(msg_id_cus)
+        return None
+
+    def try_raw_id():
+        parts = message_id.split("_")
+        if len(parts) >= 3:
+            return waha.download_media(parts[-1])
+        return None
+
+    # Parallel execution - first success wins
+    methods = [try_base64, try_media_url, try_media_url_root, try_waha_api]
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {executor.submit(m): m.__name__ for m in methods}
+
+        for future in as_completed(futures, timeout=20):
+            try:
+                result = future.result()
+                if result:
+                    logger.info(f"[VOICE_DL] Success via {futures[future]}: {len(result)} bytes")
+                    return result
+            except Exception:
+                pass
+
+    # Fallback sequential methods
+    for method in [try_waha_cus, try_raw_id]:
         try:
-            audio_bytes = base64.b64decode(media_data)
-            logger.info(f"[OTP_VOICE_TASK] Method 1 (base64): {len(audio_bytes)} bytes")
-            return audio_bytes
-        except Exception as e:
-            logger.debug(f"[OTP_VOICE_TASK] Method 1 failed: {e}")
+            result = method()
+            if result:
+                logger.info(f"[VOICE_DL] Fallback success via {method.__name__}: {len(result)} bytes")
+                return result
+        except Exception:
+            pass
 
-    # Method 2: media.url
-    media_url = payload.get("media", {}).get("url")
-    if media_url:
-        try:
-            resp = waha_request("GET", media_url, timeout=(5, 30))
-            if resp.ok:
-                audio_bytes = resp.content
-                logger.info(f"[OTP_VOICE_TASK] Method 2 (media.url): {len(audio_bytes)} bytes")
-                return audio_bytes
-        except Exception as e:
-            logger.debug(f"[OTP_VOICE_TASK] Method 2 failed: {e}")
-
-    # Method 3: mediaUrl at root
-    media_url_root = payload.get("mediaUrl")
-    if media_url_root:
-        try:
-            resp = waha_request("GET", media_url_root, timeout=(5, 30))
-            if resp.ok:
-                audio_bytes = resp.content
-                logger.info(f"[OTP_VOICE_TASK] Method 3 (mediaUrl): {len(audio_bytes)} bytes")
-                return audio_bytes
-        except Exception as e:
-            logger.debug(f"[OTP_VOICE_TASK] Method 3 failed: {e}")
-
-    # Method 4: WAHA download API
-    audio_bytes = waha.download_media(message_id)
-    if audio_bytes:
-        logger.info(f"[OTP_VOICE_TASK] Method 4 (WAHA API): {len(audio_bytes)} bytes")
-        return audio_bytes
-
-    # Method 5: WAHA with @c.us format
-    message_id_cus = message_id.replace("@s.whatsapp.net", "@c.us")
-    if message_id_cus != message_id:
-        audio_bytes = waha.download_media(message_id_cus)
-        if audio_bytes:
-            logger.info(f"[OTP_VOICE_TASK] Method 5 (@c.us): {len(audio_bytes)} bytes")
-            return audio_bytes
-
-    # Method 6: Raw message ID
-    parts = message_id.split("_")
-    if len(parts) >= 3:
-        raw_id = parts[-1]
-        audio_bytes = waha.download_media(raw_id)
-        if audio_bytes:
-            logger.info(f"[OTP_VOICE_TASK] Method 6 (raw ID): {len(audio_bytes)} bytes")
-            return audio_bytes
-
-    logger.error(f"[OTP_VOICE_TASK] All download methods failed for {masked_phone}")
+    logger.error(f"[VOICE_DL] All download methods failed for {masked_phone}")
     return None
 
 
@@ -302,10 +309,11 @@ def _download_voice_audio(
     soft_time_limit=25,
 )
 def send_welcome_message_task(self, phone_number: str):
-    """Send welcome message to new user after successful OTP verification.
+    """Send welcome message with buttons to new user after OTP verification.
 
     Called asynchronously after OTP code is verified for a new user.
-    This allows the user to receive a friendly welcome message from the bot.
+    Tries to send interactive message with "Get Card" button first,
+    falls back to plain text if buttons are not supported.
 
     Args:
         phone_number: User's phone number in E.164 format (e.g., +79991234567)
@@ -317,7 +325,14 @@ def send_welcome_message_task(self, phone_number: str):
 
     try:
         service = OTPService()
-        sent = service.send_welcome_message(phone_number)
+
+        # Try sending with interactive buttons first
+        sent = service.send_welcome_with_card_button(phone_number)
+
+        if not sent:
+            # Fallback to plain text welcome
+            logger.info(f"[OTP_WELCOME] Buttons failed, trying plain text for {masked_phone}")
+            sent = service.send_welcome_message(phone_number)
 
         if sent:
             logger.info(f"[OTP_WELCOME] Welcome message sent successfully to {masked_phone}")
@@ -328,4 +343,64 @@ def send_welcome_message_task(self, phone_number: str):
 
     except Exception as e:
         logger.error(f"[OTP_WELCOME] Error sending welcome message to {masked_phone}: {e}")
+        raise self.retry(exc=e)
+
+
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=5,
+    time_limit=30,
+    soft_time_limit=25,
+)
+def send_transaction_notification_task(
+    self,
+    phone_number: str,
+    tx_type: str,
+    amount: float,
+    currency: str = "AED",
+    merchant: str = None,
+    balance_after: float = None,
+):
+    """Send transaction notification via WhatsApp.
+
+    Called by EasyCard webhook handler to notify user about transactions.
+    Uses interactive buttons with fallback to plain text.
+
+    Args:
+        phone_number: User's phone number in E.164 format
+        tx_type: Transaction type (top_up, card_payment, etc.)
+        amount: Transaction amount
+        currency: Currency code
+        merchant: Optional merchant name
+        balance_after: Optional balance after transaction
+    """
+    from .services.otp_service import OTPService
+
+    masked_phone = f"{phone_number[:7]}***" if len(phone_number) > 7 else phone_number
+    logger.info(
+        f"[OTP_TX_NOTIFY] Sending notification to {masked_phone}: "
+        f"{tx_type} {amount} {currency}"
+    )
+
+    try:
+        service = OTPService()
+        sent = service.send_transaction_notification(
+            phone_number=phone_number,
+            tx_type=tx_type,
+            amount=amount,
+            currency=currency,
+            merchant=merchant,
+            balance_after=balance_after,
+        )
+
+        if sent:
+            logger.info(f"[OTP_TX_NOTIFY] Notification sent to {masked_phone}")
+            return {"status": "sent", "phone": masked_phone, "tx_type": tx_type}
+        else:
+            logger.warning(f"[OTP_TX_NOTIFY] Failed to send notification to {masked_phone}")
+            return {"status": "failed", "phone": masked_phone}
+
+    except Exception as e:
+        logger.error(f"[OTP_TX_NOTIFY] Error sending notification to {masked_phone}: {e}")
         raise self.retry(exc=e)

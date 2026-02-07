@@ -1,14 +1,50 @@
 """Finance AI Service for EasyCard OTP Bot."""
 
 import logging
+import threading
 from typing import Dict, List, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from django.conf import settings
 
 from .prompt_service import build_system_prompt, get_error_message
+from otp_bot.metrics import track_timing
 
 logger = logging.getLogger(__name__)
+
+# Singleton HTTP session with connection pooling for AI proxy
+_ai_session = None
+_ai_session_lock = threading.Lock()
+
+
+def get_ai_session() -> requests.Session:
+    """Get shared HTTP session for AI proxy requests."""
+    global _ai_session
+    if _ai_session is not None:
+        return _ai_session
+
+    with _ai_session_lock:
+        if _ai_session is not None:
+            return _ai_session
+
+        session = requests.Session()
+        retry = Retry(
+            total=2,
+            backoff_factor=0.3,
+            status_forcelist=[502, 503, 504],
+        )
+        adapter = HTTPAdapter(
+            pool_connections=5,
+            pool_maxsize=20,
+            max_retries=retry,
+        )
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        _ai_session = session
+
+    return _ai_session
 
 
 def get_easycard_user_context(phone_number: str) -> str:
@@ -57,6 +93,7 @@ class FinanceAIService:
         self.max_tokens = getattr(settings, "OTP_BOT_AI_MAX_TOKENS", 500)
         self.temperature = getattr(settings, "OTP_BOT_AI_TEMPERATURE", 0.7)
 
+    @track_timing("ai_get_response")
     def get_response(
         self,
         phone_number: str,
@@ -91,7 +128,8 @@ class FinanceAIService:
         max_tokens = 200 if voice_mode else self.max_tokens
 
         try:
-            response = requests.post(
+            session = get_ai_session()
+            response = session.post(
                 f"{self.proxy_url}/bot/openai-proxy/",
                 json={
                     "system_prompt": system_prompt,

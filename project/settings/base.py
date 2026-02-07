@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "messenger_bots.apps.MessengerBotsConfig",
     "otp_bot.apps.OtpBotConfig",
     "easycard_integration.apps.EasycardIntegrationConfig",
+    "saved_contacts.apps.SavedContactsConfig",
 ]
 
 if DEBUG:
@@ -452,6 +453,12 @@ CELERY_TASK_ROUTES = {
     "messenger_bots.tasks.userbot_logout_task": {"queue": "messenger_bots"},
     "messenger_bots.tasks.userbot_get_dialogs_task": {"queue": "messenger_bots"},
     "messenger_bots.tasks.userbot_send_test_message_task": {"queue": "messenger_bots"},
+    # OTP Bot tasks
+    "otp_bot.tasks.process_otp_text_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.process_otp_voice_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.send_welcome_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.send_transaction_notification_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.cleanup_expired_otp_codes": {"queue": "default"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)
@@ -663,6 +670,10 @@ ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
 OTP_BOT_AI_MODEL = config("OTP_BOT_AI_MODEL", default="gpt-4o-mini")
 OTP_BOT_AI_MAX_TOKENS = config("OTP_BOT_AI_MAX_TOKENS", default=500, cast=int)
 OTP_BOT_AI_TEMPERATURE = config("OTP_BOT_AI_TEMPERATURE", default=0.7, cast=float)
+
+# EasyCard Integration Webhooks
+# Shared secret for HMAC verification of EasyCard webhooks
+EASYCARD_WEBHOOK_SECRET = config("EASYCARD_WEBHOOK_SECRET", default="change-me-in-production")
 
 
 if DEBUG:

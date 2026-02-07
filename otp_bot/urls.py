@@ -11,6 +11,10 @@ from otp_bot.views import (
     VerifyOTPAPIView,
     ResendOTPAPIView,
 )
+from otp_bot.webhooks import (
+    EasyCardTransactionWebhookView,
+    EasyCardUserWebhookView,
+)
 
 urlpatterns = [
     # Bot management (admin, API key required)
@@ -26,4 +30,16 @@ urlpatterns = [
     path("otp/send/", SendOTPAPIView.as_view(), name="otp-send"),
     path("otp/verify/", VerifyOTPAPIView.as_view(), name="otp-verify"),
     path("otp/resend/", ResendOTPAPIView.as_view(), name="otp-resend"),
+
+    # EasyCard webhooks (from Supabase Edge Functions)
+    path(
+        "webhooks/easycard/transaction/",
+        EasyCardTransactionWebhookView.as_view(),
+        name="easycard-transaction-webhook",
+    ),
+    path(
+        "webhooks/easycard/user/",
+        EasyCardUserWebhookView.as_view(),
+        name="easycard-user-webhook",
+    ),
 ]

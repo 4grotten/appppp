@@ -824,6 +824,108 @@ def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
 
 
 @shared_task
+def ensure_waha_session_running():
+    """
+    Monitor WAHA session and auto-restart if stopped/failed.
+
+    Runs every 2 minutes to quickly detect and recover from session drops.
+    This is critical for OTP bot availability.
+    """
+    from messenger_bots.models import WhatsAppProvider, WhatsAppSessionStatus
+    from messenger_bots.services.whatsapp import WhatsAppServiceFactory
+
+    waha_bots = WhatsAppBot.objects.filter(
+        provider=WhatsAppProvider.WAHA,
+        is_active=True,
+    ).select_related("organization")
+
+    results = []
+    for bot in waha_bots:
+        try:
+            service = WhatsAppServiceFactory.get_service(bot)
+            connection_status = service.check_connection()
+            waha_status = connection_status.get("status", "UNKNOWN")
+
+            # Session needs restart if STOPPED or FAILED
+            if waha_status in ["STOPPED", "FAILED"]:
+                logger.warning(
+                    f"[WAHA_MONITOR] Session down for org {bot.organization.id}: "
+                    f"status={waha_status}, attempting auto-restart..."
+                )
+
+                # Attempt to start session
+                success = service.start_session()
+
+                if success:
+                    logger.info(
+                        f"[WAHA_MONITOR] Session auto-restarted for org {bot.organization.id}"
+                    )
+                    bot.session_status = WhatsAppSessionStatus.PENDING
+                    bot.last_error = None
+                    bot.save(update_fields=["session_status", "last_error"])
+                    results.append({
+                        "org_id": bot.organization.id,
+                        "action": "restarted",
+                        "previous_status": waha_status,
+                    })
+                else:
+                    logger.error(
+                        f"[WAHA_MONITOR] Failed to restart session for org {bot.organization.id}"
+                    )
+                    bot.session_status = WhatsAppSessionStatus.FAILED
+                    bot.last_error = f"Auto-restart failed from status: {waha_status}"
+                    bot.save(update_fields=["session_status", "last_error"])
+                    results.append({
+                        "org_id": bot.organization.id,
+                        "action": "restart_failed",
+                        "previous_status": waha_status,
+                    })
+
+            elif waha_status == "WORKING":
+                # Session is healthy
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "healthy",
+                    "status": waha_status,
+                })
+
+            elif waha_status == "STARTING":
+                # Session is starting, wait for it
+                logger.info(
+                    f"[WAHA_MONITOR] Session starting for org {bot.organization.id}"
+                )
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "starting",
+                    "status": waha_status,
+                })
+
+            else:
+                # Unknown or other status (SCAN_QR_CODE, etc.)
+                logger.info(
+                    f"[WAHA_MONITOR] Session status for org {bot.organization.id}: {waha_status}"
+                )
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "monitoring",
+                    "status": waha_status,
+                })
+
+        except Exception as e:
+            logger.error(
+                f"[WAHA_MONITOR] Error checking session for org {bot.organization.id}: {e}"
+            )
+            results.append({
+                "org_id": bot.organization.id,
+                "action": "error",
+                "error": str(e),
+            })
+
+    logger.info(f"[WAHA_MONITOR] Check completed: {len(results)} bots monitored")
+    return {"monitored": len(results), "results": results}
+
+
+@shared_task
 def check_waha_session_health():
     from messenger_bots.models import WhatsAppProvider, WhatsAppSessionStatus
     from messenger_bots.services.whatsapp import WhatsAppServiceFactory

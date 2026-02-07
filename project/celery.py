@@ -49,6 +49,10 @@ app.conf.beat_schedule = {
         "task": "messenger_bots.tasks.check_pending_bot_requests",
         "schedule": crontab(minute="*/5"),  # Every 5 minutes
     },
+    "ensure-waha-session-running": {
+        "task": "messenger_bots.tasks.ensure_waha_session_running",
+        "schedule": crontab(minute="*/2"),  # Every 2 minutes - critical for OTP availability
+    },
     "check-waha-session-health": {
         "task": "messenger_bots.tasks.check_waha_session_health",
         "schedule": crontab(minute="*/10"),  # Every 10 minutes

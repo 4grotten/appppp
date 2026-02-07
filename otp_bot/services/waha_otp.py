@@ -16,6 +16,7 @@ from typing import Dict, Optional
 from django.conf import settings
 
 from messenger_bots.services.whatsapp.http_client import waha_request
+from otp_bot.metrics import track_timing
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +190,7 @@ class WAHAOTPClient:
         except WAHAOTPError:
             return None
 
+    @track_timing("waha_send_text")
     def send_text(self, phone_number: str, text: str) -> bool:
         """Send a text message via WhatsApp.
 
@@ -247,6 +249,7 @@ class WAHAOTPClient:
             logger.error(f"[WAHA_OTP] Failed to send voice to {masked_phone}: {e.message}")
             return False
 
+    @track_timing("waha_send_voice")
     def send_voice_base64(
         self, phone_number: str, audio_bytes: bytes, mimetype: str = "audio/mpeg"
     ) -> bool:
@@ -308,3 +311,265 @@ class WAHAOTPClient:
         except Exception as e:
             logger.error(f"[WAHA_OTP] Download error: {e}")
             return None
+
+    def send_buttons(
+        self,
+        phone_number: str,
+        text: str,
+        buttons: list,
+        footer: Optional[str] = None,
+    ) -> bool:
+        """Send interactive button message via WhatsApp.
+
+        WAHA NOWEB format for buttons.
+        Buttons appear as clickable options below the message.
+
+        Args:
+            phone_number: E.164 format (e.g., +79991234567)
+            text: Message body text
+            buttons: List of button dicts [{"id": "btn1", "text": "Button Text"}, ...]
+                     Maximum 3 buttons allowed by WhatsApp
+            footer: Optional footer text displayed below buttons
+
+        Returns:
+            True if sent successfully
+        """
+        chat_id = phone_number.lstrip("+") + "@c.us"
+        masked_phone = phone_number[:7] + "***"
+        logger.info(f"[WAHA_OTP] Sending buttons to {masked_phone}")
+
+        # WhatsApp allows max 3 buttons
+        buttons_limited = buttons[:3]
+
+        payload = {
+            "session": self.session_name,
+            "chatId": chat_id,
+            "title": "",  # Optional header
+            "body": text,
+            "footer": footer or "",
+            "buttons": [
+                {"id": btn.get("id", f"btn_{i}"), "text": btn.get("text", "")}
+                for i, btn in enumerate(buttons_limited)
+            ],
+        }
+
+        try:
+            self._request("POST", "/api/sendButtons", payload)
+            logger.info(f"[WAHA_OTP] Buttons sent to {masked_phone}")
+            return True
+        except WAHAOTPError as e:
+            logger.error(f"[WAHA_OTP] Failed to send buttons to {masked_phone}: {e.message}")
+            return False
+
+    def send_list(
+        self,
+        phone_number: str,
+        text: str,
+        button_text: str,
+        sections: list,
+        title: Optional[str] = None,
+        footer: Optional[str] = None,
+    ) -> bool:
+        """Send interactive list message via WhatsApp.
+
+        List messages show a button that opens a menu with multiple options
+        organized in sections.
+
+        Args:
+            phone_number: E.164 format (e.g., +79991234567)
+            text: Message body text
+            button_text: Text on the button that opens the list menu
+            sections: List of section dicts:
+                [{"title": "Section 1", "rows": [{"id": "1", "title": "Option 1", "description": "..."}]}]
+            title: Optional header title
+            footer: Optional footer text
+
+        Returns:
+            True if sent successfully
+        """
+        chat_id = phone_number.lstrip("+") + "@c.us"
+        masked_phone = phone_number[:7] + "***"
+        logger.info(f"[WAHA_OTP] Sending list to {masked_phone}")
+
+        payload = {
+            "session": self.session_name,
+            "chatId": chat_id,
+            "title": title or "",
+            "body": text,
+            "footer": footer or "",
+            "buttonText": button_text,
+            "sections": sections,
+        }
+
+        try:
+            self._request("POST", "/api/sendList", payload)
+            logger.info(f"[WAHA_OTP] List sent to {masked_phone}")
+            return True
+        except WAHAOTPError as e:
+            logger.error(f"[WAHA_OTP] Failed to send list to {masked_phone}: {e.message}")
+            return False
+
+    def send_interactive_buttons(
+        self,
+        phone_number: str,
+        text: str,
+        buttons: list,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+    ) -> bool:
+        """Send interactive message with URL/Call/Reply buttons (WAHA Plus).
+
+        Supports mixed button types:
+        - URL: Opens link in browser
+        - Call: Initiates phone call
+        - Reply: Quick reply with callback
+        - Copy: Copy text to clipboard
+
+        Args:
+            phone_number: E.164 format (e.g., +79991234567)
+            text: Message body text
+            buttons: List of button dicts:
+                - URL: {"type": "url", "text": "Open", "url": "https://..."}
+                - Call: {"type": "call", "text": "Call", "phone": "+79001234567"}
+                - Reply: {"type": "reply", "id": "btn_id", "text": "Click"}
+                - Copy: {"type": "copy", "text": "Copy", "copy_text": "PROMO123"}
+            header: Optional header text
+            footer: Optional footer text
+
+        Returns:
+            True if sent successfully
+        """
+        chat_id = phone_number.lstrip("+") + "@c.us"
+        masked_phone = phone_number[:7] + "***"
+        logger.info(f"[WAHA_OTP] Sending interactive buttons to {masked_phone}")
+
+        # Build buttons payload for WAHA Plus format
+        formatted_buttons = []
+        for i, btn in enumerate(buttons[:3]):  # Max 3 buttons
+            btn_type = btn.get("type", "reply")
+
+            if btn_type == "url":
+                formatted_buttons.append({
+                    "type": "url",
+                    "text": btn.get("text", "Open"),
+                    "url": btn.get("url", ""),
+                })
+            elif btn_type == "call":
+                formatted_buttons.append({
+                    "type": "call",
+                    "text": btn.get("text", "Call"),
+                    "phone": btn.get("phone", ""),
+                })
+            elif btn_type == "copy":
+                formatted_buttons.append({
+                    "type": "copy",
+                    "text": btn.get("text", "Copy"),
+                    "copyCode": btn.get("copy_text", ""),
+                })
+            else:  # reply
+                formatted_buttons.append({
+                    "type": "reply",
+                    "id": btn.get("id", f"btn_{i}"),
+                    "text": btn.get("text", ""),
+                })
+
+        payload = {
+            "session": self.session_name,
+            "chatId": chat_id,
+            "body": text,
+            "buttons": formatted_buttons,
+        }
+
+        if header:
+            payload["header"] = header
+        if footer:
+            payload["footer"] = footer
+
+        try:
+            # WAHA Plus endpoint for interactive messages
+            self._request("POST", "/api/sendInteractiveMessage", payload)
+            logger.info(f"[WAHA_OTP] Interactive buttons sent to {masked_phone}")
+            return True
+        except WAHAOTPError as e:
+            logger.warning(f"[WAHA_OTP] Interactive buttons failed: {e.message}, trying reply buttons")
+            # Fallback to reply buttons for WAHA Core or old clients
+            return self._fallback_to_reply_buttons(phone_number, text, buttons, footer)
+
+    def _fallback_to_reply_buttons(
+        self,
+        phone_number: str,
+        text: str,
+        buttons: list,
+        footer: Optional[str] = None,
+    ) -> bool:
+        """Fallback to simple reply buttons when interactive buttons fail."""
+        # Convert all buttons to reply type
+        reply_buttons = []
+        for i, btn in enumerate(buttons[:3]):
+            reply_buttons.append({
+                "id": btn.get("id", f"btn_{i}"),
+                "text": btn.get("text", "Button"),
+            })
+
+        return self.send_buttons(phone_number, text, reply_buttons, footer)
+
+    def send_menu(
+        self,
+        phone_number: str,
+        welcome_text: Optional[str] = None,
+    ) -> bool:
+        """Send main menu with interactive buttons.
+
+        Displays the bot's main menu with options:
+        - Voice Assistant (URL to EasyCard Voice AI)
+        - Get Card (URL to cards page)
+        - Reply button for chat
+
+        Configure via Django settings:
+        - OTP_BOT_VOICE_ASSISTANT_URL: Voice assistant URL
+        - OTP_BOT_CARDS_URL: Cards page URL
+
+        Args:
+            phone_number: E.164 format
+            welcome_text: Optional custom welcome text
+
+        Returns:
+            True if sent successfully
+        """
+        # Get URLs from settings
+        voice_url = getattr(
+            settings,
+            "OTP_BOT_VOICE_ASSISTANT_URL",
+            "https://easycarduae.com/voice-assistant"
+        )
+        cards_url = getattr(settings, "OTP_BOT_CARDS_URL", "https://easycarduae.com/cards")
+
+        text = welcome_text or (
+            "👋 Привет! Я ваш ассистент EasyCard.\n\n"
+            "Выберите действие или напишите ваш вопрос:"
+        )
+
+        buttons = [
+            {
+                "type": "url",
+                "text": "🎙 Голосовой ассистент",
+                "url": voice_url,
+            },
+            {
+                "type": "url",
+                "text": "💳 Получить карту",
+                "url": cards_url,
+            },
+            {
+                "type": "reply",
+                "id": "start_chat",
+                "text": "💬 Начать чат",
+            },
+        ]
+
+        return self.send_interactive_buttons(
+            phone_number=phone_number,
+            text=text,
+            buttons=buttons,
+            footer="EasyCard UAE",
+        )

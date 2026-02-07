@@ -11,16 +11,39 @@ class EasyCardProfile(models.Model):
     """User profile from EasyCard database.
 
     Maps to: public.profiles table
+    Synced from Apofiz User model.
     """
+
+    ROLE_CHOICES = [
+        ("user", "User"),
+        ("moderator", "Moderator"),
+        ("admin", "Admin"),
+        ("root", "Root"),
+    ]
 
     id = models.UUIDField(primary_key=True)
     user_id = models.UUIDField(unique=True)
+    apofiz_user_id = models.BigIntegerField(
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="User ID from Apofiz backend (primary link)",
+    )
     phone = models.CharField(max_length=20, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     language = models.CharField(max_length=10, default="en")
     avatar_url = models.TextField(null=True, blank=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
+    web_links = models.JSONField(default=list, blank=True)
+    payment_links = models.JSONField(default=list, blank=True)
+    position = models.CharField(max_length=255, null=True, blank=True)
+    company_name = models.CharField(max_length=255, null=True, blank=True)
+    company_logo = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -32,11 +55,14 @@ class EasyCardProfile(models.Model):
         verbose_name_plural = "EasyCard Profiles"
 
     def __str__(self):
-        return f"{self.first_name or ''} {self.last_name or ''} ({self.phone or 'no phone'})"
+        name = self.full_name or f"{self.first_name or ''} {self.last_name or ''}".strip()
+        return f"{name or 'Unknown'} ({self.phone or 'no phone'})"
 
     @property
-    def full_name(self):
-        """Return full name of the user."""
+    def display_name(self):
+        """Return display name of the user."""
+        if self.full_name:
+            return self.full_name
         parts = [self.first_name, self.last_name]
         return " ".join(p for p in parts if p) or "Unknown"
 

@@ -84,6 +84,7 @@ class FileAdmin(admin.ModelAdmin):
         "medium",
         "small",
     )
+    search_fields = ("id", "file")
 
 
 @admin.register(LinkApp)

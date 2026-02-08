@@ -88,7 +88,7 @@ services:
     restart: always
 
   waha:
-    image: devlikeapro/waha:latest
+    image: devlikeapro/waha-plus:latest
     container_name: appofiz_waha_test
     restart: unless-stopped
     dns:
@@ -96,12 +96,21 @@ services:
       - 8.8.4.4
     env_file: ./env/test.env
     environment:
+      # WAHA Plus Core Settings
       - WAHA_DASHBOARD_ENABLED=true
       - WHATSAPP_DEFAULT_ENGINE=NOWEB
-      - WHATSAPP_HOOK_URL=https://test.apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
-      - WHATSAPP_HOOK_EVENTS=message,message.ack,session.status
-      - WAHA_WORKER_RESTART_SESSIONS=true
       - WAHA_LOG_LEVEL=info
+      - WAHA_API_KEY=${WAHA_API_KEY}
+      - WAHA_DASHBOARD_USERNAME=${WAHA_DASHBOARD_USERNAME}
+      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD}
+      # Webhook Configuration
+      - WHATSAPP_HOOK_URL=https://test.apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
+      - WHATSAPP_HOOK_EVENTS=message,message.ack,message.reaction,session.status,message.waiting
+      # WAHA Plus Optimizations
+      - WAHA_WORKER_RESTART_SESSIONS=true
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
+      - WAHA_PRINT_QR=false
+      - WHATSAPP_FILES_LIFETIME=180
     volumes:
       - waha_sessions:/app/.sessions
       - waha_files:/app/.media
@@ -111,8 +120,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    mem_limit: 256m
-    mem_reservation: 128m
+    mem_limit: 512m
+    mem_reservation: 256m
     ports:
       - "3000:3000"
 

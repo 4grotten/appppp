@@ -792,6 +792,8 @@ def _get_whatsapp_chat_history(chat: BotChat) -> list:
 def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
     """Send welcome message for first-time WhatsApp contact.
 
+    Uses WAHA Plus interactive buttons if available.
+
     Args:
         service: WhatsApp service instance (WAHA/Twilio/etc.)
         chat: BotChat instance
@@ -800,13 +802,36 @@ def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
     from messenger_bots.services.whatsapp.base import WhatsAppMessage
 
     try:
-        message = WhatsAppMessage(
-            to=chat.platform_chat_id,
-            text=welcome_text,
-        )
-        result = service.send_message(message)
+        result = None
 
-        if result.success:
+        # Try to send with interactive buttons (WAHA Plus feature)
+        if hasattr(service, 'send_buttons'):
+            buttons = [
+                {"id": "ask_question", "text": "💬 Задать вопрос"},
+                {"id": "view_contacts", "text": "📞 Контакты"},
+            ]
+
+            try:
+                result = service.send_buttons(
+                    to=chat.platform_chat_id,
+                    text=welcome_text,
+                    buttons=buttons,
+                    footer="Powered by Apofiz",
+                )
+                logger.info("[WA_TASK] Welcome sent with interactive buttons")
+            except Exception as btn_error:
+                logger.debug(f"[WA_TASK] Buttons not supported, falling back to text: {btn_error}")
+                result = None
+
+        # Fallback to plain text message
+        if not result or not result.success:
+            message = WhatsAppMessage(
+                to=chat.platform_chat_id,
+                text=welcome_text,
+            )
+            result = service.send_message(message)
+
+        if result and result.success:
             # Save welcome message to chat history
             welcome_msg = BotMessage.objects.create(
                 chat=chat,
@@ -817,7 +842,7 @@ def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
             _send_ws_notification(welcome_msg, chat)
             logger.info(f"[WA_TASK] Welcome message sent: {result.message_id}")
         else:
-            logger.warning(f"[WA_TASK] Failed to send welcome: {result.error}")
+            logger.warning(f"[WA_TASK] Failed to send welcome: {result.error if result else 'Unknown error'}")
 
     except Exception as e:
         logger.warning(f"[WA_TASK] Welcome message error: {e}")

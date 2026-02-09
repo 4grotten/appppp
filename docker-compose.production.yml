@@ -2,7 +2,8 @@ version: '3'
 volumes:
   postgres_data_dev: { }
   postgres_backup_dev: { }
-
+  waha_sessions: { }
+  waha_files: { }
 
 services:
   django: &django
@@ -17,11 +18,13 @@ services:
       - rabbitmq:rabbitmq
       - memcached:memcached
       - redis:redis
+      - waha:waha
     depends_on:
       - rabbitmq
       - postgres
       - memcached
       - redis
+      - waha
     env_file: ./env/production.env
     volumes:
       - .:/app
@@ -116,3 +119,41 @@ services:
     image: redis:6.2.6
     env_file: ./env/production.env
     restart: always
+
+  waha:
+    image: devlikeapro/waha-plus:latest
+    container_name: appofiz_waha_prod
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    env_file: ./env/production.env
+    environment:
+      # WAHA Plus Core Settings
+      - WAHA_DASHBOARD_ENABLED=true
+      - WHATSAPP_DEFAULT_ENGINE=NOWEB
+      - WAHA_LOG_LEVEL=info
+      - WAHA_API_KEY=${WAHA_API_KEY}
+      - WAHA_DASHBOARD_USERNAME=${WAHA_DASHBOARD_USERNAME}
+      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD}
+      # Webhook Configuration
+      - WHATSAPP_HOOK_URL=https://apofiz.com/api/v1/messenger-bots/whatsapp/waha/webhook/
+      - WHATSAPP_HOOK_EVENTS=message,message.ack,message.reaction,session.status,message.waiting
+      # WAHA Plus Optimizations
+      - WAHA_WORKER_RESTART_SESSIONS=true
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
+      - WAHA_PRINT_QR=false
+      - WHATSAPP_FILES_LIFETIME=180
+    volumes:
+      - waha_sessions:/app/.sessions
+      - waha_files:/app/.media
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/sessions"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    mem_limit: 1g
+    mem_reservation: 512m
+    ports:
+      - "3000:3000"

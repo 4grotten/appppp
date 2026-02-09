@@ -40,11 +40,15 @@ class WAHAService(WhatsAppServiceInterface):
         self.base_url = getattr(settings, "WAHA_BASE_URL", "http://waha:3000")
         self.api_key = getattr(settings, "WAHA_API_KEY", "")
         self.webhook_secret = getattr(settings, "WAHA_WEBHOOK_SECRET", "")
-        # WAHA Core (free) only supports "default" session
-        # For multiple sessions, need WAHA Plus ($19/month)
-        # WAHA PLUS: uncomment next line and comment the one below
-        # self.session_name = whatsapp_bot.waha_session_name or f"org_{whatsapp_bot.organization_id}"
-        self.session_name = whatsapp_bot.waha_session_name or "default"
+        # WAHA Plus: Multi-session support enabled
+        # Each organization gets its own session: org_{organization_id}
+        # Falls back to "default" for OTP bot or if not configured
+        if whatsapp_bot.waha_session_name:
+            self.session_name = whatsapp_bot.waha_session_name
+        elif whatsapp_bot.organization_id:
+            self.session_name = f"org_{whatsapp_bot.organization_id}"
+        else:
+            self.session_name = "default"
 
     def _make_request(
         self,
@@ -463,3 +467,294 @@ class WAHAService(WhatsAppServiceInterface):
         """Update bot's last_error field."""
         self.bot.last_error = error
         self.bot.save(update_fields=["last_error"])
+
+    # ============================================================
+    # WAHA Plus Features - Interactive Messages
+    # ============================================================
+
+    def send_buttons(
+        self,
+        to: str,
+        text: str,
+        buttons: list,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+    ) -> WhatsAppResponse:
+        """Send message with reply buttons (WAHA Plus).
+
+        Args:
+            to: Phone number
+            text: Message body text
+            buttons: List of button dicts [{"id": "btn_1", "text": "Button 1"}, ...]
+            header: Optional header text
+            footer: Optional footer text
+
+        Returns:
+            WhatsAppResponse with message_id
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            # Format buttons for WAHA API (max 3 buttons)
+            formatted_buttons = [
+                {"id": btn.get("id", f"btn_{i}"), "text": btn.get("text", btn.get("title", ""))}
+                for i, btn in enumerate(buttons[:3])
+            ]
+
+            payload = {
+                "session": self.session_name,
+                "chatId": chat_id,
+                "body": text,
+                "buttons": formatted_buttons,
+            }
+
+            if header:
+                payload["header"] = header
+            if footer:
+                payload["footer"] = footer
+
+            response = self._make_request("POST", "/api/sendButtons", payload)
+
+            return WhatsAppResponse(
+                success=True,
+                message_id=response.get("id"),
+                raw_response=response,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send buttons: {e}")
+            # Fallback to plain text with numbered options
+            fallback_text = f"{text}\n\n"
+            for i, btn in enumerate(buttons[:3], 1):
+                fallback_text += f"{i}. {btn.get('text', btn.get('title', ''))}\n"
+            return self.send_message(WhatsAppMessage(to=to, text=fallback_text.strip()))
+
+    def send_list(
+        self,
+        to: str,
+        text: str,
+        button_text: str,
+        sections: list,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+    ) -> WhatsAppResponse:
+        """Send list/menu message (WAHA Plus).
+
+        Args:
+            to: Phone number
+            text: Message body text
+            button_text: Text on the button that opens the list
+            sections: List of sections with rows:
+                [{"title": "Section 1", "rows": [{"id": "row_1", "title": "Item 1", "description": "..."}]}]
+            header: Optional header text
+            footer: Optional footer text
+
+        Returns:
+            WhatsAppResponse with message_id
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            payload = {
+                "session": self.session_name,
+                "chatId": chat_id,
+                "body": text,
+                "buttonText": button_text,
+                "sections": sections,
+            }
+
+            if header:
+                payload["header"] = header
+            if footer:
+                payload["footer"] = footer
+
+            response = self._make_request("POST", "/api/sendList", payload)
+
+            return WhatsAppResponse(
+                success=True,
+                message_id=response.get("id"),
+                raw_response=response,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send list: {e}")
+            # Fallback to plain text
+            fallback_text = f"{text}\n\n"
+            for section in sections:
+                if section.get("title"):
+                    fallback_text += f"*{section['title']}*\n"
+                for row in section.get("rows", []):
+                    fallback_text += f"• {row.get('title', '')}\n"
+            return self.send_message(WhatsAppMessage(to=to, text=fallback_text.strip()))
+
+    def send_contacts_button(
+        self,
+        to: str,
+        text: str,
+        contacts: list,
+    ) -> WhatsAppResponse:
+        """Send message with contact card button.
+
+        Convenience method to send organization contacts via interactive button.
+
+        Args:
+            to: Phone number
+            text: Intro text
+            contacts: List of contact dicts with name, phone, email, etc.
+
+        Returns:
+            WhatsAppResponse with message_id
+        """
+        buttons = [
+            {"id": "view_contacts", "text": "📞 Контакты"},
+        ]
+
+        if len(contacts) > 0:
+            # Build contact info text
+            contact_text = f"{text}\n\n"
+            for contact in contacts[:5]:  # Max 5 contacts
+                name = contact.get("name", "")
+                phone = contact.get("phone", "")
+                email = contact.get("email", "")
+
+                if name:
+                    contact_text += f"👤 *{name}*\n"
+                if phone:
+                    contact_text += f"📱 {phone}\n"
+                if email:
+                    contact_text += f"📧 {email}\n"
+                contact_text += "\n"
+
+            return self.send_message(WhatsAppMessage(to=to, text=contact_text.strip()))
+
+        return self.send_buttons(to=to, text=text, buttons=buttons)
+
+    def send_reaction(
+        self,
+        to: str,
+        message_id: str,
+        emoji: str,
+    ) -> WhatsAppResponse:
+        """Send reaction to a message (WAHA Plus).
+
+        Args:
+            to: Phone number (chat ID)
+            message_id: ID of the message to react to
+            emoji: Emoji to react with (e.g., "👍", "❤️", "😂")
+
+        Returns:
+            WhatsAppResponse
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            response = self._make_request(
+                "POST",
+                "/api/reaction",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                    "messageId": message_id,
+                    "reaction": emoji,
+                },
+            )
+
+            return WhatsAppResponse(
+                success=True,
+                message_id=response.get("id"),
+                raw_response=response,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send reaction: {e}")
+            return WhatsAppResponse(success=False, error=str(e))
+
+    def send_poll(
+        self,
+        to: str,
+        name: str,
+        options: list,
+        multiple_answers: bool = False,
+    ) -> WhatsAppResponse:
+        """Send poll message (WAHA Plus).
+
+        Args:
+            to: Phone number
+            name: Poll question/title
+            options: List of option strings ["Option 1", "Option 2", ...]
+            multiple_answers: Allow multiple selections
+
+        Returns:
+            WhatsAppResponse with message_id
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            response = self._make_request(
+                "POST",
+                "/api/sendPoll",
+                {
+                    "session": self.session_name,
+                    "chatId": chat_id,
+                    "name": name,
+                    "options": options[:12],  # WhatsApp max 12 options
+                    "multipleAnswers": multiple_answers,
+                },
+            )
+
+            return WhatsAppResponse(
+                success=True,
+                message_id=response.get("id"),
+                raw_response=response,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send poll: {e}")
+            return WhatsAppResponse(success=False, error=str(e))
+
+    def send_location(
+        self,
+        to: str,
+        latitude: float,
+        longitude: float,
+        name: Optional[str] = None,
+        address: Optional[str] = None,
+    ) -> WhatsAppResponse:
+        """Send location message.
+
+        Args:
+            to: Phone number
+            latitude: Location latitude
+            longitude: Location longitude
+            name: Optional location name
+            address: Optional location address
+
+        Returns:
+            WhatsAppResponse with message_id
+        """
+        try:
+            chat_id = self._format_chat_id(to)
+
+            payload = {
+                "session": self.session_name,
+                "chatId": chat_id,
+                "latitude": latitude,
+                "longitude": longitude,
+            }
+
+            if name:
+                payload["name"] = name
+            if address:
+                payload["address"] = address
+
+            response = self._make_request("POST", "/api/sendLocation", payload)
+
+            return WhatsAppResponse(
+                success=True,
+                message_id=response.get("id"),
+                raw_response=response,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send location: {e}")
+            return WhatsAppResponse(success=False, error=str(e))

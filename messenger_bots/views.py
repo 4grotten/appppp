@@ -384,7 +384,7 @@ class WAHAWebhookView(View):
         elif event_type == "message.ack":
             self._handle_message_ack(whatsapp_bot, data)
         elif event_type == "message.reaction":
-            pass  # Ignore reactions for now
+            self._handle_message_reaction(whatsapp_bot, data)
         else:
             logger.debug(f"Unhandled WAHA event type: {event_type}")
 
@@ -419,11 +419,25 @@ class WAHAWebhookView(View):
         whatsapp_bot.save(update_fields=["session_status"])
 
     def _handle_message(self, whatsapp_bot: WhatsAppBot, data: dict):
-        """Handle incoming message."""
+        """Handle incoming message including button responses."""
         payload = data.get("payload", {})
 
         # Skip outgoing messages (messages sent by us)
         if payload.get("fromMe", False):
+            return
+
+        # Check for button response (WAHA Plus)
+        message_type = payload.get("type", "")
+        button_response = payload.get("selectedButtonId") or payload.get("button", {}).get("id")
+
+        if button_response:
+            self._handle_button_response(whatsapp_bot, data, button_response)
+            return
+
+        # Check for list response (WAHA Plus)
+        list_response = payload.get("listResponse", {})
+        if list_response.get("rowId"):
+            self._handle_list_response(whatsapp_bot, data, list_response)
             return
 
         # Extract message details
@@ -516,11 +530,198 @@ class WAHAWebhookView(View):
         )
 
     def _handle_message_ack(self, whatsapp_bot: WhatsAppBot, data: dict):
-        """Handle message acknowledgment (delivered, read)."""
-        # For now, just log it
+        """Handle message acknowledgment (delivered, read).
+
+        ACK statuses:
+        - 1: Message sent to server
+        - 2: Message delivered to recipient
+        - 3: Message read by recipient (blue checkmarks)
+        - 4: Message played (for voice messages)
+        """
         payload = data.get("payload", {})
         ack_status = payload.get("ack")
-        logger.debug(f"WAHA message ack for org {whatsapp_bot.organization_id}: {ack_status}")
+        message_id = payload.get("id", {})
+
+        if isinstance(message_id, dict):
+            message_id = message_id.get("id", "")
+
+        logger.info(f"[WAHA_ACK] org={whatsapp_bot.organization_id}, status={ack_status}, msg_id={message_id}")
+
+        # If message is read (ack=3), we could update message status
+        # For now, notify via WebSocket for real-time UI updates
+        if ack_status == 3 and message_id:
+            try:
+                from messenger_bots.models import BotMessage
+                message = BotMessage.objects.filter(
+                    platform_message_id=message_id,
+                    chat__organization=whatsapp_bot.organization
+                ).first()
+
+                if message:
+                    # Send WebSocket notification for read receipt
+                    from channels.layers import get_channel_layer
+                    from asgiref.sync import async_to_sync
+
+                    channel_layer = get_channel_layer()
+                    if channel_layer:
+                        async_to_sync(channel_layer.group_send)(
+                            f"org_{whatsapp_bot.organization_id}_chat",
+                            {
+                                "type": "message_read",
+                                "message_id": message.id,
+                                "platform_message_id": message_id,
+                            }
+                        )
+                        logger.debug(f"[WAHA_ACK] Sent read receipt notification for message {message_id}")
+            except Exception as e:
+                logger.debug(f"[WAHA_ACK] Could not process read receipt: {e}")
+
+    def _handle_message_reaction(self, whatsapp_bot: WhatsAppBot, data: dict):
+        """Handle message reaction (emoji).
+
+        WAHA Plus feature - users can react to messages with emojis.
+        """
+        payload = data.get("payload", {})
+        reaction = payload.get("reaction", {})
+
+        emoji = reaction.get("text", "")
+        message_id = reaction.get("messageId", "")
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+
+        logger.info(f"[WAHA_REACTION] org={whatsapp_bot.organization_id}, emoji={emoji}, from={from_number[:7]}***, msg_id={message_id}")
+
+        if not emoji or not message_id:
+            return
+
+        try:
+            from messenger_bots.models import BotMessage
+
+            # Find the message that was reacted to
+            message = BotMessage.objects.filter(
+                platform_message_id=message_id,
+                chat__organization=whatsapp_bot.organization
+            ).select_related("chat").first()
+
+            if message:
+                # Send WebSocket notification for reaction
+                from channels.layers import get_channel_layer
+                from asgiref.sync import async_to_sync
+
+                channel_layer = get_channel_layer()
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"org_{whatsapp_bot.organization_id}_chat",
+                        {
+                            "type": "message_reaction",
+                            "message_id": message.id,
+                            "platform_message_id": message_id,
+                            "emoji": emoji,
+                            "from_number": from_number,
+                            "chat_id": message.chat_id,
+                        }
+                    )
+                    logger.info(f"[WAHA_REACTION] Sent reaction notification: {emoji} on message {message_id}")
+        except Exception as e:
+            logger.warning(f"[WAHA_REACTION] Could not process reaction: {e}")
+
+    def _handle_button_response(self, whatsapp_bot: WhatsAppBot, data: dict, button_id: str):
+        """Handle button click response (WAHA Plus).
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            data: Webhook payload
+            button_id: ID of the clicked button
+        """
+        payload = data.get("payload", {})
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+
+        # Get real phone from _data if available
+        _data = payload.get("_data", {})
+        key_data = _data.get("key", {})
+        remote_jid_alt = key_data.get("remoteJidAlt", "")
+        if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt:
+            from_number = remote_jid_alt.replace("@s.whatsapp.net", "")
+
+        logger.info(f"[WAHA_BUTTON] org={whatsapp_bot.organization_id}, button={button_id}, from={from_number[:7]}***")
+
+        # Handle specific button actions
+        if button_id == "view_contacts":
+            self._send_organization_contacts(whatsapp_bot, from_number)
+        elif button_id == "ask_question":
+            # Just acknowledge - user will type their question next
+            service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+            from messenger_bots.services.whatsapp.base import WhatsAppMessage
+            service.send_message(WhatsAppMessage(
+                to=from_number,
+                text="Напишите ваш вопрос, и я постараюсь помочь! 💬"
+            ))
+        else:
+            logger.debug(f"[WAHA_BUTTON] Unhandled button: {button_id}")
+
+    def _handle_list_response(self, whatsapp_bot: WhatsAppBot, data: dict, list_response: dict):
+        """Handle list selection response (WAHA Plus).
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            data: Webhook payload
+            list_response: List response with rowId
+        """
+        payload = data.get("payload", {})
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+        row_id = list_response.get("rowId", "")
+
+        logger.info(f"[WAHA_LIST] org={whatsapp_bot.organization_id}, row={row_id}, from={from_number[:7]}***")
+
+        # Handle specific list selections as needed
+        # For now, just log it - can be extended per organization needs
+
+    def _send_organization_contacts(self, whatsapp_bot: WhatsAppBot, to_number: str):
+        """Send organization contact information.
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            to_number: Recipient phone number
+        """
+        try:
+            org = whatsapp_bot.organization
+
+            # Build contact message
+            contact_text = f"📞 *Контакты {org.title}*\n\n"
+
+            if org.phone_number:
+                contact_text += f"📱 Телефон: {org.phone_number}\n"
+            if org.email:
+                contact_text += f"📧 Email: {org.email}\n"
+            if org.website:
+                contact_text += f"🌐 Сайт: {org.website}\n"
+            if org.address:
+                contact_text += f"📍 Адрес: {org.address}\n"
+
+            # Add working hours if available
+            if hasattr(org, 'working_hours') and org.working_hours:
+                contact_text += f"\n🕐 Режим работы:\n{org.working_hours}\n"
+
+            # Add social links if available
+            if hasattr(org, 'instagram') and org.instagram:
+                contact_text += f"\n📸 Instagram: {org.instagram}"
+            if hasattr(org, 'telegram') and org.telegram:
+                contact_text += f"\n✈️ Telegram: {org.telegram}"
+
+            service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+            from messenger_bots.services.whatsapp.base import WhatsAppMessage
+
+            result = service.send_message(WhatsAppMessage(
+                to=to_number,
+                text=contact_text.strip(),
+            ))
+
+            if result.success:
+                logger.info(f"[WAHA_CONTACTS] Sent contacts for org {org.id} to {to_number[:7]}***")
+            else:
+                logger.warning(f"[WAHA_CONTACTS] Failed to send: {result.error}")
+
+        except Exception as e:
+            logger.error(f"[WAHA_CONTACTS] Error sending contacts: {e}")
 
 
 # ============== API Views (Auth Required) ==============

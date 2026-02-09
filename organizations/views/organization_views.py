@@ -1,7 +1,7 @@
 import datetime
 import random
 from typing import Union
-
+from rest_framework import viewsets, status
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -53,6 +53,7 @@ from organizations.models import (
     RegionalTariff,
     Service,
     Subscription,
+    OpeningHours
 )
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
@@ -99,7 +100,7 @@ from organizations.serializers.organization_serializers import (
     PaymentSystemSerializer,
     PurchaseOrgSubscriptionSerializer,
     RegionalTariffSerializer,
-    SubscriptionsMessageSerializer, OrganizationCatalogSerializer,
+    SubscriptionsMessageSerializer, OrganizationCatalogSerializer,OpeningHoursSerializer
 )
 from organizations.serializers.query_param_serializers import (
     CountryQueryParamSerializer,
@@ -1979,5 +1980,29 @@ class OrganizationCatalogApiView(RetrieveUpdateAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+
+
+class OpeningHoursViewSet(viewsets.ModelViewSet):
+    queryset = OpeningHours.objects.all()
+    serializer_class = OpeningHoursSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        if isinstance(kwargs.get('data', {}), list):
+            kwargs['many'] = True
+        return super().get_serializer(*args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+
+
+
 
 

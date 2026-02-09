@@ -380,6 +380,37 @@ class OrganizationBlacklist(TimestampModel):
         ]
 
 
+class OpeningHours(models.Model):
+    WEEKDAYS = [
+        (1, 'Понедельник'),
+        (2, 'Вторник'),
+        (3, 'Среда'),
+        (4, 'Четверг'),
+        (5, 'Пятница'),
+        (6, 'Суббота'),
+        (7, 'Воскресенье'),
+    ]
+
+    organization = models.ForeignKey(
+        Organization, 
+        on_delete=models.CASCADE, 
+        related_name='working_hours'
+    )
+    
+    day_of_week = models.IntegerField(choices=WEEKDAYS)
+    opens_at = models.TimeField(null=True, blank=True)
+    closes_at = models.TimeField(null=True, blank=True)
+    is_closed = models.BooleanField(default=False, verbose_name="Выходной")
+    is_24_hours = models.BooleanField(default=False, verbose_name="Круглосуточно")
+
+    class Meta:
+        unique_together = ('organization', 'day_of_week')
+        ordering = ['day_of_week']
+
+    def __str__(self):
+        return f"{self.get_day_of_week_display()}: {self.opens_at} - {self.closes_at}"
+
+
 class BlockedUser(TimestampModel):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="blocked_user"
@@ -889,6 +920,7 @@ class Hotlink(TimestampModel):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="hotlinks"
     )
+    decription = models.TextField("Описание", null=True, blank=True)
     content = models.CharField(max_length=500)
     link_type = models.CharField(max_length=25, choices=HOTLINK_TYPES)
     image = models.ForeignKey(

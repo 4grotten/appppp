@@ -99,14 +99,14 @@ class HotlinkCreateSerializer(serializers.ModelSerializer):
         model = Hotlink
         fields = (
             'organization', 'content', 'link_type', 'image', 'collection_items', 'collection_links',
-            'collection_subcategories'
+            'collection_subcategories','decription'
         )
 
 
 class HotlinkUpdateSerializer(HotlinkCreateSerializer):
     class Meta:
         model = Hotlink
-        fields = ('content', 'link_type', 'image', 'collection_items', 'collection_links', 'collection_subcategories')
+        fields = ('content', 'link_type', 'decription','image', 'collection_items', 'collection_links', 'collection_subcategories')
 
 
 class HotlinkItemsEditSerializer(serializers.Serializer):

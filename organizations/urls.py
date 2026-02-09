@@ -137,7 +137,7 @@ from .views.organization_views import (
     SetOrganizationLocationAPIView,
     SubscriptionsMessageListAPIView,
     UnblockUserDestroyView,
-    ZinaPayConfigView, OrganizationCatalogApiView,
+    ZinaPayConfigView, OrganizationCatalogApiView,OpeningHoursViewSet
 )
 from .views.partnerships_views import (
     HomepageBannersView,
@@ -165,6 +165,9 @@ from .views.subscription_views import (
 
 router = DefaultRouter()
 router.register("services", ServiceReadOnlySet)
+router.register(r'opening-hours', OpeningHoursViewSet, basename='opening-hours')
+
+
 
 organization_urls = [
     path('organizations/<int:pk>/catalog-toggle/',
@@ -597,6 +600,8 @@ organization_urls = [
         GenerateDescriptionChatGPTAPIView.as_view(),
         name="create-organization-description-with-ai",
     ),
+	 path('', include(router.urls)),
+	
 ]
 
 membership_urls = [

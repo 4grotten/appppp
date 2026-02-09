@@ -743,12 +743,6 @@ class OpeningHoursInline(admin.TabularInline):
     extra = 7 
     max_num = 7
 
-@admin.register(Organization)
-class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    inlines = [OpeningHoursInline]
-
-
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = (

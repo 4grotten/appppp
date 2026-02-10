@@ -26,6 +26,7 @@ from rest_framework.generics import (
     UpdateAPIView,
     get_object_or_404,
 )
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -1988,19 +1989,30 @@ class OpeningHoursViewSet(viewsets.ModelViewSet):
     queryset = OpeningHours.objects.all()
     serializer_class = OpeningHoursSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        if isinstance(kwargs.get('data', {}), list):
-            kwargs['many'] = True
-        return super().get_serializer(*args, **kwargs)
+    @action(detail=False, methods=['patch'], url_path='bulk-update')
+    def bulk_update(self, request):
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"error": "Ожидается список объектов"}, status=400)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        response_data = []
+        for item in data:
 
+            instance = OpeningHours.objects.filter(
+                organization=item.get('organization'),
+                day_of_week=item.get('day_of_week')
+            ).first()
 
+            if instance:
+                serializer = self.get_serializer(instance, data=item, partial=True)
+            else:
+                serializer = self.get_serializer(data=item)
+            
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response_data.append(serializer.data)
+
+        return Response(response_data)
 
 
 

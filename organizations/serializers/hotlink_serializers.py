@@ -81,7 +81,7 @@ class HotlinkWithCountsSerializer(HotlinkSerializer):
         model = Hotlink
         fields = (
             'id', 'title', 'content', 'link_type', 'items_count', 'links_count', 'subcategories_count',
-            'linked_organization', 'linked_item', 'image','description',
+            'linked_organization', 'linked_item', 'image','decription',
             'collection_items', 'collection_links', 'collection_subcategories'
         )
 

@@ -46,6 +46,7 @@ class ItemSubcategory(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,
                                      related_name='item_categories')
     criteria_subcategory = models.ManyToManyField(CriteriaSubcategory, blank=True, related_name='item_subcategories')
+    sub_icon = models.OneToOneField(File, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}: {self.category.name}'

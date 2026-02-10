@@ -149,24 +149,21 @@ class OrganizationItemListView(FeedView):
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
-            organization=serializer.validated_data["organization"],
+            organization=organization,
             user=self.request.user,
-            search=None,
-            subcategory_id=None,
         )
-        search = self.request.GET.get("search", None)
-        if search:
-            qs = ShopItemService.get_ordering_search_result(
-                queryset=qs, search_word=search
-            )
 
-        if self.request.query_params.get('ordering'):
-            pass
-        else:
+        search = self.request.GET.get("search")
+        ordering_param = self.request.query_params.get('ordering')
+
+        if search:
+            qs = ShopItemService.get_ordering_search_result(queryset=qs, search_word=search)
+       
+        if not search and not ordering_param:
             qs = qs.order_by(F('pinned_at').desc(nulls_last=True), '-updated_at')
-        return ShopItemService.annotate_likes_and_bookmarks(
-            queryset=qs, user=self.request.user
-        )
+            
+        return ShopItemService.annotate_likes_and_bookmarks(queryset=qs, user=self.request.user)
+    
 
 
 class OrganizationRentalListView(ListAPIView):

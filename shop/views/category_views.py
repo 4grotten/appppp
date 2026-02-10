@@ -56,13 +56,13 @@ class ItemCategoryAllSubcategoriesView(RetrieveAPIView):
     queryset = ItemCategory.objects.all()
 
     def get_serializer_context(self):
+        context = super().get_serializer_context()
         serializer = OptionalOrganizationQueryParamSerializer(data=self.request.GET)
         if not serializer.is_valid():
             raise NotAcceptableException(
                 _("Valid organization is required in query parameters")
             )
-
-        context = super().get_serializer_context()
+        
         context["organization"] = serializer.validated_data["organization"]
 
         return context
@@ -280,6 +280,7 @@ class ItemSubcategoryCreateView(CreateAPIView):
             organization=serializer.validated_data["organization"],
             name=serializer.validated_data["name"],
             category=serializer.validated_data["category"],
+            sub_icon=serializer.validated_data.get("sub_icon"),
             name_ru=name_ru,
             name_en=name_en,
             name_tr=name_tr,

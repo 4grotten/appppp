@@ -62,9 +62,20 @@ class ItemCategoryListView(ListAPIView):
     serializer_class = ItemCategorySerializer
     queryset = ItemCategory.objects.all()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        item_id = self.request.query_params.get("item_id")
+        if item_id:
+            try:
+                item = ShopItem.objects.select_related('subcategory').get(id=item_id)
+                context['selected_subcategory'] = item.subcategory
+            except ShopItem.DoesNotExist:
+                context['selected_subcategory'] = None
+        
+        return context
+
     def get_queryset(self):
         queryset = super().get_queryset()
-
         purchase_type = self.request.query_params.get("purchase_type", None)
 
         if purchase_type:

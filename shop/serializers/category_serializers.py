@@ -63,15 +63,26 @@ class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
             return False
         return HotlinkCollectionSubcategory.objects.filter(
             hotlink=self.context['hotlink'], subcategory=subcategory).exists()
+    
 
+class ItemSubcategory2Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name', 'icon')
 
 class ItemCategorySerializer(serializers.ModelSerializer):
     icon = ImageSerializer()
+    current_subcategory = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCategory
-        fields = ('id', 'name', 'icon')
+        fields = ('id', 'name', 'icon', 'current_subcategory')
 
+    def get_current_subcategory(self, obj):
+        selected_subcategory = self.context.get('selected_subcategory')
+        if selected_subcategory and selected_subcategory.category_id == obj.id:
+            return ItemSubcategory2Serializer(selected_subcategory).data
+        return None
 
 class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()

@@ -81,13 +81,14 @@ class WSCommentSerializer(serializers.ModelSerializer):
     source = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
+    user_audio = serializers.FileField(required=False, allow_null=True)
     # product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
-            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data","products"
+            'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',"user_audio",
+            'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',"product_data","products",'audio'
         ) #'product_image',
 
     def get_product_data(self, obj):
@@ -229,13 +230,14 @@ class CommentSerializer(serializers.ModelSerializer):
     source = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
+    user_audio = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Comment
         fields = (
             'id', 'user', 'organization', 'item', 'parent', 'text', 'user_role', 'is_comment_liked', 'is_blocked',
             'comment_like_count', 'can_delete', 'is_updated', 'created_at', 'updated_at', 'assistant', 'source',
-            'product_data', 'products'
+            'product_data', 'products','audio',"user_audio"
         )
 
     def get_product_data(self, obj):

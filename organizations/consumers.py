@@ -1,8 +1,12 @@
 import asyncio
+import base64
 import decimal
 import json
 import logging
 import re
+import uuid
+
+from django.core.files.base import ContentFile
 
 import common.services.slack as slack
 import websockets
@@ -15,6 +19,8 @@ from shop.services.assistant_data_service import AssistantDataService
 from shop.services.comment_services import CommentService
 from shop.services.item_services import ShopItemService
 from stock.serializers import ShopItemSizeCountSetSerializer
+from shop.models import Chat,Comment
+from users.models import User
 
 from organizations.models import Coupon, DiscountCard, UserAssistant,Answer
 from organizations.services.assistant_services import (
@@ -68,8 +74,15 @@ class CommentConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.chat_group_name, self.channel_name)
-        if hasattr(self, "ai_socket") and self.ai_socket.open:
-            await self.ai_socket.close()
+
+        if hasattr(self, "ai_socket") and self.ai_socket:
+            try:
+                await asyncio.wait_for(self.ai_socket.close(), timeout=1.0)
+                logger.info("AI socket closed gracefully")
+            except asyncio.TimeoutError:
+                logger.warning("AI socket close timed out, killing connection")
+            except Exception as e:
+                logger.error(f"Error during AI socket disconnect: {e}")
 
     async def receive(self, text_data):
         try:
@@ -78,61 +91,45 @@ class CommentConsumer(AsyncWebsocketConsumer):
                 logger.warning(f"Chat not found for ID {self.chat_id}")
                 await self.close()
                 return
-            logger.info("Received text data: %s", text_data)
+            
             data = json.loads(text_data)
-            logger.info("Parsed JSON data: %s", data)
-
+            # msg_type = data.get("type")
+            user_audio_base64 = data.get("user_audio", None)
             assistant_id = data.get("assistant_id", None)
-            logger.info("Extracted assistant_id: %s", assistant_id)
-
             user = self.scope["user"]
-            logger.info("Retrieved user from scope: %s", user)
-
             chat = self.chat
-            logger.info("Current chat: %s", chat)
+            
+            # if msg_type == "save_ai_message" or data.get("assistant_id"):
+            #     await self.handle_ai_response(data, user)
+            #     return
+            
             assistant = await self.get_assistant_by_chat(chat=chat)
-            user_has_active_assistant = await self.user_has_active_assistant(
-                assistant=assistant
-            )
-            logger.info("User has active assistant: %s", user_has_active_assistant)
-
+            user_has_active_assistant = await self.user_has_active_assistant(assistant=assistant)
             is_enabled = await self.get_chat_assistant_is_enabled_flag(chat=chat)
-            logger.info("Chat assistant is enabled: %s", is_enabled)
-
             chat_by_org_user = await self.get_chat_chat_org_by_user(chat=chat)
-            logger.info("Chat is by org user: %s", chat_by_org_user)
-
+                
             if is_enabled:
-                logger.info("Chat assistant is enabled.")
                 if chat_by_org_user:
-                    logger.info("Chat is by organization user.")
                     await self.handle_user_response(data, user)
                 else:
-                    logger.info("Chat is not by organization user.")
                     if user_has_active_assistant:
-                        logger.info("User has an active assistant.")
                         if assistant_id is None:
-                            logger.info("Assistant ID is None.")
                             comment = await self.handle_user_response(data, user)
-                            logger.info("Handled user response, comment: %s", comment)
-                            await self.send_message_to_ai(comment)
-                            logger.info("Sent message to AI.")
+
+                            if comment:
+                                await self.send_message_to_ai_with_audio(comment, user_audio_base64)
+                            else:
+                                logger.error("Comment creation failed, skipping AI response.")
                         else:
-                            logger.info("Assistant ID is provided.")
                             await self.handle_ai_response(data, user)
-                            logger.info("Handled AI response.")
                     else:
-                        logger.info("User does not have an active assistant.")
                         await self.handle_user_response(data, user)
-                        logger.info("Handled user response.")
             else:
-                logger.info("Chat assistant is not enabled.")
                 comment = await self.handle_user_response(data, user)
-                logger.info("Handled user response, comment: %s", comment)
-                await self.handle_ai_default_response(parent=comment, user=user)
-                logger.info("Handled AI default response.")
+                if comment:
+                    await self.handle_ai_default_response(parent=comment, user=user)
         except Exception as e:
-            logger.error(f"Error in receive: {e}")
+            logger.error(f"Critical error in receive: {e}", exc_info=True)
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event["message"], ensure_ascii=False))
@@ -185,20 +182,56 @@ class CommentConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def create_comment_with_ai_response(self, text, chat, assistant, parent=None):
+    def create_comment_with_ai_response(self, text, chat, assistant, parent=None, audio_base64=None):
+        audio_file = None
+
+        if audio_base64:
+            try:
+                decoded_file = base64.b64decode(audio_base64)
+                file_name = f"voice_{uuid.uuid4()}.mp3"
+                audio_file = ContentFile(decoded_file, name=file_name)
+            except Exception as e:
+                logger.error(f"Error decoding audio base64: {e}")
         return CommentService.create_chat_assistant_comment(
-            text=text, chat=chat, assistant=assistant, parent=parent
+            text=text, chat=chat, assistant=assistant, parent=parent, audio_file=audio_file
         )
 
     @database_sync_to_async
     def serialize_data(self, comment, user):
-        fake_request = type("FakeRequest", (object,), {"user": user})()
+        host = self.host
+        def build_absolute_uri(_self, location=None):
+            if not location:
+                return f"https://{host}"
+            if location.startswith('http'):
+                return location
+            return f"https://{host}{location}"
+
+        FakeRequest = type("FakeRequest", (object,), {
+            "user": user,
+            "build_absolute_uri": build_absolute_uri
+        })
+        fake_request = FakeRequest()
+        
         serializer = CommentSerializer(comment, context={"request": fake_request})
         return serializer.data
 
     @database_sync_to_async
     def serialize_assistant_data(self, comment, user):
-        serializer = WSCommentSerializer(comment, context={"user": user})
+        host = self.host
+        def build_absolute_uri(_self, location=None):
+            if not location:
+                return f"https://{host}"
+            if location.startswith('http'):
+                return location
+            return f"https://{host}{location}"
+
+        FakeRequest = type("FakeRequest", (object,), {
+            "user": user,
+            "build_absolute_uri": build_absolute_uri
+        })
+
+        fake_request = FakeRequest()
+        serializer = WSCommentSerializer(comment, context={"user": user, "request": fake_request})
         return serializer.data
 
     @database_sync_to_async
@@ -270,13 +303,53 @@ class CommentConsumer(AsyncWebsocketConsumer):
         }
         return data
 
+    async def send_message_to_ai_with_audio(self, comment, audio_base64):
+        try:
+            if not hasattr(self, "ai_socket") or not self.ai_socket.open:
+                self.ai_socket = await self.connect_to_ai()
+
+            data = await self.prepare_data(comment)
+
+            data["user_audio"] = audio_base64 
+            
+            await self.ai_socket.send(json.dumps(data))
+        except Exception as e:
+            logger.error(f"Error sending to AI: {e}")
+    
+    @database_sync_to_async
+    def create_user_comment_with_audio(self, text, chat, user, audio_base64=None, parent=None):
+        user_audio_file = None
+        if audio_base64:
+            try:
+                if ";base64," in audio_base64:
+                    header, audio_base64 = audio_base64.split(";base64,")
+
+                decoded_file = base64.b64decode(audio_base64)
+                file_name = f"user_voice_{uuid.uuid4()}.mp3"
+                user_audio_file = ContentFile(decoded_file, name=file_name)
+            except Exception as e:
+                logger.error(f"Error decoding user audio: {e}")
+
+        return CommentService.create_chat_comment(
+            text=text or "[Голосовое сообщение]", 
+            chat=chat, 
+            user=user, 
+            parent=parent,
+            user_audio_file=user_audio_file
+        )
+
+
     async def handle_user_response(self, data, user):
+
         try:
             text = data.get("message", "")
             parent_id = data.get("parent", None)
+            audio_base64 = data.get("user_audio") 
             chat = self.chat
             parent = await self.get_comment(parent_id) if parent_id else None
-            comment = await self.create_user_comment(text, chat, user, parent)
+            
+            comment = await self.create_user_comment_with_audio(text, chat, user, audio_base64, parent)
+            
             serialized_data = await self.serialize_data(comment=comment, user=user)
             await self.channel_layer.group_send(
                 self.chat_group_name,
@@ -292,13 +365,29 @@ class CommentConsumer(AsyncWebsocketConsumer):
             audio_base64 = data.get("audio", None)
             parent_id = data.get("parent", None)
             assistant_id = data.get("assistant_id", None)
-            assistant = await self.get_assistant(assistant_id)
-            parent = await self.get_comment(parent_id)
-            chat = await self.get_chat_with_parent(parent)
+            # assistant = await self.get_assistant(assistant_id)
+            # parent = await self.get_comment(parent_id)
+            # chat = await self.get_chat_with_parent(parent)
 
+
+            assistant_id = data.get("assistant_id")
+            if assistant_id:
+                assistant = await self.get_assistant(assistant_id)
+            else:
+                assistant = await self.get_assistant_by_chat(chat=self.chat)
+
+            parent = None
+            if parent_id:
+                try:
+                    parent = await self.get_comment(parent_id)
+                except Exception as e:
+                    logger.warning(f"Parent comment {parent_id} not found: {e}. Saving without parent.")
+                    parent = None
+
+            chat = self.chat
 
             comment = await self.create_comment_with_ai_response(
-                text, chat, assistant, parent
+                text, chat, assistant, parent, audio_base64
             )
             serialized_data = await self.serialize_assistant_data(
                 comment=comment, user=user
@@ -317,9 +406,7 @@ class CommentConsumer(AsyncWebsocketConsumer):
             #         serialized_data['product_image'] = image_url
             #         logger.info(f"Attached image to response: {image_url}")
 
-            if audio_base64:
-                serialized_data['audio'] = audio_base64
-                logger.info("Audio attached to response")
+
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {"type": "chat_message", "message": serialized_data},
@@ -676,6 +763,9 @@ class CommentItemConsumer(AsyncWebsocketConsumer):
                     "gender": assistant.gender,
                     "position": assistant.position,
                     "is_enabled": assistant.is_enabled,
+                    "ai_prompt": assistant.ai_prompt,
+                    "first_message": assistant.first_message,
+                    "ai_voice": assistant.ai_voice,
                 },
                 "answers": [],
                 "item_info": item_info,

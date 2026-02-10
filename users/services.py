@@ -220,7 +220,9 @@ class TemporaryCodeService:
         phone_number = str(user.phone_number)
         # if phone_number.startswith(cls.nurtelecom):
         if whatsapp == True:
-            MessageServiceTwilio.send_whatsapp_sms(str(user.phone_number), message, code_id=code.id)
+            # Twilio WhatsApp (закомментировано — теперь используется WAHA OTPService)
+            # MessageServiceTwilio.send_whatsapp_sms(str(user.phone_number), message, code_id=code.id)
+            pass  # WhatsApp теперь через OTPService в views
         elif email == True:
             MailerService.send_verification_code_email(email=user.email, code=code.code)
         elif phone_number == "+996770413928":

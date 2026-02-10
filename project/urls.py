@@ -35,6 +35,7 @@ v1 = (
         path("notifications/", include("notifications.urls")),
         path("messenger-bots/", include("messenger_bots.urls")),
         path("", include("otp_bot.urls")),
+        path("contacts/", include("saved_contacts.urls")),
     ],
     "v1",
 )

@@ -88,6 +88,7 @@ from .services import (
     DeliveryAddressesService,
     PromoCodeService,
 )
+from otp_bot.services.otp_service import OTPService, BotNotConnectedError
 from .throttle.throttle import UserLoginRateThrottle
 
 
@@ -197,7 +198,44 @@ class VerifyTemporaryCodeAPIView(APIView):
         code = serializer.validated_data.get("code")
         phone_number = serializer.validated_data.get("phone_number")
 
-        TemporaryCodeService.validate(code=code, phone_number=phone_number)
+        # Сначала проверяем SMS коды (TemporaryCode)
+        sms_validated = False
+        otp_validated = False
+
+        try:
+            TemporaryCodeService.validate(code=code, phone_number=phone_number)
+            sms_validated = True
+        except Exception:
+            # Fallback: проверяем WhatsApp OTP коды
+            try:
+                otp_result = OTPService().verify_otp(phone_number, str(code))
+                if otp_result.is_valid:
+                    otp_validated = True
+                else:
+                    return Response(
+                        data={
+                            "message": gettext_lazy("Invalid or expired code"),
+                            "errors": {"code": [otp_result.error or "Invalid code"]},
+                        },
+                        status=status.HTTP_406_NOT_ACCEPTABLE,
+                    )
+            except Exception:
+                return Response(
+                    data={
+                        "message": gettext_lazy("Invalid or expired code"),
+                        "errors": {"code": [gettext_lazy("Code not found")]},
+                    },
+                    status=status.HTTP_406_NOT_ACCEPTABLE,
+                )
+
+        if not sms_validated and not otp_validated:
+            return Response(
+                data={
+                    "message": gettext_lazy("Invalid or expired code"),
+                    "errors": {"code": [gettext_lazy("Code not found")]},
+                },
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
 
         user = UserService.get(phone_number=phone_number)
 
@@ -215,8 +253,11 @@ class VerifyTemporaryCodeAPIView(APIView):
                 user=user, is_active=True, ip=request.META.get("REMOTE_ADDR")
             ).order_by("-log_time")
             token = tokens.latest("log_time")
+
+        method_used = "sms" if sms_validated else "whatsapp"
         slack.bot(
-            f"User {user} successfully validated\n" f"============================"
+            f"User {user} successfully validated via {method_used}\n"
+            f"============================"
         )
 
         return Response(
@@ -266,8 +307,20 @@ class ResendTemporaryCodeAPIView(APIView):
             TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
 
         elif resend_type == WHATSAPP_AUTH_TYPE:
-            user = UserService.get(phone_number=phone_number)
-            TemporaryCodeService.create_and_send(user=user, whatsapp=True, ip_addr=ip)
+            # WAHA OTP бот (основной)
+            try:
+                OTPService().send_otp(phone_number)
+            except BotNotConnectedError:
+                return Response(
+                    data={
+                        "message": gettext_lazy("WhatsApp service temporarily unavailable"),
+                        "error": "bot_not_connected",
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+            # Twilio fallback (закомментировано)
+            # user = UserService.get(phone_number=phone_number)
+            # TemporaryCodeService.create_and_send(user=user, whatsapp=True, ip_addr=ip)
 
         elif resend_type == EMAIL_AUTH_TYPE:
             user = UserService.get(phone_number=phone_number)
@@ -486,25 +539,64 @@ class ForgotPasswordAPIView(APIView):
                 },
                 status=status.HTTP_406_NOT_ACCEPTABLE,
             )
+
         ip = request.META.get("REMOTE_ADDR", "")
-        user = UserService.get(
-            phone_number=serializer.validated_data.get("phone_number")
-        )
-        TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
+        phone_number = serializer.validated_data.get("phone_number")
+        method = serializer.validated_data.get("method")
 
-        #        input_type = serializer.validated_data.get('type')
+        user = UserService.get(phone_number=phone_number)
 
-        #        if input_type == PHONE_NUMBER_TYPE:
-        #            user = UserService.get(phone_number=serializer.validated_data.get('phone_number'))
-        #            TemporaryCodeService.create_and_send(user=user)
-        #        elif input_type == EMAIL_TYPE:
-        #            user = UserService.get(email=serializer.validated_data.get('email'))
-        #            # TODO send code to email
-        #        else:
-        #            raise ValidationException(_('Invalid input'))
+        # Определяем регион
+        is_kyrgyzstan = phone_number.startswith("+996")
+
+        # Базовые методы доступны для всех регионов
+        available_methods = ["sms", "whatsapp"]
+
+        # Email доступен только если у пользователя есть email
+        if user.email:
+            available_methods.append("email")
+
+        # Auto-выбор если method не указан (приоритет по региону)
+        if not method:
+            method = "sms" if is_kyrgyzstan else "whatsapp"
+
+        # Валидация email метода
+        if method == "email" and not user.email:
+            return Response(
+                data={
+                    "message": gettext_lazy("Email not available for this user"),
+                    "error": "email_not_found",
+                    "available_methods": ["sms", "whatsapp"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Отправка кода
+        if method == "sms":
+            TemporaryCodeService.create_and_send(user=user, ip_addr=ip)
+        elif method == "email":
+            TemporaryCodeService.create_and_send(user=user, email=True, ip_addr=ip)
+        else:
+            # WhatsApp OTP через WAHA
+            try:
+                OTPService().send_otp(phone_number)
+            except BotNotConnectedError:
+                return Response(
+                    data={
+                        "message": gettext_lazy("WhatsApp service temporarily unavailable"),
+                        "error": "bot_not_connected",
+                        "available_methods": available_methods,
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
 
         return Response(
-            data={"message": gettext_lazy("Code sent")}, status=status.HTTP_200_OK
+            data={
+                "message": gettext_lazy("Code sent"),
+                "method": method,
+                "available_methods": available_methods,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

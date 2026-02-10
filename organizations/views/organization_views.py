@@ -1,7 +1,7 @@
 import datetime
 import random
 from typing import Union
-
+from rest_framework import viewsets, status
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -26,6 +26,7 @@ from rest_framework.generics import (
     UpdateAPIView,
     get_object_or_404,
 )
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -53,6 +54,7 @@ from organizations.models import (
     RegionalTariff,
     Service,
     Subscription,
+    OpeningHours
 )
 from organizations.permissions import IsAnyOrganizationOwnerOrAdmin
 from organizations.serializers.categories_serializers import (
@@ -99,7 +101,7 @@ from organizations.serializers.organization_serializers import (
     PaymentSystemSerializer,
     PurchaseOrgSubscriptionSerializer,
     RegionalTariffSerializer,
-    SubscriptionsMessageSerializer, OrganizationCatalogSerializer,
+    SubscriptionsMessageSerializer, OrganizationCatalogSerializer,OpeningHoursSerializer
 )
 from organizations.serializers.query_param_serializers import (
     CountryQueryParamSerializer,
@@ -1979,5 +1981,50 @@ class OrganizationCatalogApiView(RetrieveUpdateAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+
+
+class OpeningHoursViewSet(viewsets.ModelViewSet):
+    queryset = OpeningHours.objects.all()
+    serializer_class = OpeningHoursSerializer
+
+
+    def get_queryset(self):
+        queryset = OpeningHours.objects.all()
+        org_id = self.request.query_params.get('organization')
+        
+        if org_id is not None:
+            queryset = queryset.filter(organization_id=org_id)
+            
+        return queryset
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update')
+    def bulk_update(self, request):
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"error": "Ожидается список объектов"}, status=400)
+
+        response_data = []
+        for item in data:
+
+            instance = OpeningHours.objects.filter(
+                organization=item.get('organization'),
+                day_of_week=item.get('day_of_week')
+            ).first()
+
+            if instance:
+                serializer = self.get_serializer(instance, data=item, partial=True)
+            else:
+                serializer = self.get_serializer(data=item)
+            
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response_data.append(serializer.data)
+
+        return Response(response_data)
+
+
+
 
 

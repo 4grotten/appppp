@@ -1,6 +1,26 @@
+import atexit
 import os
 
 from django.apps import AppConfig
+
+
+def _graceful_shutdown():
+    """Close HTTP sessions on application shutdown.
+
+    This ensures proper cleanup of connection pools to avoid
+    resource leaks and connection warnings on shutdown.
+    """
+    try:
+        from messenger_bots.services.whatsapp.http_client import close_waha_session
+        close_waha_session()
+    except Exception:
+        pass
+
+    try:
+        from messenger_bots.services.telegram_http_client import close_telegram_session
+        close_telegram_session()
+    except Exception:
+        pass
 
 
 class MessengerBotsConfig(AppConfig):
@@ -12,6 +32,9 @@ class MessengerBotsConfig(AppConfig):
         """Run cache warmup task on server startup and register signals."""
         # Import signals to register them
         import messenger_bots.signals  # noqa: F401
+
+        # Register graceful shutdown hook
+        atexit.register(_graceful_shutdown)
 
         # Only run in main process (not in migrations, shell, etc.)
         # Check for RUN_MAIN to avoid double execution in dev server

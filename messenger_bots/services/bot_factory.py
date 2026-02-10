@@ -1383,3 +1383,136 @@ class BotFactoryService:
         )
         service = cls(userbot)
         return await service.create_bot(request)
+
+    async def set_bot_photo(self, bot_username: str, photo_content: bytes, content_type: str = "image/jpeg") -> Dict[str, Any]:
+        """
+        Set bot profile photo via BotFather /setuserpic command.
+
+        This is the only way to change a bot's profile photo programmatically,
+        as Telegram Bot API does not have setMyPhoto method.
+
+        Args:
+            bot_username: Bot username without @ (e.g., "my_bot")
+            photo_content: Image bytes (JPEG or PNG)
+            content_type: MIME type of the image
+
+        Returns:
+            {"success": True/False, "message": str}
+        """
+        logger.info(f"[BOT_FACTORY] ====== SET BOT PHOTO START ======")
+        logger.info(f"[BOT_FACTORY] Bot username: @{bot_username}")
+        logger.info(f"[BOT_FACTORY] Photo size: {len(photo_content)} bytes, type: {content_type}")
+
+        try:
+            client = await self._get_client()
+
+            # Convert image to RGB JPEG (BotFather requires proper format)
+            try:
+                img = Image.open(BytesIO(photo_content))
+
+                # Convert RGBA/P to RGB (remove transparency)
+                if img.mode in ('RGBA', 'P', 'LA'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # Save to temp file as JPEG
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                    img.save(tmp_file, format='JPEG', quality=95)
+                    tmp_path = tmp_file.name
+
+                logger.info(f"[BOT_FACTORY] Image converted to RGB JPEG: {tmp_path}")
+
+            except Exception as img_error:
+                logger.error(f"[BOT_FACTORY] Failed to process image: {img_error}")
+                return {"success": False, "error": f"Failed to process image: {img_error}"}
+
+            try:
+                # Get BotFather entity
+                botfather = await client.get_entity(BOTFATHER_USERNAME)
+
+                # Step 1: Send /setuserpic
+                logger.info("[BOT_FACTORY] Sending /setuserpic to BotFather...")
+                await client.send_message(botfather, "/setuserpic")
+                await asyncio.sleep(2)
+
+                # Step 2: Send bot username
+                username_with_at = f"@{bot_username}" if not bot_username.startswith("@") else bot_username
+                logger.info(f"[BOT_FACTORY] Sending bot username {username_with_at}...")
+                await client.send_message(botfather, username_with_at)
+                await asyncio.sleep(2)
+
+                # Check if BotFather asks for photo
+                messages = await client.get_messages(botfather, limit=1)
+                response_text = messages[0].text if messages and messages[0].text else ""
+                logger.info(f"[BOT_FACTORY] BotFather response: {response_text[:100]}...")
+
+                if "invalid" in response_text.lower() or "not found" in response_text.lower():
+                    return {"success": False, "error": f"Bot not found: {bot_username}"}
+
+                # Step 3: Send the image
+                logger.info("[BOT_FACTORY] Sending photo file...")
+                await client.send_file(botfather, tmp_path)
+                await asyncio.sleep(2)
+
+                # Check final response
+                messages = await client.get_messages(botfather, limit=1)
+                response_text = messages[0].text if messages and messages[0].text else ""
+                logger.info(f"[BOT_FACTORY] Final BotFather response: {response_text[:100]}...")
+
+                if "success" in response_text.lower() or "done" in response_text.lower():
+                    logger.info("[BOT_FACTORY] ====== SET BOT PHOTO SUCCESS ======")
+                    return {"success": True, "message": "Bot photo updated successfully"}
+                elif "error" in response_text.lower():
+                    return {"success": False, "error": response_text}
+                else:
+                    # Assume success if no explicit error
+                    logger.info("[BOT_FACTORY] ====== SET BOT PHOTO SUCCESS (assumed) ======")
+                    return {"success": True, "message": "Bot photo updated"}
+
+            finally:
+                # Clean up temp file
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        except Exception as e:
+            logger.error(f"[BOT_FACTORY] ====== SET BOT PHOTO FAILED ======")
+            logger.error(f"[BOT_FACTORY] Error: {e}", exc_info=True)
+            return {"success": False, "error": str(e)}
+
+        finally:
+            await self.disconnect()
+
+    @classmethod
+    def set_bot_photo_sync(cls, userbot_id: int, bot_username: str, photo_content: bytes, content_type: str = "image/jpeg") -> Dict[str, Any]:
+        """Synchronous wrapper for set_bot_photo."""
+        return _run_async_unsafe(cls._set_bot_photo_async(userbot_id, bot_username, photo_content, content_type))
+
+    @classmethod
+    async def _set_bot_photo_async(cls, userbot_id: int, bot_username: str, photo_content: bytes, content_type: str) -> Dict[str, Any]:
+        """Async set bot photo with userbot selection."""
+        logger.info(f"[BOT_FACTORY] _set_bot_photo_async called for @{bot_username}")
+
+        @sync_to_async
+        def get_userbot():
+            try:
+                return TelegramUserbot.objects.get(id=userbot_id, is_authenticated=True)
+            except TelegramUserbot.DoesNotExist:
+                return None
+
+        userbot = await get_userbot()
+        if not userbot:
+            # Try to get any available authenticated userbot
+            userbot = await cls.get_available_userbot()
+
+        if not userbot:
+            logger.error("[BOT_FACTORY] No authenticated userbot available")
+            return {"success": False, "error": "No authenticated userbot available. Please configure a userbot in admin."}
+
+        logger.info(f"[BOT_FACTORY] Using userbot: {userbot.phone_number}")
+        service = cls(userbot)
+        return await service.set_bot_photo(bot_username, photo_content, content_type)

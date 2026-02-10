@@ -67,6 +67,7 @@ from .models import (
     Subscription,
     UserAssistant,
     UserOrgSubscription,
+    OpeningHours
 )
 
 
@@ -736,6 +737,11 @@ class PromoSubscriberAdmin(admin.ModelAdmin):
     list_display = ("organization", "subscriber", "cashback", "created_at")
     raw_id_fields = ("organization", "subscriber")
 
+
+class OpeningHoursInline(admin.TabularInline):
+    model = OpeningHours
+    extra = 7 
+    max_num = 7
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):

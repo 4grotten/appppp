@@ -70,6 +70,7 @@ class HotlinkListCreateView(ListCreateAPIView):
             organization=serializer.validated_data["organization"],
             content=serializer.validated_data["content"],
             link_type=serializer.validated_data["link_type"],
+            decription=serializer.validated_data.get("decription"),
             image=serializer.validated_data["image"],
             collection_items=serializer.validated_data["collection_items"],
             collection_links=serializer.validated_data["collection_links"],
@@ -116,6 +117,7 @@ class HotlinkRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             image=serializer.validated_data["image"],
             content=serializer.validated_data["content"],
             link_type=serializer.validated_data["link_type"],
+            decription=serializer.validated_data.get("decription"),
             collection_items=serializer.validated_data["collection_items"],
             collection_links=serializer.validated_data["collection_links"],
             collection_subcategories=serializer.validated_data[

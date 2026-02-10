@@ -18,7 +18,7 @@ from .views.assistant_views import (
     OrganizationAssistantRetrieveUpdateView,
     PurchaseAssistantView,
     QuestionListView,
-    ToggleAssistantEnableView,
+    ToggleAssistantEnableView, GetElevenLabsSignedUrlView, AssistantSettingsUpdateView, ProxyVoicesView,
 )
 from .views.attendance_views import (
     AttendanceStatsView,
@@ -137,7 +137,7 @@ from .views.organization_views import (
     SetOrganizationLocationAPIView,
     SubscriptionsMessageListAPIView,
     UnblockUserDestroyView,
-    ZinaPayConfigView, OrganizationCatalogApiView,
+    ZinaPayConfigView, OrganizationCatalogApiView,OpeningHoursViewSet
 )
 from .views.partnerships_views import (
     HomepageBannersView,
@@ -165,6 +165,9 @@ from .views.subscription_views import (
 
 router = DefaultRouter()
 router.register("services", ServiceReadOnlySet)
+router.register(r'opening-hours', OpeningHoursViewSet, basename='opening-hours')
+
+
 
 organization_urls = [
     path('organizations/<int:pk>/catalog-toggle/',
@@ -597,6 +600,8 @@ organization_urls = [
         GenerateDescriptionChatGPTAPIView.as_view(),
         name="create-organization-description-with-ai",
     ),
+	 path('', include(router.urls)),
+	
 ]
 
 membership_urls = [
@@ -820,6 +825,16 @@ coupon_urls = [
         CouponsListForUsersAPIView.as_view(),
         name="coupons-list-for-user",
     ),
+    path('chat/<int:chat_id>/call-ai/',
+         GetElevenLabsSignedUrlView.as_view()),
+
+    path('elevenlabs/voices/',
+         ProxyVoicesView.as_view(),
+         name='elevenlabs-voices-list'),
+
+    path('assistant/<int:pk>/ai-prompt/',
+         AssistantSettingsUpdateView.as_view(),
+         name='assistant-aiprompt-update')
 ]
 
 

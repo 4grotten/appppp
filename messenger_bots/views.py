@@ -384,7 +384,7 @@ class WAHAWebhookView(View):
         elif event_type == "message.ack":
             self._handle_message_ack(whatsapp_bot, data)
         elif event_type == "message.reaction":
-            pass  # Ignore reactions for now
+            self._handle_message_reaction(whatsapp_bot, data)
         else:
             logger.debug(f"Unhandled WAHA event type: {event_type}")
 
@@ -419,11 +419,25 @@ class WAHAWebhookView(View):
         whatsapp_bot.save(update_fields=["session_status"])
 
     def _handle_message(self, whatsapp_bot: WhatsAppBot, data: dict):
-        """Handle incoming message."""
+        """Handle incoming message including button responses."""
         payload = data.get("payload", {})
 
         # Skip outgoing messages (messages sent by us)
         if payload.get("fromMe", False):
+            return
+
+        # Check for button response (WAHA Plus)
+        message_type = payload.get("type", "")
+        button_response = payload.get("selectedButtonId") or payload.get("button", {}).get("id")
+
+        if button_response:
+            self._handle_button_response(whatsapp_bot, data, button_response)
+            return
+
+        # Check for list response (WAHA Plus)
+        list_response = payload.get("listResponse", {})
+        if list_response.get("rowId"):
+            self._handle_list_response(whatsapp_bot, data, list_response)
             return
 
         # Extract message details
@@ -516,11 +530,198 @@ class WAHAWebhookView(View):
         )
 
     def _handle_message_ack(self, whatsapp_bot: WhatsAppBot, data: dict):
-        """Handle message acknowledgment (delivered, read)."""
-        # For now, just log it
+        """Handle message acknowledgment (delivered, read).
+
+        ACK statuses:
+        - 1: Message sent to server
+        - 2: Message delivered to recipient
+        - 3: Message read by recipient (blue checkmarks)
+        - 4: Message played (for voice messages)
+        """
         payload = data.get("payload", {})
         ack_status = payload.get("ack")
-        logger.debug(f"WAHA message ack for org {whatsapp_bot.organization_id}: {ack_status}")
+        message_id = payload.get("id", {})
+
+        if isinstance(message_id, dict):
+            message_id = message_id.get("id", "")
+
+        logger.info(f"[WAHA_ACK] org={whatsapp_bot.organization_id}, status={ack_status}, msg_id={message_id}")
+
+        # If message is read (ack=3), we could update message status
+        # For now, notify via WebSocket for real-time UI updates
+        if ack_status == 3 and message_id:
+            try:
+                from messenger_bots.models import BotMessage
+                message = BotMessage.objects.filter(
+                    platform_message_id=message_id,
+                    chat__organization=whatsapp_bot.organization
+                ).first()
+
+                if message:
+                    # Send WebSocket notification for read receipt
+                    from channels.layers import get_channel_layer
+                    from asgiref.sync import async_to_sync
+
+                    channel_layer = get_channel_layer()
+                    if channel_layer:
+                        async_to_sync(channel_layer.group_send)(
+                            f"org_{whatsapp_bot.organization_id}_chat",
+                            {
+                                "type": "message_read",
+                                "message_id": message.id,
+                                "platform_message_id": message_id,
+                            }
+                        )
+                        logger.debug(f"[WAHA_ACK] Sent read receipt notification for message {message_id}")
+            except Exception as e:
+                logger.debug(f"[WAHA_ACK] Could not process read receipt: {e}")
+
+    def _handle_message_reaction(self, whatsapp_bot: WhatsAppBot, data: dict):
+        """Handle message reaction (emoji).
+
+        WAHA Plus feature - users can react to messages with emojis.
+        """
+        payload = data.get("payload", {})
+        reaction = payload.get("reaction", {})
+
+        emoji = reaction.get("text", "")
+        message_id = reaction.get("messageId", "")
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+
+        logger.info(f"[WAHA_REACTION] org={whatsapp_bot.organization_id}, emoji={emoji}, from={from_number[:7]}***, msg_id={message_id}")
+
+        if not emoji or not message_id:
+            return
+
+        try:
+            from messenger_bots.models import BotMessage
+
+            # Find the message that was reacted to
+            message = BotMessage.objects.filter(
+                platform_message_id=message_id,
+                chat__organization=whatsapp_bot.organization
+            ).select_related("chat").first()
+
+            if message:
+                # Send WebSocket notification for reaction
+                from channels.layers import get_channel_layer
+                from asgiref.sync import async_to_sync
+
+                channel_layer = get_channel_layer()
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"org_{whatsapp_bot.organization_id}_chat",
+                        {
+                            "type": "message_reaction",
+                            "message_id": message.id,
+                            "platform_message_id": message_id,
+                            "emoji": emoji,
+                            "from_number": from_number,
+                            "chat_id": message.chat_id,
+                        }
+                    )
+                    logger.info(f"[WAHA_REACTION] Sent reaction notification: {emoji} on message {message_id}")
+        except Exception as e:
+            logger.warning(f"[WAHA_REACTION] Could not process reaction: {e}")
+
+    def _handle_button_response(self, whatsapp_bot: WhatsAppBot, data: dict, button_id: str):
+        """Handle button click response (WAHA Plus).
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            data: Webhook payload
+            button_id: ID of the clicked button
+        """
+        payload = data.get("payload", {})
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+
+        # Get real phone from _data if available
+        _data = payload.get("_data", {})
+        key_data = _data.get("key", {})
+        remote_jid_alt = key_data.get("remoteJidAlt", "")
+        if remote_jid_alt and "@s.whatsapp.net" in remote_jid_alt:
+            from_number = remote_jid_alt.replace("@s.whatsapp.net", "")
+
+        logger.info(f"[WAHA_BUTTON] org={whatsapp_bot.organization_id}, button={button_id}, from={from_number[:7]}***")
+
+        # Handle specific button actions
+        if button_id == "view_contacts":
+            self._send_organization_contacts(whatsapp_bot, from_number)
+        elif button_id == "ask_question":
+            # Just acknowledge - user will type their question next
+            service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+            from messenger_bots.services.whatsapp.base import WhatsAppMessage
+            service.send_message(WhatsAppMessage(
+                to=from_number,
+                text="Напишите ваш вопрос, и я постараюсь помочь! 💬"
+            ))
+        else:
+            logger.debug(f"[WAHA_BUTTON] Unhandled button: {button_id}")
+
+    def _handle_list_response(self, whatsapp_bot: WhatsAppBot, data: dict, list_response: dict):
+        """Handle list selection response (WAHA Plus).
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            data: Webhook payload
+            list_response: List response with rowId
+        """
+        payload = data.get("payload", {})
+        from_number = payload.get("from", "").replace("@c.us", "").replace("@lid", "")
+        row_id = list_response.get("rowId", "")
+
+        logger.info(f"[WAHA_LIST] org={whatsapp_bot.organization_id}, row={row_id}, from={from_number[:7]}***")
+
+        # Handle specific list selections as needed
+        # For now, just log it - can be extended per organization needs
+
+    def _send_organization_contacts(self, whatsapp_bot: WhatsAppBot, to_number: str):
+        """Send organization contact information.
+
+        Args:
+            whatsapp_bot: WhatsAppBot instance
+            to_number: Recipient phone number
+        """
+        try:
+            org = whatsapp_bot.organization
+
+            # Build contact message
+            contact_text = f"📞 *Контакты {org.title}*\n\n"
+
+            if org.phone_number:
+                contact_text += f"📱 Телефон: {org.phone_number}\n"
+            if org.email:
+                contact_text += f"📧 Email: {org.email}\n"
+            if org.website:
+                contact_text += f"🌐 Сайт: {org.website}\n"
+            if org.address:
+                contact_text += f"📍 Адрес: {org.address}\n"
+
+            # Add working hours if available
+            if hasattr(org, 'working_hours') and org.working_hours:
+                contact_text += f"\n🕐 Режим работы:\n{org.working_hours}\n"
+
+            # Add social links if available
+            if hasattr(org, 'instagram') and org.instagram:
+                contact_text += f"\n📸 Instagram: {org.instagram}"
+            if hasattr(org, 'telegram') and org.telegram:
+                contact_text += f"\n✈️ Telegram: {org.telegram}"
+
+            service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+            from messenger_bots.services.whatsapp.base import WhatsAppMessage
+
+            result = service.send_message(WhatsAppMessage(
+                to=to_number,
+                text=contact_text.strip(),
+            ))
+
+            if result.success:
+                logger.info(f"[WAHA_CONTACTS] Sent contacts for org {org.id} to {to_number[:7]}***")
+            else:
+                logger.warning(f"[WAHA_CONTACTS] Failed to send: {result.error}")
+
+        except Exception as e:
+            logger.error(f"[WAHA_CONTACTS] Error sending contacts: {e}")
 
 
 # ============== API Views (Auth Required) ==============
@@ -654,8 +855,8 @@ class TelegramBotAPIView(APIView):
             )
 
     def patch(self, request, organization_id):
-        """Toggle AI assistant on/off."""
-        logger.info(f"[TG_API] PATCH is_ai_enabled for org_id={organization_id}")
+        """Partial update of Telegram bot settings (is_active, is_ai_enabled)."""
+        logger.info(f"[TG_API] PATCH for org_id={organization_id}, data={request.data}")
 
         org = self.get_organization(request, organization_id)
         if not org:
@@ -672,18 +873,29 @@ class TelegramBotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_ai_enabled = request.data.get("is_ai_enabled")
-        if is_ai_enabled is None:
+        update_fields = []
+
+        # Handle is_ai_enabled
+        if "is_ai_enabled" in request.data:
+            bot.is_ai_enabled = bool(request.data["is_ai_enabled"])
+            update_fields.append("is_ai_enabled")
+            logger.info(f"[TG_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        # Handle is_active
+        if "is_active" in request.data:
+            bot.is_active = bool(request.data["is_active"])
+            update_fields.append("is_active")
+            logger.info(f"[TG_API] Bot {'activated' if bot.is_active else 'deactivated'} for org {organization_id}")
+
+        if not update_fields:
             return Response(
-                {"error": "is_ai_enabled field is required"},
+                {"error": "No valid fields provided. Supported: is_ai_enabled, is_active"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        bot.is_ai_enabled = bool(is_ai_enabled)
-        bot.save(update_fields=["is_ai_enabled"])
-        logger.info(f"[TG_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+        bot.save(update_fields=update_fields)
 
-        return Response({"is_ai_enabled": bot.is_ai_enabled})
+        return Response(TelegramBotSerializer(bot).data)
 
 
 class TelegramBotSettingsAPIView(APIView):
@@ -720,9 +932,31 @@ class TelegramBotSettingsAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    def get(self, request, organization_id):
+        """Get current bot settings from Telegram API (name, description, username) + DB fields."""
+        logger.info(f"[TG_SETTINGS] GET settings for org_id={organization_id}")
+
+        org, bot, error_response = self._get_bot(request, organization_id)
+        if error_response:
+            return error_response
+
+        service = TelegramBotService(bot)
+        settings = service.get_bot_settings()
+
+        # Add DB fields that frontend needs
+        settings["is_ai_enabled"] = bot.is_ai_enabled
+        settings["is_active"] = bot.is_active
+
+        logger.info(f"[TG_SETTINGS] Got settings: name='{settings.get('name')}', is_ai_enabled={bot.is_ai_enabled}, is_active={bot.is_active}")
+
+        return Response(settings)
+
     def post(self, request, organization_id):
         """Update bot settings: name, description, and/or photo (multipart/form-data)."""
         logger.info(f"[TG_SETTINGS] POST settings for org_id={organization_id}")
+        logger.info(f"[TG_SETTINGS] Content-Type: {request.content_type}")
+        logger.info(f"[TG_SETTINGS] request.data keys: {list(request.data.keys())}")
+        logger.info(f"[TG_SETTINGS] request.FILES keys: {list(request.FILES.keys())}")
 
         org, bot, error_response = self._get_bot(request, organization_id)
         if error_response:
@@ -738,10 +972,12 @@ class TelegramBotSettingsAPIView(APIView):
 
         if name is not None:
             has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting name: '{name}' (len={len(name)})")
             if len(name) > 64:
                 results["name"] = {"success": False, "error": "Name must be 64 characters or less"}
             else:
                 result = service.set_my_name(name)
+                logger.info(f"[TG_SETTINGS] setMyName response: {result}")
                 results["name"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
@@ -749,31 +985,48 @@ class TelegramBotSettingsAPIView(APIView):
 
         if description is not None:
             has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting description: '{description[:50]}...' (len={len(description)})")
             if len(description) > 512:
                 results["description"] = {"success": False, "error": "Description must be 512 characters or less"}
             else:
                 result = service.set_my_description(description)
+                logger.info(f"[TG_SETTINGS] setMyDescription response: {result}")
                 results["description"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
                 }
 
-        # Handle photo file upload
+        # Handle photo: either file upload OR photo_url
         photo = request.FILES.get("photo")
+        photo_url = request.data.get("photo_url")
+
         if photo:
+            # Direct file upload
             has_any_field = True
-            # Validate file type
+            logger.info(f"[TG_SETTINGS] Setting photo from file: name={photo.name}, size={photo.size}, content_type={photo.content_type}")
             content_type = photo.content_type
-            if content_type not in ("image/jpeg", "image/png"):
+            # Accept both image/jpeg and image/jpg (some browsers send image/jpg)
+            if content_type not in ("image/jpeg", "image/jpg", "image/png"):
                 results["photo"] = {"success": False, "error": "Photo must be JPEG or PNG"}
             elif photo.size > 5 * 1024 * 1024:  # 5MB
                 results["photo"] = {"success": False, "error": "Photo must be 5MB or less"}
             else:
                 result = service.set_my_photo(photo)
+                logger.info(f"[TG_SETTINGS] setMyPhoto response: {result}")
                 results["photo"] = {
                     "success": result.get("ok", False),
                     **({"error": result.get("description")} if not result.get("ok") else {}),
                 }
+        elif photo_url:
+            # Download from URL (e.g., from /api/v1/images/ response)
+            has_any_field = True
+            logger.info(f"[TG_SETTINGS] Setting photo from URL: {photo_url}")
+            result = service.set_my_photo_from_url(photo_url)
+            logger.info(f"[TG_SETTINGS] setMyPhoto from URL response: {result}")
+            results["photo"] = {
+                "success": result.get("ok", False),
+                **({"error": result.get("description")} if not result.get("ok") else {}),
+            }
 
         if not has_any_field:
             return Response(
@@ -1427,8 +1680,8 @@ class WhatsAppWAHABotAPIView(APIView):
             )
 
     def patch(self, request, organization_id):
-        """Toggle AI assistant on/off for WhatsApp bot."""
-        logger.info(f"[WAHA_API] PATCH is_ai_enabled for org_id={organization_id}")
+        """Partial update of WhatsApp bot settings (is_active, is_ai_enabled)."""
+        logger.info(f"[WAHA_API] PATCH for org_id={organization_id}, data={request.data}")
 
         org = self.get_organization(request, organization_id)
         if not org:
@@ -1445,18 +1698,29 @@ class WhatsAppWAHABotAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_ai_enabled = request.data.get("is_ai_enabled")
-        if is_ai_enabled is None:
+        update_fields = []
+
+        # Handle is_ai_enabled
+        if "is_ai_enabled" in request.data:
+            bot.is_ai_enabled = bool(request.data["is_ai_enabled"])
+            update_fields.append("is_ai_enabled")
+            logger.info(f"[WAHA_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+
+        # Handle is_active
+        if "is_active" in request.data:
+            bot.is_active = bool(request.data["is_active"])
+            update_fields.append("is_active")
+            logger.info(f"[WAHA_API] Bot {'activated' if bot.is_active else 'deactivated'} for org {organization_id}")
+
+        if not update_fields:
             return Response(
-                {"error": "is_ai_enabled field is required"},
+                {"error": "No valid fields provided. Supported: is_ai_enabled, is_active"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        bot.is_ai_enabled = bool(is_ai_enabled)
-        bot.save(update_fields=["is_ai_enabled"])
-        logger.info(f"[WAHA_API] AI {'enabled' if bot.is_ai_enabled else 'disabled'} for org {organization_id}")
+        bot.save(update_fields=update_fields)
 
-        return Response({"is_ai_enabled": bot.is_ai_enabled})
+        return Response(WhatsAppBotSerializer(bot).data)
 
 
 class WhatsAppWAHASessionAPIView(APIView):
@@ -1711,16 +1975,20 @@ class WhatsAppRebindAPIView(APIView):
         bot.previous_phone_number = bot.connected_phone_number
         bot.phone_changed_at = timezone.now()
 
-        # 2. Stop current session
+        # 2. Logout and delete current session completely
         try:
-            service.stop_session()
-            logger.info(f"[WA_REBIND] Session stopped for org {organization_id}")
+            # First logout (disconnects WhatsApp account)
+            service.logout_session()
+            logger.info(f"[WA_REBIND] Session logged out for org {organization_id}")
         except Exception as e:
-            logger.error(f"[WA_REBIND] Failed to stop session: {e}")
-            return Response(
-                {"error": f"Failed to stop current session: {str(e)}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            logger.warning(f"[WA_REBIND] Logout failed (continuing): {e}")
+
+        try:
+            # Then delete session data from WAHA
+            service.delete_session()
+            logger.info(f"[WA_REBIND] Session deleted for org {organization_id}")
+        except Exception as e:
+            logger.warning(f"[WA_REBIND] Delete failed (continuing): {e}")
 
         # 3. Clear current phone and update status
         bot.connected_phone_number = None
@@ -1758,3 +2026,133 @@ class WhatsAppRebindAPIView(APIView):
             "session_status": bot.session_status,
             "qr_code": qr_code,
         })
+
+
+class WhatsAppSessionLogoutAPIView(APIView):
+    """API for logging out WhatsApp session (requires QR re-scan)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def post(self, request, organization_id):
+        """Logout from WhatsApp (requires QR re-scan to reconnect)."""
+        logger.info(f"[WA_LOGOUT] POST logout for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(
+                organization=org,
+                provider=WhatsAppProvider.WAHA,
+            )
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp WAHA bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        service = WhatsAppServiceFactory.get_service(bot)
+
+        try:
+            success = service.logout_session()
+            if success:
+                bot.session_status = WhatsAppSessionStatus.DISCONNECTED
+                bot.connected_phone_number = None
+                bot.save(update_fields=["session_status", "connected_phone_number"])
+                logger.info(f"[WA_LOGOUT] Session logged out for org {organization_id}")
+                return Response({
+                    "success": True,
+                    "message": "Logged out from WhatsApp. QR scan required to reconnect.",
+                })
+            else:
+                return Response(
+                    {"error": "Failed to logout"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"[WA_LOGOUT] Logout failed: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class WhatsAppSessionDeleteAPIView(APIView):
+    """API for deleting WhatsApp session completely."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get_organization(self, request, organization_id):
+        """Get organization and verify ownership."""
+        try:
+            org = Organization.objects.get(id=organization_id)
+            if org.owner != request.user:
+                membership = org.memberships.filter(user=request.user).first()
+                if not membership or not membership.role.can_edit_organization:
+                    return None
+            return org
+        except Organization.DoesNotExist:
+            return None
+
+    def post(self, request, organization_id):
+        """Delete session completely (removes all session data from WAHA)."""
+        logger.info(f"[WA_DELETE] POST delete session for org_id={organization_id}")
+
+        org = self.get_organization(request, organization_id)
+        if not org:
+            return Response(
+                {"error": "Organization not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            bot = WhatsAppBot.objects.get(
+                organization=org,
+                provider=WhatsAppProvider.WAHA,
+            )
+        except WhatsAppBot.DoesNotExist:
+            return Response(
+                {"error": "WhatsApp WAHA bot not configured"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        service = WhatsAppServiceFactory.get_service(bot)
+
+        try:
+            success = service.delete_session()
+            if success:
+                bot.session_status = WhatsAppSessionStatus.DISCONNECTED
+                bot.connected_phone_number = None
+                bot.save(update_fields=["session_status", "connected_phone_number"])
+                logger.info(f"[WA_DELETE] Session deleted for org {organization_id}")
+                return Response({
+                    "success": True,
+                    "message": "Session deleted completely.",
+                })
+            else:
+                return Response(
+                    {"error": "Failed to delete session"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"[WA_DELETE] Delete failed: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

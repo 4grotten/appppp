@@ -31,6 +31,7 @@ from organizations.models import (
     RegionalTariff,
     SocialNetworkContact,
     UserOrgSubscription,
+    OpeningHours
 )
 from organizations.serializers.assistant_serializers import (
     OrganizationAssistantSerializer,
@@ -1479,5 +1480,25 @@ class OrganizationCatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ("id", "title", "is_catalog")
+
+
+
+class OpeningHoursSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
+
+    class Meta:
+        model = OpeningHours
+        fields = ['id', 'organization', 'day_of_week', 'opens_at', 'closes_at', 'is_closed', 'is_24_hours']
+
+    def validate(self, data):
+        if not data.get('is_closed') and not data.get('is_24_hours'):
+            if not data.get('opens_at') or not data.get('closes_at'):
+                raise serializers.ValidationError("Укажите время или выберите 'Выходной'/'Круглосуточно'")
+        return data
+
+
+
+
+
 
 

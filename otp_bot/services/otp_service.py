@@ -12,9 +12,11 @@ import hashlib
 import hmac
 
 from django.conf import settings
+from django.core.cache import cache
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from otp_bot.models import OTPBot, OTPBotStatus, OTPCode
+from otp_bot.models import OTPBot, OTPBotStatus, OTPCode, OTPBotPromptSettings
 from .waha_otp import WAHAOTPClient, WAHAOTPError
 
 logger = logging.getLogger(__name__)
@@ -24,11 +26,34 @@ OTP_CODE_TTL_SECONDS = getattr(settings, "OTP_CODE_TTL_SECONDS", 300)
 OTP_MAX_ATTEMPTS = getattr(settings, "OTP_MAX_ATTEMPTS", 3)
 OTP_RESEND_COOLDOWN_SECONDS = getattr(settings, "OTP_RESEND_COOLDOWN_SECONDS", 60)
 OTP_MAX_PER_PHONE_10MIN = getattr(settings, "OTP_MAX_PER_PHONE_10MIN", 3)
-OTP_MESSAGE_TEMPLATE = getattr(
-    settings,
-    "OTP_MESSAGE_TEMPLATE",
-    "Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин. Не сообщайте его никому.",
+
+# Fallback message templates (used if DB settings unavailable)
+_FALLBACK_OTP_MESSAGE = "Ваш код подтверждения: {code}\n\nКод действителен {ttl_minutes} мин."
+_FALLBACK_OTP_MESSAGE_NEW_USER = (
+    "Здравствуйте! 👋\n\n"
+    "Я ваш личный ассистент Easy Card 💳\n\n"
+    "Ваш код подтверждения: {code}\n\n"
+    "⏱ Код действителен {ttl_minutes} мин."
 )
+_FALLBACK_WELCOME_MESSAGE = "Добро пожаловать в Easy Card! 🎉"
+
+
+def get_otp_message_templates() -> dict:
+    """Get OTP message templates from DB settings with fallbacks."""
+    try:
+        prompt_settings = OTPBotPromptSettings.get_settings()
+        return {
+            "new_user": prompt_settings.otp_message_new_user or _FALLBACK_OTP_MESSAGE_NEW_USER,
+            "existing_user": prompt_settings.otp_message_existing_user or _FALLBACK_OTP_MESSAGE,
+            "welcome": prompt_settings.welcome_message_after_registration or _FALLBACK_WELCOME_MESSAGE,
+        }
+    except Exception as e:
+        logger.warning(f"[OTP] Failed to load prompt settings: {e}, using fallbacks")
+        return {
+            "new_user": _FALLBACK_OTP_MESSAGE_NEW_USER,
+            "existing_user": _FALLBACK_OTP_MESSAGE,
+            "welcome": _FALLBACK_WELCOME_MESSAGE,
+        }
 
 
 class OTPServiceError(Exception):
@@ -150,6 +175,8 @@ class OTPService:
         Validates phone format, checks rate limits, generates code,
         sends via WAHA, stores hash in DB.
 
+        Uses personalized welcome message for first-time users.
+
         Raises:
             BotNotConnectedError: If OTP bot is not connected
             RateLimitError: If rate limit exceeded
@@ -157,7 +184,20 @@ class OTPService:
         """
         phone = self._validate_phone(phone_number)
         self._ensure_bot_connected()
-        self._check_rate_limit(phone)
+
+        # Combined query: rate limit + first OTP check (optimization #5)
+        since = timezone.now() - timedelta(minutes=10)
+        stats = OTPCode.objects.filter(phone_number=phone).aggregate(
+            recent_count=Count('id', filter=Q(created_at__gte=since)),
+            total_count=Count('id'),
+        )
+
+        if stats['recent_count'] >= OTP_MAX_PER_PHONE_10MIN:
+            raise RateLimitError(
+                f"Rate limit: max {OTP_MAX_PER_PHONE_10MIN} OTPs per 10 minutes"
+            )
+
+        is_first_otp = stats['total_count'] == 0
 
         # Generate 6-digit code
         code = self._generate_code()
@@ -173,11 +213,14 @@ class OTPService:
             expires_at=expires_at,
         )
 
-        # Send via WhatsApp
-        message = OTP_MESSAGE_TEMPLATE.format(
+        # Get message templates from DB
+        templates = get_otp_message_templates()
+        template = templates["new_user"] if is_first_otp else templates["existing_user"]
+        message = template.format(
             code=code,
             ttl_minutes=OTP_CODE_TTL_SECONDS // 60,
         )
+
         sent = self.waha.send_text(phone, message)
 
         if not sent:
@@ -185,7 +228,7 @@ class OTPService:
             # Don't delete the OTP — user can retry via resend
             raise OTPServiceError("Failed to send WhatsApp message")
 
-        logger.info(f"[OTP] OTP sent to {phone[:7]}***: id={otp.id}")
+        logger.info(f"[OTP] OTP sent to {phone[:7]}*** (first_otp={is_first_otp}): id={otp.id}")
 
         return SendOTPResult(
             otp_id=str(otp.id),
@@ -269,6 +312,36 @@ class OTPService:
         # Send new OTP
         return self.send_otp(phone_number)
 
+    def send_welcome_message(self, phone_number: str) -> bool:
+        """Send welcome message after successful OTP verification for new users.
+
+        Args:
+            phone_number: Phone number in E.164 format
+
+        Returns:
+            True if message was sent successfully, False otherwise
+        """
+        phone = self._validate_phone(phone_number)
+
+        try:
+            self._ensure_bot_connected()
+        except BotNotConnectedError:
+            logger.warning(f"[OTP] Cannot send welcome message - bot not connected")
+            return False
+
+        # Get welcome message from DB settings
+        templates = get_otp_message_templates()
+        welcome_message = templates["welcome"]
+
+        sent = self.waha.send_text(phone, welcome_message)
+
+        if sent:
+            logger.info(f"[OTP] Welcome message sent to {phone[:7]}***")
+        else:
+            logger.error(f"[OTP] Failed to send welcome message to {phone[:7]}***")
+
+        return sent
+
     # --- Private Helpers ---
 
     @staticmethod
@@ -281,17 +354,40 @@ class OTPService:
             )
         return phone
 
-    def _ensure_bot_connected(self) -> None:
-        """Ensure OTP bot is connected and ready."""
+    def is_available(self) -> bool:
+        """Check if OTP bot is connected and ready to send messages."""
         bot = OTPBot.objects.first()
-        if not bot or bot.status != OTPBotStatus.CONNECTED:
-            # Try quick health check
-            if self.waha.is_healthy():
-                if bot:
-                    bot.status = OTPBotStatus.CONNECTED
-                    bot.save(update_fields=["status", "updated_at"])
-                return
-            raise BotNotConnectedError("OTP bot is not connected")
+        if not bot:
+            return False
+        if bot.status == OTPBotStatus.CONNECTED:
+            return True
+        # Try quick health check
+        if self.waha.is_healthy():
+            bot.status = OTPBotStatus.CONNECTED
+            bot.save(update_fields=["status", "updated_at"])
+            return True
+        return False
+
+    def _ensure_bot_connected(self) -> None:
+        """Ensure OTP bot is connected and ready (with caching)."""
+        # Quick cache check (5 sec TTL)
+        if cache.get("otp_bot_connected"):
+            return
+
+        bot = OTPBot.objects.first()
+        if bot and bot.status == OTPBotStatus.CONNECTED:
+            cache.set("otp_bot_connected", True, timeout=5)
+            return
+
+        # Fallback to health check
+        if self.waha.is_healthy():
+            cache.set("otp_bot_connected", True, timeout=5)
+            if bot:
+                bot.status = OTPBotStatus.CONNECTED
+                bot.save(update_fields=["status", "updated_at"])
+            return
+
+        raise BotNotConnectedError("OTP bot is not connected")
 
     @staticmethod
     def _check_rate_limit(phone: str) -> None:
@@ -336,3 +432,230 @@ class OTPService:
             "STOPPED": OTPBotStatus.DISCONNECTED,
         }
         return mapping.get(waha_status.upper(), OTPBotStatus.DISCONNECTED)
+
+    # --- Transaction Notifications ---
+
+    def send_transaction_notification(
+        self,
+        phone_number: str,
+        tx_type: str,
+        amount: float,
+        currency: str = "AED",
+        merchant: Optional[str] = None,
+        balance_after: Optional[float] = None,
+    ) -> bool:
+        """Send transaction notification via WhatsApp with interactive buttons.
+
+        Formats and sends a push notification about a transaction event.
+        Falls back to plain text if button sending fails.
+
+        Args:
+            phone_number: Phone number in E.164 format
+            tx_type: Transaction type (top_up, card_payment, transfer_out, etc.)
+            amount: Transaction amount
+            currency: Currency code (default AED)
+            merchant: Optional merchant name for payments
+            balance_after: Optional balance after transaction
+
+        Returns:
+            True if notification was sent successfully
+        """
+        phone = self._validate_phone(phone_number)
+
+        try:
+            self._ensure_bot_connected()
+        except BotNotConnectedError:
+            logger.warning("[OTP] Cannot send transaction notification - bot not connected")
+            return False
+
+        # Emoji and text mapping for transaction types
+        type_emoji = {
+            "top_up": "💰",
+            "card_payment": "🛒",
+            "transfer_out": "📤",
+            "transfer_in": "📥",
+            "withdrawal": "🏧",
+            "refund": "↩️",
+            "fee": "📋",
+            "cashback": "🎁",
+            "card_activation": "💳",
+        }
+
+        type_text = {
+            "top_up": "Пополнение",
+            "card_payment": "Оплата",
+            "transfer_out": "Перевод",
+            "transfer_in": "Получен перевод",
+            "withdrawal": "Снятие",
+            "refund": "Возврат",
+            "fee": "Комиссия",
+            "cashback": "Кэшбэк",
+            "card_activation": "Активация карты",
+        }
+
+        emoji = type_emoji.get(tx_type, "💳")
+        action = type_text.get(tx_type, tx_type)
+
+        # Determine sign for amount display
+        positive_types = ("top_up", "transfer_in", "refund", "cashback")
+        sign = "+" if tx_type in positive_types else "-"
+
+        # Build message
+        message = f"{emoji} {action}: {sign}{abs(amount):.2f} {currency}"
+
+        if merchant:
+            message += f"\n📍 {merchant}"
+
+        if balance_after is not None:
+            message += f"\n\n💰 Баланс: {balance_after:.2f} {currency}"
+
+        # Get app URL from settings
+        app_url = getattr(settings, "OTP_BOT_APP_URL", "https://easycarduae.com")
+
+        # Interactive buttons (WAHA Plus format)
+        buttons = [
+            {"type": "reply", "id": "view_details", "text": "📊 Подробнее"},
+            {"type": "url", "text": "📱 Открыть приложение", "url": app_url},
+        ]
+
+        # Try sending with interactive buttons first (WAHA Plus)
+        sent = self.waha.send_interactive_buttons(phone, message, buttons)
+        if not sent:
+            logger.warning(f"[OTP] Buttons failed for {phone[:7]}***, falling back to text")
+            sent = self.waha.send_text(phone, message)
+
+        if sent:
+            logger.info(f"[OTP] Transaction notification sent to {phone[:7]}***")
+        else:
+            logger.error(f"[OTP] Failed to send transaction notification to {phone[:7]}***")
+
+        return sent
+
+    def send_welcome_with_card_button(self, phone_number: str) -> bool:
+        """Send welcome message with interactive buttons after registration.
+
+        For new users who just completed registration, sends a welcome
+        message with interactive buttons (URL/Call) for WAHA Plus.
+
+        Args:
+            phone_number: Phone number in E.164 format
+
+        Returns:
+            True if message was sent successfully
+        """
+        phone = self._validate_phone(phone_number)
+
+        try:
+            self._ensure_bot_connected()
+        except BotNotConnectedError:
+            logger.warning("[OTP] Cannot send welcome with card button - bot not connected")
+            return False
+
+        # Get welcome message from DB settings
+        templates = get_otp_message_templates()
+        welcome_text = templates["welcome"]
+
+        # Get URLs from settings
+        cards_url = getattr(settings, "OTP_BOT_CARDS_URL", "https://easycarduae.com/cards")
+        voice_url = getattr(
+            settings,
+            "OTP_BOT_VOICE_ASSISTANT_URL",
+            "https://easycarduae.com/voice-assistant"
+        )
+
+        # Interactive buttons for new users (WAHA Plus format)
+        buttons = [
+            {"type": "url", "text": "💳 Забрать карту", "url": cards_url},
+            {"type": "url", "text": "🎙 Голосовой ассистент", "url": voice_url},
+            {"type": "reply", "id": "open_chat", "text": "💬 Начать чат"},
+        ]
+
+        # Try sending with interactive buttons first (WAHA Plus)
+        sent = self.waha.send_interactive_buttons(phone, welcome_text, buttons)
+        if not sent:
+            # Fallback to text with URL
+            text_with_link = f"{welcome_text}\n\n🔗 Забрать карту: {cards_url}"
+            sent = self.waha.send_text(phone, text_with_link)
+
+        if sent:
+            logger.info(f"[OTP] Welcome with card button sent to {phone[:7]}***")
+        else:
+            logger.error(f"[OTP] Failed to send welcome with card button to {phone[:7]}***")
+
+        return sent
+
+    def send_otp_with_buttons(self, phone_number: str) -> SendOTPResult:
+        """Generate and send OTP code with interactive buttons.
+
+        Similar to send_otp() but includes interactive buttons appropriate
+        for new vs existing users.
+
+        Args:
+            phone_number: Phone number in E.164 format
+
+        Returns:
+            SendOTPResult with OTP details
+
+        Raises:
+            BotNotConnectedError: If OTP bot is not connected
+            RateLimitError: If rate limit exceeded
+            OTPServiceError: If message sending fails
+        """
+        phone = self._validate_phone(phone_number)
+        self._ensure_bot_connected()
+        self._check_rate_limit(phone)
+
+        # Check if this is a new user (never received OTP before)
+        is_first_otp = not OTPCode.objects.filter(phone_number=phone).exists()
+
+        # Generate 6-digit code
+        code = self._generate_code()
+        code_hash = self._hash_code(code)
+
+        # Calculate expiry
+        expires_at = timezone.now() + timedelta(seconds=OTP_CODE_TTL_SECONDS)
+
+        # Save to DB (hash only)
+        otp = OTPCode.objects.create(
+            phone_number=phone,
+            code_hash=code_hash,
+            expires_at=expires_at,
+        )
+
+        # Get message templates from DB
+        templates = get_otp_message_templates()
+        template = templates["new_user"] if is_first_otp else templates["existing_user"]
+        message = template.format(
+            code=code,
+            ttl_minutes=OTP_CODE_TTL_SECONDS // 60,
+        )
+
+        # Buttons differ for new vs existing users
+        if is_first_otp:
+            buttons = [
+                {"id": "open_chat", "text": "💬 Открыть чат EasyCard"},
+                {"id": "about_service", "text": "ℹ️ О сервисе"},
+            ]
+        else:
+            buttons = [
+                {"id": "open_app", "text": "📱 Открыть приложение"},
+            ]
+
+        # Try buttons first, fallback to text
+        sent = self.waha.send_buttons(phone, message, buttons)
+        if not sent:
+            logger.warning(f"[OTP] Buttons failed for {phone[:7]}***, falling back to text")
+            sent = self.waha.send_text(phone, message)
+
+        if not sent:
+            logger.error(f"[OTP] Failed to send OTP to {phone[:7]}***")
+            raise OTPServiceError("Failed to send WhatsApp message")
+
+        logger.info(f"[OTP] OTP sent to {phone[:7]}*** (first_otp={is_first_otp}): id={otp.id}")
+
+        return SendOTPResult(
+            otp_id=str(otp.id),
+            phone_number=phone,
+            expires_at=expires_at.isoformat(),
+            sent=True,
+        )

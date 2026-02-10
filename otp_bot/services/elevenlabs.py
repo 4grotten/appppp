@@ -10,6 +10,8 @@ from typing import Optional
 import requests
 from django.conf import settings
 
+from otp_bot.metrics import track_timing
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,6 +58,7 @@ class ElevenLabsService:
         """Check if ElevenLabs API key is configured."""
         return bool(self.api_key)
 
+    @track_timing("elevenlabs_stt")
     def speech_to_text(self, audio_bytes: bytes) -> Optional[str]:
         """Transcribe audio to text using ElevenLabs STT.
 
@@ -113,6 +116,7 @@ class ElevenLabsService:
             logger.error(f"[ELEVENLABS] STT error: {e}", exc_info=True)
             return None
 
+    @track_timing("elevenlabs_tts")
     def text_to_speech(self, text: str) -> Optional[bytes]:
         """Convert text to speech using ElevenLabs TTS.
 

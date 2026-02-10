@@ -45,12 +45,21 @@ def _send_ws_notification(bot_message: BotMessage, bot_chat: BotChat) -> None:
 
 
 def _run_async(coro):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+    """Run async coroutine in synchronous Celery task context.
+
+    Uses asyncio.run() which:
+    - Creates a new event loop for the coroutine
+    - Runs the coroutine to completion
+    - Closes the event loop
+
+    This is the recommended approach for running async code in sync context
+    when each call is independent (like Celery tasks). For frequent calls,
+    consider using a thread-local event loop instead.
+
+    Note: This pattern is correct for userbot auth operations which are
+    infrequent (once per userbot setup).
+    """
+    return asyncio.run(coro)
 
 
 @shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
@@ -241,10 +250,102 @@ def userbot_send_test_message_task(userbot_id: int, chat: str, message: str):
     return result
 
 
+@shared_task(time_limit=120, soft_time_limit=100, ignore_result=False)
+def userbot_set_bot_photo_task(bot_username: str, photo_content_b64: str, content_type: str = "image/jpeg"):
+    """
+    Set bot profile photo via BotFather using userbot.
+
+    This is the only way to change bot's profile photo programmatically
+    since Telegram Bot API doesn't have setMyPhoto method.
+
+    Args:
+        bot_username: Bot username without @ (e.g., "my_bot")
+        photo_content_b64: Base64-encoded image bytes (Celery requires JSON-serializable args)
+        content_type: MIME type of the image
+
+    Returns:
+        {"success": True/False, "error": str}
+    """
+    import base64
+
+    logger.info(f"[USERBOT_TASK] set_bot_photo started for @{bot_username}")
+
+    # Decode base64 back to bytes
+    try:
+        photo_content = base64.b64decode(photo_content_b64)
+        logger.info(f"[USERBOT_TASK] Decoded photo: {len(photo_content)} bytes")
+    except Exception as e:
+        logger.error(f"[USERBOT_TASK] Failed to decode base64: {e}")
+        return {"success": False, "error": f"Failed to decode photo data: {e}"}
+
+    from messenger_bots.services.bot_factory import BotFactoryService
+
+    # Use any available authenticated userbot
+    result = _run_async(BotFactoryService._set_bot_photo_async(None, bot_username, photo_content, content_type))
+
+    logger.info(f"[USERBOT_TASK] set_bot_photo result: {result}")
+    return result
+
+
 CHAT_HISTORY_LIMIT = 5
 
+# Telegram message delay (seconds) - used for countdown scheduling
+TG_MESSAGE_DELAY = 0.5
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=5)
+
+@shared_task(bind=True, max_retries=2, default_retry_delay=1)
+def send_telegram_message_part_task(
+    self,
+    telegram_bot_id: int,
+    chat_id: int,
+    text: str,
+    part_index: int,
+    reply_markup: dict = None,
+):
+    """Send a single Telegram message part (for multi-part responses).
+
+    Uses countdown scheduling to avoid blocking workers with time.sleep().
+    Each part is sent as a separate task with incremental delay.
+
+    Args:
+        telegram_bot_id: TelegramBot ID
+        chat_id: BotChat ID
+        text: Message text to send
+        part_index: Index of this part (0, 1, 2, ...)
+        reply_markup: Optional inline keyboard
+    """
+    logger.debug(f"[TG_PART_TASK] Sending part {part_index} for chat {chat_id}")
+
+    try:
+        telegram_bot = TelegramBot.objects.select_related("organization").get(
+            id=telegram_bot_id
+        )
+        chat = BotChat.objects.get(id=chat_id)
+    except (TelegramBot.DoesNotExist, BotChat.DoesNotExist) as e:
+        logger.error(f"[TG_PART_TASK] Bot or chat not found: {e}")
+        return {"success": False, "error": str(e)}
+
+    from messenger_bots.services.telegram import TelegramBotService
+
+    service = TelegramBotService(telegram_bot)
+    result = service.send_message(chat.platform_chat_id, text, reply_markup=reply_markup)
+
+    if result:
+        msg = BotMessage.objects.create(
+            chat=chat,
+            sender=BotMessage.ASSISTANT,
+            text=text,
+            platform_message_id=str(result.get("message_id", "")),
+        )
+        _send_ws_notification(msg, chat)
+        logger.debug(f"[TG_PART_TASK] Part {part_index} sent: {result.get('message_id')}")
+        return {"success": True, "message_id": result.get("message_id")}
+    else:
+        logger.error(f"[TG_PART_TASK] Part {part_index} failed")
+        raise self.retry(exc=Exception("Message send failed"))
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=5, time_limit=120, soft_time_limit=100)
 def send_telegram_products_task(
     self,
     telegram_bot_id: int,
@@ -254,15 +355,14 @@ def send_telegram_products_task(
     page: int = 0,
     language: str = "ru",
 ):
+    """Send products with pagination asynchronously using countdown scheduling.
+
+    Uses countdown to schedule messages with delays, avoiding time.sleep() blocking.
+    This is the orchestrator task that schedules individual message tasks.
     """
-    Send products with pagination asynchronously.
-    This avoids blocking the webhook response with time.sleep().
-    """
-    import time
     from messenger_bots.services.telegram import (
         TelegramBotService,
         PRODUCTS_PER_PAGE,
-        MESSAGE_DELAY,
     )
 
     logger.info(f"[TG_PRODUCTS_TASK] Starting: bot_id={telegram_bot_id}, chat_id={chat_id}, page={page}")
@@ -274,37 +374,30 @@ def send_telegram_products_task(
         logger.error(f"[TG_PRODUCTS_TASK] ERROR: {e}")
         return {"success": False, "error": str(e)}
 
-    service = TelegramBotService(telegram_bot)
-    platform_chat_id = chat.platform_chat_id
-
     start = page * PRODUCTS_PER_PAGE
     batch = products[start:start + PRODUCTS_PER_PAGE]
-    messages_sent = 0
-
-    # Send products with delay between messages
-    for i, product in enumerate(batch):
-        if i > 0:
-            time.sleep(MESSAGE_DELAY)
-
-        result = service.send_message(platform_chat_id, product)
-        if result:
-            product_msg = BotMessage.objects.create(
-                chat=chat,
-                sender=BotMessage.ASSISTANT,
-                text=product,
-                platform_message_id=str(result.get("message_id", "")),
-            )
-            _send_ws_notification(product_msg, chat)
-            messages_sent += 1
-
     has_more = (start + PRODUCTS_PER_PAGE) < len(products)
 
+    # Calculate total messages to schedule
+    total_messages = len(batch)
     if has_more:
-        # Send "Show more" button
+        total_messages += 1  # "Show more" button message
+    elif footer:
+        total_messages += 1  # Footer message
+
+    # Schedule product messages with countdown delays
+    message_index = 0
+    for product in batch:
+        send_telegram_message_part_task.apply_async(
+            args=(telegram_bot_id, chat_id, product, message_index),
+            countdown=message_index * TG_MESSAGE_DELAY,
+        )
+        message_index += 1
+
+    # Schedule pagination or footer
+    if has_more:
         remaining = len(products) - (start + PRODUCTS_PER_PAGE)
         show_count = min(remaining, PRODUCTS_PER_PAGE)
-
-        time.sleep(MESSAGE_DELAY)
 
         button_text = {
             "ru": f"Показать ещё {show_count}",
@@ -322,36 +415,29 @@ def send_telegram_products_task(
             }]]
         }
 
-        result = service.send_message(
-            platform_chat_id,
-            status_text.get(language, status_text["ru"]),
-            reply_markup=keyboard,
+        send_telegram_message_part_task.apply_async(
+            args=(
+                telegram_bot_id,
+                chat_id,
+                status_text.get(language, status_text["ru"]),
+                message_index,
+            ),
+            kwargs={"reply_markup": keyboard},
+            countdown=message_index * TG_MESSAGE_DELAY,
         )
-        if result:
-            status_msg = BotMessage.objects.create(
-                chat=chat,
-                sender=BotMessage.ASSISTANT,
-                text=status_text.get(language, status_text["ru"]),
-                platform_message_id=str(result.get("message_id", "")),
-            )
-            _send_ws_notification(status_msg, chat)
-    else:
-        # Send footer
-        if footer:
-            time.sleep(MESSAGE_DELAY)
-            keyboard = service.build_main_menu_keyboard(language)
-            result = service.send_message(platform_chat_id, footer, reply_markup=keyboard)
-            if result:
-                footer_msg = BotMessage.objects.create(
-                    chat=chat,
-                    sender=BotMessage.ASSISTANT,
-                    text=footer,
-                    platform_message_id=str(result.get("message_id", "")),
-                )
-                _send_ws_notification(footer_msg, chat)
+    elif footer:
+        # Build main menu keyboard for footer
+        service = TelegramBotService(telegram_bot)
+        keyboard = service.build_main_menu_keyboard(language)
 
-    logger.info(f"[TG_PRODUCTS_TASK] Completed: sent {messages_sent} products")
-    return {"success": True, "messages_sent": messages_sent}
+        send_telegram_message_part_task.apply_async(
+            args=(telegram_bot_id, chat_id, footer, message_index),
+            kwargs={"reply_markup": keyboard},
+            countdown=message_index * TG_MESSAGE_DELAY,
+        )
+
+    logger.info(f"[TG_PRODUCTS_TASK] Scheduled {total_messages} messages for chat {chat_id}")
+    return {"success": True, "messages_scheduled": total_messages}
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -484,6 +570,62 @@ def check_pending_bot_requests():
     return {"processed": len(pending_requests)}
 
 
+@shared_task(bind=True, max_retries=2, default_retry_delay=1)
+def send_whatsapp_message_part_task(
+    self,
+    whatsapp_bot_id: int,
+    chat_id: int,
+    text: str,
+    part_index: int,
+):
+    """Send a single WhatsApp message part (for multi-part responses).
+
+    Uses countdown scheduling to avoid blocking workers with time.sleep().
+    Each part is sent as a separate task with incremental delay.
+
+    Args:
+        whatsapp_bot_id: WhatsAppBot ID
+        chat_id: BotChat ID
+        text: Message text to send
+        part_index: Index of this part (0, 1, 2, ...)
+    """
+    logger.debug(f"[WA_PART_TASK] Sending part {part_index} for chat {chat_id}")
+
+    try:
+        whatsapp_bot = WhatsAppBot.objects.select_related("organization").get(
+            id=whatsapp_bot_id
+        )
+        chat = BotChat.objects.get(id=chat_id)
+    except (WhatsAppBot.DoesNotExist, BotChat.DoesNotExist) as e:
+        logger.error(f"[WA_PART_TASK] Bot or chat not found: {e}")
+        return {"success": False, "error": str(e)}
+
+    from messenger_bots.services.whatsapp import WhatsAppServiceFactory
+    from messenger_bots.services.whatsapp.base import WhatsAppMessage
+
+    service = WhatsAppServiceFactory.get_service(whatsapp_bot)
+
+    message = WhatsAppMessage(
+        to=chat.platform_chat_id,
+        text=text,
+    )
+    result = service.send_message(message)
+
+    if result.success:
+        wa_response_msg = BotMessage.objects.create(
+            chat=chat,
+            sender=BotMessage.ASSISTANT,
+            text=text,
+            platform_message_id=result.message_id or "",
+        )
+        _send_ws_notification(wa_response_msg, chat)
+        logger.debug(f"[WA_PART_TASK] Part {part_index} sent: {result.message_id}")
+        return {"success": True, "message_id": result.message_id}
+    else:
+        logger.error(f"[WA_PART_TASK] Part {part_index} failed: {result.error}")
+        raise self.retry(exc=Exception(result.error))
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=5)
 def process_whatsapp_message_task(
     self,
@@ -587,57 +729,43 @@ def process_whatsapp_message_task(
             # Single message, just clean any stray separators
             message_parts = [clean_ai_response(response_text)]
 
-        # Send each part as a separate message and save each to DB
-        sent_message_ids = []
-        last_result = None
-
-        for i, part_text in enumerate(message_parts):
+        # Single message - send directly
+        if len(message_parts) == 1:
             message = WhatsAppMessage(
                 to=chat.platform_chat_id,
-                text=part_text,
+                text=message_parts[0],
             )
             result = service.send_message(message)
-            last_result = result
 
             if result.success:
-                sent_message_ids.append(result.message_id)
-                logger.debug(f"[WA_TASK] Sent part {i+1}/{len(message_parts)}, msg_id={result.message_id}")
-
-                # Save each message part as separate DB record (like Telegram)
                 wa_response_msg = BotMessage.objects.create(
                     chat=chat,
                     sender=BotMessage.ASSISTANT,
-                    text=part_text,
+                    text=message_parts[0],
                     platform_message_id=result.message_id or "",
                 )
                 _send_ws_notification(wa_response_msg, chat)
+                logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
+                return {"success": True, "message_ids": [result.message_id], "messages_sent": 1}
             else:
-                logger.error(f"[WA_TASK] Failed to send part {i+1}: {result.error}")
+                whatsapp_bot.last_error = result.error
+                whatsapp_bot.save(update_fields=["last_error"])
+                return {"success": False, "error": result.error}
 
-            # Small delay between messages to maintain order
-            if i < len(message_parts) - 1:
-                import time
-                time.sleep(0.3)
-
-        if sent_message_ids:
-            logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
-            logger.info(
-                f"[WA_TASK] Sent {len(sent_message_ids)} messages to {chat.platform_chat_id}"
+        # Multiple messages - use countdown scheduling to avoid blocking
+        # Schedule first message immediately, rest with countdown delays
+        for i, part_text in enumerate(message_parts):
+            send_whatsapp_message_part_task.apply_async(
+                args=(whatsapp_bot_id, chat_id, part_text, i),
+                countdown=i * 0.3,  # 0, 0.3, 0.6, 0.9... seconds
             )
-            return {
-                "success": True,
-                "message_ids": sent_message_ids,
-                "messages_sent": len(sent_message_ids),
-            }
-        else:
-            error = last_result.error if last_result else "No messages sent"
-            logger.error(f"[WA_TASK] ERROR: Failed to send response: {error}")
-            whatsapp_bot.last_error = error
-            whatsapp_bot.save(update_fields=["last_error"])
-            return {
-                "success": False,
-                "error": error,
-            }
+
+        logger.info("[WA_TASK] ====== PROCESS_WHATSAPP_MESSAGE SUCCESS ======")
+        logger.info(f"[WA_TASK] Scheduled {len(message_parts)} messages for {chat.platform_chat_id}")
+        return {
+            "success": True,
+            "messages_scheduled": len(message_parts),
+        }
 
     except Exception as e:
         logger.error(f"[WA_TASK] ERROR: WhatsApp send error: {e}", exc_info=True)
@@ -664,6 +792,8 @@ def _get_whatsapp_chat_history(chat: BotChat) -> list:
 def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
     """Send welcome message for first-time WhatsApp contact.
 
+    Uses WAHA Plus interactive buttons if available.
+
     Args:
         service: WhatsApp service instance (WAHA/Twilio/etc.)
         chat: BotChat instance
@@ -672,13 +802,36 @@ def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
     from messenger_bots.services.whatsapp.base import WhatsAppMessage
 
     try:
-        message = WhatsAppMessage(
-            to=chat.platform_chat_id,
-            text=welcome_text,
-        )
-        result = service.send_message(message)
+        result = None
 
-        if result.success:
+        # Try to send with interactive buttons (WAHA Plus feature)
+        if hasattr(service, 'send_buttons'):
+            buttons = [
+                {"id": "ask_question", "text": "💬 Задать вопрос"},
+                {"id": "view_contacts", "text": "📞 Контакты"},
+            ]
+
+            try:
+                result = service.send_buttons(
+                    to=chat.platform_chat_id,
+                    text=welcome_text,
+                    buttons=buttons,
+                    footer="Powered by Apofiz",
+                )
+                logger.info("[WA_TASK] Welcome sent with interactive buttons")
+            except Exception as btn_error:
+                logger.debug(f"[WA_TASK] Buttons not supported, falling back to text: {btn_error}")
+                result = None
+
+        # Fallback to plain text message
+        if not result or not result.success:
+            message = WhatsAppMessage(
+                to=chat.platform_chat_id,
+                text=welcome_text,
+            )
+            result = service.send_message(message)
+
+        if result and result.success:
             # Save welcome message to chat history
             welcome_msg = BotMessage.objects.create(
                 chat=chat,
@@ -689,13 +842,112 @@ def _send_whatsapp_welcome(service, chat: BotChat, welcome_text: str) -> None:
             _send_ws_notification(welcome_msg, chat)
             logger.info(f"[WA_TASK] Welcome message sent: {result.message_id}")
         else:
-            logger.warning(f"[WA_TASK] Failed to send welcome: {result.error}")
-
-        # Small delay before AI processing
-        time.sleep(0.5)
+            logger.warning(f"[WA_TASK] Failed to send welcome: {result.error if result else 'Unknown error'}")
 
     except Exception as e:
         logger.warning(f"[WA_TASK] Welcome message error: {e}")
+
+
+@shared_task
+def ensure_waha_session_running():
+    """
+    Monitor WAHA session and auto-restart if stopped/failed.
+
+    Runs every 2 minutes to quickly detect and recover from session drops.
+    This is critical for OTP bot availability.
+    """
+    from messenger_bots.models import WhatsAppProvider, WhatsAppSessionStatus
+    from messenger_bots.services.whatsapp import WhatsAppServiceFactory
+
+    waha_bots = WhatsAppBot.objects.filter(
+        provider=WhatsAppProvider.WAHA,
+        is_active=True,
+    ).select_related("organization")
+
+    results = []
+    for bot in waha_bots:
+        try:
+            service = WhatsAppServiceFactory.get_service(bot)
+            connection_status = service.check_connection()
+            waha_status = connection_status.get("status", "UNKNOWN")
+
+            # Session needs restart if STOPPED or FAILED
+            if waha_status in ["STOPPED", "FAILED"]:
+                logger.warning(
+                    f"[WAHA_MONITOR] Session down for org {bot.organization.id}: "
+                    f"status={waha_status}, attempting auto-restart..."
+                )
+
+                # Attempt to start session
+                success = service.start_session()
+
+                if success:
+                    logger.info(
+                        f"[WAHA_MONITOR] Session auto-restarted for org {bot.organization.id}"
+                    )
+                    bot.session_status = WhatsAppSessionStatus.PENDING
+                    bot.last_error = None
+                    bot.save(update_fields=["session_status", "last_error"])
+                    results.append({
+                        "org_id": bot.organization.id,
+                        "action": "restarted",
+                        "previous_status": waha_status,
+                    })
+                else:
+                    logger.error(
+                        f"[WAHA_MONITOR] Failed to restart session for org {bot.organization.id}"
+                    )
+                    bot.session_status = WhatsAppSessionStatus.FAILED
+                    bot.last_error = f"Auto-restart failed from status: {waha_status}"
+                    bot.save(update_fields=["session_status", "last_error"])
+                    results.append({
+                        "org_id": bot.organization.id,
+                        "action": "restart_failed",
+                        "previous_status": waha_status,
+                    })
+
+            elif waha_status == "WORKING":
+                # Session is healthy
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "healthy",
+                    "status": waha_status,
+                })
+
+            elif waha_status == "STARTING":
+                # Session is starting, wait for it
+                logger.info(
+                    f"[WAHA_MONITOR] Session starting for org {bot.organization.id}"
+                )
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "starting",
+                    "status": waha_status,
+                })
+
+            else:
+                # Unknown or other status (SCAN_QR_CODE, etc.)
+                logger.info(
+                    f"[WAHA_MONITOR] Session status for org {bot.organization.id}: {waha_status}"
+                )
+                results.append({
+                    "org_id": bot.organization.id,
+                    "action": "monitoring",
+                    "status": waha_status,
+                })
+
+        except Exception as e:
+            logger.error(
+                f"[WAHA_MONITOR] Error checking session for org {bot.organization.id}: {e}"
+            )
+            results.append({
+                "org_id": bot.organization.id,
+                "action": "error",
+                "error": str(e),
+            })
+
+    logger.info(f"[WAHA_MONITOR] Check completed: {len(results)} bots monitored")
+    return {"monitored": len(results), "results": results}
 
 
 @shared_task
@@ -706,7 +958,7 @@ def check_waha_session_health():
     waha_bots = WhatsAppBot.objects.filter(
         provider=WhatsAppProvider.WAHA,
         is_active=True,
-    )
+    ).select_related("organization")
 
     results = []
     for bot in waha_bots:
@@ -764,7 +1016,7 @@ def sync_waha_session_status():
     waha_bots = WhatsAppBot.objects.filter(
         provider=WhatsAppProvider.WAHA,
         is_active=True,
-    )
+    ).select_related("organization")
 
     for bot in waha_bots:
         try:
@@ -838,7 +1090,8 @@ def cache_assistant_training_data():
             continue
 
         try:
-            cache_key = f"assistant_training_data:{org.id}"
+            from messenger_bots.signals import get_assistant_cache_key
+            cache_key = get_assistant_cache_key(org.id)
             logger.info(f"[CACHE_TASK] Caching training data for org {org.id} ({org.title})")
 
             # Get base training data

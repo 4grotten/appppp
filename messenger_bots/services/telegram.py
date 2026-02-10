@@ -1,7 +1,6 @@
 import logging
 import json
 import re
-import requests
 from typing import Optional, List, Dict, Any, Tuple
 from django.conf import settings
 from django.core.cache import cache
@@ -10,6 +9,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from messenger_bots.models import TelegramBot, BotChat, BotMessage, BotPlatform
+from messenger_bots.services.telegram_http_client import telegram_post, get_telegram_session
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,17 @@ class TelegramBotService:
         self.token = telegram_bot.bot_token
 
     def _make_request(self, method: str, data: dict = None) -> dict:
-        """Make a request to Telegram Bot API."""
+        """Make a request to Telegram Bot API using shared connection pool.
+
+        Uses telegram_post() which provides:
+        - Connection pooling
+        - Automatic retries on 429/502/503/504
+        - Default timeout
+        """
         url = self.BASE_URL.format(token=self.token, method=method)
         logger.debug(f"[TG_SERVICE] API call: {method}, data={json.dumps(data, ensure_ascii=False)[:200] if data else 'None'}")
         try:
-            response = requests.post(url, json=data, timeout=30)
+            response = telegram_post(url, json=data)
             result = response.json()
             if not result.get("ok"):
                 error_msg = result.get("description", "Unknown error")
@@ -55,7 +61,7 @@ class TelegramBotService:
             else:
                 logger.debug(f"[TG_SERVICE] API SUCCESS: {method}")
             return result
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(f"[TG_SERVICE] REQUEST EXCEPTION: method={method}, error={e}", exc_info=True)
             self.bot.last_error = str(e)
             self.bot.save(update_fields=["last_error"])
@@ -99,11 +105,14 @@ class TelegramBotService:
     # --- Bot Settings (Telegram API) ---
 
     def _make_file_request(self, method: str, files: dict, data: dict = None) -> dict:
-        """Make a multipart/form-data request to Telegram Bot API (for file uploads)."""
+        """Make a multipart/form-data request to Telegram Bot API (for file uploads).
+
+        Uses shared connection pool with longer timeout for file uploads.
+        """
         url = self.BASE_URL.format(token=self.token, method=method)
         logger.debug(f"[TG_SERVICE] File API call: {method}")
         try:
-            response = requests.post(url, data=data, files=files, timeout=60)
+            response = telegram_post(url, data=data, files=files, timeout=(5, 60))
             result = response.json()
             if not result.get("ok"):
                 error_msg = result.get("description", "Unknown error")
@@ -111,7 +120,7 @@ class TelegramBotService:
             else:
                 logger.info(f"[TG_SERVICE] File API SUCCESS: {method}")
             return result
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(f"[TG_SERVICE] File REQUEST EXCEPTION: method={method}, error={e}", exc_info=True)
             return {"ok": False, "description": str(e)}
 
@@ -130,19 +139,229 @@ class TelegramBotService:
         return result
 
     def set_my_photo(self, photo_file) -> dict:
-        """Set bot's profile photo via Telegram API (setMyPhoto). Accepts file object."""
-        files = {"photo": ("photo.png", photo_file, "image/png")}
-        result = self._make_file_request("setMyPhoto", files=files)
-        if result.get("ok"):
-            logger.info(f"[TG_SERVICE] Bot photo updated")
-        return result
+        """
+        Set bot's profile photo via BotFather userbot.
+
+        NOTE: Telegram Bot API does NOT have setMyPhoto method.
+        Bot photos can only be changed via BotFather.
+        This method uses a userbot to send /setuserpic command to BotFather.
+
+        Accepts file object.
+        """
+        # Get filename and content type from uploaded file
+        filename = getattr(photo_file, 'name', 'photo.jpg')
+        content_type = getattr(photo_file, 'content_type', 'image/jpeg')
+
+        # Read file content
+        photo_file.seek(0)
+        content = photo_file.read()
+        logger.info(f"[TG_SERVICE] Photo upload via userbot: filename={filename}, size={len(content)}, content_type={content_type}")
+        logger.debug(f"[TG_SERVICE] Photo first 20 bytes: {content[:20]}")
+
+        # Validate
+        if len(content) < 100:
+            logger.error(f"[TG_SERVICE] Photo too small ({len(content)} bytes)")
+            return {"ok": False, "description": f"Photo too small ({len(content)} bytes). Send a real image file."}
+
+        # Get bot username
+        if not self.bot.bot_username:
+            # Try to fetch it
+            me = self.get_me()
+            if not me or not self.bot.bot_username:
+                return {"ok": False, "description": "Cannot determine bot username. Please configure the bot first."}
+
+        # Use userbot task to set photo via BotFather
+        from messenger_bots.tasks import userbot_set_bot_photo_task
+        import base64
+
+        try:
+            # Encode bytes to base64 for Celery JSON serialization
+            content_b64 = base64.b64encode(content).decode('utf-8')
+
+            task = userbot_set_bot_photo_task.delay(
+                self.bot.bot_username,
+                content_b64,
+                content_type
+            )
+            # Wait for result with timeout
+            result = task.get(timeout=90)
+
+            if result.get("success"):
+                logger.info(f"[TG_SERVICE] Bot photo updated via BotFather")
+                return {"ok": True, "description": "Photo updated via BotFather"}
+            else:
+                error = result.get("error", "Unknown error")
+                logger.error(f"[TG_SERVICE] Failed to set photo via BotFather: {error}")
+                return {"ok": False, "description": error}
+
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Userbot task failed: {e}")
+            return {"ok": False, "description": f"Failed to set photo via BotFather: {str(e)}"}
+
+    def set_my_photo_from_url(self, photo_url: str) -> dict:
+        """Download image from URL and set as bot's profile photo via BotFather."""
+        import requests as req
+        from urllib.parse import urlparse
+
+        logger.info(f"[TG_SERVICE] Downloading photo from URL: {photo_url}")
+
+        try:
+            # Download the image
+            response = req.get(photo_url, timeout=30)
+            response.raise_for_status()
+
+            content = response.content
+            content_type = response.headers.get('Content-Type', 'image/jpeg')
+
+            # Extract filename from URL
+            parsed_url = urlparse(photo_url)
+            filename = parsed_url.path.split('/')[-1] or 'photo.jpg'
+
+            logger.info(f"[TG_SERVICE] Downloaded photo: filename={filename}, size={len(content)}, content_type={content_type}")
+
+            # Validate
+            if len(content) < 100:
+                logger.error(f"[TG_SERVICE] Downloaded photo too small ({len(content)} bytes)")
+                return {"ok": False, "description": f"Downloaded photo too small ({len(content)} bytes)"}
+
+            if 'image/' not in content_type:
+                logger.error(f"[TG_SERVICE] Invalid content type: {content_type}")
+                return {"ok": False, "description": f"Invalid content type: {content_type}. Expected image."}
+
+            # Get bot username
+            if not self.bot.bot_username:
+                me = self.get_me()
+                if not me or not self.bot.bot_username:
+                    return {"ok": False, "description": "Cannot determine bot username"}
+
+            # Use userbot task to set photo via BotFather
+            from messenger_bots.tasks import userbot_set_bot_photo_task
+            import base64
+
+            # Encode bytes to base64 for Celery JSON serialization
+            content_b64 = base64.b64encode(content).decode('utf-8')
+
+            task = userbot_set_bot_photo_task.delay(
+                self.bot.bot_username,
+                content_b64,
+                content_type
+            )
+            result = task.get(timeout=90)
+
+            if result.get("success"):
+                logger.info(f"[TG_SERVICE] Bot photo updated from URL via BotFather")
+                return {"ok": True, "description": "Photo updated via BotFather"}
+            else:
+                error = result.get("error", "Unknown error")
+                logger.error(f"[TG_SERVICE] Failed to set photo from URL: {error}")
+                return {"ok": False, "description": error}
+
+        except req.RequestException as e:
+            logger.error(f"[TG_SERVICE] Failed to download photo from URL: {e}")
+            return {"ok": False, "description": f"Failed to download photo: {str(e)}"}
+        except Exception as e:
+            logger.error(f"[TG_SERVICE] Userbot task failed: {e}")
+            return {"ok": False, "description": f"Failed to set photo via BotFather: {str(e)}"}
 
     def delete_my_photo(self) -> dict:
-        """Delete bot's profile photo via Telegram API (deleteMyPhoto)."""
-        result = self._make_request("deleteMyPhoto")
+        """
+        Delete bot's profile photo.
+
+        NOTE: Telegram Bot API does NOT have deleteMyPhoto method.
+        Bot photos can only be deleted via BotFather (/deleteuserpic).
+        This is not currently implemented via userbot.
+        """
+        logger.warning("[TG_SERVICE] delete_my_photo is not available via Bot API. Use BotFather /deleteuserpic command.")
+        return {"ok": False, "description": "Bot photo deletion is not available via API. Use BotFather /deleteuserpic command."}
+
+    def get_my_name(self) -> dict:
+        """Get bot's name via Telegram API (getMyName)."""
+        result = self._make_request("getMyName")
         if result.get("ok"):
-            logger.info(f"[TG_SERVICE] Bot photo deleted")
+            name = result.get("result", {}).get("name", "")
+            logger.info(f"[TG_SERVICE] Got bot name: '{name}'")
         return result
+
+    def get_my_description(self) -> dict:
+        """Get bot's description via Telegram API (getMyDescription)."""
+        result = self._make_request("getMyDescription")
+        if result.get("ok"):
+            description = result.get("result", {}).get("description", "")
+            logger.info(f"[TG_SERVICE] Got bot description: '{description[:50]}...'")
+        return result
+
+    def get_my_photo_url(self) -> Optional[str]:
+        """Get bot's profile photo URL via Telegram API."""
+        try:
+            # First get bot's user_id from getMe
+            me_result = self._make_request("getMe")
+            if not me_result.get("ok"):
+                return None
+
+            bot_id = me_result.get("result", {}).get("id")
+            if not bot_id:
+                return None
+
+            # Get bot's profile photos
+            photos_result = self._make_request("getUserProfilePhotos", {"user_id": bot_id, "limit": 1})
+            if not photos_result.get("ok"):
+                return None
+
+            photos = photos_result.get("result", {}).get("photos", [])
+            if not photos:
+                logger.info(f"[TG_SERVICE] Bot has no profile photo")
+                return None
+
+            # Get the largest photo (last in array)
+            photo_sizes = photos[0]
+            if not photo_sizes:
+                return None
+
+            file_id = photo_sizes[-1].get("file_id")
+            if not file_id:
+                return None
+
+            # Get file path
+            file_result = self._make_request("getFile", {"file_id": file_id})
+            if not file_result.get("ok"):
+                return None
+
+            file_path = file_result.get("result", {}).get("file_path")
+            if not file_path:
+                return None
+
+            # Construct download URL
+            photo_url = f"https://api.telegram.org/file/bot{self.token}/{file_path}"
+            logger.info(f"[TG_SERVICE] Got bot photo URL")
+            return photo_url
+
+        except Exception as e:
+            logger.warning(f"[TG_SERVICE] Failed to get bot photo: {e}")
+            return None
+
+    def get_bot_settings(self) -> dict:
+        """Get all bot settings from Telegram API (name, description, username, photo)."""
+        settings = {
+            "username": self.bot.bot_username,
+            "name": None,
+            "description": None,
+            "photo_url": None,
+        }
+
+        # Get name
+        name_result = self.get_my_name()
+        if name_result.get("ok"):
+            settings["name"] = name_result.get("result", {}).get("name", "")
+
+        # Get description
+        desc_result = self.get_my_description()
+        if desc_result.get("ok"):
+            settings["description"] = desc_result.get("result", {}).get("description", "")
+
+        # Get photo
+        settings["photo_url"] = self.get_my_photo_url()
+
+        return settings
 
     def send_message(
         self,
@@ -280,14 +499,18 @@ class TelegramBotService:
             return None
 
     def _download_and_save_photo(self, user_id: str, org_id: int, telegram_file_path: str) -> Optional[str]:
-        """Download photo from Telegram and save to Django storage."""
+        """Download photo from Telegram and save to Django storage.
+
+        Uses shared connection pool for file download.
+        """
         try:
             from django.core.files.base import ContentFile
             from django.core.files.storage import default_storage
 
-            # Download photo from Telegram
+            # Download photo from Telegram using shared session
             download_url = f"https://api.telegram.org/file/bot{self.token}/{telegram_file_path}"
-            response = requests.get(download_url, timeout=30)
+            session = get_telegram_session()
+            response = session.get(download_url, timeout=(5, 30))
 
             if response.status_code != 200:
                 logger.warning(f"[TG_SERVICE] Failed to download photo: HTTP {response.status_code}")

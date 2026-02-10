@@ -14,13 +14,13 @@ from stock.serializers import CriteriaSubcategorySerializer
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'category')
+        fields = ('id', 'name', 'organization', 'category', 'sub_icon')
 
     def validate(self, attrs):
         user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
+        organization = attrs.get('organization')
+        if organization and not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-
         return attrs
 
 
@@ -28,12 +28,16 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
-        return ImageSerializer(
-            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
-
+        icon_obj = subcategory.sub_icon or (subcategory.category.icon if subcategory.category else None)
+        
+        if icon_obj:
+            return ImageSerializer(icon_obj, context=self.context).data
+        return None
+    
     class Meta:
         model = ItemSubcategory
         fields = ('id', 'name', 'icon')
+
 
 
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
@@ -42,8 +46,9 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory',)
+        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory')
 
+       
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     class Meta:
         model = ItemSubcategory
@@ -63,15 +68,36 @@ class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
             return False
         return HotlinkCollectionSubcategory.objects.filter(
             hotlink=self.context['hotlink'], subcategory=subcategory).exists()
+    
 
+class ItemSubcategory2Serializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, subcategory: ItemSubcategory):
+        icon_to_show = subcategory.sub_icon or subcategory.category.icon
+        
+        if icon_to_show:
+            return ImageSerializer(icon_to_show, context=self.context).data
+        return None
+
+
+    class Meta:
+        model = ItemSubcategory
+        fields = ('id', 'name', 'icon')
 
 class ItemCategorySerializer(serializers.ModelSerializer):
     icon = ImageSerializer()
+    current_subcategory = serializers.SerializerMethodField()
 
     class Meta:
         model = ItemCategory
-        fields = ('id', 'name', 'icon')
+        fields = ('id', 'name', 'icon', 'current_subcategory')
 
+    def get_current_subcategory(self, obj):
+        selected_subcategory = self.context.get('selected_subcategory')
+        if selected_subcategory and selected_subcategory.category_id == obj.id:
+            return ItemSubcategory2Serializer(selected_subcategory).data
+        return None
 
 class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
@@ -84,8 +110,8 @@ class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
         else:
             subcategories = main_category.subcategories.filter(
                 Q(organization__isnull=True) | Q(organization=organization))
-        return ItemSubcategorySerializer(subcategories, many=True).data
-
+        return ItemSubcategorySerializer(subcategories, many=True, context=self.context).data
+    
     class Meta:
         model = ItemCategory
         fields = ('id', 'name', 'icon', 'subcategories')
@@ -99,7 +125,7 @@ class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerialize
         subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(
             category=main_category, country=self.context['country'], city=self.context['city']
         )
-        return ItemSubcategorySerializer(subcategories, many=True).data
+        return ItemSubcategorySerializer(subcategories, many=True, context=self.context).data
 
     class Meta:
         model = ItemCategory

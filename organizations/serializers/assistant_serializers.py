@@ -42,7 +42,7 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assistant
-        fields = ("id", "organization", "name", "gender", "position", "image")
+        fields = ("id", "organization", "name", "gender", "position", "image","ai_prompt", "first_message", "ai_voice")
 
     def validate_organization(self, organization):
         if AssistantService.exists_for_organization(organization=organization):
@@ -50,6 +50,16 @@ class AssistantCreateSerializer(serializers.ModelSerializer):
                 _("Assistant already exists in this organization.")
             )
         return organization
+
+class AssistantSettingsUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assistant
+        fields = ("ai_prompt", "first_message", "ai_voice","voice_name")
+
+    def validate_ai_voice(self, value):
+        if not value:
+            raise serializers.ValidationError("Voice ID is required.")
+        return value
 
 
 class OrganizationAssistantAnswerCreateSerializer(serializers.ModelSerializer):
@@ -92,6 +102,10 @@ class OrganizationAssistantSerializer(serializers.ModelSerializer):
             "active_until",
             "is_enabled",
             "plans",
+            "ai_prompt",
+            "first_message",
+            "ai_voice",
+            "voice_name"
         )
         read_only_fields = ("organization",)
 
@@ -438,6 +452,7 @@ class ChatListSerializer(serializers.ModelSerializer):
         return None
 
     def get_last_message(self, chat: Chat):
+        # Try annotated values first (N+1 optimized)
         web_text = getattr(chat, '_web_last_message_text', None)
         if web_text:
             return web_text
@@ -445,9 +460,12 @@ class ChatListSerializer(serializers.ModelSerializer):
         tg_text = getattr(chat, '_tg_last_message_text', None)
         if tg_text:
             return tg_text
+
+        # Fallback to query
         last_message = None
         if chat.source == ChatSource.WEB:
-            last_message = chat.chat_messages.order_by("-created_at").first()
+            # Web chats use Comment model (related_name='comments')
+            last_message = chat.comments.order_by("-created_at").first()
         if not last_message and chat.bot_chat_id:
             if chat.bot_chat:
                 last_message = chat.bot_chat.messages.order_by("-created_at").first()
@@ -455,6 +473,7 @@ class ChatListSerializer(serializers.ModelSerializer):
         return last_message.text if last_message else None
 
     def get_last_message_created_at(self, chat: Chat):
+        # Try annotated values first (N+1 optimized)
         web_time = getattr(chat, '_web_last_message_time', None)
         if web_time:
             return web_time
@@ -463,10 +482,11 @@ class ChatListSerializer(serializers.ModelSerializer):
         if tg_time:
             return tg_time
 
+        # Fallback to query
         last_message = None
         if chat.source == ChatSource.WEB:
-            last_message = chat.chat_messages.order_by("-created_at").first()
-
+            # Web chats use Comment model (related_name='comments')
+            last_message = chat.comments.order_by("-created_at").first()
         if not last_message and chat.bot_chat_id:
             if chat.bot_chat:
                 last_message = chat.bot_chat.messages.order_by("-created_at").first()

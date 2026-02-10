@@ -45,10 +45,10 @@ class HotlinkService:
     @classmethod
     @transaction.atomic
     def create_hotlink(cls, user: User, organization: Organization, content: str, link_type: str, image: File,
-                       collection_items: list, collection_links: list, collection_subcategories: list):
+                       collection_items: list, collection_links: list, collection_subcategories: list, decription=None,):
         if not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-        hotlink = cls.create(organization=organization, content=content, link_type=link_type, image=image)
+        hotlink = cls.create(organization=organization, content=content, link_type=link_type, image=image,decription=decription)
 
         if link_type == HOTLINK_COLLECTION:
             shop_items_list_to_create = []
@@ -71,11 +71,12 @@ class HotlinkService:
     @classmethod
     @transaction.atomic
     def update_hotlink(cls, hotlink: Hotlink, image: File, content: str, link_type: str, collection_items: list,
-                       collection_links: list, collection_subcategories: list):
+                       collection_links: list, collection_subcategories: list, decription=None):
         try:
             hotlink.image = image
             hotlink.content = content
             hotlink.link_type = link_type
+            hotlink.decription = decription 
             hotlink.save()
 
             # This part is not the best solution with all the deletion and recreation

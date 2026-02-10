@@ -79,6 +79,8 @@ INSTALLED_APPS = [
     "api_keys.apps.ApiKeysConfig",
     "messenger_bots.apps.MessengerBotsConfig",
     "otp_bot.apps.OtpBotConfig",
+    "easycard_integration.apps.EasycardIntegrationConfig",
+    "saved_contacts.apps.SavedContactsConfig",
 ]
 
 if DEBUG:
@@ -146,8 +148,24 @@ DATABASES = {
         "HOST": config("POSTGRES_HOST"),
         "PORT": config("POSTGRES_PORT"),
         "OPTIONS": json.loads(config("POSTGRES_OPTIONS", default="{}")),
-    }
+    },
+    # EasyCard database (read-only, managed by EasyCard server)
+    "easycard": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("EASYCARD_DB_NAME", default="easycard"),
+        "USER": config("EASYCARD_DB_USER", default="easycard"),
+        "PASSWORD": config("EASYCARD_DB_PASSWORD", default=""),
+        "HOST": config("EASYCARD_DB_HOST", default="localhost"),
+        "PORT": config("EASYCARD_DB_PORT", default="5432"),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {
+            "connect_timeout": 10,
+        },
+    },
 }
+
+# Database routers for multi-database support
+DATABASE_ROUTERS = ["easycard_integration.db_router.EasyCardRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -383,6 +401,19 @@ CELERY_BROKER_URL = config("CELERY_DSN", default="amqp://localhost:5672")
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_IGNORE_RESULT = True  # Default: don't store results (userbot tasks override this)
 CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+
+# Task timeout protection (Phase 1 optimization)
+# 10 minutes default - tasks needing more already have explicit limits
+CELERY_TASK_SOFT_TIME_LIMIT = 600   # SoftTimeLimitExceeded raised
+CELERY_TASK_TIME_LIMIT = 660        # Hard kill after 11 min
+
+# Prefetch optimization for IO-bound tasks (network, API calls)
+CELERY_WORKER_PREFETCH_MULTIPLIER = 2  # Default is 4
+
+# Broker connection resilience
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
+
 CELERY_TASK_ROUTES = {
     "imagekit.cachefiles.backends._generate_file": {"queue": "high"},
     "notifications.tasks.*": {"queue": "default"},
@@ -422,6 +453,12 @@ CELERY_TASK_ROUTES = {
     "messenger_bots.tasks.userbot_logout_task": {"queue": "messenger_bots"},
     "messenger_bots.tasks.userbot_get_dialogs_task": {"queue": "messenger_bots"},
     "messenger_bots.tasks.userbot_send_test_message_task": {"queue": "messenger_bots"},
+    # OTP Bot tasks
+    "otp_bot.tasks.process_otp_text_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.process_otp_voice_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.send_welcome_message_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.send_transaction_notification_task": {"queue": "messenger_bots"},
+    "otp_bot.tasks.cleanup_expired_otp_codes": {"queue": "default"},
 }
 
 INSTAGRAM_VIDEO_EXPIRE_DAYS = config("INSTAGRAM_VIDEO_EXPIRE_DAYS", default=1, cast=int)
@@ -624,6 +661,7 @@ OTP_MESSAGE_TEMPLATE = config(
 
 # ElevenLabs Configuration (Voice AI for OTP Bot)
 ELEVENLABS_API_KEY = config("ELEVENLABS_API_KEY", default="")
+ELEVENLABS_API_KEY2 = config("ELEVENLABS_API_KEY2", default="")
 ELEVENLABS_VOICE_ID = config("ELEVENLABS_VOICE_ID", default="FGY2WhTYpPnrIDTdsKH5")  # Laura
 ELEVENLABS_MODEL_TTS = config("ELEVENLABS_MODEL_TTS", default="eleven_turbo_v2_5")
 ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
@@ -632,6 +670,10 @@ ELEVENLABS_MODEL_STT = config("ELEVENLABS_MODEL_STT", default="scribe_v1")
 OTP_BOT_AI_MODEL = config("OTP_BOT_AI_MODEL", default="gpt-4o-mini")
 OTP_BOT_AI_MAX_TOKENS = config("OTP_BOT_AI_MAX_TOKENS", default=500, cast=int)
 OTP_BOT_AI_TEMPERATURE = config("OTP_BOT_AI_TEMPERATURE", default=0.7, cast=float)
+
+# EasyCard Integration Webhooks
+# Shared secret for HMAC verification of EasyCard webhooks
+EASYCARD_WEBHOOK_SECRET = config("EASYCARD_WEBHOOK_SECRET", default="change-me-in-production")
 
 
 if DEBUG:

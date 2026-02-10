@@ -4,11 +4,15 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from .admin_views import (
+    OTPBotDeleteSessionView,
     OTPBotDisconnectView,
+    OTPBotLogoutView,
     OTPBotQRCodeView,
+    OTPBotRebindView,
     OTPBotStartSessionView,
+    OTPBotStopSessionView,
 )
-from .models import OTPBot, OTPCode, ChatSession, UserVoicePreference
+from .models import OTPBot, OTPCode, ChatSession, UserVoicePreference, OTPBotPromptSettings
 
 
 @admin.register(OTPBot)
@@ -39,6 +43,26 @@ class OTPBotAdmin(admin.ModelAdmin):
                 "<uuid:pk>/disconnect/",
                 self.admin_site.admin_view(OTPBotDisconnectView.as_view()),
                 name="otp_bot_otpbot_disconnect",
+            ),
+            path(
+                "<uuid:pk>/stop/",
+                self.admin_site.admin_view(OTPBotStopSessionView.as_view()),
+                name="otp_bot_otpbot_stop",
+            ),
+            path(
+                "<uuid:pk>/logout/",
+                self.admin_site.admin_view(OTPBotLogoutView.as_view()),
+                name="otp_bot_otpbot_logout",
+            ),
+            path(
+                "<uuid:pk>/delete-session/",
+                self.admin_site.admin_view(OTPBotDeleteSessionView.as_view()),
+                name="otp_bot_otpbot_delete_session",
+            ),
+            path(
+                "<uuid:pk>/rebind/",
+                self.admin_site.admin_view(OTPBotRebindView.as_view()),
+                name="otp_bot_otpbot_rebind",
             ),
         ]
         return custom_urls + urls
@@ -85,18 +109,44 @@ class OTPBotAdmin(admin.ModelAdmin):
                 f'View QR Code</a>'
             )
 
-        if obj.status in ("connected", "qr_pending"):
-            url = reverse("admin:otp_bot_otpbot_disconnect", args=[obj.pk])
-            buttons.append(
-                f'<a href="{url}" style="{base_style} background: #dc3545;" '
-                f'onclick="return confirm(\'Disconnect the OTP bot?\');">'
-                f'Disconnect</a>'
-            )
-
         if obj.status == "connected":
             buttons.append(
                 f'<span style="{base_style} background:#28a745; cursor:default;">'
                 f'&#10003; Connected ({obj.phone_number or "unknown"})</span>'
+            )
+            # Rebind - change phone number
+            url = reverse("admin:otp_bot_otpbot_rebind", args=[obj.pk])
+            confirm_msg = "Change phone number? Current session will be disconnected and you will need to scan QR with the new phone."
+            buttons.append(
+                f'<a href="{url}" style="{base_style} background: #17a2b8;" '
+                f"onclick=\"return confirm('{confirm_msg}');\">"
+                f'Rebind Number</a>'
+            )
+
+        # Session management buttons (always visible when session exists)
+        if obj.status in ("connected", "qr_pending"):
+            # Stop - keeps data, can restart
+            url = reverse("admin:otp_bot_otpbot_stop", args=[obj.pk])
+            buttons.append(
+                f'<a href="{url}" style="{base_style} background: #6c757d;" '
+                f'onclick="return confirm(\'Stop the session? Can restart later.\');">'
+                f'Stop</a>'
+            )
+
+            # Logout - requires QR re-scan
+            url = reverse("admin:otp_bot_otpbot_logout", args=[obj.pk])
+            buttons.append(
+                f'<a href="{url}" style="{base_style} background: #fd7e14;" '
+                f'onclick="return confirm(\'Logout from WhatsApp? Will need QR scan to reconnect.\');">'
+                f'Logout</a>'
+            )
+
+            # Delete - removes all session data
+            url = reverse("admin:otp_bot_otpbot_delete_session", args=[obj.pk])
+            buttons.append(
+                f'<a href="{url}" style="{base_style} background: #dc3545;" '
+                f'onclick="return confirm(\'DELETE session completely? All session data will be lost!\');">'
+                f'Delete Session</a>'
             )
 
         return mark_safe("".join(buttons) if buttons else "No actions available.")
@@ -130,3 +180,80 @@ class UserVoicePreferenceAdmin(admin.ModelAdmin):
     list_filter = ("voice_enabled",)
     search_fields = ("phone_number",)
     readonly_fields = ("id", "created_at", "updated_at")
+
+
+@admin.register(OTPBotPromptSettings)
+class OTPBotPromptSettingsAdmin(admin.ModelAdmin):
+    """Admin for OTP Bot AI prompts configuration (singleton)."""
+
+    list_display = ["id", "is_active", "updated_at"]
+    readonly_fields = ["created_at", "updated_at"]
+
+    fieldsets = (
+        ("Status", {
+            "fields": ("is_active",),
+            "description": "If disabled, uses default prompts from prompts.py",
+        }),
+        ("Core Identity", {
+            "fields": ("system_prompt_core",),
+            "description": "Main AI personality and behavior instructions",
+        }),
+        ("EasyCard: About", {
+            "fields": ("about_easycard", "card_types", "app_features"),
+            "description": "General EasyCard information",
+        }),
+        ("EasyCard: Fees", {
+            "fields": (
+                "fees_one_time",
+                "fees_topup",
+                "fees_transfer",
+                "fees_transactions",
+            ),
+            "classes": ("collapse",),
+            "description": "Fee structure in AED",
+        }),
+        ("EasyCard: Rates & Notes", {
+            "fields": ("exchange_rates", "important_notes"),
+            "classes": ("collapse",),
+        }),
+        ("Business Scenarios", {
+            "fields": (
+                "scenario_new_user",
+                "scenario_existing_user",
+                "scenario_consultation",
+                "scenario_escalation",
+                "escalation_keywords",
+            ),
+            "description": "Scenario-based prompt templates",
+        }),
+        ("Voice Mode", {
+            "fields": ("voice_mode_prompt", "voice_max_words"),
+            "classes": ("collapse",),
+            "description": "Settings for voice responses (TTS)",
+        }),
+        ("Language & Formatting", {
+            "fields": ("language_detection_rule", "formatting_rules"),
+            "classes": ("collapse",),
+        }),
+        ("WAHA Plus: Interactive Buttons", {
+            "fields": ("buttons_config", "welcome_buttons"),
+            "classes": ("collapse",),
+            "description": "JSON configuration for interactive buttons/lists (requires WAHA Plus)",
+        }),
+        ("Error Messages", {
+            "fields": ("error_ai", "error_timeout", "error_voice_unavailable"),
+            "classes": ("collapse",),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
+
+    def has_add_permission(self, request):
+        """Allow adding only if no records exist (singleton)."""
+        return not OTPBotPromptSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of singleton."""
+        return False

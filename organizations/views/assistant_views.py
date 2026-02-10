@@ -1,13 +1,17 @@
 import logging
 
+import requests
 from django.conf import settings
 from django.db import models
 from django.db.models import BooleanField, Case, F, Max, OuterRef, Subquery, Value, When
+from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_page
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from shop.tasks import update_assistant_json_task
@@ -32,7 +36,7 @@ from organizations.serializers.assistant_serializers import (
     PurchaseAssistantSerializer,
     QuestionListQueryParamSerializer,
     QuestionListSerializer,
-    ToggleAssistantSerializer,
+    ToggleAssistantSerializer, AssistantSettingsUpdateSerializer,
 )
 from organizations.services.assistant_services import (
     AnswerService,
@@ -369,15 +373,16 @@ class AssistantChatsListView(generics.ListAPIView):
 
         # Get all chats (web + telegram) for this assistant
         # Import models for subquery annotations
-        from organizations.models import ChatMessage
+        from shop.models import Comment  # Web chats store messages in Comment model
         from messenger_bots.models import BotMessage
 
         # Subqueries for last message (eliminates N+1)
-        web_last_msg_subquery = ChatMessage.objects.filter(
+        # Web chats use Comment model (related_name='comments')
+        web_last_msg_subquery = Comment.objects.filter(
             chat=OuterRef('pk')
         ).order_by('-created_at').values('text')[:1]
 
-        web_last_msg_time_subquery = ChatMessage.objects.filter(
+        web_last_msg_time_subquery = Comment.objects.filter(
             chat=OuterRef('pk')
         ).order_by('-created_at').values('created_at')[:1]
 
@@ -403,8 +408,8 @@ class AssistantChatsListView(generics.ListAPIView):
                 default=Value(False),
                 output_field=BooleanField()
             ),
-            # For web chats use chat_messages, for telegram chats use bot_chat.messages
-            web_last_message_at=Max('chat_messages__created_at'),
+            # For web chats use comments, for telegram chats use bot_chat.messages
+            web_last_message_at=Max('comments__created_at'),
             telegram_last_message_at=Max('bot_chat__messages__created_at'),
         ).annotate(
             last_message_created_at=Case(
@@ -442,3 +447,66 @@ class AssistantChatReadMessages(APIView):
         return Response(data={
             'message': _('Success')
         })
+
+
+class GetElevenLabsSignedUrlView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, chat_id):
+
+        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+
+        AI_SERVER_URL = "http://161.35.153.151:8080/bot/api/proxy/elevenlabs/signed-url/"
+
+        try:
+            logger.info(f"Proxying signed URL request to AI Server for chat {chat_id}")
+
+            response = requests.get(
+                AI_SERVER_URL,
+                params={"agent_id": agent_id},
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                return Response({
+                    "signed_url": data["signed_url"],
+                    "agent_id": agent_id
+                })
+            else:
+                logger.error(f"AI Server returned error: {response.text}")
+                return Response({"error": "AI Server could not get token"}, status=502)
+
+        except Exception as e:
+            logger.error(f"Failed to connect to AI Server: {e}")
+            return Response({"error": "AI Server unavailable"}, status=503)
+        
+
+        
+from project.settings.base import ELEVENLABS_API_KEY2
+
+
+class ProxyVoicesView(APIView):
+
+    def get(self, request):
+        ai_server_url = "http://161.35.153.151:8080/bot/elevenlabs-voices/"
+
+        try:
+            response = requests.get(ai_server_url, timeout=20)
+
+            if response.status_code == 200:
+                return Response(response.json())
+            else:
+                return Response({
+                    "error": "AI Server returned an error",
+                    "details": response.text[:500]
+                }, status=response.status_code)
+
+        except Exception as e:
+            return Response({"error": f"Failed to connect to AI server: {str(e)}"}, status=500)
+
+
+class AssistantSettingsUpdateView(generics.UpdateAPIView):
+    queryset = Assistant.objects.all()
+    serializer_class = AssistantSettingsUpdateSerializer
+

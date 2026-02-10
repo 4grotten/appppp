@@ -262,6 +262,34 @@ class VerifyOTPAPIView(APIView):
             f"[OTP_API] Token issued for {phone[:7]}*** (new_user={is_new_user})"
         )
 
+        # Try to link with EasyCard profile for user synchronization
+        try:
+            from easycard_integration.services import EasyCardDataService
+            from .models import UserEasyCardMapping
+
+            easycard_data = EasyCardDataService.get_user_financial_data(phone)
+            if easycard_data.is_registered and easycard_data.user_id:
+                UserEasyCardMapping.objects.update_or_create(
+                    apofiz_user=user,
+                    defaults={
+                        "easycard_user_id": easycard_data.user_id,
+                        "phone_number": phone,
+                    },
+                )
+                logger.info(
+                    f"[OTP_API] Linked Apofiz user {user.id} "
+                    f"with EasyCard {easycard_data.user_id[:8]}..."
+                )
+        except Exception as e:
+            # Don't fail verification if linking fails
+            logger.warning(f"[OTP_API] Failed to link EasyCard profile: {e}")
+
+        # Send welcome message to new users via OTP Bot
+        if is_new_user:
+            from .tasks import send_welcome_message_task
+            send_welcome_message_task.delay(phone_number=phone)
+            logger.info(f"[OTP_API] Welcome message task queued for {phone[:7]}***")
+
         return Response(
             {
                 "is_valid": True,

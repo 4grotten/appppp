@@ -37,6 +37,18 @@ from shop.services.category_services import ItemSubcategoryService, ItemCategory
 from utils.translator import GoogleTranslator, GPTTranslator
 
 
+class SelectedSubcategoryMixin:
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        item_id = self.request.query_params.get("item_id")
+        if item_id:
+            try:
+                item = ShopItem.objects.select_related('subcategory').get(id=item_id)
+                context['selected_subcategory'] = item.subcategory
+            except (ShopItem.DoesNotExist, ValueError):
+                context['selected_subcategory'] = None
+        return context
+
 # ToDo: write tests for this view
 class ItemCategoryAllSubcategoriesView(RetrieveAPIView):
     permission_classes = ()
@@ -56,7 +68,7 @@ class ItemCategoryAllSubcategoriesView(RetrieveAPIView):
         return context
 
 
-class ItemCategoryListView(ListAPIView):
+class ItemCategoryListView(SelectedSubcategoryMixin,ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
     serializer_class = ItemCategorySerializer
@@ -84,7 +96,7 @@ class ItemCategoryListView(ListAPIView):
         return queryset
 
 
-class ItemRentalCategoryListView(ListAPIView):
+class ItemRentalCategoryListView(SelectedSubcategoryMixin,ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
     serializer_class = ItemCategorySerializer
@@ -100,7 +112,7 @@ class ItemRentalCategoryListView(ListAPIView):
             raise ObjectNotFoundException(_("ItemCategory not found"))
 
 
-class ItemTicketCategoryListView(ListAPIView):
+class ItemTicketCategoryListView(SelectedSubcategoryMixin,ListAPIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = None
     serializer_class = ItemCategorySerializer
@@ -145,7 +157,7 @@ class ItemCategoryRetrieveView(RetrieveAPIView):
         return context
 
 
-class NonEmptyCategoryListView(ListAPIView):
+class NonEmptyCategoryListView(SelectedSubcategoryMixin,ListAPIView):
     permission_classes = ()
     pagination_class = None
     serializer_class = ItemCategorySerializer
@@ -163,7 +175,7 @@ class NonEmptyCategoryListView(ListAPIView):
         )
 
 
-class NonEmptyPartnerCategoryListView(ListAPIView):
+class NonEmptyPartnerCategoryListView(SelectedSubcategoryMixin,ListAPIView):
     permission_classes = ()
     pagination_class = None
     serializer_class = ItemCategorySerializer

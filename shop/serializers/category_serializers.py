@@ -66,6 +66,12 @@ class ItemSubcategoryForHotlinksSerializer(ItemSubcategoryBriefSerializer):
     
 
 class ItemSubcategory2Serializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, subcategory: ItemSubcategory):
+        return ImageSerializer(
+            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
+
     class Meta:
         model = ItemSubcategory
         fields = ('id', 'name', 'icon')

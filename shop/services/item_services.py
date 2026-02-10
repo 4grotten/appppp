@@ -415,14 +415,19 @@ class ShopItemService:
         return response
 
     @classmethod
-    def get_ordering_search_result(
-        cls, queryset: QuerySet, search_word: str
-    ) -> QuerySet:
+    def get_ordering_search_result(cls, queryset: QuerySet, search_word: str) -> QuerySet:
+        search_word = search_word.strip()
+
+        queryset = queryset.filter(
+            Q(name__icontains=search_word) |
+            Q(description__icontains=search_word) |
+            Q(article__icontains=search_word)
+        )
+
         queryset = queryset.annotate(
             arr_name=RawSQL(
-                "string_to_array(lower('name'), ' ')",
-                output_field=ArrayField(base_field=TextField()),
-                params=(),
+                "string_to_array(lower(\"name\"), ' ')", 
+                output_field=ArrayField(base_field=TextField())
             ),
             name_order=Case(
                 When(name__iexact=search_word, then=1),

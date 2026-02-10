@@ -14,7 +14,7 @@ from stock.serializers import CriteriaSubcategorySerializer
 class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'category')
+        fields = ('id', 'name', 'organization', 'category', 'sub_icon')
 
     def validate(self, attrs):
         user = self.context['request'].user
@@ -28,12 +28,17 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
-        return ImageSerializer(
-            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
+        if subcategory.icon:
+            return ImageSerializer(subcategory.sub_icon, context=self.context).data
 
+        if subcategory.category and subcategory.category.icon:
+            return ImageSerializer(subcategory.category.icon, context=self.context).data
+            
+        return None
+    
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'icon')
+        fields = ('id', 'name', 'sub_icon')
 
 
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
@@ -42,7 +47,7 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory',)
+        fields = ('id', 'name', 'organization', 'sub_icon', 'criteria_subcategory',)
 
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     class Meta:
@@ -69,8 +74,12 @@ class ItemSubcategory2Serializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
-        return ImageSerializer(
-            subcategory.category.icon, context=self.context).data if subcategory.category.icon else None
+        icon_to_show = subcategory.icon or subcategory.category.icon
+        
+        if icon_to_show:
+            return ImageSerializer(icon_to_show, context=self.context).data
+        return None
+
 
     class Meta:
         model = ItemSubcategory
@@ -101,8 +110,8 @@ class ItemCategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
         else:
             subcategories = main_category.subcategories.filter(
                 Q(organization__isnull=True) | Q(organization=organization))
-        return ItemSubcategorySerializer(subcategories, many=True).data
-
+        return ItemSubcategorySerializer(subcategories, many=True, context=self.context).data
+    
     class Meta:
         model = ItemCategory
         fields = ('id', 'name', 'icon', 'subcategories')
@@ -116,7 +125,7 @@ class ItemCategoryWithNonEmptySubcategoriesSerializer(serializers.ModelSerialize
         subcategories = ItemSubcategoryService.get_general_nonempty_subcategories_in_category(
             category=main_category, country=self.context['country'], city=self.context['city']
         )
-        return ItemSubcategorySerializer(subcategories, many=True).data
+        return ItemSubcategorySerializer(subcategories, many=True, context=self.context).data
 
     class Meta:
         model = ItemCategory

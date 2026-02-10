@@ -42,7 +42,7 @@ class HotlinkSerializer(serializers.ModelSerializer):
         model = Hotlink
         fields = (
             'id', 'title', 'content', 'link_type', 'linked_organization', 'linked_item', 'image',
-            'partners_count'
+            'partners_count', 'decription'
         )
 
 

@@ -149,9 +149,11 @@ class OrganizationItemListView(FeedView):
             return ShopItem.objects.none()
 
         qs = ShopItemService.get_organization_items_queryset_for_user(
-            organization=organization,
-            user=self.request.user,
-        )
+                organization=organization,
+                user=self.request.user,
+                search=None,         # Обязательный аргумент
+                subcategory_id=None, # Обязательный аргумент
+            )
 
         search = self.request.GET.get("search")
         ordering_param = self.request.query_params.get('ordering')

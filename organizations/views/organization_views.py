@@ -1989,6 +1989,16 @@ class OpeningHoursViewSet(viewsets.ModelViewSet):
     queryset = OpeningHours.objects.all()
     serializer_class = OpeningHoursSerializer
 
+
+    def get_queryset(self):
+        queryset = OpeningHours.objects.all()
+        org_id = self.request.query_params.get('organization')
+        
+        if org_id is not None:
+            queryset = queryset.filter(organization_id=org_id)
+            
+        return queryset
+
     @action(detail=False, methods=['patch'], url_path='bulk-update')
     def bulk_update(self, request):
         data = request.data

@@ -18,9 +18,9 @@ class ItemSubcategoryCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         user = self.context['request'].user
-        if not OrganizationService.user_can_edit_organization(user=user, organization=attrs['organization']):
+        organization = attrs.get('organization')
+        if organization and not OrganizationService.user_can_edit_organization(user=user, organization=organization):
             raise NotAcceptableException(_('No rights to edit organization'))
-
         return attrs
 
 
@@ -28,17 +28,16 @@ class ItemSubcategoryBriefSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     def get_icon(self, subcategory: ItemSubcategory):
-        if subcategory.icon:
-            return ImageSerializer(subcategory.sub_icon, context=self.context).data
-
-        if subcategory.category and subcategory.category.icon:
-            return ImageSerializer(subcategory.category.icon, context=self.context).data
-            
+        icon_obj = subcategory.sub_icon or (subcategory.category.icon if subcategory.category else None)
+        
+        if icon_obj:
+            return ImageSerializer(icon_obj, context=self.context).data
         return None
     
     class Meta:
         model = ItemSubcategory
         fields = ('id', 'name', 'icon')
+
 
 
 class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
@@ -47,8 +46,9 @@ class ItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
 
     class Meta:
         model = ItemSubcategory
-        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory',)
+        fields = ('id', 'name', 'organization', 'icon', 'criteria_subcategory')
 
+       
 class NonEmptyItemSubcategorySerializer(ItemSubcategoryBriefSerializer):
     class Meta:
         model = ItemSubcategory

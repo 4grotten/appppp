@@ -426,7 +426,8 @@ class ShopItemService:
 
         queryset = queryset.annotate(
             arr_name=RawSQL(
-                "string_to_array(lower(\"name\"), ' ')", 
+                "string_to_array(lower(\"name\"), ' ')",
+                params=(),
                 output_field=ArrayField(base_field=TextField())
             ),
             name_order=Case(

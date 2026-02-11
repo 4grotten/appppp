@@ -20,7 +20,7 @@ from rest_framework.filters import SearchFilter
 logger = logging.getLogger(__name__)
 
 from common.exceptions import NotAcceptableException
-from organizations.models import Answer, AnswerFile, Assistant, Chat, ChatSource, Plan, Question
+from organizations.models import Answer, AnswerFile, Assistant, Chat, ChatSource, Plan, Question, UserAssistant
 from messenger_bots.models import BotChat, BotPlatform
 from organizations.serializers.assistant_serializers import (
     AnswerFileSerializer,
@@ -450,16 +450,31 @@ class AssistantChatReadMessages(APIView):
 
 
 class GetElevenLabsSignedUrlView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, chat_id):
+        user_assistant = get_object_or_404(UserAssistant, id=chat_id, user=request.user)
 
-        agent_id = "agent_3801kfxppx4kf8vvpg5xthybyz3f"
+        if not user_assistant.is_voice_assistant:
+            logger.warning(f"User {request.user.id} tried to get voice URL for non-voice assistant {chat_id}")
+            return Response(
+                {"error": "Voice features are not enabled for this assistant"},
+                status=403
+            )
 
+        assistant_obj = user_assistant.assistant
+        if not assistant_obj or not assistant_obj.voice_assistant_id:
+            logger.error(f"Assistant {assistant_obj.id} missing voice_assistant_id")
+            return Response(
+                {"error": "Voice Assistant ID is not configured in settings"},
+                status=400
+            )
+
+        agent_id = assistant_obj.voice_assistant_id
         AI_SERVER_URL = "http://161.35.153.151:8080/bot/api/proxy/elevenlabs/signed-url/"
 
         try:
-            logger.info(f"Proxying signed URL request to AI Server for chat {chat_id}")
+            logger.info(f"Proxying signed URL request for agent {agent_id}")
 
             response = requests.get(
                 AI_SERVER_URL,
@@ -474,14 +489,15 @@ class GetElevenLabsSignedUrlView(APIView):
                     "agent_id": agent_id
                 })
             else:
-                logger.error(f"AI Server returned error: {response.text}")
-                return Response({"error": "AI Server could not get token"}, status=502)
+                logger.error(f"AI Server returned error: {response.status_code} - {response.text}")
+                return Response(
+                    {"error": "Failed to get signed URL from provider", "details": response.text},
+                    status=502
+                )
 
         except Exception as e:
             logger.error(f"Failed to connect to AI Server: {e}")
             return Response({"error": "AI Server unavailable"}, status=503)
-        
-
         
 from project.settings.base import ELEVENLABS_API_KEY2
 

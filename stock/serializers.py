@@ -164,6 +164,17 @@ class ShopItemSizeCountSetSerializer(serializers.ModelSerializer):
         model = ShopItemSizeCount
         fields = ('id', 'size', 'count')
 
+class ShopItemTotalStockSerializer(serializers.ModelSerializer):
+    total_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShopItem
+        fields = ('id', 'name', 'total_count')
+
+    def get_total_count(self, obj):
+        result = obj.shop_item_size_counts.aggregate(total=Sum('count'))
+        return result['total'] if result['total'] is not None else 0
+
 
 class ShopItemSizeCountSerializer(serializers.ModelSerializer):
     size = SizeFormatSerializer(required=False, default=None)

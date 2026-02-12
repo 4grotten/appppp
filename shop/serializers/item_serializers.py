@@ -1237,6 +1237,14 @@ class ItemFeedSerializer(ItemListSerializer):
     preferred_locations = serializers.SerializerMethodField()
     own_resume = serializers.SerializerMethodField()
     is_comments_disabled = serializers.SerializerMethodField()
+    total_stock_count = serializers.SerializerMethodField()
+
+    def get_total_stock_count(self, item: ShopItem) -> int:
+
+        if hasattr(item, 'annotated_total_stock'):
+            return item.annotated_total_stock
+        # result = item.shop_item_size_counts.aggregate(total=Sum('count'))
+        # return result['total'] if result['total'] is not None else 0
 
     def get_has_in_stock(self, item: ShopItem):
         if ShopItemSizeCount.objects.filter(main_shop_item=item).exists():
@@ -1395,6 +1403,7 @@ class ItemFeedSerializer(ItemListSerializer):
             "own_resume",
             "is_comments_disabled",
             "is_pinned",
+            "total_stock_count",
             "pinned_at"
         )
         read_only_fields = ["name_lang", "description_lang"]
